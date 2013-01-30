@@ -1,0 +1,28 @@
+<% if vm_status != "terminated" %>
+    <li id="amazon_vm_<%= vm_instance_id %>">
+      <span>
+        <%= image_tag "amazon_icon.jpg", :size => "16x16" %>
+        <%= "Instance ID: #{vm_instance_id} - State: #{vm_status}" %>
+
+        <% if ["stopped"].include?(vm_status) %>
+            <%= ec2_vm_manage_button "run.png", "run", vm_instance_id %>
+        <% else %>
+            <%= image_tag("run_gray.png") %>
+        <% end %>
+
+        <% if ["running"].include?(vm_status) %>
+            <%= ec2_vm_manage_button "stop.png", "stop", vm_instance_id %>
+        <% else %>
+            <%= image_tag("stop_gray.png") %>
+        <% end %>
+
+        <% if ["running"].include?(vm_status) %>
+            <%= ec2_vm_manage_button "unregister.png", "destroy", vm_instance_id %>
+        <% else %>
+            <%= image_tag("unregister_gray.png") %>
+        <% end %>
+
+        <%= image_tag "loading.gif", :id => "vm-busy-#{vm_instance_id}", :size => "16x16", :style => "display: none;" %>
+      </span>
+    </li>
+<% end %>

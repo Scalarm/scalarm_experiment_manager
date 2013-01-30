@@ -1,0 +1,23 @@
+<section class="buttons">
+  <%= link_to 'Edit', edit_simulation_path(@simulation), :class => "nice_button" %>
+  <%= link_to 'Back', simulations_path, :class => "nice_button" %>
+</section>
+
+<section>
+  <h1>Simulation: <%= @simulation.name %></h1>
+  
+  <p>
+    <b>Description:</b>
+    <%= @simulation.description %>
+  </p>
+
+  <p>
+    <b>Scenario XML file:</b>
+    <%= @simulation.scenario_file %>
+  </p>
+
+  <p>
+    <b>Package with other files:</b>
+    <%= @simulation.other_file %>
+  </p>
+</section>

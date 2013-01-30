@@ -1,0 +1,14 @@
+%article#list_of_running_experiments
+  - if @ids.blank?
+    %h3 There is no experiment running currently
+  - else
+    %h3 Running experiments (click on the experiment to go to the monitoring panel)
+    %center
+      %ol.list_of_experiments
+        - if not @ids.nil?
+          - @ids.each_with_index do |id, index|
+            - exp_info = @experiment_info[id]
+            - completed = compute_completed(@dones[index], @experiment_info[id][0])
+            - link_text = @experiment_info[id][3] +
+            -   ", started at: #{exp_info[2]}"
+            %li= link_to(link_text, experiments_monitor_path(:experiment_id => id))

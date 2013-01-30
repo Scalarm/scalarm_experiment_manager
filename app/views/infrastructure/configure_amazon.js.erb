@@ -1,0 +1,13 @@
+$('#aws-configure-busy').hide();
+$('#amazon_configure').dialog('close');
+
+<% @ec2_running_instances.each do |instance_id, status| %>
+<% escape_javascript amazon_instance_label(instance_id, status) %>
+    var subtree = { 'id' : '<%= instance_id %>', 'name' : 'AAA', children: [], data: {} };
+    infrastructure_tree.getNode('1_2').addSubtree(subtree, 'animate', { onComplete: function() {} });
+<% end %>
+
+infrastructure_tree.compute();
+//optional: make a translation of the tree
+infrastructure_tree.geom.translate(new $jit.Complex(-200, 0), "current");
+

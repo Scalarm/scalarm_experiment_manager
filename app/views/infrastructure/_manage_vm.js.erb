@@ -1,0 +1,8 @@
+$("#vm_<%= @vm.id %>").html("<%= escape_javascript(render :partial => "virtual_machine", :object => @vm) %>");
+// updating vm node in the infrastructure tree
+$("#vm-<%= @vm.id %>").html("<%= escape_javascript(render :partial => "vm_node", :locals => {:vm => @vm}) %>");
+prepare_dialog('vm_<%= @vm.id %>_info_dialog');
+
+<% if @error_msg then %>
+    alert("<%= @error_msg %>");
+<% end %>

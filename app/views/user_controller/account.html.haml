@@ -1,0 +1,15 @@
+
+%section#main
+  %article.login
+    = form_tag(:action => "change_password") do
+      %div
+        %label{:for => "username"} Login:
+        = @current_user.username
+      %div
+        %label{:for => "password"} Password:
+        = password_field_tag "password"
+      %div
+        %label{:for => "password_repeat"} Repeat password:
+        = password_field_tag "password_repeat"
+      .buttons
+        = submit_tag "Change password"

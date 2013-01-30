@@ -1,0 +1,28 @@
+= javascript_include_tag "livevalidation_standalone.compressed.js"
+= javascript_tag "var vars = {};"
+
+%h1
+  Starting data Farming experiment input parameters --- Configuration count: #{@sim_size.to_i * @experiment.run_counter}
+
+- if defined? @configurations
+  %ul
+    %li= @labels.join(", ")
+    - 0.upto([@configurations.size - 1, 20].min) do |i|
+      %li= @configurations[i].join(", ") 
+    - if @configurations.size > 20
+      %li ...
+%article
+  = form_tag(:action => :run) do
+    = hidden_field_tag :experiment_id, @experiment.id
+    - @parameters.each do |parameter|
+      - subnode = parameter.subnode
+      %section
+        %h2 
+          Parameter: "
+          #{parameter.param_name.starts_with?("--") ? parameter.param_name[2..-1] : parameter.param_name.split("#").last}
+          " for #{parameter.subject} with ID #{parameter.subject_id}
+        %h4 Value constraints - Minimum: #{parameter.min}, Maximum: #{parameter.max}
+        = render :partial => "#{parameter.node_type}_parameter", :locals => { :editable_inputs => false, :parameter => parameter, :node => parameter.subnode, :parameter_id => "#{parameter.subject}_#{parameter.subject_id}_#{parameter.param_name.split('#').last}" }
+      %center
+        .buttons
+          = submit_tag "Run Data Farming experiment", :class => "nice_button"

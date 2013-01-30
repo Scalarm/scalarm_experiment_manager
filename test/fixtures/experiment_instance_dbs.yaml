@@ -1,0 +1,9 @@
+partition_1:
+ id: 1
+ ip: 10.1.2.11
+ port: 27017
+
+partition_2:
+ id: 2
+ ip: 10.1.2.12
+ port: 27017

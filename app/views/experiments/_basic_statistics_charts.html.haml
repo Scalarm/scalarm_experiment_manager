@@ -1,0 +1,14 @@
+= javascript_tag "var basic_chart_tab = new Array()"
+#basic_charts_form
+  %h2 Basic statistics about Measures of Effectiveness
+  = form_tag(experiments_add_basic_statistics_chart_path, :onsubmit => "$('#busy_basic').show();", :remote => true) do
+    = hidden_field_tag :experiment_id, @experiment.id
+    %span
+      Select MoE:
+      = select_tag("moe_name", "", {:class => "moe_list"}) 
+    = "Number of bars: " 
+    = text_field_tag 'resolution', "10"
+    = submit_tag "Add chart", :class => "nice_button", :style => "float: none;"
+    = image_tag "loading.gif", :size => "16x16", :style => "display: none", :id => "busy_basic"
+
+#basic_charts

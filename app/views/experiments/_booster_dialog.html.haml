@@ -1,0 +1,52 @@
+#booster_dialog{:title=>"Increase computational power", :style=>"height:100%;"}
+  #booster_tabs{:style=>"height:100%;"}
+    %h3 
+      %a{:href => "#"} Private Infrastructure
+    #private
+      = form_tag(url_for({:controller => :infrastructure, :action => :add_hosts_to_exp}), :remote => true) do
+        = hidden_field_tag :experiment_id, @experiment.id
+        = hidden_field_tag :user_id, session[:user]
+        
+        %p{:id => "private_info"}
+        %div
+          %label{:for=>"number", :style => "width:200px;"} Number of hosts to run:
+          = text_field_tag "number"
+        .buttons
+          = submit_tag "Submit", :onClick => "booster.afterSubmit();"
+      
+    %h3
+      %a{:href => "#"} PL-Grid
+    #plgrid
+      = form_tag(url_for({:controller => :infrastructure, :action => :add_jobs_to_exp}), :remote => true) do
+        = hidden_field_tag :experiment_id, @experiment.id
+        = hidden_field_tag :user_id, session[:user]
+        
+        %p{:id => "plgrid_info"}
+        %div
+          %label{:for=>"job_counter", :style => "width:200px;"} Number of jobs:
+          = text_field_tag :job_counter
+        %div
+          %label{:for=>"time_limit", :style => "width:200px;"} Job time constraint [min]:
+          = text_field_tag :time_limit
+        .buttons
+          = submit_tag "Submit", :onClick => "booster.afterSubmit();"
+          
+    %h3
+      %a{:href => "#"} Amazon EC2
+    #amazon
+      = form_tag(url_for({:controller => :infrastructure, :action => :add_vms_to_exp}), :remote => true) do
+        = hidden_field_tag :experiment_id, @experiment.id
+        = hidden_field_tag :user_id, session[:user]
+        
+        %p{:id => "amazon_info"}
+        %div
+          %label{:for=>"number", :style => "width:200px;"} Number of Virtual Machines:
+          = text_field_tag "number"
+        %div
+          %label{:for=>"vm_type", :style => "width:200px;"} Size of Virtual Machines:
+          = select_tag "vm_type", list_of_ec2_vm_types
+        %br
+        .buttons
+          = submit_tag "Submit", :onClick => "booster.afterSubmit();"
+
+= javascript_tag "booster.initDialog();"

@@ -1,0 +1,35 @@
+<%= form_for(@simulation, :html => { :multipart => true }) do |f| %>
+  <% if @simulation.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@simulation.errors.count, "error") %> prohibited this simulation from being saved:</h2>
+
+      <ul>
+      <% @simulation.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name %><br />
+    <%= f.text_field :name %>
+  </div>
+  <div class="field">
+    <%= f.label :description %><br />
+    <%= f.text_area :description %>
+  </div>
+  <div class="field">
+    <%= check_box_tag "input_check", "", false, :onclick => "$('#upload_scenario').attr('disabled', !this.checked)" %>
+    <%= f.label :scenario_file %>
+    <%= file_field :upload, :scenario, 'disabled' => true %>
+  </div>
+  <div class="field">
+    <%= check_box_tag "other_check", "", false, :onclick => "$('#upload_other').attr('disabled', !this.checked)" %>
+    <%= f.label :other_file %>
+    <%= file_field :upload, :other, 'disabled' => true %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

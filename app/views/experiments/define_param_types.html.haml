@@ -1,0 +1,73 @@
+= javascript_tag "$('#site_title').html('Input parameter types definition')"
+
+%section#main
+  %article
+    %h3 Scenario name
+    = params[:scenario_id].split(".xml")[0]
+
+  %article
+    = form_tag({:action => :define_input}, {:onsubmit => "show_waiting_div()"}) do
+      = hidden_field_tag :scenario_id, params[:scenario_id]
+      %article
+        %h3 Set how many times each experiment instance should be run
+        = text_field_tag "exp_run_counter", 1, :class => "nice_input centered"
+
+      %article
+        %h3 Constraints of a single experiment instance
+        %div
+          Time constraint in minutes:
+          = text_field_tag "exp_time_constraint_in_sec", 10, :class => "nice_input centered"
+        %div
+          Time constraint in a number of simulation iterations:
+          = text_field_tag "exp_time_constraint_in_iter", 5000, :class => "nice_input centered"
+
+      .accordion
+        - @agents_hierarchy.each do |agent_group_id, list_of_agents|
+          %h3
+            %a{:href => "#"}
+              = "Agent Group '#{agent_group_id}'"
+          %div
+            - list_of_agents.each do |agent|
+              .accordion
+                %h3
+                  %a{:href => "#"}
+                    Parameters for #{agent.type} with ID: #{agent.id} -
+                    = agent.label if agent.label
+                %div
+                  %h4
+                    Set all parameter types to
+                    = select_tag("select", parametrization_select, :onChange => "change_param_select(this)")
+                  - agent.parameters.each do |param|
+                    %p{:style=>"margin:5px;"}
+                      Select type for parameter "#{param.parameter_label}":
+                      = select_tag(param.parameter_uid, parametrization_select)
+                      
+                      -# TODO FIXME HACK HACK HACK - demonstration settings
+                      -# range_params = ["Agent___lootLeader7___eusas.simulation.agent.Agent#agent_prestige", "Agent___lootLeader7___eusas.simulation.impl.components_D33.AngerModel_D33#social_influence_radius", "Agent___lootLeader7___eusas.simulation.impl.components_D33.AngerModel_D33#anger_PTM", "Agent___lootLeader7___eusas.simulation.impl.components_D33.RFA_ReadinessForAggression_D33#rfa_PTM", "Agent___lootLeader8___eusas.simulation.agent.Agent#agent_prestige", "Agent___lootLeader8___eusas.simulation.impl.components_D33.AngerModel_D33#social_influence_radius", "Agent___lootLeader8___eusas.simulation.impl.components_D33.AngerModel_D33#anger_PTM", "Agent___lootLeader8___eusas.simulation.impl.components_D33.RFA_ReadinessForAggression_D33#rfa_PTM", "AgentFlock___violenceProne___GlobalParameter_Size#Group_Size", "AgentFlock___violenceProne___eusas.simulation.impl.components_D33.AngerModel_D33#anger_PTM", "AgentFlock___violenceProne___eusas.simulation.impl.components_D33.RFA_ReadinessForAggression_D33#rfa_PTM", "AgentFlock___looters___GlobalParameter_Size#Group_Size", "AgentFlock___looters___eusas.simulation.impl.components_D33.AngerModel_D33#anger_PTM", "AgentFlock___looters___eusas.simulation.impl.components_D33.RFA_ReadinessForAggression_D33#rfa_PTM"]
+                      -# if range_params.include? param.parameter_uid
+                        =# javascript_tag "$(\"select[name='#{param.parameter_uid}'] option[value='range']\").attr('selected', 'selected');"
+
+        - @agent_elements.each do |element|
+          - next if @agent_in_hierarchy_ids.include?(element.id)
+          %h3
+            %a{:href => "#"}
+              Parameters for #{element.type} with ID: #{element.id} -
+              = element.label if element.label
+          %div
+            %h4
+              Set all parameter types to
+              = select_tag("select", parametrization_select, :onChange => "change_param_select(this)")
+            - element.parameters.each do |param|
+              %p{:style=>"margin:5px;"}
+                Select type for parameter "#{param.parameter_label}":
+                = select_tag(param.parameter_uid, parametrization_select)
+
+      = javascript_tag "$(document).ready(prepare_accordion());"
+
+      %article
+        %h3 Actions
+        .buttons
+          = submit_tag "Next", :class => "nice_button"
+          #waiting_div{:style=>"display: none;"}
+            %h3 Data farming file is being generated...
+            = image_tag "loading.gif"

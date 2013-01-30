@@ -1,0 +1,38 @@
+$('#dialog').parent().show();
+$('#dialog').html("<h3>Parametrization type is:</h3>");
+$('#dialog').append("<div><%= @param_type['type'] %></div>");
+$('#dialog').append("<h3>Parameter values are:</h3>");
+$('#dialog').append("<ul style='margin-left: 30px;'><% @param_values.each do |value| %><li><%= value %></li><% end %></ul>");
+
+$('#dialog').append("<h3>Expand the input parameter space:</h3>");
+form_txt = '<%= form_tag experiments_extend_input_values_path, :remote => true, :onsubmit => '$(\"#expand_dialog_busy\").show()' %>';
+form_txt += '<%= hidden_field_tag 'experiment_id', @experiment.id %>';
+form_txt += '<%= hidden_field_tag 'param_name', @param_r_id %>';
+form_txt += '<div><label class="nice_label">Priority:</label>';
+
+form_txt += '<select id="priority" name="priority">';
+form_txt += '<option value="40">Standard</option>';
+form_txt += '<option value="20">High</option>';
+form_txt += '<option value="60">Low</option>';
+form_txt += '</select></div>';
+
+form_txt += '<br/>';
+
+form_txt += '<div><label class="nice_label">Minimum:</label>';
+form_txt += '<%= text_field_tag "range_min", "", :class => "nice_input" %>';
+form_txt += "</div>";
+form_txt += '<div><label class="nice_label">Maximum:</label>';
+form_txt += '<%= text_field_tag "range_max", "", :class => "nice_input" %>';
+form_txt += "</div>";
+form_txt += '<div><label class="nice_label">Step:</label>';
+form_txt += '<%= text_field_tag "range_step", "", :class => "nice_input" %>';
+form_txt += "</div>";
+
+form_txt += "<div class='buttons'>";
+form_txt += '<%= submit_tag 'Submit', :class => 'nice_button' %>';
+form_txt += '<%= image_tag 'loading.gif', :id => 'expand_dialog_busy', :size => '20x20', :style => 'float: left; display: none;' %>'
+form_txt += "</div>";
+form_txt += "</form>";
+$('#dialog').append(form_txt);
+
+$("#expanding_dialog_busy").hide();

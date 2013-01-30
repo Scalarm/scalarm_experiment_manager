@@ -1,0 +1,720 @@
+/* Created by http://freehtml5templates.com */
+
+/* reset */
+* {
+margin: 0;
+padding: 0;
+}
+
+/* render html5 elements as block */
+header, footer, section, aside, nav, article {
+    display: block;
+}
+
+body {
+    line-height: 1;
+    background: #3384BB url(../images/bg01.jpg) repeat;
+    color: #555;
+    font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.2em;
+    min-width: 1200px;
+}
+
+select {
+    color: #555 !important;
+    font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif !important;
+    font-size: 22px !important;
+    line-height: 1.2em !important;
+}
+	
+/* layout */
+
+#wrapper {
+    width: 960px;
+    margin: 0 auto;
+    background: url(../images/bg03.jpg) repeat;
+    /* curved border radius */
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    min-height: 535px;
+}
+
+header {
+    margin-top: 10px;
+    padding: 5px;
+    background-color: #eee;
+    height: 80px;
+    /* curved border radius */
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+#main {
+    margin: 0 auto;
+    color: #444;
+    font-size: 14px;
+    line-height: 1.2em;
+}
+
+footer {
+    padding: 0 20px;
+    color: #333;
+    clear: both;
+    margin: 40px 10px 0 10px;
+}
+
+/* basics */
+
+h1,h2,h3,h4,h5,h6 {
+    font-weight: bold;
+    clear: both;
+}
+
+a {
+color:#3384bb;
+}
+
+a:hover {
+color: #ff6f39;
+}
+
+p {
+margin-bottom: 18px;
+}
+
+li {
+padding-left: 5px;
+}
+
+/* nav */
+
+nav .menu {
+width: 940px;
+font-size: 16px;
+font-weight: bold;
+}
+
+nav .menu ul {
+list-style: none;
+margin: 0;
+text-align: center;
+}
+
+nav .menu ul li {
+display: inline;
+position: relative;
+}
+
+nav .menu ul li a {
+padding: 0 15px;
+line-height: 38px;
+text-decoration: none;
+}
+
+nav .menu ul li a:hover {
+color: #ff6f39;
+border-bottom: 3px solid #ff6f39;
+}
+
+/* header */
+
+header h1 {
+font-size: 36px;
+padding-top: 20px;
+margin-left: 10px;
+float: left;
+width: 600px;
+}
+
+header h1 a {
+font-weight: bold;
+text-decoration: none;
+}
+
+header h2 {
+float: right;
+clear: right;
+margin-right: 10px;
+color: #777;
+padding-top: 28px;
+font-size: 16px;
+}
+
+/* main content */
+
+#main {
+margin: 0 10px;
+}
+
+#main h1, h2, h3, h5, h6 {
+    color: #ff6f39;
+    margin: 10px 0 20px 0;
+    line-height: 1.5em;
+}
+
+#main h3 {
+    border-bottom: 1px #555 solid;
+    font-size: 18px;
+}
+
+#main h4 {
+	color: #ff6f39;
+	margin: 5px 0 5px 0;
+	font-size: 16px;
+	line-height: 1.5em;	
+}
+
+
+
+#infoboxleft {
+float: left;
+width: 300px;
+}
+
+#infoboxmid {
+float: left;
+width: 300px;
+margin-left: 20px;
+}
+
+#infoboxright {
+float: left;
+width: 300px;
+margin-left: 20px;
+}
+
+blockquote {
+padding-left: 40px;
+background: transparent url(images/openquotes.png) no-repeat;
+font-style: italic;
+}
+
+article {
+margin-top: 10px;
+}
+
+img {
+/* curved border radius */
+border-radius: 5px;
+-moz-border-radius: 5px;
+-webkit-border-radius: 5px;
+}
+
+.alignleft,
+img.alignleft {
+display: inline;
+float: left;
+margin-right: 10px;
+margin-top: 4px;
+}
+
+.alignright,
+img.alignright {
+display: inline;
+float: right;
+margin-left: 10px;
+margin-top: 4px;
+}
+
+.aligncenter,
+img.aligncenter {
+clear: both;
+display: block;
+margin-left: auto;
+margin-right: auto;
+}
+
+img.alignleft, img.alignright, img.aligncenter {
+margin-bottom: 12px;
+}
+
+.readmore {
+font-size: 80%;
+}
+
+/* footer */
+
+footer p {
+text-align: right;
+padding-right: 20px;
+}
+
+.clearall {
+clear: both;
+}
+
+.nice_button, .buttons input[type="submit"] {
+  /*CSS 3: apply border radius, box shadow, and text shadow for rounded corners
+           and button shaddowing effects */
+  border-radius: 5px;
+  -webkit-border-radius:5px;
+  -moz-border-radius:5px;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.50);
+  -webkit-box-shadow:0 1px 3px rgba(0, 0, 0, 0.50);
+  -moz-box-shadow:0 1px 3px rgba(0, 0, 0, 0.50);
+
+  text-shadow: 1px 1px 1px #444444;
+
+  /*standard CSS properties */
+    font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif;
+    font-size:13px;
+    font-weight: 600;
+
+    text-decoration:none;
+    text-align:center;
+    color:#FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    padding: 8px 14px 8px 14px;
+    background-color: #0E59AE;
+    float: left;
+    margin-left: 10px;
+    margin-bottom: 4px;
+}
+
+.nice_button:hover, .buttons input[type="submit"]:hover {
+  color:#FFF;
+  background-color:#063468;
+}
+
+.nice_button:active, .buttons input[type="submit"]:active {
+    background-color:#1169cc;
+    position: relative;
+    top: 1px;
+}
+
+#simulation_list .ui-selecting { background: #FECA40; }
+#simulation_list .ui-selected { background: #0E59AE; color: white; }
+#simulation_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+#simulation_list li { margin: 3px; padding: 0.4em; font-size: 1.2em; height: 18px; }
+
+.list_of_experiments { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+.list_of_experiments li { margin: 2px; padding: 0.2em; font-size: 1em; height: 14px; }
+.list_of_experiments a { text-decoration: none; }
+
+#moa_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+
+label {
+  width: 7.5em;
+  float: left;
+  text-align: right;
+  margin-right: 0.5em;
+  display: block;
+  line-height: 24px;
+}
+
+.nice_label {
+	vertical-align: middle;
+	margin-top: 5px;
+}
+
+#batch_vms_form label {
+  width: 12em;
+}
+
+#add_vms_to_exp label {
+  width: 12em;
+}
+
+input[type="text"], input[type="password"], textarea
+{
+    font-family: Arial, Sans-Serif;
+    font-size: 12px;
+    margin-bottom: 5px;
+    padding: 4px;
+    border: solid 1px #777;
+    width: 100px;
+    background-color: #EEE;
+}
+
+.LV_validation_message{
+    font-weight:bold;
+    margin:0 0 0 5px;
+}
+
+.LV_valid {
+    color:#00CC00;
+}
+	
+.LV_invalid {
+    color:#CC0000;
+}
+    
+.LV_valid_field,
+input.LV_valid_field:hover, 
+input.LV_valid_field:active,
+textarea.LV_valid_field:hover, 
+textarea.LV_valid_field:active {
+    border: 1px solid #00CC00;
+}
+    
+.LV_invalid_field, 
+input.LV_invalid_field:hover, 
+input.LV_invalid_field:active,
+textarea.LV_invalid_field:hover, 
+textarea.LV_invalid_field:active {
+    border: 1px solid #CC0000;
+}
+
+.buttons {
+  text-align: center;
+  min-height: 30px;
+}
+
+.notice {
+	background: #FFF6BF;
+	border-top: 2px solid #FFD324;
+	border-bottom: 2px solid #FFD324;
+	text-align: center;
+	margin: 10px auto;
+	padding: 5px 20px;
+}
+
+.error {
+	background: #E77471;
+	border-top: 2px solid #FFD324;
+	border-bottom: 2px solid #FFD324;
+	text-align: center;
+	margin: 10px auto;
+	padding: 5px 20px;
+}
+
+.basic_chart_container {
+  width: 70%;
+  float: left;
+}
+
+.statistics_box {
+  float: left;
+}
+
+.argument_list {
+  margin-left: 20px;
+  /*padding: auto;*/
+}
+
+#accordion {
+	margin-top: 20px;
+}
+
+select {
+	font-size: 13px;
+}
+
+.statistics_box {
+    font-size: large;
+    margin: 20px;
+}
+
+/* Analysis experiments */
+.layered_window {
+    position: fixed;
+    top: -420%;
+    width: 915px;
+    z-index: 5;
+    overflow:auto;
+    color: #000000;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    padding: 0px 20px 20px 20px;
+    border-style: solid;
+    border-width: medium;
+}
+
+#histogram_analysis_link {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
+
+#histogram_analysis_window {
+    background-color: #ECF4FF;
+    border-color: #99C7FF;
+}
+
+@-webkit-keyframes histogram_slide {
+    0%   {top: -120%; right: -120%;}
+    50%  {top: 0%;  right: 0%;}
+    100% {top:  20px;  right: 120px;}
+}
+
+.histogram_window_slide {
+    position: fixed;
+    -webkit-animation-name: histogram_slide;
+    -webkit-animation-duration: 2s;
+}
+
+@-webkit-keyframes histogram_slide_out {
+    100%   {top: -120%; right: -120%; bottom: 200px;}
+    50%  {top: 0%;  right: 0%; bottom: 200px;}
+    0% {top:  20px;  right: 120px; bottom: 20px;}
+}
+
+.histogram_window_slide_out {
+    position: fixed;
+    -webkit-animation-name: histogram_slide_out;
+    -webkit-animation-duration: 2s;
+}
+
+#rtree_analysis_link {
+    position: fixed;
+    top: 212px; /* 170px; */
+    right: 10px;
+}
+
+#rtree_analysis_window {
+    background-color: #FFF9FC;
+    border-color: #FFA8D3;
+}
+
+@-webkit-keyframes rtree_slide {
+    0%   { right: -120%; }
+    50%  { right:    0%; }
+    100% { right: 120px; }
+}
+
+.rtree_window_slide {
+    position: fixed;
+    -webkit-animation-name: rtree_slide;
+    -webkit-animation-duration: 2s;
+}
+
+@-webkit-keyframes rtree_slide_out {
+    100% {top: 20px; right: -120%; bottom: 20px;}
+    50%  {top: 20px;  right: 0%; bottom: 20px;}
+    0%   {top:  20px;  right: 120px; bottom: 20px;}
+}
+
+.rtree_window_slide_out {
+    position: fixed;
+    -webkit-animation-name: rtree_slide_out;
+    -webkit-animation-duration: 2s;
+}
+
+#bivariate_analysis_link {
+    position: fixed;
+    top: 415px;  /* 330px; */
+    right: 10px;
+}
+
+#bivariate_analysis_window {
+    background-color: #F5FFF2;
+    border-color: #8FFF6F;
+}
+
+@-webkit-keyframes bivariate_slide {
+    0% {bottom: -120%; right: -120%; top: 200px;}
+    50%  {bottom: 0%;  right: 0%; top: 200px;}
+    100%   {bottom:  20px;  right: 120px; top: 20px;}
+}
+
+.bivariate_window_slide {
+    position: fixed;
+    -webkit-animation-name: bivariate_slide;
+    -webkit-animation-duration: 2s;
+}
+
+@-webkit-keyframes bivariate_slide_out {
+    100% {bottom: -120%; right: -120%; top: 200px;}
+    50%  {bottom: 0%;  right: 0%; top: 200px;}
+    0%   {bottom:  20px;  right: 120px; top: 20px;}
+}
+
+.bivariate_window_slide_out {
+    position: fixed;
+    -webkit-animation-name: bivariate_slide_out;
+    -webkit-animation-duration: 2s;
+}
+
+/* Experiment links */
+
+#running_experiments_link {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+}
+
+#running_experiments_window {
+    background-color: #ECF4FF;
+    border-color: #99C7FF;
+}
+
+@-webkit-keyframes running_experiments_slide {
+    0%   {top: -120%; left: -120%;}
+    50%  {top: 0%;  left: 0%;}
+    100% {top:  20px;  left: 120px;}
+}
+
+.running_experiments_window_slide {
+    position: fixed;
+    -webkit-animation-name: running_experiments_slide;
+    -webkit-animation-duration: 2s;
+}
+
+@-webkit-keyframes running_experiments_slide_out {
+    100%   {top: -120%; left: -120%; bottom: 200px;}
+    50%  {top: 0%;  left: 0%; bottom: 200px;}
+    0% {top:  20px;  left: 120px; bottom: 20px;}
+}
+
+.running_experiments_window_slide_out {
+    position: fixed;
+    -webkit-animation-name: running_experiments_slide_out;
+    -webkit-animation-duration: 2s;
+}
+
+#available_experiments_link {
+    position: fixed;
+    top: 212px; /* 170px; */
+    left: 10px;
+}
+
+#available_experiments_window {
+    background-color: #FFF9FC;
+    border-color: #FFA8D3;
+}
+
+@-webkit-keyframes available_experiments_slide {
+    0%   { left: -120%; }
+    50%  { left:    0%; }
+    100% { left: 120px; }
+}
+
+.available_experiments_window_slide {
+    position: fixed;
+    -webkit-animation-name: available_experiments_slide;
+    -webkit-animation-duration: 2s;
+}
+
+@-webkit-keyframes available_experiments_slide_out {
+    100% {top: 20px; left: -120%; bottom: 20px;}
+    50%  {top: 20px;  left: 0%; bottom: 20px;}
+    0%   {top:  20px;  left: 120px; bottom: 20px;}
+}
+
+.available_experiments_window_slide_out {
+    position: fixed;
+    -webkit-animation-name: available_experiments_slide_out;
+    -webkit-animation-duration: 2s;
+}
+
+.layered_window img.close_button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    width: 48px;
+    height: 48px;
+}
+
+
+#historical_experiments_link {
+    position: fixed;
+    top: 415px;  /* 330px; */
+    left: 10px;
+}
+
+#historical_experiments_window {
+    background-color: #F5FFF2;
+    border-color: #8FFF6F;
+}
+
+@-webkit-keyframes historical_experiments_slide {
+    0% {bottom: -120%; left: -120%; top: 200px;}
+    50%  {bottom: 0%;  left: 0%; top: 200px;}
+    100%   {bottom:  20px;  left: 120px; top: 20px;}
+}
+
+.historical_experiments_window_slide {
+    position: fixed;
+    -webkit-animation-name: historical_experiments_slide;
+    -webkit-animation-duration: 2s;
+}
+
+@-webkit-keyframes historical_experiments_slide_out {
+    100% {bottom: -120%; left: -120%; top: 200px;}
+    50%  {bottom: 0%;  left: 0%; top: 200px;}
+    0%   {bottom:  20px;  left: 120px; top: 20px;}
+}
+
+.historical_experiments_window_slide_out {
+    position: fixed;
+    -webkit-animation-name: historical_experiments_slide_out;
+    -webkit-animation-duration: 2s;
+}
+
+
+/* Login */
+
+.login {
+    position: relative;
+    top: 50px;
+}
+
+.login div {
+    position: relative;
+    left: 35%;
+}
+
+.login div input[type="submit"] {
+    margin-left: 80px;
+}
+
+.account_button {
+    position: relative;
+    float: right;
+}
+
+.div-dialog label, .div-dialog .buttons input {
+  float: none;
+  display: inline;
+  display: table-cell;
+  width: 50%;
+}
+
+.div-dialog label {
+  width: auto;
+  font-weight: bold;
+  padding-right: 10px;
+}
+
+.div-dialog div {
+  display: table-row;
+  width: 100%;
+}
+
+.div-dialog .buttons {
+  display: block;
+}
+
+.div-dialog {
+  margin: 0 auto;
+  display: table;
+}
+
+article#experiment_stats {
+    position: relative;
+    min-height: 250px;
+}
+
+#exp_progress_bar_2 {
+    width: 100%;
+    height: 50px;
+    /*border-style: solid*/
+}
+
+.speedometer {
+    width: 350px;
+    height: 250px;
+    position: absolute;
+    top: 35px;
+    right: 0;
+}

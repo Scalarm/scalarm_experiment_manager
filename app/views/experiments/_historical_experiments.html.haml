@@ -1,0 +1,12 @@
+%article
+  %h3 Historical experiments
+  - if @historical_exp_info.empty?
+    %h1 No historical experiment available
+  - else
+    %center
+      %ol.list_of_experiments
+        - @historical_ids.each_with_index do |id, index|
+          - next if @historical_exp_info[id].nil?
+          - completed = compute_completed(@historical_dones[index], @historical_exp_info[id][0])
+          - link_text = @historical_exp_info[id][3] + ", started at: #{@historical_exp_info[id][2]}, stopped at: #{@historical_exp_info[id][4]}"
+          %li= link_to(link_text, experiments_monitor_path(:experiment_id => id))

@@ -1,0 +1,18 @@
+= javascript_tag "$(function() { $('#simulation_list').selectable() })"
+= form_tag(url_for({:action => :define_param_types})) do
+  %article#scenarios
+    %h3 Select an experiment to run
+    %center
+      %ol#simulation_list
+        - @simulations.each do |simulation|
+          %li.ui-widget-content{:file_name => simulation}
+            = simulation[0..-5]
+
+  %article
+    %h3 Actions
+    = hidden_field_tag "scenario_id"
+    = hidden_field_tag "moa_names"
+
+    .buttons
+      = submit_tag "Go to input definition", :class => 'nice_button', :onClick => "return preparing_scenario()"
+

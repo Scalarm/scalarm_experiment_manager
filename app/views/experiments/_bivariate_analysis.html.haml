@@ -1,0 +1,14 @@
+= javascript_tag "var bivariate_chart_tab = new Array()"
+#bivariate_charts_form
+  %h2 Bivariate analysis
+  = form_tag(experiments_add_bivariate_analysis_chart_path, :onsubmit => "$('#busy_bivariate').show();", :remote => true) do
+    = hidden_field_tag :experiment_id, @experiment.id
+    %div{:style => "margin-bottom: 10px"}
+      Select values for the X axis (MoE or input):
+      = select_tag "x_axis", "", { :class => "moes_and_params_list" }
+    %div{:style => "margin-bottom: 10px"}
+      Select values for the Y axis (MoE or input):
+      = select_tag "y_axis", "", { :class => "moes_and_params_list" }
+    = submit_tag "Add chart", :class => "nice_button", :style => "margin-left: 0"
+    = image_tag "loading.gif", :size => "16x16", :style => "display: none", :id => "busy_bivariate"
+#bivariate_charts

@@ -1,0 +1,12 @@
+
+%section#main
+  %article.login
+    = form_tag(:action => "login") do
+      %div
+        %label{:for => "username"} Login:
+        = text_field_tag "username"
+      %div
+        %label{:for => "password"} Password:
+        = password_field_tag "password"
+      .buttons
+        = submit_tag "Submit"

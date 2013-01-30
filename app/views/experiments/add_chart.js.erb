@@ -1,0 +1,46 @@
+i = chart_tab.length;
+$("#monitoring_charts form").after("<div id=\"container" + i + "\" style=\"width: 100%; height: 200px\" class=\"chart_container\"></div>");
+$(document).ready(function() {
+  chart_tab[chart_tab.length] = new Highcharts.Chart({
+    chart: {
+      renderTo: 'container'+i,
+      defaultSeriesType: 'line',
+      events: {
+        click: function(e) {
+          var series = this.series[0];
+          $.ajax({
+            url: "<%= experiments_update_chart_data_path %>",
+            data: "experiment_id=<%= params[:experiment_id] %>&argument_name=<%= params[:argument_name] %>&moe_name=<%= params[:moe_name] %>",
+            success: function(msg) {
+              // alert(series.data);
+              // alert(eval(msg));
+              series.setData(eval(msg));
+            }
+          });
+        }
+      }
+    },
+    xAxis: {
+      title: {
+        text: '<%= params[:argument_name] %>'
+      }
+    },
+    yAxis: {
+      title: {
+        text: '<%= params[:moe_name] %>'
+      }
+    },
+    series: [{
+      data: [<%= @chart_data %>],
+      events: {
+        click: function(e) {
+          alert("series clicked");
+        }
+      }
+    }]
+  });
+  
+  chart_tab[chart_tab.length - 1].xAxis_title = "<%= params[:argument_name] %>";
+  chart_tab[chart_tab.length - 1].yAxis_title = "<%= params[:moe_name] %>";
+});
+$('#waiting_div').hide();

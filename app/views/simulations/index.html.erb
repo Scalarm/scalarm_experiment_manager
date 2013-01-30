@@ -1,0 +1,33 @@
+<article>
+  <section>
+    <h1>Listing simulations</h1>
+
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Scenario XML file</th>
+        <th>Other files</th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+
+      <% @simulations.each do |simulation| %>
+      <tr>
+        <td><%= simulation.name %></td>
+        <td><%= simulation.description %></td>
+        <td><%= simulation.scenario_file %></td>
+        <td><%= simulation.other_file %></td>
+        <td class="narrow"><%= link_to 'Show', simulation, :class => 'nice_button' %></td>
+        <td class="narrow"><%= link_to 'Edit', edit_simulation_path(simulation), :class => 'nice_button' %></td>
+        <td class="narrow"><%= link_to 'Destroy', simulation, :confirm => 'Are you sure?', :method => :delete, :class => 'nice_button' %></td>
+      </tr>
+      <% end %>
+    </table>
+  </section>
+
+  <section class="buttons">
+    <%= link_to 'New Simulation', new_simulation_path, :class => 'nice_button' %>
+  </section>
+</article>

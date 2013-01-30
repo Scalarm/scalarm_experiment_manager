@@ -1,0 +1,24 @@
+<% if not defined?(dynamic_creation) then %>
+<li id="pm_<%= physical_machine.id %>" class="jstree-open">
+<% end %>
+  <span>
+    <%= image_tag "server-icon.png" %>
+    <%= physical_machine.ip %>
+    <%= link_to image_tag("unregister.png"),
+                url_for({:action => :manage_pm, :pm_id => physical_machine.id }),
+                :method => :delete, :remote => true %>
+    <%= image_tag("vm.png", :onclick => "$('#machine_id').val(#{physical_machine.id}); $('#dialog-form').dialog('open');") %>
+    
+    <% pm_info_dialog_args = [ physical_machine.ip, physical_machine.username, physical_machine.cpus,
+                               physical_machine.cpu_model, physical_machine.cpu_freq, physical_machine.memory].join("','") %>
+    
+    <%= image_tag("info.gif", :onclick => "open_pm_info_dialog('#{pm_info_dialog_args}')") %>
+  </span>
+  <% if physical_machine.virtual_machines.size > 0 then %>
+    <ul>
+      <%= render :partial => "virtual_machine", :collection => physical_machine.virtual_machines %>
+    </ul>
+  <% end %>
+<% if not defined?(dynamic_creation) then %>
+</li>
+<% end %>

@@ -1,0 +1,20 @@
+#running_experiments_link
+  = image_tag("running_experiments.png", :size => "100x150", :onClick => "show_window('running_experiments')")
+
+#running_experiments_window.layered_window
+  = image_tag "close_icon.png", :onClick => "close_window('running_experiments')", :class =>"close_button"
+  = render :partial => "running_experiments"
+
+#available_experiments_link
+  = image_tag("available_experiments.png", :size => "100x150", :onClick => "show_window('available_experiments')")
+
+#available_experiments_window.layered_window
+  = image_tag "close_icon.png", :onClick => "close_window('available_experiments')", :class =>"close_button"
+  = render :partial => "available_experiments"
+
+#historical_experiments_link
+  = image_tag("historical_experiments.png", :size => "100x150", :onClick => "show_window('historical_experiments')")
+
+#historical_experiments_window.layered_window
+  = image_tag "close_icon.png", :onClick => "close_window('historical_experiments')", :class =>"close_button"
+  = render :partial => "historical_experiments"

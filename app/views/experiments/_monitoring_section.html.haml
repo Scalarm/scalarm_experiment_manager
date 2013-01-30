@@ -1,0 +1,18 @@
+= javascript_include_tag "http://code.highcharts.com/highcharts.js"
+= javascript_include_tag "http://code.highcharts.com/highcharts-more.js"
+= javascript_include_tag "http://code.highcharts.com/modules/exporting.js"
+= javascript_include_tag "experiment_monitor.js"
+= javascript_include_tag "experiment_speedometer.js"
+
+#monitoring_section
+  %article#experiment_stats
+    %h3 Simulation statistics
+  %article#experiment_progress_bar
+    %h3 Experiment progress bar
+
+%script{:type => "text/javascript"}
+  $(document).ready(function() {
+  new window.ExperimentSpeedometer('#{@experiment.id}').show();
+  var monitor = new window.ExperimentMonitor('#{@experiment.id}');
+  monitor.generate_html('experiment_stats')
+  });
