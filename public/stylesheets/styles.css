@@ -718,3 +718,22 @@ article#experiment_stats {
     top: 35px;
     right: 0;
 }
+
+.registration_form div {
+    line-height: 30px;
+}
+
+.registration_form label {
+    width: 10em;
+    line-height: 30px;
+    vertical-align: middle;
+}
+
+.registration_form .buttons {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.registration_form select {
+    margin-top: 5px;
+}

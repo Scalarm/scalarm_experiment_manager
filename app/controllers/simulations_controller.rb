@@ -1,13 +1,47 @@
+
 class SimulationsController < ApplicationController
-  # GET /simulations
-  # GET /simulations.xml
+
   def index
     @simulations = Simulation.all
+    @input_writers = SimulationInputWriter.all
+    @executors = SimulationExecutor.all
+    @output_readers = SimulationOutputReader.all
+  end
 
-    respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => @simulations }
+  def registration
+
+  end
+
+  def upload_component
+    if params["component_type"] == "input_writer"
+      input_writer = SimulationInputWriter.new({:name => params["component_name"], :code => params["component_code"].read})
+      input_writer.save
+    elsif params["component_type"] == "executor"
+      executor = SimulationExecutor.new({:name => params["component_name"], :code => params["component_code"].read})
+      executor.save
+    elsif params["component_type"] == "output_reader"
+      output_reader = SimulationOutputReader.new({:name => params["component_name"], :code => params["component_code"].read})
+      output_reader.save
     end
+
+    redirect_to :action => :index
+  end
+
+  def destroy_component
+    if params["component_type"] == "input_writer"
+      SimulationInputWriter.find_by_id(params["component_id"]).destroy
+    elsif params["component_type"] == "executor"
+      SimulationExecutor.find_by_id(params["component_id"]).destroy
+    elsif params["component_type"] == "output_reader"
+      SimulationOutputReader.find_by_id(params["component_id"]).destroy
+    end
+
+    redirect_to :action => :index
+  end
+
+  def upload_simulation
+
+    redirect_to :action => :index
   end
 
   # GET /simulations/1

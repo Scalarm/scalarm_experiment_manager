@@ -1,4 +1,11 @@
 SimulationManager::Application.routes.draw do
+  match "simulations" => "simulations#index"
+  get "simulations/index"
+  get "simulations/registration"
+  post "simulations/upload_component"
+  post "simulations/upload_simulation"
+  post "simulations/destroy_component"
+
   get "user_controller/login"
   match "login" => "user_controller#login"
   post "user_controller/login"
@@ -57,7 +64,6 @@ SimulationManager::Application.routes.draw do
   post "user_controller/change_password"
 
   resources :experiments
-  resources :simulations
 
   # infrastructure routes
   match 'infrastructure' => 'infrastructure#index'

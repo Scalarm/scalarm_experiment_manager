@@ -1,0 +1,110 @@
+<article>
+
+  <section class="registration_form">
+    <h3>Simulation registration</h3>
+
+    <%= form_tag(simulations_upload_simulation_path, :multipart => true) do %>
+        <div>
+          <label>Simulation name</label>
+          <%= text_field_tag "simulation_name" %>
+        </div>
+
+        <div>
+          <label>Simulation binaries</label>
+          <%= file_field_tag "simulation_binaries" %>
+        </div>
+
+        <div>
+          <label>Input writer</label>
+          <%= select_tag "input_writer", options_for_select(options_for_input_writers) %>
+        </div>
+
+        <div>
+          <label>Executor</label>
+          <%= select_tag "executor" %>
+        </div>
+
+        <div>
+          <label>Output reader</label>
+          <%= select_tag "output_reader" %>
+        </div>
+
+        <div class="buttons">
+          <%= submit_tag "Upload" %>
+        </div>
+
+    <% end %>
+  </section>
+
+  <section class="registration_form">
+    <h3>Simulation Input Writer registration</h3>
+
+    <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
+        <%= hidden_field_tag "component_type", "input_writer" %>
+
+        <div>
+          <label>Component name</label>
+          <%= text_field_tag "component_name" %>
+        </div>
+
+        <div>
+          <label>Component code</label>
+          <%= file_field_tag "component_code" %>
+        </div>
+
+        <div class="buttons">
+          <%= submit_tag "Upload" %>
+        </div>
+
+    <% end %>
+
+  </section>
+
+  <section class="registration_form">
+    <h3>Simulation Executor registration</h3>
+
+    <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
+        <%= hidden_field_tag "component_type", "executor" %>
+
+        <div>
+          <label>Component name</label>
+          <%= text_field_tag "component_name" %>
+        </div>
+
+        <div>
+          <label>Component code</label>
+          <%= file_field_tag "component_code" %>
+        </div>
+
+        <div class="buttons">
+          <%= submit_tag "Upload" %>
+        </div>
+
+    <% end %>
+
+  </section>
+
+  <section class="registration_form">
+    <h3>Simulation Output Reader registration</h3>
+
+    <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
+        <%= hidden_field_tag "component_type", "output_reader" %>
+
+        <div>
+          <label>Component name</label>
+          <%= text_field_tag "component_name" %>
+        </div>
+
+        <div>
+          <label>Component code</label>
+          <%= file_field_tag "component_code" %>
+        </div>
+
+        <div class="buttons">
+          <%= submit_tag "Upload" %>
+        </div>
+
+    <% end %>
+  </section>
+
+</article>
