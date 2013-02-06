@@ -1,47 +1,45 @@
-class Simulation < ActiveRecord::Base
-  has_many :experiments
-  
-  PREFIX = File.join(Rails.public_path, "data")
-  DIRS = {
-      "scenario" => "scenarios",
-      "other" => "others"
-  }
-  
-  def save_files(upload)
-    DIRS.each_key do |key|
-      logger.info("DIR - #{key} - #{upload[key]} - #{self[key + "_file"]}")
-      if upload[key] then
-        file_name = upload[key].original_filename
-        path = File.join(PREFIX + DIRS[key], file_name)
-        if self[key + "_file"] and File.exist?(File.join(PREFIX + DIRS[key], self[key + "_file"])) then
-          File.delete(File.join(PREFIX + DIRS[key], self[key + "_file"]))
-        end
-        File.open(path, "wb") { |f| f.write(upload[key].read) }
-        self[key + "_file"] = file_name
-      end
-    end
-    
-    save
-  end
-  
-  def delete_files
-    DIRS.each_key do |key|
-      if not self[key + "_file"].blank? then
-        File.delete(File.join(PREFIX, DIRS[key], self[key + "_file"]))
-      end
-    end
-  end
-  
-  def scenario_file_path
-    File.join(self.data_folder_path, self.scenario_file)
-      #File.join(PREFIX, DIRS["scenario"], self["scenario_file"])
+# Attributes
+# name, description => string
+# input_writer_id, executor_id, output_reader_id => references
+# simulation_binaries_id => references to a file kept in GridFS
+
+class Simulation < MongoActiveRecord
+
+  def self.collection_name
+    "simulations"
   end
 
-  def data_folder_path
-    if self.scenario_file != nil then
-      File.join(Rails.configuration.eusas_data_path, self.scenario_file.split('.')[0])
-    else
-      nil
-    end
+  def input_writer
+    SimulationInputWriter.find_by_id(self.input_writer_id)
   end
+
+  def executor
+    SimulationExecutor.find_by_id(self.executor_id)
+  end
+
+  def output_reader
+    SimulationOutputReader.find_by_id(self.output_reader_id)
+  end
+
+  def set_simulation_binaries(filename, binary_data)
+    @attributes["simulation_binaries_id"] = @@grid.put(binary_data, :filename => filename)
+  end
+
+  def simulation_binaries
+    @@grid.get(self.simulation_binaries_id).read
+  end
+
+  def simulation_binaries_name
+    @@grid.get(self.simulation_binaries_id).filename
+  end
+
+  def simulation_binaries_size
+    @@grid.get(self.simulation_binaries_id).file_length
+  end
+
+  def destroy
+    @@grid.delete self.simulation_binaries_id
+    super
+  end
+
 end

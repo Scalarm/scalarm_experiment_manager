@@ -3,8 +3,10 @@ SimulationManager::Application.routes.draw do
   get "simulations/index"
   get "simulations/registration"
   post "simulations/upload_component"
-  post "simulations/upload_simulation"
   post "simulations/destroy_component"
+  post "simulations/upload_simulation"
+  post "simulations/destroy_simulation"
+
 
   get "user_controller/login"
   match "login" => "user_controller#login"

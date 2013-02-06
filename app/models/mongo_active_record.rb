@@ -1,11 +1,18 @@
 require "bson"
+require "mongo"
 
 class MongoActiveRecord
   @@db = ExperimentInstanceDb.default_instance.default_connection
+  @@grid = Mongo::Grid.new(@@db)
 
   # object instance constructor based on map of attributes (json document is good example)
   def initialize(attributes)
-    @attributes = attributes
+    @attributes = {}
+
+    attributes.each do |parameter_name, parameter_value|
+      #parameter_value = BSON::ObjectId(parameter_value) if parameter_name.end_with?("_id")
+      @attributes[parameter_name] = parameter_value
+    end
   end
 
   # handling getters and setters for object instance
@@ -28,7 +35,6 @@ class MongoActiveRecord
   # save/update json document in db based on attributes
   # if this is new object instance - _id attribute will be added to attributes
   def save
-    Rails.logger.debug("Save method in #{self.class.name}")
     collection = Object.const_get(self.class.name).send(:collection)
 
     if @attributes.include? "_id"
@@ -54,8 +60,6 @@ class MongoActiveRecord
 
   # returns a reference to mongo collection based on collection_name abstract method
   def self.collection
-    Rails.logger.debug("Getting collection")
-    Rails.logger.debug("Getting collection by name - #{self.collection_name}")
     class_collection = @@db.collection(self.collection_name)
     raise "Error while connecting to #{self.collection_name}" if class_collection.nil?
 
@@ -74,7 +78,6 @@ class MongoActiveRecord
   end
 
   def self.all
-    Rails.logger.debug("All method for #{name} class")
     collection = Object.const_get(name).send(:collection)
     instances = []
 

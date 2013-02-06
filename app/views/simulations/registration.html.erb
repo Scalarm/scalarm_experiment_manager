@@ -10,23 +10,28 @@
         </div>
 
         <div>
+          <label>Simulation description</label>
+          <%= text_area_tag "simulation_description" %>
+        </div>
+
+        <div>
           <label>Simulation binaries</label>
           <%= file_field_tag "simulation_binaries" %>
         </div>
 
         <div>
           <label>Input writer</label>
-          <%= select_tag "input_writer", options_for_select(options_for_input_writers) %>
+          <%= select_tag "input_writer_id", options_for_select(SimulationInputWriter.all.map{|ex| [ex.name, ex._id]}) %>
         </div>
 
         <div>
           <label>Executor</label>
-          <%= select_tag "executor" %>
+          <%= select_tag "executor_id", options_for_select(SimulationExecutor.all.map{|ex| [ex.name, ex._id]}) %>
         </div>
 
         <div>
           <label>Output reader</label>
-          <%= select_tag "output_reader" %>
+          <%= select_tag "output_reader_id", options_for_select(SimulationOutputReader.all.map{|ex| [ex.name, ex._id]}) %>
         </div>
 
         <div class="buttons">
