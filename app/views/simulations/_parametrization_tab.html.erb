@@ -1,0 +1,36 @@
+<div id='parametrization_types'>
+  <%= content_tag :p, "Here you can specify type of parametrization for each input parameter" %>
+
+  <div class="accordion-container">
+      <% @simulation_input.each do |entity_group| %>
+        <%= content_tag :h3, "Entities of group '#{entity_group["label"]}' with ID #{entity_group["id"]}" %>
+        <div>
+          <p>Set all parameters of every entity to: </p>
+
+          <div class='accordion-container'>
+            <% entity_group["entities"].each do |entity| %>
+              <%= content_tag :h3, "Entity '#{entity['label']}' with ID #{entity['id']}" %>
+              <div>
+                <p>Set all parameters of this entity to: </p>
+
+                <% entity['parameters'].each do |parameter| %>
+                    <p>Set parameter '<%= parameter["label"] %>' (<%= parameter['id'] %>) to: </p>
+                <% end %>
+              </div>
+
+            <% end %>
+          </div>
+
+        </div>
+      <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(function() {
+    $(".accordion-container").accordion({
+        collapsible: true,
+        heightStyle: "content"
+    });
+  });
+</script>

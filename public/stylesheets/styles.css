@@ -299,6 +299,11 @@ clear: both;
 .list_of_experiments li { margin: 2px; padding: 0.2em; font-size: 1em; height: 14px; }
 .list_of_experiments a { text-decoration: none; }
 
+.centered_selectable_list { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+.centered_selectable_list li { margin: 2px; padding: 0.2em; font-size: 1em; height: 14px; }
+.centered_selectable_list a { text-decoration: none; }
+
+
 #moa_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
 
 label {
@@ -736,4 +741,16 @@ article#experiment_stats {
 
 .registration_form select {
     margin-top: 5px;
+}
+
+/* Selectable list of simulations/experiments to run */
+#simulation_list {
+    text-align: center;
+    display: block;
+    width: 100%;
+}
+
+.actions {
+    margin-top: 20px;
+    text-align: center;
 }

@@ -1,0 +1,26 @@
+<article id="scenarios">
+  <%= content_tag :h3, "Select simulation to run" %>
+
+  <ol id="simulation_list">
+    <% @simulations.each do |simulation| %>
+        <%= content_tag :li, simulation_run_label(simulation), :class => "ui-widget-content", :simulation_id => simulation._id %>
+    <% end %>
+  </ol>
+
+  <div id="submit_form" class="actions">
+    <%= form_tag simulations_conduct_experiment_path do %>
+      <%= hidden_field_tag "simulation_id" %>
+      <%= submit_tag "Go to input definition" %>
+    <% end %>
+  </div>
+</article>
+
+<script type="text/javascript">
+  $(function() {
+    $('#simulation_list').selectable({
+        selected: function() {
+            $("#submit_form input#simulation_id").val($(this).find("li").attr("simulation_id"));
+        }
+    });
+  });
+</script>

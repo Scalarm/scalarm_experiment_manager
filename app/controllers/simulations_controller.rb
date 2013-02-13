@@ -45,7 +45,8 @@ class SimulationsController < ApplicationController
         "executor_id" => params["executor_id"],
         "output_reader_id" => params["output_reader_id"],
         "name" => params["simulation_name"],
-        "description" => params["simulation_description"]
+        "description" => params["simulation_description"],
+        "input_specification" => params["simulation_input"].read
                    })
     simulation.set_simulation_binaries(params["simulation_binaries"].original_filename, params["simulation_binaries"].read)
 
@@ -59,4 +60,12 @@ class SimulationsController < ApplicationController
     redirect_to :action => :index
   end
 
+  # following methods are used in experiment conducting
+  require 'json'
+
+  def conduct_experiment
+    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation_input = JSON.parse(@simulation.input_specification)
+
+  end
 end

@@ -6,6 +6,7 @@ SimulationManager::Application.routes.draw do
   post "simulations/destroy_component"
   post "simulations/upload_simulation"
   post "simulations/destroy_simulation"
+  post "simulations/conduct_experiment"
 
 
   get "user_controller/login"

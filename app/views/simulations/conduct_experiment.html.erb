@@ -1,0 +1,36 @@
+<script type="text/javascript">
+</script>
+
+<article id='main'>
+
+  <section class='overview'>
+    <%= content_tag :h3, "Simulation information" %>
+
+    <%= content_tag :div, "Name: #{@simulation.name}" %>
+    <%= content_tag :div, "Description: #{@simulation.description}" %>
+    <%= content_tag :div, "Input specification: #{@simulation.input_specification}" %>
+  </section>
+
+  <section class='simulation_input'>
+    <%= content_tag :h3, "Input specification" %>
+
+    <div id='tabs'>
+      <%= content_tag :ul do %>
+        <%= content_tag(:li, content_tag(:a, "Parametrization", :href => "#parametrization_types")) %>
+        <%= content_tag(:li, content_tag(:a, "Parameter values", :href => "#parameters_value")) %>
+        <%= content_tag(:li, content_tag(:a, "Design of Experiments", :href => "#doe")) %>
+      <% end %>
+
+      <%= render :partial => "parametrization_tab" %>
+      <%= render :partial => "parameters_values_tab" %>
+      <%= render :partial => "doe_tab" %>
+    </div>
+  </section>
+
+</article>
+
+<script type="text/javascript">
+  $(function() {
+    $("#tabs").tabs();
+  });
+</script>
