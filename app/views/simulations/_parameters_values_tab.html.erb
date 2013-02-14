@@ -1,3 +1,34 @@
 <div id='parameters_value'>
-  BBB
+  <%= content_tag :p, "Here you can specify type of parametrization for each input parameter" %>
+
+  <div class="accordion-container">
+    <% parameter_id = 0 %>
+    <% @simulation_input.each do |entity_group| %>
+        <%= content_tag :h3, "Entities of group '#{entity_group["label"]}' with ID #{entity_group["id"]}" %>
+        <div>
+          <div class='accordion-container'>
+            <% entity_group["entities"].each do |entity| %>
+                <%= content_tag :h3, "Entity '#{entity['label']}' with ID #{entity['id']}" %>
+                <div>
+                  <% entity['parameters'].each do |parameter| %>
+                    <%= parameter_id += 1; content_tag :div, "", :id => "parameter_values_#{parameter_id}" %>
+                    <%= javascript_tag "buildParameterValuesPartial(#{parameter_id});" %>
+                  <% end %>
+                </div>
+
+            <% end %>
+          </div>
+
+        </div>
+    <% end %>
+  </div>
 </div>
+
+<script type="text/javascript">
+  $(function() {
+    $(".accordion-container").accordion({
+        collapsible: true,
+        heightStyle: "content"
+    });
+  });
+</script>

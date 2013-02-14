@@ -154,7 +154,7 @@ margin: 0 10px;
 }
 
 #main h1, h2, h3, h5, h6 {
-    color: #ff6f39;
+    color: #3383BB;
     margin: 10px 0 20px 0;
     line-height: 1.5em;
 }
@@ -165,7 +165,7 @@ margin: 0 10px;
 }
 
 #main h4 {
-	color: #ff6f39;
+	color: #3383BB;
 	margin: 5px 0 5px 0;
 	font-size: 16px;
 	line-height: 1.5em;	
@@ -753,4 +753,8 @@ article#experiment_stats {
 .actions {
     margin-top: 20px;
     text-align: center;
+}
+
+.accordion-container label {
+    width: 220px;
 }

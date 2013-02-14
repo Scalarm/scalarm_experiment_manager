@@ -9,11 +9,9 @@
   <%= render :partial => "simulation_output_readers" %>
 
   <section>
-    <h3>Actions</h3>
+    <%= content_tag :h3, "Actions" %>
 
-    <div class="buttons">
-      <%= link_to "Go to registration form", simulations_registration_path, :class => "nice_button" %>
-    </div>
+    <%= content_tag :div, link_to("Go to registration form", simulations_registration_path, :class => "nice_button"), :class => "buttons" %>
   </section>
 
 </article>
