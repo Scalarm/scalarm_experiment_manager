@@ -1,5 +1,5 @@
 <script type="text/javascript">
-  var experiment_input = $.parseJSON('<%= raw(@simulation.input_specification) %>'.replace(/\n/g,""));
+  var experimentInput = $.parseJSON('<%= raw(@simulation.input_specification.gsub(/\s+/, "")) %>');
 </script>
 
 <article id='main'>
@@ -28,10 +28,19 @@
     </div>
   </section>
 
+  <section class='buttons'>
+    <button id='start_experiment'>Start experiment</button>
+  </section>
+
 </article>
 
 <script type="text/javascript">
   $(function() {
     $("#tabs").tabs();
+    $('#start_experiment').button();
+    $('#start_experiment').click(function() {
+        updateAllInputParameterValues();
+        alert(JSON.stringify(experimentInput));
+    });
   });
 </script>

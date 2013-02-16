@@ -68,4 +68,9 @@ class SimulationsController < ApplicationController
     @simulation_input = JSON.parse(@simulation.input_specification)
 
   end
+
+  def start_experiment
+
+    redirect_to :action => :index
+  end
 end

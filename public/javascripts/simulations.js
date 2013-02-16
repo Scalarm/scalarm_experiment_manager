@@ -6,27 +6,56 @@
  * To change this template use File | Settings | File Templates.
  */
 
-function parametrizationTypeListener(parameterId) {
-    $("select#parametrization_type_" + parameterId).change(function() {
-//        var selectedType = $("select#parametrization_type_" + parameterId).val();
-        buildParameterValuesPartial(parameterId);
+function parametrizationTypeListener(parameterIndex, groupId, entityId, parameterId) {
+    $("select#parametrization_type_" + parameterIndex).change(function() {
+        buildParameterValuesPartial(parameterIndex, groupId, entityId, parameterId);
+
+        var selectedType = $("select#parametrization_type_" + parameterIndex).val();
+        updateParametrizationTypeInJSON(groupId, entityId, parameterId, selectedType);
     });
 }
 
 // DK: generic function for building DOM structure for input parameter
-function buildParameterValuesPartial(parameterId) {
-    var selectElement = $("select#parametrization_type_" + parameterId);
+function buildParameterValuesPartial(parameterIndex, groupId, entityId, parameterId) {
+//    alert("build - " + parameterIndex);
+    var selectElement = $("select#parametrization_type_" + parameterIndex);
     var parameter = $.parseJSON(selectElement.attr("parameter"));
 
     if(parameter.type == "integer") {
-        parameterValuesPartialForInteger(parameter, selectElement.val(), parameterId);
+        parameterValuesPartialForInteger(parameter, selectElement.val(), parameterIndex);
     }
     else if(parameter.type == "float") {
-        parameterValuesPartialForInteger(parameter, selectElement.val(), parameterId);
+        parameterValuesPartialForInteger(parameter, selectElement.val(), parameterIndex);
     }
     else if(parameter.type == "string") {
-        parameterValuesPartialForString(parameter, selectElement.val(), parameterId);
+        parameterValuesPartialForString(parameter, selectElement.val(), parameterIndex);
     }
+
+    $("#parameter_values_" + parameterIndex + " input").bind("change paste keyup", function() {
+        var groupId = $(this).parents("div[group_id]").attr("group_id");
+        var entityId = $(this).parents("div[entity_id]").attr("entity_id");
+        var parameterId = $(this).parents("div[parameter_id]").attr("parameter_id");
+
+//        alert(groupId);
+//        alert("ID: " + $(this).attr("id") + " - Val: " + $(this).val());
+        var parameterElementId = $(this).attr("id");
+        var setValue = $(this).val();
+//        alert(parameterElementId + " --- " + setValue);
+
+        $.each(experimentInput, function(index, group) {
+            if(group.id == groupId) {
+                $.each(group.entities, function(index, entity) {
+                    if(entity.id == entityId) {
+                        $.each(entity.parameters, function(index, parameter) {
+                            if(parameter.id == parameterId) {
+                                updateParameterValuesInJSON(parameter, parameterElementId, setValue);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
 }
 
 // DK: generates DOM structure for parameter values specifications according to parametrization type
@@ -53,6 +82,7 @@ function parameterValuesPartialForInteger(parameter, parametrizationType, parame
         container.append(labeledInput("Set distribution min value: ", "parameter_min_" + parameterId, parameter.min))
             .append(labeledInput("Set distribution max value: ", "parameter_max_" + parameterId, parameter.max))
     }
+
 }
 
 // DK: generates DOM structure for parameter values specifications according to parametrization type
@@ -129,10 +159,128 @@ function labeledInput(label, elementId, defaultValue) {
     return labeledInput;
 }
 
-function updateParametrizationTypeInJSON() {
-
+// updates experiment input model stored in global 'experimentInput' variable as JSON
+function updateParametrizationTypeInJSON(groupId, entityId, parameterId, selectedType) {
+//    alert("Updating parametrization of - " + groupId + " (" + entityId + ") - to " + selectedType);
+//    alert(experimentInput);
+    $.each(experimentInput, function(index, group) {
+        if(group.id == groupId) {
+            $.each(group.entities, function(index, entity) {
+                if(entity.id == entityId) {
+                    $.each(entity.parameters, function(index, parameter) {
+                        if(parameter.id == parameterId) {
+//                            alert("Old value: " + parameter["parametrizationType"] + " - New value: " + selectedType);
+                            parameter["parametrizationType"] = selectedType;
+                        }
+                    });
+                }
+            });
+        }
+    });
 }
 
-function updateParameterValuesInJSON() {
+// updates experiment input model stored in global 'experimentInput' variable as JSON
+function updateParameterValuesInJSON(parameter, parameterElementId, setValue) {
+    if(parameter.parametrizationType == "value") {
+        if(parameter.type == "string") {
+            var setValue = parameterElementId.substring(0, parameterElementId.lastIndexOf("_"));
+//            alert("String value: " + setValue);
+            parameter["value"] = setValue;
+        }
+        else {
+//            alert("Other value: " + parameterElementId.val());
+            parameter["value"] = $("#" + parameterElementId).val();
+        }
+    }
+    else if(parameter.parametrizationType == "gauss") {
+        if(parameterElementId.indexOf("mean") >= 0) {
+            parameter["mean"] = setValue;
+        }
+        else if(parameterElementId.indexOf("variance") >= 0) {
+            parameter["variance"] = setValue;
+        }
+    }
+    else if(parameter.parametrizationType == "uniform") {
+        if (parameterElementId.indexOf("min") >= 0) {
+            parameter["min"] = setValue;
+        }
+        else if (parameterElementId.indexOf("max") >= 0) {
+            parameter["max"] = setValue;
+        }
+    }
+    else if(parameter.parametrizationType == "range") {
+        if (parameterElementId.indexOf("min") >= 0) {
+            parameter["min"] = setValue;
+        }
+        else if (parameterElementId.indexOf("max") >= 0) {
+            parameter["max"] = setValue;
+        }
+        else if (parameterElementId.indexOf("step") >= 0) {
+            parameter["step"] = setValue;
+        }
+    }
+    else if(parameter.parametrizationType == "multiple") {
+        setValue = parameterElementId.substring(0, parameterElementId.lastIndexOf("_"));
+//        alert(parameter["value"]);
 
+        if(parameter["value"] == undefined || parameter["value"] == null) {
+            parameter["value"] = [ setValue ];
+        }
+        else {
+            var elementIndex = $.inArray(setValue, parameter["value"]);
+            if(elementIndex >= 0) {
+                parameter["value"].splice(elementIndex, 1);
+            }
+            else {
+                parameter["value"].push(setValue);
+            }
+        }
+    }
+
+//    alert(JSON.stringify(parameter));
 }
+
+function updateAllInputParameterValues() {
+    $("div[id^='parameter_values_'] input").each(function (index, element) {
+        var groupId = $(element).parents("div[group_id]").attr("group_id");
+        var entityId = $(element).parents("div[entity_id]").attr("entity_id");
+        var parameterId = $(element).parents("div[parameter_id]").attr("parameter_id");
+
+        var parameterElementId = $(element).attr("id");
+        var setValue = $(element).val();
+
+        $.each(experimentInput, function (index, group) {
+            if (group.id == groupId) {
+                $.each(group.entities, function (index, entity) {
+                    if (entity.id == entityId) {
+                        $.each(entity.parameters, function (index, parameter) {
+                            if (parameter.id == parameterId) {
+                                var parameterIndex = parameterElementId.substring(parameterElementId.lastIndexOf("_") + 1);
+                                parameter["parametrizationType"] = $("#parametrization_type_" + parameterIndex).val();
+                                updateParameterValuesInJSON(parameter, parameterElementId, setValue);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    $.post("/simulations/start_experiment", { "experiment_input": JSON.stringify(experimentInput) });
+}
+
+//function findInputParameterInModel(groupId, entityId, parameterId) {
+//    $.each(experimentInput, function (index, group) {
+//        if (group.id == groupId) {
+//            $.each(group.entities, function (index, entity) {
+//                if (entity.id == entityId) {
+//                    $.each(entity.parameters, function (index, parameter) {
+//                        if (parameter.id == parameterId) {
+//                            return parameter;
+//                        }
+//                    });
+//                }
+//            });
+//        }
+//    });
+//}

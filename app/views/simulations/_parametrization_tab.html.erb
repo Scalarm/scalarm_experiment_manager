@@ -22,7 +22,7 @@
                       <%= parametrization_options(parameter, parameter_id) %>
                     <% end %>
 
-                    <%= javascript_tag "parametrizationTypeListener(#{parameter_id});" %>
+                    <%= javascript_tag "parametrizationTypeListener(#{parameter_id}, '#{entity_group["id"]}', '#{entity["id"]}', '#{parameter['id']}');" %>
                 <% end %>
                 </div>
 
@@ -41,4 +41,6 @@
         heightStyle: "content"
     });
   });
+
+//  alert(JSON.stringify(experimentInput));
 </script>

@@ -11,7 +11,8 @@
                 <%= content_tag :h3, "Entity '#{entity['label']}' with ID #{entity['id']}" %>
                 <div>
                   <% entity['parameters'].each do |parameter| %>
-                    <%= parameter_id += 1; content_tag :div, "", :id => "parameter_values_#{parameter_id}" %>
+                    <%= parameter_id += 1; content_tag :div, "", :id => "parameter_values_#{parameter_id}",
+                                                       :group_id => entity_group["id"], :entity_id => entity["id"], :parameter_id => parameter["id"] %>
                     <%= javascript_tag "buildParameterValuesPartial(#{parameter_id});" %>
                   <% end %>
                 </div>
