@@ -184,11 +184,9 @@ function updateParameterValuesInJSON(parameter, parameterElementId, setValue) {
     if(parameter.parametrizationType == "value") {
         if(parameter.type == "string") {
             var setValue = parameterElementId.substring(0, parameterElementId.lastIndexOf("_"));
-//            alert("String value: " + setValue);
             parameter["value"] = setValue;
         }
         else {
-//            alert("Other value: " + parameterElementId.val());
             parameter["value"] = $("#" + parameterElementId).val();
         }
     }
@@ -221,7 +219,6 @@ function updateParameterValuesInJSON(parameter, parameterElementId, setValue) {
     }
     else if(parameter.parametrizationType == "multiple") {
         setValue = parameterElementId.substring(0, parameterElementId.lastIndexOf("_"));
-//        alert(parameter["value"]);
 
         if(parameter["value"] == undefined || parameter["value"] == null) {
             parameter["value"] = [ setValue ];
@@ -236,8 +233,6 @@ function updateParameterValuesInJSON(parameter, parameterElementId, setValue) {
             }
         }
     }
-
-//    alert(JSON.stringify(parameter));
 }
 
 function updateAllInputParameterValues() {
@@ -266,21 +261,5 @@ function updateAllInputParameterValues() {
         });
     });
 
-    $.post("/simulations/start_experiment", { "experiment_input": JSON.stringify(experimentInput) });
+    $("#experiment_input").val(JSON.stringify(experimentInput));
 }
-
-//function findInputParameterInModel(groupId, entityId, parameterId) {
-//    $.each(experimentInput, function (index, group) {
-//        if (group.id == groupId) {
-//            $.each(group.entities, function (index, entity) {
-//                if (entity.id == entityId) {
-//                    $.each(entity.parameters, function (index, parameter) {
-//                        if (parameter.id == parameterId) {
-//                            return parameter;
-//                        }
-//                    });
-//                }
-//            });
-//        }
-//    });
-//}

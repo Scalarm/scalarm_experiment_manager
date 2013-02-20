@@ -10,16 +10,9 @@ class window.ExperimentMonitor
 
   update: ->
     monitor = this
-    $.ajax({
-      url: "/experiments/#{monitor.experiment_id}/experiment_stats",
-      success: (statistics) ->
-        monitor.update_statistics(JSON.parse(statistics))
-    })
-    $.ajax({
-      url: "/experiments/#{monitor.experiment_id}/experiment_moes",
-      success: (response) ->
-        monitor.update_moes(JSON.parse(response))
-    })
+
+    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
 
   update_statistics: (statistics) ->
     $("#exp_all_counter").html(statistics.all.toString().with_delimeters())
@@ -74,11 +67,8 @@ class window.ExperimentMonitor
     $("#experiment_progress_bar").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
 
     monitor = this
-    $.ajax({
-      url: "/experiments/#{monitor.experiment_id}/experiment_stats",
-      success: (statistics) ->
-        monitor.update_statistics(JSON.parse(statistics))
-    })
+
+    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
 
   schedule_update: ->
     setTimeout("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", 1000)

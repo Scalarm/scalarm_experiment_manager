@@ -23,6 +23,8 @@ class MongoActiveRecord
       setter = true
     end
 
+    method_name = "_id" if method_name == "id"
+
     if setter
       @attributes[method_name] = args.first
     elsif @attributes.include?(method_name)
@@ -97,8 +99,10 @@ class MongoActiveRecord
   private
 
   def self.find_by(parameter, value)
+    value = value.first if value.is_a? Enumerable
+
     if parameter == "id"
-      value = BSON::ObjectId(value.first)
+      value = BSON::ObjectId(value)
       parameter = "_id"
     end
 

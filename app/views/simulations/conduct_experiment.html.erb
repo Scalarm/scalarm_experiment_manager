@@ -9,7 +9,7 @@
 
     <%= content_tag :div, "Name: #{@simulation.name}" %>
     <%= content_tag :div, "Description: #{@simulation.description}" %>
-    <%= content_tag :div, "Input specification: #{@simulation.input_specification}" %>
+    <%#= content_tag :div, "Input specification: #{@simulation.input_specification}" %>
   </section>
 
   <section class='simulation_input'>
@@ -28,8 +28,14 @@
     </div>
   </section>
 
-  <section class='buttons'>
-    <button id='start_experiment'>Start experiment</button>
+  <section class='submit-section'>
+    <%= form_tag simulations_start_experiment_path, :onsubmit => "updateAllInputParameterValues();" do %>
+        <%= hidden_field_tag "simulation_id", @simulation._id %>
+        <%= hidden_field_tag "experiment_input" %>
+        <%= hidden_field_tag "computing_power" %>
+
+        <%= submit_tag "Start experiment", :id => "start_experiment"  %>
+    <% end %>
   </section>
 
 </article>
@@ -38,9 +44,5 @@
   $(function() {
     $("#tabs").tabs();
     $('#start_experiment').button();
-    $('#start_experiment').click(function() {
-        updateAllInputParameterValues();
-        alert(JSON.stringify(experimentInput));
-    });
   });
 </script>

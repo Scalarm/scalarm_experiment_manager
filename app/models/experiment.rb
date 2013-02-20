@@ -6,7 +6,7 @@ class Experiment < ActiveRecord::Base
   has_many :experiment_instances
   has_one :experiment_progress_bar
   
-  attr_accessor :parametrization_info, :progress_bar
+  attr_accessor :parametrization_info, :progress_bar, :data_farming_experiment
 
   PROGRESS_BAR_THRESHOLD = 10000
   
@@ -31,6 +31,8 @@ class Experiment < ActiveRecord::Base
       e.id = experiment_id
       e.parametrization_info = additional_info
       e.experiment_progress_bar = ExperimentProgressBar.new({:experiment_id => e.id})
+
+      e.data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(experiment_id)
       
       return e
     end
@@ -38,6 +40,13 @@ class Experiment < ActiveRecord::Base
     nil
   end
 
+  def experiment_size
+    if not data_farming_experiment.nil?
+      data_farming_experiment.experiment_size
+    else
+      super
+    end
+  end
 =begin
   
   # cache related buggy functions 

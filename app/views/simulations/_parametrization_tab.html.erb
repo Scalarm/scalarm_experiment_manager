@@ -4,13 +4,13 @@
   <div class="accordion-container">
     <% parameter_id = 0 %>
     <% @simulation_input.each do |entity_group| %>
-        <%= content_tag :h3, "Entities of group '#{entity_group["label"]}' (ID: #{entity_group["id"]})" %>
+        <%= content_tag :h3, "Entities of group '#{entity_group["label"]}'" %>
         <div>
           <!--<p>Set all parameters of every entity to: </p>-->
 
           <div class='accordion-container'>
             <% entity_group["entities"].each do |entity| %>
-                <%= content_tag :h3, "Entity '#{entity['label']}' (ID: #{entity['id']})" %>
+                <%= content_tag :h3, "Entity '#{entity['label']}'" %>
                 <div>
                   <!--<p>Set all parameters of this entity to: </p>-->
 
@@ -18,7 +18,7 @@
                     <% parameter_id += 1 %>
 
                     <%= content_tag :p do %>
-                      Set '<%= parameter["label"] %>' (ID: <%= parameter['id'] %>) to:
+                      Set '<%= parameter["label"] %>' to:
                       <%= parametrization_options(parameter, parameter_id) %>
                     <% end %>
 
@@ -41,6 +41,4 @@
         heightStyle: "content"
     });
   });
-
-//  alert(JSON.stringify(experimentInput));
 </script>

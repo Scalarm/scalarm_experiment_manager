@@ -108,21 +108,20 @@ class window.ExperimentSpeedometer
 
   update_speed: ->
     speedometer = this
-    $.ajax({
-      url: "/experiments/#{@experiment_id}/completed_simulations_count/#{@interval}",
-      success: (resp_data) ->
-        new_val = JSON.parse(resp_data).count
 
-        ymax = speedometer.chart.yAxis[0].max
-        while(new_val > ymax)
-          ymax *= 2
-          speedometer.chart.yAxis[0].setExtremes(0, ymax)
+    $.getJSON "/experiments/#{@experiment_id}/completed_simulations_count/#{@interval}", (resp_data) ->
+      new_val = resp_data.count
 
-        while((new_val < ymax / 4) && (ymax > 200))
-          ymax /= 2
-          speedometer.chart.yAxis[0].setExtremes(0, ymax)
+      ymax = speedometer.chart.yAxis[0].max
+      while(new_val > ymax)
+        ymax *= 2
+        speedometer.chart.yAxis[0].setExtremes(0, ymax)
+
+      while((new_val < ymax / 4) && (ymax > 200))
+        ymax /= 2
+        speedometer.chart.yAxis[0].setExtremes(0, ymax)
 
 
-        point = speedometer.chart.series[0].points[0]
-        point.update(new_val)
-    })
+      point = speedometer.chart.series[0].points[0]
+      point.update(new_val)
+

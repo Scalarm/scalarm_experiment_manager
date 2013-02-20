@@ -269,6 +269,35 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  # modern version of the next_configuration method; returns a json document with all necessary information to start a simulation
+  def next_simulation
+    simulation_doc = {}
+
+    begin
+      experiment = Experiment.find_in_db(params[:experiment_id])
+      raise "Experiment is not running any more" if not experiment.is_running
+
+      simulation_to_send = experiment.get_next_instance
+
+      if simulation_to_send
+        simulation_to_send.put_in_cache
+        experiment.progress_bar_update(simulation_to_send.id.to_i, 'sent')
+
+        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.id,
+                               'execution_constraints' => { 'time_contraint_in_sec' => experiment.time_constraint_in_sec },
+                               'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
+      else
+        simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+      end
+
+    rescue Exception => e
+      Rails.logger.debug("Error while preparing next simulation: #{e}")
+      simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
+    end
+
+    render :json => simulation_doc
+  end
+
   # getting actual XML document of a concrete instance
   def configuration
     begin
@@ -383,7 +412,7 @@ class ExperimentsController < ApplicationController
       end
 
     respond_to do |format|
-      format.js { render :inline => stats.to_json }
+      format.json { render :json => stats }
     end
   end
 
@@ -409,7 +438,7 @@ class ExperimentsController < ApplicationController
     # logger.debug moes_info.to_s
     
     respond_to do |format|
-      format.js{ render :inline => moes_info.to_json }
+      format.json{ render :json => moes_info }
     end  
   end
   
@@ -711,7 +740,7 @@ class ExperimentsController < ApplicationController
               end
 
     respond_to do |format|
-      format.js { render :inline => ({ "count" => simulation_counter }).to_json }
+      format.json { render :json => { "count" => simulation_counter } }
     end
   end
 

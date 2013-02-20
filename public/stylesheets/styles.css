@@ -758,3 +758,8 @@ article#experiment_stats {
 .accordion-container label {
     width: 220px;
 }
+
+.submit-section {
+    margin-top: 20px;
+    text-align: center;
+}

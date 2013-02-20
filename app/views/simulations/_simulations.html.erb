@@ -7,8 +7,7 @@
             <%= form_tag simulations_destroy_simulation_path do %>
                 <%= hidden_field_tag "component_id", simulation._id %>
                 <%= simulation.name %>
-                - (input_writer: <%= simulation.input_writer.name %>; executor: <%= simulation.executor.name %>; output reader: <%= simulation.output_reader.name %>)
-                - (binaries: <%= simulation.simulation_binaries_name %>, size: <%= simulation.simulation_binaries_size / 1024.0 %> [kB])
+
                 <%= submit_tag "Destroy" %>
             <% end %>
         <% end %>

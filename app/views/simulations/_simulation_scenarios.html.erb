@@ -18,8 +18,9 @@
 <script type="text/javascript">
   $(function() {
     $('#simulation_list').selectable({
-        selected: function() {
-            $("#submit_form input#simulation_id").val($(this).find("li").attr("simulation_id"));
+        selected: function(event, ui) {
+            var selectedSimulationId = $(ui.selected).attr("simulation_id");
+            $("#submit_form input#simulation_id").val(selectedSimulationId);
         }
     });
   });
