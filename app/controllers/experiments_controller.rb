@@ -7,6 +7,8 @@ require "simulation_partitioner"
 require "scenario_file_parser"
 require "json"
 
+require 'zip/zip'
+
 
 class ExperimentsController < ApplicationController
   include ActionView::Helpers::JavaScriptHelper
@@ -742,6 +744,33 @@ class ExperimentsController < ApplicationController
     respond_to do |format|
       format.json { render :json => { "count" => simulation_counter } }
     end
+  end
+
+  def code_base
+    experiment_id = params['id'].to_i
+    simulation = DataFarmingExperiment.find_by_experiment_id(experiment_id).simulation
+    code_base_dir = Dir.mktmpdir('code_base')
+
+    file_list = %w(input_writer executor output_reader)
+    file_list.each do |filename|
+      IO.write("#{code_base_dir}/#{filename}", simulation.send(filename).code)
+    end
+    IO.binwrite("#{code_base_dir}/simulation_binaries.zip", simulation.simulation_binaries)
+    file_list << 'simulation_binaries.zip'
+
+    zipfile_name = File.join('/tmp', "experiment_#{experiment_id}_code_base.zip")
+
+    File.delete(zipfile_name) if File.exist?(zipfile_name)
+
+    Zip::ZipFile.open(zipfile_name, Zip::ZipFile::CREATE) do |zipfile|
+      file_list.each do |filename|
+        zipfile.add(filename, File.join(code_base_dir, filename))
+      end
+    end
+
+    FileUtils.rm_rf(code_base_dir)
+
+    send_file zipfile_name, :type => 'application/zip'
   end
 
   private

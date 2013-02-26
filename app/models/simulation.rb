@@ -6,7 +6,7 @@
 class Simulation < MongoActiveRecord
 
   def self.collection_name
-    "simulations"
+    'simulations'
   end
 
   def input_writer
@@ -22,7 +22,7 @@ class Simulation < MongoActiveRecord
   end
 
   def set_simulation_binaries(filename, binary_data)
-    @attributes["simulation_binaries_id"] = @@grid.put(binary_data, :filename => filename)
+    @attributes['simulation_binaries_id'] = @@grid.put(binary_data, :filename => filename)
   end
 
   def simulation_binaries
@@ -40,6 +40,21 @@ class Simulation < MongoActiveRecord
   def destroy
     @@grid.delete self.simulation_binaries_id
     super
+  end
+
+  def prepare_code_base
+    #code_base_dir = Dir.mktmpdir('code_base')
+    ##begin
+    #  # use the directory...
+    #  open("#{code_base_dir}/input_writer", 'w') { |f| f.write(self.input_writer.code) }
+    #  open("#{code_base_dir}/executor", 'w') { |f| f.write(self.executor.code) }
+    #  open("#{code_base_dir}/output_reader", 'w') { |f| f.write(self.output_reader.code) }
+    #  open("#{code_base_dir}/simulation_binaries.zip", 'w') { |f| f.write(self.simulation_binaries) }
+    ##ensure
+    #  # remove the directory.
+    #  #FileUtils.remove_entry_secure(code_base_dir)
+    ##end
+    #code_base_dir
   end
 
 end

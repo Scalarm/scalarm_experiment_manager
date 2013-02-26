@@ -101,9 +101,9 @@ class MongoActiveRecord
   def self.find_by(parameter, value)
     value = value.first if value.is_a? Enumerable
 
-    if parameter == "id"
-      value = BSON::ObjectId(value)
-      parameter = "_id"
+    if parameter == 'id'
+      value = BSON::ObjectId(value.to_s)
+      parameter = '_id'
     end
 
     collection = Object.const_get(name).send(:collection)

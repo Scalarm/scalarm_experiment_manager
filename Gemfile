@@ -27,6 +27,8 @@ gem "mongo"
 gem "bson_ext"
 gem "aws-sdk"
 
+gem 'rubyzip'
+
 group :test do
   # gem "sqlite3"
   # gem "activerecord-sqlite3-adapter"

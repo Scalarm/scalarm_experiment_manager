@@ -68,7 +68,11 @@ SimulationManager::Application.routes.draw do
   get "user_controller/account"
   post "user_controller/change_password"
 
-  resources :experiments
+  resources :experiments do
+    member do
+      get :code_base
+    end
+  end
 
   # infrastructure routes
   match 'infrastructure' => 'infrastructure#index'

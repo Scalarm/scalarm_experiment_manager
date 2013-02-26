@@ -95,7 +95,7 @@ class SimulationsController < ApplicationController
     @experiment.save_and_cache
 
     data_farming_experiment = DataFarmingExperiment.new({ "experiment_id" => @experiment.id,
-                                                          "simulation_id" => @simulation.id,
+                                                          'simulation_id' => @simulation.id,
                                                           "experiment_input" => @experiment_input,
                                                           "name" => @simulation.name,
                                                           "user_id" => session[:user],
@@ -127,6 +127,6 @@ class SimulationsController < ApplicationController
 
     @experiment.save_and_cache
 
-    redirect_to :action => :index
+    redirect_to :controller => :experiments, :action => :monitor, :experiment_id => @experiment.id
   end
 end
