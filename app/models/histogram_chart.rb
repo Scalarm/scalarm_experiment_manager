@@ -17,7 +17,7 @@ class HistogramChart
   def prepare_chart_data
     @result_csv = @experiment.create_result_csv_for(@moe_name)
     #Rails.logger.debug("Result csv = #{ @result_csv }")
-    result_file = Tempfile.new('result_file')
+    result_file = Tempfile.new('histogram')
     IO.write(result_file.path, @result_csv)
     #result_file.write(@result_csv)
 

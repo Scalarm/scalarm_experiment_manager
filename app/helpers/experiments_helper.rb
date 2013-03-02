@@ -21,12 +21,13 @@ module ExperimentsHelper
 
   def extract_input_and_moe_names(experiment)
     done_instance = ExperimentInstance.get_first_done(experiment.id)
+
     if done_instance.nil?
-      ["No input parameters found"]
+      ['No input parameters found']
     else
       extract_moe_names(experiment) +
-      ["-----------"] +
-      done_instance.arguments.split(",").map{|x| [ParameterForm.parameter_label_with_agent_id(x), x]}
+      %w(-----------) +
+      done_instance.arguments.split(',').map{|x| [ experiment.data_farming_experiment.input_parameter_label_for(x), x]}
     end
   end
 

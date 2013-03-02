@@ -422,6 +422,7 @@ class ExperimentsController < ApplicationController
 
   def experiment_moes
     experiment = Experiment.find(params[:id])
+    data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
     moes_info = {}  
     
     #moes = experiment.moe_names
@@ -434,17 +435,17 @@ class ExperimentsController < ApplicationController
         ['No input parameters found', 'nil']
       else
         moes + [ %w(----------- nil) ] +
-        done_instance.arguments.split(',').map{|x| [ ParameterForm.parameter_label_with_agent_id(x), x ]}
+        done_instance.arguments.split(',').map{|x| [ data_farming_experiment.input_parameter_label_for(x), x ]}
       end
     
     moes_info[:moes] = moes.map{|label, id| "<option value='#{id}'>#{label}</option>"}.join()
     moes_info[:moes_and_params] = moes_and_params.map{|label, id| "<option value='#{id}'>#{label}</option>"}.join()
-    
+
     # logger.debug moes_info.to_s
-    
+
     respond_to do |format|
       format.json{ render :json => moes_info }
-    end  
+    end
   end
   
   def update_list_of_running_experiments
@@ -548,15 +549,16 @@ class ExperimentsController < ApplicationController
   def histogram
     @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
     @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
-
-    Rails.logger.debug("Bucket names: #{@chart.bucket_names}")
-    Rails.logger.debug("Buckets: #{@chart.buckets}")
-
-    respond_to do |format|
-      format.js
-    end
   end
 
+  def scatter_plot
+    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+    @chart.prepare_chart_data
+  end
+
+
+  # DEPRECATED histogram chart is now handled by the 'histogram' method
   def add_basic_statistics_chart
     get_basic_statistics_about_moe
 
@@ -996,7 +998,7 @@ class ExperimentsController < ApplicationController
     @moe_name = params[:moe_name]
     @resolution = params[:resolution].to_i
 
-    rinruby = Rails.configuration.eusas_rinruby    
+    rinruby = Rails.configuration.eusas_rinruby
     rinruby.eval("
       experiment_data <- read.csv(\"#{result_file}\")
       ex_min <- min(experiment_data$#{@moe_name})
@@ -1037,7 +1039,7 @@ class ExperimentsController < ApplicationController
         @buckets[[((row[column_index].to_f-min_value) / slice_width).floor, @buckets.size-1].min] += 1
       end
     end
-    
+
   end
 
   def update_monitoring_view(experiment)

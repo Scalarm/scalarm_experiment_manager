@@ -1,13 +1,13 @@
-- @x_axis_label = ParameterForm.moe_label(@x_axis); @y_axis_label = ParameterForm.moe_label(@y_axis);
+-#- @chart.x_axis_label = ParameterForm.moe_label(@chart.x_axis); @chart.y_axis_label = ParameterForm.moe_label(@chart.y_axis);
 %h3
-  = "Bivariate chart - #{@x_axis_label} versus #{@y_axis_label}"
-  = image_tag "loading.gif", :size => "16x16", :style => "display: none", :id => "busy_bivariate_#{@x_axis}_#{@y_axis}"
+  = "Scatter plot: '#{@chart.x_axis_label}' versus '#{@chart.y_axis_label}'"
+  = image_tag 'loading.gif', id: "busy_bivariate_#{@chart.x_axis}_#{@chart.y_axis}", size: '16x16', style: 'display: none;'
 
 .buttons
-  = button_to_function "Refresh" ,
-    "refresh_bivariate_chart('#{@experiment.id}', '#{@x_axis}', '#{@y_axis}', '#{experiments_refresh_bivariate_analysis_chart_path}')",
-    :class => "nice_button"
-  
-  = button_to_function "Hide chart" , "$(this).parent().parent().remove()", :class => "nice_button"
+  -#= button_to_function "Refresh" ,
+  -#  "refresh_bivariate_chart('#{@chart.experiment.id}', '#{@chart.x_axis}', '#{@chart.y_axis}', '#{experiments_refresh_bivariate_analysis_chart_path}')",
+  -#  :class => "nice_button"
+  = button_to_function 'Hide chart' , '$(this).parent().parent().remove()', class: 'nice_button'
+
 %br
-.bivariate_chart_container{:id => "bivariate_chart_container_#{@x_axis}_#{@y_axis}"}
+.bivariate_chart_container{ id: "bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}" }

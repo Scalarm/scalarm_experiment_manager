@@ -88,6 +88,26 @@ class DataFarmingExperiment < MongoActiveRecord
     parameters
   end
 
+  def input_parameter_label_for(uid)
+    entity_group_id, entity_id, parameter_id = uid.split(ID_DELIM)
+
+    self.experiment_input.each do |entity_group|
+      if entity_group['id'] == entity_group_id
+        entity_group['entities'].each do |entity|
+          if entity['id'] == entity_id
+            entity['parameters'].each do |parameter|
+              if parameter['id'] == parameter_id
+                return "#{entity_group['label']} - #{entity['label']} - #{parameter['label']}"
+              end
+            end
+          end
+        end
+      end
+    end
+
+    nil
+  end
+
   def value_list
     value_list = []
 
@@ -119,6 +139,33 @@ class DataFarmingExperiment < MongoActiveRecord
       end
     end
 
+  end
+
+  def create_scatter_plot_csv_for(x_axis, y_axis)
+    CSV.generate do |csv|
+      csv << [ x_axis, y_axis ]
+
+      ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result arguments) }).each do |simulation_doc|
+        simulation_input = Hash[simulation_doc['arguments'].split(',').zip(simulation_doc['values'].split(','))]
+
+        x_axis_value = if simulation_doc['result'].include?(x_axis)
+                         # this is a MoE
+                         simulation_doc['result'][x_axis]
+                       else
+                         # this is an input parameter
+                         simulation_input[x_axis]
+                       end
+        y_axis_value = if simulation_doc['result'].include?(y_axis)
+                         # this is a MoE
+                         simulation_doc['result'][y_axis]
+                       else
+                         # this is an input parameter
+                         simulation_input[y_axis]
+                       end
+
+        csv << [ x_axis_value, y_axis_value ]
+      end
+    end
   end
 
 

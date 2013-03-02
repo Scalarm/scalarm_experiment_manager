@@ -74,6 +74,7 @@ SimulationManager::Application.routes.draw do
       get :next_simulation
       # experiment charts
       post :histogram
+      post :scatter_plot
     end
 
     resources :simulations do
