@@ -277,7 +277,7 @@ class ExperimentsController < ApplicationController
 
     begin
       experiment = Experiment.find_in_db(params[:experiment_id])
-      raise "Experiment is not running any more" if not experiment.is_running
+      raise 'Experiment is not running any more' if not experiment.is_running
 
       simulation_to_send = experiment.get_next_instance
 
@@ -300,6 +300,7 @@ class ExperimentsController < ApplicationController
     render :json => simulation_doc
   end
 
+  # DEPRECATED: new experiments has all information returned by a 'next_simulation' request
   # getting actual XML document of a concrete instance
   def configuration
     begin
@@ -316,6 +317,7 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  # DEPRECATED: new experiments should use a 'mark_as_complete' method from simulations_controller
   #change configuration state to 'done' and write results to a shared file
   def set_configuration_done
     begin
@@ -422,16 +424,17 @@ class ExperimentsController < ApplicationController
     experiment = Experiment.find(params[:id])
     moes_info = {}  
     
-    moes = experiment.moe_names
-    moes = moes.nil? ? ["No MoEs found", "nil"] : moes.map{|x| [ParameterForm.moe_label(x), x]}
-    
-    
+    #moes = experiment.moe_names
+    moes = experiment.result_names
+    moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map{|x| [ ParameterForm.moe_label(x), x ]}
+    Rails.logger.debug("Result names: #{moes}")
+
     done_instance = ExperimentInstance.get_first_done(experiment.id)
     moes_and_params = if done_instance.nil?
-        ["No input parameters found", "nil"]
+        ['No input parameters found', 'nil']
       else
-        moes + [["-----------", "nil"]] + 
-        done_instance.arguments.split(",").map{|x| [ParameterForm.parameter_label_with_agent_id(x), x]}
+        moes + [ %w(----------- nil) ] +
+        done_instance.arguments.split(',').map{|x| [ ParameterForm.parameter_label_with_agent_id(x), x ]}
       end
     
     moes_info[:moes] = moes.map{|label, id| "<option value='#{id}'>#{label}</option>"}.join()
@@ -536,6 +539,18 @@ class ExperimentsController < ApplicationController
 
   def update_regression_tree
     create_regression_tree_chart
+
+    respond_to do |format|
+      format.js
+    end
+  end
+
+  def histogram
+    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+
+    Rails.logger.debug("Bucket names: #{@chart.bucket_names}")
+    Rails.logger.debug("Buckets: #{@chart.buckets}")
 
     respond_to do |format|
       format.js

@@ -71,6 +71,15 @@ SimulationManager::Application.routes.draw do
   resources :experiments do
     member do
       get :code_base
+      get :next_simulation
+      # experiment charts
+      post :histogram
+    end
+
+    resources :simulations do
+      member do
+        post :mark_as_complete
+      end
     end
   end
 

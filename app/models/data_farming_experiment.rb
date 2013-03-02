@@ -1,4 +1,5 @@
 require 'json'
+require 'csv'
 
 class DataFarmingExperiment < MongoActiveRecord
   ID_DELIM = "___"
@@ -26,9 +27,9 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def argument_names
-    first_instance = ExperimentInstance.find_by_id(self._id, 1)
+    first_instance = ExperimentInstance.find_by_id(self.experiment_id, 1)
 
-    first_instance.arguments.split(",").map{|arg| ParameterForm.parameter_uid_for_r(arg)}.join(",")
+    first_instance.arguments.split(',').map{|arg| ParameterForm.parameter_uid_for_r(arg)}.join(',')
   end
 
   def range_arguments
@@ -103,6 +104,21 @@ class DataFarmingExperiment < MongoActiveRecord
 
   def experiment_size
     self.value_list.reduce(1){|acc, x| acc * x.size}
+  end
+
+  def create_result_csv_for(moe_name)
+
+    CSV.generate do |csv|
+      csv << self.argument_names.split(',') + [ moe_name ]
+
+      ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
+        next if not simulation_doc['result'].has_key?(moe_name)
+
+        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+        csv << values + [ simulation_doc['result'][moe_name] ]
+      end
+    end
+
   end
 
 

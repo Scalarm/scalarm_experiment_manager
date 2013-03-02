@@ -1,14 +1,30 @@
 = javascript_tag "var basic_chart_tab = new Array()"
+
 #basic_charts_form
   %h2 Basic statistics about Measures of Effectiveness
-  = form_tag(experiments_add_basic_statistics_chart_path, :onsubmit => "$('#busy_basic').show();", :remote => true) do
-    = hidden_field_tag :experiment_id, @experiment.id
+  = form_tag(histogram_experiment_path(@experiment.id), onsubmit: "$('#busy_basic').show();", remote: true, format: :js) do
     %span
       Select MoE:
       = select_tag("moe_name", "", {:class => "moe_list"}) 
-    = "Number of bars: " 
-    = text_field_tag 'resolution', "10"
+    = 'Number of bars:'
+    = text_field_tag 'resolution', 10
+
     = submit_tag "Add chart", :class => "nice_button", :style => "float: none;"
     = image_tag "loading.gif", :size => "16x16", :style => "display: none", :id => "busy_basic"
 
 #basic_charts
+
+
+:javascript
+  $('#basic_charts_form input[type=submit]').bind('click', function() {
+    var moe_name = $('#basic_charts_form select[name=\'moe_name\'] option:selected').val();
+    var resolution = $('#basic_charts_form input[name=\'resolution\']').val();
+
+    $.post("#{histogram_experiment_path(@experiment.id)}", { 'moe_name': moe_name, 'resolution': resolution },
+     function(data) {
+
+    });
+
+
+    return false;
+  });

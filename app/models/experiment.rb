@@ -235,6 +235,17 @@ class Experiment < ActiveRecord::Base
     moe_name_set.empty? ? nil : moe_name_set.to_a
   end
 
+  def result_names
+    moe_name_set = Set.new
+    result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
+
+    ExperimentInstance.raw_find_by_query(self.id, { is_done: true }, { fields: 'result', limit: result_limit }).each do |simulation_doc|
+      moe_name_set += simulation_doc['result'].keys
+    end
+
+    moe_name_set.empty? ? nil : moe_name_set.to_a
+  end
+
   def create_result_file
     File.delete(self.result_file) if File.exist?(self.result_file)
 

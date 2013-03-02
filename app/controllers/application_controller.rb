@@ -3,10 +3,12 @@ class ApplicationController < ActionController::Base
 
   before_filter :check_authentication, :except => [:subscribe, :unsubscribe, :message, :login,
                                                    :get_experiment_id, :get_repository, :next_configuration,
-                                                   :configuration, :set_configuration_done, :managers, :storage_managers]
+                                                   :configuration, :set_configuration_done, :managers, :storage_managers, :code_base,
+                                                   :next_simulation, :mark_as_complete, :histogram]
 
   before_filter :vm_authentication, :only => [:get_experiment_id, :get_repository, :next_configuration,
-                                              :configuration, :set_configuration_done, :managers, :storage_managers, :log_failure]
+                                              :configuration, :set_configuration_done, :managers, :storage_managers, :log_failure, :code_base,
+                                              :next_simulation, :mark_as_complete, :histogram]
   
   # protect_from_forgery
   
@@ -22,7 +24,8 @@ class ApplicationController < ActionController::Base
     unless session[:user]
       session[:intended_action] = action_name
       session[:intended_controller] = controller_name
-      redirect_to :action => "login", :controller => "user_controller"
+
+      redirect_to :action => :login, :controller => :user_controller
     end
   end
 end

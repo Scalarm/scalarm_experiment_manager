@@ -129,4 +129,33 @@ class SimulationsController < ApplicationController
 
     redirect_to :controller => :experiments, :action => :monitor, :experiment_id => @experiment.id
   end
+
+  # a life-cycle of a single simulation
+
+  def mark_as_complete
+    experiment = Experiment.find(params[:experiment_id].to_i)
+    simulation = ExperimentInstance.cache_get(params[:experiment_id], params[:id])
+
+    response = { status: 'ok' }
+    begin
+      if simulation.nil? or simulation.is_done
+        logger.debug("Experiment Instance #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{simulation.nil?}")
+      else
+        simulation.is_done = true
+        simulation.to_sent = false
+        simulation.result = JSON.parse(params[:result])
+        simulation.done_at = Time.now
+        simulation.save
+        simulation.remove_from_cache
+
+        experiment.progress_bar_update(params[:id].to_i, 'done')
+      end
+    rescue Exception => e
+      Rails.logger.debug("Error in marking a simulation as complete - #{e}")
+      response = { status: 'error', reason: e.to_s }
+    end
+
+    render :json => response
+  end
+
 end
