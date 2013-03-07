@@ -1,6 +1,26 @@
-require "parameter_form"
+require 'parameter_form'
 
 module ExperimentsHelper
+
+  def extend_experiment_form
+    form = ''
+
+    #priority_select = select_tag 'priority', options_for_select([ [ 'Standard', 40 ], [ 'High', 60 ], [ 'Low', 20 ] ])
+
+    #form += content_tag(:div, content_tag(:label, 'Priority:', class: 'nice_label') + priority_select)
+    #//form_txt += '<%= raw select_tag('priority', options_for_select([ [ 'Standard', 40 ], [ 'High', 60 ] ])) %>'
+    min_param = content_tag(:label, 'Minimum:', class: 'nice_label') + text_field_tag('range_min', '', class: 'nice_input')
+    max_param = content_tag(:label, 'Maximum:', class: 'nice_label') + text_field_tag('range_max', '', class: 'nice_input')
+    step_param = content_tag(:label, 'Step:', class: 'nice_label') + text_field_tag('range_step', '', class: 'nice_input')
+
+    form += content_tag(:div, min_param) + content_tag(:div, max_param) + content_tag(:div, step_param)
+
+    form += content_tag(:div,
+                        submit_tag('Submit', class: 'nice_button') +
+                        image_tag('loading.gif', id: 'expand_dialog_busy', size: '20x20', style: 'float: left; display: none;') )
+
+    form
+  end
 
   def json_rt_node(node, tree)
     formatted_mean = "%.2f" % node["mean"]

@@ -72,9 +72,11 @@ SimulationManager::Application.routes.draw do
     member do
       get :code_base
       get :next_simulation
+      get :parameter_values
       # experiment charts
       post :histogram
       post :scatter_plot
+      post :regression_tree
     end
 
     resources :simulations do

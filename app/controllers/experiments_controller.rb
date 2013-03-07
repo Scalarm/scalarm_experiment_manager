@@ -548,12 +548,21 @@ class ExperimentsController < ApplicationController
 
   def histogram
     @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+
     @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
   end
 
   def scatter_plot
     @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+
     @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+    @chart.prepare_chart_data
+  end
+
+  def regression_tree
+    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+
+    @chart = RegressionTreeChart.new(@experiment, params[:moe_name], Rails.configuration.eusas_rinruby)
     @chart.prepare_chart_data
   end
 
@@ -609,6 +618,17 @@ class ExperimentsController < ApplicationController
     @param_type = {}
     @param_type['type'] = @parametrization_type
     @param_values = @experiment.generated_parameter_values_for(@param_r_id)
+  end
+
+  def parameter_values
+    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @parameter_uid = params[:param_name]
+
+    @parameter_uid, @parametrization_type = @experiment.parametrization_of(@parameter_uid)
+
+    @param_type = {}
+    @param_type['type'] = @parametrization_type
+    @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
   end
 
   #TODO FIXME refactor to be one screen height
@@ -955,8 +975,8 @@ class ExperimentsController < ApplicationController
     
     rinruby.eval("
       library(rpart)
-      experiment_data <- read.csv('#{result_file}')
-      fit <- rpart(#{@moe_name}~#{arguments},method='anova',data=experiment_data)
+      experiment_data <- read.csv('#{result_file.path}')
+      fit <- rpart(#{moe_name}~#{range_arguments},method='anova',data=experiment_data)
       fit_to_string <- capture.output(summary(fit))
     ")
 

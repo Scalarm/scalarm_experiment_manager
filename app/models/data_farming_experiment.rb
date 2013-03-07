@@ -29,16 +29,18 @@ class DataFarmingExperiment < MongoActiveRecord
   def argument_names
     first_instance = ExperimentInstance.find_by_id(self.experiment_id, 1)
 
-    first_instance.arguments.split(',').map{|arg| ParameterForm.parameter_uid_for_r(arg)}.join(',')
+    #first_instance.arguments.split(',').map{|arg| ParameterForm.parameter_uid_for_r(arg)}.join(',')
+
+    first_instance.arguments
   end
 
   def range_arguments
     params_with_range = []
 
     self.experiment_input.each do |entity_group|
-      entity_group["entities"].each do |entity|
-        entity["parameters"].each do |parameter|
-          if parameter["parametrizationType"] == "range"
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          if parameter['parametrizationType'] == 'range'
             params_with_range << parameter_uid(entity_group, entity, parameter)
           end
         end
@@ -50,9 +52,9 @@ class DataFarmingExperiment < MongoActiveRecord
 
   def parametrization_of(parameter_uid)
     self.experiment_input.each do |entity_group|
-      entity_group["entities"].each do |entity|
-        entity["parameters"].each do |parameter|
-          return parameter_uid, parameter.parametrizationType if parameter_uid(entity_group, entity, parameter) == parameter_uid
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          return parameter_uid, parameter['parametrizationType'] if parameter_uid(entity_group, entity, parameter) == parameter_uid
         end
       end
     end
@@ -64,8 +66,8 @@ class DataFarmingExperiment < MongoActiveRecord
     parameters = []
 
     self.experiment_input.each do |entity_group|
-      entity_group["entities"].each do |entity|
-        entity["parameters"].each do |parameter|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
           parameters += get_parametrization_values(entity_group, entity, parameter)
         end
       end
@@ -78,8 +80,8 @@ class DataFarmingExperiment < MongoActiveRecord
     parameters = []
 
     self.experiment_input.each do |entity_group|
-      entity_group["entities"].each do |entity|
-        entity["parameters"].each do |parameter|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
           parameters << parameter_uid(entity_group, entity, parameter)
         end
       end
@@ -166,6 +168,26 @@ class DataFarmingExperiment < MongoActiveRecord
         csv << [ x_axis_value, y_axis_value ]
       end
     end
+  end
+
+  def generated_parameter_values_for(parameter_uid)
+    instance = ExperimentInstance.find_by_id(self.experiment_id, 1)
+    #Rails.logger.debug("Parameter UID: #{parameter_uid}")
+    #Rails.logger.debug("instance.arguments: #{instance.arguments.split(',')}")
+    param_index = instance.arguments.split(',').index(parameter_uid)
+    param_value = instance.values.split(',')[param_index]
+
+    find_exp = '^'
+    find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
+    find_exp = /#{find_exp}#{param_value}/
+
+    query_hash = { 'values' => { '$not' => find_exp } }
+    option_hash = { fields: %w(values) }
+
+    param_values = ExperimentInstance.raw_find_by_query(self.experiment_id, query_hash, option_hash).
+        map { |x| x['values'].split(',')[param_index] }.uniq + [param_value]
+
+    param_values.map { |x| x.to_f }.uniq.sort
   end
 
 

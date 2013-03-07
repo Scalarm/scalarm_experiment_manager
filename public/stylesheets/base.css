@@ -41,6 +41,10 @@
     overflow:hidden;
 }
 
+.container {
+    margin-top: 15px;
+}
+
 /*TOOLTIPS*/
 .tip {
     color: #111;

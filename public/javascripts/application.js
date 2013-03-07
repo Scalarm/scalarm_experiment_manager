@@ -306,7 +306,7 @@ function show_dialog_for_new_parameter_value(param_id, param_label, url, experim
 
   $.ajax({
     url: url,
-    data: 'experiment_id='+experiment_id+'&param_name='+param_id,
+    data: { 'param_name': param_id },
     success: function(msg) { $("#dialog").css("height", 250); }
   });
 }
