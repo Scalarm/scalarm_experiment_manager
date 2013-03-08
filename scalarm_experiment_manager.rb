@@ -1,7 +1,7 @@
-require "yaml"
-require "net/http"
+require 'yaml'
+require 'net/http'
 
-require_relative "app/models/experiment_manager"
+#require_relative "app/models/experiment_manager"
 
 # utilities functions
 class ScalarmExperimentManager
@@ -20,10 +20,12 @@ class ScalarmExperimentManager
       port = starting_port + i
       puts "bundle exec #{thin_start_cmd(port)}"
       system("export EUSAS_SERVER_PORT=#{port}; bundle exec #{thin_start_cmd(port)}")
-      # registering Experiment Manager in DB
-      em = ExperimentManager.new({"hostname" => "#{@host}:#{port}"})
-      em.save(true)
-      File.open("tmp/manager_#{port}.txt", "w"){|f| f.puts em.manager_id}
+
+      # TODO fix this registering Experiment Manager in DB
+      #current_count = ExperimentManager.all.count
+      #em = ExperimentManager.new({ hostname: "#{@host}:#{port}", created_at: Time.now, manager_id: current_count + 1 })
+      #em.save
+      #File.open("tmp/manager_#{port}.txt", "w"){|f| f.puts em.manager_id}
     end
   end
 
@@ -39,14 +41,15 @@ class ScalarmExperimentManager
 
       File.delete("tmp/pids/thin_#{port}.pid") if File.exist?("tmp/pids/thin_#{port}.pid")
 
-      ExperimentManager.find({"hostname" => "#{@host}:#{port}"}).each do |em|
-        em.destroy
-      end
-
-      File.delete("tmp/manager_#{port}.txt")
+      # TODO fix me
+      #ExperimentManager.find_by_hostname("#{@host}:#{port}").each do |em|
+      #  em.destroy
+      #end
+      #
+      #File.delete("tmp/manager_#{port}.txt")
     end
 
-    if thin_procs_list("").empty?
+    if thin_procs_list('').empty?
       puts "Stopping db router - cd #{@config["storage_manager_path"]}; ruby scalarm_storage_manager.rb stop db router"
       puts %x[cd #{@config["storage_manager_path"]}; ruby scalarm_storage_manager.rb stop db router]
     end

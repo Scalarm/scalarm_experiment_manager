@@ -1,5 +1,5 @@
-require "bson"
-require "mongo"
+require 'bson'
+require 'mongo'
 
 class MongoActiveRecord
   @@db = ExperimentInstanceDb.default_instance.default_connection
@@ -18,12 +18,12 @@ class MongoActiveRecord
   # handling getters and setters for object instance
   def method_missing(method_name, *args, &block)
     method_name = method_name.to_s; setter = false
-    if method_name.ends_with? "="
+    if method_name.ends_with? '='
       method_name.chop!
       setter = true
     end
 
-    method_name = "_id" if method_name == "id"
+    method_name = '_id' if method_name == 'id'
 
     if setter
       @attributes[method_name] = args.first
@@ -39,25 +39,25 @@ class MongoActiveRecord
   def save
     collection = Object.const_get(self.class.name).send(:collection)
 
-    if @attributes.include? "_id"
-      collection.update({"_id" => @attributes["_id"]}, @attributes, {:upsert => true})
+    if @attributes.include? '_id'
+      collection.update({'_id' => @attributes['_id']}, @attributes, {:upsert => true})
     else
       id = collection.save(@attributes)
-      @attributes["_id"] = id
+      @attributes['_id'] = id
     end
   end
 
   def destroy
-    return if not @attributes.include? "_id"
+    return if not @attributes.include? '_id'
 
     collection = Object.const_get(self.class.name).send(:collection)
-    collection.remove({ "_id" => @attributes["_id"] })
+    collection.remove({ '_id' => @attributes['_id'] })
   end
 
   #### Class Methods ####
 
   def self.collection_name
-    raise "This is an abstract method, which must be implemented by all subclasses"
+    raise 'This is an abstract method, which must be implemented by all subclasses'
   end
 
   # returns a reference to mongo collection based on collection_name abstract method
@@ -70,8 +70,8 @@ class MongoActiveRecord
 
   # find by dynamic methods
   def self.method_missing(method_name, *args, &block)
-    if method_name.to_s.start_with?("find_by")
-      parameter_name = method_name.to_s.split("_")[2..-1].join("_")
+    if method_name.to_s.start_with?('find_by')
+      parameter_name = method_name.to_s.split('_')[2..-1].join('_')
 
       return self.find_by(parameter_name, args)
     end

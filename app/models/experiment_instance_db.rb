@@ -2,9 +2,10 @@ require "bson"
 
 class ExperimentInstanceDb < ActiveRecord::Base
   has_many :experiment_partitions
-  
+
   @@shared_instance = nil
   @@shared_connection = nil
+  @@database_name = 'scalarm_db'
 
   def self.get_random_id
     ExperimentInstanceDb.all[rand(ExperimentInstanceDb.count)].id
@@ -12,7 +13,7 @@ class ExperimentInstanceDb < ActiveRecord::Base
   
   def self.default_instance
     if @@shared_instance.nil?
-      @@shared_instance = ExperimentInstanceDb.new(:ip => "127.0.0.1", :port => 27017)
+      @@shared_instance = ExperimentInstanceDb.new(:ip => '127.0.0.1', :port => 27017)
     end
     
     @@shared_instance
@@ -21,7 +22,7 @@ class ExperimentInstanceDb < ActiveRecord::Base
   def default_connection
     if @@shared_connection.nil?
       begin
-        @@shared_connection = Mongo::Connection.new(self.ip, self.port).db("eusas_db")
+        @@shared_connection = Mongo::Connection.new(self.ip, self.port).db(@@database_name)
       rescue Exception => e
         Rails.logger.debug("Error while connecting to mongodb - #{e}")
         nil
@@ -35,10 +36,8 @@ class ExperimentInstanceDb < ActiveRecord::Base
     mongo_start = Time.now
 
     collection = self.default_instance.connect_to_collection(experiment_id)
-    
-    if collection.nil?
-      raise("No Experiment Instance DB available")
-    end
+
+    raise('No Experiment Instance DB available') if collection.nil?
 
     collection.create_index([["id", Mongo::ASCENDING]])
     collection.create_index([["is_done", Mongo::ASCENDING]])
@@ -47,7 +46,7 @@ class ExperimentInstanceDb < ActiveRecord::Base
     
     # sharding collection
     cmd = BSON::OrderedHash.new
-    cmd["enableSharding"] = "eusas_db"
+    cmd["enableSharding"] = @@database_name
     begin
       Mongo::Connection.new(ExperimentInstanceDb.default_instance.ip, ExperimentInstanceDb.default_instance.port).db("admin").command(cmd)
     rescue Exception => e
@@ -55,7 +54,7 @@ class ExperimentInstanceDb < ActiveRecord::Base
     end
     
     cmd = BSON::OrderedHash.new
-    cmd["shardcollection"] = "eusas_db.#{ExperimentInstanceDb.default_instance.collection_name(experiment_id)}"
+    cmd["shardcollection"] = "#{@@database_name}.#{ExperimentInstanceDb.default_instance.collection_name(experiment_id)}"
     cmd["key"] = { "id" => 1 }
     begin
       Mongo::Connection.new(ExperimentInstanceDb.default_instance.ip, ExperimentInstanceDb.default_instance.port).db("admin").command(cmd)
@@ -143,7 +142,8 @@ class ExperimentInstanceDb < ActiveRecord::Base
   def store_experiment_info(experiment, labels, value_list, multiply_list)
     collection = self.default_connection.collection("experiments_info")
 
-    doc = {"experiment_id" => experiment.id,
+    doc = {
+          "experiment_id" => experiment.id,
           "is_running" => experiment.is_running,
           "experiment_size" => experiment.experiment_size,
           "labels" => labels,
