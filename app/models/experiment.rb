@@ -630,7 +630,9 @@ class Experiment < ActiveRecord::Base
   # Generate a list of subsequent simulation ids in a random order
   # based on the 'manager_id' attribute and the overall number of registered Experiment Managers
   def create_file_with_ids
-    manager_counter = ExperimentManager.count
+    manager_counter = ExperimentManager.all.count
+    manager_counter = 1 if manager_counter = 0
+
     id_list = []
     next_simulation_id = Rails.configuration.manager_id
 

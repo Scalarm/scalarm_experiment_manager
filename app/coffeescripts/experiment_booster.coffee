@@ -9,7 +9,7 @@ class window.ExperimentBooster
     
   initDialog: ->
     $("##{@dialog_element_id}").dialog({ autoOpen: false, height: 'auto', width: 550, modal: true, resizable: true })
-    $("##{@accordion_element_id}").accordion( { autoHeight: false } )
+    $("##{@accordion_element_id}").accordion( { heightStyle: 'content' } )
     $("##{@dialog_element_id}").css('overflow', 'hidden')
     @loadInfrastructureInfo()
     
@@ -26,13 +26,10 @@ class window.ExperimentBooster
     alert(msg)
     
   loadInfrastructureInfo: ->
-    boosterDialog = this
-    $.ajax({
-      url: "/infrastructure/infrastructure_info",
-      success: (resp_data) ->
-        resp = JSON.parse(resp_data)
+    $.getJSON('/infrastructure/infrastructure_info',
+      (resp) ->
         $('#private_info').text(resp.private)
         $('#plgrid_info').text(resp.plgrid)
         $('#amazon_info').text(resp.amazon)
-    })
+    )
   

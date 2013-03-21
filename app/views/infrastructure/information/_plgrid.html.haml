@@ -1,0 +1,37 @@
+-#= form_tag(schedule_simulation_managers_infrastructure_path, remote: true) do
+%div{ id: 'plgrid-booster-form' }
+  = hidden_field_tag :infrastructure_type, :plgrid
+
+  = hidden_field_tag :experiment_id, experiment.id
+  = hidden_field_tag :user_id, session[:user]
+
+  %p{ id: 'plgrid_info' }
+    %div
+      %label{ for: 'job_counter', style: 'width:200px;' } Number of jobs:
+      = text_field_tag :job_counter
+    %div
+      %label{ for: 'time_limit', style: 'width:200px;' } Job time constraint [min]:
+      = text_field_tag :time_limit
+    .buttons
+      = submit_tag 'Submit'
+
+:javascript
+  $(function() {
+    $("#plgrid-booster-form input[type='submit']").bind('click', function() {
+      data = {
+        'infrastructure_type': 'plgrid',
+        'experiment_id': #{experiment.id},
+        'user_id': #{session[:user]},
+        'job_counter': $('#job_counter').val(),
+        'time_limit': $('#time_limit').val(),
+        'authenticity_token': '#{form_authenticity_token}'
+      };
+      $.post("#{ schedule_simulation_managers_infrastructure_path }", data,
+      function(response) {
+          booster.onSuccess(response.msg);
+      }, 'json');
+      booster.afterSubmit();
+
+      return false;
+    });
+  });

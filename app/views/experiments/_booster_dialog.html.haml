@@ -1,7 +1,13 @@
-#booster_dialog{:title=>"Increase computational power", :style=>"height:100%;"}
-  #booster_tabs{:style=>"height:100%;"}
+#booster_dialog{ title: 'Increase computational power', style: 'height:100%;' }
+  #booster_tabs{ style: 'height:100%;' }
+    - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+      %h3
+        %a{ href: '#' }= infrastructure_info[:label]
+      %div{ id: infrastructure_id }
+        = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment }
+
     %h3 
-      %a{:href => "#"} Private Infrastructure
+      %a{ href: '#' } Private Infrastructure
     #private
       = form_tag(url_for({:controller => :infrastructure, :action => :add_hosts_to_exp}), :remote => true) do
         = hidden_field_tag :experiment_id, @experiment.id
@@ -13,24 +19,7 @@
           = text_field_tag "number"
         .buttons
           = submit_tag "Submit", :onClick => "booster.afterSubmit();"
-      
-    %h3
-      %a{:href => "#"} PL-Grid
-    #plgrid
-      = form_tag(url_for({:controller => :infrastructure, :action => :add_jobs_to_exp}), :remote => true) do
-        = hidden_field_tag :experiment_id, @experiment.id
-        = hidden_field_tag :user_id, session[:user]
-        
-        %p{:id => "plgrid_info"}
-        %div
-          %label{:for=>"job_counter", :style => "width:200px;"} Number of jobs:
-          = text_field_tag :job_counter
-        %div
-          %label{:for=>"time_limit", :style => "width:200px;"} Job time constraint [min]:
-          = text_field_tag :time_limit
-        .buttons
-          = submit_tag "Submit", :onClick => "booster.afterSubmit();"
-          
+
     %h3
       %a{:href => "#"} Amazon EC2
     #amazon

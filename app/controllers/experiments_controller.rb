@@ -271,7 +271,8 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  # modern version of the next_configuration method; returns a json document with all necessary information to start a simulation
+  # modern version of the next_configuration method;
+  # returns a json document with all necessary information to start a simulation
   def next_simulation
     simulation_doc = {}
 
@@ -279,10 +280,13 @@ class ExperimentsController < ApplicationController
       experiment = Experiment.find_in_db(params[:experiment_id])
       raise 'Experiment is not running any more' if not experiment.is_running
 
+      Rails.logger.debug('Before get next instance')
       simulation_to_send = experiment.get_next_instance
-
+      Rails.logger.debug('Before if')
       if simulation_to_send
+        Rails.logger.debug('Before put in cache')
         simulation_to_send.put_in_cache
+        Rails.logger.debug('Before progress_bar_update')
         experiment.progress_bar_update(simulation_to_send.id.to_i, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.id,

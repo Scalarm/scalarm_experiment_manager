@@ -52,7 +52,7 @@ class InfrastructureController < ApplicationController
       current_user.save
     end
 
-    redirect_to :action => "index"
+    redirect_to action: :index
   end
 
   def configure_plgrid_grouping_factor
@@ -410,10 +410,8 @@ class InfrastructureController < ApplicationController
   
   def infrastructure_info
     collect_infrastructure_info
-    
-    respond_to do |format|
-      format.js { render :inline => @infrastructure_info.to_json }
-    end
+
+    render json: @infrastructure_info
   end
 
   # ============================ PRIVATE METHODS ============================

@@ -116,7 +116,12 @@ SimulationManager::Application.routes.draw do
   post "infrastructure/register_simulation_manager_host"
   post "infrastructure/manage_simulation_manager_host"
   
-  get 'infrastructure/infrastructure_info'
+  resource :infrastructure do
+    member do
+      post :schedule_simulation_managers
+      get :infrastructure_info
+    end
+  end
 
   resource :socky do
     member do
