@@ -12,6 +12,7 @@ require 'zip/zip'
 
 class ExperimentsController < ApplicationController
   include ActionView::Helpers::JavaScriptHelper
+  include Spawn
 
   def index
     experiment = get_latest_running_experiment
@@ -174,7 +175,7 @@ class ExperimentsController < ApplicationController
 
       Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
       if Time.now - @experiment.start_at > 30
-        spawn(:method => :thread) do
+        spawn_block(:method => :thread) do
           @experiment.experiment_progress_bar.update_all_bars
         end
       end
@@ -206,7 +207,7 @@ class ExperimentsController < ApplicationController
     if experiment
       experiment.experiment_progress_bar.drop
       experiment.experiment_progress_bar.destroy
-      spawn do
+      spawn_block do
         ExperimentInstance.drop_instances_for(experiment.id)
         logger.debug(%x[rm -rf #{experiment.data_folder_path}])
       end
@@ -368,7 +369,7 @@ class ExperimentsController < ApplicationController
   end
 
   def experiment_stats
-    experiment = Experiment.find(params[:id])
+    experiment = Experiment.find(params[:id].to_i)
 
     stats = if experiment
         generated, instances_done, instances_sent = experiment.get_statistics
@@ -414,18 +415,14 @@ class ExperimentsController < ApplicationController
 
         partial_stats
       else
-        {
-            "all" => 0, "sent" => 0, "done_num" => 0, "done_percentage" => "'0.00'", "generated" => 0, "progress_bar" => "[]"
-        }
+        { all: 0, sent: 0, done_num: 0, done_percentage: "'0.00'", generated: 0, progress_bar: '[]' }
       end
 
-    respond_to do |format|
-      format.json { render :json => stats }
-    end
+    render json: stats
   end
 
   def experiment_moes
-    experiment = Experiment.find(params[:id])
+    experiment = Experiment.find(params['id'].to_i)
     data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
     moes_info = {}  
     
@@ -715,7 +712,7 @@ class ExperimentsController < ApplicationController
       return
     end
 
-    spawn(:method => :thread) do
+    spawn_block(:method => :thread) do
       @experiment.experiment_progress_bar.update_all_bars
     end
 
@@ -774,7 +771,7 @@ class ExperimentsController < ApplicationController
   end
 
   def completed_simulations_count
-    experiment = Experiment.find(params[:id])
+    experiment = Experiment.find(params[:id].to_i)
 
     simulation_counter = if experiment
                 experiment.completed_simulations_count_for(params[:secs].to_i)
@@ -782,9 +779,7 @@ class ExperimentsController < ApplicationController
                 0
               end
 
-    respond_to do |format|
-      format.json { render :json => { "count" => simulation_counter } }
-    end
+    render json: { count: simulation_counter }
   end
 
   def code_base
@@ -1067,7 +1062,7 @@ class ExperimentsController < ApplicationController
   end
 
   def update_monitoring_view(experiment)
-    spawn do
+    spawn_block do
       instances_done, instances_sent = ExperimentInstance.get_statistics(experiment.id)
       statistics = [instances_sent, instances_done, experiment.experiment_size,
                     "'%.2f'" % ((instances_done.to_f / experiment.experiment_size) * 100)]
@@ -1097,7 +1092,7 @@ class ExperimentsController < ApplicationController
   end
 
   def update_moe_list_if_first(instance)
-    spawn do
+    spawn_block do
       instances_done = ExperimentInstance.count_with_query(instance.experiment.id, {"is_done" => true})
       if instances_done == 1 then
         options = instance.result.split(',').map { |item| item.split("=")[0] }

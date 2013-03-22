@@ -1,8 +1,8 @@
-= javascript_include_tag "http://code.highcharts.com/highcharts.js"
-= javascript_include_tag "http://code.highcharts.com/highcharts-more.js"
-= javascript_include_tag "http://code.highcharts.com/modules/exporting.js"
-= javascript_include_tag "experiment_monitor.js"
-= javascript_include_tag "experiment_speedometer.js"
+= javascript_include_tag 'http://code.highcharts.com/2.3/highcharts.js'
+= javascript_include_tag 'http://code.highcharts.com/2.3/highcharts-more.js'
+= javascript_include_tag 'http://code.highcharts.com/2.3/modules/exporting.js'
+= javascript_include_tag 'experiment_monitor.js'
+= javascript_include_tag 'experiment_speedometer.js'
 
 #monitoring_section
   %article#experiment_stats
@@ -10,7 +10,7 @@
   %article#experiment_progress_bar
     %h3 Experiment progress bar
 
-%script{:type => "text/javascript"}
+%script{ type: 'text/javascript' }
   $(document).ready(function() {
   new window.ExperimentSpeedometer('#{@experiment.id}').show();
   var monitor = new window.ExperimentMonitor('#{@experiment.id}');

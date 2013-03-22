@@ -1,12 +1,16 @@
 class InfrastructureFacade
 
+  class SpawnProxy
+    include Spawn
+  end
+
   def prepare_configuration_for_simulation_manager(sm_uuid, user, experiment_id)
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
     # TODO experiment manager address from database
     sm_config = {
-        experiment_manager_address: '149.156.10.250:6001',
+        experiment_manager_address: '149.156.10.250',
         experiment_manager_user: ApplicationController::USER,
         experiment_manager_pass: ApplicationController::PASSWORD,
         experiment_id: experiment_id,
@@ -30,6 +34,18 @@ class InfrastructureFacade
     {
         plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
     }
+  end
+
+  def self.start_monitoring
+    get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
+      Rails.logger.debug("Starting monitoring thread of '#{infrastructure_id}'")
+
+      ActiveRecord::Base.connection.reconnect!
+      SpawnProxy.new.spawn_block do
+        infrastructure_information[:facade].start_monitoring
+      end
+      ActiveRecord::Base.connection.reconnect!
+    end
   end
 
 end

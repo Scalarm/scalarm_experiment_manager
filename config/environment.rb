@@ -3,3 +3,6 @@ require File.expand_path('../application', __FILE__)
 
 # Initialize the rails application
 SimulationManager::Application.initialize!
+
+# Start infrastructure Monitoring
+InfrastructureFacade.start_monitoring

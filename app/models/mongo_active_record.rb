@@ -17,6 +17,7 @@ class MongoActiveRecord
 
   # handling getters and setters for object instance
   def method_missing(method_name, *args, &block)
+    #Rails.logger.debug("MongoRecord: #{method_name} - #{args.join(',')}")
     method_name = method_name.to_s; setter = false
     if method_name.ends_with? '='
       method_name.chop!
@@ -52,6 +53,12 @@ class MongoActiveRecord
 
     collection = Object.const_get(self.class.name).send(:collection)
     collection.remove({ '_id' => @attributes['_id'] })
+  end
+
+  def to_s
+    <<-eos
+      MongoActiveRecord - #{self.class.name} - Attributes - #{@attributes}\n
+    eos
   end
 
   #### Class Methods ####

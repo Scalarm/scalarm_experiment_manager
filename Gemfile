@@ -27,6 +27,7 @@ gem 'net-ssh'
 gem 'net-scp'
 gem 'libxml-ruby', '2.2.2'
 gem 'rubyzip'
+gem 'spawn', :git => 'git://github.com/rfc2822/spawn'
 # wrapper for R interpreter
 gem 'rinruby'
 # Amazon EC2 connector

@@ -2,11 +2,15 @@ require 'json'
 require 'csv'
 
 class DataFarmingExperiment < MongoActiveRecord
-  ID_DELIM = "___"
+  ID_DELIM = '___'
 
 
   def self.collection_name
     'experiments'
+  end
+
+  def is_completed
+    ExperimentInstance.count_with_query(self._id) == ExperimentInstance.count_with_query(self._id, {'is_done' => true})
   end
 
   def simulation
