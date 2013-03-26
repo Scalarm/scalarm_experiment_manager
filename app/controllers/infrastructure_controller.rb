@@ -625,18 +625,18 @@ class InfrastructureController < ApplicationController
   
   def activate_plgrid_monitoring_thread
     # user_id = session[:user]
-    logger.debug("PLGRID_MONITORING_THREAD_ACTIVATED is #{Rails.configuration.plgrid_monitoring_thread_activated}")
-    if not Rails.configuration.plgrid_monitoring_thread_activated
-      logger.debug("Activating PL-Grid monitoring thread")
-      Rails.configuration.plgrid_monitoring_thread_activated = true
-      spawn(:method => :thread, :argv => "PLGRID_MONITORING_THREAD") do
-        GridJob.plgrid_monitoring_function
-        Rails.configuration.plgrid_monitoring_thread_activated = false
-        logger.debug("PLGRID_MONITORING_THREAD_ACTIVATED is #{Rails.configuration.plgrid_monitoring_thread_activated}")
-      end
-    else
-      logger.debug("Amazon monitoring thread is running")
-    end
+    #logger.debug("PLGRID_MONITORING_THREAD_ACTIVATED is #{Rails.configuration.plgrid_monitoring_thread_activated}")
+    #if not Rails.configuration.plgrid_monitoring_thread_activated
+    #  logger.debug("Activating PL-Grid monitoring thread")
+    #  Rails.configuration.plgrid_monitoring_thread_activated = true
+    #  spawn(:method => :thread, :argv => "PLGRID_MONITORING_THREAD") do
+    #    GridJob.plgrid_monitoring_function
+    #    Rails.configuration.plgrid_monitoring_thread_activated = false
+    #    logger.debug("PLGRID_MONITORING_THREAD_ACTIVATED is #{Rails.configuration.plgrid_monitoring_thread_activated}")
+    #  end
+    #else
+    #  logger.debug("Amazon monitoring thread is running")
+    #end
   end 
 
   def amazon_monitoring_function

@@ -19,7 +19,12 @@ class UserControllerController < ApplicationController
   end
 
   def logout
-    flash[:notice] = "You have log out successfully"
+    flash[:notice] = 'You have log out successfully'
+
+    InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+      infrastructure_info[:facade].clean_tmp_credentials(session[:user], session)
+    end
+
     session[:user] = nil
     session[:grid_credentials] = nil
 

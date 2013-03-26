@@ -763,3 +763,7 @@ article#experiment_stats {
     margin-top: 20px;
     text-align: center;
 }
+
+.wide-label label {
+    width: 200px;
+}

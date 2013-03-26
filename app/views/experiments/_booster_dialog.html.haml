@@ -4,7 +4,7 @@
       %h3
         %a{ href: '#' }= infrastructure_info[:label]
       %div{ id: infrastructure_id }
-        = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment }
+        = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @user }
 
     %h3 
       %a{ href: '#' } Private Infrastructure

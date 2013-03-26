@@ -109,6 +109,35 @@ class PLGridFacade < InfrastructureFacade
     jobs.nil? ? 0 : jobs.size
   end
 
+  def add_credentials(user_id, params, session)
+    credentials = GridCredentials.find_by_user_id(user_id)
+
+    if credentials
+      credentials.login = params[:username]
+      credentials.password = params[:password]
+      credentials.host = params[:host]
+    else
+      credentials = GridCredentials.new(user_id: user_id, host: params[:host],
+                                        login: params[:username], password: params[:password])
+    end
+
+    if params[:save_settings] == 'false'
+      session[:tmp_plgrid_credentials] = true
+    else
+      session.delete(:tmp_plgrid_credentials)
+    end
+
+    credentials.save
+
+    'ok'
+  end
+
+  def clean_tmp_credentials(user_id, session)
+    if session.include?(:tmp_plgrid_credentials)
+      GridCredentials.find_by_user_id(user_id).delete
+    end
+  end
+
   def prepare_job_descriptor(uuid)
     <<-eos
       Executable = "scalarm_job_#{uuid}.sh";

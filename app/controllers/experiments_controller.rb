@@ -155,6 +155,7 @@ class ExperimentsController < ApplicationController
     begin
       @experiment = Experiment.find(params[:experiment_id])
       set_monitoring_view_params(params[:experiment_id])
+      @user = User.find(session[:user])
 
       # Experiments info
       # TODO FIXME move this to background

@@ -1,9 +1,8 @@
 <%= javascript_include_tag "simulation_manager_facet.js" %>
 <%= javascript_include_tag "jquery.jstree.js" %>
 <%= javascript_include_tag "infrastructure.js" %>
-<%= # socky :channels => "infrastructure" %>
 
-<%= javascript_tag "$(function() { infrastructure_init() })"%>
+<%= javascript_tag "$(function() { infrastructure_init(); });" %>
 
 <section id="main">
   <%= render :partial => "infrastructure_graph" %>

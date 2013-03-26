@@ -120,6 +120,7 @@ SimulationManager::Application.routes.draw do
     member do
       post :schedule_simulation_managers
       get :infrastructure_info
+      post :add_infrastructure_credentials
     end
   end
 
