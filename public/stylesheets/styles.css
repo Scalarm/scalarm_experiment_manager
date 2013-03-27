@@ -31,17 +31,15 @@ select {
 /* layout */
 
 #wrapper {
+    position: relative;
     width: 960px;
-    margin: 0 auto;
     background: url(../images/bg03.jpg) repeat;
     /* curved border radius */
     border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     padding: 10px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-
+    margin: 10px auto;
     min-height: 535px;
 }
 
@@ -61,6 +59,7 @@ header {
     color: #444;
     font-size: 14px;
     line-height: 1.2em;
+    position: relative;
 }
 
 footer {
@@ -435,9 +434,9 @@ select {
 }
 
 #histogram_analysis_link {
-    position: fixed;
-    top: 10px;
-    right: 10px;
+    position: absolute;
+    top: 0px;
+    right: -110px;
 }
 
 #histogram_analysis_window {
@@ -470,9 +469,9 @@ select {
 }
 
 #rtree_analysis_link {
-    position: fixed;
-    top: 212px; /* 170px; */
-    right: 10px;
+    position: absolute;
+    top: 170px;
+    right: -110px;
 }
 
 #rtree_analysis_window {
@@ -505,9 +504,9 @@ select {
 }
 
 #bivariate_analysis_link {
-    position: fixed;
-    top: 415px;  /* 330px; */
-    right: 10px;
+    position: absolute;
+    top: 340px;
+    right: -110px;
 }
 
 #bivariate_analysis_window {
@@ -542,9 +541,9 @@ select {
 /* Experiment links */
 
 #running_experiments_link {
-    position: fixed;
-    top: 10px;
-    left: 10px;
+    position: absolute;
+    top: 0px;
+    left: -110px;
 }
 
 #running_experiments_window {
@@ -577,9 +576,9 @@ select {
 }
 
 #available_experiments_link {
-    position: fixed;
-    top: 212px; /* 170px; */
-    left: 10px;
+    position: absolute;
+    top: 170px;
+    left: -110px;
 }
 
 #available_experiments_window {
@@ -622,9 +621,9 @@ select {
 
 
 #historical_experiments_link {
-    position: fixed;
-    top: 415px;  /* 330px; */
-    left: 10px;
+    position: absolute;
+    top: 340px;
+    left: -110px;
 }
 
 #historical_experiments_window {
