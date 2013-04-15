@@ -25,7 +25,7 @@ function buildParameterValuesPartial(parameterIndex, groupId, entityId, paramete
         parameterValuesPartialForInteger(parameter, selectElement.val(), parameterIndex);
     }
     else if(parameter.type == "float") {
-        parameterValuesPartialForInteger(parameter, selectElement.val(), parameterIndex);
+        parameterValuesPartialForFloat(parameter, selectElement.val(), parameterIndex);
     }
     else if(parameter.type == "string") {
         parameterValuesPartialForString(parameter, selectElement.val(), parameterIndex);
@@ -65,12 +65,13 @@ function parameterValuesPartialForInteger(parameter, parametrizationType, parame
         " - [ " + parameter.min + ", " + parameter.max + " ]"));
 
     if (parametrizationType == "value") {
-        container.append(labeledInput("Set value: ", "parameter_value_" + parameterId, parameter.min));
+        var default_value = (parameter.value != undefined) ? parameter.value : parameter.min;
+        container.append(labeledInput("Set value: ", "parameter_value_" + parameterId, default_value));
     }
     else if (parametrizationType == "range") {
         container.append(labeledInput("Set min: ", "parameter_min_" + parameterId, parameter.min))
             .append(labeledInput("Set max: ", "parameter_max_" + parameterId, parameter.max))
-            .append(labeledInput("Set step: ", "parameter_step_" + parameterId, Math.round((parameter.min + parameter.max) / 5)));
+            .append(labeledInput("Set step: ", "parameter_step_" + parameterId, (parameter.min + parameter.max) / 5.0));
     }
     else if (parametrizationType == "gauss") {
         var mean_value = Math.round((parameter.min + parameter.max) / 2);
@@ -92,7 +93,8 @@ function parameterValuesPartialForFloat(parameter, parametrizationType, paramete
         " - [ " + parameter.min + ", " + parameter.max + " ]" ));
 
     if(parametrizationType == "value") {
-        container.append(labeledInput("Set value: ", "parameter_value_" + parameterId, parameter.min));
+        var default_value = (parameter.value != undefined) ? parameter.value : parameter.min;
+        container.append(labeledInput("Set value: ", "parameter_value_" + parameterId, default_value));
     }
     else if(parametrizationType == "range") {
         container.append(labeledInput("Set min: ", "parameter_min_" + parameterId, parameter.min))

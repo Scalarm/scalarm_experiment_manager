@@ -9,7 +9,7 @@
           <!--<p>Set all parameters of every entity to: </p>-->
 
           <div class='accordion-container'>
-            <% entity_group["entities"].each do |entity| %>
+            <% entity_group['entities'].each do |entity| %>
                 <%= content_tag :h3, "Entity '#{entity['label']}'" %>
                 <div>
                   <!--<p>Set all parameters of this entity to: </p>-->
@@ -17,12 +17,12 @@
                   <% entity['parameters'].each do |parameter| %>
                     <% parameter_id += 1 %>
 
-                    <%= content_tag :p do %>
-                      Set '<%= parameter["label"] %>' to:
+                    <%= content_tag :p, :class => (parameter.include?('value') ? 'hidden' : '') do %>
+                      Set '<%= parameter['label'] %>' to:
                       <%= parametrization_options(parameter, parameter_id) %>
                     <% end %>
 
-                    <%= javascript_tag "parametrizationTypeListener(#{parameter_id}, '#{entity_group["id"]}', '#{entity["id"]}', '#{parameter['id']}');" %>
+                    <%= javascript_tag "parametrizationTypeListener(#{parameter_id}, '#{entity_group['id']}', '#{entity['id']}', '#{parameter['id']}');" %>
                 <% end %>
                 </div>
 

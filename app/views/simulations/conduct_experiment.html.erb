@@ -1,5 +1,5 @@
 <script type="text/javascript">
-  var experimentInput = $.parseJSON('<%= raw(@simulation.input_specification.gsub(/\s+/, "")) %>');
+  var experimentInput = $.parseJSON('<%= raw(@simulation.input_specification.gsub(/\s+/, '')) %>');
 </script>
 
 <article id='main'>
@@ -22,9 +22,9 @@
         <%= content_tag(:li, content_tag(:a, "Design of Experiments", :href => "#doe")) %>
       <% end %>
 
-      <%= render :partial => "parametrization_tab" %>
-      <%= render :partial => "parameters_values_tab" %>
-      <%= render :partial => "doe_tab" %>
+      <%= render partial: 'parametrization_tab' %>
+      <%= render partial: 'parameters_values_tab' %>
+      <%= render partial: 'doe_tab' %>
     </div>
   </section>
 
