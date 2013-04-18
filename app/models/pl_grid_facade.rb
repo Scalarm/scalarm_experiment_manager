@@ -3,6 +3,9 @@ require 'fileutils'
 require 'net/ssh'
 require 'net/scp'
 
+require 'grid_schedulers/glite_facade'
+require 'grid_schedulers/pbs_facade'
+
 class PLGridFacade < InfrastructureFacade
 
   def initialize
@@ -28,13 +31,14 @@ class PLGridFacade < InfrastructureFacade
           # generate new proxy
           ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
           job_list.each do |job|
-            Rails.logger.debug("#{Time.now} - checking job #{job} - current state #{job.current_state(ssh)}")
+            scheduler = create_scheduler_facade(job.scheduler_type)
+            Rails.logger.debug("#{Time.now} - checking job #{job.job_id} - current state #{scheduler.current_state(ssh, job)}")
 
             #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
-            if %w(Ready Scheduled).include?(job.current_state(ssh)) and (job.created_at + 10.minutes < Time.now)
+            if scheduler.is_job_queued(ssh, job) and (job.created_at + 10.minutes < Time.now)
               Rails.logger.debug("#{Time.now} - the job will be restarted due to not been run")
 
-              if job.restart(ssh)
+              if scheduler.restart(ssh, job)
                 job.created_at = Time.now
                 job.save
               end
@@ -42,15 +46,18 @@ class PLGridFacade < InfrastructureFacade
             elsif (job.created_at + 24.hours < Time.now) and ((not job.experiment.nil?) and (not job.experiment.is_completed))
               #  if the job is running more than 24 h then restart
               Rails.logger.debug("#{Time.now} - the job will be restarted due to being run for 24 hours")
-              if job.restart(ssh)
+              if scheduler.restart(ssh, job)
                 job.created_at = Time.now
                 job.save
               end
 
-            elsif job.is_done(ssh) or (job.created_at + job.time_limit.minutes < Time.now)
+            elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
               Rails.logger.debug("#{Time.now} - the job is done or should be already done - so we will destroy it")
-              job.cancel(ssh)
+              Rails.logger.debug("First condition #{scheduler.is_done(ssh, job)}")
+              Rails.logger.debug("Second condition #{(job.created_at + job.time_limit.minutes < Time.now)}")
+              scheduler.cancel(ssh, job)
               job.destroy
+              scheduler.clean_after_job(ssh, job)
             end
           end
         end
@@ -63,30 +70,28 @@ class PLGridFacade < InfrastructureFacade
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
+    scheduler = create_scheduler_facade(additional_params['scheduler'])
+
     # prepare locally code of a simulation manager to upload with a configuration file
     prepare_configuration_for_simulation_manager(sm_uuid, user, experiment_id)
-    # prepare job executable and descriptor
-    IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-    IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid))
 
     if credentials = user.grid_credentials
+      # prepare job executable and descriptor
+      scheduler.prepare_job_files(sm_uuid)
+
       #  upload the code to the Grid user interface machine
       Net::SCP.start(credentials.host, credentials.login, password: credentials.password) do |scp|
-        scp.upload! "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", '.'
-        scp.upload! "/tmp/scalarm_job_#{sm_uuid}.sh", '.'
-        scp.upload! "/tmp/scalarm_job_#{sm_uuid}.jdl", '.'
+        scheduler.send_job_files(sm_uuid, scp)
       end
 
       Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-        ssh.exec!("chmod a+x scalarm_job_#{sm_uuid}.sh")
-        #  create a proxy certificate for the user
-        ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
-        #  schedule the job with glite wms
         1.upto(instances_count).each do
           #  retrieve job id and store it in the database for future usage
           job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id, 'created_at' => Time.now,
-                                'sm_uuid' => sm_uuid, 'time_limit' => additional_params[:time_limit].to_i })
-          if job.submit(ssh)
+                                'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
+                                'time_limit' => additional_params[:time_limit].to_i })
+
+          if scheduler.submit_job(ssh, job)
             job.save
           else
             return 'error', 'Could not submit job'
@@ -138,27 +143,12 @@ class PLGridFacade < InfrastructureFacade
     end
   end
 
-  def prepare_job_descriptor(uuid)
-    <<-eos
-      Executable = "scalarm_job_#{uuid}.sh";
-      Arguments = "#{uuid}";
-      StdOutput = "scalarm_job.out";
-      StdError = "scalarm_job.err";
-      OutputSandbox = {"scalarm_job.out", "scalarm_job.err"};
-      InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
-      Requirements = other.GlueCEUniqueID == "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid";
-    eos
-  end
-
-  def prepare_job_executable
-    <<-eos
-      #!/bin/bash
-      module add ruby/1.9.1-p376.sl4
-
-      unzip scalarm_simulation_manager_$1.zip
-      cd scalarm_simulation_manager_$1
-      ruby simulation_manager.rb
-    eos
+  def create_scheduler_facade(type)
+    if type == 'qsub'
+      PBSFacade.new
+    elsif type == 'glite'
+      GliteFacade.new
+    end
   end
 
 end
