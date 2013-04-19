@@ -83,7 +83,7 @@ class SimulationsController < ApplicationController
     end
 
 
-    @experiment = Experiment.new(:is_running => false,
+    @experiment = Experiment.new(:is_running => true,
                                  :instance_index => 0,
                                  :run_counter => 1,
                                  :time_constraint_in_sec => 60,
@@ -94,20 +94,20 @@ class SimulationsController < ApplicationController
 
     @experiment.save_and_cache
 
-    data_farming_experiment = DataFarmingExperiment.new({ "experiment_id" => @experiment.id,
+    data_farming_experiment = DataFarmingExperiment.new({ 'experiment_id' => @experiment.id,
                                                           'simulation_id' => @simulation.id,
-                                                          "experiment_input" => @experiment_input,
-                                                          "name" => @simulation.name,
-                                                          "user_id" => session[:user],
-                                                          "is_running" => false,
-                                                          "run_counter" => 1,
-                                                          "time_constraint_in_sec" => 3600
+                                                          'experiment_input' => @experiment_input,
+                                                          'name' => @simulation.name,
+                                                          'user_id' => session[:user],
+                                                          'is_running' => true,
+                                                          'run_counter' => 1,
+                                                          'time_constraint_in_sec' => 3600
                                                         })
     data_farming_experiment.save
 
     @experiment.parameters = data_farming_experiment.parametrization_values
     @experiment.arguments = data_farming_experiment.parametrization_values
-    @experiment.doe_groups = ""
+    @experiment.doe_groups = ''
     @experiment.experiment_size = data_farming_experiment.experiment_size
 
     @experiment.is_running = true

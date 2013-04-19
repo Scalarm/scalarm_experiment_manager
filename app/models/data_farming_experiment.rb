@@ -4,9 +4,18 @@ require 'csv'
 class DataFarmingExperiment < MongoActiveRecord
   ID_DELIM = '___'
 
-
   def self.collection_name
     'experiments'
+  end
+
+  def self.get_running_experiments
+    instances = []
+
+    collection.find({'is_running' => true}).each do |attributes|
+      instances << Object.const_get(name).send(:new, attributes)
+    end
+
+    instances
   end
 
   def is_completed
@@ -31,9 +40,6 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def argument_names
-    #first_instance = ExperimentInstance.get_first_done(self.experiment_id)
-    #first_instance.arguments.split(',').map{|arg| ParameterForm.parameter_uid_for_r(arg)}.join(',')
-    #first_instance.arguments
     ExperimentInstance.get_arguments(self.experiment_id)
   end
 
