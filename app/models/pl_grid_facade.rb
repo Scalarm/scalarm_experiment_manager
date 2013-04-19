@@ -53,8 +53,6 @@ class PLGridFacade < InfrastructureFacade
 
             elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
               Rails.logger.debug("#{Time.now} - the job is done or should be already done - so we will destroy it")
-              Rails.logger.debug("First condition #{scheduler.is_done(ssh, job)}")
-              Rails.logger.debug("Second condition #{(job.created_at + job.time_limit.minutes < Time.now)}")
               scheduler.cancel(ssh, job)
               job.destroy
               scheduler.clean_after_job(ssh, job)

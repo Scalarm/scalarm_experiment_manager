@@ -115,7 +115,6 @@ class ExperimentsController < ApplicationController
       logger.debug("params_groups_for_doe = #{@experiment.doe_groups}")
 
       @parameters, @doe_groups = @experiment.create_parameters_and_doe_groups
-      Rails.logger.debug("Start: after create_parameters_and_doe_groups")
 
       params_to_override = params.select { |key, value| key.starts_with? "Agent" }
       @experiment.arguments = params_to_override.reduce("") { |acc, item| acc += "#{item[0]}=#{item[1]}|" }.chop
@@ -132,7 +131,7 @@ class ExperimentsController < ApplicationController
 
       ExperimentWatcher.watch(@experiment)
     else
-      flash["error"] = "No experiment with the given ID"
+      flash['error'] = 'No experiment with the given ID'
     end
 
     redirect_to :action => :monitor, :experiment_id => params[:experiment_id]

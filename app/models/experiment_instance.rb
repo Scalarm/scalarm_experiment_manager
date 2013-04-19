@@ -113,7 +113,7 @@ class ExperimentInstance
   end
 
   def self.find_by_id(experiment_id, instance_id)
-    instance_hash = ExperimentInstanceDb.default_instance.find_one(experiment_id, {"id" => instance_id.to_i})
+    instance_hash = ExperimentInstanceDb.default_instance.find_one(experiment_id, {'id' => instance_id.to_i})
     instance_hash.nil? ? nil : ExperimentInstance.new(instance_hash)
   end
 
@@ -126,6 +126,15 @@ class ExperimentInstance
     end
 
     return nil
+  end
+
+  def self.get_arguments(experiment_id)
+    result = ExperimentInstance.raw_find_by_query(experiment_id, {}, { limit: 1, fields: %w(arguments)})
+    if result.size >= 1
+      result[0]['arguments']
+    else
+      nil
+    end
   end
 
   def self.find_expired_instances(experiment_id, time_constraint_in_secs)

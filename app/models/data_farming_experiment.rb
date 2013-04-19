@@ -31,11 +31,10 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def argument_names
-    first_instance = ExperimentInstance.find_by_id(self.experiment_id, 1)
-
+    #first_instance = ExperimentInstance.get_first_done(self.experiment_id)
     #first_instance.arguments.split(',').map{|arg| ParameterForm.parameter_uid_for_r(arg)}.join(',')
-
-    first_instance.arguments
+    #first_instance.arguments
+    ExperimentInstance.get_arguments(self.experiment_id)
   end
 
   def range_arguments
