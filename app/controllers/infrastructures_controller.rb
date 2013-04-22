@@ -20,7 +20,7 @@ class InfrastructuresController < ApplicationController
     infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_type])
     status, response_msg = infrastructure.start_simulation_managers(user, params[:job_counter].to_i, experiment_id, params)
 
-    render json: {status: status, msg: response_msg}
+    render json: { status: status, msg: response_msg }
   end
 
   def add_infrastructure_credentials

@@ -87,7 +87,7 @@ class PLGridFacade < InfrastructureFacade
           #  retrieve job id and store it in the database for future usage
           job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id, 'created_at' => Time.now,
                                 'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
-                                'time_limit' => additional_params[:time_limit].to_i })
+                                'time_limit' => additional_params['time_limit'].to_i })
 
           if scheduler.submit_job(ssh, job)
             job.save
@@ -147,6 +147,10 @@ class PLGridFacade < InfrastructureFacade
     elsif type == 'glite'
       GliteFacade.new
     end
+  end
+
+  def default_additional_params
+    { 'scheduler' => 'qsub', 'time_limit' => 300 }
   end
 
 end

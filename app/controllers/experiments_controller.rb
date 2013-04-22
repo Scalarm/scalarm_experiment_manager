@@ -97,6 +97,13 @@ class ExperimentsController < ApplicationController
 
     @experiment.save_and_cache
 
+    if params[:computing_power]
+      username, pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
+      current_user = User.find_by_username(username)
+      computing_power = JSON.parse(params[:computing_power])
+      InfrastructureFacade.schedule_simulation_managers(current_user, @experiment.id, computing_power['type'], computing_power['resource_counter'])
+    end
+
     respond_to do |format|
       format.html{ redirect_to :controller => :experiments, :action => :monitor, :experiment_id => @experiment.id }
       format.json{ render :json => { status: 'ok', experiment_id: data_farming_experiment.experiment_id } }

@@ -48,4 +48,13 @@ class InfrastructureFacade
     end
   end
 
+  def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)
+    infrastructure = InfrastructureFacade.get_facade_for(infrastructure_type)
+    additional_params = additional_params || infrastructure.default_additional_params
+
+    status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
+
+    return status, response_msg
+  end
+
 end
