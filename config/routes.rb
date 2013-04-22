@@ -7,8 +7,6 @@ SimulationManager::Application.routes.draw do
   post "simulations/upload_simulation"
   post "simulations/destroy_simulation"
   post "simulations/conduct_experiment"
-  post "simulations/start_experiment"
-
 
   get "user_controller/login"
   match "login" => "user_controller#login"
@@ -69,6 +67,10 @@ SimulationManager::Application.routes.draw do
   post "user_controller/change_password"
 
   resources :experiments do
+    collection do
+      post :start_experiment
+    end
+
     member do
       get :code_base
       get :next_simulation

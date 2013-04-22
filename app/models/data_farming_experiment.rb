@@ -199,8 +199,48 @@ class DataFarmingExperiment < MongoActiveRecord
     param_values.map { |x| x.to_f }.uniq.sort
   end
 
+  # return a full experiment input based on partial information given, and using default values for other parameters
+  def self.prepare_experiment_input(simulation, partial_experiment_input)
+    partial_experiment_input = self.nested_json_to_hash(partial_experiment_input)
+    experiment_input = JSON.parse simulation.input_specification
+
+    experiment_input.each do |entity_group|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          # check if partial_experiment_input contains information about this parameter
+          parameter_uid = "#{entity_group['id']}#{DataFarmingExperiment::ID_DELIM}#{entity['id']}#{DataFarmingExperiment::ID_DELIM}#{parameter['id']}"
+          # if there is information then add it to the input
+          if partial_experiment_input.include?(parameter_uid)
+            partial_experiment_input[parameter_uid].each do |key, value|
+              parameter[key] = value
+            end
+          else
+            # otherwise set default values
+            parameter['parametrizationType'] = 'value'
+            parameter['value'] = parameter['value'] || parameter['min']
+          end
+        end
+      end
+    end
+
+  end
 
   private
+
+  def self.nested_json_to_hash(nested_json)
+    hash_counterpart = Hash.new
+    nested_json.each do |entity_group|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          parameter_uid = "#{entity_group['id']}#{DataFarmingExperiment::ID_DELIM}#{entity['id']}#{DataFarmingExperiment::ID_DELIM}#{parameter['id']}"
+          hash_counterpart[parameter_uid] = parameter
+        end
+      end
+    end
+
+    hash_counterpart
+  end
+
 
   def parameter_uid(entity_group, entity, parameter)
     "#{entity_group["id"]}#{ID_DELIM}#{entity["id"]}#{ID_DELIM}#{parameter["id"]}"

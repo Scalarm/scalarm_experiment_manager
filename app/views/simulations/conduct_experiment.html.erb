@@ -29,7 +29,7 @@
   </section>
 
   <section class='submit-section'>
-    <%= form_tag simulations_start_experiment_path, :onsubmit => "updateAllInputParameterValues();" do %>
+    <%= form_tag start_experiment_experiments_path, :onsubmit => "updateAllInputParameterValues();" do %>
         <%= hidden_field_tag "simulation_id", @simulation._id %>
         <%= hidden_field_tag "experiment_input" %>
         <%= hidden_field_tag "computing_power" %>

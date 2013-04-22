@@ -14,6 +14,8 @@ class ExperimentsController < ApplicationController
   include ActionView::Helpers::JavaScriptHelper
   include Spawn
 
+  before_filter :api_authentication, only: [ :start_experiment ]
+
   def index
     experiment = get_latest_running_experiment
 
@@ -36,6 +38,70 @@ class ExperimentsController < ApplicationController
 
       @simulations.sort!
     end
+  end
+
+  def start_experiment
+    @simulation = Simulation.find_by_id params['simulation_id']
+    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']))
+    # prepare scenario parametrization in the old fashion
+    @scenario_parametrization = {}
+    @experiment_input.each do |entity_group|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          parameter_uid = "#{entity_group['id']}#{DataFarmingExperiment::ID_DELIM}#{entity['id']}#{DataFarmingExperiment::ID_DELIM}#{parameter['id']}"
+          @scenario_parametrization[parameter_uid] = parameter['parametrizationType']
+        end
+      end
+    end
+
+    # create the old fashion experiment object
+    @experiment = Experiment.new(:is_running => true,
+                                 :instance_index => 0,
+                                 :run_counter => 1,
+                                 :time_constraint_in_sec => 60,
+                                 :time_constraint_in_iter => 100,
+                                 :experiment_name => @simulation.name,
+                                 :user_id => session[:user],
+                                 :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(','))
+    @experiment.save_and_cache
+    # create the new type of experiment object
+    data_farming_experiment = DataFarmingExperiment.new({'experiment_id' => @experiment.id,
+                                                         'simulation_id' => @simulation.id,
+                                                         'experiment_input' => @experiment_input,
+                                                         'name' => @simulation.name,
+                                                         'user_id' => session[:user],
+                                                         'is_running' => true,
+                                                         'run_counter' => 1,
+                                                         'time_constraint_in_sec' => 3600
+                                                        })
+    data_farming_experiment.save
+    # rewrite all necessary parameters
+    @experiment.parameters = data_farming_experiment.parametrization_values
+    @experiment.arguments = data_farming_experiment.parametrization_values
+    @experiment.doe_groups = ''
+    @experiment.experiment_size = data_farming_experiment.experiment_size
+    @experiment.is_running = true
+    @experiment.start_at = Time.now
+    # create progress bar
+    @experiment.create_progress_bar
+    # create multiple list to fast generete subsequent simulations
+    labels = data_farming_experiment.parameters
+    value_list = data_farming_experiment.value_list
+    multiply_list = Array.new(value_list.size)
+    multiply_list[-1] = 1
+    (multiply_list.size - 2).downto(0) do |index|
+      multiply_list[index] = multiply_list[index + 1] * value_list[index + 1].size
+    end
+
+    ExperimentInstanceDb.default_instance.store_experiment_info(@experiment, labels, value_list, multiply_list)
+
+    @experiment.save_and_cache
+
+    respond_to do |format|
+      format.html{ redirect_to :controller => :experiments, :action => :monitor, :experiment_id => @experiment.id }
+      format.json{ render :json => { status: 'ok', experiment_id: data_farming_experiment.experiment_id } }
+    end
+
   end
 
   # prepare data for a view with definition of types of experiment parameters
