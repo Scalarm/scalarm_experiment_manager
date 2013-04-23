@@ -569,18 +569,18 @@ class ExperimentsController < ApplicationController
 
   def file_with_configurations
     begin
-      experiment = Experiment.find_by_id(params[:experiment_id])
+      experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
 
-      file_path = File.join(Rails.public_path, "data", "configurations.txt")
-      File.open(file_path, "w") do |file|
-        experiment.experiment_instances.each do |instance|
-          # logger.info(instance.values)
-          file.puts instance.values
-        end
+      file_path = "/tmp/configurations_#{experiment.experiment_id}.txt"
+      File.delete(file_path) if File.exist?(file_path)
+
+      File.open(file_path, 'w') do |file|
+        file.puts(experiment.create_result_csv)
       end
-      send_file(file_path, :type => "text/plain")
-    rescue
-      render :inline => "No experiment with the given id", :status => 404
+
+      send_file(file_path, type: 'text/plain')
+    rescue Exception => e
+      render inline: "No experiment with the given id - #{e}", status: 404
     end
   end
 

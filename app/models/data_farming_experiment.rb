@@ -1,5 +1,6 @@
 require 'json'
 require 'csv'
+require 'set'
 
 class DataFarmingExperiment < MongoActiveRecord
   ID_DELIM = '___'
@@ -152,6 +153,16 @@ class DataFarmingExperiment < MongoActiveRecord
 
   end
 
+  def moe_names
+    moe_name_set = []
+    limit = self.experiment_size > 1000 ? self.experiment_size / 2 : self.experiment_size
+    ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(result), limit: limit }).each do |instance_doc|
+      moe_name_set += instance_doc['result'].keys.to_a
+    end
+
+    moe_name_set.uniq
+  end
+
   def create_scatter_plot_csv_for(x_axis, y_axis)
     CSV.generate do |csv|
       csv << [ x_axis, y_axis ]
@@ -223,6 +234,21 @@ class DataFarmingExperiment < MongoActiveRecord
       end
     end
 
+  end
+
+  def create_result_csv
+    moes = self.moe_names
+
+    CSV.generate do |csv|
+      csv << self.argument_names.split(',') + moes
+
+      ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
+        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+        moe_values = moes.reduce([]){ |tab, moe_name| tab << simulation_doc['result'][moe_name] || '' }
+
+        csv << values + moe_values
+      end
+    end
   end
 
   private

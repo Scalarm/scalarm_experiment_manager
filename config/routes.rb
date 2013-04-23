@@ -41,7 +41,6 @@ SimulationManager::Application.routes.draw do
   
   match "experiments/next_configuration/:experiment_id" => "experiments#next_configuration"
   match "experiments/:experiment_id/next_simulation" => "experiments#next_simulation"
-  match "experiments/file_with_configurations/:experiment_id" => "experiments#file_with_configurations"
   match "experiments/configuration/:experiment_id/:instance_id" => "experiments#configuration"
   match "experiments/set_configuration_done/:experiment_id/:instance_id" => "experiments#set_configuration_done"
   post "experiments/add_chart"
@@ -75,6 +74,7 @@ SimulationManager::Application.routes.draw do
       get :code_base
       get :next_simulation
       get :parameter_values
+      get :file_with_configurations
       # experiment charts
       post :histogram
       post :scatter_plot

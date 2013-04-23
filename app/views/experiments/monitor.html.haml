@@ -30,8 +30,8 @@
       = button_to "Download results", { :action => :download_results, :simulation_id => @experiment.id },
         :class => "nice_button", :id => "get_results_button",
         :style => "display: #{if @done == @all and @all != 0 then "" else "none" end};"
-      = button_to "Generated configurations", { :action => :file_with_configurations, :experiment_id => @experiment.id },
-        :class => "nice_button"
+      = button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.id),
+        :class => "nice_button", :method => :get
       = image_tag "loading.gif", :id => "loading-img", :style => "display: none;"
       
     - if @experiment.is_running
