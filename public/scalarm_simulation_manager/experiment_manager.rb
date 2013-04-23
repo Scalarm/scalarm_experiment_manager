@@ -1,6 +1,7 @@
 require 'json'
-require 'net/http'
 require 'uri'
+require 'openssl'
+require 'net/https'
 
 class ExperimentManager
 
@@ -38,6 +39,7 @@ class ExperimentManager
     uri = URI(path_to("#{experiment_id}/simulations/#{simulation_id}/mark_as_complete"))
 
     http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
 
     request = Net::HTTP::Post.new(uri.request_uri)
     request.basic_auth(@user, @pass)
@@ -47,7 +49,7 @@ class ExperimentManager
   end
 
   def path_to(method)
-    "http://#{@experiment_manager_address}/experiments/#{method}"
+    "https://#{@experiment_manager_address}/experiments/#{method}"
   end
 
   def execute_http_get(url)
@@ -57,7 +59,8 @@ class ExperimentManager
     req = Net::HTTP::Get.new(uri.path)
     req.basic_auth(@user, @pass)
 
-    response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+    ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
 
     response.body
   end
