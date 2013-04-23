@@ -4,11 +4,13 @@ class ApplicationController < ActionController::Base
   before_filter :check_authentication, :except => [:subscribe, :unsubscribe, :message, :login,
                                                    :get_experiment_id, :get_repository, :next_configuration,
                                                    :configuration, :set_configuration_done, :managers, :storage_managers, :code_base,
-                                                   :next_simulation, :mark_as_complete, :histogram, :start_experiment]
+                                                   :next_simulation, :mark_as_complete, :histogram, :start_experiment, :experiment_stats ]
 
   before_filter :vm_authentication, :only => [:get_experiment_id, :get_repository, :next_configuration,
                                               :configuration, :set_configuration_done, :managers, :storage_managers, :log_failure, :code_base,
                                               :next_simulation, :mark_as_complete, :histogram]
+
+  before_filter :api_authentication, only: [ :start_experiment, :experiment_stats ]
 
 
   

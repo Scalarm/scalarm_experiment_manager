@@ -14,8 +14,6 @@ class ExperimentsController < ApplicationController
   include ActionView::Helpers::JavaScriptHelper
   include Spawn
 
-  before_filter :api_authentication, only: [ :start_experiment ]
-
   def index
     experiment = get_latest_running_experiment
 
