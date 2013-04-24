@@ -67,7 +67,7 @@ class ExperimentsController < ApplicationController
                                  :time_constraint_in_sec => 60,
                                  :time_constraint_in_iter => 100,
                                  :experiment_name => @simulation.name,
-                                 :user_id => session[:user],
+                                 :user_id => @current_user.id,
                                  :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(','))
     @experiment.save_and_cache
     # create the new type of experiment object
@@ -75,7 +75,7 @@ class ExperimentsController < ApplicationController
                                                          'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
                                                          'name' => @simulation.name,
-                                                         'user_id' => session[:user],
+                                                         'user_id' => @current_user.id,
                                                          'is_running' => true,
                                                          'run_counter' => 1,
                                                          'time_constraint_in_sec' => 3600
