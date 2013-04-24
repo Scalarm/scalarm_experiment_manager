@@ -387,16 +387,16 @@ class Experiment < ActiveRecord::Base
   end
 
   def progress_bar_update(simulation_id, update_type)
-    return if self.experiment_size < PROGRESS_BAR_THRESHOLD and update_type == "sent"
+    return if self.experiment_size > PROGRESS_BAR_THRESHOLD and update_type == 'sent'
 
     parts_per_slot = parts_per_progress_bar_slot
     bar_index = ((simulation_id - 1) / parts_per_slot).floor
 
-    increment_value = if update_type == "done"
-                        (self.experiment_size < PROGRESS_BAR_THRESHOLD) ? 1 : 2
-                      elsif update_type == "sent"
+    increment_value = if update_type == 'done'
+                        (self.experiment_size > PROGRESS_BAR_THRESHOLD) ? 1 : 2
+                      elsif update_type == 'sent'
                         1
-                      elsif update_type == "rollback"
+                      elsif update_type == 'rollback'
                         -1
                       end
 
