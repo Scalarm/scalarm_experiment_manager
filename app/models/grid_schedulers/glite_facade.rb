@@ -94,7 +94,7 @@ Requirements = other.GlueCEUniqueID == "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-
   def prepare_job_executable
     <<-eos
 #!/bin/bash
-module add ruby/2.0.0-p0
+module add plgrid/tools/ruby/2.0.0-p0
 
 unzip scalarm_simulation_manager_$1.zip
 cd scalarm_simulation_manager_$1

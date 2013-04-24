@@ -28,7 +28,7 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def save_and_cache
-    Rails.cache.write("data_farming_experiment_#{self._id}", self, :expires_in => 600.seconds)
+    #Rails.cache.write("data_farming_experiment_#{self._id}", self, :expires_in => 600.seconds)
     self.save
   end
 

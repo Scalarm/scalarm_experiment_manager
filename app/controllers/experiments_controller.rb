@@ -40,7 +40,14 @@ class ExperimentsController < ApplicationController
   end
 
   def start_experiment
-    @simulation = Simulation.find_by_id params['simulation_id']
+    @simulation = if params['simulation_id']
+                    Simulation.find_by_id params['simulation_id']
+                  elsif
+                    params['simulation_name']
+                    Simulation.find_by_name params['simulation_name']
+                  else
+                    nil
+                  end
     @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']))
     # prepare scenario parametrization in the old fashion
     @scenario_parametrization = {}
@@ -284,8 +291,13 @@ class ExperimentsController < ApplicationController
     experiment = Experiment.find(params[:id].to_i)
 
     if experiment
-      experiment.experiment_progress_bar.drop
-      experiment.experiment_progress_bar.destroy
+      if experiment.experiment_progress_bar
+        experiment.experiment_progress_bar.drop
+        experiment.experiment_progress_bar.destroy
+      end
+
+      DataFarmingExperiment.find_by_experiment_id(experiment.id).destroy
+
       spawn_block do
         ExperimentInstance.drop_instances_for(experiment.id)
         #logger.debug(%x[rm -rf #{experiment.data_folder_path}])

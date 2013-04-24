@@ -49,7 +49,7 @@ class ExperimentProgressBar < ActiveRecord::Base
       counter += 1
       begin
         progress_bar = progress_bar_table
-        progress_bar.create_index([["bar_num", Mongo::ASCENDING]])
+        progress_bar.create_index([['bar_num', Mongo::ASCENDING]])
         bar_created = true
         
         return progress_bar 
