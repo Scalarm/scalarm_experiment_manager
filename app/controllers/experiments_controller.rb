@@ -242,13 +242,13 @@ class ExperimentsController < ApplicationController
           "is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC")
 
       @simulations = []
-      scenario_dir = Rails.configuration.scenarios_path
-      Dir.open(scenario_dir).each do |element|
-        potential_scenario_file = File.join(scenario_dir, element)
-        if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
-          @simulations << element
-        end
-      end
+      #scenario_dir = Rails.configuration.scenarios_path
+      #Dir.open(scenario_dir).each do |element|
+      #  potential_scenario_file = File.join(scenario_dir, element)
+      #  if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
+      #    @simulations << element
+      #  end
+      #end
       
       @simulations.sort!
 
@@ -369,16 +369,12 @@ class ExperimentsController < ApplicationController
     simulation_doc = {}
 
     begin
-      experiment = Experiment.find_in_db(params[:experiment_id])
+      experiment = Experiment.find_in_db(params[:id].to_i)
       raise 'Experiment is not running any more' if not experiment.is_running
 
-      Rails.logger.debug('Before get next instance')
       simulation_to_send = experiment.get_next_instance
-      Rails.logger.debug('Before if')
       if simulation_to_send
-        Rails.logger.debug('Before put in cache')
         simulation_to_send.put_in_cache
-        Rails.logger.debug('Before progress_bar_update')
         experiment.progress_bar_update(simulation_to_send.id.to_i, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.id,

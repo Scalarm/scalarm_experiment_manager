@@ -9,7 +9,7 @@ class Experiment < ActiveRecord::Base
   attr_accessor :parametrization_info, :progress_bar, :data_farming_experiment
 
   PROGRESS_BAR_THRESHOLD = 10000
-  
+
   def self.find_in_db(experiment_id)
     experiment_id = experiment_id.to_i
     experiment_hash = ExperimentInstanceDb.default_instance.get_experiment_info(experiment_id)
