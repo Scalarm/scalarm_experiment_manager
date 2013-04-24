@@ -32,6 +32,7 @@ class DataFarmingExperiment < MongoActiveRecord
     self.save
   end
 
+
   def get_statistics
     all  = ExperimentInstance.count_with_query(self._id)
     done = ExperimentInstance.count_with_query(self._id, {'is_done' => true})

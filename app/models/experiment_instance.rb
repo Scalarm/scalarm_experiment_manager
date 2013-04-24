@@ -60,6 +60,7 @@ class ExperimentInstance
   def self.drop_instances_for(experiment_id)
     begin
       ExperimentInstanceDb.default_instance.drop_instances_for(experiment_id)
+
     rescue Exception => e
       Rails.logger.debug("Error in 'drop_instances_for' --- #{e}")
     end

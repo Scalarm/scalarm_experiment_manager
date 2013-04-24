@@ -84,7 +84,7 @@ class Experiment < ActiveRecord::Base
 =end
   
   def save_and_cache
-    Rails.cache.write("experiment_#{id}", self, :expires_in => 600.seconds)
+    #Rails.cache.write("experiment_#{id}", self, :expires_in => 600.seconds)
     self.save 
   end
 

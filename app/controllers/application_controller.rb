@@ -26,7 +26,9 @@ class ApplicationController < ActionController::Base
   end
 
   def check_authentication
-    unless session[:user]
+    if session[:user]
+      @current_user = User.find_by_id(session[:user])
+    else
       session[:intended_action] = action_name
       session[:intended_controller] = controller_name
 
@@ -35,9 +37,12 @@ class ApplicationController < ActionController::Base
   end
 
   def api_authentication
-    unless session[:user]
+    if session[:user]
+      @current_user = User.find_by_id(session[:user])
+    else
       authenticate_or_request_with_http_basic do |username, password|
-        not User.authenticate(username, password).nil?
+        @current_user = User.authenticate(username, password)
+        not @current_user.nil?
       end
     end
   end

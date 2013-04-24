@@ -7,7 +7,7 @@
 = render :partial => "experiment_links"
 = render :partial => "analysis_charts"
 
-= javascript_include_tag "experiment_booster.js"
+= javascript_include_tag 'experiment_booster.js'
 = javascript_tag "var booster = new window.ExperimentBooster('booster_dialog');"
 
 %section#main
@@ -20,12 +20,13 @@
     %h3 Actions
     .buttons
       - if @experiment.is_running
-        = button_to "Stop experiment", { :action => :stop, :experiment_id => @experiment.id },
+        = button_to "Stop experiment", stop_experiment_path(@experiment.id),
           :class => "nice_button", :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
         = button_to_function "Booster", "booster.openDialog();", :class => "nice_button"
         = button_to_function "Scheduling policy", "$('#scheduling_policy_dialog').dialog('open')", :class => "nice_button"
       - else
-        = button_to("Destroy", { :action => :destroy, :experiment_id => @experiment.id }, :class => "nice_button", :onClick => "$('#loading-img').show(); return confirm('Are you sure?')")
+        = button_to("Destroy", experiment_path(@experiment.id), :method => :delete, :class => "nice_button", :onClick => "$('#loading-img').show(); return confirm('Are you sure?')")
+
         
       = button_to "Download results", { :action => :download_results, :simulation_id => @experiment.id },
         :class => "nice_button", :id => "get_results_button",

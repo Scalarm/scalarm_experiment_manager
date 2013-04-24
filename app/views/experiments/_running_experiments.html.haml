@@ -11,4 +11,4 @@
             - completed = compute_completed(@dones[index], @experiment_info[id][0])
             - link_text = @experiment_info[id][3] +
             -   ", started at: #{exp_info[2]}"
-            %li= link_to(link_text, experiments_monitor_path(:experiment_id => id))
+            %li= link_to(link_text, monitor_experiment_path(id))

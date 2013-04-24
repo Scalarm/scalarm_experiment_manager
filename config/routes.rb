@@ -25,10 +25,6 @@ SimulationManager::Application.routes.draw do
   post "experiments/define_param_types"
   post "experiments/define_input"
   post "experiments/define_doe"
-  post "experiments/run"
-  post "experiments/stop"
-  post "experiments/destroy"
-  get "experiments/monitor"
   get "experiments/latest_running_experiment"
   
   post "experiments/download_results"
@@ -71,10 +67,14 @@ SimulationManager::Application.routes.draw do
     end
 
     member do
-      get :code_base
-      get :next_simulation
-      get :parameter_values
-      get :file_with_configurations
+      get   :code_base
+      get   :next_simulation
+      get   :parameter_values
+      get   :file_with_configurations
+      get   :monitor
+      post  :stop
+      post  :destroy
+
       # experiment charts
       post :histogram
       post :scatter_plot

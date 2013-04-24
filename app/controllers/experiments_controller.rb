@@ -17,8 +17,9 @@ class ExperimentsController < ApplicationController
   def index
     experiment = get_latest_running_experiment
 
+
     if experiment and flash[:error].nil?
-      redirect_to :action => "monitor", :experiment_id => experiment.id
+      redirect_to monitor_experiment_path(experiment.id)
     else
       @ids, @dones, @experiment_info = Experiment.experiments_info("is_running=1 ORDER BY id DESC")
 
@@ -95,7 +96,7 @@ class ExperimentsController < ApplicationController
 
     @experiment.save_and_cache
 
-    if params[:computing_power]
+    if params.include?(:computing_power) and (not params[:computing_power].empty?)
       username, pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
       current_user = User.find_by_username(username)
       computing_power = JSON.parse(params[:computing_power])
@@ -103,7 +104,7 @@ class ExperimentsController < ApplicationController
     end
 
     respond_to do |format|
-      format.html{ redirect_to :controller => :experiments, :action => :monitor, :experiment_id => @experiment.id }
+      format.html{ redirect_to monitor_experiment_path(@experiment.id) }
       format.json{ render :json => { status: 'ok', experiment_id: data_farming_experiment.experiment_id } }
     end
 
@@ -205,7 +206,7 @@ class ExperimentsController < ApplicationController
       flash['error'] = 'No experiment with the given ID'
     end
 
-    redirect_to :action => :monitor, :experiment_id => params[:experiment_id]
+    redirect_to monitor_experiment_path(params[:experiment_id])
   end
 
   # sets an experiment to the "running" state
@@ -223,9 +224,9 @@ class ExperimentsController < ApplicationController
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
     begin
-      @experiment = Experiment.find(params[:experiment_id])
-      set_monitoring_view_params(params[:experiment_id])
-      @user = User.find(session[:user])
+      @experiment = Experiment.find(params[:id].to_i)
+      set_monitoring_view_params(params[:id].to_i)
+      @user = @current_user
 
       # Experiments info
       # TODO FIXME move this to background
@@ -260,33 +261,40 @@ class ExperimentsController < ApplicationController
 
   # stops the currently running DF experiment (if any)
   def stop
-    experiment = Experiment.find(params[:experiment_id])
-    if experiment then
+    experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+
+    if experiment
       experiment.is_running = false
       experiment.end_at = Time.now
+
+      old_exp = Experiment.find(experiment.experiment_id)
+      old_exp.is_running = false
+      old_exp.end_at = Time.now
+      old_exp.save_and_cache
+
       experiment.save_and_cache
     else
-      flash[:notice] = "Your experiment is no longer available."
+      flash[:notice] = 'Your experiment is no longer available.'
     end
 
     redirect_to :action => :index
   end
 
   def destroy
-    experiment = Experiment.find(params[:experiment_id].to_i)
+    experiment = Experiment.find(params[:id].to_i)
 
     if experiment
       experiment.experiment_progress_bar.drop
       experiment.experiment_progress_bar.destroy
       spawn_block do
         ExperimentInstance.drop_instances_for(experiment.id)
-        logger.debug(%x[rm -rf #{experiment.data_folder_path}])
+        #logger.debug(%x[rm -rf #{experiment.data_folder_path}])
       end
       experiment.destroy
 
-      flash[:notice] = "Your experiment has been destroyed."
+      flash[:notice] = 'Your experiment has been destroyed.'
     else
-      flash[:notice] = "Your experiment is no longer available."
+      flash[:notice] = 'Your experiment is no longer available.'
     end
 
     redirect_to :action => :index
@@ -835,9 +843,9 @@ class ExperimentsController < ApplicationController
     experiment = get_latest_running_experiment
 
     if experiment
-      redirect_to :action => "monitor", :experiment_id => experiment.id
+      redirect_to monitor_experiment_path(experiment.id)
     else
-      redirect_to :action => "index"
+      redirect_to action: :index
     end
   end
 
