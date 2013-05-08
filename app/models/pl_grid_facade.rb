@@ -30,6 +30,7 @@ class PLGridFacade < InfrastructureFacade
       jobs = PlGridJob.all.group_by(&:user_id)
     #  for each group - login to the ui using the user credentials
       jobs.each do |user_id, job_list|
+
         credentials = GridCredentials.find_by_user_id(user_id)
         Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
           # generate new proxy
@@ -42,17 +43,32 @@ class PLGridFacade < InfrastructureFacade
             if scheduler.is_job_queued(ssh, job) and (job.created_at + 10.minutes < Time.now)
               Rails.logger.debug("#{Time.now} - the job will be restarted due to not been run")
 
-              if scheduler.restart(ssh, job)
-                job.created_at = Time.now
-                job.save
+              if not job.experiment_id.blank?
+                if scheduler.restart(ssh, job)
+                  job.created_at = Time.now
+                  job.save
+                end
+              else
+                if DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
+                  Rails.logger.debug('The experiment which should be computed no longer exists')
+                  job.destroy
+                end
               end
 
             elsif (job.created_at + 24.hours < Time.now) and ((not job.experiment.nil?) and (not job.experiment.is_completed))
               #  if the job is running more than 24 h then restart
               Rails.logger.debug("#{Time.now} - the job will be restarted due to being run for 24 hours")
-              if scheduler.restart(ssh, job)
-                job.created_at = Time.now
-                job.save
+
+              if not job.experiment_id.blank?
+                if scheduler.restart(ssh, job)
+                  job.created_at = Time.now
+                  job.save
+                end
+              else
+                if DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
+                  Rails.logger.debug('The experiment which should be computed no longer exists')
+                  job.destroy
+                end
               end
 
             elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)

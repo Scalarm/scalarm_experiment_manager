@@ -52,7 +52,7 @@ class PBSFacade
   end
 
   def is_job_queued(ssh, job)
-    %w(Q T W).include?(current_state(ssh, job))
+    %w(Q T W U).include?(current_state(ssh, job))
   end
 
   def cancel(ssh, job)
