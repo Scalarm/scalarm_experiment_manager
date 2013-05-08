@@ -130,7 +130,6 @@ class MongoActiveRecord
   end
 
   def self.find_all_by(parameter, value)
-    Rails.logger.debug("Calling find all by method")
     value = value.first if value.is_a? Enumerable
 
     if parameter == 'id'
