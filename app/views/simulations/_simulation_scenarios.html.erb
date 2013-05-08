@@ -17,11 +17,14 @@
 
 <script type="text/javascript">
   $(function() {
+//  making the list of simulation scenarios selectable
     $('#simulation_list').selectable({
         selected: function(event, ui) {
             var selectedSimulationId = $(ui.selected).attr("simulation_id");
             $("#submit_form input#simulation_id").val(selectedSimulationId);
         }
     });
+//  making every button in this partial a jquery ui button
+    $('#scenarios input[type=submit]').button({});
   });
 </script>
