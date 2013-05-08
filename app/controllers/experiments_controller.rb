@@ -18,9 +18,9 @@ class ExperimentsController < ApplicationController
     experiment = get_latest_running_experiment
 
 
-    if experiment and flash[:error].nil?
-      redirect_to monitor_experiment_path(experiment.id)
-    else
+    #if experiment and flash[:error].nil?
+    #  redirect_to monitor_experiment_path(experiment.id)
+    #else
       @ids, @dones, @experiment_info = Experiment.experiments_info("is_running=1 ORDER BY id DESC")
 
       @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
@@ -40,7 +40,7 @@ class ExperimentsController < ApplicationController
       @simulations.sort!
 
       @simulation_scenarios = Simulation.all
-    end
+    #end
   end
 
   def start_experiment
@@ -292,22 +292,10 @@ class ExperimentsController < ApplicationController
   end
 
   def destroy
-    experiment = Experiment.find(params[:id].to_i)
+    df_exp = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
 
-    if experiment
-      if experiment.experiment_progress_bar
-        experiment.experiment_progress_bar.drop
-        experiment.experiment_progress_bar.destroy
-      end
-
-      DataFarmingExperiment.find_by_experiment_id(experiment.id).destroy
-
-      spawn_block do
-        ExperimentInstance.drop_instances_for(experiment.id)
-        #logger.debug(%x[rm -rf #{experiment.data_folder_path}])
-      end
-      experiment.destroy
-
+    if df_exp
+      df_exp.destroy
       flash[:notice] = 'Your experiment has been destroyed.'
     else
       flash[:notice] = 'Your experiment is no longer available.'

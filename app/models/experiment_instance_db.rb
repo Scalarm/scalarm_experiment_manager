@@ -74,6 +74,10 @@ class ExperimentInstanceDb < ActiveRecord::Base
     "experiment_instances_#{experiment_id}"
   end
 
+  def self.collection_name(experiment_id)
+    "experiment_instances_#{experiment_id}"
+  end
+
   def find_one(experiment_id, query = {})
     collection = connect_to_collection(experiment_id)
     raise "Error while connecting to #{self.ip}" if collection.nil?

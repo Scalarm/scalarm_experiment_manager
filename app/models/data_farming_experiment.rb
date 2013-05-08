@@ -252,6 +252,24 @@ class DataFarmingExperiment < MongoActiveRecord
     end
   end
 
+  def destroy
+    # drop simulation table
+    @@db[ExperimentInstanceDb.collection_name(self.experiment_id)].drop
+    # drop progress bar object
+    progress_bar = ExperimentProgressBar.find_by_experiment_id(self.experiment_id)
+    if progress_bar
+      progress_bar.drop
+      progress_bar.destroy
+    end
+    # drop object from relational database
+    experiment = Experiment.find_by_id(self.experiment_id)
+    experiment.destroy
+    # TODO destroy all binary files stored for this experiments
+    # self-drop
+    @@db['experiments_info'].remove({ experiment_id: self.experiment_id })
+    DataFarmingExperiment.destroy({ experiment_id: self.experiment_id })
+  end
+
   private
 
   def self.nested_json_to_hash(nested_json)
