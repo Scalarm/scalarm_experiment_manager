@@ -1,16 +1,16 @@
 <article id="scenarios">
-  <%= content_tag :h3, "Select simulation to run" %>
+  <%= content_tag :h3, t('simulation_scenario_list.label') %>
 
   <ol id="simulation_list">
-    <% @simulations.each do |simulation| %>
-        <%= content_tag :li, simulation_run_label(simulation), :class => "ui-widget-content", :simulation_id => simulation._id %>
+    <% @simulation_scenarios.each do |simulation| %>
+        <%= content_tag :li, simulation_run_label(simulation), :class => 'ui-widget-content', :simulation_id => simulation._id %>
     <% end %>
   </ol>
 
   <div id="submit_form" class="actions">
     <%= form_tag simulations_conduct_experiment_path do %>
-      <%= hidden_field_tag "simulation_id" %>
-      <%= submit_tag "Go to input definition" %>
+      <%= hidden_field_tag :simulation_id %>
+      <%= submit_tag t('simulation_scenario_list.go_to_input_definition_button') %>
     <% end %>
   </div>
 </article>

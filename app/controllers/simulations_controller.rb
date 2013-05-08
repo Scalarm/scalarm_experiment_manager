@@ -3,6 +3,7 @@ class SimulationsController < ApplicationController
 
   def index
     @simulations = Simulation.all
+    @simulation_scenarios = @simulations
     @input_writers = SimulationInputWriter.all
     @executors = SimulationExecutor.all
     @output_readers = SimulationOutputReader.all

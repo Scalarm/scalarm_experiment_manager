@@ -2,4 +2,9 @@
 # See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
 
 en:
-  hello: "Hello world"
+  registered_simulation_scenario_list:
+    label: "Registered Simulations"
+    destroy_button: "Destroy"
+  simulation_scenario_list:
+    label: "Select simulation scenario to run"
+    go_to_input_definition_button: "Go to input definition"

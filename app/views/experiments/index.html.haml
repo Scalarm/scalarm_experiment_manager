@@ -2,7 +2,9 @@
 = # socky :channels => "experiment_state_changed"
 
 %section#main
-  = render :partial => "running_experiments"
+  = render 'running_experiments'
+
+  = render 'simulations/simulation_scenarios'
     
   = form_tag(url_for({:action => :define_param_types})) do
     %article#scenarios

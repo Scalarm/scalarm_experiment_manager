@@ -28,14 +28,18 @@ class ExperimentsController < ApplicationController
 
       @simulations = []
       scenario_dir = Rails.configuration.scenarios_path
-      Dir.open(scenario_dir).each do |element|
-        potential_scenario_file = File.join(scenario_dir, element)
-        if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
-          @simulations << element
+      if Dir.exist?(scenario_dir)
+        Dir.open(scenario_dir).each do |element|
+          potential_scenario_file = File.join(scenario_dir, element)
+          if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
+            @simulations << element
+          end
         end
       end
 
       @simulations.sort!
+
+      @simulation_scenarios = Simulation.all
     end
   end
 
