@@ -13,8 +13,13 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def current_state(user_id)
-    jobs = PlGridJob.find_by_user_id(user_id)
-    jobs_count = jobs.nil? ? 0 : jobs.size
+    jobs = PlGridJob.find_all_by_user_id(user_id)
+    Rails.logger.debug("Found jobs #{jobs}")
+    jobs_count = if jobs.nil?
+                   0
+                 else
+                   jobs.size
+                 end
 
     "Currently #{jobs_count} jobs are scheduled or running."
   end

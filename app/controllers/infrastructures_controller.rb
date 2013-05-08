@@ -4,7 +4,7 @@ class InfrastructuresController < ApplicationController
     infrastructure_info = {}
 
     InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure|
-      infrastructure_info[infrastructure_id] = infrastructure[:facade].current_state(session[:user])
+      infrastructure_info[infrastructure_id] = infrastructure[:facade].current_state(@current_user.id)
     end
 
     infrastructure_info[:private] = 'Not available'

@@ -81,6 +81,11 @@ class MongoActiveRecord
       parameter_name = method_name.to_s.split('_')[2..-1].join('_')
 
       return self.find_by(parameter_name, args)
+
+    elsif method_name.to_s.start_with?('find_all_by')
+      parameter_name = method_name.to_s.split('_')[3..-1].join('_')
+
+      return self.find_all_by(parameter_name, args)
     end
 
     super(method_name, *args, &block)
@@ -122,6 +127,23 @@ class MongoActiveRecord
     else
       nil
     end
+  end
+
+  def self.find_all_by(parameter, value)
+    Rails.logger.debug("Calling find all by method")
+    value = value.first if value.is_a? Enumerable
+
+    if parameter == 'id'
+      value = BSON::ObjectId(value.to_s)
+      parameter = '_id'
+    end
+
+    collection = Object.const_get(name).send(:collection)
+
+    collection.find({parameter => value}).map do |attributes|
+      Object.const_get(name).new(attributes)
+    end
+
   end
 
 end
