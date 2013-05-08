@@ -14,7 +14,6 @@ class PLGridFacade < InfrastructureFacade
 
   def current_state(user_id)
     jobs = PlGridJob.find_all_by_user_id(user_id)
-    Rails.logger.debug("Found jobs #{jobs}")
     jobs_count = if jobs.nil?
                    0
                  else
