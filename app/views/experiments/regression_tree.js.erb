@@ -11,7 +11,7 @@ $('div#rt_chart_' + i).html("<%= escape_javascript( render partial: 'regression_
 
 function init_<%= "#{@chart.experiment.experiment_id}_#{@chart.moe_name}" %>(experiment_id, moe_name) {
   // init tree data
-  var json_<%= "#{@chart.experiment.experiment_id}_#{@chart.moe_name}" %> = <%= json_rt_node(@chart.tree_nodes[1], @chart.tree_nodes) %>;
+  var json_<%= "#{@chart.experiment.experiment_id}_#{@chart.moe_name}" %> = <%= raw(json_rt_node(@chart.tree_nodes[1], @chart.tree_nodes)) %>;
 
   //init Spacetree
   //Create a new ST instance
