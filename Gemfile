@@ -42,3 +42,5 @@ end
 #gem "socky-client-rails"
 #gem "socky-server"
 
+gem 'newrelic_rpm'
+

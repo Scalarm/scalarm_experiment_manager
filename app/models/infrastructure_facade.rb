@@ -1,3 +1,5 @@
+require 'yaml'
+
 class InfrastructureFacade
 
   class SpawnProxy
@@ -13,9 +15,13 @@ class InfrastructureFacade
         experiment_manager_address: '149.156.10.250',
         experiment_manager_user: ApplicationController::USER,
         experiment_manager_pass: ApplicationController::PASSWORD,
+
         experiment_id: experiment_id,
         user_id: user.id,
     }
+    # adding information about storage manager from a config file
+    config = YAML::load_file(File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml'))
+    sm_config['storage_manager'] = config['storage_manager']
 
     IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
     # zip all files

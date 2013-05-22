@@ -37,21 +37,24 @@ class PLGridFacade < InfrastructureFacade
           ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
           job_list.each do |job|
             scheduler = create_scheduler_facade(job.scheduler_type)
-            Rails.logger.debug("#{Time.now} - checking job #{job.job_id} - current state #{scheduler.current_state(ssh, job)}")
+            #Rails.logger.debug("#{Time.now} - checking job #{job.job_id} - current state #{scheduler.current_state(ssh, job)}")
+            #Rails.logger.debug("Is job scheduled --- #{scheduler.is_job_queued(ssh, job)}")
+            #Rails.logger.debug("Too long scheduled --- #{(job.created_at + 10.minutes < Time.now)} --- #{job.created_at} --- #{job.created_at + 10.minutes} --- #{Time.now}")
+            #Rails.logger.debug("Too long running --- #{(job.created_at + 24.hours < Time.now)}")
+            #Rails.logger.debug("Experiment is valid --- #{((not job.experiment.nil?) and (not job.experiment.is_completed))}")
+            #Rails.logger.debug("Experiment is not valid --- #{not job.experiment_id.blank? and DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?}")
 
             #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
             if scheduler.is_job_queued(ssh, job) and (job.created_at + 10.minutes < Time.now)
-              Rails.logger.debug("#{Time.now} - the job will be restarted due to not been run")
-
-              if not job.experiment_id.blank?
+              Rails.logger.debug("#{Time.now} - the job will be restarted due to not been run --- #{not job.experiment_id.blank?} --- #{DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?}")
+              # but first check if the experiment which should be calculated still exists
+              if not job.experiment_id.blank? and DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
+                Rails.logger.debug('The experiment which should be computed no longer exists')
+                job.destroy
+              else
                 if scheduler.restart(ssh, job)
                   job.created_at = Time.now
                   job.save
-                end
-              else
-                if DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
-                  Rails.logger.debug('The experiment which should be computed no longer exists')
-                  job.destroy
                 end
               end
 
@@ -59,15 +62,14 @@ class PLGridFacade < InfrastructureFacade
               #  if the job is running more than 24 h then restart
               Rails.logger.debug("#{Time.now} - the job will be restarted due to being run for 24 hours")
 
-              if not job.experiment_id.blank?
+              # but first check if the experiment which should be calculated still exists
+              if not job.experiment_id.blank? and DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
+                Rails.logger.debug('The experiment which should be computed no longer exists')
+                job.destroy
+              else
                 if scheduler.restart(ssh, job)
                   job.created_at = Time.now
                   job.save
-                end
-              else
-                if DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
-                  Rails.logger.debug('The experiment which should be computed no longer exists')
-                  job.destroy
                 end
               end
 

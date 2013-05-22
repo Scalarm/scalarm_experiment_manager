@@ -4,7 +4,8 @@ require 'uri'
 
 require 'fileutils'
 
-require './experiment_manager.rb'
+require_relative 'experiment_manager'
+require_relative 'storage_manager'
 
 class IO
   def self.write(filename, text) 
@@ -20,6 +21,7 @@ config = JSON.parse(IO.read('config.json'))
 puts config
 
 em_proxy = ExperimentManager.new(config)
+sm_proxy = StorageManager.new(config)
 
 # 2. check if an experiment id is specified and if there is no experiment id get one
 if not config.has_key?('experiment_id')
@@ -121,6 +123,12 @@ while true
 
       puts "We got the following response: #{response}"
     end
+    # upload binary_output if provided
+    output_binary_file = "#{simulation_dir}/output.tar.gz"
+    if File.exist?(output_binary_file)
+      sm_proxy.upload_binary_output(experiment_id, simulation_input['simulation_id'], output_binary_file)
+    end
+
     # 6f. go to the 6 point
   end
 

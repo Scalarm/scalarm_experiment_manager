@@ -1,6 +1,7 @@
 require 'json'
 require 'csv'
 require 'set'
+require 'yaml'
 
 class DataFarmingExperiment < MongoActiveRecord
   ID_DELIM = '___'
@@ -253,6 +254,16 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def destroy
+    # destroy all binary files stored for this experiments
+    config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
+    Rails.logger.debug("Config for storage manager: #{config.inspect}")
+    sm_proxy = StorageManagerProxy.new(config)
+
+    1.upto(self.experiment_size).each do |simulation_id|
+      success = sm_proxy.delete_binary_output(self.experiment_id, simulation_id)
+      Rails.logger.debug("Deletion of simulation #{simulation_id} for experiment #{self.experiment_id} completed successfully ? #{success}")
+    end
+
     # drop simulation table
     @@db[ExperimentInstanceDb.collection_name(self.experiment_id)].drop
     # drop progress bar object
@@ -264,7 +275,6 @@ class DataFarmingExperiment < MongoActiveRecord
     # drop object from relational database
     experiment = Experiment.find_by_id(self.experiment_id)
     experiment.destroy
-    # TODO destroy all binary files stored for this experiments
     # self-drop
     @@db['experiments_info'].remove({ experiment_id: self.experiment_id })
     DataFarmingExperiment.destroy({ experiment_id: self.experiment_id })
