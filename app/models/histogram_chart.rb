@@ -67,7 +67,11 @@ class HistogramChart
       if column_index < 0 then
         column_index = row.index(@moe_name)
       else
-        buckets[ [ ((row[column_index].to_f - @stats[:ex_min]) / @bucket_width).floor, buckets.size - 1 ].min ] += 1
+        if @bucket_width == 0.0
+          buckets[0] += 1
+        else
+          buckets[ [ ((row[column_index].to_f - @stats[:ex_min]) / @bucket_width).floor, buckets.size - 1 ].min ] += 1
+        end
       end
     end
 
