@@ -1,17 +1,16 @@
-<section>
-  <%= content_tag :h3, "Registered Simulation Output Readers" %>
+<div class="panel radius">
+  <%= content_tag :h4, t('registered_output_readers_list.label'), class: 'subheader' %>
 
-  <ul>
+  <ul class="no-bullet">
     <% @output_readers.each do |output_reader| %>
         <%= content_tag :li do %>
             <%= form_tag simulations_destroy_component_path do %>
-                <%= hidden_field_tag "component_type", "output_reader" %>
-                <%= hidden_field_tag "component_id", output_reader._id %>
-                <%= output_reader.name %>
-                <%= submit_tag "Destroy" %>
+                <%= hidden_field_tag 'component_type', 'output_reader' %>
+                <%= hidden_field_tag 'component_id', output_reader._id %>
+                <%= content_tag :strong, output_reader.name %>
+                <%= submit_tag 'Destroy', class: 'button' %>
             <% end %>
         <% end %>
     <% end %>
   </ul>
-</section>
-<%= javascript_tag "$(function() { $('input[type=submit]').button({}); });" %>
+</div>

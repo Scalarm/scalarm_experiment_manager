@@ -8,3 +8,13 @@ en:
   simulation_scenario_list:
     label: "Select simulation scenario to run"
     go_to_input_definition_button: "Go to input definition"
+  login_success: "You have log in successfully"
+  logout_success: "You have log out successfully"
+  password_changed: "You have changed your password."
+  password_repeat_error: "'Password' and 'Repeat password' must be equal!"
+  registered_executors_list:
+    label: "Registered Simulation Executors"
+  registered_input_writers_list:
+    label: "Registered Simulation Input Writers"
+  registered_output_readers_list:
+    label: "Registered Simulation Output Readers"

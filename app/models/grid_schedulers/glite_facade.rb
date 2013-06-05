@@ -81,6 +81,7 @@ class GliteFacade
 
   # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
   # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
+  # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"
   def prepare_job_descriptor(uuid)
     <<-eos
 Executable = "scalarm_job_#{uuid}.sh";
@@ -89,7 +90,7 @@ StdOutput = "scalarm_job.out";
 StdError = "scalarm_job.err";
 OutputSandbox = {"scalarm_job.out", "scalarm_job.err"};
 InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
-Requirements = other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid";
+Requirements = (other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid" || other.GlueCEUniqueID == "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid");
     eos
   end
 
@@ -97,6 +98,8 @@ Requirements = other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid
     <<-eos
 #!/bin/bash
 module add plgrid/tools/ruby/2.0.0-p0
+
+#if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cd $TMPDIR; fi
 
 unzip scalarm_simulation_manager_$1.zip
 cd scalarm_simulation_manager_$1

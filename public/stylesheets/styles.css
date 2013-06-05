@@ -45,13 +45,27 @@ select {
 
 header {
     margin-top: 10px;
+    margin-bottom: 10px;
     padding: 5px;
     background-color: #eee;
-    height: 80px;
+    height: 98px;
     /* curved border radius */
     border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
+}
+
+.navigation {
+    max-width: 100%;
+    margin-bottom: 0px;
+    padding: 0;
+    margin: 0;
+}
+
+.navigation a {
+    margin-bottom: 0px;
+    margin-right: 5px;
+    float: right;
 }
 
 #main {
@@ -249,7 +263,7 @@ padding-right: 20px;
 clear: both;
 }
 
-.nice_button, .buttons input[type="submit"] {
+.sbtn, .nice_button, .buttons input[type="submit"] {
   /*CSS 3: apply border radius, box shadow, and text shadow for rounded corners
            and button shaddowing effects */
   border-radius: 5px;
@@ -274,16 +288,16 @@ clear: both;
     padding: 8px 14px 8px 14px;
     background-color: #0E59AE;
     float: left;
-    margin-left: 10px;
+    margin-right: 10px;
     margin-bottom: 4px;
 }
 
-.nice_button:hover, .buttons input[type="submit"]:hover {
+.sbtn:hover, .nice_button:hover, .buttons input[type="submit"]:hover {
   color:#FFF;
   background-color:#063468;
 }
 
-.nice_button:active, .buttons input[type="submit"]:active {
+.sbtn:active, .nice_button:active, .buttons input[type="submit"]:active {
     background-color:#1169cc;
     position: relative;
     top: 1px;
@@ -306,12 +320,13 @@ clear: both;
 #moa_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
 
 label {
-  width: 7.5em;
-  float: left;
-  text-align: right;
-  margin-right: 0.5em;
-  display: block;
-  line-height: 24px;
+  /*width: 7.5em;*/
+  /*float: left;*/
+  /*text-align: right;*/
+  /*margin-right: 0.5em;*/
+  /*display: block;*/
+  /*line-height: 24px;*/
+  font-size: 14px;
 }
 
 .nice_label {
@@ -769,4 +784,8 @@ article#experiment_stats {
 
 .hidden {
     display: none;
+}
+
+.list input {
+    margin-bottom: 0px;
 }

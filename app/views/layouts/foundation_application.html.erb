@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width" />
+
+  <title>Scalarm</title>
+
+  <%= stylesheet_link_tag 'https://fonts.googleapis.com/css?family=Ubuntu' %>
+
+  <link rel="stylesheet" href="/css/foundation.css" />
+  <script src="/js/vendor/custom.modernizr.js"></script>
+
+  <%= stylesheet_link_tag :all %>
+  <%= stylesheet_link_tag 'overcast/jquery-ui-1.10.2.min.css' %>
+  <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'/>
+
+
+  <%= javascript_include_tag 'application', 'simulations' %>
+  <%= javascript_include_tag 'jquery/jquery-1.9.1.min.js' %>
+  <%= javascript_include_tag 'jquery/jquery-ui-1.10.2.min.js' %>
+
+  <%= csrf_meta_tag %>
+</head>
+
+<body>
+<div id="wrapper">
+
+  <div class="row navigation">
+    <% if session[:user] %>
+        <%= link_to 'Logout', user_controller_logout_path, class: 'button' %>
+        <%= link_to 'Account', user_controller_account_path, class: 'button' %>
+    <% end %>
+  </div>
+
+  <header>
+    <h1 id="site_title">Scalarm Experiment Manager</h1>
+
+    <a href="http://www.cyfronet.pl">
+      <%= image_tag "cyfronet_logo.png", :size => "170x80", :style => "float: right;" %>
+    </a>
+    <a href="http://www.eda.europa.eu">
+      <%= image_tag "eda_logo.png", :height => "80" %>
+    </a>
+  </header>
+
+  <div class="clearall"></div>
+
+  <div class="notice" style="display: none;">
+    <%= flash[:notice] if flash[:notice] %>
+  </div>
+  <%= javascript_tag("$('.notice').show();") if flash[:notice]  %>
+
+  <div class="error" style="display: none;">
+    <%= flash[:error] if flash[:error] %>
+  </div>
+  <%= javascript_tag("$('.error').show();") if flash[:error]  %>
+
+  <%= yield %>
+</div>
+
+<script>
+  document.write('<script src=' +
+  ('__proto__' in {} ? '/js/vendor/zepto' : '/js/vendor/jquery') +
+  '.js><\/script>')
+  </script>
+
+  <script src="/js/foundation.min.js"></script>
+  <!--
+
+  <script src="js/foundation/foundation.js"></script>
+
+  <script src="js/foundation/foundation.alerts.js"></script>
+
+  <script src="js/foundation/foundation.clearing.js"></script>
+
+  <script src="js/foundation/foundation.cookie.js"></script>
+
+  <script src="js/foundation/foundation.dropdown.js"></script>
+
+  <script src="js/foundation/foundation.forms.js"></script>
+
+  <script src="js/foundation/foundation.joyride.js"></script>
+
+  <script src="js/foundation/foundation.magellan.js"></script>
+
+  <script src="js/foundation/foundation.orbit.js"></script>
+
+  <script src="js/foundation/foundation.placeholder.js"></script>
+
+  <script src="js/foundation/foundation.reveal.js"></script>
+
+  <script src="js/foundation/foundation.section.js"></script>
+
+  <script src="js/foundation/foundation.tooltips.js"></script>
+
+  <script src="js/foundation/foundation.topbar.js"></script>
+
+  -->
+
+  <script>
+    $(document).foundation();
+  </script>
+
+</body>
+</html>

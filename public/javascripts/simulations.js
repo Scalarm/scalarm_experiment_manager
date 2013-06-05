@@ -12,6 +12,13 @@ function parametrizationTypeListener(parameterIndex, groupId, entityId, paramete
 
         var selectedType = $("select#parametrization_type_" + parameterIndex).val();
         updateParametrizationTypeInJSON(groupId, entityId, parameterId, selectedType);
+
+        if(selectedType == "range") {
+            document.dispatchEvent(createNewRangeParameter(entityId, groupId, parameterId));
+        } else {
+            document.dispatchEvent(createNewOtherParameter(entityId, groupId, parameterId));
+        }
+
     });
 }
 
@@ -264,4 +271,32 @@ function updateAllInputParameterValues() {
     });
 
     $("#experiment_input").val(JSON.stringify(experimentInput));
+}
+
+function createNewRangeParameter(entity_id, group_id, parameter_id) {
+    return new CustomEvent(
+        "newRangeParameter",
+        {
+            detail: {
+                entity_id: entity_id,
+                group_id: group_id,
+                parameter_id: parameter_id
+            },
+            bubbles: true,
+            cancelable: true
+        });
+}
+
+function createNewOtherParameter(entity_id, group_id, parameter_id) {
+    return new CustomEvent(
+        "newOtherParameter",
+        {
+            detail: {
+                entity_id: entity_id,
+                group_id: group_id,
+                parameter_id: parameter_id
+            },
+            bubbles: true,
+            cancelable: true
+        });
 }

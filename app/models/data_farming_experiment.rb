@@ -193,7 +193,11 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def generated_parameter_values_for(parameter_uid)
-    instance = ExperimentInstance.find_by_id(self.experiment_id, 1)
+    simulation_id = 1
+    while (instance = ExperimentInstance.find_by_id(self.experiment_id, simulation_id)).nil?
+      simulation_id += 1
+    end
+
     #Rails.logger.debug("Parameter UID: #{parameter_uid}")
     #Rails.logger.debug("instance.arguments: #{instance.arguments.split(',')}")
     param_index = instance.arguments.split(',').index(parameter_uid)

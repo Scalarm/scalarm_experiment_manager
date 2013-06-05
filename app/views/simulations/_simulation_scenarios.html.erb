@@ -1,30 +1,6 @@
-<article id="scenarios">
-  <%= content_tag :h3, t('simulation_scenario_list.label') %>
-
-  <ol id="simulation_list">
-    <% @simulation_scenarios.each do |simulation| %>
-        <%= content_tag :li, simulation_run_label(simulation), :class => 'ui-widget-content', :simulation_id => simulation._id %>
-    <% end %>
-  </ol>
-
-  <div id="submit_form" class="actions">
-    <%= form_tag simulations_conduct_experiment_path do %>
-      <%= hidden_field_tag :simulation_id %>
-      <%= submit_tag t('simulation_scenario_list.go_to_input_definition_button') %>
-    <% end %>
-  </div>
-</article>
-
-<script type="text/javascript">
-  $(function() {
-//  making the list of simulation scenarios selectable
-    $('#simulation_list').selectable({
-        selected: function(event, ui) {
-            var selectedSimulationId = $(ui.selected).attr("simulation_id");
-            $("#submit_form input#simulation_id").val(selectedSimulationId);
-        }
-    });
-//  making every button in this partial a jquery ui button
-    $('#scenarios input[type=submit]').button({});
-  });
-</script>
+<div class="panel radius list">
+  <%= content_tag :h4, t('simulation_scenario_list.label'), class: 'subheader' %>
+  <% @simulation_scenarios.each do |simulation| %>
+    <%= button_to simulation_run_label(simulation), simulations_conduct_experiment_path(simulation_id: simulation.id), class: 'button expand' %>
+  <% end %>
+</div>

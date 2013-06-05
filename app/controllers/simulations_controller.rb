@@ -7,10 +7,12 @@ class SimulationsController < ApplicationController
     @input_writers = SimulationInputWriter.all
     @executors = SimulationExecutor.all
     @output_readers = SimulationOutputReader.all
+
+    render layout: 'foundation_application'
   end
 
   def registration
-
+    render layout: 'foundation_application'
   end
 
   def upload_component
@@ -67,6 +69,8 @@ class SimulationsController < ApplicationController
   def conduct_experiment
     @simulation = Simulation.find_by_id(params[:simulation_id])
     @simulation_input = JSON.parse(@simulation.input_specification)
+
+    render layout: 'foundation_application'
   end
 
 

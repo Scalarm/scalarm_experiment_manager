@@ -2,17 +2,17 @@
 
 <article>
 
-  <%= render :partial => "simulations" %>
+  <%= render 'simulations' %>
 
-  <%= render :partial => "simulation_input_writers" %>
-  <%= render :partial => "simulation_executors" %>
-  <%= render :partial => "simulation_output_readers" %>
+  <%= render 'simulation_input_writers' %>
+  <%= render 'simulation_executors' %>
+  <%= render 'simulation_output_readers' %>
 
-  <section>
-    <%= content_tag :h3, "Actions" %>
-
-    <%= content_tag :div, link_to("Go to registration form", simulations_registration_path, :class => "nice_button"), :class => "buttons" %>
-  </section>
+  <div class="row">
+    <div class="small-3 small-centered columns">
+        <%= content_tag :div, link_to('Go to registration form', simulations_registration_path, class: 'button') %>
+    </div>
+  </div>
 
 </article>
 

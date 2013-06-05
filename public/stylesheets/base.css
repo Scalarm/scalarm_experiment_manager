@@ -61,3 +61,8 @@
     font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
     padding:7px;
 }
+
+#site_title {
+    line-height: 80px;
+    padding-top: 0px;
+}

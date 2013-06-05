@@ -1,120 +1,119 @@
 <article>
 
-  <section class="registration_form">
-    <h3>Simulation registration</h3>
+  <div class="panel radius">
+    <%= content_tag :h4, 'Simulation scenario registration', class: 'subheader' %>
 
-    <%= form_tag(simulations_upload_simulation_path, :multipart => true) do %>
-        <div>
-          <label>Simulation name</label>
-          <%= text_field_tag "simulation_name" %>
+    <%= form_tag(simulations_upload_simulation_path, :multipart => true, class: 'custom') do %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Simulation name:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= text_field_tag 'simulation_name' %>
+          </div>
         </div>
 
-        <div>
-          <label>Simulation description</label>
-          <%= text_area_tag "simulation_description" %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Simulation description:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= text_area_tag 'simulation_description' %>
+          </div>
         </div>
 
-        <div>
-          <label>Input specification</label>
-          <%= file_field_tag "simulation_input" %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Input specification:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= file_field_tag 'simulation_input' %>
+          </div>
         </div>
 
-        <div>
-          <label>Simulation binaries</label>
-          <%= file_field_tag "simulation_binaries" %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Simulation binaries:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= file_field_tag 'simulation_binaries' %>
+          </div>
         </div>
 
-        <div>
-          <label>Input writer</label>
-          <%= select_tag "input_writer_id", options_for_select(SimulationInputWriter.all.map{|ex| [ex.name, ex._id]}) %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Input writer:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= select_tag 'input_writer_id',
+                           options_for_select(SimulationInputWriter.all.map{|ex| [ex.name, ex._id]}),
+                           class: 'medium' %>
+          </div>
         </div>
 
-        <div>
-          <label>Executor</label>
-          <%= select_tag "executor_id", options_for_select(SimulationExecutor.all.map{|ex| [ex.name, ex._id]}) %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Executor:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= select_tag 'executor_id',
+                           options_for_select(SimulationExecutor.all.map{|ex| [ex.name, ex._id]}),
+                           class: 'medium' %>
+          </div>
         </div>
 
-        <div>
-          <label>Output reader</label>
-          <%= select_tag "output_reader_id", options_for_select(SimulationOutputReader.all.map{|ex| [ex.name, ex._id]}) %>
+        <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Output reader:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= select_tag 'output_reader_id',
+                           options_for_select(SimulationOutputReader.all.map{|ex| [ex.name, ex._id]}),
+                           class: 'medium' %>
+          </div>
         </div>
 
-        <div class="buttons">
-          <%= submit_tag "Upload" %>
-        </div>
-
-    <% end %>
-  </section>
-
-  <section class="registration_form">
-    <h3>Simulation Input Writer registration</h3>
-
-    <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
-        <%= hidden_field_tag "component_type", "input_writer" %>
-
-        <div>
-          <label>Component name</label>
-          <%= text_field_tag "component_name" %>
-        </div>
-
-        <div>
-          <label>Component code</label>
-          <%= file_field_tag "component_code" %>
-        </div>
-
-        <div class="buttons">
-          <%= submit_tag "Upload" %>
-        </div>
-
-    <% end %>
-
-  </section>
-
-  <section class="registration_form">
-    <h3>Simulation Executor registration</h3>
-
-    <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
-        <%= hidden_field_tag "component_type", "executor" %>
-
-        <div>
-          <label>Component name</label>
-          <%= text_field_tag "component_name" %>
-        </div>
-
-        <div>
-          <label>Component code</label>
-          <%= file_field_tag "component_code" %>
-        </div>
-
-        <div class="buttons">
-          <%= submit_tag "Upload" %>
+        <div class="row">
+            <%= submit_tag 'Upload', class: 'button' %>
         </div>
 
     <% end %>
+  </div>
 
-  </section>
+  <% %w(input_writer executor output_reader).each do |component_name| %>
 
-  <section class="registration_form">
-    <h3>Simulation Output Reader registration</h3>
+      <div class="panel radius">
+        <%= content_tag :h4, "#{component_name.split('_').map(&:capitalize).join(' ')} registration", class: 'subheader' %>
 
-    <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
-        <%= hidden_field_tag "component_type", "output_reader" %>
+        <%= form_tag(simulations_upload_component_path, :multipart => true) do %>
 
-        <div>
-          <label>Component name</label>
-          <%= text_field_tag "component_name" %>
-        </div>
+            <%= hidden_field_tag 'component_type', component_name %>
 
-        <div>
-          <label>Component code</label>
-          <%= file_field_tag "component_code" %>
-        </div>
+            <div class="row">
+              <div class="small-2 columns right-align inline">
+                <span>Component name:</span>
+              </div>
+              <div class="small-10 columns">
+                <%= text_field_tag 'component_name' %>
+              </div>
+            </div>
 
-        <div class="buttons">
-          <%= submit_tag "Upload" %>
-        </div>
+            <div class="row">
+              <div class="small-2 columns inline">
+                <span>Component code:</span>
+              </div>
+              <div class="small-10 columns">
+                <%= file_field_tag 'component_code' %>
+              </div>
+            </div>
 
-    <% end %>
-  </section>
+            <div class="row">
+              <%= submit_tag 'Upload', class: 'button' %>
+            </div>
+
+        <% end %>
+      </div>
+
+  <% end %>
 
 </article>
