@@ -52,13 +52,14 @@ class ExperimentsController < ApplicationController
                   else
                     nil
                   end
-    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']))
+    doe_info = JSON.parse(params['doe']).delete_if{|doe_id, parameter_list| parameter_list.first.nil?}
+    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
     # prepare scenario parametrization in the old fashion
     @scenario_parametrization = {}
     @experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          parameter_uid = "#{entity_group['id']}#{DataFarmingExperiment::ID_DELIM}#{entity['id']}#{DataFarmingExperiment::ID_DELIM}#{parameter['id']}"
+          parameter_uid = DataFarmingExperiment.parameter_uid(entity_group, entity, parameter)
           @scenario_parametrization[parameter_uid] = parameter['parametrizationType']
         end
       end
@@ -82,7 +83,8 @@ class ExperimentsController < ApplicationController
                                                          'user_id' => @current_user.id,
                                                          'is_running' => true,
                                                          'run_counter' => 1,
-                                                         'time_constraint_in_sec' => 3600
+                                                         'time_constraint_in_sec' => 3600,
+                                                         'doe_info' => doe_info
                                                         })
     data_farming_experiment.save
     # rewrite all necessary parameters
@@ -119,6 +121,37 @@ class ExperimentsController < ApplicationController
       format.json{ render :json => { status: 'ok', experiment_id: data_farming_experiment.experiment_id } }
     end
 
+  end
+
+  def calculate_experiment_size
+    @simulation = if params['simulation_id']
+                    Simulation.find_by_id params['simulation_id']
+                  elsif
+                    params['simulation_name']
+                    Simulation.find_by_name params['simulation_name']
+                  else
+                    nil
+                  end
+    doe_info = JSON.parse(params['doe']).delete_if{|doe_id, parameter_list| parameter_list.first.nil?}
+    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
+
+    # create the new type of experiment object
+    data_farming_experiment = DataFarmingExperiment.new({'experiment_id' => nil,
+                                                         'simulation_id' => @simulation.id,
+                                                         'experiment_input' => @experiment_input,
+                                                         'name' => @simulation.name,
+                                                         'user_id' => @current_user.id,
+                                                         'is_running' => true,
+                                                         'run_counter' => 1,
+                                                         'time_constraint_in_sec' => 3600,
+                                                         'doe_info' => doe_info
+                                                        })
+    experiment_size = data_farming_experiment.experiment_size
+    Rails.logger.debug("Experiment size is #{experiment_size}")
+
+    respond_to do |format|
+      format.json{ render :json => { experiment_size: "#{experiment_size} simulations will be scheduled with current settings." } }
+    end
   end
 
   # prepare data for a view with definition of types of experiment parameters

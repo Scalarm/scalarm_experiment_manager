@@ -33,7 +33,7 @@ function DoeManager() {
 
     this.newRangeParamHandler = newRangeParamHandler;
     function newRangeParamHandler(event) {
-        var parameter_id = event.detail.entity_id + "___" + event.detail.group_id + "___" + event.detail.parameter_id;
+        var parameter_id = event.detail.group_id + "___" + event.detail.entity_id + "___" + event.detail.parameter_id;
         doe_manager.range_parameters.push(parameter_id);
         // updating all select elements with parameters
         doe_manager.updateAllSelectElements();
@@ -132,4 +132,40 @@ function DoeManager() {
         groupElement.find(".bullet-item a.button").click();
         groupElement.remove();
     }
+
+    this.updateDoeForSubmit = updateDoeForSubmit;
+    function updateDoeForSubmit() {
+        var doeTab = [];
+        $("[id^='doe-group-']").each(function (index, doeGroup) {
+            var doeId = $(doeGroup).attr('doe-id');
+            var parameters = [];
+
+            $(doeGroup).find('li.bullet-item').each(function(i, parameterBullet) {
+                parameters.push($(parameterBullet).attr('param_id'));
+            });
+
+            doeTab.push([ doeId, parameters ]);
+        });
+
+        $("input[name='doe']").val(JSON.stringify(doeTab));
+    }
+
+    this.checkExperimentSize = checkExperimentSize;
+    function checkExperimentSize() {
+        updateAllInputParameterValues();
+        doe_manager.updateDoeForSubmit();
+        $.ajax({
+            type: "POST",
+            url: $('#calculate-experiment-size-url').val(),
+            data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val(),
+            success: function(msg) {
+                alert(msg.experiment_size);
+            }
+        });
+
+        return false;
+    }
+
+    $("body").delegate("#experiment_submit_form", "submit", this.updateDoeForSubmit);
+    $("body").delegate("button#check-experiment-size", "click", this.checkExperimentSize);
 }

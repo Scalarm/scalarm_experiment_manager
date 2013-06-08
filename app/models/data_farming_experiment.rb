@@ -91,10 +91,14 @@ class DataFarmingExperiment < MongoActiveRecord
   def parameters
     parameters = []
 
+    self.doe_info.each do |doe_group|
+      parameters << doe_group[1]
+    end
+
     self.experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          parameters << parameter_uid(entity_group, entity, parameter)
+          parameters << parameter_uid(entity_group, entity, parameter) unless parameter.include?('in_doe') and parameter['in_doe'] == true
         end
       end
     end
@@ -123,17 +127,36 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def value_list
-    value_list = []
+    self.doe_info = apply_doe_methods
+    Rails.logger.debug("Doe info: #{self.doe_info}")
 
+    value_list = []
+    # adding values from Design of Experiment
+    self.doe_info.each do |doe_group|
+      value_list << doe_group[2]
+    end
+    # adding the rest of values
     self.experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          value_list << generate_parameter_values(parameter)
+          unless parameter.include?('in_doe') and parameter['in_doe'] == true
+            value_list << generate_parameter_values(parameter.merge({'entity_group_id' => entity_group['id'], 'entity_id' => entity['id']}))
+          end
         end
       end
     end
 
     value_list
+  end
+
+  def apply_doe_methods
+    return [] if self.doe_info.blank?
+
+    self.doe_info.map do |doe_name, parameter_list|
+      parameter_values = execute_doe_method(doe_name, parameter_list)
+
+      [doe_name, parameter_list, parameter_values]
+    end
   end
 
   def experiment_size
@@ -217,7 +240,8 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   # return a full experiment input based on partial information given, and using default values for other parameters
-  def self.prepare_experiment_input(simulation, partial_experiment_input)
+  # doe_list = [ [ doe_id, [ param_1, param_2 ] ], ... ]
+  def self.prepare_experiment_input(simulation, partial_experiment_input, doe_list = [])
     partial_experiment_input = self.nested_json_to_hash(partial_experiment_input)
     experiment_input = JSON.parse simulation.input_specification
 
@@ -225,7 +249,7 @@ class DataFarmingExperiment < MongoActiveRecord
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
           # check if partial_experiment_input contains information about this parameter
-          parameter_uid = "#{entity_group['id']}#{DataFarmingExperiment::ID_DELIM}#{entity['id']}#{DataFarmingExperiment::ID_DELIM}#{parameter['id']}"
+          parameter_uid = self.parameter_uid(entity_group, entity, parameter)
           # if there is information then add it to the input
           if partial_experiment_input.include?(parameter_uid)
             partial_experiment_input[parameter_uid].each do |key, value|
@@ -236,6 +260,16 @@ class DataFarmingExperiment < MongoActiveRecord
             parameter['parametrizationType'] = 'value'
             parameter['value'] = parameter['value'] || parameter['min']
           end
+          # check if this parameter is included in DoE and mark it accordingly
+          parameter['in_doe'] = false
+          doe_list.each do |doe_id, parameter_list|
+            #Rails.logger.debug("Parameter: #{parameter_uid} --- Parameter list: #{parameter_list.join(',')}")
+            if parameter_list.include?(parameter_uid)
+              parameter['in_doe'] = true
+              break
+            end
+          end
+
         end
       end
     end
@@ -300,9 +334,16 @@ class DataFarmingExperiment < MongoActiveRecord
     hash_counterpart
   end
 
-
   def parameter_uid(entity_group, entity, parameter)
-    "#{entity_group["id"]}#{ID_DELIM}#{entity["id"]}#{ID_DELIM}#{parameter["id"]}"
+    DataFarmingExperiment.parameter_uid(entity_group, entity, parameter)
+  end
+
+  def self.parameter_uid(entity_group, entity, parameter)
+    entity_group_id = entity_group.include?('id') ? entity_group['id'] : entity_group
+    entity_id = entity.include?('id') ? entity['id'] : entity
+    parameter_id = parameter.include?('id') ? parameter['id'] : parameter
+
+    "#{entity_group_id}#{ID_DELIM}#{entity_id}#{ID_DELIM}#{parameter_id}"
   end
 
   def get_parametrization_values(entity_group, entity, parameter)
@@ -327,6 +368,15 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def generate_parameter_values(parameter)
+    parameter_uid = parameter_uid({'id' => parameter['entity_group_id']}, {'id' => parameter['entity_id']}, parameter)
+
+    self.doe_info.each do |doe_element|
+      doe_id, doe_parameters = doe_element
+      if doe_parameters.include?(parameter_uid)
+        Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
+      end
+    end
+
     parameter_values = []
 
     if parameter['parametrizationType'] == 'value'
@@ -354,5 +404,90 @@ class DataFarmingExperiment < MongoActiveRecord
 
     parameter_values
   end
+
+  def execute_doe_method(doe_method_name, parameters_for_doe)
+    case doe_method_name
+      when '2k'
+        values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
+          parameter = get_parameter_doc(parameter_uid)
+          sum << [ parameter['min'].to_f, parameter['max'].to_f ]
+        }
+
+        if values.size > 1
+          values = values[1..-1].reduce(values.first){|acc,values| acc.product values}.map{|x| x.flatten}
+        else
+          values = values.first.map{|x| [ x ]}
+        end
+
+        values
+
+      when 'fullFactorial'
+        values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
+          parameter = get_parameter_doc(parameter_uid)
+          sum << (parameter['min'].to_f..parameter['max'].to_f).step(parameter['step'].to_f).to_a
+        }
+
+        if values.size > 1
+          values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
+        else
+          values = values.first.map { |x| [x] }
+        end
+
+        values
+
+      when *%w(latinHypercube fractionalFactorial nolhDesign)
+        design_file_path = File.join(Rails.root, 'lib', 'designs.R')
+        Rails.logger.info("arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}') design <- #{doe_method_name}(arg) design <- data.matrix(design)")
+        Rails.configuration.eusas_rinruby.eval("arg <- #{data_frame(parameters_for_doe)}
+            source('#{design_file_path}')
+            design <- #{doe_method_name}(arg)
+            design <- data.matrix(design)")
+
+        values = Rails.configuration.eusas_rinruby.design.to_a
+        values = values.map{|list| list.map{|num| num.round(5)}}
+        Rails.logger.debug("Design: #{values}")
+
+        values
+    end
+  end
+
+  def data_frame(parameter_list)
+    data_frame_list = parameter_list.map do |parameter_uid|
+      parameter = get_parameter_doc(parameter_uid)
+      "#{parameter_uid}=c(#{parameter['min']}, #{parameter['max']}, #{parameter['step']})"
+    end
+
+    "data.frame(#{data_frame_list.join(',')})"
+  end
+
+  def get_parameter_doc(parameter_uid)
+    entity_group_id, entity_id, parameter_id = parameter_uid.split(ID_DELIM)
+    self.experiment_input.each do |entity_group|
+
+      if entity_group['id'] == entity_group_id
+
+        entity_group['entities'].each do |entity|
+
+          if entity['id'] == entity_id
+
+            entity['parameters'].each do |parameter|
+
+              if parameter['id'] == parameter_id
+
+                return parameter
+
+              end
+
+            end
+
+          end
+
+        end
+
+      end
+
+    end
+  end
+
 
 end

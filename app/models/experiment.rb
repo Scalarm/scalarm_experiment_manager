@@ -616,7 +616,7 @@ class Experiment < ActiveRecord::Base
     # Rails.logger.debug("Index: #{index} - Current index: #{current_index} - Selected Element: #{tab[current_index]} - id_num: #{id_num}")
     end
 
-    columns = ["id", "experiment_id", "is_done", "to_sent", "run_index", "arguments", "values", "sent_at"]
+    columns = %w(id experiment_id is_done to_sent run_index arguments values sent_at)
     values  = [instance_id, self.id, false, false, 1, @parametrization_info["labels"].join(","), combination.join(","), Time.now]
 
     instance_hash = Hash[*columns.zip(values).flatten]

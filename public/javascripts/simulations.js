@@ -270,7 +270,7 @@ function updateAllInputParameterValues() {
         });
     });
 
-    $("#experiment_input").val(JSON.stringify(experimentInput));
+    $("input[name='experiment_input']").val(JSON.stringify(experimentInput));
 }
 
 function createNewRangeParameter(entity_id, group_id, parameter_id) {

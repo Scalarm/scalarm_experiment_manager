@@ -32,16 +32,18 @@
         <%= render partial: 'doe_tab' %>
       </div>
     </div>
-
   </section>
 
   <section class='submit-section'>
-    <%= form_tag start_experiment_experiments_path, :onsubmit => "updateAllInputParameterValues();" do %>
+    <%= form_tag start_experiment_experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do %>
         <%= hidden_field_tag 'simulation_id', @simulation._id %>
         <%= hidden_field_tag 'experiment_input' %>
         <%= hidden_field_tag 'computing_power' %>
+        <%= hidden_field_tag 'doe' %>
+        <%= hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path %>
 
         <%= submit_tag 'Start experiment', class: 'button' %>
+        <%= button_tag 'Calculate experiment size', class: 'button', id: 'check-experiment-size' %>
     <% end %>
   </section>
 

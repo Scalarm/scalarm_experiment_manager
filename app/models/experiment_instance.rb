@@ -140,7 +140,7 @@ class ExperimentInstance
 
   def self.find_expired_instances(experiment_id, time_constraint_in_secs)
     expired_instances = []
-    send_condition = {"is_done" => false, "to_sent" => false}
+    send_condition = {'is_done' => false, 'to_sent' => false}
 
     now = Time.now
     
