@@ -15,32 +15,32 @@ class ExperimentsController < ApplicationController
   include Spawn
 
   def index
-    experiment = get_latest_running_experiment
-
-
+    #experiment = get_latest_running_experiment
     #if experiment and flash[:error].nil?
     #  redirect_to monitor_experiment_path(experiment.id)
     #else
-      @ids, @dones, @experiment_info = Experiment.experiments_info("is_running=1 ORDER BY id DESC")
+      @ids, @dones, @experiment_info = Experiment.experiments_info('is_running=1 ORDER BY id DESC')
 
       @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
-          "is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC")
+          'is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC')
 
-      @simulations = []
-      scenario_dir = Rails.configuration.scenarios_path
-      if Dir.exist?(scenario_dir)
-        Dir.open(scenario_dir).each do |element|
-          potential_scenario_file = File.join(scenario_dir, element)
-          if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
-            @simulations << element
-          end
-        end
-      end
-
-      @simulations.sort!
+      #@simulations = []
+      #scenario_dir = Rails.configuration.scenarios_path
+      #if Dir.exist?(scenario_dir)
+      #  Dir.open(scenario_dir).each do |element|
+      #    potential_scenario_file = File.join(scenario_dir, element)
+      #    if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
+      #      @simulations << element
+      #    end
+      #  end
+      #end
+      #
+      #@simulations.sort!
 
       @simulation_scenarios = Simulation.all
     #end
+
+    render layout: 'foundation_application'
   end
 
   def start_experiment
@@ -267,40 +267,59 @@ class ExperimentsController < ApplicationController
 
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
-    begin
-      @experiment = Experiment.find(params[:id].to_i)
-      set_monitoring_view_params(params[:id].to_i)
-      @user = @current_user
+    @experiment = Experiment.find(params[:id].to_i)
+    if @experiment.nil? or @experiment.experiment_progress_bar.nil?
 
-      # Experiments info
-      # TODO FIXME move this to background
-      @ids, @dones, @experiment_info = Experiment.experiments_info("is_running=1 ORDER BY id DESC")
-      @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
-          "is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC")
+      Rails.logger.debug("We have a fatal error with Experiment #{params[:id]} - it will be destroyed --- #{@experiment.nil?} --- #{@experiment.experiment_progress_bar.nil?}")
 
-      @simulations = []
-      #scenario_dir = Rails.configuration.scenarios_path
-      #Dir.open(scenario_dir).each do |element|
-      #  potential_scenario_file = File.join(scenario_dir, element)
-      #  if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
-      #    @simulations << element
-      #  end
-      #end
-      
-      @simulations.sort!
+      df_exp = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
 
-      Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-      if Time.now - @experiment.start_at > 30
-        spawn_block(:method => :thread) do
-          @experiment.experiment_progress_bar.update_all_bars
-        end
+      if df_exp
+        df_exp.destroy
+        flash[:notice] = 'Your experiment has been destroyed.'
+      else
+        flash[:notice] = 'Your experiment is no longer available.'
       end
 
-    rescue Exception => e
-      flash[:error] = "Problem occured during loading experiment info - #{e}"
-      logger.debug(e.backtrace)
       redirect_to :action => :index
+
+    else
+
+      begin
+        set_monitoring_view_params(params[:id].to_i)
+        @user = @current_user
+
+        Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+        if Time.now - @experiment.start_at > 30
+          spawn_block(:method => :thread) do
+            @experiment.experiment_progress_bar.update_all_bars
+          end
+        end
+
+      rescue Exception => e
+        flash[:error] = "Problem occured during loading experiment info - #{e}"
+        logger.debug(e.backtrace)
+        redirect_to :action => :index
+      end
+
     end
+
+    # Experiments info
+    # TODO FIXME move this to background
+    @ids, @dones, @experiment_info = Experiment.experiments_info("is_running=1 ORDER BY id DESC")
+    @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
+        "is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC")
+
+    @simulations = []
+    #scenario_dir = Rails.configuration.scenarios_path
+    #Dir.open(scenario_dir).each do |element|
+    #  potential_scenario_file = File.join(scenario_dir, element)
+    #  if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
+    #    @simulations << element
+    #  end
+    #end
+
+    @simulations.sort!
   end
 
   # stops the currently running DF experiment (if any)
