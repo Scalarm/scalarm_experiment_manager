@@ -31,7 +31,8 @@ class MongoActiveRecord
     elsif @attributes.include?(method_name)
       @attributes[method_name]
     else
-      super(method_name, *args, &block)
+      nil
+      #super(method_name, *args, &block)
     end
   end
 

@@ -294,7 +294,7 @@ class DataFarmingExperiment < MongoActiveRecord
   def destroy
     # destroy all binary files stored for this experiments
     config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
-    Rails.logger.debug("Config for storage manager: #{config.inspect}")
+    #Rails.logger.debug("Config for storage manager: #{config.inspect}")
     sm_proxy = StorageManagerProxy.new(config)
 
     1.upto(self.experiment_size).each do |simulation_id|

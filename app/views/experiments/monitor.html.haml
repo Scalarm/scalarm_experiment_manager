@@ -4,8 +4,8 @@
 = javascript_include_tag 'exporting'
 = javascript_tag "$('#site_title').html('Experiment monitoring')"
 
-= render :partial => "experiment_links"
-= render :partial => "analysis_charts"
+= render 'experiment_links'
+= render 'analysis_charts'
 
 = javascript_include_tag 'experiment_booster.js'
 = javascript_tag "var booster = new window.ExperimentBooster('booster_dialog');"
@@ -14,29 +14,29 @@
   %article
     %h3 Scenario name
     = @experiment.experiment_name
-  = render :partial => "monitoring_section"
+  = render 'monitoring_section'
   
   %article
     %h3 Actions
-    .buttons
+    %ul.inline-list
       - if @experiment.is_running
-        = button_to "Stop experiment", stop_experiment_path(@experiment.id),
-          :class => "nice_button", :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
-        = button_to_function "Booster", "booster.openDialog();", :class => "nice_button"
-        = button_to_function "Scheduling policy", "$('#scheduling_policy_dialog').dialog('open')", :class => "nice_button"
+        %li
+          = button_to 'Stop experiment', stop_experiment_path(@experiment.id),
+            class: 'button', :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
+        %li= button_to_function 'Booster', "booster.openDialog();", class: 'button'
+        %li= button_to_function 'Scheduling policy', "$('#scheduling_policy_dialog').dialog('open')", class: 'button'
       - else
-        = button_to("Destroy", experiment_path(@experiment.id), :method => :delete, :class => "nice_button", :onClick => "$('#loading-img').show(); return confirm('Are you sure?')")
+        %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, class: 'button inline', onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
 
-        
-      = button_to "Download results", { :action => :download_results, :simulation_id => @experiment.id },
-        :class => "nice_button", :id => "get_results_button",
-        :style => "display: #{if @done == @all and @all != 0 then "" else "none" end};"
-      = button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.id),
-        :class => "nice_button", :method => :get
-      = image_tag "loading.gif", :id => "loading-img", :style => "display: none;"
+      -# TODO repair download experiment results button
+      -#= button_to "Download results", { :action => :download_results, :simulation_id => @experiment.id },
+      -#  :class => "nice_button", :id => "get_results_button",
+      -#  :style => "display: #{if @done == @all and @all != 0 then "" else "none" end};"
+      %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.id), class: 'button inline', method: :get
+      %li= image_tag 'loading.gif', :id => 'loading-img', :style => 'display: none;'
       
     - if @experiment.is_running
-      = render :partial => "booster_dialog"
+      = render 'booster_dialog'
       
-    = render :partial => "scheduling_policy_dialog"
-= render :partial => "general_purpose_dialog"
+    = render 'scheduling_policy_dialog'
+= render 'general_purpose_dialog'

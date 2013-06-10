@@ -320,6 +320,10 @@ class ExperimentsController < ApplicationController
     #end
 
     @simulations.sort!
+
+    @simulation_scenarios = Simulation.all
+
+    render layout: 'foundation_application'
   end
 
   # stops the currently running DF experiment (if any)
