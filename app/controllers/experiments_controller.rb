@@ -30,7 +30,12 @@ class ExperimentsController < ApplicationController
                   else
                     nil
                   end
-    doe_info = JSON.parse(params['doe']).delete_if{|doe_id, parameter_list| parameter_list.first.nil?}
+    doe_info = if params.include?('doe')
+                 JSON.parse(params['doe']).delete_if{|doe_id, parameter_list| parameter_list.first.nil?}
+               else
+                 []
+               end
+
     @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
     # prepare scenario parametrization in the old fashion
     @scenario_parametrization = {}
@@ -54,8 +59,6 @@ class ExperimentsController < ApplicationController
 
     @experiment.save_and_cache
     # create the new type of experiment object
-    Rails.logger.debug("Do we have Scalarm user: #{current_user.nil?}")
-
     data_farming_experiment = DataFarmingExperiment.new({'experiment_id' => @experiment.id,
                                                          'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
@@ -68,10 +71,6 @@ class ExperimentsController < ApplicationController
                                                          'user_id' => current_user.id
                                                         })
     data_farming_experiment.user_id = current_user.id unless current_user.nil?
-
-    #if defined? @current_user
-    #  data_farming_experiment.user_id = @current_user.id
-    #end
 
     data_farming_experiment.save
     # rewrite all necessary parameters
@@ -97,8 +96,6 @@ class ExperimentsController < ApplicationController
     @experiment.save_and_cache
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
-      username, pass = ActionController::HttpAuthentication::Basic::user_name_and_password(request)
-      current_user = User.find_by_username(username)
       computing_power = JSON.parse(params[:computing_power])
       InfrastructureFacade.schedule_simulation_managers(current_user, @experiment.id, computing_power['type'], computing_power['resource_counter'])
     end

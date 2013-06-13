@@ -8,7 +8,7 @@ class ScalarmExperimentManager
 
   def initialize
     @config = YAML::load_file File.join(".", "config", "scalarm_experiment_manager.yml")
-    @host = ""
+    @host = ''
     UDPSocket.open { |s| s.connect('64.233.187.99', 1); @host = s.addr.last }
   end
 
@@ -115,28 +115,30 @@ starting_port, cluster_size = ARGV[1].to_i, ARGV[2].to_i
 
 case ARGV[0]
 
-when "start" then
-  sem.download_scenarios_and_code_repository
-  sem.start_server(starting_port, cluster_size)
+  when 'start' then
+    #sem.download_scenarios_and_code_repository
+    sem.start_server(starting_port, cluster_size)
 
-when "stop" then
-  sem.stop_server(starting_port, cluster_size)
+  when 'stop' then
+    sem.stop_server(starting_port, cluster_size)
 
-when "restart" then
-  sem.stop_server(starting_port, cluster_size)
-  sem.start_server(starting_port, cluster_size)
+  when 'restart' then
+    sem.stop_server(starting_port, cluster_size)
+    sem.start_server(starting_port, cluster_size)
 
-when 'status' then
-  server_status = 0
-  0.upto(cluster_size - 1) do |i|
-    port = starting_port + i
-    server_status += sem.thin_procs_list(port).size
-  end
+  when 'status' then
+    server_status = 0
+    0.upto(cluster_size - 1) do |i|
+      port = starting_port + i
+      server_status += sem.thin_procs_list(port).size
+    end
 
-  if server_status == 0
-    puts "Scalarm Experiment Manager is not running"
+    if server_status == 0
+      puts 'Scalarm Experiment Manager is not running'
+    else
+      puts "Scalarm Experiment Manager is running in #{server_status} instances"
+    end
+
   else
-    puts "Scalarm Experiment Manager is running in #{server_status} instances"
-  end
-
+    puts "Invalid option #{ARGV[0]}"
 end
