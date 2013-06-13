@@ -30,6 +30,7 @@ class ExperimentsController < ApplicationController
                   else
                     nil
                   end
+
     doe_info = if params.include?('doe')
                  JSON.parse(params['doe']).delete_if{|doe_id, parameter_list| parameter_list.first.nil?}
                else
@@ -137,117 +138,6 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  # prepare data for a view with definition of types of experiment parameters
-  def define_param_types
-    prepare_agent_elements
-  end
-
-  # preparing data for parametrization of experiment variables
-  #TODO FIXME refactor to be one screen height
-  def define_input
-    prepare_agent_elements
-    @scenario_parametrization = {}
-
-    @agent_elements.each do |element|
-      element.parameters.each do |param|
-        @scenario_parametrization[param.parameter_uid] = params[param.parameter_uid]
-      end
-    end
-
-    data_farming_scenario = DataFarmingScenario.new(params[:scenario_id], @agent_elements, @scenario_parametrization)
-    @document = data_farming_scenario.scenario_xml
-
-    @experiment = Experiment.new(:is_running => false,
-                                 :instance_index => 0,
-                                 :run_counter => params[:exp_run_counter].to_i,
-                                 :time_constraint_in_sec => params[:exp_time_constraint_in_sec].to_i * 60,
-                                 :time_constraint_in_iter => params[:exp_time_constraint_in_iter].to_i,
-                                 :experiment_name => params[:scenario_id].split(".xml")[0],
-                                 :user_id => session[:user],
-                                 :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(","))
-
-    @experiment.save_and_cache
-    @experiment.experiment_file = "Experiment_#{@experiment.id}.xml"
-
-    @experiment.make_simulation_logs_dir
-
-    @document.save(@experiment.experiment_file_path, :indent => true, :encoding => XML::Encoding::UTF_8)
-
-    @parameters = parse_df_scenario(@experiment.experiment_file_path, Rails.configuration.eusas_rinruby)
-    @parameters_by_subject_id = @parameters.group_by { |p| p.subject_id }
-
-    @experiment.save_and_cache
-  end
-
-  def define_doe
-    @experiment = Experiment.find(params[:experiment_id])
-    @params_for_doe = []
-    @experiment_params = {}
-
-    params.each do |key, value|
-      if key.start_with?("Agent") or key.start_with?("Group") then
-        @experiment_params[key] = value
-      end
-
-      if key.start_with?("Agent") and key.ends_with?("step") then
-        reference = key.split("_")[0..-2].join("_")
-        @params_for_doe << [ParameterForm.parameter_label_with_agent_id(reference), reference]
-      end
-    end
-
-  end
-
-  def add_doe_group
-    @type = params[:type]
-  end
-
-  #TODO FIXME refactor to be one screen height
-  def start
-    @experiment = Experiment.find_by_id(params[:experiment_id])
-
-    if not @experiment.nil? and not @experiment.is_running then
-      params_to_override, params_groups_for_doe = select_params_for_parameters_and_doe_groups
-      @experiment.parameters = params_to_override.map{|k,v| "#{k}=#{v}"}.join("|")
-      @experiment.doe_groups = params_groups_for_doe.map{|k,v| "#{k}=#{v}"}.join("|")
-      
-      logger.debug("params_to_override = #{@experiment.parameters}")
-      logger.debug("params_groups_for_doe = #{@experiment.doe_groups}")
-
-      @parameters, @doe_groups = @experiment.create_parameters_and_doe_groups
-
-      params_to_override = params.select { |key, value| key.starts_with? "Agent" }
-      @experiment.arguments = params_to_override.reduce("") { |acc, item| acc += "#{item[0]}=#{item[1]}|" }.chop
-
-      @experiment.experiment_size = compute_experiment_size(@parameters, @doe_groups) * @experiment.run_counter
-
-      @experiment.make_simulation_logs_dir
-      @experiment.is_running = true
-      @experiment.start_at = Time.now
-      @experiment.save_and_cache
-
-      @experiment.create_progress_bar
-      @experiment.generate_instance_configurations
-
-      ExperimentWatcher.watch(@experiment)
-    else
-      flash['error'] = 'No experiment with the given ID'
-    end
-
-    redirect_to monitor_experiment_path(params[:experiment_id])
-  end
-
-  # sets an experiment to the "running" state
-  # and create a directory for the simulation logs
-  def run
-    experiment = Experiment.find_by_id(params[:experiment_id])
-    experiment.is_running = true
-    experiment.start_at = Time.now
-    experiment.save_and_cache
-    experiment.make_simulation_logs_dir
-
-    redirect_to :action => :monitor
-  end
-
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
     @experiment = Experiment.find(params[:id].to_i)
@@ -343,49 +233,12 @@ class ExperimentsController < ApplicationController
     experiment_id = ExperimentQueue.enqueue_exp_id
 
     if experiment_id.nil?
-      logger.info("No experiment running")
-      render :inline => "None", :status => 404
+      logger.info(t('no_running_experiment_response'))
+      render :inline => 'None', :status => 404
     else
       logger.debug("Next experiment id is #{experiment_id}")
-      #experiment = Experiment.find_by_id(exp_id)
-      #experiment.vm_counter += 1
-      #experiment.save
-      #
-      #Socky.send("update_list_of_running_experiments(#{experiment.id})", :channels => "experiment_state_changed")
 
       render :inline => experiment_id.to_s
-    end
-  end
-
-  # if there is a running DF experiment it returns an archive with repository
-  # which contains all the necessary configuration files
-  def get_repository
-    send_file(File.join(Rails.public_path, "repository.tar.gz"), :type => "application/x-gzip")
-  end
-
-  # getting parameters of an experiment instance to compute in format "<instance_id>#<log_file_path>"
-  def next_configuration
-    begin
-      experiment = Experiment.find_in_db(params[:experiment_id])
-      raise "Experiment is not running any more" if not experiment.is_running
-
-      instance_to_send = experiment.get_next_instance
-
-      if instance_to_send
-        log_file_path = make_instance_log_file(instance_to_send)
-        instance_to_send.put_in_cache
-
-        experiment.progress_bar_update(instance_to_send.id.to_i, "sent")
-
-        render :inline => "#{instance_to_send.id}##{log_file_path}#" +
-            "#{experiment.time_constraint_in_sec}##{experiment.time_constraint_in_iter}"
-      else
-        render :inline => "All sent"
-      end
-
-    rescue Exception => e
-      logger.debug("Error1 --- " + e.to_s)
-      render :inline => "None"
     end
   end
 
@@ -416,55 +269,6 @@ class ExperimentsController < ApplicationController
     end
 
     render :json => simulation_doc
-  end
-
-  # DEPRECATED: new experiments has all information returned by a 'next_simulation' request
-  # getting actual XML document of a concrete instance
-  def configuration
-    begin
-      instance = ExperimentInstance.cache_get(params[:experiment_id], params[:instance_id])
-
-      simulation_scenario = DataFarmingScenario.new(nil)
-      simulation_scenario.load_tamplate_from_cache(params[:experiment_id])
-      simulation_xml = simulation_scenario.prepare_xml_for_simulation(instance.arguments.split(","), instance.values.split(","))
-
-      render :inline => simulation_xml
-    rescue Exception => e
-      Rails.logger.error("Error2 - #{e}")
-      render :inline => "NOT OK", :status => 404
-    end
-  end
-
-  # DEPRECATED: new experiments should use a 'mark_as_complete' method from simulations_controller
-  #change configuration state to 'done' and write results to a shared file
-  def set_configuration_done
-    begin
-      experiment = Experiment.find(params[:experiment_id].to_i)
-      instance = ExperimentInstance.cache_get(params[:experiment_id], params[:instance_id])
-
-      if instance.nil? or instance.is_done
-        logger.debug("Experiment Instance #{params[:instance_id]} of experiment #{params[:experiment_id]} is already done or is nil? #{instance.nil?}")
-      else
-        instance.is_done = true
-        instance.to_sent = false
-        instance.result = params[:instance_result].split(",").map { |result|
-          split_result = result.split("=")
-          split_result[1] = format("%.4f", split_result[1].to_f)
-          split_result.join("=")
-        }.join(",")
-        instance.done_at = Time.now
-        instance.save
-        instance.remove_from_cache
-
-        experiment.progress_bar_update(params[:instance_id].to_i, "done")
-      end
-
-      render :inline => "OK"
-
-    rescue Exception => e
-      logger.error("Error3 --- #{e}")
-      render :inline => "NOT OK", :status => 404
-    end
   end
 
   def update_state
@@ -561,18 +365,6 @@ class ExperimentsController < ApplicationController
       format.json{ render :json => moes_info }
     end
   end
-  
-  def update_list_of_running_experiments
-    @running_experiments = Experiment.running_experiments
-
-    respond_to do |format|
-      format.js {
-        render :inline => "window.location.reload()"
-        #render :inline => "$('#list_of_running_experiments').html('#{}" +
-        #    escape_javascript(render :partial => 'running_experiments') + ");"
-      }
-    end
-  end
 
   def instance_description
     #ei = ExperimentInstance.find_by_id(params[:instance_id])
@@ -626,40 +418,6 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  def add_chart
-    @chart_data = get_chart_data(params[:experiment_id], params[:argument_name], params[:moe_name])
-
-    respond_to do |format|
-      format.js
-    end
-  end
-
-  def update_chart_data
-    @chart_data = get_chart_data(params[:experiment_id], params[:argument_name], params[:moe_name])
-
-    respond_to do |format|
-      format.js {
-        render :inline => "chart_tab[#{params[:chart_id]}].series[0].setData([#{@chart_data}]);"
-      }
-    end
-  end
-
-  def add_regression_tree_chart
-    create_regression_tree_chart
-
-    respond_to do |format|
-      format.js
-    end
-  end
-
-  def update_regression_tree
-    create_regression_tree_chart
-
-    respond_to do |format|
-      format.js
-    end
-  end
-
   def histogram
     @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
 
@@ -680,48 +438,6 @@ class ExperimentsController < ApplicationController
     @chart.prepare_chart_data
   end
 
-
-  # DEPRECATED histogram chart is now handled by the 'histogram' method
-  def add_basic_statistics_chart
-    get_basic_statistics_about_moe
-
-    respond_to do |format|
-      format.js
-    end
-  end
-
-  def update_basic_statistics_chart
-    @chart_id = params[:chart_id]
-      get_basic_statistics_about_moe
-
-    respond_to do |format|
-      format.js
-    end
-  end
-
-  def add_bivariate_analysis_chart
-    prepare_bivariate_chart_data
-
-    respond_to do |format|
-      format.js
-    end
-  end
-
-  def refresh_bivariate_analysis_chart
-    prepare_bivariate_chart_data
-    @chart_id = params[:chart_id].split("_").last
-
-    @chart_data = ""
-    @chart_values.each do |x_value, y_values|
-      y_values.each do |y_value|
-        @chart_data += "[ #{x_value}, #{y_value} ],"
-      end
-    end
-
-    respond_to do |format|
-      format.js
-    end
-  end
 
   def get_parameter_values
     @experiment = Experiment.find(params[:experiment_id])
@@ -836,22 +552,6 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  def check_experiment_size
-    experiment = Experiment.find(params[:experiment_id])
-
-    if experiment then
-      parameters, doe_groups = experiment.create_parameters_and_doe_groups(select_params_for_parameters_and_doe_groups)
-      Rails.logger.debug("After parameters and doe groups creation")
-      exp_size = (compute_experiment_size(parameters, doe_groups) * experiment.run_counter).to_s.with_delimeters
-      Rails.logger.debug("After completing exp_size calculation")
-
-      render :inline => "$('#experiment_size_dialog').dialog('open');
-                         $('#experiment_size_num').html('#{exp_size}')"
-    else
-      render :inline => "alert('Experiment is not available anymore.')"
-    end
-  end
-
   def change_scheduling_policy
     experiment = Experiment.find_by_id(params[:experiment_id])
     new_scheduling_policy = params[:scheduling_policy]
@@ -936,13 +636,6 @@ class ExperimentsController < ApplicationController
     return params_to_override, params_groups_for_doe
   end
 
-  def compute_experiment_size(parameters, doe_groups)
-    exp_size = parameters.reduce(1) { |acc, param_node| acc *= param_node.values.size }
-    doe_groups.reduce(exp_size) { |acc, group|
-      acc *= group[1].size(File.join(Rails.root, "lib", "designs.R"))
-    }
-  end
-
   def set_monitoring_view_params(experiment_id)
     experiment = Experiment.find_by_id(experiment_id)
 
@@ -968,253 +661,6 @@ class ExperimentsController < ApplicationController
       @predicted_finish_time /= (@done.to_f / experiment.experiment_size)
 
       @predicted_finish_time = "%.2f" % @predicted_finish_time
-    end
-  end
-
-  def make_instance_log_file(instance)
-    instance_folder_name = instance.id.to_s
-     # if instance.run_index > 1 then
-                             # (instance_id - instance.run_index + 1).id.to_s
-                           # else
-                             # instance.id.to_s
-                           # end
-
-    instance_dir = File.join(Experiment.find(instance.experiment_id).data_folder_path, instance_folder_name)
-    # TODO temp removal
-    #begin
-    #  if not File.exists?(instance_dir) then
-    #    Dir::mkdir(instance_dir)
-    #  end
-    #rescue Exception => e
-    #  logger.debug("ERROR: make_instance_log_file - #{e}")
-    #end
-
-    # unnecessery -> everything is in a database
-    #File.open(File.join(instance_dir, "configuration.txt"), "w") do |file|
-    #  values = instance.values.split(",")
-    #  instance.arguments.split(",").each_with_index do |arg, index|
-    #    file.puts "#{arg} = #{values[index]}"
-    #  end
-    #end
-
-    File.join(instance_dir, "run#{instance.run_index}.log")
-  end
-
-  def get_agents_elements(simulation_scenario_name)
-    scenario_file = File.join(Rails.configuration.scenarios_path, simulation_scenario_name)
-    results = ScenarioFileParser.parse_scenario_file(scenario_file)
-
-    return results
-  end
-
-  def get_chart_data(experiment_id, argument, moe)
-    chart_data = ""
-    instances = ExperimentInstance.find_by_query(experiment_id, {:is_done => true})
-    instances.each do |instance|
-      argument_index = instance.arguments.split(',').find_index(argument)
-      moe_text = instance.result.split(',').find { |item| item.start_with?(moe + "=") }
-      chart_data += "[#{instance.values.split(',')[argument_index]}, #{moe_text.split("=")[1]}],"
-    end
-
-    chart_data[0..-2]
-  end
-
-  def parse_regression_tree_data(tree_data)
-    nodes = {}
-    starting_lines = []
-    tree_data.each_with_index do |line, index|
-      starting_lines << index if line.start_with?("Node number")
-    end
-
-    starting_lines.each_with_index do |s_index, index|
-      node_data = if index < starting_lines.size - 1 then
-                    tree_data[s_index..(starting_lines[index+1] - 1)]
-                  else
-                    tree_data[s_index..-1]
-                  end
-      node_id, node_map = parse_regression_tree_node(node_data)
-      nodes[node_id] = node_map
-    end
-
-    nodes
-  end
-
-  def parse_regression_tree_node(node_data)
-    node_map = {}
-
-    first_line = node_data.first
-    colon_ind = first_line.index(":")
-    id = first_line["Node number ".size...colon_ind].to_i
-    node_map["id"] = id
-    node_map["n"] = first_line[(colon_ind+2)..(first_line.index("observation")-2)].to_i
-
-    second_line = node_data[1]
-    second_line = second_line.split(",")[0]
-    mean = second_line.split("=")[1].to_f
-    node_map["mean"] = mean
-
-    # check for children
-    if node_data.size > 3 then
-      sons_line = node_data[2]
-      left_son = sons_line[(sons_line.index("=")+1)...sons_line.index("(")].to_i
-      node_map["left"] = left_son
-
-      right_son = sons_line[(sons_line.rindex("=")+1)...sons_line.rindex("(")].to_i
-      node_map["right"] = right_son
-
-
-      question_line = node_data[4]
-      question = question_line.split("to the")[0].split(" ")
-      node_map["param_id"] = question.first
-      node_map["param_label"] = ParameterForm.parameter_label_from(question.first)
-      question[0] = ParameterForm.parameter_label_from(question.first)
-      question = question.join(" ")
-
-      node_map["question"] = question
-    end
-
-    return id, node_map
-  end
-
-  def create_regression_tree_chart
-    @experiment = Experiment.find(params[:experiment_id])
-    @moe_name = params[:moe_name]
-    result_file = @experiment.create_result_file_for(@moe_name)
-
-    arguments = @experiment.range_arguments.join("+")
-
-    rinruby = Rails.configuration.eusas_rinruby
-    
-    rinruby.eval("
-      library(rpart)
-      experiment_data <- read.csv('#{result_file.path}')
-      fit <- rpart(#{moe_name}~#{range_arguments},method='anova',data=experiment_data)
-      fit_to_string <- capture.output(summary(fit))
-    ")
-
-    @tree_nodes = nil
-    begin
-      @tree_nodes = parse_regression_tree_data(rinruby.fit_to_string)
-    rescue Exception => e
-      logger.debug(e.inspect)
-      logger.debug(e.backtrace)
-      logger.info("Could not create regression tree chart for #{@moe_name}. Probably too few simulations were performed.")
-    end
-  end
-
-  def prepare_bivariate_chart_data
-    @experiment = Experiment.find(params[:experiment_id])
-    @x_axis, @y_axis = ParameterForm.parameter_uid_for_r(params[:x_axis]), ParameterForm.parameter_uid_for_r(params[:y_axis])
-    result_file = @experiment.create_result_file_for_scatter_plot(@x_axis, @y_axis)
-    @chart_values = Hash.new
-
-    column_x_idx, column_y_idx = -1, -1
-    CSV.foreach(result_file) do |row|
-      if column_x_idx < 0 then
-        column_x_idx = row.index(@x_axis)
-        column_y_idx = row.index(@y_axis)
-      else
-        if @chart_values.has_key? row[column_x_idx]
-          @chart_values[row[column_x_idx]] << row[column_y_idx]
-        else
-          @chart_values[row[column_x_idx]] = [row[column_y_idx]]
-        end
-      end
-    end
-    
-  end
-
-  def get_basic_statistics_about_moe
-    @experiment = Experiment.find(params[:experiment_id])
-    result_file = @experiment.create_result_file_for(params[:moe_name])
-    @moe_name = params[:moe_name]
-    @resolution = params[:resolution].to_i
-
-    rinruby = Rails.configuration.eusas_rinruby
-    rinruby.eval("
-      experiment_data <- read.csv(\"#{result_file}\")
-      ex_min <- min(experiment_data$#{@moe_name})
-      ex_max <- max(experiment_data$#{@moe_name})
-      ex_sd <- sd(experiment_data$#{@moe_name})
-      ex_mean <- mean(experiment_data$#{@moe_name})
-    ")
-    @ex_min = format("%.2f", rinruby.ex_min)
-    @ex_max = format("%.2f", rinruby.ex_max)
-    @ex_sd = format("%.2f", rinruby.ex_sd)
-    @ex_mean = format("%.2f", rinruby.ex_mean)
-
-    get_moe_value_map(result_file, @moe_name, @ex_min.to_f, @ex_max.to_f, @resolution)
-  end
-
-  def get_moe_value_map(result_file, column_name, min_value, max_value, slices_num=10)
-    column_index = -1
-    slice_width = [(max_value - min_value) / slices_num, 1].max
-
-    if max_value == min_value
-      slice_width = [max_value, 1].max
-      slices_num = 1
-    end
-
-    @bucket_names = Array.new(slices_num) { |ind|
-      if ind == slices_num - 1
-        "[#{'%.1f'%(min_value + slice_width*ind)}-#{'%.1f'%(min_value + slice_width*(ind+1))}]"
-      else
-        "[#{'%.1f'%(min_value + slice_width*ind)}-#{'%.1f'%(min_value + slice_width*(ind+1))})"
-      end
-    }
-    @buckets = Array.new(slices_num) { 0 }
-
-    CSV.foreach(result_file) do |row|
-      if column_index < 0 then
-        column_index = row.index(column_name)
-      else
-        @buckets[[((row[column_index].to_f-min_value) / slice_width).floor, @buckets.size-1].min] += 1
-      end
-    end
-
-  end
-
-  def update_monitoring_view(experiment)
-    spawn_block do
-      instances_done, instances_sent = ExperimentInstance.get_statistics(experiment.id)
-      statistics = [instances_sent, instances_done, experiment.experiment_size,
-                    "'%.2f'" % ((instances_done.to_f / experiment.experiment_size) * 100)]
-      logger.debug("Statistics: #{statistics}")
-
-      if instances_done > 0 and (instances_done % 10 == 0 or instances_done == experiment.experiment_size)
-        ei_perform_time_avg = ExperimentInstance.get_avg_execution_time_of_ei(experiment.id)
-        ei_perform_time_avg = "%.2f" % ei_perform_time_avg
-        statistics << ei_perform_time_avg
-
-        predicted_finish_time = (Time.now - experiment.created_at).to_f / 3600
-        predicted_finish_time /= (instances_done.to_f / experiment.experiment_size)
-        predicted_finish_time = "%.2f" % predicted_finish_time
-
-        statistics << predicted_finish_time
-      end
-
-      bar_colors = experiment.experiment_progress_bar.progress_bar_color
-      # Socky.send("update_monitoring_section([#{bar_colors.join(',')}], [#{statistics.join(",")}])",
-                 # :channels => "experiment_monitoring_#{experiment.id}")
-    end
-  end
-
-  def prepare_agent_elements
-    @agent_elements = get_agents_elements(params[:scenario_id])
-    @agents_hierarchy, @agent_in_hierarchy_ids = DataFarmingScenario.new(params[:scenario_id]).agents_layout(@agent_elements)
-  end
-
-  def update_moe_list_if_first(instance)
-    spawn_block do
-      instances_done = ExperimentInstance.count_with_query(instance.experiment.id, {"is_done" => true})
-      if instances_done == 1 then
-        options = instance.result.split(',').map { |item| item.split("=")[0] }
-        options_txt = options.reduce("") { |acc, t| acc += "<option value='#{t}'>#{t}</option>" }
-        # Socky.send("$(\"[name='moe_name']\").each(function(ind,obj) { $(obj).html(\"#{options_txt}\") })",
-                   # :channels => "experiment_monitoring_#{instance.experiment_id}")
-      end
-
-      # Socky.send("update_list_of_running_experiments(#{instance.experiment_id})", :channels => "experiment_state_changed")
     end
   end
 

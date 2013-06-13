@@ -36,10 +36,6 @@ function update_monitoring_view(experiment_id) {
   }
 }
 
-function update_list_of_running_experiments(experiment_id) {
-  $.get('/experiments/update_list_of_running_experiments?experiment_id=' + experiment_id, function(data) { eval(data); });
-}
-
 function check_experiment_size(experiment_id) {
   prepare_data_for_doe();
   data_txt = "experiment_id="+experiment_id;

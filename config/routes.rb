@@ -21,35 +21,19 @@ SimulationManager::Application.routes.draw do
   get "configuration/log_failure"
 
   #experiment-related routes
-  post "experiments/start"
-  post "experiments/define_param_types"
-  post "experiments/define_input"
-  post "experiments/define_doe"
   get "experiments/latest_running_experiment"
   
   post "experiments/download_results"
-  get "experiments/update_state"
-  get "experiments/update_list_of_running_experiments"
-  
+
   get "experiments/get_experiment_id"
-  get "experiments/get_repository"
   match "experiments/instance_description/:instance_id" => "experiments#instance_description"
   
   match "experiments/next_configuration/:experiment_id" => "experiments#next_configuration"
   match "experiments/configuration/:experiment_id/:instance_id" => "experiments#configuration"
   match "experiments/set_configuration_done/:experiment_id/:instance_id" => "experiments#set_configuration_done"
-  post "experiments/add_chart"
-  post "experiments/add_regression_tree_chart"
-  post "experiments/add_basic_statistics_chart"
-  get "experiments/update_chart_data"
-  get "experiments/update_regression_tree"
-  get "experiments/update_basic_statistics_chart"
   get "experiments/get_parameter_values"
   post "experiments/extend_input_values"
-  post "experiments/check_experiment_size"
   post "experiments/change_scheduling_policy"
-  post "experiments/add_bivariate_analysis_chart"
-  get "experiments/refresh_bivariate_analysis_chart"
 
   match "experiments/:id/completed_simulations_count/:secs" => "experiments#completed_simulations_count"
   match "experiments/:id/experiment_stats" => "experiments#experiment_stats"
