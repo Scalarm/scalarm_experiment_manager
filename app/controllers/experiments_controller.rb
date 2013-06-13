@@ -1,11 +1,10 @@
-require "rubygems"
-require "csv"
+require 'csv'
 require "rinruby"
-require "xml"
-require "df_xml_parser"
-require "simulation_partitioner"
-require "scenario_file_parser"
-require "json"
+require 'xml'
+require 'df_xml_parser'
+require 'simulation_partitioner'
+require 'scenario_file_parser'
+require 'json'
 
 require 'zip/zip'
 
@@ -15,30 +14,22 @@ class ExperimentsController < ApplicationController
   include Spawn
 
   def index
-    #experiment = get_latest_running_experiment
-    #if experiment and flash[:error].nil?
-    #  redirect_to monitor_experiment_path(experiment.id)
-    #else
+
+    unless current_user.nil?
+
+      @running_experiments = current_user.get_running_experiments
+      @historical_experiments = current_user.get_historical_experiments
+
+    else
+
       @ids, @dones, @experiment_info = Experiment.experiments_info('is_running=1 ORDER BY id DESC')
 
       @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
-          'is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC')
+                'is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC')
 
-      #@simulations = []
-      #scenario_dir = Rails.configuration.scenarios_path
-      #if Dir.exist?(scenario_dir)
-      #  Dir.open(scenario_dir).each do |element|
-      #    potential_scenario_file = File.join(scenario_dir, element)
-      #    if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
-      #      @simulations << element
-      #    end
-      #  end
-      #end
-      #
-      #@simulations.sort!
+    end
 
-      @simulation_scenarios = Simulation.all
-    #end
+    @simulation_scenarios = Simulation.all
 
     render layout: 'foundation_application'
   end
@@ -72,20 +63,32 @@ class ExperimentsController < ApplicationController
                                  :time_constraint_in_sec => 60,
                                  :time_constraint_in_iter => 100,
                                  :experiment_name => @simulation.name,
-                                 :user_id => @current_user.id,
                                  :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(','))
+
+    #if defined? @current_user
+    #  @experiment.user_id = @current_user.id
+    #end
+
     @experiment.save_and_cache
     # create the new type of experiment object
+    Rails.logger.debug("Do we have Scalarm user: #{current_user.nil?}")
+
     data_farming_experiment = DataFarmingExperiment.new({'experiment_id' => @experiment.id,
                                                          'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
                                                          'name' => @simulation.name,
-                                                         'user_id' => @current_user.id,
                                                          'is_running' => true,
                                                          'run_counter' => 1,
                                                          'time_constraint_in_sec' => 3600,
-                                                         'doe_info' => doe_info
+                                                         'doe_info' => doe_info,
+                                                         'start_at' => Time.now
                                                         })
+    data_farming_experiment.user_id = current_user.id unless current_user.nil?
+
+    #if defined? @current_user
+    #  data_farming_experiment.user_id = @current_user.id
+    #end
+
     data_farming_experiment.save
     # rewrite all necessary parameters
     @experiment.parameters = data_farming_experiment.parametrization_values
@@ -140,7 +143,6 @@ class ExperimentsController < ApplicationController
                                                          'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
                                                          'name' => @simulation.name,
-                                                         'user_id' => @current_user.id,
                                                          'is_running' => true,
                                                          'run_counter' => 1,
                                                          'time_constraint_in_sec' => 3600,
@@ -268,6 +270,9 @@ class ExperimentsController < ApplicationController
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
     @experiment = Experiment.find(params[:id].to_i)
+
+    @error_flag = false
+
     if @experiment.nil? or @experiment.experiment_progress_bar.nil?
 
       Rails.logger.debug("We have a fatal error with Experiment #{params[:id]} - it will be destroyed --- #{@experiment.nil?} --- #{@experiment.experiment_progress_bar.nil?}")
@@ -281,6 +286,7 @@ class ExperimentsController < ApplicationController
         flash[:notice] = 'Your experiment is no longer available.'
       end
 
+      @error_flag = true
       redirect_to :action => :index
 
     else
@@ -299,6 +305,7 @@ class ExperimentsController < ApplicationController
       rescue Exception => e
         flash[:error] = "Problem occured during loading experiment info - #{e}"
         logger.debug(e.backtrace)
+        @error_flag = true
         redirect_to :action => :index
       end
 
@@ -323,7 +330,7 @@ class ExperimentsController < ApplicationController
 
     @simulation_scenarios = Simulation.all
 
-    render layout: 'foundation_application'
+    render layout: 'foundation_application' unless @error_flag
   end
 
   # stops the currently running DF experiment (if any)

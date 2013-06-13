@@ -19,9 +19,15 @@ class StorageManagerProxy
     request = Net::HTTP::Delete.new(uri.request_uri)
     request.basic_auth(@config['user'], @config['pass'])
 
-    response = http.request(request)
+    begin
+      response = http.request(request)
 
-    response.code == '200'
+      response.code == '200'
+    rescue Exception => e
+      Rails.logger.debug("Exception during communication with Storage manager")
+
+      false
+    end
   end
 
 end

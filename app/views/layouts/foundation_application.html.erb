@@ -30,6 +30,10 @@
         <%= link_to 'Logout', user_controller_logout_path, class: 'button' %>
         <%= link_to 'Account', user_controller_account_path, class: 'button' %>
     <% end %>
+
+    <% unless @scalarm_user.nil? %>
+        <span class="radius secondary label right">You are log in as '<%= @scalarm_user.login %>'</span>
+    <% end %>
   </div>
 
   <header>
@@ -65,37 +69,6 @@
   </script>
 
   <script src="/js/foundation.min.js"></script>
-  <!--
-
-  <script src="js/foundation/foundation.js"></script>
-
-  <script src="js/foundation/foundation.alerts.js"></script>
-
-  <script src="js/foundation/foundation.clearing.js"></script>
-
-  <script src="js/foundation/foundation.cookie.js"></script>
-
-  <script src="js/foundation/foundation.dropdown.js"></script>
-
-  <script src="js/foundation/foundation.forms.js"></script>
-
-  <script src="js/foundation/foundation.joyride.js"></script>
-
-  <script src="js/foundation/foundation.magellan.js"></script>
-
-  <script src="js/foundation/foundation.orbit.js"></script>
-
-  <script src="js/foundation/foundation.placeholder.js"></script>
-
-  <script src="js/foundation/foundation.reveal.js"></script>
-
-  <script src="js/foundation/foundation.section.js"></script>
-
-  <script src="js/foundation/foundation.tooltips.js"></script>
-
-  <script src="js/foundation/foundation.topbar.js"></script>
-
-  -->
 
   <script>
     $(document).foundation();
