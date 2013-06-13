@@ -29,26 +29,22 @@ class InfrastructureController < ApplicationController
   end
 
   def configure_plgrid
-    current_user = User.find(params[:user_id])
-    password = params[:password]
-
-    credentials = current_user.grid_credentials
+    credentials = GridCredentials.find_by_user_id(current_user.id)
 
     if credentials
       credentials.user_id = current_user.id
       credentials.login = params[:username]
-      credentials.password = password
+      credentials.password = params[:password]
       credentials.host = params[:host]
     else
-      credentials = GridCredentials.new(:user_id => current_user.id, :login => params[:username],
-                                        :password => password, :host => params[:host])
+      credentials = GridCredentials.new({ 'user_id' => current_user.id, 'login' => params[:username], 'host' => params[:host]})
+      credentials.password = params[:password]
     end
 
     # for temporary usage during the session
     session[:grid_credentials] = credentials
 
     if params[:save_settings]
-      current_user.grid_credentials = credentials
       current_user.save
     end
 

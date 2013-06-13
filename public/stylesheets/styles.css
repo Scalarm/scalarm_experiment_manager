@@ -342,16 +342,16 @@ label {
   width: 12em;
 }
 
-input[type="text"], input[type="password"], textarea
-{
-    font-family: Arial, Sans-Serif;
-    font-size: 12px;
-    margin-bottom: 5px;
-    padding: 4px;
-    border: solid 1px #777;
-    width: 100px;
-    background-color: #EEE;
-}
+/*input[type="text"], input[type="password"], textarea*/
+/*{*/
+    /*font-family: Arial, Sans-Serif;*/
+    /*font-size: 12px;*/
+    /*margin-bottom: 5px;*/
+    /*padding: 4px;*/
+    /*border: solid 1px #777;*/
+    /*width: 100px;*/
+    /*background-color: #EEE;*/
+/*}*/
 
 .LV_validation_message{
     font-weight:bold;

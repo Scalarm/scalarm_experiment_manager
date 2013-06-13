@@ -14,18 +14,17 @@ class InfrastructuresController < ApplicationController
   end
 
   def schedule_simulation_managers
-    user = User.find(params[:user_id])
     experiment_id = (params[:experiment_id] or nil)
 
     infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_type])
-    status, response_msg = infrastructure.start_simulation_managers(user, params[:job_counter].to_i, experiment_id, params)
+    status, response_msg = infrastructure.start_simulation_managers(current_user, params[:job_counter].to_i, experiment_id, params)
 
     render json: { status: status, msg: response_msg }
   end
 
   def add_infrastructure_credentials
     infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_type])
-    status = infrastructure.add_credentials(session[:user], params, session)
+    status = infrastructure.add_credentials(current_user, params, session)
 
     render json: { status: status }
   end

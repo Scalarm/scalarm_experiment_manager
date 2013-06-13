@@ -1,41 +1,59 @@
+- user = @scalarm_user || @current_user
 - credentials = GridCredentials.find_by_user_id(user.id)
 
 %div{ id: 'plgrid-login-form', class: 'wide-label' }
-  %h3= 'Please, provide credentials to access PL-Grid'
-  %div
-    = label_tag 'PL-Grid access host:'
-    = text_field_tag :plgrid_host, credentials.nil? ? '' : credentials.host
-  %div
-    = label_tag 'Username:'
-    = text_field_tag :plgrid_username, credentials.nil? ? '' : credentials.login
-  %div
-    = label_tag 'Password:'
-    = password_field_tag :plgrid_password, credentials.nil? ? '' : credentials.password
-  %div
-    = label_tag :plgrid_save_settings, 'Save settings:'
-    = check_box_tag :plgrid_save_settings, '1', (not credentials.nil?)
-  %br
-  .buttons
-    = submit_tag 'Submit'
-    = image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+  %h5.subheader= 'Please, provide credentials to access PL-Grid'
 
-%br
+  .row
+    .small-4.columns
+      = label_tag 'PL-Grid access host:', nil, class: 'inline'
+    .small-8.columns
+      = text_field_tag :plgrid_host, credentials.nil? ? '' : credentials.host
+  .row
+    .small-4.columns
+      = label_tag 'Username:', nil, class: 'inline'
+    .small-8.columns
+      = text_field_tag :plgrid_username, credentials.nil? ? '' : credentials.login
+  .row
+    .small-4.columns
+      = label_tag 'Password:', nil, class: 'inline'
+    .small-8.columns
+      = password_field_tag :plgrid_password, credentials.nil? ? '' : credentials.password
+  .row
+    .small-4.columns
+      = label_tag 'Save settings:', nil, class: 'inline'
+    .small-8.columns
+      = check_box_tag :plgrid_save_settings, '1', (not credentials.nil?)
 
-%div{ id: 'plgrid-booster-form', class: 'wide-label' }
-  %p{ id: 'plgrid_info' }
-  %div
-    = label_tag 'Number of jobs:'
-    = text_field_tag :job_counter
-  %div
-    = label_tag 'Scheduler:'
-    = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
-  %br
-  %div
-    = label_tag 'Job time constraint [min]:'
-    = text_field_tag :time_limit
-  .buttons
-    = submit_tag 'Submit', class: 'nice_button'
-    = button_to_function 'Edit credentials', "$('#plgrid-booster-form').hide(); $('#plgrid-login-form').show();", class: 'nice_button'
+  .row
+    %ul.inline-list
+      %li= submit_tag 'Submit', class: 'button'
+      %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+
+= form_tag '', class: 'custom' do
+  %div{ id: 'plgrid-booster-form', class: 'wide-label' }
+    %p{ id: 'plgrid_info' }
+
+    .row
+      .small-3.columns
+        = label_tag 'Number of jobs:', nil, class: 'inline'
+      .small-9.columns
+        = text_field_tag :job_counter
+    .row
+      .small-3.columns
+        = label_tag 'Scheduler:', nil, class: 'inline'
+      .small-9.columns
+        = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+    .row
+      .small-5.columns
+        = label_tag 'Job time constraint [min]:', nil, class: 'inline'
+      .small-7.columns
+        = text_field_tag :time_limit
+
+    .row
+      %ul.inline-list
+        %li= submit_tag 'Submit', class: 'button'
+        %li= button_to_function 'Edit credentials', "$('#plgrid-booster-form').hide(); $('#plgrid-login-form').show();", class: 'button'
 
 :javascript
   $(function() {
@@ -54,7 +72,6 @@
         'password': $('#plgrid_password').val(),
         'save_settings': $('#plgrid_save_settings').prop('checked'),
         'infrastructure_type': 'plgrid',
-        'user_id': #{session[:user]},
         'authenticity_token': '#{form_authenticity_token}'
       };
 
@@ -69,12 +86,11 @@
 
       return false;
     });
-
+    //'user_id': #{session[:user]},
     $("#plgrid-booster-form input[type='submit']").bind('click', function() {
       data = {
         'infrastructure_type': 'plgrid',
         'experiment_id': #{experiment.id},
-        'user_id': #{session[:user]},
         'job_counter': $('#job_counter').val(),
         'time_limit': $('#time_limit').val(),
         'scheduler': $('#scheduler').val(),

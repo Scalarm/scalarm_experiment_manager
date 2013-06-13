@@ -95,7 +95,7 @@ class PLGridFacade < InfrastructureFacade
     # prepare locally code of a simulation manager to upload with a configuration file
     prepare_configuration_for_simulation_manager(sm_uuid, user, experiment_id)
 
-    if credentials = user.grid_credentials
+    if credentials = GridCredentials.find_by_user_id(user.id)
       # prepare job executable and descriptor
       scheduler.prepare_job_files(sm_uuid)
 
@@ -134,16 +134,16 @@ class PLGridFacade < InfrastructureFacade
     jobs.nil? ? 0 : jobs.size
   end
 
-  def add_credentials(user_id, params, session)
-    credentials = GridCredentials.find_by_user_id(user_id)
+  def add_credentials(user, params, session)
+    credentials = GridCredentials.find_by_user_id(user.id)
 
     if credentials
       credentials.login = params[:username]
       credentials.password = params[:password]
       credentials.host = params[:host]
     else
-      credentials = GridCredentials.new(user_id: user_id, host: params[:host],
-                                        login: params[:username], password: params[:password])
+      credentials = GridCredentials.new({ 'user_id' => user.id, 'host' => params[:host], 'login' => params[:username] })
+      credentials.password = params[:password]
     end
 
     if params[:save_settings] == 'false'
@@ -159,7 +159,7 @@ class PLGridFacade < InfrastructureFacade
 
   def clean_tmp_credentials(user_id, session)
     if session.include?(:tmp_plgrid_credentials)
-      GridCredentials.find_by_user_id(user_id).delete
+      GridCredentials.find_by_user_id(user_id).destroy
     end
   end
 
