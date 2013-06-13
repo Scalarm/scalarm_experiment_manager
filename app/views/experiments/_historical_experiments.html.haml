@@ -1,25 +1,9 @@
 .panel.radius.list
   = content_tag :h4, t('historical_experiments.label'), class: 'subheader'
 
-  - unless @scalarm_user.nil?
-
-    - if @historical_experiments.blank?
-      %p No historical experiment available
-    - else
-      - @historical_experiments.each do |experiment|
-        - link_text = "#{experiment.name}, started at: #{experiment.started_at}, stopped at: #{experiment.end_at}"
-        = button_to link_text, monitor_experiment_path(experiment.experiment_id), class: 'button expand', method: :get
-
+  - if @historical_experiments.blank?
+    %p No historical experiment available
   - else
-    - if @historical_ids.blank?
-      %p No historical experiment available
-    - else
-      - @historical_ids.each_with_index do |id, index|
-        - next if @historical_exp_info[id].nil?
-        -#- completed = compute_completed(@historical_dones[index], @historical_exp_info[id][0])
-        - link_text = "#{@historical_exp_info[id][3]}, started at: #{@historical_exp_info[id][2]}, stopped at: #{@historical_exp_info[id][4]}"
-        = button_to link_text, monitor_experiment_path(id), class: 'button expand', method: :get
-
-
-
-
+    - @historical_experiments.each do |experiment|
+      - link_text = "#{experiment.name}, started at: #{experiment.started_at}, stopped at: #{experiment.end_at}"
+      = button_to link_text, monitor_experiment_path(experiment.experiment_id), class: 'button expand', method: :get

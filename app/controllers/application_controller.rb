@@ -18,8 +18,10 @@ class ApplicationController < ActionController::Base
   # protect_from_forgery
 
   def current_user
-    unless @scalarm_user.nil?
+    if not @scalarm_user.nil?
       @scalarm_user
+    elsif not @current_user.nil?
+      @current_user
     else
       nil
     end

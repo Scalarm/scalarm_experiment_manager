@@ -14,21 +14,8 @@ class ExperimentsController < ApplicationController
   include Spawn
 
   def index
-
-    unless current_user.nil?
-
-      @running_experiments = current_user.get_running_experiments
-      @historical_experiments = current_user.get_historical_experiments
-
-    else
-
-      @ids, @dones, @experiment_info = Experiment.experiments_info('is_running=1 ORDER BY id DESC')
-
-      @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
-                'is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC')
-
-    end
-
+    @running_experiments = current_user.get_running_experiments
+    @historical_experiments = current_user.get_historical_experiments
     @simulation_scenarios = Simulation.all
 
     render layout: 'foundation_application'
@@ -65,10 +52,6 @@ class ExperimentsController < ApplicationController
                                  :experiment_name => @simulation.name,
                                  :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(','))
 
-    #if defined? @current_user
-    #  @experiment.user_id = @current_user.id
-    #end
-
     @experiment.save_and_cache
     # create the new type of experiment object
     Rails.logger.debug("Do we have Scalarm user: #{current_user.nil?}")
@@ -81,7 +64,8 @@ class ExperimentsController < ApplicationController
                                                          'run_counter' => 1,
                                                          'time_constraint_in_sec' => 3600,
                                                          'doe_info' => doe_info,
-                                                         'start_at' => Time.now
+                                                         'start_at' => Time.now,
+                                                         'user_id' => current_user.id
                                                         })
     data_farming_experiment.user_id = current_user.id unless current_user.nil?
 
@@ -289,6 +273,11 @@ class ExperimentsController < ApplicationController
       @error_flag = true
       redirect_to :action => :index
 
+    elsif DataFarmingExperiment.find_by_experiment_id(@experiment.id).user_id != current_user.id
+      flash[:error] = 'Required experiment is not yours'
+      @error_flag = true
+
+      redirect_to :action => :index
     else
 
       begin
@@ -311,23 +300,8 @@ class ExperimentsController < ApplicationController
 
     end
 
-    # Experiments info
-    # TODO FIXME move this to background
-    @ids, @dones, @experiment_info = Experiment.experiments_info("is_running=1 ORDER BY id DESC")
-    @historical_ids, @historical_dones, @historical_exp_info = Experiment.experiments_info(
-        "is_running=0 AND start_at IS NOT NULL ORDER BY end_at DESC")
-
-    @simulations = []
-    #scenario_dir = Rails.configuration.scenarios_path
-    #Dir.open(scenario_dir).each do |element|
-    #  potential_scenario_file = File.join(scenario_dir, element)
-    #  if File.file?(potential_scenario_file) and element.ends_with?(".xml") then
-    #    @simulations << element
-    #  end
-    #end
-
-    @simulations.sort!
-
+    @running_experiments = current_user.get_running_experiments
+    @historical_experiments = current_user.get_historical_experiments
     @simulation_scenarios = Simulation.all
 
     render layout: 'foundation_application' unless @error_flag

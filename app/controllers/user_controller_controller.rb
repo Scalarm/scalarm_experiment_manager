@@ -4,7 +4,7 @@ class UserControllerController < ApplicationController
     if request.post?
       begin
         session[:user] = User.authenticate(params[:username], params[:password]).id
-        session[:grid_credentials] = User.find(session[:user]).grid_credentials
+        session[:grid_credentials] = GridCredentials.find_by_user_id(session[:user])
 
         flash[:notice] = t('login_success')
 
