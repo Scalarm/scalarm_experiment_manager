@@ -15,7 +15,7 @@
                 = form_tag '', class: 'custom' do
                   = content_tag :div, :class => "row #{(parameter.include?('value') ? 'hidden' : '')}" do
                     .small-5.columns
-                      = label_tag "Set '#{parameter['label']}' to:", nil, class: 'inline'
+                      = label_tag "Set '#{parameter['label']}' to:", nil, class: 'inline right'
                     .small-7.columns
                       = parametrization_options(parameter, parameter_id)
                 = javascript_tag "parametrizationTypeListener(#{parameter_id}, '#{entity_group['id']}', '#{entity['id']}', '#{parameter['id']}');"

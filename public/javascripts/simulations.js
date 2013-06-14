@@ -158,11 +158,13 @@ function parameterValuesPartialForString(parameter, parametrizationType, paramet
 
 // util function for creating <div> with text and input inside
 function labeledInput(label, elementId, defaultValue) {
-    var inputTemplate = $("<input type='text' />").addClass("nice_input");
-    var labelElement = $("<label></label>").html(label);
+    var inputTemplate = $("<input type='text' />")
+    var labelElement = $("<label></label>").addClass('inline').addClass('right').html(label);
 
-    var labeledInput = $("<div></div>").append(labelElement).append(
-        inputTemplate.clone().attr("id", elementId).val(defaultValue)
+    var labeledInput = $("<div></div>").addClass('row').
+        append($("<div></div>").addClass('small-5').addClass('columns').append(labelElement)).
+        append($("<div></div>").addClass('small-7').addClass('columns').append(
+        inputTemplate.clone().attr("id", elementId).val(defaultValue))
     );
 
     return labeledInput;
