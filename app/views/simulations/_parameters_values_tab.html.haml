@@ -1,0 +1,18 @@
+.content{'data-slug' => 'parameters_value', style: ''}
+  %h3.subheader
+    Here you can specify values for each input parameter you want to explore
+  .accordion-container
+    - parameter_id = 0
+    - @simulation_input.each do |entity_group|
+      = content_tag :h3, "Entities of group '#{entity_group['label']}'"
+      %div
+        .accordion-container
+          - entity_group['entities'].each do |entity|
+            = content_tag :h3, "Entity '#{entity['label']}'"
+            %div
+              - entity['parameters'].each do |parameter|
+                - parameter_id += 1
+                = content_tag :div, (parameter.include?('value') ? parameter['value'] : ''), :id => "parameter_values_#{parameter_id}",
+                                                    :class => (parameter.include?('value') ? 'hidden' : ''),
+                                                    :group_id => entity_group['id'], :entity_id => entity['id'], :parameter_id => parameter['id']
+                = javascript_tag "buildParameterValuesPartial(#{parameter_id});"
