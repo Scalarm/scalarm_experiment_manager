@@ -2,14 +2,24 @@
 = javascript_tag 'var rt_chart_tab = new Array(); var rt_vis_tab = new Array();'
 
 #regression_charts_form
-  %h2 Regression trees
-  %div
-    %span
-      Select MoE:
-      = select_tag 'moe_name', '', { class: 'moe_list' }
-
-    = submit_tag 'Load chart', class: 'nice_button', style: 'float: none;'
-    = image_tag 'loading.gif', id: 'busy_rt', size: '16x16', style: 'display: none;'
+  %h2.subheader Regression trees
+  = form_tag '', class: '' do
+    .row
+      .small-10.columns
+        .small-3.columns
+          = label_tag 'Select MoE:', nil, class: 'inline'
+        .small-9.columns
+          = select_tag 'moe_name', '', { class: 'moe_list' }
+    .row
+      .small-10.columns
+        .small-3.columns
+          = label_tag 'Number of bars:', nil, class: 'inline'
+        .small-9.columns
+          = text_field_tag 'resolution', 10
+    .row
+      %ul.inline-list
+        %li= submit_tag 'Load chart', class: 'button'
+        %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
 
 #regression_charts
 

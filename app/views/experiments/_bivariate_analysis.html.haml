@@ -1,18 +1,22 @@
 = javascript_tag 'var bivariate_chart_tab = new Array();'
 
 #bivariate_charts_form
-  %h2 Bivariate analysis
-
-  %div
-    %div{ style: 'margin-bottom: 10px;' }
-      Select values for the X axis (MoE or input):
-      = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
-    %div{ style: 'margin-bottom: 10px;' }
-      Select values for the Y axis (MoE or input):
-      = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
-
-    = submit_tag 'Load chart', class: 'nice_button', style: 'margin-left: 0;'
-    = image_tag 'loading.gif', id: 'busy_scatter_plot', size: '16x16', style: 'display: none'
+  %h2.subheader Bivariate analysis
+  = form_tag '', class: '' do
+    .row
+      .small-5.columns
+        = label_tag 'Select values for the X axis (MoE or input):', nil, class: 'inline'
+      .small-7.columns
+        = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
+    .row
+      .small-5.columns
+        = label_tag 'Select values for the Y axis (MoE or input):', nil, class: 'inline'
+      .small-7.columns
+        = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
+    .row
+      %ul.inline-list
+        %li= submit_tag 'Load chart', class: 'button'
+        %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
 
 #bivariate_charts
 
