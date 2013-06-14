@@ -11,12 +11,6 @@
         .small-9.columns
           = select_tag 'moe_name', '', { class: 'moe_list' }
     .row
-      .small-10.columns
-        .small-3.columns
-          = label_tag 'Number of bars:', nil, class: 'inline'
-        .small-9.columns
-          = text_field_tag 'resolution', 10
-    .row
       %ul.inline-list
         %li= submit_tag 'Load chart', class: 'button'
         %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
