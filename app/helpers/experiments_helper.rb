@@ -4,19 +4,26 @@ module ExperimentsHelper
 
   def extend_experiment_form
     form = ''
+    form_elements = []
 
-    #priority_select = select_tag 'priority', options_for_select([ [ 'Standard', 40 ], [ 'High', 60 ], [ 'Low', 20 ] ])
+    form_elements << content_tag(:div, content_tag(:label, 'Priority:', class: 'inline right'), class: 'small-4 columns') +
+                     content_tag(:div, escape_javascript(select_tag('priority',
+                                                                    options_for_select([['Standard', 40], ['High', 20], ['Low', 60]]))),
+                                 class: 'small-8 columns')
 
-    #form += content_tag(:div, content_tag(:label, 'Priority:', class: 'nice_label') + priority_select)
-    #//form_txt += '<%= raw select_tag('priority', options_for_select([ [ 'Standard', 40 ], [ 'High', 60 ] ])) %>'
-    min_param = content_tag(:label, 'Minimum:', class: 'nice_label') + text_field_tag('range_min', '', class: 'nice_input')
-    max_param = content_tag(:label, 'Maximum:', class: 'nice_label') + text_field_tag('range_max', '', class: 'nice_input')
-    step_param = content_tag(:label, 'Step:', class: 'nice_label') + text_field_tag('range_step', '', class: 'nice_input')
+    form_elements << content_tag(:div, content_tag(:label, 'Minimum:', class: 'inline right'), class: 'small-4 columns') +
+                     content_tag(:div, text_field_tag('range_min'), class: 'small-8 columns')
 
-    form += content_tag(:div, min_param) + content_tag(:div, max_param) + content_tag(:div, step_param)
+    form_elements << content_tag(:div, content_tag(:label, 'Maximum:', class: 'inline right'), class: 'small-4 columns') +
+                     content_tag(:div, text_field_tag('range_max'), class: 'small-8 columns')
+
+    form_elements << content_tag(:div, content_tag(:label, 'Step:', class: 'inline right'), class: 'small-4 columns') +
+                     content_tag(:div, text_field_tag('range_step'), class: 'small-8 columns')
+
+    form += form_elements.reduce(''){|sum, element| sum += content_tag(:div, element, class: 'row')}
 
     form += content_tag(:div,
-                        submit_tag('Submit', class: 'nice_button') +
+                        submit_tag('Submit', class: 'button') +
                         image_tag('loading.gif', id: 'expand_dialog_busy', size: '20x20', style: 'float: left; display: none;') )
 
     form

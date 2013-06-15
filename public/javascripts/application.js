@@ -303,7 +303,7 @@ function show_dialog_for_new_parameter_value(param_id, param_label, url, experim
   $.ajax({
     url: url,
     data: { 'param_name': param_id },
-    success: function(msg) { $("#dialog").css("height", 250); }
+    success: function(msg) { $("#dialog").css("height", 250); $("#dialog").dialog({title: param_label})}
   });
 }
 
