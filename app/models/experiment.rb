@@ -463,15 +463,16 @@ class Experiment < ActiveRecord::Base
   end
 
   def simulation_hash_to_sent(db)
-    Rails.logger.debug("Simulation which is in to sent state")
+    Rails.logger.debug('Simulation which is in to sent state')
 
     db.find_one_with_order(self.id, {"to_sent" => true})
   end
 
   def naive_partition_based_simulation_hash(db)
-    Rails.logger.debug("Naive partition based simulation")
+    Rails.logger.debug('Naive partition based simulation')
 
-    manager_counter = ExperimentManager.count
+    manager_counter = ExperimentManager.all.size
+    manager_counter = 1 if manager_counter = 0
 
     partitions_to_check = 1.upto(manager_counter).to_a.shuffle
     partition_size = self.experiment_size / manager_counter
@@ -630,7 +631,7 @@ class Experiment < ActiveRecord::Base
   # Generate a list of subsequent simulation ids in a random order
   # based on the 'manager_id' attribute and the overall number of registered Experiment Managers
   def create_file_with_ids
-    manager_counter = ExperimentManager.all.count
+    manager_counter = ExperimentManager.all.size
     manager_counter = 1 if manager_counter == 0
 
     id_list = []

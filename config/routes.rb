@@ -43,6 +43,8 @@ SimulationManager::Application.routes.draw do
   get "user_controller/account"
   post "user_controller/change_password"
 
+  match "/experiments/:experiment_id" => redirect("/experiments/%{experiment_id}/monitor")
+
   resources :experiments do
     collection do
       post :start_experiment
@@ -71,6 +73,8 @@ SimulationManager::Application.routes.draw do
       end
     end
   end
+
+
 
   # infrastructure routes
   match 'infrastructure' => 'infrastructure#index'
