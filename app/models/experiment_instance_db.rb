@@ -100,10 +100,15 @@ class ExperimentInstanceDb < ActiveRecord::Base
   end
 
   def save_instance(instance_doc)
-    collection = connect_to_collection(instance_doc["experiment_id"])
+    collection = connect_to_collection(instance_doc['experiment_id'])
     raise "Error while connecting to #{self.ip}" if collection.nil?
 
-    collection.update({"id" => instance_doc["id"]}, instance_doc, {:upsert => true})
+    if instance_doc.include?('_id')
+      collection.update({'_id' => instance_doc['_id']}, instance_doc, {:upsert => true})
+    else
+      collection.update({'id' => instance_doc['id']}, instance_doc, {:upsert => true})
+    end
+
   end
 
   def drop_instances_for(experiment_id)

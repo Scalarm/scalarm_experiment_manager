@@ -472,7 +472,7 @@ class Experiment < ActiveRecord::Base
     Rails.logger.debug('Naive partition based simulation')
 
     manager_counter = ExperimentManager.all.size
-    manager_counter = 1 if manager_counter = 0
+    manager_counter = 1 if manager_counter == 0
 
     partitions_to_check = 1.upto(manager_counter).to_a.shuffle
     partition_size = self.experiment_size / manager_counter

@@ -463,7 +463,11 @@ class ExperimentsController < ApplicationController
     
     @new_instance_counter = 0
 
-    sample_simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, 1)
+    simulation_id = 1
+    while (sample_simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, simulation_id)).nil?
+      simulation_id += 1
+    end
+
     param_index = sample_simulation.arguments.split(',').index(@param_name)
     sample_value = sample_simulation.values.split(',')[param_index]
 
@@ -547,7 +551,8 @@ class ExperimentsController < ApplicationController
     @experiment.save
     # 3. simulations id renumeration apply
     Rails.logger.debug("Size of new ids: #{id_change_map.size}")
-    id_change_map.each do |old_simulation_id, new_simulation_id|
+    id_change_map.keys.sort.reverse.each do |old_simulation_id|
+      new_simulation_id = id_change_map[old_simulation_id]
       Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
       # make the actual change
       unless old_simulation_id == new_simulation_id

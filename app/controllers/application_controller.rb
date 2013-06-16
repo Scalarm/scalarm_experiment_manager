@@ -37,7 +37,6 @@ class ApplicationController < ActionController::Base
 
   def check_authentication
     @scalarm_user = @current_user = nil
-    Rails.logger.debug("DN: #{request.env['HTTP_SSL_CLIENT_S_DN']}")
 
     if session[:user]
 
@@ -46,7 +45,7 @@ class ApplicationController < ActionController::Base
     else
 
       if request.env.include?('HTTP_SSL_CLIENT_S_DN') and request.env['HTTP_SSL_CLIENT_S_DN'] != '(null)' and request.env['HTTP_SSL_CLIENT_VERIFY'] == 'SUCCESS'
-        Rails.logger.debug('We can use dn for authentication')
+        Rails.logger.debug("We can use DN(#{request.env['HTTP_SSL_CLIENT_S_DN']}) for authentication")
         @scalarm_user = ScalarmUser.find_by_dn(request.env['HTTP_SSL_CLIENT_S_DN'])
 
         if @scalarm_user.nil?
