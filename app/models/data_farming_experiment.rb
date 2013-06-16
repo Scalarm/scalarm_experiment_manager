@@ -48,9 +48,9 @@ class DataFarmingExperiment < MongoActiveRecord
 
 
   def get_statistics
-    all  = ExperimentInstance.count_with_query(self._id)
-    done = ExperimentInstance.count_with_query(self._id, {'is_done' => true})
-    sent = ExperimentInstance.count_with_query(self._id, {'to_sent' => false, 'is_done' => false})
+    all  = ExperimentInstance.count_with_query(self.experiment_id)
+    done = ExperimentInstance.count_with_query(self.experiment_id, {'is_done' => true})
+    sent = ExperimentInstance.count_with_query(self.experiment_id, {'to_sent' => false, 'is_done' => false})
 
     return all, done, sent
   end
@@ -340,6 +340,17 @@ class DataFarmingExperiment < MongoActiveRecord
     # self-drop
     @@db['experiments_info'].remove({ experiment_id: self.experiment_id })
     DataFarmingExperiment.destroy({ experiment_id: self.experiment_id })
+  end
+
+  def result_names
+    moe_name_set = Set.new
+    result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
+
+    ExperimentInstance.raw_find_by_query(self.experiment_id, {is_done: true}, {fields: 'result', limit: result_limit}).each do |simulation_doc|
+      moe_name_set += simulation_doc['result'].keys
+    end
+
+    moe_name_set.empty? ? nil : moe_name_set.to_a
   end
 
   private

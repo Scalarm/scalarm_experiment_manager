@@ -282,47 +282,48 @@ class ExperimentsController < ApplicationController
   end
 
   def experiment_stats
-    experiment = Experiment.find(params[:id].to_i)
+    experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
 
     stats = if experiment
         generated, instances_done, instances_sent = experiment.get_statistics
         if generated > experiment.experiment_size
           experiment.experiment_size = generated
-          experiment.save_and_cache
+          old_fashion_experiment = experiment.old_fashion_experiment
+          old_fashion_experiment.experiment_size = generated
+          old_fashion_experiment.save_and_cache
+          experiment.save
         end
 
-        #Rails.logger.debug("Progress Bar: #{experiment.experiment_progress_bar.progress_bar_color.join(",")}")
-        
         partial_stats = {
-          "all" => experiment.experiment_size, "sent" => instances_sent, "done_num" => instances_done,
-          "done_percentage" => "'%.2f'" % ((instances_done.to_f / experiment.experiment_size) * 100),
-          "generated" => [generated, experiment.experiment_size].min, 
-          "progress_bar" => "[#{experiment.experiment_progress_bar.progress_bar_color.join(",")}]"
+            all: experiment.experiment_size, sent: instances_sent, done_num: instances_done,
+            done_percentage: "'%.2f'" % ((instances_done.to_f / experiment.experiment_size) * 100),
+            generated: [generated, experiment.experiment_size].min,
+            progress_bar: "[#{ExperimentProgressBar.find_by_experiment_id(experiment.experiment_id).progress_bar_color.join(',')}]"
         }
-        
+
         if instances_done > 0 and (instances_done % 3 == 0 or instances_done == experiment.experiment_size)
           ei_perform_time_avg = ExperimentInstance.get_avg_execution_time_of_ei(experiment.id)
           ei_perform_time_avg_m = (ei_perform_time_avg / 60.to_f).floor
           ei_perform_time_avg_s = (ei_perform_time_avg - ei_perform_time_avg_m*60).to_i
-          
+
           ei_perform_time_avg = ""
           ei_perform_time_avg += "#{ei_perform_time_avg_m} minutes"  if ei_perform_time_avg_m > 0
           ei_perform_time_avg += " and " if (ei_perform_time_avg_m > 0) and (ei_perform_time_avg_s > 0)
           ei_perform_time_avg +=  "#{ei_perform_time_avg_s} seconds" if ei_perform_time_avg_s > 0
-          
+
           # ei_perform_time_avg = "%.2f" % ei_perform_time_avg
           partial_stats["avg_simulation_time"] = ei_perform_time_avg
-        
+
           predicted_finish_time = (Time.now - experiment.created_at).to_f / 3600
           predicted_finish_time /= (instances_done.to_f / experiment.experiment_size)
           predicted_finish_time_h = predicted_finish_time.floor
           predicted_finish_time_m = ((predicted_finish_time.to_f - predicted_finish_time_h.to_f)*60).to_i
-          
+
           predicted_finish_time = ""
           predicted_finish_time += "#{predicted_finish_time_h} hours"  if predicted_finish_time_h > 0
           predicted_finish_time += " and " if (predicted_finish_time_h > 0) and (predicted_finish_time_m > 0)
           predicted_finish_time +=  "#{predicted_finish_time_m} minutes" if predicted_finish_time_m > 0
-    
+
           partial_stats["predicted_finish_time"] = predicted_finish_time
         end
 
@@ -335,27 +336,23 @@ class ExperimentsController < ApplicationController
   end
 
   def experiment_moes
-    experiment = Experiment.find(params['id'].to_i)
-    data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
     moes_info = {}  
     
-    #moes = experiment.moe_names
     moes = experiment.result_names
     moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map{|x| [ ParameterForm.moe_label(x), x ]}
-    Rails.logger.debug("Result names: #{moes}")
+    #Rails.logger.debug("Result names: #{moes}")
 
-    done_instance = ExperimentInstance.get_first_done(experiment.id)
+    done_instance = ExperimentInstance.get_first_done(experiment.experiment_id)
     moes_and_params = if done_instance.nil?
         ['No input parameters found', 'nil']
       else
         moes + [ %w(----------- nil) ] +
-        done_instance.arguments.split(',').map{|x| [ data_farming_experiment.input_parameter_label_for(x), x ]}
+        done_instance.arguments.split(',').map{|x| [ experiment.input_parameter_label_for(x), x ]}
       end
     
     moes_info[:moes] = moes.map{|label, id| "<option value='#{id}'>#{label}</option>"}.join()
     moes_info[:moes_and_params] = moes_and_params.map{|label, id| "<option value='#{id}'>#{label}</option>"}.join()
-
-    # logger.debug moes_info.to_s
 
     respond_to do |format|
       format.json{ render :json => moes_info }
@@ -553,7 +550,7 @@ class ExperimentsController < ApplicationController
     id_change_map.each do |old_simulation_id, new_simulation_id|
       Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
       # make the actual change
-      unless old_simulation_id != new_simulation_id
+      unless old_simulation_id == new_simulation_id
         simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, old_simulation_id)
         unless simulation.nil?
           simulation.id = new_simulation_id

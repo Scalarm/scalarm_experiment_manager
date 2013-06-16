@@ -35,15 +35,11 @@ SimulationManager::Application.routes.draw do
   post "experiments/change_scheduling_policy"
 
   match "experiments/:id/completed_simulations_count/:secs" => "experiments#completed_simulations_count"
-  match "experiments/:id/experiment_stats" => "experiments#experiment_stats"
-  match "experiments/:id/experiment_moes" => "experiments#experiment_moes"
 
   # user controller
   post "user_controller/account"
   get "user_controller/account"
   post "user_controller/change_password"
-
-  match "/experiments/:experiment_id" => redirect("/experiments/%{experiment_id}/monitor")
 
   resources :experiments do
     collection do
@@ -65,6 +61,9 @@ SimulationManager::Application.routes.draw do
       post :histogram
       post :scatter_plot
       post :regression_tree
+      # monitoring stats
+      get :experiment_stats
+      get :experiment_moes
     end
 
     resources :simulations do
