@@ -32,7 +32,6 @@ SimulationManager::Application.routes.draw do
   match "experiments/configuration/:experiment_id/:instance_id" => "experiments#configuration"
   match "experiments/set_configuration_done/:experiment_id/:instance_id" => "experiments#set_configuration_done"
   get "experiments/get_parameter_values"
-  post "experiments/extend_input_values"
   post "experiments/change_scheduling_policy"
 
   match "experiments/:id/completed_simulations_count/:secs" => "experiments#completed_simulations_count"
@@ -58,6 +57,7 @@ SimulationManager::Application.routes.draw do
       get   :monitor
       post  :stop
       post  :destroy
+      post  :extend_input_values
 
       # experiment charts
       post :histogram

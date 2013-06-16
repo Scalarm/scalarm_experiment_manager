@@ -86,11 +86,7 @@ class ExperimentsController < ApplicationController
     # create multiple list to fast generete subsequent simulations
     labels = data_farming_experiment.parameters
     value_list = data_farming_experiment.value_list
-    multiply_list = Array.new(value_list.size)
-    multiply_list[-1] = 1
-    (multiply_list.size - 2).downto(0) do |index|
-      multiply_list[index] = multiply_list[index + 1] * value_list[index + 1].size
-    end
+    multiply_list = data_farming_experiment.multiply_list
 
     ExperimentInstanceDb.default_instance.store_experiment_info(@experiment, labels, value_list, multiply_list)
 
@@ -463,92 +459,119 @@ class ExperimentsController < ApplicationController
 
   #TODO FIXME refactor to be one screen height
   def extend_input_values
-    @experiment = Experiment.find(params[:experiment_id])
+    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:experiment_id].to_i)
     @param_name = params[:param_name]
-    @range_min = params[:range_min].to_f
-    @range_max = params[:range_max].to_f
-    @range_step = params[:range_step].to_f
+    @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
     @priority = params[:priority].to_i
     
-    @new_instance_counter, offset = 0, @experiment.experiment_size + 1
+    @new_instance_counter = 0
 
-    sample_instance = ExperimentInstance.find_by_id(@experiment.id, 1)
-    param_index = sample_instance.arguments.split(",").map{|x| ParameterForm.parameter_uid_for_r(x)}.index(@param_name)
-    sample_value = sample_instance.values.split(",")[param_index]
-    # Getting combinations of other parameters
+    sample_simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, 1)
+    param_index = sample_simulation.arguments.split(',').index(@param_name)
+    sample_value = sample_simulation.values.split(',')[param_index]
+
+    Rails.logger.debug("Param index: #{param_index} --- Sample value: #{sample_value}")
+    # Getting combinations of other parameters, i.e. all simulations with a concrete value of our parameter
     # values,arguments
-    instances_to_reproduce = ExperimentInstance.raw_find_by_query(@experiment.id, {}, {:fields => ["values","arguments"]}).select{ |instance|
-      instance["values"].split(",")[param_index] == sample_value
+    combinations_to_reproduce = ExperimentInstance.raw_find_by_query(@experiment.experiment_id, {},
+                                                                     { fields: ['values', 'arguments'] }).select{ |simulation|
+      simulation['values'].split(',')[param_index] == sample_value
     }
-    instances_to_reproduce_count = instances_to_reproduce.size*@experiment.run_counter*@range_min.step(@range_max, @range_step).to_a.size
 
-    # create additional partitions
-    instance_dbs = ExperimentInstanceDb.all
-    raise "No ExperimentInstanceDb defined, hence could not create experiment partitions." if instance_dbs.empty?
+    combinations_to_reproduce_count = combinations_to_reproduce.size*@range_min.step(@range_max, @range_step).to_a.size
+    Rails.logger.debug("Combinations to reproduce: #{combinations_to_reproduce_count} --- #{combinations_to_reproduce.size}")
 
-    partitions = @experiment.instances_partitioning(instances_to_reproduce_count, instance_dbs.size, @experiment.experiment_size)
-    0.upto(partitions.size - 1) do |index|
-      partition_hash = partitions[index]
-      Rails.logger.debug("Index: #{index} - #{partition_hash}")
+    ids_of_new_simulations = []
+    value_list = @experiment.value_list
+    multiply_list = @experiment.multiply_list
+    Rails.logger.debug("Value list: #{value_list}")
+    Rails.logger.debug("Multiply list: #{multiply_list}")
 
-      partition = ExperimentPartition.create(:experiment_id => @experiment.id,
-        :experiment_instance_db_id => instance_dbs[partition_hash[:db_index]].id,
-        :start_id => partition_hash[:start_id],
-        :end_id => partition_hash[:end_id])
+    num_of_new_values = @range_min.step(@range_max, @range_step).to_a.size
+    Rails.logger.debug("num_of_new_values: #{num_of_new_values}")
+    num_of_new_simulations = (@experiment.experiment_size / value_list[param_index].size) * num_of_new_values
+    Rails.logger.debug("num_of_new_simulations: #{num_of_new_simulations}")
+    start_index = (param_index == 0 ? @experiment.experiment_size : multiply_list[param_index - 1])
+    Rails.logger.debug("start_index: #{start_index}")
+    num_of_elements_in_iteration = (param_index == multiply_list.size - 1 ? 1 : value_list[param_index + 1..-1].reduce(1){|acc, tab| acc *= tab.size }) * num_of_new_values
+    Rails.logger.debug("num_of_elements_in_iteration: #{num_of_elements_in_iteration}")
+    iteration_offset = value_list[param_index..-1].reduce(1){|acc, tab| acc *= tab.size }
+    Rails.logger.debug("iteration_offset: #{iteration_offset}")
 
-      partition.create_table if index < instance_dbs.size
+    while(num_of_new_simulations > 0)
+      1.upto(num_of_elements_in_iteration) do |i|
+        ids_of_new_simulations << start_index + i
+      end
+
+      start_index += num_of_elements_in_iteration + iteration_offset
+      num_of_new_simulations -= num_of_elements_in_iteration
+    end
+    ids_of_new_simulations.sort!
+
+    Rails.logger.debug("ids_of_new_simulations: #{ids_of_new_simulations}")
+
+    Rails.logger.debug("Renumerating ids")
+
+    id_change_map = {}
+    id_add_factor = 0
+    next_id_to_renumerate = 1
+    while next_id_to_renumerate <= @experiment.experiment_size
+      Rails.logger.debug("Next range to renumerate: #{next_id_to_renumerate} .. #{next_id_to_renumerate + iteration_offset - 1}")
+
+      next_id_to_renumerate.upto(next_id_to_renumerate + iteration_offset - 1) do |simulation_id|
+        id_change_map[simulation_id] = simulation_id + id_add_factor
+      end
+
+      id_add_factor += num_of_elements_in_iteration
+      next_id_to_renumerate += iteration_offset
     end
 
-    logger.debug "Number of instances to reproduce #{instances_to_reproduce_count}"
-    @experiment.experiment_size += instances_to_reproduce_count
-    @experiment.save_and_cache
-    
-    columns = ["id", "experiment_id", "is_done", "to_sent", "run_index", "random_value", "priority", "arguments", "values"]
-    combinations = []
-    
-    instances_to_reproduce.each do |instance|
-      new_values = instance["values"].split(",")
-      
-      @range_min.step(@range_max, @range_step).each do |value|
-        new_values[param_index] = value
-        
-        1.upto(@experiment.run_counter).each do |counter|
-          values = [offset + @new_instance_counter, @experiment.id, false, true, counter, rand(), @priority, instance["arguments"], new_values.join(",")]
-          combinations << values
-          
-          @new_instance_counter += 1
-          
-          if combinations.size >= 1000
-            begin
-              ExperimentInstance.bulk_insert(@experiment.id, combinations, columns)
-            rescue Exception => e
-              Rails.logger.debug("Exception occured while inserting instances: #{e}")
-              return
-            end
-            combinations = []
-          end
+    new_values = @range_min.step(@range_max, @range_step).to_a
+    Rails.logger.debug("Additional values for parameter #{@param_name} --- #{new_values}")
+    @experiment.value_list_extension = [] if @experiment.value_list_extension.nil?
+
+    @experiment.value_list_extension << [ @param_name, new_values ]
+
+    Rails.logger.debug("New value list: #{@experiment.value_list}")
+    Rails.logger.debug("New multiply list: #{@experiment.multiply_list}")
+
+    # UPDATE
+    # 1. old fashion experiment
+    old_experiment = @experiment.old_fashion_experiment
+    old_experiment.experiment_size = @experiment.experiment_size
+    labels = @experiment.parameters
+    value_list = @experiment.value_list
+    multiply_list = @experiment.multiply_list
+
+    ExperimentInstanceDb.default_instance.store_experiment_info(old_experiment, labels, value_list, multiply_list)
+
+    old_experiment.save_and_cache
+    # 2. data farming experiment
+    @experiment.save
+    # 3. simulations id renumeration apply
+    Rails.logger.debug("Size of new ids: #{id_change_map.size}")
+    id_change_map.each do |old_simulation_id, new_simulation_id|
+      Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
+      # make the actual change
+      unless old_simulation_id != new_simulation_id
+        simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, old_simulation_id)
+        unless simulation.nil?
+          simulation.id = new_simulation_id
+          simulation.save
         end
-        
       end
     end
-    
-    # insert the last set of combinations
-    logger.debug("Insert last instances: #{@experiment.id} --- #{combinations.size}")
-    begin
-      ExperimentInstance.bulk_insert(@experiment.id, combinations, columns)
-    rescue Exception => e
-      Rails.logger.debug("Exception occured while inserting instances: #{e}")
-      return
-    end
 
+    @experiment.old_fashion_experiment.experiment_progress_bar.create_progress_bar_table.drop
+    @experiment.old_fashion_experiment.experiment_progress_bar.insert_initial_bar(@experiment.experiment_size)
+
+    # 4. update progress bar
     spawn_block(:method => :thread) do
-      @experiment.experiment_progress_bar.update_all_bars
+      old_experiment.experiment_progress_bar.update_all_bars
     end
-
-    @experiment.save_and_cache
 
     respond_to do |format|
-      format.js{ render :inline => "$('#dialog').parent().hide(); $('#expand_dialog_busy').hide(); alert('#{@new_instance_counter} instances created');" }  
+      format.js{ render :inline => "$('#dialog').parent().hide(); $('#expand_dialog_busy').hide(); alert('#{combinations_to_reproduce_count} instances created');" }
     end
   end
 

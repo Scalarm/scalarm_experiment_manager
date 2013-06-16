@@ -44,3 +44,5 @@ end
 
 gem 'newrelic_rpm'
 
+gem 'jquery-rails', '~> 2.1'
+

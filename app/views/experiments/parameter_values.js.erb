@@ -5,7 +5,8 @@ $('#dialog').append("<%= escape_javascript(content_tag :h3, 'Parameter values ar
 $('#dialog').append("<ul class='circle'><% @param_values.each do |value| %><li><%= value %></li><% end %></ul>");
 
 $('#dialog').append("<h3>Expand the input parameter space:</h3>");
-form_txt = '<%= form_tag experiments_extend_input_values_path, :remote => true, :onsubmit => '$(\"#expand_dialog_busy\").show()', class: 'custom' %>';
+form_txt = '<%= form_tag extend_input_values_experiment_path(@experiment.experiment_id),
+                :remote => true, :onsubmit => '$(\"#expand_dialog_busy\").show()', class: 'custom' %>';
 form_txt += '<%= hidden_field_tag 'experiment_id', @experiment.experiment_id %>';
 form_txt += '<%= hidden_field_tag 'param_name', @parameter_uid %>';
 

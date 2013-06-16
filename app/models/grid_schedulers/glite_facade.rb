@@ -82,6 +82,7 @@ class GliteFacade
   # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
   # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
   # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"
+  # task - "cream.grid.task.gda.pl:8443/cream-pbs-plgrid"
   def prepare_job_descriptor(uuid)
     <<-eos
 Executable = "scalarm_job_#{uuid}.sh";
@@ -90,7 +91,7 @@ StdOutput = "scalarm_job.out";
 StdError = "scalarm_job.err";
 OutputSandbox = {"scalarm_job.out", "scalarm_job.err"};
 InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
-Requirements = (other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid" || other.GlueCEUniqueID == "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid");
+Requirements = (other.GlueCEUniqueID == "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid" || other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid");
     eos
   end
 

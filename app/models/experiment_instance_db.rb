@@ -144,19 +144,20 @@ class ExperimentInstanceDb < ActiveRecord::Base
   end
   
   def store_experiment_info(experiment, labels, value_list, multiply_list)
-    collection = self.default_connection.collection("experiments_info")
+    collection = self.default_connection.collection('experiments_info')
 
     doc = {
-          "experiment_id" => experiment.id,
-          "is_running" => experiment.is_running,
-          "experiment_size" => experiment.experiment_size,
-          "labels" => labels,
-          "value_list" => value_list,
-          "multiply_list" => multiply_list,
-          "time_constraint_in_sec" => experiment.time_constraint_in_sec,
-          "time_constraint_in_iter" => experiment.time_constraint_in_iter}
+          'experiment_id' => experiment.id,
+          'is_running' => experiment.is_running,
+          'experiment_size' => experiment.experiment_size,
+          'labels' => labels,
+          'value_list' => value_list,
+          'multiply_list' => multiply_list,
+          'time_constraint_in_sec' => experiment.time_constraint_in_sec,
+          'time_constraint_in_iter' => experiment.time_constraint_in_iter
+    }
 
-    collection.insert(doc)
+    collection.update({'experiment_id' => experiment.id}, doc, {upsert: true})
   end
   
   def get_experiment_info(experiment_id)

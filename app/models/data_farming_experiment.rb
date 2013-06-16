@@ -141,7 +141,7 @@ class DataFarmingExperiment < MongoActiveRecord
 
   def value_list
     self.doe_info = apply_doe_methods
-    Rails.logger.debug("Doe info: #{self.doe_info}")
+    #Rails.logger.debug("Doe info: #{self.doe_info}")
 
     value_list = []
     # adding values from Design of Experiment
@@ -160,6 +160,17 @@ class DataFarmingExperiment < MongoActiveRecord
     end
 
     value_list
+  end
+
+  def multiply_list
+    multiply_list = Array.new(value_list.size)
+
+    multiply_list[-1] = 1
+    (multiply_list.size - 2).downto(0) do |index|
+      multiply_list[index] = multiply_list[index + 1] * value_list[index + 1].size
+    end
+
+    multiply_list
   end
 
   def apply_doe_methods
@@ -413,6 +424,14 @@ class DataFarmingExperiment < MongoActiveRecord
       r_interpreter = Rails.configuration.eusas_rinruby
       r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
       parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
+    end
+
+    unless self.value_list_extension.nil?
+      self.value_list_extension.each do |param_name, list_of_additional_values|
+        if param_name == parameter_uid
+          parameter_values += list_of_additional_values
+        end
+      end
     end
 
     parameter_values
