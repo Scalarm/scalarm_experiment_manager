@@ -56,7 +56,8 @@ class SimulationsController < ApplicationController
         'name' => params['simulation_name'],
         'description' => params['simulation_description'],
         'input_specification' => params['simulation_input'].read,
-        'user_id' => current_user.id
+        'user_id' => current_user.id,
+        'created_at' => Time.now
                    })
 
     simulation.progress_monitor_id = params['progress_monitor_id'] if params['progress_monitor_id']
