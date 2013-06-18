@@ -1,0 +1,10 @@
+.panel.radius
+  = content_tag :h4, t('registered_progress_monitors_list.label'), class: 'subheader'
+  %ul.no-bullet
+    - @progress_monitors.each do |progress_monitor|
+      %li
+        = form_tag simulations_destroy_component_path do
+          = hidden_field_tag 'component_type', 'progress_monitor'
+          = hidden_field_tag 'component_id', progress_monitor._id
+          = content_tag :strong, progress_monitor.name
+          = submit_tag 'Destroy', class: 'button'

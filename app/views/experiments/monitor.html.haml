@@ -33,10 +33,15 @@
       -#  :class => "nice_button", :id => "get_results_button",
       -#  :style => "display: #{if @done == @all and @all != 0 then "" else "none" end};"
       %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.id), class: 'button inline', method: :get
+      %li= button_to_function 'On-line progress information',
+        "$('#progress_information').slideToggle(); $('html, body').animate({ scrollTop: $('#progress_information').offset().top }, 1000);",
+        class: 'button'
       %li= image_tag 'loading.gif', :id => 'loading-img', :style => 'display: none;'
       
     - if @experiment.is_running
       = render 'booster_dialog'
-      
     = render 'scheduling_policy_dialog'
+
+  = render 'monitoring_table'
+
 = render 'general_purpose_dialog'

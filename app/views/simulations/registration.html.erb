@@ -74,13 +74,24 @@
         </div>
 
         <div class="row">
+          <div class="small-3 columns right-align inline">
+            <span>Progress monitor:</span>
+          </div>
+          <div class="small-9 columns">
+            <%= select_tag 'progress_monitor_id',
+                           options_for_select(SimulationProgressMonitor.all.map{|ex| [ex.name, ex._id]}),
+                           class: 'medium' %>
+          </div>
+        </div>
+
+        <div class="row">
             <%= submit_tag 'Upload', class: 'button' %>
         </div>
 
     <% end %>
   </div>
 
-  <% %w(input_writer executor output_reader).each do |component_name| %>
+  <% %w(input_writer executor output_reader progress_monitor).each do |component_name| %>
 
       <div class="panel radius">
         <%= content_tag :h4, "#{component_name.split('_').map(&:capitalize).join(' ')} registration", class: 'subheader' %>

@@ -16,24 +16,22 @@ class IO
 end
 
 
-# 1. load config file
+# 1. load config file and create proxies
 config = JSON.parse(IO.read('config.json'))
-puts config
-
 em_proxy = ExperimentManager.new(config)
 sm_proxy = StorageManager.new(config)
 
 # 2. check if an experiment id is specified and if there is no experiment id get one
-if not config.has_key?('experiment_id')
-  puts 'Getting experiment id'
-
-  while (experiment_id = em_proxy.get_experiment_id.to_i) == 0
-    sleep 30
-  end
-
-else
+#if not config.has_key?('experiment_id')
+#  puts 'Getting experiment id'
+#
+#  while (experiment_id = em_proxy.get_experiment_id.to_i) == 0
+#    sleep 30
+#  end
+#
+#else
   experiment_id = config['experiment_id']
-end
+#end
 
 puts "We will execute simulations from an experiment with ID #{experiment_id}"
 experiment_dir = "experiment_#{experiment_id}"
@@ -55,9 +53,8 @@ end
 
 # 6. main loop
 all_sent_threshold, error_threshold = 10
-#i = 1
+
 while true
-  #i = 2
 # 6a. get information about next simulation to calculate and store it in input.json file
   simulation_input = em_proxy.next_simulation(experiment_id)
   puts "Text format of simulation_input: #{simulation_input}"
@@ -94,8 +91,57 @@ while true
     Dir.chdir(simulation_dir) do |path|
       puts Dir.pwd
 
+      # 6c.1. progress monitoring scheduling if available
+      progress_monitor_pid = nil
+      if File.exist?(File.join(code_base_dir, 'progress_monitor'))
+        progress_monitor_pid = Process.fork do
+          require 'json'
+          sm_root_dir = File.join('.', '..', '..')
+
+          puts "[progress_monitor] #{Dir.pwd}"
+          config = JSON.parse(IO.read(File.join(sm_root_dir, 'config.json')))
+          experiment_id = config['experiment_id']
+          em_proxy = ExperimentManager.new(config)
+          code_base_dir = File.absolute_path(File.join(sm_root_dir, "experiment_#{experiment_id}", 'code_base'))
+
+          if File.exist?(File.join(code_base_dir, 'progress_monitor'))
+
+            while true
+              progress_monitor_output = %x[#{code_base_dir}/progress_monitor]
+              puts "[progress monitor] script output: #{progress_monitor_output}"
+
+              tmp_result_file = 'intermediate_result.json'
+              tmp_result = if File.exists?(tmp_result_file)
+                             puts 'Reading intermediate results from a file'
+                             JSON.parse(IO.read(tmp_result_file))
+                           else # mocking tmp result
+                             JSON.parse({'status' => 'ok', 'results' => { 'intermediate_results' => rand(100) }}.to_json)
+                           end
+
+              if tmp_result['status'] == 'ok'
+                puts "[progress monitor] Everything went well -> we will upload the following intermediate results: #{tmp_result['results']}"
+
+                response = em_proxy.report_intermediate_result(experiment_id, simulation_input['simulation_id'], tmp_result['results'])
+
+                puts "[progress monitor] We got the following response: #{response}"
+              end
+
+              sleep 30
+            end
+
+          else
+            puts '[progress_monitor] There is no progress monitor script'
+          end
+
+        end
+      end
+
       executor_output = %x[#{code_base_dir}/executor]
       puts "Executor output: #{executor_output}"
+      # 6c.2. killing progress monitor process
+      unless progress_monitor_pid.nil?
+        Process.kill('INT', progress_monitor_pid)
+      end
     end
 
     # 6d. run an adapter script (output reader) to transform specific output format to scalarm model (output.json)
@@ -112,8 +158,8 @@ while true
                           puts 'Reading simulation output from a file'
                           JSON.parse(IO.read(output_file))
                         else
-                          puts 'Mocking simulation response'
-                          JSON.parse({ 'status' => 'ok', 'results' => { 'avg_error' => 6.2 } }.to_json)
+                          puts 'No file => an error occured'
+                          JSON.parse({ 'status' => 'error', 'results' => { } }.to_json)
                         end
 
     if simulation_output['status'] == 'ok'

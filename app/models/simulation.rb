@@ -21,6 +21,14 @@ class Simulation < MongoActiveRecord
     SimulationOutputReader.find_by_id(self.output_reader_id)
   end
 
+  def progress_monitor
+    if self.progress_monitor_id.nil?
+      nil
+    else
+      SimulationProgressMonitor.find_by_id(self.progress_monitor_id)
+    end
+  end
+
   def set_simulation_binaries(filename, binary_data)
     @attributes['simulation_binaries_id'] = @@grid.put(binary_data, :filename => filename)
   end

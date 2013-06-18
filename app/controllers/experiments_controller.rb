@@ -137,6 +137,7 @@ class ExperimentsController < ApplicationController
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
     @experiment = Experiment.find(params[:id].to_i)
+    @data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
 
     @error_flag = false
 
@@ -625,9 +626,11 @@ class ExperimentsController < ApplicationController
     simulation = DataFarmingExperiment.find_by_experiment_id(experiment_id).simulation
     code_base_dir = Dir.mktmpdir('code_base')
 
-    file_list = %w(input_writer executor output_reader)
+    file_list = %w(input_writer executor output_reader progress_monitor)
     file_list.each do |filename|
-      IO.write("#{code_base_dir}/#{filename}", simulation.send(filename).code)
+      unless simulation.send(filename).nil?
+        IO.write("#{code_base_dir}/#{filename}", simulation.send(filename).code)
+      end
     end
     IO.binwrite("#{code_base_dir}/simulation_binaries.zip", simulation.simulation_binaries)
     file_list << 'simulation_binaries.zip'
@@ -638,13 +641,38 @@ class ExperimentsController < ApplicationController
 
     Zip::ZipFile.open(zipfile_name, Zip::ZipFile::CREATE) do |zipfile|
       file_list.each do |filename|
-        zipfile.add(filename, File.join(code_base_dir, filename))
+        if File.exist?(File.join(code_base_dir, filename))
+          zipfile.add(filename, File.join(code_base_dir, filename))
+        end
       end
     end
 
     FileUtils.rm_rf(code_base_dir)
 
     send_file zipfile_name, :type => 'application/zip'
+  end
+
+  def intermediate_results
+    dfe = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    range_arguments = dfe.range_arguments
+    unless dfe.argument_names.nil?
+      arguments = dfe.argument_names.split(',')
+
+      results = ExperimentInstance.find_by_query(params[:id].to_i, {'to_sent' => false, 'is_done' => false}).map{ |simulation|
+        split_values = simulation['values'].split(',')
+        modified_values = range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
+        [
+            simulation['id'],
+            simulation['sent_at'].strftime('%Y-%m-%d %H:%M'),
+            simulation['tmp_result'].to_s || 'No data available',
+            modified_values
+        ].flatten
+      }
+
+      render json: { 'aaData' => results }.as_json
+    else
+      render json: { 'aaData' => [] }.as_json
+    end
   end
 
   private

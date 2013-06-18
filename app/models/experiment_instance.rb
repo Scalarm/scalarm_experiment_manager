@@ -158,10 +158,10 @@ class ExperimentInstance
   end
 
   def self.find_by_query(experiment_id, query)
-    ExperimentInstanceDb.default_instance.find(experiment_id, query)
+    ExperimentInstanceDb.default_instance.find(experiment_id, query, {sort: [ ['id', :asc] ]})
   end
   
-  require "set"
+  require 'set'
 
   def self.raw_find_by_query(experiment_id, query, options = {})
     begin

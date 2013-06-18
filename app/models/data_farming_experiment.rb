@@ -21,7 +21,7 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def is_completed
-    ExperimentInstance.count_with_query(self._id) == ExperimentInstance.count_with_query(self._id, {'is_done' => true})
+    ExperimentInstance.count_with_query(self.experiment_id) == ExperimentInstance.count_with_query(self.experiment_id, {'is_done' => true})
   end
 
   def created_at
@@ -408,7 +408,7 @@ class DataFarmingExperiment < MongoActiveRecord
     self.doe_info.each do |doe_element|
       doe_id, doe_parameters = doe_element
       if doe_parameters.include?(parameter_uid)
-        Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
+        #Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
       end
     end
 
@@ -427,8 +427,8 @@ class DataFarmingExperiment < MongoActiveRecord
       end
     elsif parameter['parametrizationType'] == 'gauss'
       r_interpreter = Rails.configuration.eusas_rinruby
-      Rails.logger.debug("Mean: #{parameter['mean'].to_f}")
-      Rails.logger.debug("Variance: #{parameter['variance'].to_f}")
+      #Rails.logger.debug("Mean: #{parameter['mean'].to_f}")
+      #Rails.logger.debug("Variance: #{parameter['variance'].to_f}")
       r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
       parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
     elsif parameter['parametrizationType'] == 'uniform'

@@ -23,3 +23,5 @@ en:
   registered_output_readers_list:
     label: "Registered Simulation Output Readers"
   no_running_experiment_response: "No experiment running"
+  registered_progress_monitors_list:
+    label: "Registered Simulation Progress Monitors"

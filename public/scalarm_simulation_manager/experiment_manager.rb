@@ -50,6 +50,21 @@ class ExperimentManager
     http.request(request).body
   end
 
+  def report_intermediate_result(experiment_id, simulation_id, results)
+    uri = URI(path_to("#{experiment_id}/simulations/#{simulation_id}/progress_info"))
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.ssl_version = :SSLv3
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    request = Net::HTTP::Post.new(uri.request_uri)
+    request.basic_auth(@user, @pass)
+    request.set_form_data({'result' => results.to_json})
+
+    http.request(request).body
+  end
+
   def path_to(method)
     "https://#{@experiment_manager_address}/experiments/#{method}"
   end

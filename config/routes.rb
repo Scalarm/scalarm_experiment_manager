@@ -56,6 +56,7 @@ SimulationManager::Application.routes.draw do
       post  :stop
       post  :destroy
       post  :extend_input_values
+      get   :intermediate_results
 
       # experiment charts
       post :histogram
@@ -69,6 +70,7 @@ SimulationManager::Application.routes.draw do
     resources :simulations do
       member do
         post :mark_as_complete
+        post :progress_info
       end
     end
   end
