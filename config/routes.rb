@@ -65,6 +65,8 @@ SimulationManager::Application.routes.draw do
       # monitoring stats
       get :experiment_stats
       get :experiment_moes
+      get :running_simulations_table
+      get :completed_simulations_table
     end
 
     resources :simulations do

@@ -1,0 +1,17 @@
+$('#completed_simulations_table_wrapper').html("<%= escape_javascript render 'completed_simulations_table' %>")
+
+oTableFinal = $('#completed_simulations_table').dataTable({
+    'bFilter': false,
+    'bPaginate': false,
+    'bSort': true,
+    'bProcessing': true,
+    'sAjaxSource': "<%= intermediate_results_experiment_path(@data_farming_experiment.experiment_id, simulations: 'completed') %>",
+    'bStateSave': true,
+    'bDestroy': true
+});
+
+setInterval(function () {
+    if ($('#completed_simulations_table').is(":visible")) {
+        oTableFinal.fnReloadAjax();
+    }
+}, 30000);

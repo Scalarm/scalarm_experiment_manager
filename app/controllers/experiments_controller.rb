@@ -658,13 +658,25 @@ class ExperimentsController < ApplicationController
     unless dfe.argument_names.nil?
       arguments = dfe.argument_names.split(',')
 
-      results = ExperimentInstance.find_by_query(params[:id].to_i, {'to_sent' => false, 'is_done' => false}).map{ |simulation|
+      results = if params[:simulations] == 'running'
+                  ExperimentInstance.find_by_query(params[:id].to_i, {'to_sent' => false, 'is_done' => false})
+                elsif params[:simulations] == 'completed'
+                  ExperimentInstance.find_by_query(params[:id].to_i, {'is_done' => true})
+                end
+
+      result_column = if params[:simulations] == 'running'
+                        'tmp_result'
+                      elsif params[:simulations] == 'completed'
+                        'result'
+                      end
+
+      results = results.map{ |simulation|
         split_values = simulation['values'].split(',')
         modified_values = range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
         [
             simulation['id'],
             simulation['sent_at'].strftime('%Y-%m-%d %H:%M'),
-            simulation['tmp_result'].to_s || 'No data available',
+            simulation[result_column].to_s || 'No data available',
             modified_values
         ].flatten
       }
@@ -673,6 +685,15 @@ class ExperimentsController < ApplicationController
     else
       render json: { 'aaData' => [] }.as_json
     end
+  end
+
+
+  def running_simulations_table
+    @data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+  end
+
+  def completed_simulations_table
+    @data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
   end
 
   private
