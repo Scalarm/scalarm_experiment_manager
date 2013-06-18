@@ -16,7 +16,7 @@ class ExperimentsController < ApplicationController
   def index
     @running_experiments = current_user.get_running_experiments
     @historical_experiments = current_user.get_historical_experiments
-    @simulation_scenarios = Simulation.all
+    @simulation_scenarios = current_user.get_simulation_scenarios
 
     render layout: 'foundation_application'
   end
@@ -186,7 +186,7 @@ class ExperimentsController < ApplicationController
 
     @running_experiments = current_user.get_running_experiments
     @historical_experiments = current_user.get_historical_experiments
-    @simulation_scenarios = Simulation.all
+    @simulation_scenarios = current_user.get_simulation_scenarios
 
     render layout: 'foundation_application' unless @error_flag
   end

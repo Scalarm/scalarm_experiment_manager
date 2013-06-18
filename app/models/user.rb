@@ -31,4 +31,8 @@ class User < ActiveRecord::Base
     end
   end
 
+  def get_simulation_scenarios
+    Simulation.find_all_by_user_id(self.id)
+  end
+
 end
