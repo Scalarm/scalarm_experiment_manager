@@ -21,7 +21,7 @@
     %ul.inline-list
       - if @experiment.is_running
         %li
-          = button_to 'Stop experiment', stop_experiment_path(@experiment.id),
+          = button_to 'Stop experiment', stop_experiment_path(@experiment.experiment_id),
             class: 'button', :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
         %li= button_to_function 'Booster', "booster.openDialog();", class: 'button'
         %li= button_to_function 'Scheduling policy', "$('#scheduling_policy_dialog').dialog('open')", class: 'button'
@@ -32,7 +32,7 @@
       -#= button_to "Download results", { :action => :download_results, :simulation_id => @experiment.id },
       -#  :class => "nice_button", :id => "get_results_button",
       -#  :style => "display: #{if @done == @all and @all != 0 then "" else "none" end};"
-      %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.id), class: 'button inline', method: :get
+      %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.experiment_id), class: 'button inline', method: :get
       %li= button_to_function 'On-line progress information',
         "$('#progress_information').slideToggle(); $('html, body').animate({ scrollTop: $('#progress_information').offset().top }, 1000);",
         class: 'button'

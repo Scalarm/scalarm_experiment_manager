@@ -10,6 +10,14 @@ class DataFarmingExperiment < MongoActiveRecord
     'experiments'
   end
 
+  def self.find_by_id(experiment_id)
+    if experiment_id.to_i.to_s == experiment_id
+      self.find_by('experiment_id', experiment_id.to_i)
+    else
+      self.find_by('id', experiment_id)
+    end
+  end
+
   def self.get_running_experiments
     instances = []
 
@@ -351,6 +359,12 @@ class DataFarmingExperiment < MongoActiveRecord
     end
 
     moe_name_set.empty? ? nil : moe_name_set.to_a
+  end
+
+  def completed_simulations_count_for(secs)
+    query = { 'is_done' => true, 'done_at' => { '$gte' => (Time.now - secs)} }
+
+    ExperimentInstance.count_with_query(self.experiment_id, query)
   end
 
   private

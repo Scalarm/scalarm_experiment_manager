@@ -136,19 +136,17 @@ class ExperimentsController < ApplicationController
 
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
-    @experiment = Experiment.find(params[:id].to_i)
-    @data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @progress_bar = ExperimentProgressBar.find_by_experiment_id(params[:id].to_i)
 
     @error_flag = false
 
-    if @experiment.nil? or @experiment.experiment_progress_bar.nil?
+    if @experiment.nil? or @progress_bar.nil?
 
-      Rails.logger.debug("We have a fatal error with Experiment #{params[:id]} - it will be destroyed --- #{@experiment.nil?} --- #{@experiment.experiment_progress_bar.nil?}")
+      Rails.logger.debug("We have a fatal error with Experiment #{params[:id]} - it will be destroyed --- #{@experiment.nil?} --- #{@progress_bar.nil?}")
 
-      df_exp = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
-
-      if df_exp
-        df_exp.destroy
+      if @experiment
+        @data_farming_experiment.destroy
         flash[:notice] = 'Your experiment has been destroyed.'
       else
         flash[:notice] = 'Your experiment is no longer available.'
@@ -157,7 +155,7 @@ class ExperimentsController < ApplicationController
       @error_flag = true
       redirect_to :action => :index
 
-    elsif DataFarmingExperiment.find_by_experiment_id(@experiment.id).user_id != current_user.id
+    elsif @experiment.user_id != current_user.id
       flash[:error] = 'Required experiment is not yours'
       @error_flag = true
 
@@ -165,13 +163,13 @@ class ExperimentsController < ApplicationController
     else
 
       begin
-        set_monitoring_view_params(params[:id].to_i)
-        @user = @current_user
+        set_monitoring_view_params(@experiment, @progress_bar)
+        @user = current_user
 
         Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
         if Time.now - @experiment.start_at > 30
           spawn_block(:method => :thread) do
-            @experiment.experiment_progress_bar.update_all_bars
+            @progress_bar.update_all_bars
           end
         end
 
@@ -283,7 +281,7 @@ class ExperimentsController < ApplicationController
   end
 
   def experiment_stats
-    experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    experiment = DataFarmingExperiment.find_by_id(params[:id])
 
     stats = if experiment
         generated, instances_done, instances_sent = experiment.get_statistics
@@ -337,8 +335,8 @@ class ExperimentsController < ApplicationController
   end
 
   def experiment_moes
-    experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
-    moes_info = {}  
+    experiment = DataFarmingExperiment.find_by_id(params[:id])
+    moes_info = {}
     
     moes = experiment.result_names
     moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map{|x| [ ParameterForm.moe_label(x), x ]}
@@ -610,7 +608,7 @@ class ExperimentsController < ApplicationController
   end
 
   def completed_simulations_count
-    experiment = Experiment.find(params[:id].to_i)
+    experiment = DataFarmingExperiment.find_by_id(params[:id])
 
     simulation_counter = if experiment
                 experiment.completed_simulations_count_for(params[:secs].to_i)
@@ -710,26 +708,23 @@ class ExperimentsController < ApplicationController
     return params_to_override, params_groups_for_doe
   end
 
-  def set_monitoring_view_params(experiment_id)
-    experiment = Experiment.find_by_id(experiment_id)
-
-    @all = ExperimentInstance.count_with_query(experiment_id)
-    @done, @sent = ExperimentInstance.get_statistics(experiment_id)
-    @parts_per_slot, @number_of_bars = experiment.experiment_progress_bar.basic_progress_bar_info
-    Rails.logger.debug("EXP id: #{experiment_id} --- Generated: #{@all} --- Done: #{@done}\
+  def set_monitoring_view_params(experiment, progress_bar)
+    @all, @done, @sent = experiment.get_statistics
+    @parts_per_slot, @number_of_bars = progress_bar.basic_progress_bar_info
+    Rails.logger.debug("EXP id: #{experiment.experiment_id} --- Generated: #{@all} --- Done: #{@done}\
     --- Sent: #{@sent} --- Parts: #{@parts_per_slot} --- Bars: #{@number_of_bars}")
 
-    @bar_colors = experiment.experiment_progress_bar.progress_bar_color
+    @bar_colors = progress_bar.progress_bar_color
 
     if @done > 0 then
-      @ei_perform_time_avg = ExperimentInstance.get_avg_execution_time_of_ei(experiment_id)
+      @ei_perform_time_avg = ExperimentInstance.get_avg_execution_time_of_ei(experiment.experiment_id)
       @ei_perform_time_avg = "%.2f" % @ei_perform_time_avg
     else
-      @ei_perform_time_avg = "Not available yet"
+      @ei_perform_time_avg = 'Not available yet'
     end
 
     if @done < 20 then
-      @predicted_finish_time = "Not available yet"
+      @predicted_finish_time = 'Not available yet'
     else
       @predicted_finish_time = (Time.now - experiment.created_at).to_f / 3600
       @predicted_finish_time /= (@done.to_f / experiment.experiment_size)
