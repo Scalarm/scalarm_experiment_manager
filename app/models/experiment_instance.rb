@@ -188,11 +188,11 @@ class ExperimentInstance
   end
   
   def put_in_cache
-    Rails.cache.write("simulation_#{self.experiment.id}_#{self.id}", self)
+    Rails.cache.write("simulation_#{self.experiment_id}_#{self.id}", self)
   end
   
   def remove_from_cache
-    Rails.cache.delete("simulation_#{self.experiment.id}_#{self.id}")
+    Rails.cache.delete("simulation_#{self.experiment_id}_#{self.id}")
   end
 
 end

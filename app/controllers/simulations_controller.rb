@@ -88,7 +88,7 @@ class SimulationsController < ApplicationController
   # a life-cycle of a single simulation
 
   def mark_as_complete
-    experiment = Experiment.find(params[:experiment_id].to_i)
+    experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
     simulation = ExperimentInstance.cache_get(params[:experiment_id], params[:id])
 
     response = { status: 'ok' }

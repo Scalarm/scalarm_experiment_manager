@@ -1,7 +1,7 @@
 %table#completed_simulations_table{style: 'max-width: 200px;'}
   %thead
     %th #
-    %th Started at
+    %th Execution time
     %th Final results
     - @data_farming_experiment.range_arguments.each do |parameter_uid|
       %th= @data_farming_experiment.input_parameter_label_for(parameter_uid)

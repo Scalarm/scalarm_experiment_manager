@@ -4,6 +4,7 @@ require 'set'
 require 'yaml'
 
 class DataFarmingExperiment < MongoActiveRecord
+  include DataFarmingExperimentProgressBar
   ID_DELIM = '___'
 
   def self.collection_name
@@ -337,9 +338,9 @@ class DataFarmingExperiment < MongoActiveRecord
     # drop simulation table
     @@db[ExperimentInstanceDb.collection_name(self.experiment_id)].drop
     # drop progress bar object
+    self.progress_bar_table.drop
     progress_bar = ExperimentProgressBar.find_by_experiment_id(self.experiment_id)
     if progress_bar
-      progress_bar.drop
       progress_bar.destroy
     end
     # drop object from relational database

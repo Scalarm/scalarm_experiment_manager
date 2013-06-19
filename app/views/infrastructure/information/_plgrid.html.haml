@@ -90,7 +90,7 @@
     $("#plgrid-booster-form input[type='submit']").bind('click', function() {
       data = {
         'infrastructure_type': 'plgrid',
-        'experiment_id': #{experiment.id},
+        'experiment_id': #{experiment.experiment_id},
         'job_counter': $('#job_counter').val(),
         'time_limit': $('#time_limit').val(),
         'scheduler': $('#scheduler').val(),
