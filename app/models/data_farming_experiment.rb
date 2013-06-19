@@ -35,21 +35,22 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def created_at
-    if self.start_at.nil?
-      self.old_fashion_experiment.created_at
-    else
+    #if self.start_at.nil?
+    #  self.old_fashion_experiment.created_at
+    #else
       self.start_at
-    end
+    #end
   end
 
   def simulation
     Simulation.find_by_id self.simulation_id
   end
 
-  # USE WITH CAUTION !!!
-  def old_fashion_experiment
-    Experiment.find_by_id(self.experiment_id)
-  end
+  # NOT USED ANY MORE
+  ## USE WITH CAUTION !!!
+  #def old_fashion_experiment
+  #  Experiment.find_by_id(self.experiment_id)
+  #end
 
   def save_and_cache
     #Rails.cache.write("data_farming_experiment_#{self._id}", self, :expires_in => 600.seconds)
@@ -350,10 +351,6 @@ class DataFarmingExperiment < MongoActiveRecord
     @@db[ExperimentInstanceDb.collection_name(self.experiment_id)].drop
     # drop progress bar object
     self.progress_bar_table.drop
-    progress_bar = ExperimentProgressBar.find_by_experiment_id(self.experiment_id)
-    if progress_bar
-      progress_bar.destroy
-    end
     # drop object from relational database
     experiment = Experiment.find_by_id(self.experiment_id)
     experiment.destroy

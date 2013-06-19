@@ -3,20 +3,20 @@ class ExperimentQueue < ActiveRecord::Base
   
   def self.enqueue_exp_id
     begin
-      exp = ExperimentQueue.order("created_at").first
+      exp = ExperimentQueue.order('created_at').first
       exp_id = exp.experiment_id
       exp.destroy
       
       exp_id
     rescue
-      running_exps = Experiment.where(:is_running => 1)
+      running_exps = DataFarmingExperiment.find_all_by_is_running(true)
       
       if not running_exps.empty?
         running_exps.shuffle.each do |experiment|
-          if (experiment.experiment_size != ExperimentInstance.count_with_query(experiment.id, {})) or
-            (ExperimentInstance.count_with_query(experiment.id, {"is_done" => false}) > 0)
+          if (experiment.experiment_size != ExperimentInstance.count_with_query(experiment.experiment_id, {})) or
+            (ExperimentInstance.count_with_query(experiment.experiment_id, {'is_done' => false}) > 0)
             
-            return experiment.id
+            return experiment.experiment_id
           end
         end
       end

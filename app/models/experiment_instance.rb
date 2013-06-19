@@ -25,8 +25,8 @@ class ExperimentInstance
       @mongo_doc[method_name] = args.first
     elsif @mongo_doc.include?(method_name)
       @mongo_doc[method_name]
-    elsif method_name == "experiment"
-      Experiment.find(@mongo_doc["experiment_id"])
+    elsif method_name == 'experiment'
+      DataFarmingExperiment.find_by_id(@mongo_doc['experiment_id'])
     end
   end
 

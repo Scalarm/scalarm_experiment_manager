@@ -198,10 +198,10 @@ class ExperimentsController < ApplicationController
       experiment.is_running = false
       experiment.end_at = Time.now
 
-      old_exp = Experiment.find(experiment.experiment_id)
-      old_exp.is_running = false
-      old_exp.end_at = Time.now
-      old_exp.save_and_cache
+      #old_exp = Experiment.find(experiment.experiment_id)
+      #old_exp.is_running = false
+      #old_exp.end_at = Time.now
+      #old_exp.save_and_cache
 
       experiment.save_and_cache
     else
@@ -268,19 +268,20 @@ class ExperimentsController < ApplicationController
     render :json => simulation_doc
   end
 
-  def update_state
-    @experiment = Experiment.find_by_id(params[:experiment_id])
-    @all = ExperimentInstance.count_all(params[:experiment_id])
-    @done, @sent = ExperimentInstance.get_statistics(params[:experiment_id])
-
-    respond_to do |format|
-      format.js {
-        render :inline => "if($('#pb_busy:visible').length == 0) {
-            $('#monitoring_section').html('<%= escape_javascript(render :partial => 'monitoring_section') %>');
-          }"
-      }
-    end
-  end
+  # NOT USED ANY MORE
+  #def update_state
+  #  @experiment = Experiment.find_by_id(params[:experiment_id])
+  #  @all = ExperimentInstance.count_all(params[:experiment_id])
+  #  @done, @sent = ExperimentInstance.get_statistics(params[:experiment_id])
+  #
+  #  respond_to do |format|
+  #    format.js {
+  #      render :inline => "if($('#pb_busy:visible').length == 0) {
+  #          $('#monitoring_section').html('<%= escape_javascript(render :partial => 'monitoring_section') %>');
+  #        }"
+  #    }
+  #  end
+  #end
 
   def experiment_stats
     experiment = DataFarmingExperiment.find_by_id(params[:id])
@@ -289,9 +290,6 @@ class ExperimentsController < ApplicationController
         generated, instances_done, instances_sent = experiment.get_statistics
         if generated > experiment.experiment_size
           experiment.experiment_size = generated
-          old_fashion_experiment = experiment.old_fashion_experiment
-          old_fashion_experiment.experiment_size = generated
-          old_fashion_experiment.save_and_cache
           experiment.save
         end
 
@@ -432,20 +430,20 @@ class ExperimentsController < ApplicationController
     @chart.prepare_chart_data
   end
 
-
-  def get_parameter_values
-    @experiment = Experiment.find(params[:experiment_id])
-
-    @param_r_id = params[:param_name]
-    @parameter_uid, @parametrization_type = @experiment.parametrization_of(@param_r_id)
-
-    @param_type = {}
-    @param_type['type'] = @parametrization_type
-    @param_values = @experiment.generated_parameter_values_for(@param_r_id)
-  end
+  # NOT USED ANY MORE
+  #def get_parameter_values
+  #  @experiment = Experiment.find(params[:experiment_id])
+  #
+  #  @param_r_id = params[:param_name]
+  #  @parameter_uid, @parametrization_type = @experiment.parametrization_of(@param_r_id)
+  #
+  #  @param_type = {}
+  #  @param_type['type'] = @parametrization_type
+  #  @param_values = @experiment.generated_parameter_values_for(@param_r_id)
+  #end
 
   def parameter_values
-    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @experiment = DataFarmingExperiment.find_by_id(params[:id])
     @parameter_uid = params[:param_name]
 
     @parameter_uid, @parametrization_type = @experiment.parametrization_of(@parameter_uid)
@@ -539,15 +537,15 @@ class ExperimentsController < ApplicationController
 
     # UPDATE
     # 1. old fashion experiment
-    old_experiment = @experiment.old_fashion_experiment
-    old_experiment.experiment_size = @experiment.experiment_size
+    #old_experiment = @experiment.old_fashion_experiment
+    #old_experiment.experiment_size = @experiment.experiment_size
     labels = @experiment.parameters
     value_list = @experiment.value_list
     multiply_list = @experiment.multiply_list
 
-    ExperimentInstanceDb.default_instance.store_experiment_info(old_experiment, labels, value_list, multiply_list)
+    #ExperimentInstanceDb.default_instance.store_experiment_info(old_experiment, labels, value_list, multiply_list)
 
-    old_experiment.save_and_cache
+    #old_experiment.save_and_cache
     # 2. data farming experiment
     @experiment.save
     # 3. simulations id renumeration apply

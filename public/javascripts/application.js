@@ -29,12 +29,13 @@ function vm_busy_hide(id) {
   $("vm-busy-"+id).hide();
 }
 
-function update_monitoring_view(experiment_id) {
-  if($('#pb_busy:visible').length == 0 && ($('#experiment_id').attr('value') == experiment_id)) {
-    var page = $('#page_id').attr('value');
-    $.get('/experiments/update_state?experiment_id=' + experiment_id + '&page=' + page, function(data) { eval(data); });
-  }
-}
+// NOT USED ANY MORE
+//function update_monitoring_view(experiment_id) {
+//  if($('#pb_busy:visible').length == 0 && ($('#experiment_id').attr('value') == experiment_id)) {
+//    var page = $('#page_id').attr('value');
+//    $.get('/experiments/update_state?experiment_id=' + experiment_id + '&page=' + page, function(data) { eval(data); });
+//  }
+//}
 
 function check_experiment_size(experiment_id) {
   prepare_data_for_doe();
