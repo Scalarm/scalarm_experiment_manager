@@ -5,6 +5,7 @@ require 'yaml'
 
 class DataFarmingExperiment < MongoActiveRecord
   include DataFarmingExperimentProgressBar
+  include SimulationScheduler
   ID_DELIM = '___'
 
   def self.collection_name
@@ -65,7 +66,17 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def argument_names
-    ExperimentInstance.get_arguments(self.experiment_id)
+    params = []
+
+    self.experiment_input.each do |entity_group|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+            params << parameter_uid(entity_group, entity, parameter)
+        end
+      end
+    end
+
+    params.join(',')
   end
 
   def range_arguments
@@ -199,7 +210,7 @@ class DataFarmingExperiment < MongoActiveRecord
   def create_result_csv_for(moe_name)
 
     CSV.generate do |csv|
-      csv << self.argument_names.split(',') + [ moe_name ]
+      csv << self.labels.split(',') + [ moe_name ]
 
       ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
         next if not simulation_doc['result'].has_key?(moe_name)
@@ -313,7 +324,7 @@ class DataFarmingExperiment < MongoActiveRecord
     moes = self.moe_names
 
     CSV.generate do |csv|
-      csv << self.argument_names.split(',') + moes
+      csv << self.labels.split(',') + moes
 
       ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
         values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}

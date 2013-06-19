@@ -69,9 +69,11 @@ class ExperimentsController < ApplicationController
                                                          'time_constraint_in_sec' => 3600,
                                                          'doe_info' => doe_info,
                                                          'start_at' => Time.now,
-                                                         'user_id' => current_user.id
+                                                         'user_id' => current_user.id,
+                                                         'scheduling_policy' => 'monte_carlo'
                                                         })
     data_farming_experiment.user_id = current_user.id unless current_user.nil?
+    data_farming_experiment.labels = data_farming_experiment.argument_names
 
     data_farming_experiment.save
     # rewrite all necessary parameters
@@ -242,10 +244,11 @@ class ExperimentsController < ApplicationController
     simulation_doc = {}
 
     begin
-      experiment = Experiment.find_in_db(params[:id].to_i)
+      experiment = DataFarmingExperiment.find_by_id(params[:id])
       raise 'Experiment is not running any more' if not experiment.is_running
 
       simulation_to_send = experiment.get_next_instance
+      #Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
         simulation_to_send.put_in_cache
         experiment.progress_bar_update(simulation_to_send.id.to_i, 'sent')
@@ -563,7 +566,7 @@ class ExperimentsController < ApplicationController
     end
 
     @experiment.create_progress_bar_table.drop
-    @experiment.insert_initial_bar(@experiment.experiment_size)
+    @experiment.insert_initial_bar
 
     # 4. update progress bar
     spawn_block(:method => :thread) do
@@ -576,14 +579,14 @@ class ExperimentsController < ApplicationController
   end
 
   def change_scheduling_policy
-    experiment = Experiment.find_by_id(params[:experiment_id])
+    experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
     new_scheduling_policy = params[:scheduling_policy]
 
     experiment.scheduling_policy = new_scheduling_policy
-    if experiment.save_and_cache then
-      msg = "The scheduling policy of the experiment has been changed."
+    msg = if experiment.save_and_cache
+      'The scheduling policy of the experiment has been changed.'
     else
-      msg = "The scheduling policy of the experiment could not have been changed due to internal server issues."
+      'The scheduling policy of the experiment could not have been changed due to internal server issues.'
     end
 
     respond_to do |format|
