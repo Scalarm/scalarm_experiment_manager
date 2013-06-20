@@ -128,7 +128,7 @@ class ExperimentsController < ApplicationController
                                                          'time_constraint_in_sec' => 3600,
                                                          'doe_info' => doe_info
                                                         })
-    experiment_size = data_farming_experiment.experiment_size
+    experiment_size = data_farming_experiment.value_list.reduce(1){|acc, x| acc * x.size}
     Rails.logger.debug("Experiment size is #{experiment_size}")
 
     respond_to do |format|
@@ -147,7 +147,7 @@ class ExperimentsController < ApplicationController
       Rails.logger.debug("We have a fatal error with Experiment #{params[:id]} - it will be destroyed --- #{@experiment.nil?}")
 
       if @experiment
-        @data_farming_experiment.destroy
+        @experiment.destroy
         flash[:notice] = 'Your experiment has been destroyed.'
       else
         flash[:notice] = 'Your experiment is no longer available.'
@@ -176,8 +176,9 @@ class ExperimentsController < ApplicationController
 
       rescue Exception => e
         flash[:error] = "Problem occured during loading experiment info - #{e}"
-        logger.debug(e.backtrace)
         @error_flag = true
+        @experiment.destroy
+        flash[:notice] = 'Your experiment has been destroyed.'
         redirect_to :action => :index
       end
 
@@ -455,7 +456,7 @@ class ExperimentsController < ApplicationController
 
   #TODO FIXME refactor to be one screen height
   def extend_input_values
-    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:experiment_id].to_i)
+    @experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
     @param_name = params[:param_name]
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
     @priority = params[:priority].to_i
@@ -531,6 +532,7 @@ class ExperimentsController < ApplicationController
     @experiment.value_list_extension = [] if @experiment.value_list_extension.nil?
 
     @experiment.value_list_extension << [ @param_name, new_values ]
+    @experiment.clear_cached_data
 
     Rails.logger.debug("New value list: #{@experiment.value_list}")
     Rails.logger.debug("New multiply list: #{@experiment.multiply_list}")

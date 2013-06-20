@@ -161,37 +161,47 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def value_list
-    self.doe_info = apply_doe_methods
-    #Rails.logger.debug("Doe info: #{self.doe_info}")
+    if self.cached_value_list.nil?
+      self.doe_info = apply_doe_methods
+      #Rails.logger.debug("Doe info: #{self.doe_info}")
 
-    value_list = []
-    # adding values from Design of Experiment
-    self.doe_info.each do |doe_group|
-      value_list << doe_group[2]
-    end
-    # adding the rest of values
-    self.experiment_input.each do |entity_group|
-      entity_group['entities'].each do |entity|
-        entity['parameters'].each do |parameter|
-          unless parameter.include?('in_doe') and parameter['in_doe'] == true
-            value_list << generate_parameter_values(parameter.merge({'entity_group_id' => entity_group['id'], 'entity_id' => entity['id']}))
+      value_list = []
+      # adding values from Design of Experiment
+      self.doe_info.each do |doe_group|
+        value_list << doe_group[2]
+      end
+      # adding the rest of values
+      self.experiment_input.each do |entity_group|
+        entity_group['entities'].each do |entity|
+          entity['parameters'].each do |parameter|
+            unless parameter.include?('in_doe') and parameter['in_doe'] == true
+              value_list << generate_parameter_values(parameter.merge({'entity_group_id' => entity_group['id'], 'entity_id' => entity['id']}))
+            end
           end
         end
       end
+
+      self.cached_value_list = value_list
+      self.save_and_cache
     end
 
-    value_list
+    self.cached_value_list
   end
 
   def multiply_list
-    multiply_list = Array.new(value_list.size)
+    if self.cached_multiple_list.nil?
+      multiply_list = Array.new(value_list.size)
 
-    multiply_list[-1] = 1
-    (multiply_list.size - 2).downto(0) do |index|
-      multiply_list[index] = multiply_list[index + 1] * value_list[index + 1].size
+      multiply_list[-1] = 1
+      (multiply_list.size - 2).downto(0) do |index|
+        multiply_list[index] = multiply_list[index + 1] * value_list[index + 1].size
+      end
+
+      self.cached_multiple_list = multiply_list
+      self.save_and_cache
     end
 
-    multiply_list
+    self.cached_multiple_list
   end
 
   def apply_doe_methods
@@ -205,7 +215,12 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def experiment_size
-    self.value_list.reduce(1){|acc, x| acc * x.size}
+    if self.size.nil?
+      self.size = self.value_list.reduce(1){|acc, x| acc * x.size}
+      self.save_and_cache
+    end
+
+    self.size
   end
 
   def create_result_csv_for(moe_name)
@@ -342,9 +357,13 @@ class DataFarmingExperiment < MongoActiveRecord
     #Rails.logger.debug("Config for storage manager: #{config.inspect}")
     sm_proxy = StorageManagerProxy.new(config)
 
-    1.upto(self.experiment_size).each do |simulation_id|
-      success = sm_proxy.delete_binary_output(self.experiment_id, simulation_id)
-      Rails.logger.debug("Deletion of simulation #{simulation_id} for experiment #{self.experiment_id} completed successfully ? #{success}")
+    begin
+      1.upto(self.experiment_size).each do |simulation_id|
+        success = sm_proxy.delete_binary_output(self.experiment_id, simulation_id)
+        Rails.logger.debug("Deletion of simulation #{simulation_id} for experiment #{self.experiment_id} completed successfully ? #{success}")
+      end
+    rescue Exception => e
+      Rails.logger.debug("Data farming experiment destroy error - #{e}")
     end
 
     # drop simulation table
@@ -374,6 +393,14 @@ class DataFarmingExperiment < MongoActiveRecord
     query = { 'is_done' => true, 'done_at' => { '$gte' => (Time.now - secs)} }
 
     ExperimentInstance.count_with_query(self.experiment_id, query)
+  end
+
+  def clear_cached_data
+    self.cached_value_list = nil
+    self.cached_multiple_list = nil
+    self.size = nil
+
+    self.save_and_cache
   end
 
   private
