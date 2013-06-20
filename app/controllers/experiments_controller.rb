@@ -314,7 +314,7 @@ class ExperimentsController < ApplicationController
           # ei_perform_time_avg = "%.2f" % ei_perform_time_avg
           partial_stats['avg_simulation_time'] = ei_perform_time_avg
 
-          predicted_finish_time = (Time.now - experiment.created_at).to_f / 3600
+          predicted_finish_time = (Time.now - experiment.start_at).to_f / 3600
           predicted_finish_time /= (instances_done.to_f / experiment.experiment_size)
           predicted_finish_time_h = predicted_finish_time.floor
           predicted_finish_time_m = ((predicted_finish_time.to_f - predicted_finish_time_h.to_f)*60).to_i
@@ -734,7 +734,7 @@ class ExperimentsController < ApplicationController
     if @done < 20 then
       @predicted_finish_time = 'Not available yet'
     else
-      @predicted_finish_time = (Time.now - experiment.created_at).to_f / 3600
+      @predicted_finish_time = (Time.now - experiment.start_at).to_f / 3600
       @predicted_finish_time /= (@done.to_f / experiment.experiment_size)
 
       @predicted_finish_time = "%.2f" % @predicted_finish_time

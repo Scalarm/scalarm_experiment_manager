@@ -34,14 +34,6 @@ class DataFarmingExperiment < MongoActiveRecord
     ExperimentInstance.count_with_query(self.experiment_id) == ExperimentInstance.count_with_query(self.experiment_id, {'is_done' => true})
   end
 
-  def created_at
-    #if self.start_at.nil?
-    #  self.old_fashion_experiment.created_at
-    #else
-      self.start_at
-    #end
-  end
-
   def simulation
     Simulation.find_by_id self.simulation_id
   end
