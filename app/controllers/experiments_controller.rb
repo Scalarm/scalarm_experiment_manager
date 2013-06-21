@@ -73,7 +73,7 @@ class ExperimentsController < ApplicationController
                                                          'scheduling_policy' => 'monte_carlo'
                                                         })
     data_farming_experiment.user_id = current_user.id unless current_user.nil?
-    data_farming_experiment.labels = data_farming_experiment.argument_names
+    data_farming_experiment.labels = data_farming_experiment.parameters.flatten.join(',')
 
     data_farming_experiment.save
     # rewrite all necessary parameters
@@ -461,8 +461,6 @@ class ExperimentsController < ApplicationController
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
     @priority = params[:priority].to_i
     
-    @new_instance_counter = 0
-
     simulation_id = 1
     while (sample_simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, simulation_id)).nil?
       simulation_id += 1
@@ -512,7 +510,6 @@ class ExperimentsController < ApplicationController
     Rails.logger.debug("ids_of_new_simulations: #{ids_of_new_simulations}")
 
     Rails.logger.debug("Renumerating ids")
-
     id_change_map = {}
     id_add_factor = 0
     next_id_to_renumerate = 1
@@ -541,7 +538,7 @@ class ExperimentsController < ApplicationController
     # 1. old fashion experiment
     #old_experiment = @experiment.old_fashion_experiment
     #old_experiment.experiment_size = @experiment.experiment_size
-    labels = @experiment.parameters
+    @experiment.labels = @experiment.parameters.flatten.join(',')
     value_list = @experiment.value_list
     multiply_list = @experiment.multiply_list
 

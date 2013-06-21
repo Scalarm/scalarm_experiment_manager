@@ -115,7 +115,7 @@ while true
                              puts 'Reading intermediate results from a file'
                              JSON.parse(IO.read(tmp_result_file))
                            else # mocking tmp result
-                             JSON.parse({'status' => 'ok', 'results' => { 'intermediate_results' => rand(100) }}.to_json)
+                             JSON.parse({'status' => 'error', 'results' => { }}.to_json)
                            end
 
               if tmp_result['status'] == 'ok'

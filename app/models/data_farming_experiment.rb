@@ -391,6 +391,7 @@ class DataFarmingExperiment < MongoActiveRecord
     self.cached_value_list = nil
     self.cached_multiple_list = nil
     self.size = nil
+    self.labels = nil
 
     self.save_and_cache
   end
