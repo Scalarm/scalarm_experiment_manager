@@ -1,107 +1,108 @@
-- user = @scalarm_user || @current_user
 - credentials = GridCredentials.find_by_user_id(user.id)
 
-%div{ id: 'plgrid-login-form', class: 'wide-label' }
-  %h5.subheader= 'Please, provide credentials to access PL-Grid'
+.section-container.accordion{'data-section' => 'accordion'}
+  %section#plgrid-submission-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plgrid-submission-panel'} Job submission
+      .content{'data-section-content' => ''}
+        %p
+          = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'experiment_id', experiment.experiment_id
+            = hidden_field_tag 'infrastructure_type', 'plgrid'
+            .row
+              .small-6.columns
+                = label_tag 'Number of jobs:', nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :job_counter
+            .row
+              .small-6.columns
+                = label_tag 'Scheduler:', nil, class: 'inline right'
+              .small-6.columns
+                = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+            .row
+              .small-6.columns
+                = label_tag 'Job time constraint [min]:', nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :time_limit
 
-  .row
-    .small-4.columns
-      = label_tag 'PL-Grid access host:', nil, class: 'inline'
-    .small-8.columns
-      = text_field_tag :plgrid_host, credentials.nil? ? '' : credentials.host
-  .row
-    .small-4.columns
-      = label_tag 'Username:', nil, class: 'inline'
-    .small-8.columns
-      = text_field_tag :plgrid_username, credentials.nil? ? '' : credentials.login
-  .row
-    .small-4.columns
-      = label_tag 'Password:', nil, class: 'inline'
-    .small-8.columns
-      = password_field_tag :plgrid_password, credentials.nil? ? '' : credentials.password
-  .row
-    .small-4.columns
-      = label_tag 'Save settings:', nil, class: 'inline'
-    .small-8.columns
-      = check_box_tag :plgrid_save_settings, '1', (not credentials.nil?)
+            .row
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'small button'
+                %li= image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
 
-  .row
-    %ul.inline-list
-      %li= submit_tag 'Submit', class: 'button'
-      %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+  %section#plgrid-login-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plgrid-login-form-panel'} Login form
+      .content{'data-section-content' => ''}
+        %p
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'infrastructure_type', 'plgrid'
 
-= form_tag '', class: 'custom' do
-  %div{ id: 'plgrid-booster-form', class: 'wide-label' }
-    %p{ id: 'plgrid_info' }
+            %h5.subheader= 'Please, provide credentials to access PL-Grid'
 
-    .row
-      .small-3.columns
-        = label_tag 'Number of jobs:', nil, class: 'inline'
-      .small-9.columns
-        = text_field_tag :job_counter
-    .row
-      .small-3.columns
-        = label_tag 'Scheduler:', nil, class: 'inline'
-      .small-9.columns
-        = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
-    .row
-      .small-5.columns
-        = label_tag 'Job time constraint [min]:', nil, class: 'inline'
-      .small-7.columns
-        = text_field_tag :time_limit
+            .row
+              .small-4.columns
+                = label_tag 'UI host:', nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :host, credentials.nil? ? '' : credentials.host
+            .row
+              .small-4.columns
+                = label_tag 'Username:', nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :username, credentials.nil? ? '' : credentials.login
+            .row
+              .small-4.columns
+                = label_tag 'Password:', nil, class: 'inline right'
+              .small-8.columns
+                = password_field_tag :password, credentials.nil? ? '' : credentials.password
+            .row
+              .small-4.columns
+                = label_tag 'Save settings:', nil, class: 'inline right'
+              .small-8.columns
+                = check_box_tag :save_settings, '1', (not credentials.nil?), style: 'display: none;'
+            .row
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'button small'
+                %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+          #plgrid-login-ajax-response
 
-    .row
-      %ul.inline-list
-        %li= submit_tag 'Submit', class: 'button'
-        %li= button_to_function 'Edit credentials', "$('#plgrid-booster-form').hide(); $('#plgrid-login-form').show();", class: 'button'
+  %section#plgrid-jobs-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plgrid-jobs-panel'} Scheduled jobs
+      .content{'data-section-content' => ''}
+        %p
+          %p{ id: 'plgrid_info' }= @current_states[:plgrid]
+          %ul.circle
+            - @simulation_managers[:plgrid].each do |plgrid_job|
+              %li= plgrid_job.to_s
 
 :javascript
   $(function() {
-    if(#{ credentials.nil?}) {
-      $('#plgrid-booster-form').hide();
+    if(#{ credentials.nil? }) {
+      $('#plgrid-submission-tab form').addClass('disabled');
+      $('#plgrid-login-tab').addClass('active');
     } else {
-      $('#plgrid-login-form').hide();
+      $('#plgrid-submission-tab').addClass('active');
     }
 
-    $("#plgrid-login-form input[type='submit']").bind('click', function() {
-      $('#plgrid-configure-busy').show();
+    $("#plgrid-login-tab form")
+      .bind('ajax:before', function() {
+        $('#plgrid-configure-busy').show();
+        $('#plgrid-login-ajax-response').html('');
+      })
+      .bind('ajax:success', function(data, status, xhr) { $('#plgrid-login-ajax-response').html('Your credentials have been updated'); })
+      .bind('ajax:failure', function(xhr, status, error) { $('#plgrid-login-ajax-response').html('An erroc occured'); })
+      .bind('ajax:complete', function() { $('#plgrid-configure-busy').hide(); });
 
-      data = {
-        'host': $('#plgrid_host').val(),
-        'username': $('#plgrid_username').val(),
-        'password': $('#plgrid_password').val(),
-        'save_settings': $('#plgrid_save_settings').prop('checked'),
-        'infrastructure_type': 'plgrid',
-        'authenticity_token': '#{form_authenticity_token}'
-      };
+    $("#plgrid-submission-tab form")
+          .bind('ajax:before', function() { $('#plgrid-submission-busy').show(); booster.afterSubmit(); })
+          .bind('ajax:success', function(data, response, xhr) { booster.onSuccess(response.msg); })
+          .bind('ajax:complete', function() { $('#plgrid-submission-busy').hide(); $('#loading-img').hide(); });
 
-      $.post("#{ add_infrastructure_credentials_infrastructure_path }", data,
-            function(response) {
-              if(response.status == 'ok') {
-                $('#plgrid-login-form').hide();
-                $('#plgrid-booster-form').show();
-              }
-              $('#plgrid-configure-busy').hide();
-            }, 'json');
 
-      return false;
-    });
-    //'user_id': #{session[:user]},
-    $("#plgrid-booster-form input[type='submit']").bind('click', function() {
-      data = {
-        'infrastructure_type': 'plgrid',
-        'experiment_id': #{experiment.experiment_id},
-        'job_counter': $('#job_counter').val(),
-        'time_limit': $('#time_limit').val(),
-        'scheduler': $('#scheduler').val(),
-        'authenticity_token': '#{form_authenticity_token}'
-      };
-      $.post("#{ schedule_simulation_managers_infrastructure_path }", data,
-      function(response) {
-          booster.onSuccess(response.msg);
-      }, 'json');
-      booster.afterSubmit();
-
-      return false;
+    $('p').each(function(index, element) {
+      if($(element).html() == "") {
+        $(element).remove();
+      }
     });
   });

@@ -20,4 +20,8 @@ class PlGridJob < MongoActiveRecord
     end
   end
 
+  def to_s
+    "JobId: #{job_id}, Scheduled at: #{created_at}, ExperimentId: #{experiment_id}"
+  end
+
 end

@@ -23,7 +23,7 @@
         %li
           = button_to 'Stop experiment', stop_experiment_path(@experiment.experiment_id),
             class: 'button', :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
-        %li= button_to_function 'Booster', "booster.openDialog();", class: 'button'
+        %li= button_to_function 'Booster', "booster.openDialog('#{get_booster_dialog_experiment_path(@experiment.experiment_id)}');", class: 'button'
         %li= button_to_function 'Scheduling policy', "$('#scheduling_policy_dialog').dialog('open')", class: 'button'
       - else
         %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, class: 'button inline', onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
@@ -38,8 +38,8 @@
         class: 'button'
       %li= image_tag 'loading.gif', :id => 'loading-img', :style => 'display: none;'
       
-    - if @experiment.is_running
-      = render 'booster_dialog'
+    -#- if @experiment.is_running
+    -#  = render partial: 'booster_dialog', locals: { user: user }
     = render 'scheduling_policy_dialog'
 
   = render 'monitoring_table'

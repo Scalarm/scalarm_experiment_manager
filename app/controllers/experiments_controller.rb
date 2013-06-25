@@ -138,7 +138,7 @@ class ExperimentsController < ApplicationController
 
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
-    @experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @experiment = DataFarmingExperiment.find_by_id(params[:id])
 
     @error_flag = false
 
@@ -165,7 +165,6 @@ class ExperimentsController < ApplicationController
 
       begin
         set_monitoring_view_params(@experiment)
-        @user = current_user
 
         Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
         if Time.now - @experiment.start_at > 30
@@ -184,16 +183,36 @@ class ExperimentsController < ApplicationController
 
     end
 
-    @running_experiments = current_user.get_running_experiments.sort{|e1, e2| e2.start_at <=> e1.start_at}
-    @historical_experiments = current_user.get_historical_experiments.sort{|e1, e2| e2.end_at <=> e1.end_at}
-    @simulation_scenarios = current_user.get_simulation_scenarios.sort{|s1, s2| s2.created_at <=> s1.created_at}
+    unless @error_flag
+      @running_experiments = current_user.get_running_experiments.sort{|e1, e2| e2.start_at <=> e1.start_at}
+      @historical_experiments = current_user.get_historical_experiments.sort{|e1, e2| e2.end_at <=> e1.end_at}
+      @simulation_scenarios = current_user.get_simulation_scenarios.sort{|s1, s2| s2.created_at <=> s1.created_at}
 
-    render layout: 'foundation_application' unless @error_flag
+      @simulation_managers = {}
+      InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+        @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(current_user)
+      end
+
+      render layout: 'foundation_application', locals: { user: current_user }
+    end
+
+  end
+
+  def get_booster_dialog
+    @experiment = DataFarmingExperiment.find_by_id(params[:id])
+
+    @simulation_managers, @current_states = {}, {}
+    InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+      @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(current_user)
+      @current_states[infrastructure_id] = infrastructure_info[:facade].current_state(current_user)
+    end
+
+    render inline: render_to_string(partial: 'booster_dialog', locals: { user: current_user })
   end
 
   # stops the currently running DF experiment (if any)
   def stop
-    experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    experiment = DataFarmingExperiment.find_by_id(params[:id])
 
     if experiment
       experiment.is_running = false

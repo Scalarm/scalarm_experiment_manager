@@ -12,8 +12,8 @@ class PLGridFacade < InfrastructureFacade
     @ui_grid_host = 'ui.grid.cyfronet.pl'
   end
 
-  def current_state(user_id)
-    jobs = PlGridJob.find_all_by_user_id(user_id)
+  def current_state(user)
+    jobs = PlGridJob.find_all_by_user_id(user.id)
     jobs_count = if jobs.nil?
                    0
                  else
@@ -129,9 +129,8 @@ class PLGridFacade < InfrastructureFacade
     raise 'not implemented'
   end
 
-  def get_running_simulation_managers_count(user, experiment = nil)
-    jobs = PlGridJob.find_by_user_id(user.id)
-    jobs.nil? ? 0 : jobs.size
+  def get_running_simulation_managers(user, experiment = nil)
+    PlGridJob.find_all_by_user_id(user.id)
   end
 
   def add_credentials(user, params, session)

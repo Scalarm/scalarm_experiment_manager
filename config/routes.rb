@@ -56,6 +56,7 @@ SimulationManager::Application.routes.draw do
       post  :destroy
       post  :extend_input_values
       get   :intermediate_results
+      get   :get_booster_dialog
 
       # experiment charts
       post :histogram
