@@ -5,5 +5,5 @@
     %p No historical experiment available
   - else
     - @historical_experiments.each do |experiment|
-      - link_text = "#{experiment.name}, started at: #{experiment.started_at}, stopped at: #{experiment.end_at}"
+      - link_text = "#{experiment.name}, started at: #{experiment.start_at}, stopped at: #{experiment.end_at}"
       = button_to link_text, monitor_experiment_path(experiment.experiment_id), class: 'button expand', method: :get

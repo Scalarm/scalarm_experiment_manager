@@ -669,15 +669,15 @@ class ExperimentsController < ApplicationController
   end
 
   def intermediate_results
-    dfe = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    dfe = DataFarmingExperiment.find_by_id(params[:id])
     range_arguments = dfe.range_arguments
     unless dfe.argument_names.nil?
       arguments = dfe.argument_names.split(',')
 
       results = if params[:simulations] == 'running'
-                  ExperimentInstance.find_by_query(params[:id].to_i, {'to_sent' => false, 'is_done' => false})
+                  ExperimentInstance.find_by_query(dfe.experiment_id, {'to_sent' => false, 'is_done' => false})
                 elsif params[:simulations] == 'completed'
-                  ExperimentInstance.find_by_query(params[:id].to_i, {'is_done' => true})
+                  ExperimentInstance.find_by_query(dfe.experiment_id, {'is_done' => true})
                 end
 
       result_column = if params[:simulations] == 'running'
@@ -711,11 +711,11 @@ class ExperimentsController < ApplicationController
 
 
   def running_simulations_table
-    @data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @data_farming_experiment = DataFarmingExperiment.find_by_id(params[:id])
   end
 
   def completed_simulations_table
-    @data_farming_experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+    @data_farming_experiment = DataFarmingExperiment.find_by_id(params[:id])
   end
 
   private

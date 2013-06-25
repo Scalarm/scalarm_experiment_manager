@@ -59,17 +59,18 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def argument_names
-    params = []
-
-    self.experiment_input.each do |entity_group|
-      entity_group['entities'].each do |entity|
-        entity['parameters'].each do |parameter|
-            params << parameter_uid(entity_group, entity, parameter)
-        end
-      end
-    end
-
-    params.join(',')
+    parameters.flatten.join(',')
+    #params = []
+    #
+    #self.experiment_input.each do |entity_group|
+    #  entity_group['entities'].each do |entity|
+    #    entity['parameters'].each do |parameter|
+    #        params << parameter_uid(entity_group, entity, parameter)
+    #    end
+    #  end
+    #end
+    #
+    #params.join(',')
   end
 
   def range_arguments

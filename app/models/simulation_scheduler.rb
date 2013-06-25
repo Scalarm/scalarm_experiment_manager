@@ -120,7 +120,7 @@ module SimulationScheduler
     end
 
     columns = %w(id experiment_id is_done to_sent run_index arguments values sent_at)
-    values = [instance_id, self.experiment_id, false, false, 1, self.labels, combination.join(','), Time.now]
+    values = [instance_id, self.experiment_id, false, false, 1, self.argument_names, combination.join(','), Time.now]
 
     instance_hash = Hash[*columns.zip(values).flatten]
     #Rails.logger.debug("Inserting as simulation: #{instance_hash}")
