@@ -2,10 +2,12 @@ require 'json'
 require 'csv'
 require 'set'
 require 'yaml'
+require 'experiment_extensions/experiment_extender'
 
 class DataFarmingExperiment < MongoActiveRecord
   include DataFarmingExperimentProgressBar
   include SimulationScheduler
+  include ExperimentExtender
   ID_DELIM = '___'
 
   def self.collection_name
@@ -153,7 +155,7 @@ class DataFarmingExperiment < MongoActiveRecord
     nil
   end
 
-  def value_list
+  def value_list(debug = false)
     if self.cached_value_list.nil?
       self.doe_info = apply_doe_methods
       #Rails.logger.debug("Doe info: #{self.doe_info}")
@@ -175,13 +177,13 @@ class DataFarmingExperiment < MongoActiveRecord
       end
 
       self.cached_value_list = value_list
-      self.save_and_cache
+      self.save_and_cache unless debug
     end
 
     self.cached_value_list
   end
 
-  def multiply_list
+  def multiply_list(debug = false)
     if self.cached_multiple_list.nil?
       multiply_list = Array.new(value_list.size)
 
@@ -190,8 +192,9 @@ class DataFarmingExperiment < MongoActiveRecord
         multiply_list[index] = multiply_list[index + 1] * value_list[index + 1].size
       end
 
+
       self.cached_multiple_list = multiply_list
-      self.save_and_cache
+      self.save_and_cache unless debug
     end
 
     self.cached_multiple_list
@@ -207,10 +210,10 @@ class DataFarmingExperiment < MongoActiveRecord
     end
   end
 
-  def experiment_size
+  def experiment_size(debug = false)
     if self.size.nil?
       self.size = self.value_list.reduce(1){|acc, x| acc * x.size}
-      self.save_and_cache
+      self.save_and_cache unless debug
     end
 
     self.size
@@ -394,7 +397,71 @@ class DataFarmingExperiment < MongoActiveRecord
     self.size = nil
     self.labels = nil
 
-    self.save_and_cache
+    #self.save_and_cache
+  end
+
+  def get_parameter_doc(parameter_uid)
+    entity_group_id, entity_id, parameter_id = parameter_uid.split(ID_DELIM)
+    self.experiment_input.each do |entity_group|
+
+      if entity_group['id'] == entity_group_id
+
+        entity_group['entities'].each do |entity|
+
+          if entity['id'] == entity_id
+
+            entity['parameters'].each do |parameter|
+
+              if parameter['id'] == parameter_id
+
+                return parameter
+
+              end
+
+            end
+
+          end
+
+        end
+
+      end
+
+    end
+  end
+
+  # returns a list of generated values for the given parameter_uid
+  # it takes into account 'value_list' and 'value_list_extension'
+  def parameter_values_for(parameter_uid)
+    values = []
+
+  #  if this parameter is used in DoE => get all values from doe_info
+    if get_parameter_doc(parameter_uid)['in_doe']
+
+      self.doe_info.each do |method, list_of_parameters, doe_values|
+        unless (param_index = list_of_parameters.index(parameter_uid)).nil?
+          doe_values.each do |configuration|
+            values << configuration[param_index]
+          end
+          values.uniq!
+        end
+      end
+
+    else
+  #  if not used in DoE => get values from 'value_list' and 'value_list_extension'
+      param_index = self.parameters.index(parameter_uid)
+      values += value_list[param_index]
+
+      unless self.value_list_extension.nil?
+        self.value_list_extension.each do |param_name, list_of_additional_values|
+          if param_name == parameter_uid
+            values += list_of_additional_values
+          end
+        end
+      end
+
+    end
+
+    values
   end
 
   private
@@ -459,7 +526,7 @@ class DataFarmingExperiment < MongoActiveRecord
     parameter_values = []
 
     if parameter['parametrizationType'] == 'value'
-      parameter_values << parameter["value"].to_f
+      parameter_values << parameter['value'].to_f
     elsif parameter['parametrizationType'] == 'range'
       step = parameter['step'].to_f
       raise "Step can't be zero" if step == 0.0
@@ -547,34 +614,7 @@ class DataFarmingExperiment < MongoActiveRecord
     "data.frame(#{data_frame_list.join(',')})"
   end
 
-  def get_parameter_doc(parameter_uid)
-    entity_group_id, entity_id, parameter_id = parameter_uid.split(ID_DELIM)
-    self.experiment_input.each do |entity_group|
 
-      if entity_group['id'] == entity_group_id
-
-        entity_group['entities'].each do |entity|
-
-          if entity['id'] == entity_id
-
-            entity['parameters'].each do |parameter|
-
-              if parameter['id'] == parameter_id
-
-                return parameter
-
-              end
-
-            end
-
-          end
-
-        end
-
-      end
-
-    end
-  end
 
 
 end

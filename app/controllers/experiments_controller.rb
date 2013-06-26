@@ -473,124 +473,28 @@ class ExperimentsController < ApplicationController
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
   end
 
-  #TODO FIXME refactor to be one screen height
   def extend_input_values
-    @experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
-    @param_name = params[:param_name]
+    @experiment = DataFarmingExperiment.find_by_id(params[:id])
+    parameter_uid = params[:param_name]
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
-    @priority = params[:priority].to_i
-    
-    simulation_id = 1
-    while (sample_simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, simulation_id)).nil?
-      simulation_id += 1
-    end
+    Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
+    new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    #@priority = params[:priority].to_i
+    Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
-    param_index = sample_simulation.arguments.split(',').index(@param_name)
-    sample_value = sample_simulation.values.split(',')[param_index]
+    num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
+    if num_of_new_simulations > 0
+      @experiment.create_progress_bar_table.drop
+      @experiment.insert_initial_bar
 
-    Rails.logger.debug("Param index: #{param_index} --- Sample value: #{sample_value}")
-    # Getting combinations of other parameters, i.e. all simulations with a concrete value of our parameter
-    # values,arguments
-    combinations_to_reproduce = ExperimentInstance.raw_find_by_query(@experiment.experiment_id, {},
-                                                                     { fields: ['values', 'arguments'] }).select{ |simulation|
-      simulation['values'].split(',')[param_index] == sample_value
-    }
-
-    combinations_to_reproduce_count = combinations_to_reproduce.size*@range_min.step(@range_max, @range_step).to_a.size
-    Rails.logger.debug("Combinations to reproduce: #{combinations_to_reproduce_count} --- #{combinations_to_reproduce.size}")
-
-    ids_of_new_simulations = []
-    value_list = @experiment.value_list
-    multiply_list = @experiment.multiply_list
-    Rails.logger.debug("Value list: #{value_list}")
-    Rails.logger.debug("Multiply list: #{multiply_list}")
-
-    num_of_new_values = @range_min.step(@range_max, @range_step).to_a.size
-    Rails.logger.debug("num_of_new_values: #{num_of_new_values}")
-    num_of_new_simulations = (@experiment.experiment_size / value_list[param_index].size) * num_of_new_values
-    Rails.logger.debug("num_of_new_simulations: #{num_of_new_simulations}")
-    start_index = (param_index == 0 ? @experiment.experiment_size : multiply_list[param_index - 1])
-    Rails.logger.debug("start_index: #{start_index}")
-    num_of_elements_in_iteration = (param_index == multiply_list.size - 1 ? 1 : value_list[param_index + 1..-1].reduce(1){|acc, tab| acc *= tab.size }) * num_of_new_values
-    Rails.logger.debug("num_of_elements_in_iteration: #{num_of_elements_in_iteration}")
-    iteration_offset = value_list[param_index..-1].reduce(1){|acc, tab| acc *= tab.size }
-    Rails.logger.debug("iteration_offset: #{iteration_offset}")
-
-    while(num_of_new_simulations > 0)
-      1.upto(num_of_elements_in_iteration) do |i|
-        ids_of_new_simulations << start_index + i
+      # 4. update progress bar
+      spawn_block(:method => :thread) do
+        @experiment.update_all_bars
       end
-
-      start_index += num_of_elements_in_iteration + iteration_offset
-      num_of_new_simulations -= num_of_elements_in_iteration
-    end
-    ids_of_new_simulations.sort!
-
-    Rails.logger.debug("ids_of_new_simulations: #{ids_of_new_simulations}")
-
-    Rails.logger.debug("Renumerating ids")
-    id_change_map = {}
-    id_add_factor = 0
-    next_id_to_renumerate = 1
-    while next_id_to_renumerate <= @experiment.experiment_size
-      Rails.logger.debug("Next range to renumerate: #{next_id_to_renumerate} .. #{next_id_to_renumerate + iteration_offset - 1}")
-
-      next_id_to_renumerate.upto(next_id_to_renumerate + iteration_offset - 1) do |simulation_id|
-        id_change_map[simulation_id] = simulation_id + id_add_factor
-      end
-
-      id_add_factor += num_of_elements_in_iteration
-      next_id_to_renumerate += iteration_offset
-    end
-
-    new_values = @range_min.step(@range_max, @range_step).to_a
-    Rails.logger.debug("Additional values for parameter #{@param_name} --- #{new_values}")
-    @experiment.value_list_extension = [] if @experiment.value_list_extension.nil?
-
-    @experiment.value_list_extension << [ @param_name, new_values ]
-    @experiment.clear_cached_data
-
-    Rails.logger.debug("New value list: #{@experiment.value_list}")
-    Rails.logger.debug("New multiply list: #{@experiment.multiply_list}")
-
-    # UPDATE
-    # 1. old fashion experiment
-    #old_experiment = @experiment.old_fashion_experiment
-    #old_experiment.experiment_size = @experiment.experiment_size
-    @experiment.labels = @experiment.parameters.flatten.join(',')
-    value_list = @experiment.value_list
-    multiply_list = @experiment.multiply_list
-
-    #ExperimentInstanceDb.default_instance.store_experiment_info(old_experiment, labels, value_list, multiply_list)
-
-    #old_experiment.save_and_cache
-    # 2. data farming experiment
-    @experiment.save
-    # 3. simulations id renumeration apply
-    Rails.logger.debug("Size of new ids: #{id_change_map.size}")
-    id_change_map.keys.sort.reverse.each do |old_simulation_id|
-      new_simulation_id = id_change_map[old_simulation_id]
-      Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
-      # make the actual change
-      unless old_simulation_id == new_simulation_id
-        simulation = ExperimentInstance.find_by_id(@experiment.experiment_id, old_simulation_id)
-        unless simulation.nil?
-          simulation.id = new_simulation_id
-          simulation.save
-        end
-      end
-    end
-
-    @experiment.create_progress_bar_table.drop
-    @experiment.insert_initial_bar
-
-    # 4. update progress bar
-    spawn_block(:method => :thread) do
-      @experiment.update_all_bars
     end
 
     respond_to do |format|
-      format.js{ render :inline => "$('#dialog').parent().hide(); $('#expand_dialog_busy').hide(); alert('#{combinations_to_reproduce_count} instances created');" }
+      format.js{ render :inline => "$('#dialog').parent().hide(); $('#expand_dialog_busy').hide(); alert('#{num_of_new_simulations} instances created');" }
     end
   end
 
@@ -718,11 +622,32 @@ class ExperimentsController < ApplicationController
     @data_farming_experiment = DataFarmingExperiment.find_by_id(params[:id])
   end
 
+  def extension_dialog
+  #  getting parametrization and generated values of every input parameter without default value
+    @experiment = DataFarmingExperiment.find_by_id(params[:id])
+    @parameters = {}
+
+    @experiment.argument_names.split(',').each do |parameter_uid|
+      parameter_doc = @experiment.get_parameter_doc(parameter_uid)
+      next if parameter_doc.include?('value') # it means this parameter has only one possible value - the default one
+
+      parameter_info = {}
+      parameter_info[:label] = @experiment.input_parameter_label_for(parameter_uid)
+      parameter_info[:parametrizationType] = parameter_doc['parametrizationType']
+      parameter_info[:in_doe] = parameter_doc['in_doe']
+      parameter_info[:values] = @experiment.parameter_values_for(parameter_uid)
+
+      @parameters[parameter_uid] = parameter_info
+    end
+
+    render partial: 'extension_dialog'
+  end
+
   private
 
   def get_latest_running_experiment
     user = User.find_by_id(session[:user])
-    user.experiments.where(:is_running => true).order("id").first
+    user.experiments.where(:is_running => true).order('id').first
   end
   
   def select_params_for_parameters_and_doe_groups
