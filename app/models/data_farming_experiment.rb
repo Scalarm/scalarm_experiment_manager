@@ -157,7 +157,7 @@ class DataFarmingExperiment < MongoActiveRecord
 
   def value_list(debug = false)
     if self.cached_value_list.nil?
-      self.doe_info = apply_doe_methods if self.doe_info.nil?
+      self.doe_info = apply_doe_methods if self.doe_info.blank? or self.doe_info.first.size == 2
       #Rails.logger.debug("Doe info: #{self.doe_info}")
 
       value_list = []

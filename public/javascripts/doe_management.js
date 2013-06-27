@@ -159,7 +159,8 @@ function DoeManager() {
             url: $('#calculate-experiment-size-url').val(),
             data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val(),
             success: function(msg) {
-                alert(msg.experiment_size);
+                $("#experiment-size-dialog #calculated-experiment-size").html(msg.experiment_size);
+                $('#experiment-size-dialog').foundation('reveal', 'open');
             }
         });
 

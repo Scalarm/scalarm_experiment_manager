@@ -132,7 +132,7 @@ class ExperimentsController < ApplicationController
     Rails.logger.debug("Experiment size is #{experiment_size}")
 
     respond_to do |format|
-      format.json{ render :json => { experiment_size: "#{experiment_size} simulations will be scheduled with current settings." } }
+      format.json{ render :json => { experiment_size: "#{experiment_size} " } }
     end
   end
 
@@ -482,8 +482,8 @@ class ExperimentsController < ApplicationController
     #@priority = params[:priority].to_i
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
-    num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
-    if num_of_new_simulations > 0
+    @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
+    if @num_of_new_simulations > 0
       @experiment.create_progress_bar_table.drop
       @experiment.insert_initial_bar
 
@@ -493,9 +493,6 @@ class ExperimentsController < ApplicationController
       end
     end
 
-    respond_to do |format|
-      format.js{ render :inline => "$('#dialog').parent().hide(); $('#expand_dialog_busy').hide(); alert('#{num_of_new_simulations} instances created');" }
-    end
   end
 
   def change_scheduling_policy

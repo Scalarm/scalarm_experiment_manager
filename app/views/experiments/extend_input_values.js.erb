@@ -1,4 +1,1 @@
-$('#monitoring_section').html('<%= escape_javascript(render :partial => 'monitoring_section') %>');
-$('#dialog').parent().hide();
-$('#expand_dialog_busy').hide();
-alert("<%= @new_instance_counter %> instances created");
+alert("<%= "#{@num_of_new_simulations} were instances created" %>");

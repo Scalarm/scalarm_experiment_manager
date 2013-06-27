@@ -4,7 +4,7 @@ module ExperimentExtender
     Rails.logger.debug("Adding additional values for parameter #{parameter_uid} --- #{new_parameter_values}")
     parameter_doc = self.get_parameter_doc(parameter_uid)
 
-    update_doe_info(parameter_uid, new_parameter_values) if parameter_doc['in_doe']
+    new_parameter_values = update_doe_info(parameter_uid, new_parameter_values) if parameter_doc['in_doe']
 
     param_index = -1
     self.parameters.each_with_index do |parameter, index|
@@ -30,8 +30,11 @@ module ExperimentExtender
     ids_of_new_simulations = generate_ids_for_new_simulations(param_index, num_of_new_simulations, num_of_elements_in_iteration, iteration_offset)
     Rails.logger.debug("ids_of_new_simulations: #{ids_of_new_simulations}")
 
-    self.value_list_extension = [] if self.value_list_extension.nil?
-    self.value_list_extension << [parameter_uid, new_parameter_values]
+    unless parameter_doc['in_doe']
+      self.value_list_extension = [] if self.value_list_extension.nil?
+      self.value_list_extension << [parameter_uid, new_parameter_values]
+    end
+
     self.clear_cached_data
 
     Rails.logger.debug("New value list: #{self.value_list}")
@@ -72,7 +75,7 @@ module ExperimentExtender
     Rails.logger.debug("Other DoE parameters: #{other_doe_parameter_values}")
     other_doe_parameter_values[other_doe_parameter_values.index(nil)] = new_parameter_values
     new_combinations = other_doe_parameter_values[1..-1].reduce(other_doe_parameter_values[0]){|acc, next_list| acc.product(next_list)}.map(&:flatten)
-    Rails.logger.debug("Product: #{new_combinations}}")
+    Rails.logger.debug("Product: #{new_combinations}")
 
     Rails.logger.debug("DoE info: #{self.doe_info}")
 
@@ -84,6 +87,7 @@ module ExperimentExtender
     end
 
     Rails.logger.debug("New DoE info: #{self.doe_info}")
+    new_combinations
   end
 
   def generate_ids_for_new_simulations(param_index, num_of_new_simulations, num_of_elements_in_iteration, iteration_offset)
