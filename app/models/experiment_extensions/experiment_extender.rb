@@ -4,11 +4,15 @@ module ExperimentExtender
     Rails.logger.debug("Adding additional values for parameter #{parameter_uid} --- #{new_parameter_values}")
     parameter_doc = self.get_parameter_doc(parameter_uid)
 
-    if parameter_doc['in_doe']
-      return add_parameter_values_in_doe(parameter_uid, new_parameter_values)
-    end
+    update_doe_info(parameter_uid, new_parameter_values) if parameter_doc['in_doe']
 
-    param_index = self.parameters.index(parameter_uid)
+    param_index = -1
+    self.parameters.each_with_index do |parameter, index|
+      if (parameter.respond_to?('each') and parameter.include?(parameter_uid)) or (parameter == parameter_uid)
+        param_index = index
+        break
+      end
+    end
 
     Rails.logger.debug("Value list: #{self.value_list}")
     Rails.logger.debug("Multiply list: #{self.multiply_list}")
@@ -45,7 +49,7 @@ module ExperimentExtender
     num_of_new_simulations
   end
 
-  def add_parameter_values_in_doe(parameter_uid, new_parameter_values)
+  def update_doe_info(parameter_uid, new_parameter_values)
     doe_group = self.doe_info.select{|doe_group_tmp| doe_group_tmp[1].include?(parameter_uid)}.first
     Rails.logger.debug("DoE group: #{doe_group}")
 
@@ -79,9 +83,7 @@ module ExperimentExtender
       end
     end
 
-    Rails.logger.debug("DoE info: #{self.doe_info}")
-
-    return 0
+    Rails.logger.debug("New DoE info: #{self.doe_info}")
   end
 
   def generate_ids_for_new_simulations(param_index, num_of_new_simulations, num_of_elements_in_iteration, iteration_offset)
@@ -130,8 +132,8 @@ module ExperimentExtender
       unless old_simulation_id == new_simulation_id
         simulation = ExperimentInstance.find_by_id(self.experiment_id, old_simulation_id)
         unless simulation.nil?
-          simulation.id = new_simulation_id
-          simulation.save
+          #simulation.id = new_simulation_id
+          #simulation.save
         end
       end
     end
