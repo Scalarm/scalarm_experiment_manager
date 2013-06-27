@@ -306,6 +306,8 @@ class DataFarmingExperiment < MongoActiveRecord
         entity['parameters'].each do |parameter|
           # check if partial_experiment_input contains information about this parameter
           parameter_uid = self.parameter_uid(entity_group, entity, parameter)
+          parameter['with_default_value'] = parameter.include?('value')
+
           # if there is information then add it to the input
           if partial_experiment_input.include?(parameter_uid)
             partial_experiment_input[parameter_uid].each do |key, value|

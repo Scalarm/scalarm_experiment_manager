@@ -626,8 +626,7 @@ class ExperimentsController < ApplicationController
 
     @experiment.argument_names.split(',').each do |parameter_uid|
       parameter_doc = @experiment.get_parameter_doc(parameter_uid)
-      next if parameter_doc.include?('value') # it means this parameter has only one possible value - the default one
-
+      next if parameter_doc['with_default_value'] # it means this parameter has only one possible value - the default one
       parameter_info = {}
       parameter_info[:label] = @experiment.input_parameter_label_for(parameter_uid)
       parameter_info[:parametrizationType] = parameter_doc['parametrizationType']
