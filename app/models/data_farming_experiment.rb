@@ -351,8 +351,13 @@ class DataFarmingExperiment < MongoActiveRecord
 
   def destroy
     # destroy all binary files stored for this experiments
+    sm_uuid = SecureRandom.uuid
+    temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid)
     config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
     #Rails.logger.debug("Config for storage manager: #{config.inspect}")
+    config['storage_manager']['user'] = sm_uuid
+    config['storage_manager']['pass'] = temp_password.password
+
     sm_proxy = StorageManagerProxy.new(config)
 
     begin
@@ -363,6 +368,8 @@ class DataFarmingExperiment < MongoActiveRecord
     rescue Exception => e
       Rails.logger.debug("Data farming experiment destroy error - #{e}")
     end
+
+    temp_password.destroy
 
     # drop simulation table
     @@db[ExperimentInstanceDb.collection_name(self.experiment_id)].drop
