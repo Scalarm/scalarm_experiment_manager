@@ -15,7 +15,7 @@ class InfrastructureController < ApplicationController
   before_filter :register_to_amazon, :only => [:index, :run_amazon_instances, :manage_ec2_vm, :infrastructure_info, :add_vms_to_exp]
 
   def index
-    check_authentication
+    authenticate
     @machines = PhysicalMachine.all
     
     logger.debug("Current user id: #{session[:user]}")

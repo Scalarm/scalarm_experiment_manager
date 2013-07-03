@@ -50,6 +50,10 @@ class PLGridFacade < InfrastructureFacade
               # but first check if the experiment which should be calculated still exists
               if not job.experiment_id.blank? and DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
                 Rails.logger.debug('The experiment which should be computed no longer exists')
+                Rails.logger.debug("Destroying temp pass for #{job.sm_uuid}")
+                temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
+                Rails.logger.debug("It is nil ? --- #{temp_pass.nil?}")
+                temp_pass.destroy
                 job.destroy
               else
                 if scheduler.restart(ssh, job)
@@ -65,6 +69,10 @@ class PLGridFacade < InfrastructureFacade
               # but first check if the experiment which should be calculated still exists
               if not job.experiment_id.blank? and DataFarmingExperiment.find_by_experiment_id(job.experiment_id).nil?
                 Rails.logger.debug('The experiment which should be computed no longer exists')
+                Rails.logger.debug("Destroying temp pass for #{job.sm_uuid}")
+                temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
+                Rails.logger.debug("It is nil ? --- #{temp_pass.nil?}")
+                temp_pass.destroy
                 job.destroy
               else
                 if scheduler.restart(ssh, job)
@@ -76,6 +84,10 @@ class PLGridFacade < InfrastructureFacade
             elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
               Rails.logger.debug("#{Time.now} - the job is done or should be already done - so we will destroy it")
               scheduler.cancel(ssh, job)
+              Rails.logger.debug("Destroying temp pass for #{job.sm_uuid}")
+              temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
+              Rails.logger.debug("It is nil ? --- #{temp_pass.nil?}")
+              temp_pass.destroy
               job.destroy
               scheduler.clean_after_job(ssh, job)
             end

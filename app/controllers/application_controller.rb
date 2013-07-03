@@ -1,20 +1,7 @@
 class ApplicationController < ActionController::Base
-  USER, PASSWORD = 'eusas', 'change.ME'
 
-  before_filter :check_authentication, :except => [:subscribe, :unsubscribe, :message, :login,
-                                                   :get_experiment_id, :get_repository, :next_configuration,
-                                                   :configuration, :set_configuration_done, :managers, :storage_managers, :code_base,
-                                                   :next_simulation, :mark_as_complete, :progress_info
-                                                   ]
+  before_filter :authenticate, :except => [ :subscribe, :unsubscribe, :message, :login ]
 
-  before_filter :vm_authentication, :only => [:get_experiment_id, :get_repository, :next_configuration,
-                                              :configuration, :set_configuration_done, :managers, :storage_managers, :log_failure, :code_base,
-                                              :next_simulation, :mark_as_complete, :progress_info]
-
-  #before_filter :api_authentication, only: [ :start_experiment, :experiment_stats, :file_with_configurations ]
-
-
-  
   # protect_from_forgery
 
   def current_user
@@ -29,13 +16,7 @@ class ApplicationController < ActionController::Base
   
   protected
 
-  def vm_authentication
-    authenticate_or_request_with_http_basic do |user, password|
-      user == USER && password == PASSWORD
-    end
-  end
-
-  def check_authentication
+  def authenticate
     @scalarm_user = @current_user = nil
 
     if session[:user]
@@ -56,6 +37,15 @@ class ApplicationController < ActionController::Base
           redirect_to :login
         end
 
+      elsif request.env.include?('HTTP_AUTHORIZATION') and request.env['HTTP_AUTHORIZATION'].include?('Basic')
+        authenticate_or_request_with_http_basic do |sm_uuid, password|
+          Rails.logger.debug("Possible SM authentication: #{sm_uuid}")
+
+          temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid)
+
+          ((not temp_pass.nil?) and temp_pass.password == password) or (sm_uuid == 'hidden' and password == 'hidden')
+        end
+
       else
         Rails.logger.debug('We should use user and pass for authentication')
 
@@ -67,17 +57,6 @@ class ApplicationController < ActionController::Base
 
     end
 
-  end
-
-  def api_authentication
-    if session[:user]
-      @current_user = User.find_by_id(session[:user])
-    else
-      authenticate_or_request_with_http_basic do |username, password|
-        @current_user = User.authenticate(username, password)
-        not @current_user.nil?
-      end
-    end
   end
 
 end

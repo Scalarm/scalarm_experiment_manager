@@ -45,7 +45,7 @@ class ExperimentManager
 
     request = Net::HTTP::Post.new(uri.request_uri)
     request.basic_auth(@user, @pass)
-    request.set_form_data({ 'result' => results.to_json })
+    request.set_form_data({'result' => results.to_json})
 
     http.request(request).body
   end
