@@ -53,7 +53,7 @@ class PLGridFacade < InfrastructureFacade
                 Rails.logger.debug("Destroying temp pass for #{job.sm_uuid}")
                 temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
                 Rails.logger.debug("It is nil ? --- #{temp_pass.nil?}")
-                temp_pass.destroy
+                temp_pass.destroy unless temp_pass.nil?
                 job.destroy
               else
                 if scheduler.restart(ssh, job)
@@ -72,7 +72,7 @@ class PLGridFacade < InfrastructureFacade
                 Rails.logger.debug("Destroying temp pass for #{job.sm_uuid}")
                 temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
                 Rails.logger.debug("It is nil ? --- #{temp_pass.nil?}")
-                temp_pass.destroy
+                temp_pass.destroy unless temp_pass.nil?
                 job.destroy
               else
                 if scheduler.restart(ssh, job)
@@ -87,7 +87,7 @@ class PLGridFacade < InfrastructureFacade
               Rails.logger.debug("Destroying temp pass for #{job.sm_uuid}")
               temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
               Rails.logger.debug("It is nil ? --- #{temp_pass.nil?}")
-              temp_pass.destroy
+              temp_pass.destroy unless temp_pass.nil?
               job.destroy
               scheduler.clean_after_job(ssh, job)
             end
