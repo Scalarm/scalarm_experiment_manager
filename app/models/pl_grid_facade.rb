@@ -33,10 +33,12 @@ class PLGridFacade < InfrastructureFacade
 
         credentials = GridCredentials.find_by_user_id(user_id)
         Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-          # generate new proxy
-          ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
           job_list.each do |job|
             scheduler = create_scheduler_facade(job.scheduler_type)
+            if job.scheduler_type == 'glite'
+              # generate new proxy
+              ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
+            end
             #Rails.logger.debug("#{Time.now} - checking job #{job.job_id} - current state #{scheduler.current_state(ssh, job)}")
             #Rails.logger.debug("Is job scheduled --- #{scheduler.is_job_queued(ssh, job)}")
             #Rails.logger.debug("Too long scheduled --- #{(job.created_at + 10.minutes < Time.now)} --- #{job.created_at} --- #{job.created_at + 10.minutes} --- #{Time.now}")
