@@ -57,7 +57,7 @@ class GliteFacade
 
   def cancel(ssh, job)
     ssh.open_channel do |channel|
-      channel.send_data("glite_wms_job-cancel #{job.job_id}")
+      channel.send_data("glite-wms-job-cancel #{job.job_id}")
       channel.send_data('y')
       channel.close
     end
