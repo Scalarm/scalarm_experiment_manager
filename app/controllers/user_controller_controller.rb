@@ -3,12 +3,12 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        session[:user] = User.authenticate(params[:username], params[:password]).id
+        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id
         session[:grid_credentials] = GridCredentials.find_by_user_id(session[:user])
 
         flash[:notice] = t('login_success')
 
-        redirect_to experiments_latest_running_experiment_path
+        redirect_to experiments_path
       rescue Exception => e
         flash[:error] = e.to_s
         session[:user] = nil
@@ -48,13 +48,13 @@ class UserControllerController < ApplicationController
   end
 
   def account
-    @current_user = User.find(session[:user])
+    @current_user = ScalarmUser.find_by_id(session[:user])
 
     render layout: 'foundation_application'
   end
 
   def change_password
-    @current_user = User.find(session[:user])
+    @current_user = ScalarmUser.find_by_id(session[:user])
 
     if params[:password] != params[:password_repeat]
       flash[:error] = t('password_repeat_error')
@@ -65,7 +65,7 @@ class UserControllerController < ApplicationController
       flash[:notice] = t('password_changed')
     end
 
-    redirect_to :action => "account"
+    redirect_to :action => 'account'
   end
 
 end

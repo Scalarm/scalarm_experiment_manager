@@ -25,4 +25,29 @@ class ScalarmUser < MongoActiveRecord
     Simulation.find_all_by_user_id(self.id)
   end
 
+  def password=(pass)
+    salt = [Array.new(6) { rand(256).chr }.join].pack('m').chomp
+    self.password_salt, self.password_hash = salt, Digest::SHA256.hexdigest(pass + salt)
+  end
+
+  def self.authenticate_with_password(login, password)
+    user = ScalarmUser.find_by_login(login)
+
+    if user.nil? || user.password_salt.nil? || user.password_hash.nil?  || Digest::SHA256.hexdigest(password + user.password_salt) != user.password_hash
+      raise 'Bad login or password'
+    end
+
+    user
+  end
+
+  def self.authenticate_with_certificate(dn)
+    user = ScalarmUser.find_by_dn(dn)
+
+    if user.nil?
+      raise "Authentication failed: user with DN = #{dn} not found"
+    end
+
+    user
+  end
+
 end

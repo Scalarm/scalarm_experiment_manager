@@ -6,7 +6,13 @@
           .large-6.columns
             %label.right.inline Login:
           .large-6.columns
-            %span.inline= @current_user.username
+            %span.inline= @current_user.login
+
+        .row
+          .large-6.columns
+            %label.right.inline Certificate DN:
+          .large-6.columns
+            %span.inline= @current_user.dn
 
         .row
           .large-6.columns
