@@ -89,7 +89,7 @@ class SimulationsController < ApplicationController
 
   def mark_as_complete
     experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
-    simulation = ExperimentInstance.cache_get(params[:experiment_id], params[:id])
+    simulation = ExperimentInstance.cache_get(experiment.experiment_id, params[:id])
 
     response = { status: 'ok' }
     begin
@@ -114,7 +114,8 @@ class SimulationsController < ApplicationController
   end
 
   def progress_info
-    simulation = ExperimentInstance.find_by_id(params[:experiment_id].to_i, params[:id].to_i)
+    dfe = DataFarmingExperiment.find_by_id(params[:experiment_id])
+    simulation = ExperimentInstance.find_by_id(dfe.experiment_id, params[:id].to_i)
 
     response = {status: 'ok'}
     begin

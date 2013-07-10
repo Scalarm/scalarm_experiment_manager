@@ -14,7 +14,7 @@ class PlGridJob < MongoActiveRecord
 
   def experiment
     if @attributes.include?('experiment_id')
-      DataFarmingExperiment.find_by_experiment_id(self.experiment_id.to_i)
+      DataFarmingExperiment.find_by_id(self.experiment_id)
     else
       nil
     end

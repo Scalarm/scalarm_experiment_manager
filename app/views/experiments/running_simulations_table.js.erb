@@ -5,7 +5,7 @@ oTable = $('#running_simulations_table').dataTable({
     'bPaginate': false,
     'bSort': true,
     'bProcessing': true,
-    'sAjaxSource': "<%= intermediate_results_experiment_path(@data_farming_experiment.experiment_id, simulations: 'running') %>",
+    'sAjaxSource': "<%= intermediate_results_experiment_path(@data_farming_experiment.id, simulations: 'running') %>",
     'bStateSave': true,
     'bDestroy': true
 });

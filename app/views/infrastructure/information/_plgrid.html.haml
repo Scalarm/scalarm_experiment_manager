@@ -7,7 +7,7 @@
       .content{'data-section-content' => ''}
         %p
           = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
-            = hidden_field_tag 'experiment_id', experiment.experiment_id
+            = hidden_field_tag 'experiment_id', experiment.id
             = hidden_field_tag 'infrastructure_type', 'plgrid'
             .row
               .small-6.columns

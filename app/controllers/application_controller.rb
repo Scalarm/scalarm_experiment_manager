@@ -34,7 +34,7 @@ class ApplicationController < ActionController::Base
 
           flash[:notice] = t('login_success')
 
-          redirect_to experiments_path
+          #redirect_to experiments_path
         rescue Exception => e
           flash[:error] = e.to_s
           session[:user] = nil

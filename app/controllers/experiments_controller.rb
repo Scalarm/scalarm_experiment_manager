@@ -100,8 +100,8 @@ class ExperimentsController < ApplicationController
     end
 
     respond_to do |format|
-      format.html{ redirect_to monitor_experiment_path(@experiment.id) }
-      format.json{ render :json => { status: 'ok', experiment_id: data_farming_experiment.experiment_id } }
+      format.html{ redirect_to monitor_experiment_path(data_farming_experiment.id) }
+      format.json{ render :json => { status: 'ok', experiment_id: data_farming_experiment.id } }
     end
 
   end
@@ -415,9 +415,9 @@ class ExperimentsController < ApplicationController
 
   def file_with_configurations
     begin
-      experiment = DataFarmingExperiment.find_by_experiment_id(params[:id].to_i)
+      experiment = DataFarmingExperiment.find_by_id(params[:id])
 
-      file_path = "/tmp/configurations_#{experiment.experiment_id}.txt"
+      file_path = "/tmp/configurations_#{experiment.id}.txt"
       File.delete(file_path) if File.exist?(file_path)
 
       File.open(file_path, 'w') do |file|
@@ -517,13 +517,13 @@ class ExperimentsController < ApplicationController
   end
 
   def latest_running_experiment
-    experiment = get_latest_running_experiment
-
-    if experiment
-      redirect_to monitor_experiment_path(experiment.id)
-    else
+    #experiment = get_latest_running_experiment
+    #
+    #if experiment
+    #  redirect_to monitor_experiment_path(experiment.id)
+    #else
       redirect_to action: :index
-    end
+    #end
   end
 
   def completed_simulations_count
@@ -539,8 +539,7 @@ class ExperimentsController < ApplicationController
   end
 
   def code_base
-    experiment_id = params['id'].to_i
-    simulation = DataFarmingExperiment.find_by_experiment_id(experiment_id).simulation
+    simulation = DataFarmingExperiment.find_by_id(params[:id]).simulation
     code_base_dir = Dir.mktmpdir('code_base')
 
     file_list = %w(input_writer executor output_reader progress_monitor)
@@ -552,7 +551,7 @@ class ExperimentsController < ApplicationController
     IO.binwrite("#{code_base_dir}/simulation_binaries.zip", simulation.simulation_binaries)
     file_list << 'simulation_binaries.zip'
 
-    zipfile_name = File.join('/tmp', "experiment_#{experiment_id}_code_base.zip")
+    zipfile_name = File.join('/tmp', "experiment_#{params[:id]}_code_base.zip")
 
     File.delete(zipfile_name) if File.exist?(zipfile_name)
 
@@ -641,11 +640,6 @@ class ExperimentsController < ApplicationController
 
   private
 
-  def get_latest_running_experiment
-    user = User.find_by_id(session[:user])
-    user.experiments.where(:is_running => true).order('id').first
-  end
-  
   def select_params_for_parameters_and_doe_groups
     params_to_override = params.select { |key, value| key.starts_with? "Agent" } 
     params_groups_for_doe = params.select { |key, value| key.starts_with?("doe_") and key.ends_with?("_params") }

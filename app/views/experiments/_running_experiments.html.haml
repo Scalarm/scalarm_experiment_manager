@@ -6,4 +6,4 @@
   - else
     - @running_experiments.each do |experiment|
       - link_text = "#{experiment.name}, started at: #{experiment.start_at}"
-      = button_to link_text, monitor_experiment_path(experiment.experiment_id), class: 'button expand', method: :get
+      = button_to link_text, monitor_experiment_path(experiment.id), class: 'button expand', method: :get
