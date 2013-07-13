@@ -83,6 +83,7 @@ class GliteFacade
   # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
   # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"
   # task - "cream.grid.task.gda.pl:8443/cream-pbs-plgrid"
+  # pcss - "creamce.reef.man.poznan.pl:8443/cream-pbs-plgrid"
   def prepare_job_descriptor(uuid)
     <<-eos
 Executable = "scalarm_job_#{uuid}.sh";

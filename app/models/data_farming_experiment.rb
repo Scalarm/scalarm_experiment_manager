@@ -8,6 +8,8 @@ class DataFarmingExperiment < MongoActiveRecord
   include DataFarmingExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
+  include DataFarmingSimulation
+
   ID_DELIM = '___'
 
   def self.collection_name

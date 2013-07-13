@@ -5,10 +5,8 @@ class ApplicationController < ActionController::Base
   # protect_from_forgery
 
   def current_user
-    if not @scalarm_user.nil?
-      @scalarm_user
-    elsif not @current_user.nil?
-      @current_user
+    if session[:user]
+      ScalarmUser.find_by_id(session[:user])
     else
       nil
     end

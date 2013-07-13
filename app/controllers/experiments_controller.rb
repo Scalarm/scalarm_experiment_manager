@@ -85,18 +85,18 @@ class ExperimentsController < ApplicationController
     @experiment.start_at = Time.now
     # create progress bar
     data_farming_experiment.insert_initial_bar
+    data_farming_experiment.create_simulation_table
+    # DEPRECATED
     # create multiple list to fast generete subsequent simulations
-    labels = data_farming_experiment.parameters
-    value_list = data_farming_experiment.value_list
-    multiply_list = data_farming_experiment.multiply_list
-
-    ExperimentInstanceDb.default_instance.store_experiment_info(@experiment, labels, value_list, multiply_list)
-
+    #labels = data_farming_experiment.parameters
+    #value_list = data_farming_experiment.value_list
+    #multiply_list = data_farming_experiment.multiply_list
+    #ExperimentInstanceDb.default_instance.store_experiment_info(@experiment, labels, value_list, multiply_list)
     @experiment.save_and_cache
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
       computing_power = JSON.parse(params[:computing_power])
-      InfrastructureFacade.schedule_simulation_managers(current_user, @experiment.id, computing_power['type'], computing_power['resource_counter'])
+      InfrastructureFacade.schedule_simulation_managers(current_user, data_farming_experiment.id, computing_power['type'], computing_power['resource_counter'])
     end
 
     respond_to do |format|

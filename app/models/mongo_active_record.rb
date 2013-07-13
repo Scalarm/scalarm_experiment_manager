@@ -5,6 +5,14 @@ class MongoActiveRecord
   @@db = ExperimentInstanceDb.default_instance.default_connection
   @@grid = Mongo::Grid.new(@@db)
 
+  def self.execute_raw_command_on(db, cmd)
+    @@db.connection.db(db).command(cmd)
+  end
+
+  def self.get_collection(collection_name)
+    @@db.collection(collection_name)
+  end
+
   # object instance constructor based on map of attributes (json document is good example)
   def initialize(attributes)
     @attributes = {}
@@ -123,10 +131,10 @@ class MongoActiveRecord
 
     attributes = collection.find_one({ parameter => value })
 
-    if not attributes.nil?
-      Object.const_get(name).new(attributes)
-    else
+    if attributes.nil?
       nil
+    else
+      Object.const_get(name).new(attributes)
     end
   end
 

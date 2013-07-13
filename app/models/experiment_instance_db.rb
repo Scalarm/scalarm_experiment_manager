@@ -1,4 +1,4 @@
-require "bson"
+require 'bson'
 
 class ExperimentInstanceDb < ActiveRecord::Base
   has_many :experiment_partitions

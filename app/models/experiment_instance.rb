@@ -1,7 +1,5 @@
-require "bson"
-require "set"
-
-require "experiment_partition"
+require 'bson'
+require 'set'
 
 class ExperimentInstance
 
@@ -16,7 +14,7 @@ class ExperimentInstance
   # handling getters and setters
   def method_missing(m, *args, &block)
     method_name = m.to_s; setter = false
-    if method_name.ends_with? "="
+    if method_name.ends_with? '='
       method_name.chop!
       setter = true
     end
@@ -39,23 +37,24 @@ class ExperimentInstance
   end
 
   def output_values
-    self.result.split(',').map { |item| item.split("=")[1] }
+    self.result.split(',').map { |item| item.split('=')[1] }
   end
 
   def self.columns
-    @columns ||= [];
+    @columns ||= []
   end
 
   def self.column(name, sql_type = nil, default = nil, null = true)
     columns << ActiveRecord::ConnectionAdapters::Column.new(name.to_s, default, sql_type.to_s, null)
   end
 
-  def self.get_statistics(experiment_id)
-    done = ExperimentInstance.count_with_query(experiment_id, {"is_done" => true})
-    sent = ExperimentInstance.count_with_query(experiment_id, {"to_sent" => false})
-
-    return done, sent - done
-  end
+  # DEPRECATED
+  #def self.get_statistics(experiment_id)
+  #  done = ExperimentInstance.count_with_query(experiment_id, {"is_done" => true})
+  #  sent = ExperimentInstance.count_with_query(experiment_id, {"to_sent" => false})
+  #
+  #  return done, sent - done
+  #end
 
   def self.drop_instances_for(experiment_id)
     begin
@@ -69,9 +68,9 @@ class ExperimentInstance
   def self.get_avg_execution_time_of_ei(experiment_id)
     summary_runtime, counter = 0, 0
     
-    ExperimentInstance.raw_find_by_query(experiment_id, { "is_done" => true }, { :fields => ["done_at", "sent_at"], :limit => 10000, :sort => [["done_at", :desc]] }).each do |doc|
+    ExperimentInstance.raw_find_by_query(experiment_id, { 'is_done' => true }, { :fields => ["done_at", "sent_at"], :limit => 10000, :sort => [["done_at", :desc]] }).each do |doc|
       begin
-        summary_runtime += (doc["done_at"] - doc["sent_at"]) 
+        summary_runtime += (doc['done_at'] - doc['sent_at'])
         counter += 1
       rescue Exception => e
         Rails.logger.error(e)
@@ -83,7 +82,9 @@ class ExperimentInstance
   end
 
   def self.bulk_insert(experiment_id, combinations, labels)
-    docs_to_insert = combinations.map{|doc| Hash[*labels.zip(doc).flatten] }
+    docs_to_insert = combinations.map do |doc|
+      Hash[*labels.zip(doc).flatten]
+    end
     ExperimentInstanceDb.default_instance.bulk_insert(experiment_id, docs_to_insert)
     # slice_count, num_of_rows = partition_instances_by_size(docs_to_insert)
 # 
@@ -97,17 +98,18 @@ class ExperimentInstance
     # end
   end
 
-  def self.partition_instances_by_size(docs_to_insert)
-    row_size = docs_to_insert[0].to_s.size
-    mongo_limit_size = 16000000
-    num_of_rows = (mongo_limit_size / (row_size*1.7)).to_i
-
-    if num_of_rows > docs_to_insert.size
-      return docs_to_insert.size, num_of_rows
-    else
-      return docs_to_insert.size / num_of_rows, num_of_rows
-    end
-  end
+  # DEPRECATED
+  #def self.partition_instances_by_size(docs_to_insert)
+  #  row_size = docs_to_insert[0].to_s.size
+  #  mongo_limit_size = 16000000
+  #  num_of_rows = (mongo_limit_size / (row_size*1.7)).to_i
+  #
+  #  if num_of_rows > docs_to_insert.size
+  #    return docs_to_insert.size, num_of_rows
+  #  else
+  #    return docs_to_insert.size / num_of_rows, num_of_rows
+  #  end
+  #end
 
   def self.count_with_query(experiment_id, query = {})    
     ExperimentInstanceDb.default_instance.count_with_query(experiment_id, query)
@@ -146,7 +148,7 @@ class ExperimentInstance
     
     begin
       ExperimentInstanceDb.default_instance.find(experiment_id, send_condition).each do |instance_doc|
-        if now - instance_doc["sent_at"] >= time_constraint_in_secs * 2
+        if now - instance_doc['sent_at'] >= time_constraint_in_secs * 2
           expired_instances << ExperimentInstance.new(instance_doc)
         end
       end
