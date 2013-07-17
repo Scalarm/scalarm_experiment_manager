@@ -1,5 +1,5 @@
 require 'csv'
-require "rinruby"
+require 'rinruby'
 require 'xml'
 require 'df_xml_parser'
 require 'simulation_partitioner'

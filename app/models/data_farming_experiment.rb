@@ -3,6 +3,9 @@ require 'csv'
 require 'set'
 require 'yaml'
 require 'experiment_extensions/experiment_extender'
+require 'experiment_extensions/data_farming_experiment_progress_bar'
+require 'experiment_extensions/data_farming_simulation'
+require 'experiment_extensions/simulation_scheduler'
 
 class DataFarmingExperiment < MongoActiveRecord
   include DataFarmingExperimentProgressBar

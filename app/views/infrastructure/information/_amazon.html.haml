@@ -1,0 +1,157 @@
+-# local variables: experiment, user
+- amazon_secrets_creds = AmazonSecrets.find_by_user_id(user.id)
+- amazon_ami_creds = AmazonAmi.find_all_by_user_id(user.id)
+- if amazon_ami_creds.empty?
+  -  amazon_ami_creds = nil
+- else
+  - amazon_ami_creds = amazon_ami_creds.select{|ami| ami.experiment_id.to_s == experiment.id.to_s}.first
+
+.section-container.accordion{'data-section' => 'accordion'}
+  %section#amazon-submission-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#amazon-submission-panel'} Start virtual machines in the Cloud
+      .content{'data-section-content' => ''}
+        %p
+          -#= form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
+          -#  = hidden_field_tag 'experiment_id', experiment.id
+          -#  = hidden_field_tag 'infrastructure_type', 'plgrid'
+          -#  .row
+          -#    .small-6.columns
+          -#      = label_tag 'Number of jobs:', nil, class: 'inline right'
+          -#    .small-6.columns
+          -#      = text_field_tag :job_counter
+          -#  .row
+          -#    .small-6.columns
+          -#      = label_tag 'Scheduler:', nil, class: 'inline right'
+          -#    .small-6.columns
+          -#      = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+          -#  .row
+          -#    .small-6.columns
+          -#      = label_tag 'Job time constraint [min]:', nil, class: 'inline right'
+          -#    .small-6.columns
+          -#      = text_field_tag :time_limit
+          -#
+          -#  .row
+          -#    %ul.inline-list
+          -#      %li= submit_tag 'Submit', class: 'small button'
+          -#      %li= image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
+
+  %section#amazon-credentials
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#amazon-credentials-panel'} Amazon credentials
+      .content{'data-section-content' => ''}
+        %p
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'infrastructure_type', 'amazon'
+            = hidden_field_tag 'credential_type', 'secrets'
+
+            %fieldset
+              %legend= 'Amazon EC2 secrets'
+              .row
+                .small-4.columns
+                  = label_tag 'Access Key Id:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.access_key
+              .row
+                .small-4.columns
+                  = label_tag 'Secret Access Key:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :secret_access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_key
+              .row
+                .small-4.columns
+                  = label_tag 'Store in this session only:', nil, class: 'inline right'
+                .small-8.columns
+                  = check_box_tag :store_secrets_in_session, '1', true, style: 'display: none;'
+              .row
+                = submit_tag 'Submit', class: 'button small'
+                = image_tag 'loading.gif', class: 'amazon-credentials-busy', style: 'display: none;'
+
+              .row
+                .small-12.columns
+                  #amazon-login-ajax-response
+
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'infrastructure_type', 'amazon'
+            = hidden_field_tag 'credential_type', 'ami'
+            = hidden_field_tag 'experiment_id', experiment.id
+
+            %fieldset
+              %legend= 'Amazon EC2 image information'
+              .row
+                .small-4.columns
+                  = label_tag 'Amazon Image Id:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :ami_id, amazon_ami_creds.nil? ? '' : amazon_ami_creds.ami_id
+              .row
+                .small-4.columns
+                  = label_tag 'Virtual machine login:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :ami_login, amazon_ami_creds.nil? ? '' : amazon_ami_creds.login
+              .row
+                .small-4.columns
+                  = label_tag 'Virtual machine password:', nil, class: 'inline right'
+                .small-8.columns
+                  = password_field_tag :ami_password, amazon_ami_creds.nil? ? '' : amazon_ami_creds.password
+              .row
+                .small-4.columns
+                  = label_tag 'Store in this session only:', nil, class: 'inline right'
+                .small-8.columns
+                = check_box_tag :store_ami_in_session, '1', false, style: 'display: none;'
+
+              .row
+                = submit_tag 'Submit', class: 'button small'
+                = image_tag 'loading.gif', class: 'amazon-credentials-busy', style: 'display: none;'
+
+              .row
+                .small-12.columns
+                  #amazon-login-ajax-response
+
+
+  %section#amazon-vms
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#amazon-vms-panel'} Scheduled virtual machines
+      .content{'data-section-content' => ''}
+        %p
+          -#%p{ id: 'plgrid_info' }= @current_states[:plgrid]
+          -#%ul.circle
+          -#  - @simulation_managers[:plgrid].each do |plgrid_job|
+          -#    %li= plgrid_job.to_s
+
+:javascript
+  $(function() {
+    //if(#{ amazon_secrets_creds.nil? } || #{ amazon_ami_creds.nil? }) {
+    //  $('#plgrid-submission-tab form').addClass('disabled');
+    //  $('#plgrid-login-tab').addClass('active');
+    //}
+    //else {
+    //  $('#plgrid-submission-tab').addClass('active');
+    //}
+
+    $("#amazon-credentials form")
+      .bind('ajax:before', function() {
+        $(this).find('.amazon-credentials-busy').show();
+        $('#plgrid-login-ajax-response').html('');
+      })
+      .bind('ajax:success', function(data, status, xhr) {
+        $(this).find('#amazon-login-ajax-response').html('Your credentials have been updated').addClass('alert-box').addClass('success');
+
+      })
+      .bind('ajax:failure', function(xhr, status, error) {
+        $(this).find('#amazon-login-ajax-response').html('An erroc occured').addClass('alert-box').addClass('alert');
+      })
+      .bind('ajax:complete', function() {
+        $(this).find('.amazon-credentials-busy').hide();
+      });
+
+        //$("#plgrid-submission-tab form")
+        //      .bind('ajax:before', function() { $('#plgrid-submission-busy').show(); booster.afterSubmit(); })
+        //      .bind('ajax:success', function(data, response, xhr) { booster.onSuccess(response.msg); })
+        //      .bind('ajax:complete', function() { $('#plgrid-submission-busy').hide(); $('#loading-img').hide(); });
+
+
+    $('p').each(function(index, element) {
+      if($(element).html() == "") {
+        $(element).remove();
+      }
+    });
+  });

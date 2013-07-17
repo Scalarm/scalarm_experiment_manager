@@ -1,3 +1,4 @@
+
 class InfrastructuresController < ApplicationController
 
   def infrastructure_info

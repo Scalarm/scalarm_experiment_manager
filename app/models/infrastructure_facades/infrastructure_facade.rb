@@ -1,5 +1,14 @@
 require 'yaml'
 
+# methods necessary to implement by subclasses
+# start_monitoring() - starting a background job which monitors scheduled jobs/vms etc. and handle their state, e.g. restart if necessary or delete db information
+# default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
+# start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
+# clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
+# get_running_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
+# current_state(user) - returns a string describing summary of current infrastructure state
+# add_credentials(user, params, session) - save credentials to database or session based on request parameters
+
 class InfrastructureFacade
 
   class SpawnProxy
@@ -40,7 +49,8 @@ class InfrastructureFacade
   # TODO should this be taken from a configuration file ?
   def self.get_registered_infrastructures
     {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
+        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
+        amazon: { label: 'Amazon Elastic Compute Cloud', facade: AmazonFacade.new }
     }
   end
 
