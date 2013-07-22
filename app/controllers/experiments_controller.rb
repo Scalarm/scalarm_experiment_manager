@@ -193,6 +193,7 @@ class ExperimentsController < ApplicationController
         @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(current_user)
       end
 
+      @current_user = current_user
       render layout: 'foundation_application', locals: { user: current_user }
     end
 

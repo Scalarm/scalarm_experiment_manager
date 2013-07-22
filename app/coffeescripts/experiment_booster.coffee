@@ -8,7 +8,7 @@ class window.ExperimentBooster
     @loadingElement = $('#loading-img')
     
   initDialog: ->
-    $("##{@dialog_element_id}").dialog({ autoOpen: false, height: 'auto', width: 550, modal: true, resizable: true })
+    $("##{@dialog_element_id}").dialog({ autoOpen: false, height: 'auto', width: 650, modal: true, resizable: true })
     $("##{@accordion_element_id}").accordion( { heightStyle: 'content' } )
     $("##{@dialog_element_id}").css('overflow', 'hidden')
 #    @loadInfrastructureInfo()

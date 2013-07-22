@@ -50,17 +50,14 @@
 
 = render 'general_purpose_dialog'
 
-#revealLayer
 #extension-dialog.reveal-modal
 
 :javascript
   $(function() {
     // handling ajax loading of the Extension dialog
     $('#extensionDialogOpenButton').on('click', function() {
-      $( '#revealLayer' ).empty();
-      $( '#revealLayer' ).load( "#{extension_dialog_experiment_path(@experiment.id)}" );
-      $( '#revealLayer' ).appendTo( '#extension-dialog' );
-      $( '#extension-dialog' ).foundation('reveal', 'open');
+      $('#extension-dialog').load( "#{extension_dialog_experiment_path(@experiment.id)}" );
+      $('#extension-dialog').foundation('reveal', 'open');
       return false;
     });
   });
