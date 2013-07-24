@@ -15,7 +15,7 @@ class InfrastructureFacade
     include Spawn
   end
 
-  def prepare_configuration_for_simulation_manager(sm_uuid, user, experiment_id)
+  def prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id)
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
@@ -27,7 +27,7 @@ class InfrastructureFacade
         experiment_manager_pass: temp_password.password,
 
         experiment_id: experiment_id,
-        user_id: user.id,
+        user_id: user_id,
     }
 
     config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
