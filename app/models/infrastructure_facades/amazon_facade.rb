@@ -129,7 +129,7 @@ class AmazonFacade < InfrastructureFacade
 
     if session.include?(:tmp_store_ami_in_session)
       AmazonAmi.find_all_by_user_id(user_id).each do |amazon_ami|
-        amazon_ami.destroy if amazon_ami.experiment_id == session[:tmp_store_ami_in_session]
+        amazon_ami.destroy if amazon_ami.experiment_id.to_s == session[:tmp_store_ami_in_session].to_s
       end
     end
 
