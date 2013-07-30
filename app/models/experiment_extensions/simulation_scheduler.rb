@@ -47,6 +47,7 @@ module SimulationScheduler
   end
 
   def fetch_instance_from_db
+    Rails.logger.debug("Scheduling_policy is set to #{self.scheduling_policy}")
     begin
       self.send("#{self.scheduling_policy}_scheduling")
     rescue Exception => e
@@ -210,13 +211,32 @@ def naive_partition_based_simulation_hash(db)
     nil
   end
 
-  # TODO FIXME - repair
   def sequential_forward_scheduling
-    monte_carlo_scheduling
+    next_simulation_id = 1
+
+    while next_simulation_id <= experiment_size
+      if simulation_collection.find_one({id: next_simulation_id}).nil?
+        return create_new_simulation(next_simulation_id, value_list, multiply_list)
+      else
+        next_simulation_id += 1
+      end
+    end
+
+    nil
   end
 
   def sequential_backward_scheduling
-    monte_carlo_scheduling
+    next_simulation_id = experiment_size
+
+    while next_simulation_id > 0
+      if simulation_collection.find_one({id: next_simulation_id}).nil?
+        return create_new_simulation(next_simulation_id, value_list, multiply_list)
+      else
+        next_simulation_id -= 1
+      end
+    end
+
+    nil
   end
 
 
