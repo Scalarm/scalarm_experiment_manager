@@ -1,13 +1,17 @@
-#scheduling_policy_dialog{:title=>"Scheduling policy of the experiment"}
-  = form_tag(url_for({:action => :change_scheduling_policy}), :onSubmit => "$('#loading-img').show(); $('#scheduling_policy_dialog').dialog('close')", :remote => true) do
-    = hidden_field_tag :experiment_id, @experiment.experiment_id
-    %div
-      Current scheduling policy of the experiment: 
-      %b#policy_name=  "#{@experiment.scheduling_policy}."
-    %br
-    %div Select new scheduling policy: #{select_scheduling_policy}
-    %br
-    .buttons
-      = submit_tag "Submit"
-      
-= javascript_tag "prepare_policy_dialog()"
+#scheduling_policy_dialog.reveal-modal
+  %h2 Scheduling policy of the experiment
+
+  %p
+    = form_tag(change_scheduling_policy_experiment_path, :onSubmit => "$('#scheduling-busy').show()", remote: true, class: 'custom') do
+      = hidden_field_tag :experiment_id, @experiment.id
+      %div
+        Current scheduling policy of the experiment:
+        %b#policy_name=  "#{@experiment.scheduling_policy}."
+      %div Select new scheduling policy: #{select_scheduling_policy}
+
+      %div
+        = submit_tag 'Submit', class: 'button'
+        = image_tag 'loading.gif', :id => 'scheduling-busy', :style => 'display: none;'
+        #scheduling-ajax-response
+
+  %a.close-reveal-modal &#215;

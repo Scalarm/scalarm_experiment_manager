@@ -25,7 +25,7 @@
             = button_to 'Stop experiment', stop_experiment_path(@experiment.experiment_id),
               class: 'button', :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
           %li= button_to_function 'Booster', "booster.openDialog('#{get_booster_dialog_experiment_path(@experiment.experiment_id)}');", class: 'button'
-          %li= button_to_function 'Scheduling policy', "$('#scheduling_policy_dialog').dialog('open')", class: 'button'
+          %li= button_to_function 'Scheduling policy', "$('#scheduling_policy_dialog').foundation('reveal', 'open'); $('#scheduling-ajax-response').html('');", class: 'button'
         - else
           %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, class: 'button inline', onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
 

@@ -31,7 +31,6 @@ SimulationManager::Application.routes.draw do
   match "experiments/next_configuration/:experiment_id" => "experiments#next_configuration"
   match "experiments/configuration/:experiment_id/:instance_id" => "experiments#configuration"
   match "experiments/set_configuration_done/:experiment_id/:instance_id" => "experiments#set_configuration_done"
-  post "experiments/change_scheduling_policy"
 
   match "experiments/:id/completed_simulations_count/:secs" => "experiments#completed_simulations_count"
 
@@ -58,6 +57,7 @@ SimulationManager::Application.routes.draw do
       get   :intermediate_results
       get   :get_booster_dialog
       get   :extension_dialog
+      post  :change_scheduling_policy
 
       # experiment charts
       post :histogram

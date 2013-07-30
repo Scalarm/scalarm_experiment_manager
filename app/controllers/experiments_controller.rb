@@ -509,10 +509,11 @@ class ExperimentsController < ApplicationController
 
     respond_to do |format|
       format.js {
-        render :inline => "$('#general_purpose_dialog').html('#{msg}');" +
-            "$('#general_purpose_dialog').dialog('open');" +
-            "$('#loading-img').hide();" +
-            "$('#policy_name').html('#{new_scheduling_policy}');"
+        render :inline => "
+          $('#scheduling-busy').hide();
+          $('#scheduling-ajax-response').html('#{msg}');
+          $('#policy_name').html('#{new_scheduling_policy}');
+        "
       }
     end
   end
