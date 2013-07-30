@@ -22,7 +22,7 @@ class InfrastructureFacade
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid)
     # TODO experiment manager address from database
     sm_config = {
-        experiment_manager_address: '149.156.10.250',
+        experiment_manager_address: 'system.scalarm.com',
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
 

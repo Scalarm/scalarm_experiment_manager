@@ -37,7 +37,7 @@ class ApplicationController < ActionController::Base
           flash[:error] = e.to_s
           session[:user] = nil
 
-          redirect_to login_path
+          redirect_to :login
         end
 
       elsif request.env.include?('HTTP_AUTHORIZATION') and request.env['HTTP_AUTHORIZATION'].include?('Basic')
