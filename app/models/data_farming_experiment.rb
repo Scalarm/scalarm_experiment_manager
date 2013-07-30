@@ -382,7 +382,7 @@ class DataFarmingExperiment < MongoActiveRecord
     self.progress_bar_table.drop
     # drop object from relational database
     experiment = Experiment.find_by_id(self.experiment_id)
-    experiment.destroy
+    experiment.destroy if not experiment.nil?
     # self-drop
     @@db['experiments_info'].remove({ experiment_id: self.experiment_id })
     DataFarmingExperiment.destroy({ experiment_id: self.experiment_id })
