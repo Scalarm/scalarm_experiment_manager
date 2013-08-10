@@ -62,6 +62,7 @@ while true
 
   if simulation_input['status'] == 'all_sent'
     puts 'There is no more simulations to run in this experiment'
+
     break if all_sent_threshold <= 0
     all_sent_threshold -= 1
 
@@ -172,6 +173,7 @@ while true
     # upload binary_output if provided
     output_binary_file = "#{simulation_dir}/output.tar.gz"
     if File.exist?(output_binary_file)
+      puts 'Uploading binary output'
       sm_proxy.upload_binary_output(experiment_id, simulation_input['simulation_id'], output_binary_file)
     end
 

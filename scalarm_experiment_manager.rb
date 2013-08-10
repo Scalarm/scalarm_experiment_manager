@@ -60,7 +60,7 @@ class ScalarmExperimentManager
   end
 
   def thin_start_cmd(port)
-    "thin -d -p #{port} -e development -l log/scalarm_#{port}.log --pid #{self.pid_file(port)} start"
+    "thin -d --socket /tmp/scalarm_#{port}.sock -e development -l log/scalarm_#{port}.log --pid #{self.pid_file(port)} start"
   end
 
   def thin_procs_list(port)
@@ -69,14 +69,13 @@ class ScalarmExperimentManager
   end
 
   def download_scenarios_and_code_repository
-    puts "Downloading simulation code and scenarios"
+    puts 'Downloading simulation code and scenarios'
     # deleting any old files
-    `cd public; rm -rf simulation_scenarios; rm repository.tar.gz`
+    #`cd public; rm -rf simulation_scenarios; rm repository.tar.gz`
     # downloading current versions
-    download_file_from_information_service("simulation_scenarios", "scenarios.zip")
-    `cd public; unzip scenarios.zip; rm scenarios.zip; mv scenarios simulation_scenarios`
-
-    download_file_from_information_service("simulation_code", "repository.tar.gz")
+    #download_file_from_information_service("simulation_scenarios", "scenarios.zip")
+    #`cd public; unzip scenarios.zip; rm scenarios.zip; mv scenarios simulation_scenarios`
+    #download_file_from_information_service("simulation_code", "repository.tar.gz")
   end
 
   private

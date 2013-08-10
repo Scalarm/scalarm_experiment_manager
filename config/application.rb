@@ -64,7 +64,10 @@ module SimulationManager
     config.plgrid_monitoring_thread_activated = false
     #puts("server_port : #{ENV["EUSAS_SERVER_PORT"]}")
     config.manager_id = nil
-    File.open("tmp/manager_#{ENV["EUSAS_SERVER_PORT"]}.txt"){|f| config.manager_id = f.readline.to_i}
+    if File.exists?("tmp/manager_#{ENV["EUSAS_SERVER_PORT"]}.txt")
+      File.open("tmp/manager_#{ENV["EUSAS_SERVER_PORT"]}.txt"){|f| config.manager_id = f.readline.to_i}
+    end
+
     config.experiment_seeks = {}
     #puts("Manager ID: #{config.manager_id}")
   end
