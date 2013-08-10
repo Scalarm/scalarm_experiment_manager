@@ -1,0 +1,43 @@
+#download-dialog.reveal-modal
+  %h2 Experiment results dialog
+  = form_tag extend_input_values_experiment_path, remote: true, class: 'custom', id: 'experiment-extension-form', onsubmit: '$(\"#expand_dialog_busy\").show()' do
+    = select_tag 'param_name', options_for_select(@parameters.map{|parameter_uid, parameter_info| [ parameter_info[:label], parameter_uid ] }), class: 'expand'
+
+    - counter = 0
+    - @parameters.each do |parameter_uid, parameter_info|
+      - counter += 1
+      .parameter-values{ 'parameter_uid' => parameter_uid, 'style' => "display: #{counter == 1 ? 'display' : 'none'};" }
+        %h3.subheader= parameter_info[:label]
+        %h4.subheader= "Parametrization: #{parameter_info[:parametrizationType]}"
+        %h4.subheader= "Included in DoE: #{parameter_info[:in_doe]}"
+        %h4.subheader Values
+        %ul.circle
+          - parameter_info[:values].each do |value|
+            %li= value
+    %h4.subheader Expand the input parameter space:
+    -#.row
+    -#  = content_tag(:div, content_tag(:label, 'Priority:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, select_tag('priority', options_for_select([['Standard', 40], ['High', 20], ['Low', 60]])), class: 'small-8 columns')
+    .row
+      = content_tag(:div, content_tag(:label, 'Minimum:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, text_field_tag('range_min'), class: 'small-8 columns')
+    .row
+      = content_tag(:div, content_tag(:label, 'Maximum:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, text_field_tag('range_max'), class: 'small-8 columns')
+    .row
+      = content_tag(:div, content_tag(:label, 'Step:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, text_field_tag('range_step'), class: 'small-8 columns')
+    .row
+      = content_tag(:div, submit_tag('Submit', class: 'button') + image_tag('loading.gif', id: 'expand_dialog_busy', size: '20x20', style: 'float: left; display: none;') )
+
+  %a.close-reveal-modal &#215;
+
+  :javascript
+    $(function() {
+      $('#experiment-extension-form #param_name').on('change', function() {
+        $('#experiment-extension-form [parameter_uid]').hide();
+        $("#experiment-extension-form [parameter_uid='" + $('#experiment-extension-form #param_name').val() + "']").show();
+      });
+
+      $('#experiment-extension-form [type=submit]').on('click', function() {
+        $( '#extension-dialog' ).foundation('reveal', 'close');
+      });
+
+      $('body').foundation();
+    });

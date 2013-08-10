@@ -1,0 +1,21 @@
+%h2 Experiment results dialog
+
+%p
+  %ul
+    - @simulation_download_list.each do |simulation_doc|
+      %li
+        <b>Id</b>:
+        = simulation_doc['id']
+        , <br/><b>Input:</b>
+        = simulation_doc['input']
+        , <br/><b>Output:</b>
+        = simulation_doc['result']
+        , <br/><b>Download link:</b>
+        = link_to('Click to download', simulation_doc['download_link'])
+
+
+%a.close-reveal-modal &#215;
+
+:javascript
+  $(function() {
+  });

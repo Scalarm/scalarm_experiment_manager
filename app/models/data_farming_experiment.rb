@@ -366,10 +366,10 @@ class DataFarmingExperiment < MongoActiveRecord
     sm_proxy = StorageManagerProxy.new(config)
 
     begin
-      1.upto(self.experiment_size).each do |simulation_id|
-        success = sm_proxy.delete_binary_output(self.experiment_id, simulation_id)
-        Rails.logger.debug("Deletion of simulation #{simulation_id} for experiment #{self.experiment_id} completed successfully ? #{success}")
-      end
+      #1.upto(self.experiment_size).each do |simulation_id|
+        success = sm_proxy.delete_experiment_output(self.experiment_id, self.experiment_size)
+        Rails.logger.debug("Deletion of experiment output #{experiment_size} completed successfully ? #{success}")
+      #end
     rescue Exception => e
       Rails.logger.debug("Data farming experiment destroy error - #{e}")
     end

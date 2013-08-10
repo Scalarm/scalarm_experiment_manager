@@ -169,7 +169,7 @@ class ExperimentInstance
     begin
       ExperimentInstanceDb.default_instance.find(experiment_id, query, options).to_a
     rescue Exception => e
-      Rails.logger.debug("Error in 'count_with_query' --- #{e}")
+      Rails.logger.debug("Error in 'raw_find_by_query' --- #{e}")
       []
     end  
   end

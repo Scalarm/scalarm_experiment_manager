@@ -30,9 +30,9 @@ class InfrastructureFacade
         user_id: user_id,
     }
 
-    config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
+    #config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
     # adding information about storage manager from a config file
-    sm_config['storage_manager'] = config['storage_manager']
+    sm_config['storage_manager'] = { address: 'system.scalarm.com:20000' }
 
     IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
     # zip all files

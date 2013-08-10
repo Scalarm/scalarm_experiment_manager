@@ -29,25 +29,24 @@
         - else
           %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, class: 'button inline', onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
 
-        -# TODO repair download experiment results button
-        -#= button_to "Download results", { :action => :download_results, :simulation_id => @experiment.id },
-        -#  :class => "nice_button", :id => "get_results_button",
-        -#  :style => "display: #{if @done == @all and @all != 0 then "" else "none" end};"
+        %li
+          %a#download-dialog-buttton.button{ 'href' => "https://system.scalarm.com:20000/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}" }
+            Download results
+
         %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.experiment_id), class: 'button', method: :get
         %li= button_to_function 'On-line progress information',
           "$('#progress_information').slideToggle(); $('html, body').animate({ scrollTop: $('#progress_information').offset().top }, 1000);",
           class: 'button'
-    .row
-      %ul.inline-list
         - if @experiment.is_running
           %li
             %a#extensionDialogOpenButton.button{ 'href' => '#' } Experiment extension
-        %li= image_tag 'loading.gif', :id => 'loading-img', :style => 'display: none;'
-      
+          %li= image_tag 'loading.gif', :id => 'loading-img', :style => 'display: none;'
+
     = render 'scheduling_policy_dialog'
   = render 'monitoring_table'
 = render 'general_purpose_dialog'
 
+#download-dialog.reveal-modal
 #extension-dialog.reveal-modal
 
 :javascript
