@@ -20,19 +20,16 @@ class InfrastructureFacade
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid)
-    # TODO experiment manager address from database
+
+    config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
     sm_config = {
-        experiment_manager_address: 'system.scalarm.com',
+        information_service_url: config['information_service_url'],
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
 
         experiment_id: experiment_id,
         user_id: user_id,
     }
-
-    #config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
-    # adding information about storage manager from a config file
-    sm_config['storage_manager'] = { address: 'system.scalarm.com:20000' }
 
     IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
     # zip all files

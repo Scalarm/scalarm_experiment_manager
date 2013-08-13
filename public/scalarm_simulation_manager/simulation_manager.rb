@@ -6,6 +6,7 @@ require 'fileutils'
 
 require_relative 'experiment_manager'
 require_relative 'storage_manager'
+require_relative 'information_service'
 
 class IO
   def self.write(filename, text) 
@@ -18,8 +19,15 @@ end
 
 # 1. load config file and create proxies
 config = JSON.parse(IO.read('config.json'))
-em_proxy = ExperimentManager.new(config)
-sm_proxy = StorageManager.new(config)
+information_service = InformationService.new(config)
+
+em_url = information_service.get_experiment_managers.sample
+raise 'No Experiment manager URL available' if em_url.nil?
+em_proxy = ExperimentManager.new(em_url, config)
+
+sm_url = information_service.get_storage_managers.sample
+raise 'No Storage manager URL available' if sm_url.nil?
+sm_proxy = StorageManager.new(sm_url, config)
 
 # 2. check if an experiment id is specified and if there is no experiment id get one
 #if not config.has_key?('experiment_id')

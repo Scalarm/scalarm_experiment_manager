@@ -29,6 +29,7 @@ module SimulationScheduler
 
     id_list = []
     next_simulation_id = Rails.configuration.manager_id
+    next_simulation_id = 1 if next_simulation_id.nil?
 
     while next_simulation_id <= self.experiment_size
       id_list << next_simulation_id

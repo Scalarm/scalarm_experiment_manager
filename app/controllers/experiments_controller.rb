@@ -268,8 +268,9 @@ class ExperimentsController < ApplicationController
       experiment = DataFarmingExperiment.find_by_id(params[:id])
       raise 'Experiment is not running any more' if not experiment.is_running
 
+      Rails.logger.debug("Before getting instance")
       simulation_to_send = experiment.get_next_instance
-      #Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
+      Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
         simulation_to_send.put_in_cache
         experiment.progress_bar_update(simulation_to_send.id.to_i, 'sent')

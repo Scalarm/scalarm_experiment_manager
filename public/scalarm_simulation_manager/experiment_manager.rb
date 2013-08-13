@@ -5,8 +5,8 @@ require 'net/https'
 
 class ExperimentManager
 
-  def initialize(config)
-    @experiment_manager_address = config['experiment_manager_address']
+  def initialize(url, config)
+    @experiment_manager_address = url
     @user = config['experiment_manager_user']
     @pass = config['experiment_manager_pass']
   end
