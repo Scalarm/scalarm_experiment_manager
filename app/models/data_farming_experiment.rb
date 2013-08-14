@@ -355,13 +355,15 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def destroy
+    # TODO TMP due to problem with routing in PLGCloud
+    information_service = InformationService.new({'information_service_url' => 'localhost:11300'})
+    @storage_manager_url = information_service.get_storage_managers.sample
     # destroy all binary files stored for this experiments
     sm_uuid = SecureRandom.uuid
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid)
-    config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
-    #Rails.logger.debug("Config for storage manager: #{config.inspect}")
-    config['storage_manager']['user'] = sm_uuid
-    config['storage_manager']['pass'] = temp_password.password
+    # TODO TMP due to problem with routing in PLGCloud
+    config = {'storage_manager' => { 'address' => 'localhost:20000', 'user' => sm_uuid, 'pass' => temp_password.password} }
+    Rails.logger.debug("Destroy config = #{config}")
 
     sm_proxy = StorageManagerProxy.new(config)
 

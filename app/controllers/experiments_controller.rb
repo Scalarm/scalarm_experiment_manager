@@ -8,6 +8,8 @@ require 'json'
 
 require 'zip/zip'
 
+require "#{Rails.root}/public/scalarm_simulation_manager/information_service"
+
 
 class ExperimentsController < ApplicationController
   include ActionView::Helpers::JavaScriptHelper
@@ -138,7 +140,14 @@ class ExperimentsController < ApplicationController
 
   # finds currently running DF experiment (if any) and displays its progress bar
   def monitor
+    #scalarm_config = YAML.load(File.open(File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')))
+    #Rails.logger.debug("Scalarm config: #{scalarm_config}")
     @experiment = DataFarmingExperiment.find_by_id(params[:id])
+
+    #Rails.logger.debug("Storage manager URL: #{scalarm_config['information_service_url']}")
+    # TODO TMP due to problem with routing in PLGCloud
+    information_service = InformationService.new({'information_service_url' => 'localhost:11300'})
+    @storage_manager_url = information_service.get_storage_managers.sample
 
     @error_flag = false
 

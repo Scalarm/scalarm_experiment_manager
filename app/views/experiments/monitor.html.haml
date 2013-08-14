@@ -30,7 +30,7 @@
           %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, class: 'button inline', onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
 
         %li
-          %a#download-dialog-buttton.button{ 'href' => "https://system.scalarm.com:20000/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}" }
+          %a#download-dialog-buttton.button{ 'href' => "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}" }
             Download results
 
         %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.experiment_id), class: 'button', method: :get

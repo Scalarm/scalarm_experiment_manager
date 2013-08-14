@@ -32,6 +32,7 @@ class StorageManagerProxy
 
   def delete_experiment_output(experiment_id, experiment_size)
     uri = URI("https://#{@config['address']}/experiment/#{experiment_id}/from/1/to/#{experiment_size}")
+    Rails.logger.debug("using URL: #{uri} to delete experiment output")
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
