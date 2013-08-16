@@ -10,7 +10,7 @@
 
         %ul.right
           %li
-            = link_to content_tag(:span, 'Account', 'data-tooltip' => '', class: 'has-tip tip-bottom', style: 'color: white',
+            = link_to content_tag(:span, 'Account', 'data-tooltip' => '', class: 'has-tip tip-bottom', style: 'color: #3383BB',
               title: "You are log in as '#{@current_user.login}'"), user_controller_account_path
           %li
             = link_to 'Logout', user_controller_logout_path

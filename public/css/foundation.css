@@ -2713,7 +2713,7 @@ form.custom {
     width: 100%;
     height: auto;
     display: block;
-    background: #222222;
+    background: url(../images/bg03.jpg) repeat;
     font-size: 16px;
     margin: 0; }
   .top-bar-section .divider,
@@ -2726,10 +2726,10 @@ form.custom {
   .top-bar-section ul li > a {
     display: block;
     width: 100%;
-    color: white;
+    color: #3383BB;
     padding: 12px 0 12px 0;
     padding-left: 15px;
-    font-size: 0.8125em;
+    font-size: 0.9125em;
     font-weight: bold;
     background: #222222; }
     .top-bar-section ul li > a.hover {
@@ -2811,7 +2811,7 @@ form.custom {
 
 @media only screen and (min-width: 58.75em) {
   .top-bar {
-    background: #111111;
+    background: url(../images/bg03.jpg) repeat;
     *zoom: 1;
     overflow: visible; }
     .top-bar:before, .top-bar:after {
@@ -2856,7 +2856,7 @@ form.custom {
     .top-bar-section li a:not(.button) {
       padding: 0 15px;
       line-height: 45px;
-      background: #111111; }
+      background: url(../images/bg03.jpg) repeat; }
       .top-bar-section li a:not(.button).hover {
         background: black; }
     .top-bar-section .has-dropdown > a {
