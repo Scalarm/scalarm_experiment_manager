@@ -16,7 +16,7 @@ class window.ExperimentMonitor
 
   update_statistics: (statistics) ->
     $("#exp_all_counter").html(statistics.all.toString().with_delimeters())
-    $("#exp_generated_counter").html(statistics.generated.toString().with_delimeters())
+#    $("#exp_generated_counter").html(statistics.generated.toString().with_delimeters())
     $("#exp_sent_counter").html(statistics.sent.toString().with_delimeters())
     $("#exp_done_counter").html(statistics.done_num.toString().with_delimeters())
     $("#exp_done_percentage_counter").html(statistics.done_percentage)
@@ -31,7 +31,11 @@ class window.ExperimentMonitor
 
     for i in [0..bar_colors.length]
       context.fillStyle = if(bar_colors[i] == 0) then "#BDBDBD" else "rgb(0, #{bar_colors[i]}, 0)"
-      context.fillRect(part_width * i, 10, part_width*0.95, canvas.height - 10)
+
+      if i == bar_colors.length - 1
+        context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
+      else
+        context.fillRect(part_width * i, 10, part_width*0.95, canvas.height - 10)
 
     if(statistics.avg_simulation_time != undefined)
       $("#ei_perform_time_avg").html(statistics.avg_simulation_time)
@@ -47,10 +51,9 @@ class window.ExperimentMonitor
   generate_html: (parent_id) ->
     elements = [
       "ALL: ", $('<span>').attr('id', 'exp_all_counter').text("0"),
-      " - GENERATED: ", $('<span>').attr('id', 'exp_generated_counter').text("0"),
-      " - DONE: ", $('<span>').attr('id', 'exp_done_counter').text("0"),
-      " ( ", $('<span>').attr('id', 'exp_done_percentage_counter').text("0"), " % COMPLETED )",
-      " - SENT: ", $('<span>').attr('id', 'exp_sent_counter').text("0"),
+      "<br/>SENT: ", $('<span>').attr('id', 'exp_sent_counter').text("0"),
+      "<br/>DONE: ", $('<span>').attr('id', 'exp_done_counter').text("0"),
+      " ( ", $('<span>').attr('id', 'exp_done_percentage_counter').text("0"), " % COMPLETED )"
     ]
 
     stats_par = $('<p>')
@@ -61,8 +64,8 @@ class window.ExperimentMonitor
     $("##{parent_id}").append(stats_par)
       .append($('<p>').attr('id', 'p_ei_perform_time_avg').append("Average time of performing a single experiment instance: ")
         .append($('<span>').attr('id', 'ei_perform_time_avg')).hide())
-      .append($('<p>').attr('id', 'p_predicted_finish_time').append("Predicted time of finishing the experiment: ")
-        .append($('<span>').attr('id', 'predicted_finish_time')).hide())
+#      .append($('<p>').attr('id', 'p_predicted_finish_time').append("Predicted time of finishing the experiment: ")
+#        .append($('<span>').attr('id', 'predicted_finish_time')).hide())
 
     $("#experiment_progress_bar").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
 
