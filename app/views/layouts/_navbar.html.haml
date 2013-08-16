@@ -1,12 +1,12 @@
 - unless @current_user.nil?
-  .fixed(style='height=30px')
+  .fixed
     %nav.top-bar
       %section.top-bar-section
         %ul.left
-          %li.name
-            %h1= link_to('Experiments', experiments_path)
-          %li.name
-            %h1= link_to('Simulation scenarios', simulations_path)
+          %li
+            = link_to('Experiments', experiments_path)
+          %li
+            = link_to('Simulation scenarios', simulations_path)
 
         %ul.right
           %li

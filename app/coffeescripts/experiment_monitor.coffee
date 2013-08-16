@@ -50,19 +50,33 @@ class window.ExperimentMonitor
 
   generate_html: (parent_id) ->
     elements = [
-      "ALL: ", $('<span>').attr('id', 'exp_all_counter').text("0"),
-      "<br/>SENT: ", $('<span>').attr('id', 'exp_sent_counter').text("0"),
-      "<br/>DONE: ", $('<span>').attr('id', 'exp_done_counter').text("0"),
+      "<strong>ALL: </strong>", $('<span>').attr('id', 'exp_all_counter').text("0"),
+      "<strong>RUNNING: </strong>", $('<span>').attr('id', 'exp_sent_counter').text("0"),
+      "<strong>DONE: </strong>", $('<span>').attr('id', 'exp_done_counter').text("0"),
       " ( ", $('<span>').attr('id', 'exp_done_percentage_counter').text("0"), " % COMPLETED )"
     ]
 
-    stats_par = $('<p>')
+    $("##{parent_id}").css('font-size', '15px').append(
+      $('<div></div>').addClass('row').css('margin-bottom', '10px').append(
+        $('<div></div>').addClass('small-1 columns').append(elements[0])
+      ).append(
+        $('<div></div>').addClass('small-11 columns').append(elements[1])
+      )
+    ).append(
+      $('<div></div>').addClass('row').css('margin-bottom', '10px').append(
+        $('<div></div>').addClass('small-1 columns').append(elements[2])
+      ).append(
+        $('<div></div>').addClass('small-11 columns').append(elements[3])
+      )
+    ).append(
+      $('<div></div>').addClass('row').append(
+        $('<div></div>').addClass('small-1 columns').append(elements[4])
+      ).append(
+        $('<div></div>').addClass('small-11 columns').append(elements[5]).append(elements[6]).append(elements[7]).append(elements[8])
+      )
+    )
 
-    for element in elements
-      stats_par.append(element)
-
-    $("##{parent_id}").append(stats_par)
-      .append($('<p>').attr('id', 'p_ei_perform_time_avg').append("Average time of performing a single experiment instance: ")
+    $("##{parent_id}").append($('<p>').attr('id', 'p_ei_perform_time_avg').append("Average time of performing a single experiment instance: ")
         .append($('<span>').attr('id', 'ei_perform_time_avg')).hide())
 #      .append($('<p>').attr('id', 'p_predicted_finish_time').append("Predicted time of finishing the experiment: ")
 #        .append($('<span>').attr('id', 'predicted_finish_time')).hide())
