@@ -1,0 +1,16 @@
+- unless @current_user.nil?
+  .fixed(style='height=30px')
+    %nav.top-bar
+      %section.top-bar-section
+        %ul.left
+          %li.name
+            %h1= link_to('Experiments', experiments_path)
+          %li.name
+            %h1= link_to('Simulation scenarios', simulations_path)
+
+        %ul.right
+          %li
+            = link_to content_tag(:span, 'Account', 'data-tooltip' => '', class: 'has-tip tip-bottom', style: 'color: white',
+              title: "You are log in as '#{@current_user.login}'"), user_controller_account_path
+          %li
+            = link_to 'Logout', user_controller_logout_path

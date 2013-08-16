@@ -14,32 +14,29 @@
   %article
     %h3 Scenario name
     = @experiment.name
+
   = render 'monitoring_section'
   
   %article
     %h3 Actions
-    .row
-      %ul.inline-list
-        - if @experiment.is_running
-          %li
-            = button_to 'Stop experiment', stop_experiment_path(@experiment.experiment_id),
-              class: 'button', :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
-          %li= button_to_function 'Booster', "booster.openDialog('#{get_booster_dialog_experiment_path(@experiment.experiment_id)}');", class: 'button'
-          %li= button_to_function 'Scheduling policy', "$('#scheduling_policy_dialog').foundation('reveal', 'open'); $('#scheduling-ajax-response').html('');", class: 'button'
-        - else
-          %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, class: 'button inline', onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
 
-        %li
-          %a#download-dialog-buttton.button{ 'href' => "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}" }
-            Download results
-
-        %li= button_to 'Generated configurations', file_with_configurations_experiment_path(@experiment.experiment_id), class: 'button', method: :get
-        %li= button_to_function 'On-line progress information',
-          "$('#progress_information').slideToggle(); $('html, body').animate({ scrollTop: $('#progress_information').offset().top }, 1000);",
-          class: 'button'
-        - if @experiment.is_running
+    %nav.top-bar
+      %section.top-bar-section
+        %ul
+          - if @experiment.is_running
+            %li
+              = link_to 'Stop experiment', stop_experiment_path(@experiment.experiment_id), :onClick => "$('#loading-img').show(); return confirm('Are you sure?')"
+            %li
+              %a#extensionDialogOpenButton{ 'href' => '#' } Extend
+            %li= link_to_function 'Boost', "booster.openDialog('#{get_booster_dialog_experiment_path(@experiment.experiment_id)}');"
+            %li= link_to_function 'Set scheduling policy', "$('#scheduling_policy_dialog').foundation('reveal', 'open'); $('#scheduling-ajax-response').html('');"
+          - else
+            %li= button_to('Destroy', experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')")
           %li
-            %a#extensionDialogOpenButton.button{ 'href' => '#' } Experiment extension
+            %a#download-dialog-buttton{ 'href' => "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}" }
+              Download results
+          %li= link_to 'Get configurations', file_with_configurations_experiment_path(@experiment.experiment_id), method: :get
+          %li= link_to_function 'Progress information', "$('#progress_information').slideToggle(); $('html, body').animate({ scrollTop: $('#progress_information').offset().top }, 1000);"
           %li= image_tag 'loading.gif', :id => 'loading-img', :style => 'display: none;'
 
     = render 'scheduling_policy_dialog'

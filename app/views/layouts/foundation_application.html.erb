@@ -22,28 +22,15 @@
 </head>
 
 <body>
+
+<%= render 'layouts/navbar' %>
+
 <div id="wrapper">
-
-  <div class="row navigation">
-    <% if session[:user] %>
-        <%= link_to 'Logout', user_controller_logout_path, class: 'button' %>
-        <%= link_to 'Account', user_controller_account_path, class: 'button' %>
-    <% end %>
-
-    <% unless @scalarm_user.nil? %>
-        <span class="radius secondary label right">You are log in as '<%= @scalarm_user.login %>'</span>
-    <% end %>
-  </div>
-
   <header>
     <h1 id="site_title">Scalarm Experiment Manager</h1>
 
-    <a href="http://www.cyfronet.pl">
-      <%= image_tag "cyfronet_logo.png", :size => "170x80", :style => "float: right;" %>
-    </a>
-    <a href="http://www.eda.europa.eu">
-      <%= image_tag "eda_logo.png", :height => "80" %>
-    </a>
+    <%= link_to image_tag('cyfronet_logo.png', style: 'float: right;'), 'http://www.cyfronet.pl' %>
+    <%= link_to image_tag('eda_logo.png'), 'http://www.eda.europa.eu' %>
   </header>
 
   <div class="clearall"></div>
