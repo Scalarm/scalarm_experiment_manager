@@ -69,15 +69,19 @@ class window.ExperimentMonitor
         $('<div></div>').addClass('small-11 columns').append(elements[3])
       )
     ).append(
-      $('<div></div>').addClass('row').append(
+      $('<div></div>').addClass('row').css('margin-bottom', '10px').append(
         $('<div></div>').addClass('small-1 columns').append(elements[4])
       ).append(
         $('<div></div>').addClass('small-11 columns').append(elements[5]).append(elements[6]).append(elements[7]).append(elements[8])
       )
     )
-
-    $("##{parent_id}").append($('<p>').attr('id', 'p_ei_perform_time_avg').append("Average time of performing a single experiment instance: ")
-        .append($('<span>').attr('id', 'ei_perform_time_avg')).hide())
+#    .append(
+#      $('<div></div>').addClass('row').append(
+#        $('<div></div>').addClass('small-6 columns').append($('<strong>').attr('id', 'p_ei_perform_time_avg').append("Average time of performing a single experiment instance: ").hide())
+#      ).append(
+#        $('<div></div>').addClass('small-6 columns').append($('<span>').attr('id', 'ei_perform_time_avg').hide())
+#      )
+#    )
 #      .append($('<p>').attr('id', 'p_predicted_finish_time').append("Predicted time of finishing the experiment: ")
 #        .append($('<span>').attr('id', 'predicted_finish_time')).hide())
 

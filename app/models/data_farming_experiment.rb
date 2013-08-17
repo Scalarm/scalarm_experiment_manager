@@ -227,7 +227,7 @@ class DataFarmingExperiment < MongoActiveRecord
   def create_result_csv_for(moe_name)
 
     CSV.generate do |csv|
-      csv << self.labels.split(',') + [ moe_name ]
+      csv << self.parameters.flatten + [ moe_name ]
 
       ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
         next if not simulation_doc['result'].has_key?(moe_name)
@@ -343,9 +343,9 @@ class DataFarmingExperiment < MongoActiveRecord
     moes = self.moe_names
 
     CSV.generate do |csv|
-      csv << self.labels.split(',') + moes
+      csv << self.parameters.flatten + moes
 
-      ExperimentInstance.raw_find_by_query(self.experiment_id, { is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
+      self.find_simulation_docs_by({ is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
         values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
         moe_values = moes.reduce([]){ |tab, moe_name| tab << simulation_doc['result'][moe_name] || '' }
 
@@ -383,8 +383,8 @@ class DataFarmingExperiment < MongoActiveRecord
     # drop progress bar object
     self.progress_bar_table.drop
     # drop object from relational database
-    experiment = Experiment.find_by_id(self.experiment_id)
-    experiment.destroy if not experiment.nil?
+    #experiment = Experiment.find_by_id(self.experiment_id)
+    #experiment.destroy if not experiment.nil?
     # self-drop
     @@db['experiments_info'].remove({ experiment_id: self.experiment_id })
     DataFarmingExperiment.destroy({ experiment_id: self.experiment_id })

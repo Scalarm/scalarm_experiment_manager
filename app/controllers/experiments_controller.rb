@@ -52,17 +52,17 @@ class ExperimentsController < ApplicationController
     end
 
     # create the old fashion experiment object
-    @experiment = Experiment.new(:is_running => true,
-                                 :instance_index => 0,
-                                 :run_counter => 1,
-                                 :time_constraint_in_sec => 60,
-                                 :time_constraint_in_iter => 100,
-                                 :experiment_name => @simulation.name,
-                                 :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(','))
+    #@experiment = Experiment.new(:is_running => true,
+    #                             :instance_index => 0,
+    #                             :run_counter => 1,
+    #                             :time_constraint_in_sec => 60,
+    #                             :time_constraint_in_iter => 100,
+    #                             :experiment_name => @simulation.name,
+    #                             :parametrization => @scenario_parametrization.map { |k, v| "#{k}=#{v}" }.join(','))
 
-    @experiment.save_and_cache
+    #@experiment.save_and_cache
     # create the new type of experiment object
-    data_farming_experiment = DataFarmingExperiment.new({'experiment_id' => @experiment.id,
+    data_farming_experiment = DataFarmingExperiment.new({#'experiment_id' => @experiment.id,
                                                          'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
                                                          'name' => @simulation.name,
@@ -78,13 +78,14 @@ class ExperimentsController < ApplicationController
     data_farming_experiment.labels = data_farming_experiment.parameters.flatten.join(',')
 
     data_farming_experiment.save
+    data_farming_experiment.experiment_id = data_farming_experiment.id
     # rewrite all necessary parameters
-    @experiment.parameters = data_farming_experiment.parametrization_values
-    @experiment.arguments = data_farming_experiment.parametrization_values
-    @experiment.doe_groups = ''
-    @experiment.experiment_size = data_farming_experiment.experiment_size
-    @experiment.is_running = true
-    @experiment.start_at = Time.now
+    #@experiment.parameters = data_farming_experiment.parametrization_values
+    #@experiment.arguments = data_farming_experiment.parametrization_values
+    #@experiment.doe_groups = ''
+    #@experiment.experiment_size = data_farming_experiment.experiment_size
+    #@experiment.is_running = true
+    #@experiment.start_at = Time.now
     # create progress bar
     data_farming_experiment.insert_initial_bar
     data_farming_experiment.create_simulation_table
@@ -94,7 +95,7 @@ class ExperimentsController < ApplicationController
     #value_list = data_farming_experiment.value_list
     #multiply_list = data_farming_experiment.multiply_list
     #ExperimentInstanceDb.default_instance.store_experiment_info(@experiment, labels, value_list, multiply_list)
-    @experiment.save_and_cache
+    #@experiment.save_and_cache
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
       computing_power = JSON.parse(params[:computing_power])

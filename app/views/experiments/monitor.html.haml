@@ -31,7 +31,7 @@
           - else
             %li= button_to 'Destroy', experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: 'button'
           %li
-            = button_to 'Download results', "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}", id: 'download-dialog-buttton', class: 'button'
+            = button_to 'Download results', "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}", id: 'download-dialog-buttton', class: 'button', method: :get
 
           %li= button_to 'Get configurations', file_with_configurations_experiment_path(@experiment.id), method: :get, class: 'button'
           %li= button_to_function 'Progress information', "$('#progress_information').slideToggle(); $('html, body').animate({ scrollTop: $('#progress_information').offset().top }, 1000);", class: 'button'

@@ -23,12 +23,11 @@ class InfrastructureFacade
 
     config = YAML::load_file File.join(Rails.root, 'config', 'scalarm_experiment_manager.yml')
     sm_config = {
+        experiment_id: experiment_id,
+        user_id: user_id,
         information_service_url: config['information_service_url'],
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
-
-        experiment_id: experiment_id,
-        user_id: user_id,
     }
 
     IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)

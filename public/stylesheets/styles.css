@@ -445,8 +445,7 @@ select {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     padding: 20px;
-    border-style: solid;
-    border-width: medium;
+    border: medium solid;
 }
 
 #histogram_analysis_link {
@@ -628,7 +627,7 @@ select {
 
 .layered_window img.close_button {
     position: absolute;
-    top: 10px;
+    top: 30px;
     right: 10px;
 
     width: 48px;
