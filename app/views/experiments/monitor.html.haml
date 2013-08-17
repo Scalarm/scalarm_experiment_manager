@@ -26,8 +26,8 @@
           - if @experiment.is_running
             %li= button_to 'Stop experiment', stop_experiment_path(@experiment.id), :onClick => "return confirm('Are you sure?')", class: 'button'
             %li= button_to 'Extend', '#', id: 'extensionDialogOpenButton', class: 'button'
-            %li= button_to_function 'Boost', "booster.openDialog('#{get_booster_dialog_experiment_path(@experiment.experiment_id)}');", class: 'button'
-            %li= button_to_function 'Set scheduling policy', "$('#scheduling_policy_dialog').foundation('reveal', 'open'); $('#scheduling-ajax-response').html('');", class: 'button'
+            %li= button_to_function 'Boost', "booster.openDialog('#{get_booster_dialog_experiment_path(@experiment.id)}');", class: 'button'
+            %li= button_to_function 'Set scheduling', "$('#scheduling_policy_dialog').foundation('reveal', 'open'); $('#scheduling-ajax-response').html('');", class: 'button'
           - else
             %li= button_to 'Destroy', experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: 'button'
           %li
