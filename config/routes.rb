@@ -32,8 +32,6 @@ SimulationManager::Application.routes.draw do
   match "experiments/configuration/:experiment_id/:instance_id" => "experiments#configuration"
   match "experiments/set_configuration_done/:experiment_id/:instance_id" => "experiments#set_configuration_done"
 
-  match "experiments/:id/completed_simulations_count/:secs" => "experiments#completed_simulations_count"
-
   # user controller
   post "user_controller/account"
   get "user_controller/account"
@@ -69,6 +67,7 @@ SimulationManager::Application.routes.draw do
       get :running_simulations_table
       get :completed_simulations_table
       get :experiment_results_table
+      get :completed_simulations_count
     end
 
     resources :simulations do

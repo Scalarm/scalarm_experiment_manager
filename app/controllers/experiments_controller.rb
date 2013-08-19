@@ -79,6 +79,7 @@ class ExperimentsController < ApplicationController
 
     data_farming_experiment.save
     data_farming_experiment.experiment_id = data_farming_experiment.id
+    data_farming_experiment.save
     # rewrite all necessary parameters
     #@experiment.parameters = data_farming_experiment.parametrization_values
     #@experiment.arguments = data_farming_experiment.parametrization_values

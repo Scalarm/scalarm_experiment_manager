@@ -109,7 +109,7 @@ class window.ExperimentSpeedometer
   update_speed: ->
     speedometer = this
 
-    $.getJSON "/experiments/#{@experiment_id}/completed_simulations_count/#{@interval}", (resp_data) ->
+    $.getJSON "/experiments/#{@experiment_id}/completed_simulations_count?secs=#{@interval}", (resp_data) ->
       new_val = resp_data.count
 
       ymax = speedometer.chart.yAxis[0].max

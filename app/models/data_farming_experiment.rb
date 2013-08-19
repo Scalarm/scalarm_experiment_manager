@@ -45,12 +45,6 @@ class DataFarmingExperiment < MongoActiveRecord
     Simulation.find_by_id self.simulation_id
   end
 
-  # NOT USED ANY MORE
-  ## USE WITH CAUTION !!!
-  #def old_fashion_experiment
-  #  Experiment.find_by_id(self.experiment_id)
-  #end
-
   def save_and_cache
     #Rails.cache.write("data_farming_experiment_#{self._id}", self, :expires_in => 600.seconds)
     self.save
@@ -67,17 +61,6 @@ class DataFarmingExperiment < MongoActiveRecord
 
   def argument_names
     parameters.flatten.join(',')
-    #params = []
-    #
-    #self.experiment_input.each do |entity_group|
-    #  entity_group['entities'].each do |entity|
-    #    entity['parameters'].each do |parameter|
-    #        params << parameter_uid(entity_group, entity, parameter)
-    #    end
-    #  end
-    #end
-    #
-    #params.join(',')
   end
 
   def range_arguments
