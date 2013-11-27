@@ -1,0 +1,47 @@
+%h2
+  Simulation
+  = @simulation['id']
+%a.close-reveal-modal &#215;
+
+.row
+  %b
+    Status:
+  - if @simulation['is_done']
+    completed
+  - elsif @simulation['to_sent']
+    not sent
+  - else
+    running
+
+- if not @simulation['to_sent']
+  .row
+    %b
+      Started at:
+    = @simulation['sent_at']
+
+- if @simulation['is_done']
+  .row
+    %b
+      Completed at:
+    = @simulation['done_at']
+
+.row
+  %h4
+    Input:
+  %ul
+    - @simulation['arguments'].split(',').each_with_index do |argument, index|
+      %li
+        %b
+          = @experiment.input_parameter_label_for(argument) + ':'
+        = @simulation['values'].split(',')[index]
+
+- if @simulation['is_done']
+  .row
+    %h4
+      Output:
+    %ul
+      - @simulation['result'].each do |moe_name, moe_value|
+        %li
+          %b
+            = moe_name + ':'
+          = moe_value

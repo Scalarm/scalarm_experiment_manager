@@ -1,0 +1,40 @@
+%section.panel.radius
+  #bivariate_charts_form
+    %h3.subheader= t('charts.scatter.section_header')
+
+    = form_tag '', class: '' do
+      .row
+        .small-5.columns
+          = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
+        .small-7.columns
+          = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
+      .row
+        .small-5.columns
+          = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
+        .small-7.columns
+          = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
+      .row
+        %ul.inline-list
+          %li= submit_tag t('charts.load_button'), class: 'button'
+          %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
+
+#bivariate_charts
+
+- content_for :javascript do
+  :javascript
+    var bivariate_chart_tab = new Array();
+
+    // 'Load chart' button handler
+    $('#bivariate_charts_form input[type=submit]').bind('click', function() {
+      $('#busy_scatter_plot').show();
+
+      var x_axis = $('#bivariate_charts_form select[name=\'x_axis\'] option:selected').val();
+      var y_axis = $('#bivariate_charts_form select[name=\'y_axis\'] option:selected').val();
+
+      $.post("#{scatter_plot_experiment_path(@experiment.id)}",
+        { 'x_axis': x_axis, 'y_axis': y_axis },
+        function(data) { $('#busy_scatter_plot').hide(); }
+      );
+
+      return false;
+    });

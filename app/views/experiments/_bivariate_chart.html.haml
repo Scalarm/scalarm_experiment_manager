@@ -1,0 +1,21 @@
+-#- @chart.x_axis_label = ParameterForm.moe_label(@chart.x_axis); @chart.y_axis_label = ParameterForm.moe_label(@chart.y_axis);
+%section.panel.radius.plot
+  %h3.subheader
+    = t('charts.scatter.header', x_axis: @chart.x_axis_label, y_axis: @chart.y_axis_label)
+    = image_tag 'loading.gif', id: "busy_bivariate_#{@chart.x_axis}_#{@chart.y_axis}", size: '16x16', style: 'display: none;'
+
+  .row
+    -#= button_to_function "Refresh" ,
+    -#  "refresh_bivariate_chart('#{@chart.experiment.id}', '#{@chart.x_axis}', '#{@chart.y_axis}', '#{experiments_refresh_bivariate_analysis_chart_path}')",
+    -#  :class => "nice_button"
+    %span.button= t('charts.hide_button')
+
+  %br
+  .bivariate_chart_container{ id: "bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}" }
+
+  :javascript
+    $(function() {
+      $('.plot .button').on('click', function() {
+        $(this).parent().parent().remove()
+      });
+    });

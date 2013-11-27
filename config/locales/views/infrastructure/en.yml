@@ -1,0 +1,13 @@
+en:
+  infrastructure:
+    information:
+      time_constraint: "Job time constraint [min]:"
+      start_at: 'Start at ("hh:mm:ss" format)'
+      plgrid:
+        submission:
+          job_counter: "Number of jobs:"
+          scheduler: "Scheduler:"
+      amazon:
+        submission:
+          instance_counter: 'Instance count:'
+          vm_type: 'VM type:'

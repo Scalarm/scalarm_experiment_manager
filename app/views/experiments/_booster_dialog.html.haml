@@ -1,0 +1,16 @@
+%h2= t('experiments.show.booster.header')
+
+%a.close-reveal-modal &#215;
+
+.section-container.tabs(data-section="tabs")
+  - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+    %section
+      %p.title(data-section-title="")
+        %a(href="#")= infrastructure_info[:label]
+      .content(data-section-content="")
+        %p= render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
+
+:javascript
+  $(function() {
+    $(document).foundation();
+  });

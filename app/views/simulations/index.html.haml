@@ -1,0 +1,16 @@
+- content_for :title, 'Scalarm - simulations'
+
+= render 'simulation_scenarios'
+
+= render 'simulations'
+
+= render 'simulation_input_writers'
+= render 'simulation_executors'
+= render 'simulation_output_readers'
+= render 'simulation_progress_monitors'
+
+%section
+  .row
+    .small-4.small-centered.columns
+      = link_to(t('simulations.go_to_registriation'), simulations_registration_path, class: 'button expand')
+

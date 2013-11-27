@@ -1,0 +1,43 @@
+%section.panel.radius
+  = content_tag :h3, t('.experiments_label'), class: 'subheader'
+
+  = form_tag(simulations_upload_simulation_path, :multipart => true, class: 'custom') do
+    = render partial: 'form_row', object: 'simulation_name', locals: { input_element: text_field_tag('simulation_name') }
+    = render partial: 'form_row', object: 'simulation_description', locals: { input_element: text_area_tag('simulation_description') }
+
+    = render partial: 'form_row', object: 'simulation_binaries', locals: { input_element: file_field_tag('simulation_binaries') }
+    = render partial: 'form_row', object: 'simulation_input', locals: { input_element: file_field_tag('simulation_input') }
+
+    = render partial: 'form_row', object: 'input_writer', locals: { input_element: select_tag('input_writer_id', options_for_select(SimulationInputWriter.all.map{|ex| [ex.name, ex._id]}), class: 'medium') }
+    = render partial: 'form_row', object: 'executor', locals: { input_element: select_tag('executor_id', options_for_select(SimulationExecutor.all.map{|ex| [ex.name, ex._id]}), class: 'medium') }
+    = render partial: 'form_row', object: 'output_reader', locals: { input_element: select_tag('output_reader_id', options_for_select(SimulationOutputReader.all.map{|ex| [ex.name, ex._id]}), class: 'medium') }
+    = render partial: 'form_row', object: 'progress_monitor', locals: { input_element: select_tag('progress_monitor_id', options_for_select(SimulationProgressMonitor.all.map{|ex| [ex.name, ex._id]}), class: 'medium') }
+
+    .row
+      .small-2.small-centered.columns
+        = submit_tag t('.upload'), class: 'button expand'
+
+
+- %w(input_writer executor output_reader progress_monitor).each do |component_name|
+
+  %section.panel.radius
+    = content_tag :h4, "#{t(".#{component_name}")} registration", class: 'subheader'
+
+    = form_tag(simulations_upload_component_path, :multipart => true) do
+      = hidden_field_tag 'component_type', component_name
+
+      .row
+        .small-2.columns.right-align.inline
+          %span= t('.component_name') + ':'
+        .small-10.columns
+          = text_field_tag 'component_name'
+
+      .row
+        .small-2.columns.inline
+          %span= t('.component_code') + ':'
+        .small-10.columns
+          = file_field_tag 'component_code'
+
+      .row
+        .small-2.small-centered.columns
+          = submit_tag t('.upload'), class: 'button expand'

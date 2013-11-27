@@ -1,0 +1,12 @@
+%article{id: 'progress_information', style: 'overflow:auto;'}
+  %h4.subheader= t('experiments.show.progress.header')
+
+  %ul.inline-list.button-list
+    %li= button_to t('experiments.show.progress.show_completed'), completed_simulations_table_experiment_path(@experiment._id),
+      remote: true, class: 'button', method: :get, onclick: "$('#completed_simulations_table_wrapper').slideToggle(); var targetOffset = $(this).offset().top; $('html,body').animate({scrollTop: targetOffset}, 1000);"
+
+    %li= button_to t('experiments.show.progress.show_running'), running_simulations_table_experiment_path(@experiment._id),
+      remote: true, class: 'button', method: :get, onclick: "$('#running_simulations_table_wrapper').slideToggle(); var targetOffset = $(this).offset().top; $('html,body').animate({scrollTop: targetOffset}, 1000);"
+
+  #running_simulations_table_wrapper{style: 'display: none;'}
+  #completed_simulations_table_wrapper{style: 'display: none;'}

@@ -1,0 +1,9 @@
+%section.panel.radius.list
+  = content_tag :h3, t('historical_experiments.label'), class: 'subheader'
+
+  - if @historical_experiments.blank?
+    %p No historical experiment available
+  - else
+    - @historical_experiments.each do |experiment|
+      - link_text = "#{experiment.name}, started at: #{experiment.start_at}, stopped at: #{experiment.end_at}"
+      = button_to link_text, experiment_path(experiment.id), class: 'button expand', method: :get

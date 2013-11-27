@@ -1,0 +1,31 @@
+%section#main
+  .row.large-5.large-centered.columns
+    .panel.radius
+      = form_tag user_controller_change_password_path do
+        .row
+          .large-6.columns
+            %label.right.inline Login:
+          .large-6.columns
+            %span.inline= @current_user.login
+
+        .row
+          .large-6.columns
+            %label.right.inline Certificate DN:
+          .large-6.columns
+            %span.inline= @current_user.dn
+
+        .row
+          .large-6.columns
+            %label.right.inline Password:
+          .large-6.columns
+            = password_field_tag 'password', '', class: 'inline'
+
+        .row
+          .large-6.columns
+            %label.right.inline Repeat password:
+          .large-6.columns
+            = password_field_tag 'password_repeat', '', class: 'inline'
+
+        .row
+          .large-6.large-centered.columns
+            = submit_tag 'Change password', class: 'button'

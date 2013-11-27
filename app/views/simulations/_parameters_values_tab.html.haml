@@ -1,0 +1,24 @@
+.content{'data-slug' => 'parameters_value', style: ''}
+  %h3.subheader= t('simulations.conduct_experiment.parameters_values_tab.header')
+
+  .section-container.accordion(data-section="accordion")
+    - parameter_id = 0
+    - @simulation_input.each do |entity_group|
+      %section
+        %p.title
+          %a(href="#panel_#{parameter_id}")
+            = t('simulations.conduct_experiment.parametrization_tab.entity_group_header', label: entity_group['label'])
+        .content
+          %p
+            - entity_group['entities'].each do |entity|
+              .row(style="text-align:center;")
+                %h3.subheader= t('simulations.conduct_experiment.parametrization_tab.entity_header', label: entity['label'])
+              %div
+                - entity['parameters'].each do |parameter|
+                  - parameter_id += 1
+                  = content_tag :div, (parameter.include?('value') ? parameter['value'] : ''), :id => "parameter_values_#{parameter_id}",
+                                                      :class => (parameter.include?('value') ? 'hidden' : ''),
+                                                      :group_id => entity_group['id'], :entity_id => entity['id'], :parameter_id => parameter['id']
+                  - content_for :javascript do
+                    :javascript
+                      buildParameterValuesPartial(#{parameter_id});

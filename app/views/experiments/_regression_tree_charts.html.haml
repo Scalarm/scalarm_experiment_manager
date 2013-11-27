@@ -1,0 +1,36 @@
+%section.panel.radius.list#regression_charts_form
+  %h3.subheader= t('charts.regression.section_header')
+
+  #regression_charts_form
+    = form_tag '', class: '' do
+      .row
+        .small-10.columns
+          .small-3.columns
+            = label_tag :moe_name, t('charts.regression.select_moe') + ':', class: 'inline'
+          .small-9.columns
+            = select_tag 'moe_name', '', { class: 'moe_list' }
+      .row
+        %ul.inline-list
+          %li= submit_tag t('charts.load_button'), class: 'button'
+          %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
+
+#regression_charts
+
+- content_for :javascript do
+  :javascript
+    var rt_chart_tab = new Array();
+    var rt_vis_tab = new Array();
+
+    // 'Load chart' button handler
+    $('#regression_charts_form input[type=submit]').bind('click', function() {
+      $('#busy_rt').show();
+
+      var moe_name = $('#regression_charts_form select[name=\'moe_name\'] option:selected').val();
+
+      $.post("#{regression_tree_experiment_path(@experiment.id)}",
+        { 'moe_name': moe_name },
+        function(data) { $('#busy_rt').hide(); }
+      );
+
+      return false;
+    });

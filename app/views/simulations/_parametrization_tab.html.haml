@@ -1,0 +1,31 @@
+.content{'data-slug' => 'parametrization_types', style: ''}
+  %h3.subheader= t('simulations.conduct_experiment.parametrization_tab.header')
+
+  .section-container.accordion(data-section="accordion")
+    - parameter_id = 0
+    - @simulation_input.each do |entity_group|
+      %section
+        %p.title
+          %a(href="#panel_#{parameter_id}")
+            = t('simulations.conduct_experiment.parametrization_tab.entity_group_header', label: entity_group['label'])
+        .content
+          %p
+            - entity_group['entities'].each do |entity|
+              .row(style="text-align:center;")
+                %h3.subheader= t('simulations.conduct_experiment.parametrization_tab.entity_header', label: entity['label'])
+
+              %div
+                - entity['parameters'].each do |parameter|
+                  - parameter_id += 1
+                  = form_tag '', class: 'custom' do
+                    = content_tag :div, :class => "row #{(parameter.include?('value') ? 'hidden' : '')}" do
+                      .small-5.columns
+                        %label.inline.right
+                          = t('simulations.conduct_experiment.parametrization_tab.parameter_header', label: parameter['label'])
+                      .small-7.columns
+                        = parametrization_options(parameter, parameter_id)
+                  - content_for :javascript do
+                    :javascript
+                      $(function() {
+                        parametrizationTypeListener(#{parameter_id}, '#{entity_group['id']}', '#{entity['id']}', '#{parameter['id']}')
+                      });

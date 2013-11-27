@@ -1,0 +1,166 @@
+# Files in the config/locales directory are used for internationalization
+# and are automatically loaded by Rails. If you want to use locales other
+# than English, add the necessary files in this directory.
+#
+# To use the locales, use `I18n.t`:
+#
+#     I18n.t 'hello'
+#
+# In views, this is aliased to just `t`:
+#
+#     <%= t('hello') %>
+#
+# To use a different locale, set it with `I18n.locale`:
+#
+#     I18n.locale = :es
+#
+# This would use the information in config/locales/es.yml.
+#
+# To learn more, please read the Rails Internationalization guide
+# available at http://guides.rubyonrails.org/i18n.html.
+
+en:
+  navbar:
+    experiments_link: Experiments
+    simulations_link: Simulations
+    account_link: Account
+    logout_link: Logout
+
+  registered_simulation_scenario_list:
+    label: "Registered simulations"
+    destroy_button: "Destroy"
+    empty_list: There is no simulation registered. Go to registration form and register new simulations.
+  simulation_scenario_list:
+    label: "Select experiment to run"
+    empty_list: There is no experiment defined to run. Go to registration form and define new experiments.
+    go_to_input_definition_button: "Go to input definition"
+  running_experiments:
+    label: Running experiments (click on the experiment to go to the monitoring panel)
+  historical_experiments:
+      label: Historical experiments
+  login_success: "You have log in successfully"
+  logout_success: "You have log out successfully"
+  password_changed: "You have changed your password."
+  password_repeat_error: "'Password' and 'Repeat password' must be equal!"
+
+  registered_executors_list:
+    label: "Registered simulation executors"
+    empty_list: There is no simulation executor defined to run. Go to registration form and define new ones.
+
+  registered_input_writers_list:
+    label: "Registered simulation input writers"
+    empty_list: There is no simulation input writer defined to run. Go to registration form and define new ones.
+
+  registered_output_readers_list:
+    label: "Registered simulation output readers"
+    empty_list: There is no simulation output reader defined to run. Go to registration form and define new ones.
+
+  no_running_experiment_response: "No experiment running"
+
+  registered_progress_monitors_list:
+    label: "Registered simulation progress monitors"
+    empty_list: There is no simulation progress monitor defined to run. Go to registration form and define new ones.
+
+  experiments:
+    show:
+      stats_header: Simulation statistics
+      progress_bar_header: Experiment progress bar
+      actions_header: Actions
+      # buttons from the monitoring view
+      stop_button: Stop experiment
+      extend_button: Extend
+      boost_button: Boost
+      scheduling_button: Set scheduling
+      destroy_button: Destroy
+      download_results_button: Download results
+      binaries_results_button: Simulations output (binaries)
+      get_configurations_button: Configurations (CSV)
+      progress_information_button: Show progress
+
+      booster:
+        header: Increase computational power
+
+      progress:
+        show_completed: Show/Hide completed
+        show_running: Show/Hide running
+        header: Progress information
+
+
+  simulations:
+    deregister_button: Deregister
+    go_to_registriation: Go to registration form
+
+    registration:
+      experiments_label: Register simulation
+      simulation_name: Simulation name
+      simulation_description: Simulation description
+      simulation_input: Input definition
+      simulation_binaries: Simulation binaries
+      input_writer: Input writer
+      output_reader: Output reader
+      executor: Executor
+      progress_monitor: Progress monitor
+      upload: Upload
+      component_name: Component name
+      component_code: Component code
+
+    conduct_experiment:
+      overview_header: Simulation information
+      overview_name: "Name: %{name}"
+      overview_description: "Description: %{description}"
+
+      input_header: Parameter space specification
+      input_parametrization_types: Parametrization
+      input_parameter_values: Parameter values
+      input_doe: Design of Experiment
+
+      submit_button: Start experiment
+      experiment_size_button: Calculate experiment size
+      experiment_size_dialog_body: "Calculated experiment size - <span id=\"calculated-experiment-size\"></span> simulations"
+      time_constraint_label: Time constraint for simulation execution ([s])
+      repeatation_label: Execution repeatation of each input parameters combination
+
+      parametrization_tab:
+        header: Specify parametrization for each input parameter below
+        entity_group_header: "Group - '%{label}'"
+        entity_header: "'%{label}'"
+        parameter_header: "Set parameter '%{label}' to:"
+
+      parameters_values_tab:
+        header: Specify values for each input parameter you want to explore
+
+  plgrid:
+    login:
+      ok: Your credentials have been updated
+      error: An erroc occured
+    job_submission:
+      authentication_failed: "An exception occured during authentication - %{ex}. Please check if the host is available and the username and password are correct."
+      error: "An exception occured - %{ex}. Please check if the host is available and the username and password are correct."
+      ok: "You have scheduled %{instances_count} jobs"
+      no_credentials: You have to provide Grid credentials first!
+
+#  amazon:
+#    login:
+#      ok:
+#      error:
+
+  charts:
+    hide_button: Hide chart
+    load_button: Load chart
+
+    histogram:
+      section_header: Basic statistics about Measures of Effectiveness
+      header: "Basic statistics about '%{moe}'"
+      select_moe: Select MoE
+      resolution: Number of bars
+
+    regression:
+      section_header: Regression trees
+      header: "Regression tree for the '%{moe}' Measure of Effectiveness"
+      select_moe: Select MoE
+
+    scatter:
+      section_header: Bivariate analysis
+      header: "Scatter plot: '%{x_axis}' versus '%{y_axis}'"
+      select_x: Select values for the X axis (MoE or input)
+      select_y: Select values for the Y axis (MoE or input)

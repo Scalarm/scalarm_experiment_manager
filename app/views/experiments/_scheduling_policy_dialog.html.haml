@@ -1,0 +1,17 @@
+#scheduling_policy_dialog.reveal-modal
+  %h2 Scheduling policy of the experiment
+
+  %p
+    = form_tag(change_scheduling_policy_experiment_path, :onSubmit => "$('#scheduling-busy').show()", remote: true, class: 'custom') do
+      = hidden_field_tag :experiment_id, @experiment.id
+      %div
+        Current scheduling policy of the experiment:
+        %b#policy_name=  "#{@experiment.scheduling_policy}."
+      %div Select new scheduling policy: #{select_scheduling_policy}
+
+      %div
+        = submit_tag 'Submit', class: 'button'
+        = image_tag 'loading.gif', :id => 'scheduling-busy', :style => 'display: none;'
+        #scheduling-ajax-response
+
+  %a.close-reveal-modal &#215;

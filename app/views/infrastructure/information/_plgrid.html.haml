@@ -1,0 +1,102 @@
+- credentials = GridCredentials.find_by_user_id(@current_user.id)
+
+#plgrid-login-ajax-response.alert-box.radius(style="display: none;")
+
+.section-container.accordion{'data-section' => 'accordion'}
+  %section#plgrid-submission-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plgrid-submission-panel'} Job submission
+      .content{'data-section-content' => ''}
+        %p
+          = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
+            = hidden_field_tag 'experiment_id', experiment.id
+            = hidden_field_tag 'infrastructure_type', 'plgrid'
+            .row
+              .small-6.columns
+                = label_tag t('.submission.job_counter'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :job_counter
+            .row
+              .small-6.columns
+                = label_tag t('.submission.scheduler'), nil, class: 'inline right'
+              .small-6.columns
+                = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+            .row
+              .small-6.columns
+                = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :time_limit
+
+            .row
+              .small-6.columns
+                = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :start_at
+
+            .row
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'small button'
+                %li= image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
+
+  %section#plgrid-login-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plgrid-login-form-panel'} Login form
+      .content{'data-section-content' => ''}
+        %p
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'infrastructure_type', 'plgrid'
+
+            %h5.subheader= 'Please, provide credentials to access PL-Grid'
+
+            .row
+              .small-4.columns
+                = label_tag 'UI host:', nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :host, credentials.nil? ? '' : credentials.host
+            .row
+              .small-4.columns
+                = label_tag 'Username:', nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :username, credentials.nil? ? '' : credentials.login
+            .row
+              .small-4.columns
+                = label_tag 'Password:', nil, class: 'inline right'
+              .small-8.columns
+                = password_field_tag :password, credentials.nil? ? '' : credentials.password
+            .row
+              .small-4.columns
+                = label_tag 'Save settings:', nil, class: 'inline right'
+              .small-8.columns
+                = check_box_tag :save_settings, '1', (not credentials.nil?), style: 'display: none;'
+            .row
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'button small'
+                %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+
+  %section#plgrid-jobs-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plgrid-jobs-panel'} Scheduled jobs
+      .content{'data-section-content' => ''}
+        %p
+          %p{ id: 'plgrid_info' }= @current_states[:plgrid]
+          %ul.circle
+            - @simulation_managers[:plgrid].each do |plgrid_job|
+              %li= plgrid_job.to_s
+
+:javascript
+  $(function() {
+    if(#{ credentials.nil? }) {
+      $('#plgrid-submission-tab form').addClass('disabled');
+      $('#plgrid-login-tab').addClass('active');
+    } else {
+      $('#plgrid-submission-tab').addClass('active');
+    }
+
+    new window.PLGridManager('#extension-dialog');
+
+    $('p').each(function(index, element) {
+      if($(element).html() == "") {
+        $(element).remove();
+      }
+    });
+  });

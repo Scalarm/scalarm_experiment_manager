@@ -1,0 +1,24 @@
+-# partial input parameters: moe_name, moe_label, experiment -> all stored in a local chart object
+%section.panel.radius.plot
+  %h3.subheader
+    = t('charts.regression.header', moe: chart.moe_name)
+    = image_tag 'loading.gif', id: "busy_#{ chart.experiment.experiment_id }_#{ chart.moe_name }", size: '16x16', style: 'display: none;'
+  .row
+    -#= button_to_function "Refresh" , "refresh_regression_tree_chart('#{@experiment.experiment_id}', '#{@moe_name}', '#{experiments_update_regression_tree_path}')", :class => "nice_button"
+    %span.button= t('charts.hide_button')
+    -#= button_to_function 'Hide chart', '$(this).parent().parent().remove();', class: 'button'
+
+  - if chart.tree_nodes.nil?
+    %h4 Could not create regression tree for #{chart.moe_label}. Probably too few simulations were performed.
+  - else
+    .container
+      .infovis{ id: "infovis_#{ chart.experiment.experiment_id }_#{ chart.moe_name }"}
+
+  :javascript
+    $(function() {
+      init_#{chart.experiment.experiment_id}_#{chart.moe_name}('#{chart.experiment.experiment_id}', '#{chart.moe_name}');
+
+      $('.plot .button').on('click', function() {
+        $(this).parent().parent().remove()
+      });
+    });
