@@ -1,6 +1,0 @@
-<div class="panel radius list">
-  <%= content_tag :h4, t('simulation_scenario_list.label'), class: 'subheader' %>
-  <% @simulation_scenarios.each do |simulation| %>
-    <%= button_to simulation_run_label(simulation), simulations_conduct_experiment_path(simulation_id: simulation.id), class: 'button expand' %>
-  <% end %>
-</div>

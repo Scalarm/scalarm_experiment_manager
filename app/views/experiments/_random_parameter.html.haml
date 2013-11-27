@@ -1,8 +1,0 @@
-- rnode = node.subnode
-- rnode.attributes.each do |key, value_node|
-  %p{:style=>"margin:5px;"}
-    Parameter - 
-    %b= key
-  = render :partial => "#{value_node.node_type}_parameter", 
-  :locals => { :editable_inputs => editable_inputs, :parameter => parameter, 
-  :node => value_node.subnode, :parameter_id => "#{parameter_id}_#{key}" }

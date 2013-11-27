@@ -1,5 +1,0 @@
-<% chart_data = @buckets.reduce(""){|sum,value| sum += "#{value},"}[0..-2] %>
-chart = basic_chart_tab[<%= @chart_id.split("_").last %>];
-chart.series[0].setData([<%= chart_data %>]);
-
-$("#statistics_box_<%= @experiment.id %>_<%= @moe_name %>_<%= @resolution %>").replaceWith("<%= escape_javascript(render :partial => "statistics_box") %>");

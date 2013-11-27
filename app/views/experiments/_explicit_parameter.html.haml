@@ -1,8 +1,0 @@
-- html_hash = { :class => "nice_input" }
-- html_hash[:disabled] = true if (defined? editable_inputs) and (editable_inputs == false)
-
-%div
-  %label.nice_label Set value:
-  = text_field_tag parameter_id + "_value", node.value.to_f, html_hash
-
-= javascript_tag "add_live_validation('#{parameter_id}_value', #{parameter.min}, #{parameter.max})"

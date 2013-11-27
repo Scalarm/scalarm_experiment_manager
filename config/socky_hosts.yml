@@ -1,5 +1,0 @@
-:hosts:
-  - :host: 149.156.10.250
-    :port: 3002
-    :secret: my_secret_key
-    :secure: false

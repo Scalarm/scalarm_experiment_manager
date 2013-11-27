@@ -1,9 +1,0 @@
-#booster_dialog{ title: 'Increase computational power', style: 'height:100%;' }
-  #booster_tabs{ style: 'height:100%;' }
-    - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      %h3
-        %a{ href: '#' }= infrastructure_info[:label]
-      %div{ id: infrastructure_id }
-        = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: user }
-
-= javascript_tag 'booster.initDialog();'

@@ -1,9 +1,0 @@
-.panel.radius.list
-  = content_tag :h4, t('running_experiments.label'), class: 'subheader'
-
-  - if @running_experiments.blank?
-    %p There is no experiment running currently
-  - else
-    - @running_experiments.each do |experiment|
-      - link_text = "#{experiment.name}, started at: #{experiment.start_at}"
-      = button_to link_text, monitor_experiment_path(experiment.id), class: 'button expand', method: :get
