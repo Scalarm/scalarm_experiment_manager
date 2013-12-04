@@ -17,7 +17,7 @@ body {
     background: #3384BB url(image_path('bg01.jpg')) repeat;
     color: #555;
     //font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif;
-    font-family: 'Ubuntu', sans-serif;
+//    font-family: 'Ubuntu', sans-serif;
     font-size: 14px;
     line-height: 1.2em;
     min-width: 1200px;
@@ -26,7 +26,7 @@ body {
 select {
     color: #555 !important;
     //font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif !important;
-    font-family: 'Ubuntu', sans-serif;
+//    font-family: 'Ubuntu', sans-serif;
     font-size: 22px !important;
     line-height: 1.2em !important;
 }
@@ -55,7 +55,7 @@ select {
   position: relative;
   width: 960px;
   background: url(image_path('bg03.jpg')) repeat;
-  margin: 5px auto;
+  margin: 50px auto;
   min-height: 535px;
   padding: 10px;
   /* curved border radius */
@@ -105,7 +105,7 @@ footer {
 /* basics */
 
 h1,h2,h3,h4,h5,h6 {
-    font-weight: bold;
+//    font-weight: bold;
     clear: both;
 }
 
@@ -297,7 +297,7 @@ clear: both;
 
   /*standard CSS properties */
     //font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif;
-    font-family: 'Ubuntu', sans-serif;
+//    font-family: 'Ubuntu', sans-serif;
     font-size:13px;
     font-weight: 600;
 
@@ -850,11 +850,12 @@ article#experiment_stats {
     filter:alpha(opacity=90);
     font-size:10px;
     //font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
-    font-family: 'Ubuntu', sans-serif;
+//    font-family: 'Ubuntu', sans-serif;
     padding:7px;
 }
 
 #site_title {
-    /*line-height: 70px;*/
+    line-height: 70px;
     padding-top: 0px;
+
 }
