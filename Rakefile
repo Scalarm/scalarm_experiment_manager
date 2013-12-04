@@ -23,4 +23,21 @@ namespace :service do
     %x[pumactl -F config/puma.rb -T scalarm stop]
   end
 
+  desc 'Removing unnecessary digests on production'
+  task non_digested: :environment do
+    Rake::Task['assets:precompile'].execute
+    assets = Dir.glob(File.join(Rails.root, 'public/assets/**/*'))
+    regex = /(-{1}[a-z0-9]{32}*\.{1}){1}/
+    assets.each do |file|
+      next if File.directory?(file) || file !~ regex
+
+      source = file.split('/')
+      source.push(source.pop.gsub(regex, '.'))
+
+      non_digested = File.join(source)
+      FileUtils.cp(file, non_digested)
+    end
+  end
+
 end
+

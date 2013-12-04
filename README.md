@@ -56,3 +56,9 @@ Note: you have to start Storage Manager and Information Service first.
 $ rake service:start
 $ rake service:stop
 ```
+
+Note: when deploying on the production environment you need to build assets:
+
+```
+$ RAILS_ENV=production rake log_bank:non_digested
+```
