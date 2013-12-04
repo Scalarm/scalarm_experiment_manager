@@ -52,8 +52,8 @@
       <%= yield %>
     </div>
 
+    <%= javascript_include_tag "application" %>
     <%= content_for :javascript do %>
-      <%= javascript_include_tag "application" %>
         <script>
           $(function() {
             if(<%= not flash[:notice].nil? %>) {
