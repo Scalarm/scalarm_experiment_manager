@@ -183,18 +183,14 @@ class MongoActiveRecord
       @@client = MongoClient.new(storage_manager_url.split(':')[0], storage_manager_url.split(':')[1])
       @@db = @@client[db_name]
       @@grid = Mongo::Grid.new(@@db)
+      Rails.logger.debug("MongoActiveRecord initialized with URL '#{storage_manager_url}' and DB '#{db_name}'")
+
+      return true
     rescue Exception => e
-      puts "Could not initialize connection with MongoDB --- #{e}"
+      Rails.logger.debug "Could not initialize connection with MongoDB --- #{e}"
     end
 
-    Rails.logger.debug("MongoActiveRecord initialized with URL '#{storage_manager_url}' and DB '#{db_name}'")
+    false
   end
-
-  # class initizalization
-  config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-  information_service = InformationService.new(config['information_service_url'], config['information_service_user'], config['information_service_pass'])
-  storage_manager_list = information_service.get_list_of('db_routers')
-
-  MongoActiveRecord.connection_init(storage_manager_list.sample, config['db_name'])
 
 end
