@@ -22,7 +22,7 @@
 //= require jit-yc
 
 
-$(document).foundation();
+$(function(){ $(document).foundation(); });
 
 function string_with_delimeters() {
     var string_copy = this.split("").reverse().join("");

@@ -34,7 +34,7 @@ gem 'therubyracer', platforms: :ruby
 # Use jquery as the JavaScript library
 gem 'jquery-rails'
 gem 'haml'
-gem 'foundation-rails'
+gem 'zurb-foundation'
 gem 'highcharts-rails'
 gem 'jit-rails'
 
