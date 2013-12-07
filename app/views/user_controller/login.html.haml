@@ -1,5 +1,7 @@
 - content_for :title, 'Scalarm - login'
 
+= javascript_include_tag 'jquery'
+
 %section#main
   .row
     .large-6.columns
@@ -25,9 +27,16 @@
       .panel.radius
         .row
           .large-12.large-centered.columns(style="text-align:center;")
-            %span.button
-              (TODO) Login with Google OpenId
+            %span.button#google_openid
+              = t('openid.login', provider: 'Google')
         -#.row
         -#  .large-12.large-centered.columns(style="text-align:center;")
         -#    %span.button
         -#      (TODO) Login with PLGrid OpenId
+
+        :javascript
+          $(function() {
+            $('span#google_openid').click(function() {
+              window.location = " #{login_openid_google_url} ";
+            });
+          });
