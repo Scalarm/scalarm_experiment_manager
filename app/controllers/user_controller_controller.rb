@@ -90,6 +90,7 @@ class UserControllerController < ApplicationController
   # Action for callback from Google OpenID.
   def openid_callback_google
     restrict_email = 'jakub.liput@gmail.com'
+    google_endpoint_url = 'https://www.google.com/accounts/o8/ud'
 
     Rails.logger.debug("Google OpenID callback with parameters: #{params}")
 
@@ -101,6 +102,13 @@ class UserControllerController < ApplicationController
     case oidresp.status
 
       when OpenID::Consumer::SUCCESS
+
+        # check if response is from appropriate endpoint
+        op_endpoint = params['openid.op_endpoint']
+        if oidresp.endpoint.server_url != op_endpoint and op_endpoint != google_endpoint_url
+          flash[:error] = t('openid.wrong_endpoint', endpoint: oidresp.endpoint.server_url)
+          redirect_to login_path
+        end
 
         # -- Attribute Exchange support --
         ax_resp = OpenID::AX::FetchResponse.from_success_response(oidresp)
