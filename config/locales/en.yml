@@ -43,6 +43,19 @@ en:
   password_changed: "You have changed your password."
   password_repeat_error: "'Password' and 'Repeat password' must be equal!"
 
+  openid:
+      provider_discovery_failed: "OpenID discovery failed for %{provider_url}: %{error}"
+      verification_success: "Verification of %{identity} succeeded."
+      cancelled: "OpenID transaction cancelled."
+      unknown_status: "OpenID unknown status: %{status}"
+      verification_failed_identity: "Verification of %{identity} failed: %{message}"
+      verification_failed: "Verification failed: %{message}"
+      login: "Login with %{provider} OpenID"
+      wrong_endpoint: "Got response from wrong OpenID endpoint: %{endpoint}"
+      google:
+          no_openid_user: "There is no Scalarm user registered with Google OpenID E-Mail: %{email}"
+          no_email_provided: "Error authenticating with OpenID: no email attribute provided by server."
+
   registered_executors_list:
     label: "Registered simulation executors"
     empty_list: There is no simulation executor defined to run. Go to registration form and define new ones.
