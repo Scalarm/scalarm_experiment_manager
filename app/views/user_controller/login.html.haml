@@ -27,16 +27,8 @@
       .panel.radius
         .row
           .large-12.large-centered.columns(style="text-align:center;")
-            %span.button#google_openid
-              = t('openid.login', provider: 'Google')
+            = link_to t('openid.login', provider: 'Google'), login_openid_google_url, class:'button'
         -#.row
         -#  .large-12.large-centered.columns(style="text-align:center;")
         -#    %span.button
         -#      (TODO) Login with PLGrid OpenId
-
-        :javascript
-          $(function() {
-            $('span#google_openid').click(function() {
-              window.location = " #{login_openid_google_url} ";
-            });
-          });
