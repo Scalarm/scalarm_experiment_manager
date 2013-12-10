@@ -102,7 +102,7 @@ class SimulationsController < ApplicationController
         @experiment.progress_bar_update(@simulation['id'], 'done')
       end
     rescue Exception => e
-      Rails.logger.debug("Error in marking a simulation as complete - #{e}")
+      Rails.logger.error("Error in marking a simulation as complete - #{e}")
       response = { status: 'error', reason: e.to_s }
     end
 

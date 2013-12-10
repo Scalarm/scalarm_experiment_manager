@@ -42,7 +42,7 @@ class ApplicationController < ActionController::Base
 
           unless temp_pass.nil?
             Rails.logger.debug("[authentication] SM using uuid: '#{sm_uuid}'")
-            correct = (not temp_pass.nil?) and temp_pass.password == password
+            correct = ((not temp_pass.nil?) and (temp_pass.password == password))
             @sm_user = true if correct
 
             correct
