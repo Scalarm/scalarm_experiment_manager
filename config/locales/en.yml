@@ -164,3 +164,9 @@ en:
       header: "Scatter plot: '%{x_axis}' versus '%{y_axis}'"
       select_x: Select values for the X axis (MoE or input)
       select_y: Select values for the Y axis (MoE or input)
+
+
+  security:
+    sim_authorization_error: "Simulation Manager '%{sm_uuid}' is not authorized to execute experiment '%{experiment_id}'"
+
+  experiment_not_found: "Experiment '%{experiment_id}' for user '%{user}' not found"

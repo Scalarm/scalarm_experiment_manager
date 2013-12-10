@@ -8,7 +8,7 @@ class ApplicationController < ActionController::Base
   protected
 
   def authenticate
-    @current_user = nil; @sm_user = false
+    @current_user = nil; @sm_user = nil
     
     Rails.logger.debug("Session: #{session[:user]}")
 
@@ -43,7 +43,7 @@ class ApplicationController < ActionController::Base
           unless temp_pass.nil?
             Rails.logger.debug("[authentication] SM using uuid: '#{sm_uuid}'")
             correct = ((not temp_pass.nil?) and (temp_pass.password == password))
-            @sm_user = true if correct
+            @sm_user = temp_pass if correct
 
             correct
           else
