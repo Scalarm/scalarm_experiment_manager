@@ -1,14 +1,13 @@
 .content{'data-slug' => 'parameters_value', style: ''}
   %h3.subheader= t('simulations.conduct_experiment.parameters_values_tab.header')
 
-  .section-container.accordion(data-section="accordion")
+  %dl.accordion(data-accordion="")
     - parameter_id = 0
     - @simulation_input.each do |entity_group|
-      %section
-        %p.title
-          %a(href="#panel_#{parameter_id}")
-            = t('simulations.conduct_experiment.parametrization_tab.entity_group_header', label: entity_group['label'])
-        .content
+      %dd
+        %a(href="#panel_value_#{parameter_id}")
+          = t('simulations.conduct_experiment.parametrization_tab.entity_group_header', label: entity_group['label'])
+        .content.active{id: "panel_value_#{parameter_id}"}
           %p
             - entity_group['entities'].each do |entity|
               .row(style="text-align:center;")
