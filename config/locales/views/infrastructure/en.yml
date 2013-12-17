@@ -14,7 +14,6 @@ en:
       plcloud:
         login:
           title: 'Please, provide credentials to access PL-Cloud'
-          uihost: "UI host:"
           username: "Username:"
           password: "Password:"
           save: "Save settings;"

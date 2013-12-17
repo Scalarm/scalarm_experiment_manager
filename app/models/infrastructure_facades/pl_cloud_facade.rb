@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'rest-client'
 
 require_relative 'pl_cloud_credentials/pl_cloud_secrets'
 require_relative 'pl_cloud_credentials/pl_cloud_image'
@@ -21,6 +22,47 @@ class PLCloudFacade < InfrastructureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     # TODO
     return 'error', "Starting simulation manager for PLCloud is not implemented yet."
+
+    plc_client = nil # TODO !
+
+    #ec2 = get_ec2_for(user)
+    #return 'error', 'You have to provide Amazon secrets first!' if ec2.nil?
+
+    # user_amis, experiment_ami = AmazonAmi.find_all_by_user_id(user.id), nil
+    # user_amis.each do |ami|
+    #   if ami.experiment_id == experiment_id
+    #     experiment_ami = ami
+    #     break
+    #   end
+    # end
+    experiment_image = PLCloudImage.find_by_id(additional_params['image_id'])
+
+    return 'error', 'You have to provide PLCloud Image information first!' if experiment_image.nil?
+
+    timestamp = Time.now.to_i
+    scheduled_instances = (1..instances_count).map { |i|
+        plc_client = create_instance "SCALARM_#{timestamp}_#{i}", image_id, "scalarm_#{timestamp}_#{i}"
+    }
+
+    scheduled_instances = [ scheduled_instances ] unless scheduled_instances.respond_to?(:each)
+
+    scheduled_instances.each do |instance|
+      amazon_vm = AmazonVm.new({
+                                   user_id: user.id,
+                                   experiment_id: experiment_id,
+                                   created_at: Time.now,
+                                   time_limit: additional_params[:time_limit],
+                                   vm_id: instance.instance_id,
+                                   instance_type: instance.instance_type,
+                                   sm_uuid: SecureRandom.uuid,
+                                   initialized: false,
+                                   start_at: additional_params['start_at']
+                               })
+      amazon_vm.save
+    end
+
+    return 'ok', "You have scheduled #{scheduled_instances.size} virtual machines on Amazon EC2!"
+
   end
 
   def default_additional_params
@@ -58,6 +100,8 @@ class PLCloudFacade < InfrastructureFacade
 
   private
 
+
+
   def handle_secrets_credentials(user, params, session)
     credentials = PLCloudSecrets.find_by_user_id(user.id)
 
@@ -93,10 +137,9 @@ class PLCloudFacade < InfrastructureFacade
       end
     end
 
-    # TODO: change correspoding params in form
     credentials.image_id = params[:image_id]
-    credentials.login = params[:image_login] # TODO: ??
-    credentials.password = params[:image_password] # TODO: ??
+    credentials.login = params[:image_login]
+    credentials.password = params[:image_password]
     credentials.save
 
     if params.include?('store_template_in_session')

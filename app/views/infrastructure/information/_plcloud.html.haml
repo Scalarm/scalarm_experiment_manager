@@ -75,14 +75,9 @@
 
             .row
               .small-4.columns
-                = label_tag t('.login.uihost'), nil, class: 'inline right'
-              .small-8.columns
-                = text_field_tag :host, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.host
-            .row
-              .small-4.columns
                 = label_tag t('.login.username'), nil, class: 'inline right'
               .small-8.columns
-                = text_field_tag :username, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.login
+                = text_field_tag :login, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.login
             .row
               .small-4.columns
                 = label_tag t('.login.password'), nil, class: 'inline right'

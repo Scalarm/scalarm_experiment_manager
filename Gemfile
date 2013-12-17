@@ -60,3 +60,5 @@ gem 'rubysl-matrix', '~> 2.1'
 gem 'rubysl', '~> 2.0'
 
 gem 'ruby-openid'
+
+gem 'rest-client', '~> 1.6.7'
