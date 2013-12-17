@@ -1,0 +1,152 @@
+-# local variables: experiment, user
+- plgrid_secrets_creds = PLCloudSecrets.find_by_user_id(user.id)
+- plgrid_image_creds = PLCloudImage.find_all_by_user_id(user.id)
+- if plgrid_image_creds.empty?
+  -  plgrid_image_creds = nil
+- else
+  - plgrid_image_creds = plgrid_image_creds.select{|img| img.experiment_id.to_s == experiment.id.to_s}.first
+
+#plcloud-ajax-response.alert-box.radius(style="display: none;")
+
+.section-container.accordion{'data-section' => 'accordion'}
+  %section#plcloud-submission-tab
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plcloud-submission-panel'} Start virtual machines in the Cloud
+      .content{'data-section-content' => ''}
+        %p
+          = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'experiment_id', experiment.id
+            = hidden_field_tag 'infrastructure_type', 'plcloud'
+            = hidden_field_tag 'security_group', 'quicklaunch-1'
+
+            .row
+              .small-6.columns
+                = label_tag t('.submission.instance_counter'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :job_counter
+            - images = PLCloudImage.all.map{|i| ["#{i.image_id} --- #{i.login}", i.id]}
+            .row
+              .small-6.columns
+                = label_tag t('.submission.image'), nil, class: 'inline right'
+              .small-6.columns
+                = select_tag :image_id, options_for_select(images)
+
+            -#TODO
+            -#.row
+            -#  .small-6.columns
+            -#    = label_tag t('.submission.vm_type'), nil, class: 'inline right'
+            -#  .small-6.columns
+            -#    = select_tag :instance_type, options_for_select(PLCloudVm.amazon_instance_types)
+
+            -#TODO
+            -#.row
+            -#  .small-6.columns
+            -#    = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
+            -#  .small-6.columns
+            -#    = text_field_tag :time_limit
+
+            -#TODO
+            -#.row
+            -#  .small-6.columns
+            -#    = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
+            -#  .small-6.columns
+            -#    = text_field_tag :start_at
+
+            .row
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'small button'
+                %li= image_tag 'loading.gif', class: 'plcloud-submission-busy', style: 'display: none;'
+
+            .row
+              .small-12.columns
+                #plcloud-submission-ajax-response
+
+  %section#plgrid-credentials
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plcloud-credentials-panel'} PLCloud credentials
+    .content{'data-section-content' => ''}
+      %p
+        = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+          = hidden_field_tag 'infrastructure_type', 'plcloud'
+          = hidden_field_tag 'credential_type', 'secrets'
+
+          %fieldset
+            %legend= t('infrastructure.information.plcloud.login.title')
+
+            .row
+              .small-4.columns
+                = label_tag t('.login.uihost'), nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :host, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.host
+            .row
+              .small-4.columns
+                = label_tag t('.login.username'), nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :username, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.login
+            .row
+              .small-4.columns
+                = label_tag t('.login.password'), nil, class: 'inline right'
+              .small-8.columns
+                = password_field_tag :password, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.password
+            .row
+              .small-4.columns
+                = label_tag t('.login.save'), nil, class: 'inline right'
+              .small-8.columns
+                = check_box_tag :save_settings, '1', (not plgrid_secrets_creds.nil?), style: 'display: none;'
+            .row
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'button small'
+                %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+
+        = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+          = hidden_field_tag 'infrastructure_type', 'plcloud'
+          = hidden_field_tag 'credential_type', 'image'
+          = hidden_field_tag 'experiment_id', experiment.id
+
+          %fieldset
+            %legend= t('.image.title')
+            .row
+              .small-4.columns
+                = label_tag t('.image.image_id'), nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :image_id, plgrid_image_creds.nil? ? '' : plgrid_image_creds.ami_id
+            .row
+              .small-4.columns
+                = label_tag t('.image.login'), nil, class: 'inline right'
+              .small-8.columns
+                = text_field_tag :image_login, plgrid_image_creds.nil? ? '' : plgrid_image_creds.login
+            .row
+              .small-4.columns
+                = label_tag t('.image.password'), nil, class: 'inline right'
+              .small-8.columns
+                = password_field_tag :image_password, plgrid_image_creds.nil? ? '' : plgrid_image_creds.password
+            .row
+              .small-4.columns
+                = label_tag t('.image.session_only'), nil, class: 'inline right'
+              .small-8.columns
+                = check_box_tag :store_image_in_session, '1', false, style: 'display: none;'
+
+            .row
+              = submit_tag 'Submit', class: 'button small'
+              = image_tag 'loading.gif', class: 'plcloud-credentials-busy', style: 'display: none;'
+
+  %section#plcloud-vms
+    %p.title{'data-section-title' => ''}
+      %a{'href' => '#plcloud-vms-panel'} Scheduled virtual machines
+    .content{'data-section-content' => ''}
+      %p
+        %p= @current_states[:amazon]
+        %ul.circle
+          - @simulation_managers[:amazon].each do |virtual_machine|
+            %li= virtual_machine
+
+:javascript
+  $(function() {
+    new window.PLCloudManager();
+
+    $('p').each(function(index, element) {
+      if($(element).html() == "") {
+        $(element).remove();
+      }
+    });
+  });
