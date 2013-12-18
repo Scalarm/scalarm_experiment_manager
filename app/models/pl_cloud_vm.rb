@@ -4,7 +4,6 @@
 # created_at => time - when this job were scheduled
 # time_limit => time - when this job should be stopped
 # vm_id => string - instance id of the vm
-# instance_type => string - typu of the vm
 # sm_uuid => string - uuid of configuration files
 # initialized => boolean - whether or not SM code has been sent to this machind
 
