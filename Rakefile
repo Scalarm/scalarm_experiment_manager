@@ -7,18 +7,13 @@ ScalarmExperimentManager::Application.load_tasks
 
 namespace :service do
   desc 'Start the service'
-  task :start => :environment do
-    #config = YAML::load(File.open(File.join(Rails.root, 'config', 'scalarm.yml')))
-    #puts "thin start -d -C config/thin.yml"
-    #%x[thin start -d -C config/thin.yml]
+  task :start, [:debug] => [:environment] do |t, args|
     puts 'pumactl -F config/puma.rb -T scalarm start'
     %x[pumactl -F config/puma.rb -T scalarm start]
   end
 
   desc 'Stop the service'
-  task :stop => :environment do
-    #%x[thin stop -C config/thin.yml]
-    #%x[kill -9 $(ps aux | grep 'thin server (/tmp/scalarm_experiment_manager.sock)' | awk '{print $2}')]
+  task :stop, [:debug] => [:environment] do |t, args|
     puts 'pumactl -F config/puma.rb -T scalarm stop'
     %x[pumactl -F config/puma.rb -T scalarm stop]
   end
@@ -41,3 +36,39 @@ namespace :service do
 
 end
 
+namespace :db_router do
+  desc 'Start MongoDB router'
+  task :start, [:debug] => [:environment] do |t, args|
+    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    information_service = InformationService.new(config['information_service_url'],
+                                                 config['information_service_user'],
+                                                 config['information_service_pass'])
+
+    config_service_url = information_service.get_list_of('db_config_services').sample
+    start_router(config_service_url) if config_service_url
+  end
+
+  task :stop, [:debug] => [:environment] do |t, args|
+    stop_router
+  end
+end
+
+
+# ================ UTILS
+def start_router(config_service_url)
+  router_cmd = "./bin/mongos --bind_ip localhost --configdb #{config_service_url} --logpath log/db_router.log --fork --logappend"
+  puts router_cmd
+  puts %x[#{router_cmd}]
+end
+
+def stop_router
+  proc_name = "./mongos .*"
+  out = %x[ps aux | grep "#{proc_name}"]
+  processes_list = out.split("\n").delete_if { |line| line.include? 'grep' }
+
+  processes_list.each do |process_line|
+    pid = process_line.split(' ')[1]
+    puts "kill -15 #{pid}"
+    system("kill -15 #{pid}")
+  end
+end

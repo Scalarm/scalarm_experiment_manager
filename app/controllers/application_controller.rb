@@ -3,12 +3,12 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   #protect_from_forgery with: :exception
 
-  before_filter :authenticate, :except => [:login]
+  before_filter :authenticate, :except => [:login, :login_openid_google, :openid_callback_google]
 
   protected
 
   def authenticate
-    @current_user = nil; @sm_user = false
+    @current_user = nil; @sm_user = nil
     
     Rails.logger.debug("Session: #{session[:user]}")
 
@@ -42,8 +42,8 @@ class ApplicationController < ActionController::Base
 
           unless temp_pass.nil?
             Rails.logger.debug("[authentication] SM using uuid: '#{sm_uuid}'")
-            correct = (not temp_pass.nil?) and temp_pass.password == password
-            @sm_user = true if correct
+            correct = ((not temp_pass.nil?) and (temp_pass.password == password))
+            @sm_user = temp_pass if correct
 
             correct
           else

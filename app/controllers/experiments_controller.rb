@@ -470,13 +470,21 @@ class ExperimentsController < ApplicationController
         redirect action: :index
       end
 
-    elsif @sm_user
-      @experiment = DataFarmingExperiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
+    elsif (not @sm_user.nil?)
+      if  @sm_user.experiment_id != params['id']
+        error_msg = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params['id'])
+        Rails.logger.error(error_msg)
 
-      if @experiment.nil?
-        flash[:error] = "Experiment '#{params['id']}' for user '#{@current_user.login}' not found"
+        render json: { status: 'error', reason: error_msg }, status: 403
+      else
+        @experiment = DataFarmingExperiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
 
-        redirect action: :index
+        if @experiment.nil?
+          error_msg = t('experiment_not_found', experiment_id: params['id'], user: @sm_user.sm_uuid)
+          Rails.logger.error(error_msg)
+
+          render json: { status: 'error', reason: error_msg }, status: 404
+        end
       end
     end
   end

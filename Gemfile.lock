@@ -99,6 +99,7 @@ GEM
       json (~> 1.4)
     ref (1.0.5)
     rinruby (2.0.3)
+    ruby-openid (2.3.0)
     rubysl (2.0.14)
       rubysl-abbrev (~> 2.0)
       rubysl-base64 (~> 2.0)
@@ -365,6 +366,7 @@ DEPENDENCIES
   racc
   rails (= 4.0.1)
   rinruby
+  ruby-openid
   rubysl (~> 2.0)
   rubysl-matrix (~> 2.1)
   rubyzip

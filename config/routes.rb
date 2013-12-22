@@ -11,6 +11,10 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'user_controller/account'
   post 'user_controller/change_password'
 
+  # OpenID
+  get 'login/login_openid_google' => 'user_controller#login_openid_google'
+  get 'login/openid_callback_google' => 'user_controller#openid_callback_google'
+
   get 'simulations' => 'simulations#index'
   get 'simulations/index'
   get 'simulations/registration'
