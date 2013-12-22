@@ -77,12 +77,12 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def destroy_and_clean_after(job, scheduler, ssh)
-    # Rails.logger.info("Destroying temp pass for #{job.sm_uuid}")
-    # temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
-    # Rails.logger.info("It is nil ? --- #{temp_pass.nil?}")
-    # temp_pass.destroy unless temp_pass.nil?
-    # job.destroy
-    # scheduler.clean_after_job(ssh, job)
+    Rails.logger.info("Destroying temp pass for #{job.sm_uuid}")
+    temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
+    Rails.logger.info("It is nil ? --- #{temp_pass.nil?}")
+    temp_pass.destroy unless temp_pass.nil? || temp_pass.longlife
+    job.destroy
+    scheduler.clean_after_job(ssh, job)
   end
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
