@@ -345,7 +345,7 @@ class DataFarmingExperiment < MongoActiveRecord
     unless @storage_manager_url
       # destroy all binary files stored for this experiments
       sm_uuid = SecureRandom.uuid
-      temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid)
+      temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, self.experiment_id)
       config = {'storage_manager' => { 'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password} }
       Rails.logger.debug("Destroy config = #{config}")
 
