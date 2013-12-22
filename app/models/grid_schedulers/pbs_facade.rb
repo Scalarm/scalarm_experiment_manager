@@ -11,8 +11,6 @@ class PBSFacade
 
   def submit_job(ssh, job)
     ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
-    #  create a proxy certificate for the user
-    ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
     #  schedule the job with qsub
     submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | qsub -q plgrid")
     Rails.logger.debug("Output lines: #{submit_job_output}")
