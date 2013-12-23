@@ -56,7 +56,9 @@ gem 'puma'
 # Use debugger
 # gem 'debugger', group: [:development, :test]
 # Rubinius specifics
-gem 'rubysl', '~> 2.0'
-gem 'rubysl-openssl', '2.0.5'
+platforms :rbx do
+  gem 'rubysl', '~> 2.0'
+  gem 'rubysl-openssl', '2.0.5'
+end
 
 gem 'ruby-openid'
