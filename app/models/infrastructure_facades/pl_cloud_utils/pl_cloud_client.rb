@@ -1,7 +1,10 @@
 require 'rest-client'
+require 'json'
+require 'xmlsimple'
 
 class PLCloudClient
   PLCLOUD_URL = 'https://149.156.10.32:3443'
+  DNAT_URL = 'https://149.156.10.32:8401/dnat'
 
   RE_ID = /ID: (\d+)/
   RE_VM_ID = /VM ID: (\d+)/
@@ -35,7 +38,7 @@ class PLCloudClient
   end
 
 
-  # -- OpenNebula utils --
+  # -- PLCloud REST OpenNebula utils --
 
   # @return [Integer] created template id or -1 on error
   def onetemplate_create(name, image_id, host_name)
@@ -70,7 +73,7 @@ class PLCloudClient
     # get instance ID
     ids = resp.scan(RE_VM_ID)
     if ids.length > 0
-      ids.map {|i| i[1].to_i}
+      ids.map {|i| i[0].to_i}
     else
       Rails.logger.error("Error instantiating PLCloud template: #{resp}")
       Rails.logger.error("Used template id: #{template_id}")
@@ -86,7 +89,7 @@ class PLCloudClient
 
     ids = resp.to_s.scan(RE_ID)
     if ids.length > 0
-      ids.map {|i| i[1].to_i}
+      ids.map {|i| i[0].to_i}
     else
       Rails.logger.error("Error creating PLCloud instance(s): #{resp}")
       Rails.logger.error("Used template config:\n#{template_conf}")
@@ -113,8 +116,6 @@ CONTEXT = [
     eos
   end
 
-  private
-
   # @return [String] base64 encoded file content for send to PLCloud REST with POST
   def encode_b64(text)
     Base64.encode64(text).split("\n").join('\n')
@@ -135,6 +136,58 @@ CONTEXT = [
       puts "Exception: #{$!}\n#{url}, #{str_args}"
       nil
     end
+  end
+
+  # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
+  def redirect_port(vm_ip, port)
+    # equivalent: oneport -a vm_ip -p port
+    # ca_file = '/software/local/cloud/rest-api-client/1.0/etc/one38.crt'
+
+    # TODO: use CA
+
+    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
+    # ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER
+    payload = [{'proto' => 'tcp', 'port' => port}].to_json
+
+    resp = dnat[vm_ip].post payload, content_type: 'text/json'
+
+    data = JSON.parse resp
+
+    unless data.kind_of?(Array) and data.size == 1
+      Rails.logger.error "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
+      return nil
+    end
+
+    dh = data[0]
+
+    unless dh.kind_of?(Hash)
+      Rails.logger.error "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
+      return nil
+    end
+
+    Rails.logger.debug("Successful PLCloud VM port redirection:\n #{dh['pubIp']}:#{dh['pubPort']} -> #{dh['privIp']}:#{dh['privPort']}")
+
+    {ip: dh['pubIp'], port: dh['pubPort']}
+  end
+
+  # @return [Hash] {<private_port_num> => {ip: <public_ip>, port: <public_port_num>}}
+  # @param [String] vm_ip virtual machine's private ip
+  def redirections_for(vm_ip)
+    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
+    resp = dnat[vm_ip].get
+    data = JSON.parse resp
+
+    Hash[data.map {|r| [r['privPort'], {ip: r['pubIp'], port: r['pubPort']}]}]
+  end
+
+  # Get VM info with "onevm show <vm_id> --xml"
+  # Information can be obtained from hash converted from given XML.
+  # Eg. vm_info(99)['TEMPLATE']['NIC']['IP'] gives VM's private IP address of VM with id=99.
+  # @return [Hash] keys are uppercase Strings, values can be String or Hash
+  # @param [Fixnum] vm_id VM's id, can be also String or other type with .to_s
+  def vm_info(vm_id)
+    resp = execute('onevm', ['show', vm_id.to_s, '--xml'])
+    XmlSimple.xml_in(resp, 'ForceArray' => false)
   end
 
 end

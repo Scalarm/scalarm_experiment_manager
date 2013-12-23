@@ -62,3 +62,4 @@ gem 'rubysl', '~> 2.0'
 gem 'ruby-openid'
 
 gem 'rest-client', '~> 1.6.7'
+gem 'xml-simple'

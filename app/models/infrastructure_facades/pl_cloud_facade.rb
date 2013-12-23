@@ -60,7 +60,7 @@ class PLCloudFacade < InfrastructureFacade
 
         end
       rescue Exception => e
-        Rails.logger.info("Exception #{e} in Amazon EC2 monitoring")
+        Rails.logger.info("Exception #{e} in PLCloud monitoring")
       end
 
       sleep(60)
@@ -79,6 +79,8 @@ class PLCloudFacade < InfrastructureFacade
     timestamp = Time.now.to_i
 
     sched_instances_ids = plc_client.create_instance("scalarm_#{timestamp}", exp_image_id, instances_count)
+
+    # TODO: forward ssh port to public
 
     sched_instances_ids.each do |instance_id|
       plc_vm = PLCloudVm.new({
