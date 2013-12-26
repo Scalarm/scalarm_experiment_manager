@@ -35,4 +35,14 @@
 
         return false;
       });
+
+      $('#boostButton').on('click', function() {
+        $('#actions-loading').show();
+        $('#extension-dialog').load( "#{get_booster_dialog_experiment_path(@experiment.id)}", function() {
+          $('#actions-loading').hide();
+          $('#extension-dialog').foundation('reveal', 'open');
+        } );
+
+        return false;
+      });
     });

@@ -4,7 +4,7 @@ class window.PLGridManager
     @bindToSubmissionForm()
 
   bindToLoginForm: () ->
-    $("#plgrid-login-tab form")
+    $("#plgrid-login-form-panel form")
       .bind('ajax:before', () ->
           $('#plgrid-configure-busy').show()
           $('#plgrid-login-ajax-response').html('')
@@ -20,7 +20,7 @@ class window.PLGridManager
       )
 
   bindToSubmissionForm: () ->
-    $("#plgrid-submission-tab form")
+    $("#plgrid-submission-panel form")
       .bind('ajax:before', () =>
         $(@dialogId).foundation('reveal', 'close')
         window.show_loading_notice()

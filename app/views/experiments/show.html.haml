@@ -31,11 +31,7 @@
       monitor.generate_html('experiment_stats')
 
 
-      $('#boostButton').on('click', function() {
-        $('#extension-dialog').load( "#{get_booster_dialog_experiment_path(@experiment.id)}" );
-        $('#extension-dialog').foundation('reveal', 'open');
-        return false;
-      });
+
 
       $('#progressButton').on('click', function() {
         $('#progressInformationWrapper').slideToggle();

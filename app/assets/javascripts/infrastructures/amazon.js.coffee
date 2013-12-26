@@ -6,7 +6,7 @@ class window.AmazonManager
     $('#amazon-ajax-response').hide()
 
   bindToCredentialForm: () ->
-    $("#amazon-credentials form")
+    $("#amazon-credentials-panel form")
       .bind('ajax:before', () ->
         $(this).find('.amazon-credentials-busy').show()
       )
@@ -24,7 +24,7 @@ class window.AmazonManager
       )
 
   bindToSubmissionForm: () ->
-    $("#amazon-submission-tab form")
+    $("#amazon-submission-panel form")
       .bind('ajax:before', () ->
         $('.amazon-submission-busy').show()
       )
