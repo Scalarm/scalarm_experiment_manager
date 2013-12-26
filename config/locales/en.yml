@@ -20,6 +20,8 @@
 # available at http://guides.rubyonrails.org/i18n.html.
 
 en:
+  title: Scalarm Experiment Manager
+
   navbar:
     experiments_link: Experiments
     simulations_link: Simulations

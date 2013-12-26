@@ -6,27 +6,8 @@ margin: 0;
 padding: 0;
 }
 
-/* render html5 elements as block */
-header, footer, section, aside, nav, article {
-    display: block;
-    margin-top: 0px;
-}
-
-body {
-    line-height: 1;
-    background: #3384BB url(image_path('bg01.jpg')) repeat;
-    color: #555;
-    //font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif;
-//    font-family: 'Ubuntu', sans-serif;
-    font-size: 14px;
-    line-height: 1.2em;
-    min-width: 1200px;
-}
-
 select {
     color: #555 !important;
-    //font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif !important;
-//    font-family: 'Ubuntu', sans-serif;
     font-size: 22px !important;
     line-height: 1.2em !important;
 }
@@ -53,9 +34,12 @@ select {
 
 #wrapper {
   position: relative;
-  width: 960px;
+  max-width: 960px;
   background: url(image_path('bg03.jpg')) repeat;
-  margin: 50px auto;
+  margin-top: 20px;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 5px;
   min-height: 535px;
   padding: 10px;
   /* curved border radius */
@@ -65,7 +49,7 @@ select {
 }
 
 header {
-  padding: 10px;
+  padding: 5px;
   margin-bottom: 17px;
   background-color: #eee;
   /* curved border radius */
@@ -104,26 +88,26 @@ footer {
 
 /* basics */
 
-h1,h2,h3,h4,h5,h6 {
-//    font-weight: bold;
-    clear: both;
-}
-
-a {
-color:#3384bb;
-}
-
-a:hover {
-color: #ff6f39;
-}
-
-p {
-margin-bottom: 18px;
-}
-
-li {
-padding-left: 5px;
-}
+//h1,h2,h3,h4,h5,h6 {
+////    font-weight: bold;
+//    clear: both;
+//}
+//
+//a {
+//color:#3384bb;
+//}
+//
+//a:hover {
+//color: #ff6f39;
+//}
+//
+//p {
+//margin-bottom: 18px;
+//}
+//
+//li {
+//padding-left: 5px;
+//}
 
 /* nav */
 
@@ -154,56 +138,6 @@ nav .menu ul li a:hover {
 color: #ff6f39;
 border-bottom: 3px solid #ff6f39;
 }
-
-/* header */
-
-header h1 {
-font-size: 36px;
-padding-top: 20px;
-margin-left: 10px;
-float: left;
-width: 600px;
-}
-
-header h1 a {
-font-weight: bold;
-text-decoration: none;
-}
-
-header h2 {
-float: right;
-clear: right;
-margin-right: 10px;
-color: #777;
-padding-top: 28px;
-font-size: 16px;
-}
-
-/* main content */
-
-#main {
-margin: 0 10px;
-}
-
-#main h1, h2, h3, h5, h6 {
-    color: #3383BB;
-    margin: 10px 0 20px 0;
-    line-height: 1.5em;
-}
-
-#main h3 {
-    border-bottom: 1px #555 solid;
-    font-size: 18px;
-}
-
-#main h4 {
-	color: #3383BB;
-	margin: 5px 0 5px 0;
-	font-size: 16px;
-	line-height: 1.5em;
-}
-
-
 
 #infoboxleft {
 float: left;
