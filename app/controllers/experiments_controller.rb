@@ -252,7 +252,7 @@ class ExperimentsController < ApplicationController
       @parameters[parameter_uid] = parameter_info
     end
 
-    Rails.logger.debug("Parameters: #{@parameters}")
+    #Rails.logger.debug("Parameters: #{@parameters}")
 
     render partial: 'extension_dialog'
   end

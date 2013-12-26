@@ -11,32 +11,13 @@
   = render 'monitoring_stats'
 
   %article#experiment_progress_bar
-    %h4.subheader= t('.progress_bar_header')
+    %h3.subheader= t('.progress_bar_header')
 
-  %article
-    %h4.subheader= t('.actions_header')
-
-    %ul.inline-list.button-list
-      - if @experiment.is_running
-        %li= button_to t('.stop_button'), stop_experiment_path(@experiment.id), :onClick => "return confirm('Are you sure?')", class: 'button radius small'
-        %li= button_to t('.extend_button'), '#', id: 'extensionDialogOpenButton', class: 'button radius small'
-        %li= button_to t('.boost_button'), '#', id: 'boostButton', class: 'button radius small'
-        %li= button_to t('.scheduling_button'), '#', id: 'schedulingButton', class: 'button radius small'
-      - else
-        %li= button_to t('.destroy_button'), experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: 'button radius small'
-
-      %li
-        =link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: 'button radius small'
-        %ul#download-dropdown.f-dropdown(data-dropdown-conent)
-          %li= link_to t('.binaries_results_button'), "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}", id: 'download-dialog-buttton'
-          %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
-      %li= button_to t('.progress_information_button'), '#', id: 'progressButton', class: 'button radius small'
-      %li= image_tag 'loading.gif', id: 'loading-img', style: 'display: none;'
+  = render 'monitoring_actions'
 
 %section.panel.radius(style="display: none;" id="progressInformationWrapper")
   = render 'monitoring_table'
 
-#extension-dialog.reveal-modal(data-reveal="")
 = render 'scheduling_policy_dialog'
 
 - content_for :javascript do
@@ -49,12 +30,6 @@
       var monitor = new window.ExperimentMonitor('#{@experiment.id}');
       monitor.generate_html('experiment_stats')
 
-      // handling ajax loading of the Extension dialog
-      $('#extensionDialogOpenButton').on('click', function() {
-        $('#extension-dialog').load( "#{extension_dialog_experiment_path(@experiment.id)}" );
-        $('#extension-dialog').foundation('reveal', 'open');
-        return false;
-      });
 
       $('#boostButton').on('click', function() {
         $('#extension-dialog').load( "#{get_booster_dialog_experiment_path(@experiment.id)}" );
