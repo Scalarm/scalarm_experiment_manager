@@ -23,18 +23,24 @@ class PLCloudClient
   # @param [Integer] count
   # @param [Hash] vm_config hash with VM template params: host_name, network_id, cpu, memory, arch
   # @return [Array<Integer>] list of PLCloud VM instances ids ([] on error)
-  def create_instance(name, image_id, count,
+  def create_instances(name, image_id, count,
       vm_config={host_name: name, network_id: 0, cpu: 0.5, memory: 1024, arch: 'x86_64'})
 
     conf = self.template_config(name, image_id, vm_config[:host_name],
                          vm_config[:network_id], vm_config[:cpu], vm_config[:memory], vm_config[:arch])
 
     onevm_create(conf, count)
-
   end
 
+  # Terminates and deletes instance - use with caution!
+  # @param [Fixnum] vm_id vm's id
+  def delete_instance(vm_id)
+    execute('onevm', ['delete', vm_id])
+  end
+
+  # @return [PLCloudInstance] abstraction layer object used for managing and retrieving info about VM instance
   def vm_instance(vm_id)
-    PLCloudInstance(vm_id, self)
+    PLCloudInstance.new(vm_id, self)
   end
 
 
@@ -133,11 +139,13 @@ CONTEXT = [
                       'One-User' => @secrets.login, 'One-Secret' => @secrets.password,
                       :content_type => :json, :accept => :json
     rescue
-      puts "Exception: #{$!}\n#{url}, #{str_args}"
+      Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
       nil
     end
   end
 
+  # @param [String] vm_ip
+  # @param [Fixnum] port also can be String which can be converted to Fixnum
   # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
   def redirect_port(vm_ip, port)
     # equivalent: oneport -a vm_ip -p port
@@ -146,23 +154,26 @@ CONTEXT = [
     # TODO: use CA
 
     dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
-    # ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER
-    payload = [{'proto' => 'tcp', 'port' => port}].to_json
 
-    resp = dnat[vm_ip].post payload, content_type: 'text/json'
+    # ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER
+    payload = [{'proto' => 'tcp', 'port' => port.to_i}].to_json
+
+    begin
+      resp = dnat[vm_ip].post payload, content_type: 'text/json'
+    rescue
+      raise "Exception during POST to port redirection service: #{$!}\nPayload: #{payload}"
+    end
 
     data = JSON.parse resp
 
     unless data.kind_of?(Array) and data.size == 1
-      Rails.logger.error "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
-      return nil
+      raise "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
     end
 
     dh = data[0]
 
     unless dh.kind_of?(Hash)
-      Rails.logger.error "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
-      return nil
+      raise "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
     end
 
     Rails.logger.debug("Successful PLCloud VM port redirection:\n #{dh['pubIp']}:#{dh['pubPort']} -> #{dh['privIp']}:#{dh['privPort']}")
@@ -188,6 +199,14 @@ CONTEXT = [
   def vm_info(vm_id)
     resp = execute('onevm', ['show', vm_id.to_s, '--xml'])
     XmlSimple.xml_in(resp, 'ForceArray' => false)
+  end
+
+  # @return [Hash] hash: vm_id => vm_info - like in vm_info(vm_id) method for every VM
+  def all_vm_info
+    resp = execute('onevm', ['list', '--xml'])
+    infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['VM']
+    infos = [infos] unless infos.kind_of?(Array)
+    return Hash[infos.map {|i| [i['ID'].to_i, i]}]
   end
 
 end

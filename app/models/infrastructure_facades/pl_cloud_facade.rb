@@ -9,9 +9,22 @@ require_relative 'pl_cloud_utils/pl_cloud_instance'
 
 class PLCloudFacade < InfrastructureFacade
 
+  VM_NAME_PREFIX = 'scalarm_'
+
   def current_state(user)
-    # TODO
-    "TODO"
+    plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
+
+    return Rails.logger.info("No information available") if plc_secrets.nil?
+    plc_client = PLCloudClient.new(plc_secrets)
+
+    begin
+      # TODO: change to onevm list? (shorter format with stringified states, but not XML)
+      # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with VM state ACTIVE (3)
+      num = (plc_client.all_vm_info.values.select { |vm| vm['NAME'] =~ /^#{VM_NAME_PREFIX}/ && vm['STATE'] == '3'}).count
+      "You have #{num} Scalarm virtual machines running"
+    rescue Exception => ex
+      "No information available due to exception - #{ex}"
+    end
   end
 
   def start_monitoring
@@ -23,7 +36,6 @@ class PLCloudFacade < InfrastructureFacade
         plcloud_vms.each do |user_id, vm_list|
           user = ScalarmUser.find_by_id(user_id)
           plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
-
           if plc_secrets.nil?
             Rails.logger.info("We cannot monitor PLCloud VMs for #{user.login} due secrets lacking")
             next
@@ -31,38 +43,35 @@ class PLCloudFacade < InfrastructureFacade
 
           plc_client = PLCloudClient.new(plc_secrets)
 
-
           vm_list.each do |plc_vm|
             Rails.logger.info("[PLC vm #{plc_vm.vm_id}] checking")
             vm_instance = plc_client.vm_instance(plc_vm.vm_id)
 
             experiment = DataFarmingExperiment.find_by_id(plc_vm.experiment_id)
 
-            if [:stopped, :terminated].include?(vm_instance.status)
+            if %w(stop fail).include?(vm_instance.short_vm_state) or (not vm_instance.exists?)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be removed from our db as it is terminated")
-              SimulationManagerTempPassword.find_by_sm_uuid(plc_vm.sm_uuid).destroy
+              sm_temp_password = SimulationManagerTempPassword.find_by_sm_uuid(plc_vm.sm_uuid)
+              sm_temp_password.destroy if sm_temp_password
               plc_vm.destroy
 
-            elsif ([:pending, :running].include?(vm_instance.status) and (plc_vm.created_at + plc_vm.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
+            elsif (%w(pend actv done).include?(vm_instance.short_vm_state) and (plc_vm.created_at + plc_vm.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be destroyed as it is done or should be done")
-              vm_instance.terminate
+              vm_instance.delete
 
-            elsif (vm_instance.status == :running) and (not plc_vm.initialized)
+            elsif (vm_instance.short_vm_state == 'actv') and (not plc_vm.initialized)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be initialized with SM now")
               initialize_sm_on(plc_vm, vm_instance)
 
-            elsif (vm_instance.status == :pending) and (plc_vm.created_at + 10.minutes < Time.now)
+            elsif (vm_instance.short_vm_state == 'pend') and (plc_vm.created_at + 10.minutes < Time.now)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM will be restarted due to not being run for more then 10 minutes")
               vm_instance.reboot
             end
-
           end
-
         end
       rescue Exception => e
         Rails.logger.info("Exception #{e} in PLCloud monitoring")
       end
-
       sleep(60)
     end
   end
@@ -78,25 +87,38 @@ class PLCloudFacade < InfrastructureFacade
 
     timestamp = Time.now.to_i
 
-    sched_instances_ids = plc_client.create_instance("scalarm_#{timestamp}", exp_image_id, instances_count)
+    si_ids = plc_client.create_instances("#{VM_NAME_PREFIX}#{timestamp}", exp_image_id, instances_count)
 
-    # TODO: forward ssh port to public
+    sched_instances = si_ids.map { |vm_id| plc_client.vm_instance(vm_id) }
 
-    sched_instances_ids.each do |instance_id|
+    sched_instances.each do |instance|
+
+      current_redirects = plc_client.redirections_for(instance.vm_id)
+      if current_redirects.include?(22)
+        public_ip = current_redirects[:ip]
+        public_ssh_port = current_redirects[:port]
+      else
+        rdr = instance.redirect_port(22)
+        public_ip = rdr[:ip]
+        public_ssh_port = rdr[:port]
+      end
+
       plc_vm = PLCloudVm.new({
                                  user_id: user.id,
                                  experiment_id: experiment_id,
                                  created_at: Time.now,
                                  time_limit: additional_params[:time_limit],
-                                 vm_id: instance_id,
+                                 vm_id: instance.vm_id,
                                  sm_uuid: SecureRandom.uuid,
                                  initialized: false,
-                                 start_at: additional_params['start_at']
+                                 start_at: additional_params['start_at'],
+                                 public_ip: public_ip,
+                                 public_ssh_port: public_ssh_port
                              })
       plc_vm.save
     end
 
-    return 'ok', "You have scheduled #{sched_instances_ids.size} virtual machines on PLCloud!"
+    return 'ok', "You have scheduled #{sched_instances.size} virtual machines on PLCloud!"
 
   end
 
@@ -183,9 +205,10 @@ class PLCloudFacade < InfrastructureFacade
     'ok'
   end
 
+  # @param [PLCloudVm] vm_record
+  # @param [PLCloudInstance] vm_instance
   def initialize_sm_on(vm_record, vm_instance)
-    Rails.logger.debug('PLCloud SM initialization not implemented yet')
-    return nil
+    Rails.logger.debug("Initializing SM on #{vm_record.public_ip}:#{vm_record.public_ssh_port}")
 
     prepare_configuration_for_simulation_manager(vm_record.sm_uuid, vm_record.user_id, vm_record.experiment_id, vm_record.start_at)
 
@@ -194,12 +217,22 @@ class PLCloudFacade < InfrastructureFacade
     error_counter = 0
     while true
       begin
-        #  upload the code to the VM
-        Net::SCP.start(vm_instance.public_dns_name, experiment_vm_image.login, password: experiment_vm_image.password) do |scp|
+        #  upload the code to the VM - use only password authentication
+        Net::SCP.start(vm_record.public_ip, experiment_vm_image.login,
+                       port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |scp|
           scp.upload! "/tmp/scalarm_simulation_manager_#{vm_record.sm_uuid}.zip", '.'
         end
 
-        Net::SSH.start(vm_instance.public_dns_name, experiment_vm_image.login, password: experiment_vm_image.password) do |ssh|
+        # ---- TODO TESTING ----
+        Rails.logger.debug("----- WAITING 3 MINUTES AFTER SM UPLOAD TO /tmp -----")
+        sleep(3*60)
+        Rails.logger.debug("----- WAITING END! -----")
+        # ---- TODO TESTING ----
+
+        # execute simulation manager on VM - use only password auth
+        # NOTE: VM should have rvm installed
+        Net::SSH.start(vm_record.public_ip, experiment_vm_image.login,
+                       port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |ssh|
           ssh.exec!("source .rvm/environments/default; rm -rf scalarm_simulation_manager_#{vm_record.sm_uuid}; unzip scalarm_simulation_manager_#{vm_record.sm_uuid}.zip; cd scalarm_simulation_manager_#{vm_record.sm_uuid}; ruby simulation_manager.rb < /dev/null > /tmp/mylogfile 2>&1")
         end
 
@@ -208,7 +241,7 @@ class PLCloudFacade < InfrastructureFacade
         Rails.logger.debug("Exception #{e} occured while communication with #{vm_instance.public_dns_name} --- #{error_counter}")
         error_counter += 1
         if error_counter > 10
-          vm_instance.terminate
+          vm_instance.delete
           break
         end
       end

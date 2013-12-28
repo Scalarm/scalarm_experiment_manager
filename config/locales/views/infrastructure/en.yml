@@ -26,3 +26,4 @@ en:
         submission:
           image: "Image:"
           instance_counter: "Instance count:"
+        sched_vms: "Scheduled virtual machines"

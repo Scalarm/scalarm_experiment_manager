@@ -31,26 +31,17 @@
               .small-6.columns
                 = select_tag :image_id, options_for_select(images)
 
-            -#TODO
-            -#.row
-            -#  .small-6.columns
-            -#    = label_tag t('.submission.vm_type'), nil, class: 'inline right'
-            -#  .small-6.columns
-            -#    = select_tag :instance_type, options_for_select(PLCloudVm.amazon_instance_types)
+            .row
+              .small-6.columns
+                = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :time_limit
 
-            -#TODO
-            -#.row
-            -#  .small-6.columns
-            -#    = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
-            -#  .small-6.columns
-            -#    = text_field_tag :time_limit
-
-            -#TODO
-            -#.row
-            -#  .small-6.columns
-            -#    = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
-            -#  .small-6.columns
-            -#    = text_field_tag :start_at
+            .row
+              .small-6.columns
+                = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :start_at
 
             .row
               %ul.inline-list
@@ -130,9 +121,9 @@
       %a{'href' => '#plcloud-vms-panel'} Scheduled virtual machines
     .content{'data-section-content' => ''}
       %p
-        %p= @current_states[:amazon]
+        %p= @current_states[:plcloud]
         %ul.circle
-          - @simulation_managers[:amazon].each do |virtual_machine|
+          - @simulation_managers[:plcloud].each do |virtual_machine|
             %li= virtual_machine
 
 :javascript
