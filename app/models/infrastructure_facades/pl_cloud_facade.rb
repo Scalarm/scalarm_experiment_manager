@@ -214,6 +214,9 @@ class PLCloudFacade < InfrastructureFacade
 
     experiment_vm_image = PLCloudImage.find_by_image_id(vm_instance.image_id.to_s)
 
+    Rails.logger.debug("iid: #{vm_instance.image_id}")
+    Rails.logger.debug("evi: #{experiment_vm_image}")
+
     error_counter = 0
     while true
       begin
@@ -238,7 +241,7 @@ class PLCloudFacade < InfrastructureFacade
 
         break
       rescue Exception => e
-        Rails.logger.debug("Exception #{e} occured while communication with #{vm_instance.public_dns_name} --- #{error_counter}")
+        Rails.logger.debug("Exception #{e} occured while communication with #{vm_record.public_ip}:#{vm_record.public_ssh_port} --- #{error_counter}")
         error_counter += 1
         if error_counter > 10
           vm_instance.delete

@@ -150,6 +150,11 @@ class PLCloudInstance
     SHORT_LCM_STATES[LCM_STATES[@info['LCM_STATE'].to_i]]
   end
 
+  # @return [Fixnum] image id
+  def image_id
+    @info['TEMPLATE']['DISK']['IMAGE_ID'].to_i
+  end
+
   def private_ip
     @info['TEMPLATE']['NIC']['IP']
   end
