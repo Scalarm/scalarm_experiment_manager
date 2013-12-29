@@ -286,14 +286,26 @@ class window.ExperimentBooster
 class window.WindowManager
   constructor: () ->
     #experiments windows
-    $("#running_experiments_link").on('click', => @show_window("running_experiments"))
-    $("#running_experiments_window .close_button").on('click', => @close_window("running_experiments"))
+    $("#running_experiments_window .close_button").on 'click', => @close_window("running_experiments")
 
-    $("#available_experiments_link").on('click', => @show_window("available_experiments"))
-    $("#available_experiments_window .close_button").on('click', => @close_window("available_experiments"))
+    $("#running_experiments_link").on 'click', =>
+      $('#running_experiments_window').load '/experiments/running_experiments', =>
+        @show_window("running_experiments")
+        $("#running_experiments_window .close_button").on 'click', => @close_window("running_experiments")
 
-    $("#historical_experiments_link").on('click', => @show_window("historical_experiments"))
-    $("#historical_experiments_window .close_button").on('click', => @close_window("historical_experiments"))
+    $("#available_experiments_window .close_button").on 'click', => @close_window("available_experiments")
+
+    $("#available_experiments_link").on 'click', =>
+      $('#available_experiments_window').load '/simulations/simulation_scenarios', =>
+        @show_window("available_experiments")
+        $("#available_experiments_window .close_button").on 'click', => @close_window("available_experiments")
+
+    $("#historical_experiments_window .close_button").on 'click', => @close_window("historical_experiments")
+    $("#historical_experiments_link").on 'click', =>
+      $('#historical_experiments_window').load '/experiments/historical_experiments', =>
+        @show_window("historical_experiments")
+        $("#historical_experiments_window .close_button").on 'click', => @close_window("historical_experiments")
+
     # analysis charts
     $("#histogram_analysis_link").on('click', => @show_window('histogram_analysis'))
     $("#histogram_analysis_window .close_button").on('click', => @close_window('histogram_analysis'))

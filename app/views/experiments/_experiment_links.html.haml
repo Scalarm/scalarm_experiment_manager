@@ -3,24 +3,24 @@
 
 #running_experiments_window.layered_window
   = image_tag 'close_icon.png', :class =>'close_button'
-  = render 'running_experiments'
+  .row.small-2.columns.small-centered= image_tag 'loading.gif'
 
 #available_experiments_link
   = image_tag('available_experiments.png', :size => '100x150')
 
 #available_experiments_window.layered_window
   = image_tag 'close_icon.png', :class =>'close_button'
-  = render 'simulations/simulation_scenarios'
+  .row.small-2.columns.small-centered= image_tag 'loading.gif'
 
 #historical_experiments_link
   = image_tag('historical_experiments.png', :size => '100x150')
 
 #historical_experiments_window.layered_window
   = image_tag 'close_icon.png', :class =>'close_button'
-  = render 'historical_experiments'
+  .row.small-2.columns.small-centered= image_tag 'loading.gif'
 
 - content_for :javascript do
   :javascript
     $(function() {
       var windows = new window.WindowManager();
-    });
+    }); 
