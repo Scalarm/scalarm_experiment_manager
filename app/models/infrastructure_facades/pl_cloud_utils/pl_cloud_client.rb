@@ -11,7 +11,11 @@ class PLCloudClient
 
   FILE_CONTENT_DIRECT = 'file_content_direct'
 
-  # TODO: clean up default template values
+  # default VM template values
+  DEFAULT_NETWORK_ID = 0
+  DEFAULT_CPU = 0.5
+  DEFAULT_MEMORY = 1024
+  DEFAULT_ARCH = 'x86_64'
 
   # @param [PLCloudSecrets] secrets secrets used to authenticate to PLCloud REST service
   def initialize(secrets)
@@ -23,8 +27,12 @@ class PLCloudClient
   # @param [Integer] count
   # @param [Hash] vm_config hash with VM template params: host_name, network_id, cpu, memory, arch
   # @return [Array<Integer>] list of PLCloud VM instances ids ([] on error)
-  def create_instances(name, image_id, count,
-      vm_config={host_name: name, network_id: 0, cpu: 0.5, memory: 1024, arch: 'x86_64'})
+  def create_instances(name, image_id, count, vm_config={
+      host_name: name,
+      network_id: DEFAULT_NETWORK_ID,
+      cpu: DEFAULT_CPU,
+      memory: DEFAULT_MEMORY,
+      arch: DEFAULT_ARCH} )
 
     conf = self.template_config(name, image_id, vm_config[:host_name],
                          vm_config[:network_id], vm_config[:cpu], vm_config[:memory], vm_config[:arch])
@@ -53,7 +61,6 @@ class PLCloudClient
 
     b64_config = encode_b64(temp_config)
 
-    # TODO handle bad response
     resp = execute('onetemplate', ['create', 'file_content_direct', b64_config])
 
     # get template id from response
@@ -75,10 +82,12 @@ class PLCloudClient
     Rails.logger.debug("Creating PLCloud VM instance using template id: #{template_id}")
     resp = execute('onetemplate', ['instantiate', template_id, '--multiple', count])
 
-    # TODO: when other amount of instances than requested are created
     # get instance ID
     ids = resp.scan(RE_VM_ID)
     if ids.length > 0
+      if (ids.length != count)
+        Rails.logger.warn("Requested intantiate of #{count} PLCloud machines, but #{ids.length} was created.")
+      end
       ids.map {|i| i[0].to_i}
     else
       Rails.logger.error("Error instantiating PLCloud template: #{resp}")
@@ -104,7 +113,8 @@ class PLCloudClient
   end
 
   # @return [String] template config file
-  def template_config(name, image_id, host_name=name, network_id=0, cpu=0.5, memory=1024, arch='x86_64')
+  def template_config(name, image_id, host_name=name,
+      network_id=DEFAULT_NETWORK_ID, cpu=DEFAULT_CPU, memory=DEFAULT_MEMORY, arch=DEFAULT_ARCH)
     <<-eos
 NAME = "#{name}"
 CPU    = #{cpu}
@@ -151,11 +161,10 @@ CONTEXT = [
     # equivalent: oneport -a vm_ip -p port
     # ca_file = '/software/local/cloud/rest-api-client/1.0/etc/one38.crt'
 
-    # TODO: use CA
+    # TODO: use CA, "ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER" to RestClient Resource
 
     dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
 
-    # ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER
     payload = [{'proto' => 'tcp', 'port' => port.to_i}].to_json
 
     begin

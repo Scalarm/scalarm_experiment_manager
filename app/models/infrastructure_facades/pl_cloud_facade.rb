@@ -18,7 +18,6 @@ class PLCloudFacade < InfrastructureFacade
     plc_client = PLCloudClient.new(plc_secrets)
 
     begin
-      # TODO: change to onevm list? (shorter format with stringified states, but not XML)
       # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with VM state ACTIVE (3)
       num = (plc_client.all_vm_info.values.select { |vm| vm['NAME'] =~ /^#{VM_NAME_PREFIX}/ && vm['STATE'] == '3'}).count
       "You have #{num} Scalarm virtual machines running"
@@ -148,8 +147,8 @@ class PLCloudFacade < InfrastructureFacade
     end
 
     if session.include?(:tmp_store_image_in_session) and (not user_id.nil?)
-      PLCloudImage.find_all_by_user_id(user_id).each do |amazon_ami|
-        amazon_ami.destroy if amazon_ami.experiment_id.to_s == session[:tmp_store_image_in_session].to_s
+      PLCloudImage.find_all_by_user_id(user_id).each do |image|
+        image.destroy if image.experiment_id.to_s == session[:tmp_store_image_in_session].to_s
       end
     end
 
@@ -214,9 +213,6 @@ class PLCloudFacade < InfrastructureFacade
 
     experiment_vm_image = PLCloudImage.find_by_image_id(vm_instance.image_id.to_s)
 
-    Rails.logger.debug("iid: #{vm_instance.image_id}")
-    Rails.logger.debug("evi: #{experiment_vm_image}")
-
     error_counter = 0
     while true
       begin
@@ -226,17 +222,12 @@ class PLCloudFacade < InfrastructureFacade
           scp.upload! "/tmp/scalarm_simulation_manager_#{vm_record.sm_uuid}.zip", '.'
         end
 
-        # ---- TODO TESTING ----
-        Rails.logger.debug("----- WAITING 3 MINUTES AFTER SM UPLOAD TO /tmp -----")
-        sleep(3*60)
-        Rails.logger.debug("----- WAITING END! -----")
-        # ---- TODO TESTING ----
-
         # execute simulation manager on VM - use only password auth
         # NOTE: VM should have rvm installed
         Net::SSH.start(vm_record.public_ip, experiment_vm_image.login,
                        port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |ssh|
-          ssh.exec!("source .rvm/environments/default; rm -rf scalarm_simulation_manager_#{vm_record.sm_uuid}; unzip scalarm_simulation_manager_#{vm_record.sm_uuid}.zip; cd scalarm_simulation_manager_#{vm_record.sm_uuid}; ruby simulation_manager.rb < /dev/null > /tmp/mylogfile 2>&1")
+          output = ssh.exec!("source .rvm/environments/default; rm -rf scalarm_simulation_manager_#{vm_record.sm_uuid}; unzip scalarm_simulation_manager_#{vm_record.sm_uuid}.zip; cd scalarm_simulation_manager_#{vm_record.sm_uuid}; ruby simulation_manager.rb < /dev/null > /tmp/mylogfile 2>&1")
+          Rails.logger.debug "SM exec output: #{output}"
         end
 
         break

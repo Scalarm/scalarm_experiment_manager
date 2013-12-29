@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.1'
+gem 'rails', '4.0.2'
 gem 'racc'
 
 # wrapper for R interpreter
@@ -45,8 +45,8 @@ gem 'turbolinks'
 gem 'jbuilder', '~> 1.2'
 
 group :doc do
-  # bundle exec rake doc:rails generates the API under doc/api.
-  gem 'sdoc', require: false
+    # bundle exec rake doc:rails generates the API under doc/api.
+    gem 'sdoc', require: false
 end
 
 # Use unicorn as the app server
@@ -56,10 +56,13 @@ gem 'puma'
 # Use debugger
 # gem 'debugger', group: [:development, :test]
 # Rubinius specifics
-gem 'rubysl-matrix', '~> 2.1'
-gem 'rubysl', '~> 2.0'
+platforms :rbx do
+    gem 'rubysl', '~> 2.0'
+    gem 'rubysl-openssl', '2.0.5'
+end
 
 gem 'ruby-openid'
+
 
 gem 'rest-client', '~> 1.6.7'
 gem 'xml-simple'
