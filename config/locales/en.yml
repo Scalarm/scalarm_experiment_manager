@@ -23,9 +23,9 @@ en:
   title: Scalarm Experiment Manager
 
   navbar:
-    experiments_link: Experiments
-    simulations_link: Simulations
-    account_link: Account
+    experiments_link: Experiment view
+    simulations_link: Simulation view
+    account_link: "Logged as '%{login}'"
     logout_link: Logout
 
   registered_simulation_scenario_list:

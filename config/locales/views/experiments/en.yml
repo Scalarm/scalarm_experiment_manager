@@ -1,0 +1,11 @@
+en:
+  experiments:
+    experiment_links:
+      navigation_link: Experiments
+      running_experiments: Running experiments
+      simulation_scenarios: Simulation scenarios
+      historical_experiments: Historical experiments
+      data_exploration_link: Data exploration methods
+      histograms: "Histograms"
+      regression_trees: Regression trees
+      scatter_plots: Scatter plots

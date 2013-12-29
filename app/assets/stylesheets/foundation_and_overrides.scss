@@ -1237,11 +1237,11 @@ $side-nav-divider-color: rgb(217, 217, 217); // darken(#fff, 10%);
 
 // Background color for the top bar
 
-$topbar-bg: rgb(217, 217, 217);//image-url('bg03');
+$topbar-bg: image-url('bg03.jpg');
 
 // Height and margin
 
-$topbar-height: 30px;
+$topbar-height: 35px;
 // $topbar-margin-bottom: emCalc(30);
 
 // Control Input height for top bar
@@ -1250,16 +1250,16 @@ $topbar-height: 30px;
 
 // Controlling the styles for the title in the top bar
 
-// $topbar-title-weight: bold;
+//$topbar-title-weight: bold;
 // $topbar-title-font-size: emCalc(17);
 
 // Style the top bar dropdown elements
 
-// $topbar-dropdown-bg: #222;
+//$topbar-dropdown-bg: #222;
 //$topbar-dropdown-link-color: black;
 // $topbar-dropdown-link-bg: lighten($topbar-bg, 5%);
 // $topbar-dropdown-toggle-size: 5px;
-// $topbar-dropdown-toggle-color: #fff;
+$topbar-dropdown-toggle-color: black;
 // $topbar-dropdown-toggle-alpha: 0.5;
 
 // Set the link colors and styles for top-level nav
@@ -1273,7 +1273,7 @@ $topbar-link-color: black;
 // $topbar-link-bg-hover: darken($topbar-bg, 3%);
 // $topbar-link-bg-active: darken($topbar-bg, 3%);
 
-// $topbar-dropdown-label-color: #555;
+//$topbar-dropdown-label-color: #555;
 // $topbar-dropdown-label-text-transform: uppercase;
 // $topbar-dropdown-label-font-weight: bold;
 // $topbar-dropdown-label-font-size: emCalc(10);
@@ -1283,7 +1283,7 @@ $topbar-link-color: black;
 // $topbar-menu-link-transform: uppercase;
 // $topbar-menu-link-font-size: emCalc(13);
 // $topbar-menu-link-weight: bold;
-$topbar-menu-link-color: rgb(217, 217, 217); //#fff;
+//$topbar-menu-link-color: rgb(217, 217, 217); //#fff;
 // $topbar-menu-icon-color: #fff;
 // $topbar-menu-link-color-toggled: #888;
 // $topbar-menu-icon-color-toggled: #888;
@@ -1296,8 +1296,8 @@ $topbar-menu-link-color: rgb(217, 217, 217); //#fff;
 
 // Divider Styles
 
-$topbar-divider-border-bottom: solid 1px rgb(217, 217, 217); //lighten($topbar-bg, 10%);
-$topbar-divider-border-top: solid 1px rgb(217, 217, 217); //darken($topbar-bg, 10%);
+//$topbar-divider-border-bottom: solid 1px rgb(217, 217, 217); //lighten($topbar-bg, 10%);
+//$topbar-divider-border-top: solid 1px rgb(217, 217, 217); //darken($topbar-bg, 10%);
 
 // Sticky Class
 

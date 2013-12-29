@@ -288,32 +288,42 @@ class window.WindowManager
     #experiments windows
     $("#running_experiments_window .close_button").on 'click', => @close_window("running_experiments")
 
-    $("#running_experiments_link").on 'click', =>
+    $("#running_experiments_link, .running_experiments_link").on 'click', =>
       $('#running_experiments_window').load '/experiments/running_experiments', =>
         @show_window("running_experiments")
         $("#running_experiments_window .close_button").on 'click', => @close_window("running_experiments")
+      false
 
     $("#available_experiments_window .close_button").on 'click', => @close_window("available_experiments")
 
-    $("#available_experiments_link").on 'click', =>
+    $("#available_experiments_link, .available_experiments_link").on 'click', =>
       $('#available_experiments_window').load '/simulations/simulation_scenarios', =>
         @show_window("available_experiments")
         $("#available_experiments_window .close_button").on 'click', => @close_window("available_experiments")
+      false
 
     $("#historical_experiments_window .close_button").on 'click', => @close_window("historical_experiments")
-    $("#historical_experiments_link").on 'click', =>
+    $("#historical_experiments_link, .historical_experiments_link").on 'click', =>
       $('#historical_experiments_window').load '/experiments/historical_experiments', =>
         @show_window("historical_experiments")
         $("#historical_experiments_window .close_button").on 'click', => @close_window("historical_experiments")
+      false
 
     # analysis charts
-    $("#histogram_analysis_link").on('click', => @show_window('histogram_analysis'))
+    $("#histogram_analysis_link, .histogram_analysis_link").on 'click', =>
+      @show_window('histogram_analysis')
+      false
     $("#histogram_analysis_window .close_button").on('click', => @close_window('histogram_analysis'))
 
-    $("#rtree_analysis_link").on('click', => @show_window('rtree_analysis'))
+    $("#rtree_analysis_link, .rtree_analysis_link").on 'click', =>
+      @show_window('rtree_analysis')
+      false
+
     $("#rtree_analysis_window .close_button").on('click', => @close_window('rtree_analysis'))
 
-    $("#bivariate_analysis_link").on('click', => @show_window("bivariate_analysis"))
+    $("#bivariate_analysis_link, .bivariate_analysis_link").on 'click', =>
+      @show_window("bivariate_analysis")
+      false
     $("#bivariate_analysis_window .close_button").on('click', => @close_window("bivariate_analysis"))
 
   show_window: (window_name) =>
