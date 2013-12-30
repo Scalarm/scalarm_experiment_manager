@@ -226,7 +226,7 @@ class PLCloudFacade < InfrastructureFacade
         # NOTE: VM should have rvm installed
         Net::SSH.start(vm_record.public_ip, experiment_vm_image.login,
                        port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |ssh|
-          output = ssh.exec!("source .rvm/environments/default; rm -rf scalarm_simulation_manager_#{vm_record.sm_uuid}; unzip scalarm_simulation_manager_#{vm_record.sm_uuid}.zip; cd scalarm_simulation_manager_#{vm_record.sm_uuid}; ruby simulation_manager.rb < /dev/null > /tmp/mylogfile 2>&1")
+          output = ssh.exec!(start_simulation_manager_cmd(vm_record.sm_uuid))
           Rails.logger.debug "SM exec output: #{output}"
         end
 
@@ -245,6 +245,16 @@ class PLCloudFacade < InfrastructureFacade
 
     vm_record.initialized = true
     vm_record.save
+  end
+
+  def start_simulation_manager_cmd(sm_uuid)
+    [
+      'source .rvm/environments/default',
+      " rm -rf scalarm_simulation_manager_#{sm_uuid}",
+      "unzip scalarm_simulation_manager_#{sm_uuid}.zip",
+      "cd scalarm_simulation_manager_#{sm_uuid}",
+      'ruby simulation_manager.rb < /dev/null > /tmp/mylogfile 2>&1'
+    ].join(';')
   end
 
 end

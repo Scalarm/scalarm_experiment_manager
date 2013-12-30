@@ -15,7 +15,8 @@ class InfrastructureFacade
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
-    temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
+    temp_password = SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid)
+    temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id) if temp_password.nil?
 
     config = YAML::load_file File.join(Rails.root, 'config', 'scalarm.yml')
     sm_config = {
