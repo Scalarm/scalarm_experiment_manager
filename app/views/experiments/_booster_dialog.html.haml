@@ -8,11 +8,12 @@
     %dd{class: "#{first ? 'active' : '' }"}
       %a{ href: "##{infrastructure_id}" }= infrastructure_info[:label]
     - first = false if first
+
 - first = true
 .tabs-content
   - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-    .content.row{ id: infrastructure_id, class: "#{first ? 'active' : '' }" }
-      %p= render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
+    .content{ id: infrastructure_id, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
+      = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
     - first = false if first
 
 :javascript

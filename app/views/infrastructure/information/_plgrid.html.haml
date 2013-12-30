@@ -14,31 +14,35 @@
               = hidden_field_tag 'experiment_id', experiment.id
               = hidden_field_tag 'infrastructure_type', 'plgrid'
               .row
-                .small-6.columns
+                .small-4.columns
                   = label_tag t('.submission.job_counter'), nil, class: 'inline right'
-                .small-6.columns
+                .small-4.columns
                   = text_field_tag :job_counter
+                .small-4.columns
               .row
-                .small-6.columns
+                .small-4.columns
                   = label_tag t('.submission.scheduler'), nil, class: 'inline right'
-                .small-6.columns
+                .small-4.columns
                   = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+                .small-4.columns
               .row
-                .small-6.columns
+                .small-4.columns
                   = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
-                .small-6.columns
+                .small-4.columns
                   = text_field_tag :time_limit
+                .small-4.columns
 
               .row
-                .small-6.columns
+                .small-4.columns
                   = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
-                .small-6.columns
+                .small-4.columns
                   = text_field_tag :start_at
+                .small-4.columns
 
-              .row.small-12.columns
-                %ul.inline-list
-                  %li= submit_tag 'Submit', class: 'small button radius'
-                  %li= image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
+              .row
+                .small-12.columns.text-center
+                  = submit_tag 'Submit', class: 'button radius'
+                  = image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
     %dd
       %a(href='#plgrid-login-form-panel') Login form
       #plgrid-login-form-panel.content
@@ -51,27 +55,31 @@
             .row
               .small-4.columns
                 = label_tag 'UI host:', nil, class: 'inline right'
-              .small-8.columns
+              .small-4.columns
                 = text_field_tag :host, credentials.nil? ? '' : credentials.host
+              .small-4.columns
             .row
               .small-4.columns
                 = label_tag 'Username:', nil, class: 'inline right'
-              .small-8.columns
+              .small-4.columns
                 = text_field_tag :username, credentials.nil? ? '' : credentials.login
+              .small-4.columns
             .row
               .small-4.columns
                 = label_tag 'Password:', nil, class: 'inline right'
-              .small-8.columns
+              .small-4.columns
                 = password_field_tag :password, credentials.nil? ? '' : credentials.password
+              .small-4.columns
             .row
               .small-4.columns
                 = label_tag 'Save settings:', nil, class: 'inline right'
-              .small-8.columns
+              .small-4.columns
                 = check_box_tag :save_settings, '1', (not credentials.nil?)
+              .small-4.columns
             .row
-              %ul.inline-list
-                %li= submit_tag 'Submit', class: 'button small radius'
-                %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
+              .small-12.columns.text-center
+                = submit_tag 'Submit', class: 'button radius'
+                = image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
     %dd
       %a(href='#plgrid-jobs-panel') Scheduled jobs
       #plgrid-jobs-panel.content

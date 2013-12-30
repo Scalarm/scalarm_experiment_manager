@@ -1,9 +1,9 @@
 %h2= t('experiments.extension_dialog.header')
 = form_tag(extend_input_values_experiment_path, :onSubmit => "window.show_loading_notice();", remote: true, class: 'custom', id: 'experiment-extension-form') do
   .row
-    .small-2.columns
-      %h4.subheader= t('experiments.extension_dialog.parameter')
-    .small-10.columns
+    .small-3.columns
+      %h4.subheader.right= t('experiments.extension_dialog.parameter')
+    .small-9.columns
       = select_tag 'param_name', options_for_select(@parameters.map{|parameter_uid, parameter_info| [ parameter_info[:label], parameter_uid ] }), class: 'expand'
 
   - counter = 0
@@ -11,33 +11,46 @@
     - counter += 1
     .parameter-values{ 'parameter_uid' => parameter_uid, 'style' => "display: #{counter == 1 ? 'display' : 'none'};" }
       -#%h3.subheader= parameter_info[:label]
-      .row.small-12.columns
-        %h4.subheader= t('experiments.extension_dialog.parametrization', type: parameter_info[:parametrizationType])
-      .row.small-12.columns
-        %h4.subheader= t('experiments.extension_dialog.doe', in_doe: parameter_info[:in_doe])
-      .row.small-12.columns
-        %h4.subheader= t('experiments.extension_dialog.values')
-      .row.small-12.columns
-        %ul.circle
-          - parameter_info[:values].each do |value|
-            %li= value
+      .row
+        .small-3.columns
+          %h4.subheader.right= t 'experiments.extension_dialog.parametrization'
+        .small-9.columns
+          %h4.subheader= parameter_info[:parametrizationType]
+
+      .row
+        .small-3.columns
+          %h4.subheader.right= t 'experiments.extension_dialog.doe'
+        .small-9.columns
+          %h4.subheader= parameter_info[:in_doe]
+
+      .row
+        .small-3.columns
+          %h4.subheader.right= t 'experiments.extension_dialog.values'
+        .small-9.columns
+          %ul.circle
+            - parameter_info[:values].each do |value|
+              %li= value
+
   .row.small-12.columns
     %h3.subheader= t('experiments.extension_dialog.expand_header')
   -#.row
   -#  = content_tag(:div, content_tag(:label, 'Priority:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, select_tag('priority', options_for_select([['Standard', 40], ['High', 20], ['Low', 60]])), class: 'small-8 columns')
   .row
-    .small-2.columns= content_tag(:label, t('experiments.extension_dialog.minimum') + ':', class: 'inline right')
+    .small-3.columns
+      %h4.subheader.right= t('experiments.extension_dialog.minimum') + ':'
     .small-4.columns= text_field_tag('range_min')
-    .small-4.columns
+    .small-3.columns
   .row
-    .small-2.columns= content_tag(:label, t('experiments.extension_dialog.maximum') + ':', class: 'inline right')
+    .small-3.columns
+      %h4.subheader.right= t('experiments.extension_dialog.maximum') + ':'
     .small-4.columns= text_field_tag('range_max')
-    .small-4.columns
+    .small-3.columns
   .row
-    .small-2.columns= content_tag(:label, t('experiments.extension_dialog.step') + ':', class: 'inline right')
+    .small-3.columns
+      %h4.subheader.right= t('experiments.extension_dialog.step') + ':'
     .small-4.columns= text_field_tag('range_step')
-    .small-4.columns
-  .row.small-12.columns
+    .small-3.columns
+  .row.small-12.columns(style="text-align: center")
     = content_tag(:div, submit_tag('Submit', class: 'button radius') + image_tag('loading.gif', id: 'expand_dialog_busy', size: '20x20', style: 'float: left; display: none;') )
 
 %a.close-reveal-modal &#215;

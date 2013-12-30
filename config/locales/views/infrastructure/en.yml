@@ -16,7 +16,7 @@ en:
           title: 'Please, provide credentials to access PL-Cloud'
           username: "Username:"
           password: "Password:"
-          save: "Save settings;"
+          save: "Save settings:"
         image:
           login: "Virtual machine login:"
           password: "Virtual machine password:"
@@ -30,9 +30,9 @@ en:
   experiments:
     extension_dialog:
       header: "Experiment extension dialog"
-      expand_header: "Expand the input parameter space:"
-      parametrization: "Parametrization: %{type}"
-      doe: "Included in DoE: %{in_doe}"
+      expand_header: "Expand the input parameter space"
+      parametrization: "Parametrization:"
+      doe: "Included in DoE:"
       values: "Values"
       parameter: "Parameter:"
       minimum: Minimum

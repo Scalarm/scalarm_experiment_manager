@@ -992,12 +992,12 @@ $primary-color: #0e59ae;
 
 // We use these to control the style of the reveal overlay.
 
-// $reveal-overlay-bg: rgba(#000, .45);
+//$reveal-overlay-bg: rgba(#000, .45);
 // $reveal-overlay-bg-old: #000;
 
 // We use these to control the style of the modal itself.
 
-// $reveal-modal-bg: #fff;
+$reveal-modal-bg: image-url('bg03.jpg');
 // $reveal-position-top: 50px;
 // $reveal-default-width: 80%;
 // $reveal-modal-padding: emCalc(20);

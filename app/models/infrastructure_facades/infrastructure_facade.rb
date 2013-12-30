@@ -47,7 +47,7 @@ class InfrastructureFacade
     {
         plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
         amazon: { label: 'Amazon Elastic Compute Cloud', facade: AmazonFacade.new },
-        plcloud: { label: 'PL-Cloud', facade: PLCloudFacade.new }
+        plcloud: { label: 'PLGrid Cloud', facade: PLCloudFacade.new }
     }
   end
 
