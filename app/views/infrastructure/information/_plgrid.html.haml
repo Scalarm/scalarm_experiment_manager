@@ -6,7 +6,7 @@
 .row
   %dl.accordion(data-accordion="")
     %dd
-      %a(href='#plgrid-submission-panel') Job submission
+      %a(href='#plgrid-submission-panel')= t('infrastructure.information.submission_label')
       #plgrid-submission-panel.content
         %p
           .row
@@ -15,73 +15,73 @@
               = hidden_field_tag 'infrastructure_type', 'plgrid'
               .row
                 .small-4.columns
-                  = label_tag t('.submission.job_counter'), nil, class: 'inline right'
+                  = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
                 .small-4.columns
                   = text_field_tag :job_counter
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag t('.submission.scheduler'), nil, class: 'inline right'
+                  = label_tag :scheduler, t('.submission.scheduler'), class: 'inline right'
                 .small-4.columns
                   = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
+                  = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
                 .small-4.columns
                   = text_field_tag :time_limit
                 .small-4.columns
 
               .row
                 .small-4.columns
-                  = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
+                  = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
                 .small-4.columns
                   = text_field_tag :start_at
                 .small-4.columns
 
               .row
                 .small-12.columns.text-center
-                  = submit_tag 'Submit', class: 'button radius'
+                  = submit_tag t('infrastructure.information.submit'), class: 'button radius'
                   = image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
     %dd
-      %a(href='#plgrid-login-form-panel') Login form
-      #plgrid-login-form-panel.content
+      %a(href='#plgrid-login-form-panel')= t('infrastructure.information.credentials_label')
+      .content#plgrid-login-form-panel
         %p.row
           = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
             = hidden_field_tag 'infrastructure_type', 'plgrid'
 
-            %h5.subheader= 'Please, provide credentials to access PL-Grid'
+            %h5.subheader= t('.credentials_label')
 
             .row
               .small-4.columns
-                = label_tag 'UI host:', nil, class: 'inline right'
+                = label_tag :host, t('.credentials.host') + ':', class: 'inline right'
               .small-4.columns
                 = text_field_tag :host, credentials.nil? ? '' : credentials.host
               .small-4.columns
             .row
               .small-4.columns
-                = label_tag 'Username:', nil, class: 'inline right'
+                = label_tag :username, t('.credentials.login') + ':', class: 'inline right'
               .small-4.columns
                 = text_field_tag :username, credentials.nil? ? '' : credentials.login
               .small-4.columns
             .row
               .small-4.columns
-                = label_tag 'Password:', nil, class: 'inline right'
+                = label_tag :password, t('.credentials.password') + ':', class: 'inline right'
               .small-4.columns
                 = password_field_tag :password, credentials.nil? ? '' : credentials.password
               .small-4.columns
             .row
               .small-4.columns
-                = label_tag 'Save settings:', nil, class: 'inline right'
+                = label_tag :save_settings, t('.credentials.save_settings') + ':', class: 'inline right'
               .small-4.columns
                 = check_box_tag :save_settings, '1', (not credentials.nil?)
               .small-4.columns
             .row
               .small-12.columns.text-center
-                = submit_tag 'Submit', class: 'button radius'
+                = submit_tag t('infrastructure.information.submit'), class: 'button radius'
                 = image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
     %dd
-      %a(href='#plgrid-jobs-panel') Scheduled jobs
+      %a(href='#plgrid-jobs-panel')= t('infrastructure.information.scheduled_label')
       #plgrid-jobs-panel.content
         %p.row
           %p{ id: 'plgrid_info' }= @current_states[:plgrid]

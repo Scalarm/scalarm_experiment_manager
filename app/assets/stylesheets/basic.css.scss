@@ -233,31 +233,7 @@ clear: both;
     top: 1px;
 }
 
-#simulation_list .ui-selecting { background: #FECA40; }
-#simulation_list .ui-selected { background: #0E59AE; color: white; }
-#simulation_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
-#simulation_list li { margin: 3px; padding: 0.4em; font-size: 1.2em; height: 18px; }
-
-.list_of_experiments { list-style-type: none; margin: 0; padding: 0; width: 100%; }
-.list_of_experiments li { margin: 2px; padding: 0.2em; font-size: 1em; height: 14px; }
-.list_of_experiments a { text-decoration: none; }
-
-.centered_selectable_list { list-style-type: none; margin: 0; padding: 0; width: 100%; }
-.centered_selectable_list li { margin: 2px; padding: 0.2em; font-size: 1em; height: 14px; }
-.centered_selectable_list a { text-decoration: none; }
-
-
 #moa_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
-
-label {
-  /*width: 7.5em;*/
-  /*float: left;*/
-  /*text-align: right;*/
-  /*margin-right: 0.5em;*/
-  /*display: block;*/
-  /*line-height: 24px;*/
-  font-size: 14px;
-}
 
 .nice_label {
 	vertical-align: middle;

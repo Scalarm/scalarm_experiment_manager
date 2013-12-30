@@ -1,32 +1,4 @@
 en:
-  infrastructure:
-    information:
-      time_constraint: "Job time constraint [min]:"
-      start_at: 'Start at ("hh:mm:ss" format)'
-      plgrid:
-        submission:
-          job_counter: "Number of jobs:"
-          scheduler: "Scheduler:"
-      amazon:
-        submission:
-          instance_counter: 'Instance count:'
-          vm_type: 'VM type:'
-      plcloud:
-        login:
-          title: 'Please, provide credentials to access PL-Cloud'
-          username: "Username:"
-          password: "Password:"
-          save: "Save settings:"
-        image:
-          login: "Virtual machine login:"
-          password: "Virtual machine password:"
-          session_only: "Store in this session only:"
-          title: "PLCloud image information"
-          image_id: "PLCloud Image Id:"
-        submission:
-          image: "Image:"
-          instance_counter: "Instance count:"
-        sched_vms: "Scheduled virtual machines"
   experiments:
     extension_dialog:
       header: "Experiment extension dialog"

@@ -1,0 +1,51 @@
+en:
+  infrastructure:
+    information:
+      instance_counter: Instance counter
+      time_constraint: Job time constraint [min]
+      start_at: 'Start at ("hh:mm:ss" format)'
+      submit: Submit
+
+      submission_label: Simulation Manager submission
+      credentials_label: Credentials
+      scheduled_label: Scheduled Simulation Managers
+
+      plgrid:
+        scheduler: Scheduler
+        credentials_label: Please, provide your credentials to the PL-Grid infrastructure
+        credentials:
+          host: User Interface (UI) host
+          login: UI login
+          password: UI password
+          save_settings: Save settings
+        scheduled_label: Scheduled jobs
+
+      amazon:
+        vm_type: VM type
+        image_label: VM image
+        credentials_label: Please, provide your credentials to Amazon EC2
+
+        credentials:
+          secrets: Amazon EC2 secrets
+          key_id: Access Key Id
+          secret_key: Secret Access Key
+          store_in_session: Store in this session only
+        images_label: Amazon EC2 image information
+        images:
+          image_id: Amazon Image Id
+          login: Virtual machine login
+          password: Virtual machine password
+
+      plcloud:
+        credentials_label: Please, provide your credentials to access the PL-Grid infrastructure
+        credentials_link: PLGrid Cloud credentials
+        credentials:
+          login: UI login
+          password: UI password
+          save_settings: Save settings
+        images:
+          login: "Virtual machine login"
+          password: "Virtual machine password"
+          session_only: "Store in this session only"
+          title: "PLGrid Cloud image information"
+          image_id: "Image Id"

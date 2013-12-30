@@ -14,7 +14,7 @@ class PLCloudClient
   # default VM template values
   DEFAULT_NETWORK_ID = 0
   DEFAULT_CPU = 0.5
-  DEFAULT_MEMORY = 1024
+  DEFAULT_MEMORY = 512
   DEFAULT_ARCH = 'x86_64'
 
   # @param [PLCloudSecrets] secrets secrets used to authenticate to PLCloud REST service
