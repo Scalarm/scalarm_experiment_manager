@@ -5,3 +5,9 @@
 = render 'simulations/simulation_scenarios'
 
 = render 'historical_experiments'
+
+= content_for :javascript do
+  :javascript
+    $(function() {
+      $('.close_button').hide();
+    });
