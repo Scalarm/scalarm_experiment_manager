@@ -1,48 +1,48 @@
 - credentials = GridCredentials.find_by_user_id(@current_user.id)
 
-#plgrid-login-ajax-response.alert-box.radius(style="display: none;")
+.row
+  #plgrid-login-ajax-response.alert-box.radius(style="display: none;")
 
-.section-container.accordion{'data-section' => 'accordion'}
-  %section#plgrid-submission-tab
-    %p.title{'data-section-title' => ''}
-      %a{'href' => '#plgrid-submission-panel'} Job submission
-      .content{'data-section-content' => ''}
+.row
+  %dl.accordion(data-accordion="")
+    %dd
+      %a(href='#plgrid-submission-panel') Job submission
+      #plgrid-submission-panel.content
         %p
-          = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
-            = hidden_field_tag 'experiment_id', experiment.id
-            = hidden_field_tag 'infrastructure_type', 'plgrid'
-            .row
-              .small-6.columns
-                = label_tag t('.submission.job_counter'), nil, class: 'inline right'
-              .small-6.columns
-                = text_field_tag :job_counter
-            .row
-              .small-6.columns
-                = label_tag t('.submission.scheduler'), nil, class: 'inline right'
-              .small-6.columns
-                = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
-            .row
-              .small-6.columns
-                = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
-              .small-6.columns
-                = text_field_tag :time_limit
+          .row
+            = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
+              = hidden_field_tag 'experiment_id', experiment.id
+              = hidden_field_tag 'infrastructure_type', 'plgrid'
+              .row
+                .small-6.columns
+                  = label_tag t('.submission.job_counter'), nil, class: 'inline right'
+                .small-6.columns
+                  = text_field_tag :job_counter
+              .row
+                .small-6.columns
+                  = label_tag t('.submission.scheduler'), nil, class: 'inline right'
+                .small-6.columns
+                  = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+              .row
+                .small-6.columns
+                  = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
+                .small-6.columns
+                  = text_field_tag :time_limit
 
-            .row
-              .small-6.columns
-                = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
-              .small-6.columns
-                = text_field_tag :start_at
+              .row
+                .small-6.columns
+                  = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
+                .small-6.columns
+                  = text_field_tag :start_at
 
-            .row
-              %ul.inline-list
-                %li= submit_tag 'Submit', class: 'small button'
-                %li= image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
-
-  %section#plgrid-login-tab
-    %p.title{'data-section-title' => ''}
-      %a{'href' => '#plgrid-login-form-panel'} Login form
-      .content{'data-section-content' => ''}
-        %p
+              .row.small-12.columns
+                %ul.inline-list
+                  %li= submit_tag 'Submit', class: 'small button radius'
+                  %li= image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
+    %dd
+      %a(href='#plgrid-login-form-panel') Login form
+      #plgrid-login-form-panel.content
+        %p.row
           = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
             = hidden_field_tag 'infrastructure_type', 'plgrid'
 
@@ -67,36 +67,28 @@
               .small-4.columns
                 = label_tag 'Save settings:', nil, class: 'inline right'
               .small-8.columns
-                = check_box_tag :save_settings, '1', (not credentials.nil?), style: 'display: none;'
+                = check_box_tag :save_settings, '1', (not credentials.nil?)
             .row
               %ul.inline-list
-                %li= submit_tag 'Submit', class: 'button small'
+                %li= submit_tag 'Submit', class: 'button small radius'
                 %li= image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
-
-  %section#plgrid-jobs-tab
-    %p.title{'data-section-title' => ''}
-      %a{'href' => '#plgrid-jobs-panel'} Scheduled jobs
-      .content{'data-section-content' => ''}
-        %p
+    %dd
+      %a(href='#plgrid-jobs-panel') Scheduled jobs
+      #plgrid-jobs-panel.content
+        %p.row
           %p{ id: 'plgrid_info' }= @current_states[:plgrid]
           %ul.circle
             - @simulation_managers[:plgrid].each do |plgrid_job|
-              %li= plgrid_job.to_s
+              %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
 
 :javascript
   $(function() {
     if(#{ credentials.nil? }) {
       $('#plgrid-submission-tab form').addClass('disabled');
-      $('#plgrid-login-tab').addClass('active');
+      $('#plgrid-login-form-panel').addClass('active');
     } else {
       $('#plgrid-submission-tab').addClass('active');
     }
 
     new window.PLGridManager('#extension-dialog');
-
-    $('p').each(function(index, element) {
-      if($(element).html() == "") {
-        $(element).remove();
-      }
-    });
   });

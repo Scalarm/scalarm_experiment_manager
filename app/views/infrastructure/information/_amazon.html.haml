@@ -6,9 +6,128 @@
 - else
   - amazon_ami_creds = amazon_ami_creds.select{|ami| ami.experiment_id.to_s == experiment.id.to_s}.first
 
-#amazon-ajax-response.alert-box.radius(style="display: none;")
+.row
+  #amazon-ajax-response.alert-box.radius(style="display: none;")
 
-.section-container.accordion{'data-section' => 'accordion'}
+.row
+  %dl.accordion(data-accordion="")
+    %dd
+      %a(href='#amazon-submission-panel') Start virtual machines in the Cloud
+      .content#amazon-submission-panel
+        %p
+          = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'experiment_id', experiment.id
+            = hidden_field_tag 'infrastructure_type', 'amazon'
+            = hidden_field_tag 'security_group', 'quicklaunch-1'
+
+            .row
+              .small-6.columns
+                = label_tag t('.submission.instance_counter'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :job_counter
+            - images = AmazonAmi.all.map{|i| ["#{i.ami_id} --- #{i.login}", i.id]}
+            .row
+              .small-6.columns
+                = label_tag "Image:", nil, class: 'inline right'
+              .small-6.columns
+                = select_tag :image_id, options_for_select(images)
+            .row
+              .small-6.columns
+                = label_tag t('.submission.vm_type'), nil, class: 'inline right'
+              .small-6.columns
+                = select_tag :instance_type, options_for_select(AmazonVm.amazon_instance_types)
+            .row
+              .small-6.columns
+                = label_tag t('infrastructure.information.time_constraint'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :time_limit
+
+            .row
+              .small-6.columns
+                = label_tag t('infrastructure.information.start_at'), nil, class: 'inline right'
+              .small-6.columns
+                = text_field_tag :start_at
+
+            .row.small-12.columns
+              %ul.inline-list
+                %li= submit_tag 'Submit', class: 'small button radius'
+                %li= image_tag 'loading.gif', class: 'amazon-submission-busy', style: 'display: none;'
+
+            .row
+              .small-12.columns
+                #amazon-submission-ajax-response
+    %dd
+      %a(href='#amazon-credentials-panel') Amazon credentials
+      .content#amazon-credentials-panel
+        %p
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'infrastructure_type', 'amazon'
+            = hidden_field_tag 'credential_type', 'secrets'
+
+            %fieldset
+              %legend= 'Amazon EC2 secrets'
+              .row
+                .small-4.columns
+                  = label_tag 'Access Key Id:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.access_key
+              .row
+                .small-4.columns
+                  = label_tag 'Secret Access Key:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :secret_access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_key
+              .row
+                .small-4.columns
+                  = label_tag 'Store in this session only:', nil, class: 'inline right'
+                .small-8.columns
+                  = check_box_tag :store_secrets_in_session, '1', true
+              .row.small-12.columns
+                = submit_tag 'Submit', class: 'button small radius'
+                = image_tag 'loading.gif', class: 'amazon-credentials-busy', style: 'display: none;'
+
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'infrastructure_type', 'amazon'
+            = hidden_field_tag 'credential_type', 'ami'
+            = hidden_field_tag 'experiment_id', experiment.id
+
+            %fieldset
+              %legend= 'Amazon EC2 image information'
+              .row
+                .small-4.columns
+                  = label_tag 'Amazon Image Id:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :ami_id, amazon_ami_creds.nil? ? '' : amazon_ami_creds.ami_id
+              .row
+                .small-4.columns
+                  = label_tag 'Virtual machine login:', nil, class: 'inline right'
+                .small-8.columns
+                  = text_field_tag :ami_login, amazon_ami_creds.nil? ? '' : amazon_ami_creds.login
+              .row
+                .small-4.columns
+                  = label_tag 'Virtual machine password:', nil, class: 'inline right'
+                .small-8.columns
+                  = password_field_tag :ami_password, amazon_ami_creds.nil? ? '' : amazon_ami_creds.password
+              .row
+                .small-4.columns
+                  = label_tag 'Store in this session only:', nil, class: 'inline right'
+                .small-8.columns
+                  = check_box_tag :store_ami_in_session, '1', false
+
+              .row.small-12.columns
+                = submit_tag 'Submit', class: 'button small radius'
+                = image_tag 'loading.gif', class: 'amazon-credentials-busy', style: 'display: none;'
+
+    %dd
+      %a(href='#amazon-vms-panel') Start virtual machines in the Cloud
+      .content#amazon-vms-panel
+        %p
+          %p= @current_states[:amazon]
+          %ul.circle
+            - @simulation_managers[:amazon].each do |virtual_machine|
+              %li= virtual_machine
+
+
+-#.section-container.accordion{'data-section' => 'accordion'}
   %section#amazon-submission-tab
     %p.title{'data-section-title' => ''}
       %a{'href' => '#amazon-submission-panel'} Start virtual machines in the Cloud

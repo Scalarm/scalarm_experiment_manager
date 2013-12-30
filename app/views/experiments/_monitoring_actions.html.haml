@@ -1,0 +1,48 @@
+%article
+  %h3.subheader
+    = t('.actions_header')
+    = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
+
+  %ul.inline-list
+    - if @experiment.is_running
+      %li= button_to t('.stop_button'), stop_experiment_path(@experiment.id), :onClick => "return confirm('Are you sure?')", class: 'button radius small'
+      %li= button_to t('.extend_button'), '#', id: 'extensionDialogOpenButton', class: 'button radius small'
+      %li= button_to t('.boost_button'), '#', id: 'boostButton', class: 'button radius small'
+      %li= button_to t('.scheduling_button'), '#', id: 'schedulingButton', class: 'button radius small'
+    - else
+      %li= button_to t('.destroy_button'), experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: 'button radius small'
+
+    %li
+      =link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: 'button radius small'
+      %ul#download-dropdown.f-dropdown(data-dropdown-conent)
+        %li= link_to t('.binaries_results_button'), "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}", id: 'download-dialog-buttton'
+        %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
+    %li= button_to t('.progress_information_button'), '#', id: 'progressButton', class: 'button radius small'
+    %li= image_tag 'loading.gif', id: 'loading-img', style: 'display: none;'
+
+#extension-dialog.reveal-modal(data-reveal="")
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      // handling ajax loading of the Extension dialog
+      $('#extensionDialogOpenButton').on('click', function() {
+        $('#actions-loading').show();
+        $('#extension-dialog').load("#{extension_dialog_experiment_path(@experiment.id)}", function() {
+          $('#actions-loading').hide();
+          $('#extension-dialog').foundation('reveal', 'open');
+        });
+
+        return false;
+      });
+
+      $('#boostButton').on('click', function() {
+        $('#actions-loading').show();
+        $('#extension-dialog').load( "#{get_booster_dialog_experiment_path(@experiment.id)}", function() {
+          $('#actions-loading').hide();
+          $('#extension-dialog').foundation('reveal', 'open');
+        } );
+
+        return false;
+      });
+    });

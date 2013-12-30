@@ -27,3 +27,14 @@ en:
           image: "Image:"
           instance_counter: "Instance count:"
         sched_vms: "Scheduled virtual machines"
+  experiments:
+    extension_dialog:
+      header: "Experiment extension dialog"
+      expand_header: "Expand the input parameter space:"
+      parametrization: "Parametrization: %{type}"
+      doe: "Included in DoE: %{in_doe}"
+      values: "Values"
+      parameter: "Parameter:"
+      minimum: Minimum
+      maximum: Maximum
+      step: Step

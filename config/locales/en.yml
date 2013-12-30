@@ -20,10 +20,12 @@
 # available at http://guides.rubyonrails.org/i18n.html.
 
 en:
+  title: Scalarm Experiment Manager
+
   navbar:
-    experiments_link: Experiments
-    simulations_link: Simulations
-    account_link: Account
+    experiments_link: Experiment view
+    simulations_link: Simulation view
+    account_link: "Logged as '%{login}'"
     logout_link: Logout
 
   registered_simulation_scenario_list:
@@ -78,8 +80,11 @@ en:
     show:
       stats_header: Simulation statistics
       progress_bar_header: Experiment progress bar
+
+
+    # buttons from the monitoring view
+    monitoring_actions:
       actions_header: Actions
-      # buttons from the monitoring view
       stop_button: Stop experiment
       extend_button: Extend
       boost_button: Boost
@@ -151,6 +156,7 @@ en:
       error: "An exception occured - %{ex}. Please check if the host is available and the username and password are correct."
       ok: "You have scheduled %{instances_count} jobs"
       no_credentials: You have to provide Grid credentials first!
+    job_desc: "<b>Job id</b>: %{job_id}<br/><b>Scheduled at</b>: %{created_at}<br/><b>Experiment id</b>: %{experiment_id}"
 
 #  amazon:
 #    login:

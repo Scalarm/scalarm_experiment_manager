@@ -1,23 +1,45 @@
+= content_for :navbar do
+  %ul
+    %li.has-dropdown.not-click
+      %a(href="#")= t('.navigation_link')
+      %ul.dropdown
+        %li
+          %a.running_experiments_link(href="#")= t('.running_experiments')
+        %li
+          %a.available_experiments_link(href="#")= t('.simulation_scenarios')
+        %li
+          %a.historical_experiments_link(href="#")= t('.historical_experiments')
+
+    %li.has-dropdown.not-click
+      %a(href="#")= t('.data_exploration_link')
+      %ul.dropdown
+        %li
+          %a.histogram_analysis_link(href="#")= t('.histograms')
+        %li
+          %a.rtree_analysis_link(href="#")= t('.regression_trees')
+        %li
+          %a.bivariate_analysis_link(href="#")= t('.scatter_plots')
+
 #running_experiments_link
   = image_tag('running_experiments.png', :size => '100x150')
 
 #running_experiments_window.layered_window
   = image_tag 'close_icon.png', :class =>'close_button'
-  = render 'running_experiments'
+  .row.small-2.columns.small-centered= image_tag 'loading.gif'
 
 #available_experiments_link
   = image_tag('available_experiments.png', :size => '100x150')
 
 #available_experiments_window.layered_window
   = image_tag 'close_icon.png', :class =>'close_button'
-  = render 'simulations/simulation_scenarios'
+  .row.small-2.columns.small-centered= image_tag 'loading.gif'
 
 #historical_experiments_link
   = image_tag('historical_experiments.png', :size => '100x150')
 
 #historical_experiments_window.layered_window
   = image_tag 'close_icon.png', :class =>'close_button'
-  = render 'historical_experiments'
+  .row.small-2.columns.small-centered= image_tag 'loading.gif'
 
 - content_for :javascript do
   :javascript

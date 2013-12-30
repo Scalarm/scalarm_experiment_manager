@@ -28,6 +28,8 @@ ScalarmExperimentManager::Application.routes.draw do
     collection do
       post :start_experiment
       post :calculate_experiment_size
+      get :running_experiments
+      get :historical_experiments
     end
 
     member do
@@ -67,6 +69,8 @@ ScalarmExperimentManager::Application.routes.draw do
       end
     end
   end
+
+  get 'simulations/simulation_scenarios' => 'simulations#simulation_scenarios'
 
   resource :infrastructure do
     member do

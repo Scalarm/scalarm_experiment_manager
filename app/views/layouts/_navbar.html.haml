@@ -7,10 +7,14 @@
             = link_to t('navbar.experiments_link'), experiments_path
           %li
             = link_to t('navbar.simulations_link'), simulations_path
+          %li.divider
+
+        - if content_for?(:navbar)
+          = yield :navbar
 
         %ul.right
+          %li.divider
           %li
-            = link_to content_tag(:span, t('navbar.account_link'), 'data-tooltip' => '', class: 'has-tip tip-bottom',
-              title: "You are log in as '#{@current_user.login}'"), user_controller_account_path
+            = link_to t('navbar.account_link', login: @current_user.login), user_controller_account_path
           %li
             = link_to t('navbar.logout_link'), logout_path, method: :post

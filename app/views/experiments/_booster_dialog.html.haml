@@ -1,14 +1,19 @@
-%h2= t('experiments.show.booster.header')
+%h2= t('experiments.monitoring_actions.booster.header')
 
 %a.close-reveal-modal &#215;
 
-.section-container.tabs(data-section="tabs")
+- first = true
+%dl.tabs(data-tab="")
   - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-    %section
-      %p.title(data-section-title="")
-        %a(href="#")= infrastructure_info[:label]
-      .content(data-section-content="")
-        %p= render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
+    %dd{class: "#{first ? 'active' : '' }"}
+      %a{ href: "##{infrastructure_id}" }= infrastructure_info[:label]
+    - first = false if first
+- first = true
+.tabs-content
+  - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+    .content.row{ id: infrastructure_id, class: "#{first ? 'active' : '' }" }
+      %p= render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
+    - first = false if first
 
 :javascript
   $(function() {

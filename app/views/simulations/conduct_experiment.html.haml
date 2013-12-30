@@ -7,20 +7,20 @@
 %section.panel.radius.simulation_input
   %h3.subheader= t('.input_header')
 
-
-  .section-container.auto(data-section="" data-options="deep_linking: true;")
-    %section.section.active
-      %p.title(style="left: 0px;")
-        = link_to t('.input_parametrization_types'), '#parametrization_types'
-        = render 'parametrization_tab'
-    %section.section(style="padding-top: 49px;")
-      %p.title(style="left: 87px;")
-        = link_to t('.input_parameter_values'), '#parameters_values_tab'
-        = render 'parameters_values_tab'
-    %section.section
-      %p.title(style="left: 174px;")
-        = link_to t('.input_doe'), '#parameters_values_tab'
-        = render 'doe_tab'
+  %dl.tabs(data-tab="")
+    %dd.active
+      = link_to t('.input_parametrization_types'), '#parametrization_types'
+    %dd
+      = link_to t('.input_parameter_values'), '#parameters_values_tab'
+    %dd
+      = link_to t('.input_doe'), '#doe'
+  .tabs-content
+    #parametrization_types.content.active(style="width: 100%")
+      = render 'parametrization_tab'
+    #parameters_values_tab.content(style="width: 100%")
+      = render 'parameters_values_tab'
+    #doe.content(style="width: 100%")
+      = render 'doe_tab'
 
   .row.submit-section
     = form_tag start_experiment_experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
@@ -43,7 +43,7 @@
       = submit_tag t('.submit_button'), class: 'button'
       = button_tag t('.experiment_size_button'), class: 'button', id: 'check-experiment-size'
 
-#experiment-size-dialog.reveal-modal(style="display: none;")
+#experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
   %h2.subheader= raw t('.experiment_size_dialog_body')
   %a.close-reveal-modal &#215;
 

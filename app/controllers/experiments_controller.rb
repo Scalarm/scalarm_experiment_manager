@@ -36,9 +36,9 @@ class ExperimentsController < ApplicationController
     end
 
     unless @error_flag
-      @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-      @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-      @simulations = @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
+      #@running_experiments = [] # @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+      #@historical_experiments = [] #@current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
+      #@simulations = [] # @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
 
       @simulation_managers = {}
       InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
@@ -46,6 +46,18 @@ class ExperimentsController < ApplicationController
       end
     end
 
+  end
+
+  def running_experiments
+    @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+
+    render partial: 'running_experiments'
+  end
+
+  def historical_experiments
+    @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+
+    render partial: 'historical_experiments'
   end
 
   def get_booster_dialog
@@ -252,7 +264,7 @@ class ExperimentsController < ApplicationController
       @parameters[parameter_uid] = parameter_info
     end
 
-    Rails.logger.debug("Parameters: #{@parameters}")
+    #Rails.logger.debug("Parameters: #{@parameters}")
 
     render partial: 'extension_dialog'
   end
