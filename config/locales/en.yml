@@ -157,6 +157,7 @@ en:
 #      ok:
 #      error:
 
+
   charts:
     hide_button: Hide chart
     load_button: Load chart
