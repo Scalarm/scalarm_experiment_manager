@@ -101,10 +101,10 @@ class ExperimentsController < ApplicationController
                     nil
                   end
 
-    doe_info = if params.include?('doe')
-                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
-               else
+    doe_info = if params['doe'].blank?
                  []
+               else
+                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
                end
 
     @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
@@ -161,7 +161,11 @@ class ExperimentsController < ApplicationController
                     nil
                   end
 
-    doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
+    doe_info = if params['doe'].blank?
+                 []
+               else
+                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
+               end
     @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
