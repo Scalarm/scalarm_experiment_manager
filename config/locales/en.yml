@@ -128,9 +128,12 @@ en:
       component_header: "%{component} registration"
 
     conduct_experiment:
-      overview_header: Simulation information
-      overview_name: "Name: %{name}"
-      overview_description: "Description: %{description}"
+      title: Conduct an experiment
+      empty_simulation: Simulation for this experiment is unavailable
+      simulation_overview_header: Simulation information
+
+      simulation_overview_name: Simulation name
+      simulation_overview_description: Simulation description
 
       input_header: Parameter space specification
       input_parametrization_types: Parametrization

@@ -1,5 +1,10 @@
 en:
   experiments:
+    show:
+      experiment_info_title: Experiment information
+      experiment_name: Name
+      experiment_description: Description
+
     experiment_links:
       navigation_link: Experiments
       running_experiments: Running experiments

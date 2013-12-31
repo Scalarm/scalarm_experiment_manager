@@ -2,10 +2,35 @@
 = render 'analysis_charts'
 
 %section.panel.radius
-  %h3.subheader= t('simulations.conduct_experiment.overview_header')
+  %h3.subheader= t('.experiment_info_title')
 
-  %p= t('simulations.conduct_experiment.overview_name', name: @experiment.simulation.name)
-  %p= t('simulations.conduct_experiment.overview_description', description: @experiment.simulation.description)
+  .row
+    .small-3.columns
+      %h5.subheader.right= t('.experiment_name') + ':'
+    .small-9.columns
+      %h5.subheader= @experiment.name
+  .row
+    .small-3.columns
+      %h5.subheader.right= t('.experiment_description') + ':'
+    .small-9.columns
+      %h5.subheader= @experiment.description
+
+
+  - if @experiment.simulation.nil?
+    %h4.subheader= t('simulations.conduct_experiment.empty_simulation')
+  - else
+    %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
+
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
+      .small-9.columns
+        %h5.subheader= @experiment.simulation.name
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
+      .small-9.columns
+        %h5.subheader= @experiment.simulation.description
 
 %section.panel.radius.last-element#monitoring_section
   = render 'monitoring_stats'

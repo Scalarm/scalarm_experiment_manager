@@ -119,10 +119,14 @@ class ExperimentsController < ApplicationController
       end
     end
 
+    experiment_name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment_description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+
     # create the new type of experiment object
     data_farming_experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
-                                                         'name' => @simulation.name,
+                                                         'name' => experiment_name,
+                                                         'description' => experiment_description,
                                                          'is_running' => true,
                                                          'run_counter' => params[:run_index].to_i,
                                                          'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
