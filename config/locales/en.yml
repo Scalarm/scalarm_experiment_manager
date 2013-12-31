@@ -107,8 +107,10 @@ en:
   simulations:
     deregister_button: Deregister
     go_to_registriation: Go to registration form
+    empty_component: <N/A>
 
     registration:
+      title: Simulation registration
       experiments_label: Register simulation
       simulation_name: Simulation name
       simulation_description: Simulation description
@@ -119,8 +121,11 @@ en:
       executor: Executor
       progress_monitor: Progress monitor
       upload: Upload
-      component_name: Component name
-      component_code: Component code
+      component_registration_title: Adapter registration
+      component_name: Adapter name
+      component_code: Adapter code
+      component_type: Adapter type
+      component_header: "%{component} registration"
 
     conduct_experiment:
       overview_header: Simulation information

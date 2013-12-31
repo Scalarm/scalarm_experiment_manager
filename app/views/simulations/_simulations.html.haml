@@ -1,15 +1,27 @@
 %section.panel.radius
-  = content_tag :h3, t('registered_simulation_scenario_list.label'), class: 'subheader'
+  %h3.subheader= t('registered_simulation_scenario_list.label')
 
   - if @simulations.empty?
     .panel.callout.radius
-      = content_tag :h4, t('simulation_scenario_list.empty_list'), class: 'subheader'
+      %h4.subheader= t('simulation_scenario_list.empty_list')
 
   - else
-    %ul.no-bullet
+    %table(style="width: 100%;")
+      %tr
+        %th= t('simulations.registration.simulation_name')
+        %th= t('simulations.registration.input_writer')
+        %th= t('simulations.registration.executor')
+        %th= t('simulations.registration.output_reader')
+        %th= t('simulations.registration.progress_monitor')
+        %th
       - @simulations.each do |simulation|
-        = content_tag :li, :title => simulation.description do
-          = form_tag simulations_destroy_simulation_path do
-            = hidden_field_tag :component_id, simulation._id
-            = content_tag :strong, simulation.name
-            = submit_tag t('simulations.deregister_button'), class: 'button'
+        = form_tag simulations_destroy_simulation_path do
+          = hidden_field_tag :component_id, simulation._id
+          %tr
+            %td
+              %span.has-tip{'data-tooltip' => '', 'title' => simulation.description}= simulation.name
+            %td= simulation.input_writer.nil? ? t('simulations.empty_component') : simulation.input_writer.name
+            %td= simulation.executor.nil? ? t('simulations.empty_component') : simulation.executor.name
+            %td= simulation.output_reader.nil? ? t('simulations.empty_component') : simulation.output_reader.name
+            %td= simulation.progress_monitor.nil? ? t('simulations.empty_component') : simulation.progress_monitor.name
+            %td= submit_tag t('simulations.deregister_button'), class: 'button tiny radius'

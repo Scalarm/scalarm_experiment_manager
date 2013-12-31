@@ -1,16 +1,20 @@
 %section.panel.radius
-  = content_tag :h3, t('registered_input_writers_list.label'), class: 'subheader'
+  %h3.subheader= t('registered_input_writers_list.label')
 
   - if @input_writers.empty?
     .panel.callout.radius
-      = content_tag :h4, t('registered_input_writers_list.empty_list'), class: 'subheader'
+      %h4.subheader= t('registered_input_writers_list.empty_list')
 
   - else
-    %ul.no-bullet
-      - @input_writers.each do |input_writer|
-        = content_tag :li do
-          = form_tag simulations_destroy_component_path do
-            = hidden_field_tag 'component_type', 'input_writer'
-            = hidden_field_tag 'component_id', input_writer._id
-            = content_tag :strong, input_writer.name
-            = submit_tag t('simulations.deregister_button'), class: 'button'
+    - @input_writers.each do |input_writer|
+      - is_last = input_writer == @input_writers.last
+      = form_tag simulations_destroy_component_path do
+        = hidden_field_tag 'component_type', 'input_writer'
+        = hidden_field_tag 'component_id', input_writer._id
+
+        .row
+          .small-8.columns
+            %h4.subheader= input_writer.name
+          .small-4.columns
+            = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
+
