@@ -7,7 +7,7 @@
   %p= t('simulations.conduct_experiment.overview_name', name: @experiment.simulation.name)
   %p= t('simulations.conduct_experiment.overview_description', description: @experiment.simulation.description)
 
-%section.panel.radius#monitoring_section
+%section.panel.radius.last-element#monitoring_section
   = render 'monitoring_stats'
 
   %article#experiment_progress_bar
