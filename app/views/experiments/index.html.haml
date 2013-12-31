@@ -1,13 +1,7 @@
 - content_for :title, 'Scalarm - experiments'
 
-= render 'running_experiments'
+= render partial: 'running_experiments', locals: { show_close_button: false }
 
-= render 'simulations/simulation_scenarios'
+= render partial: 'simulations/simulation_scenarios', locals: { show_close_button: false }
 
-= render 'historical_experiments'
-
-= content_for :javascript do
-  :javascript
-    $(function() {
-      $('.close_button').hide();
-    });
+= render partial: 'historical_experiments', locals: { show_close_button: false }

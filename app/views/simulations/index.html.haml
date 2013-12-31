@@ -1,6 +1,6 @@
 - content_for :title, 'Scalarm - simulations'
 
-= render 'simulation_scenarios'
+= render partial: 'simulation_scenarios', locals: { show_close_button: false }
 
 = render 'simulations'
 
@@ -12,5 +12,5 @@
 %section
   .row
     .small-4.small-centered.columns
-      = link_to(t('simulations.go_to_registriation'), simulations_registration_path, class: 'button expand')
+      = link_to(t('simulations.go_to_registriation'), simulations_registration_path, class: 'button expand radius last-element')
 

@@ -52,13 +52,13 @@ class ExperimentsController < ApplicationController
   def running_experiments
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
-    render partial: 'running_experiments'
+    render partial: 'running_experiments', locals: { show_close_button: true }
   end
 
   def historical_experiments
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
-    render partial: 'historical_experiments'
+    render partial: 'historical_experiments', locals: { show_close_button: true }
   end
 
   def get_booster_dialog
