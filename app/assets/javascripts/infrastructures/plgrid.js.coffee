@@ -1,23 +1,32 @@
 class window.PLGridManager
   constructor: (@dialogId) ->
+    @responsePanel = $('#plgrid-login-ajax-response')
+    @loading = $('#plgrid-configure-busy')
+
     @bindToLoginForm()
     @bindToSubmissionForm()
 
   bindToLoginForm: () ->
     $("#plgrid-login-form-panel form")
-      .bind('ajax:before', () ->
-          $('#plgrid-configure-busy').show()
-          $('#plgrid-login-ajax-response').html('')
+      .bind('ajax:before', =>
+        @loading.show()
+        @responsePanel.html('')
       )
-      .bind('ajax:success', (data, status, xhr) ->
-        $('#plgrid-login-ajax-response').html(status.msg).removeClass('alert').addClass('success').show()
+      .bind('ajax:success', (data, status, xhr) =>
+        @responsePanel.html(status.msg).removeClass('alert').addClass('success')
       )
-      .bind('ajax:failure', (xhr, status, error) ->
-        $('#plgrid-login-ajax-response').html('An erroc occured').removeClass('success').addClass('alert').show()
+      .bind('ajax:failure', (xhr, status, error) =>
+        @responsePanel.html("Status: #{status}, Error: #{error}").removeClass('success').addClass('alert')
       )
-      .bind('ajax:complete', () ->
-        $('#plgrid-configure-busy').hide()
+      .bind('ajax:complete', () =>
+        @responsePanel.show()
+        @loading.hide()
+
+        setTimeout( =>
+          @responsePanel.hide()
+        , 20000)
       )
+
 
   bindToSubmissionForm: () ->
     $("#plgrid-submission-panel form")
