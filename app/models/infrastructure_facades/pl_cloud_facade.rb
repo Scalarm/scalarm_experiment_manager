@@ -216,11 +216,20 @@ class PLCloudFacade < InfrastructureFacade
     error_counter = 0
     while true
       begin
+        Net::SSH.start(vm_record.public_ip, experiment_vm_image.login,
+                       port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |ssh|
+          output = ssh.exec!('ps aux | grep simulation_manager.rb | wc -l')
+          Rails.logger.debug "SM checking output: #{output}"
+          return if output.to_i > 1
+        end
+
         #  upload the code to the VM - use only password authentication
         Net::SCP.start(vm_record.public_ip, experiment_vm_image.login,
                        port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |scp|
           scp.upload! "/tmp/scalarm_simulation_manager_#{vm_record.sm_uuid}.zip", '.'
         end
+
+        'No such file or directory'
 
         # execute simulation manager on VM - use only password auth
         # NOTE: VM should have rvm installed
@@ -250,10 +259,10 @@ class PLCloudFacade < InfrastructureFacade
   def start_simulation_manager_cmd(sm_uuid)
     [
       'source .rvm/environments/default',
-      " rm -rf scalarm_simulation_manager_#{sm_uuid}",
+      "rm -rf scalarm_simulation_manager_#{sm_uuid}",
       "unzip scalarm_simulation_manager_#{sm_uuid}.zip",
       "cd scalarm_simulation_manager_#{sm_uuid}",
-      'ruby simulation_manager.rb < /dev/null > /tmp/mylogfile 2>&1'
+      'nohup ruby simulation_manager.rb  >/tmp/mylogfile 2>&1 &'
     ].join(';')
   end
 
