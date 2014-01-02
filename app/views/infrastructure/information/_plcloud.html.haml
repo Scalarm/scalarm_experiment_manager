@@ -57,8 +57,8 @@
               .small-12.columns
                 #plcloud-submission-ajax-response
     %dd
-      %a(href='#plgrid-credentials')= t('infrastructure.information.credentials_label')
-      .content#plgrid-credentials
+      %a(href='#plcloud-credentials')= t('infrastructure.information.credentials_label')
+      .content#plcloud-credentials
         %p
           = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
             = hidden_field_tag 'infrastructure_type', 'plcloud'
@@ -140,7 +140,7 @@
 
 :javascript
   $(function() {
-    new window.PLCloudManager();
+    new window.PLCloudManager('#extension-dialog');
 
     $('p').each(function(index, element) {
       if($(element).html() == "") {

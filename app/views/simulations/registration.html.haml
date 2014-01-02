@@ -1,5 +1,7 @@
+- content_for :title, t('.title')
+
 %section.panel.radius
-  = content_tag :h3, t('.experiments_label'), class: 'subheader'
+  %h3.subheader= t('.experiments_label')
 
   = form_tag(simulations_upload_simulation_path, :multipart => true, class: 'custom') do
     = render partial: 'form_row', object: 'simulation_name',
@@ -23,29 +25,28 @@
 
     .row
       .small-2.small-centered.columns
-        = submit_tag t('.upload'), class: 'button expand'
+        = submit_tag t('.upload'), class: 'button expand radius last-element'
 
 
-- %w(input_writer executor output_reader progress_monitor).each do |component_name|
+%section.panel.radius.last-element
+  %h3.subheader= t('.component_registration_title')
+  = form_tag(simulations_upload_component_path, :multipart => true) do
+    .row
+      .small-3.columns= label_tag :component_name, t('.component_name') + ':', class: 'inline right'
+      .small-6.columns= text_field_tag 'component_name'
+      .small-3.columns
 
-  %section.panel.radius
-    = content_tag :h4, "#{t(".#{component_name}")} registration", class: 'subheader'
+    .row
+      .small-3.columns= label_tag :component_code, t('.component_code') + ':', class: 'inline right'
+      .small-6.columns= file_field_tag 'component_code'
+      .small-3.columns
 
-    = form_tag(simulations_upload_component_path, :multipart => true) do
-      = hidden_field_tag 'component_type', component_name
+    .row
+      .small-3.columns= label_tag :component_type, t('.component_type') + ':', class: 'inline right'
+      .small-6.columns= select_tag('component_type', adapter_types, class: 'medium')
+      .small-3.columns
 
-      .row
-        .small-2.columns.right-align.inline
-          %span= t('.component_name') + ':'
-        .small-10.columns
-          = text_field_tag 'component_name'
 
-      .row
-        .small-2.columns.inline
-          %span= t('.component_code') + ':'
-        .small-10.columns
-          = file_field_tag 'component_code'
-
-      .row
-        .small-2.small-centered.columns
-          = submit_tag t('.upload'), class: 'button expand'
+    .row
+      .small-2.small-centered.columns
+        = submit_tag t('.upload'), class: 'button expand radius last-element'

@@ -41,4 +41,11 @@ module SimulationsHelper
                        ])
   end
 
+  def adapter_types
+    options_for_select(%w(input_writer executor output_reader progress_monitor).map do |c|
+        [ t("simulations.registration.#{c}"), c ]
+      end
+    )
+  end
+
 end

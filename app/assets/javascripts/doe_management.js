@@ -136,18 +136,26 @@ function DoeManager() {
     this.updateDoeForSubmit = updateDoeForSubmit;
     function updateDoeForSubmit() {
         var doeTab = [];
+//        console.log("Size: " + $("[id^='doe-group-']").length);
+
         $("[id^='doe-group-']").each(function (index, doeGroup) {
             var doeId = $(doeGroup).attr('doe-id');
-            var parameters = [];
+//            console.log("Doe id: " + doeId);
+            if(doeId != undefined) {
+                var parameters = [];
 
-            $(doeGroup).find('li.bullet-item').each(function(i, parameterBullet) {
-                parameters.push($(parameterBullet).attr('param_id'));
-            });
+    //            console.log("Parameter list size: " + $(doeGroup).find('li.bullet-item').length);
+                $(doeGroup).find('li.bullet-item').each(function(i, parameterBullet) {
+    //                console.log("Parameter: " + $(parameterBullet).attr('param_id'));
+                    parameters.push($(parameterBullet).attr('param_id'));
+                });
 
-            doeTab.push([ doeId, parameters ]);
+                doeTab.push([ doeId, parameters ]);
+            }
         });
-
+//        console.log("Stringified doe: " + JSON.stringify(doeTab));
         $("input[name='doe']").val(JSON.stringify(doeTab));
+        $("#doe").val(JSON.stringify(doeTab));
     }
 
     this.checkExperimentSize = checkExperimentSize;

@@ -143,7 +143,7 @@ class SimulationsController < ApplicationController
   def simulation_scenarios
     @simulations = @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
 
-    render partial: 'simulation_scenarios'
+    render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
 
   private

@@ -1,5 +1,4 @@
 .row
-  .small-3.columns.right-align.inline
-    %span= t("simulations.registration.#{form_row}") + ':'
-  .small-9.columns
-    = input_element
+  .small-3.columns= label_tag form_row, t("simulations.registration.#{form_row}") + ':', class: 'inline right'
+  .small-6.columns= input_element
+  .small-3.columns

@@ -1,44 +1,44 @@
 class window.AmazonManager
-  constructor: () ->
+  constructor: (@dialogId) ->
+    @responsePanel = $('#amazon-ajax-response')
+    @loading = $('.amazon-credentials-busy')
     @bindToCredentialForm()
     @bindToSubmissionForm()
 
-    $('#amazon-ajax-response').hide()
+    $('#plcloud-ajax-response').hide()
 
-  bindToCredentialForm: () ->
-    $("#amazon-credentials-panel form")
-      .bind('ajax:before', () ->
-        $(this).find('.amazon-credentials-busy').show()
+  bindToCredentialForm: =>
+    $("#amazon-credentials form")
+      .bind('ajax:before', =>
+        @loading.show()
+        @responsePanel.html('')
       )
-      .bind('ajax:success', (data, status, xhr) ->
-        $('#amazon-ajax-response').html('Your credentials have been updated').removeClass('alert').addClass('success')
-        setTimeout("$('#amazon-ajax-response').hide()", 10000)
+      .bind('ajax:success', (data, status, xhr) =>
+        @responsePanel.html(status.msg).removeClass('alert').addClass('success')
       )
-      .bind('ajax:failure', (xhr, status, error) ->
-        $('#amazon-ajax-response').html('An erroc occured').removeClass('success').addClass('alert')
-        setTimeout("$('#amazon-ajax-response').hide()", 20000)
+      .bind('ajax:failure', (xhr, status, error) =>
+        @responsePanel.html("Status: #{status}, Error: #{error}").removeClass('success').addClass('alert')
       )
-      .bind('ajax:complete', () ->
-        $('#amazon-ajax-response').show()
-        $('.amazon-credentials-busy').hide()
+      .bind('ajax:complete', () =>
+        @responsePanel.show()
+        @loading.hide()
+
+        setTimeout( =>
+          @responsePanel.hide()
+        , 20000)
       )
 
   bindToSubmissionForm: () ->
     $("#amazon-submission-panel form")
-      .bind('ajax:before', () ->
-        $('.amazon-submission-busy').show()
+      .bind('ajax:before', () =>
+        $(@dialogId).foundation('reveal', 'close')
+        window.show_loading_notice()
       )
-      .bind('ajax:success', (data, response, xhr) ->
-        $('#amazon-ajax-response').html(response.msg)
+      .bind('ajax:success', (data, status, xhr) ->
+        window.hide_notice()
 
-        if response.status == 'ok'
-          $('#amazon-ajax-response').removeClass('alert').addClass('success').show()
-        else if(response.status == 'error')
-          $('#amazon-ajax-response').removeClass('success').addClass('alert').show()
-      )
-      .bind('ajax:failure', (xhr, status, error) ->
-        $('#amazon-ajax-response').html('An erroc occured').removeClass('success').addClass('alert').show()
-      )
-      .bind('ajax:complete', () ->
-        $('.amazon-submission-busy').hide()
+        if status.status == 'error'
+          window.show_error(status.msg)
+        else if status.status == 'ok'
+          window.show_notice(status.msg)
       )

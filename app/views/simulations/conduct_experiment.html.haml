@@ -1,29 +1,56 @@
-%section.panel.radius
-  %h3.subheader= t('.overview_header')
+- content_for :title, t('.title')
 
-  %p= t('.overview_name', name: @simulation.name)
-  %p= t('.overview_description', description: @simulation.description)
+= form_tag start_experiment_experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
 
-%section.panel.radius.simulation_input
-  %h3.subheader= t('.input_header')
+  %section.panel.radius
+    %h3.subheader= t('experiments.show.experiment_info_title')
 
-  %dl.tabs(data-tab="")
-    %dd.active
-      = link_to t('.input_parametrization_types'), '#parametrization_types'
-    %dd
-      = link_to t('.input_parameter_values'), '#parameters_values_tab'
-    %dd
-      = link_to t('.input_doe'), '#doe'
-  .tabs-content
-    #parametrization_types.content.active(style="width: 100%")
-      = render 'parametrization_tab'
-    #parameters_values_tab.content(style="width: 100%")
-      = render 'parameters_values_tab'
-    #doe.content(style="width: 100%")
-      = render 'doe_tab'
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('experiments.show.experiment_name') + ':'
+      .small-6.columns
+        %h5.subheader= text_field_tag :experiment_name
+      .small-3.columns
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('experiments.show.experiment_description') + ':'
+      .small-6.columns
+        %h5.subheader= text_area_tag :experiment_description
+      .small-3.columns
 
-  .row.submit-section
-    = form_tag start_experiment_experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
+    %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
+
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
+      .small-9.columns
+        %h5.subheader= @simulation.name
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
+      .small-9.columns
+        %h5.subheader= @simulation.description
+
+  %section.panel.radius.simulation_input.last-element
+    %h3.subheader= t('.input_header')
+
+    %dl.tabs(data-tab="")
+      %dd.active
+        = link_to t('.input_parametrization_types'), '#parametrization_types'
+      %dd
+        = link_to t('.input_parameter_values'), '#parameters_values_tab'
+      %dd
+        = link_to t('.input_doe'), '#doe'
+    .tabs-content
+      #parametrization_types.content.active(style="width: 100%")
+        = render 'parametrization_tab'
+      #parameters_values_tab.content(style="width: 100%")
+        = render 'parameters_values_tab'
+      #doe.content(style="width: 100%")
+        = render 'doe_tab'
+
+    .row.submit-section
+
       = hidden_field_tag 'simulation_id', @simulation._id
       = hidden_field_tag 'experiment_input'
       = hidden_field_tag 'computing_power'
@@ -40,13 +67,13 @@
       -#    = text_field_tag 'run_index', 1
       = hidden_field_tag 'run_index', 1
 
-      = submit_tag t('.submit_button'), class: 'button'
-      = button_tag t('.experiment_size_button'), class: 'button', id: 'check-experiment-size'
+      = submit_tag t('.submit_button'), class: 'button radius last-element'
+      = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
 
-#experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
-  %h2.subheader= raw t('.experiment_size_dialog_body')
-  %a.close-reveal-modal &#215;
+  #experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
+    %h2.subheader= raw t('.experiment_size_dialog_body')
+    %a.close-reveal-modal &#215;
 
-- content_for :javascript do
-  :javascript
-    var experimentInput = $.parseJSON(#{raw @simulation.input_specification.to_json});
+  - content_for :javascript do
+    :javascript
+      var experimentInput = $.parseJSON(#{raw @simulation.input_specification.to_json});

@@ -52,13 +52,13 @@ class ExperimentsController < ApplicationController
   def running_experiments
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
-    render partial: 'running_experiments'
+    render partial: 'running_experiments', locals: { show_close_button: true }
   end
 
   def historical_experiments
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
-    render partial: 'historical_experiments'
+    render partial: 'historical_experiments', locals: { show_close_button: true }
   end
 
   def get_booster_dialog
@@ -101,10 +101,10 @@ class ExperimentsController < ApplicationController
                     nil
                   end
 
-    doe_info = if params.include?('doe')
-                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
-               else
+    doe_info = if params['doe'].blank?
                  []
+               else
+                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
                end
 
     @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
@@ -119,10 +119,14 @@ class ExperimentsController < ApplicationController
       end
     end
 
+    experiment_name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment_description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+
     # create the new type of experiment object
     data_farming_experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
-                                                         'name' => @simulation.name,
+                                                         'name' => experiment_name,
+                                                         'description' => experiment_description,
                                                          'is_running' => true,
                                                          'run_counter' => params[:run_index].to_i,
                                                          'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
@@ -161,7 +165,11 @@ class ExperimentsController < ApplicationController
                     nil
                   end
 
-    doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
+    doe_info = if params['doe'].blank?
+                 []
+               else
+                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
+               end
     @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object

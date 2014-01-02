@@ -1,16 +1,19 @@
 %section.panel.radius
-  = content_tag :h3, t('registered_progress_monitors_list.label'), class: 'subheader'
+  %h3.subheader= t('registered_progress_monitors_list.label')
 
   - if @progress_monitors.empty?
     .panel.callout.radius
-      = content_tag :h4, t('registered_progress_monitors_list.empty_list'), class: 'subheader'
+      %h4.subheader= t('registered_progress_monitors_list.empty_list')
 
   - else
-    %ul.no-bullet
-      - @progress_monitors.each do |progress_monitor|
-        = content_tag :li do
-          = form_tag simulations_destroy_component_path do
-            = hidden_field_tag 'component_type', 'progress_monitor'
-            = hidden_field_tag 'component_id', progress_monitor._id
-            = content_tag :strong, progress_monitor.name
-            = submit_tag t('simulations.deregister_button'), class: 'button'
+    - @progress_monitors.each do |progress_monitor|
+      - is_last = progress_monitor == @progress_monitors.last
+      = form_tag simulations_destroy_component_path do
+        = hidden_field_tag 'component_type', 'progress_monitor'
+        = hidden_field_tag 'component_id', progress_monitor._id
+
+        .row
+          .small-8.columns
+            %h4.subheader= progress_monitor.name
+          .small-4.columns
+            = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
