@@ -98,10 +98,10 @@ en:
       booster:
         header: Increase computational power
 
-      progress:
-        show_completed: Show/Hide completed
-        show_running: Show/Hide running
-        header: Progress information
+    monitoring_table:
+      show_completed: Show/Hide completed
+      show_running: Show/Hide running
+      header: Progress information
 
 
   simulations:
