@@ -218,9 +218,7 @@ class PLCloudFacade < InfrastructureFacade
       begin
         Net::SSH.start(vm_record.public_ip, experiment_vm_image.login,
                        port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |ssh|
-          output = ssh.exec!('ps aux | grep simulation_manager.rb | wc -l')
-          Rails.logger.debug "SM checking output: #{output}"
-          return if output.to_i > 1
+
         end
 
         #  upload the code to the VM - use only password authentication
@@ -235,6 +233,11 @@ class PLCloudFacade < InfrastructureFacade
         # NOTE: VM should have rvm installed
         Net::SSH.start(vm_record.public_ip, experiment_vm_image.login,
                        port: vm_record.public_ssh_port, password: experiment_vm_image.password, auth_methods: %w(password)) do |ssh|
+          output = ssh.exec!("ls /tmp/mylogfile")
+          Rails.logger.debug "SM checking output: #{output}"
+
+          return unless output.include?('No such file or directory')
+
           output = ssh.exec!(start_simulation_manager_cmd(vm_record.sm_uuid))
           Rails.logger.debug "SM exec output: #{output}"
         end
