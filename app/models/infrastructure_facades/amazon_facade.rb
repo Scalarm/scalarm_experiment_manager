@@ -42,8 +42,9 @@ class AmazonFacade < InfrastructureFacade
 
             if [:stopped, :terminated].include?(vm_instance.status)
               Rails.logger.info("[vm #{amazon_vm.vm_id}] This VM is going to be removed from our db as it is terminated")
-              SimulationManagerTempPassword.find_by_sm_uuid(amazon_vm.sm_uuid).destroy
-              amazon_vm.destroy
+              temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(amazon_vm.sm_uuid)
+              temp_pass.destroy unless temp_pass.nil?
+              amazon_vm.destroy unless amazon_vm.nil?
 
             elsif ([:pending, :running].include?(vm_instance.status) and (amazon_vm.created_at + amazon_vm.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
               Rails.logger.info("[vm #{amazon_vm.vm_id}] This VM is going to be destroyed as it is done or should be done")
