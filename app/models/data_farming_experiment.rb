@@ -51,6 +51,9 @@ class DataFarmingExperiment < MongoActiveRecord
     all  = simulations_count_with({})
     sent = simulations_count_with({'to_sent' => false, 'is_done' => false})
     done = simulations_count_with({'is_done' => true})
+    if done > all
+      done = all
+    end
 
     return all, sent, done
   end
