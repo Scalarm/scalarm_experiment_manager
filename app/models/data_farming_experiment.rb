@@ -213,6 +213,11 @@ class DataFarmingExperiment < MongoActiveRecord
     self.size
   end
 
+  def experiment_size=(new_size)
+    @attributes['experiment_size'] = new_size
+    self.size = new_size
+  end
+
   def create_result_csv_for(moe_name)
 
     CSV.generate do |csv|

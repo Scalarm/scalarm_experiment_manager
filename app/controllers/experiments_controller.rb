@@ -204,7 +204,7 @@ class ExperimentsController < ApplicationController
 
     stats = {
         all: sims_generated, sent: sims_sent, done_num: sims_done,
-        done_percentage: "'%.2f'" % ((sims_done.to_f / sims_generated) * 100),
+        done_percentage: "'%.2f'" % ((sims_done.to_f / @experiment.experiment_size) * 100),
         generated: [sims_generated, @experiment.experiment_size].min,
         progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
     }
