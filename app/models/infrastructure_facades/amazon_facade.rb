@@ -232,7 +232,12 @@ class AmazonFacade < InfrastructureFacade
         end
 
         Net::SSH.start(vm_instance.public_dns_name, experiment_ami.login, password: experiment_ami.password) do |ssh|
-          ssh.exec!("source .rvm/environments/default; rm -rf scalarm_simulation_manager_#{vm_record.sm_uuid}; unzip scalarm_simulation_manager_#{vm_record.sm_uuid}.zip; cd scalarm_simulation_manager_#{vm_record.sm_uuid}; nohup ruby simulation_manager.rb  >/tmp/mylogfile 2>&1 &")
+          output = ssh.exec!("ls /tmp/scalarm_sm_log")
+          Rails.logger.debug "[amazon] SM checking output: #{output}"
+
+          return unless output.include?('No such file or directory')
+
+          ssh.exec!("source .rvm/environments/default; rm -rf scalarm_simulation_manager_#{vm_record.sm_uuid}; unzip scalarm_simulation_manager_#{vm_record.sm_uuid}.zip; cd scalarm_simulation_manager_#{vm_record.sm_uuid}; nohup ruby simulation_manager.rb  >/tmp/scalarm_sm_log 2>&1 &")
         end
 
         break
