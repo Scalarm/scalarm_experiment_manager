@@ -198,7 +198,7 @@ class ExperimentsController < ApplicationController
     sims_generated, sims_sent, sims_done = @experiment.get_statistics
 
     if sims_generated > @experiment.experiment_size
-      @experiment.experiment_size = generated
+      @experiment.experiment_size = sims_generated
       @experiment.save
     end
 
