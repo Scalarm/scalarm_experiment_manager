@@ -340,6 +340,14 @@ class ExperimentsController < ApplicationController
                       end
 
       results = results.map{ |simulation|
+        unless simulation.include?('sent_at') and simulation.include?('id') and simulation.include?('values')
+          next
+        end
+
+        if (params[:simulations] == 'completed') and (not simulation.include?('done_at'))
+          next
+        end
+
         split_values = simulation['values'].split(',')
         modified_values = @experiment.range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
         time_column = if params[:simulations] == 'running'
