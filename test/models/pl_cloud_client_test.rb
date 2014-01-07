@@ -48,7 +48,7 @@ class PLCloudClientTest < Test::Unit::TestCase
     image = PLCloudImage.find_by_user_id(user.id)
     assert(image, "No PLCloud for user #{TEST_USER_LOGIN}.
       Please create associated PLCloudImage for this user (see comments in test source file).")
-    plcc = PLCloudClient.new(secrets)
+    plcc = PLCloudUtil.new(secrets)
 
     # --- create ---
 

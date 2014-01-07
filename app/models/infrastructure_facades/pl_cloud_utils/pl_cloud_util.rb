@@ -2,7 +2,7 @@ require 'rest-client'
 require 'json'
 require 'xmlsimple'
 
-class PLCloudClient
+class PLCloudUtil
   PLCLOUD_URL = 'https://149.156.10.32:3443'
   DNAT_URL = 'https://149.156.10.32:8401/dnat'
 
@@ -46,9 +46,9 @@ class PLCloudClient
     execute('onevm', ['delete', vm_id])
   end
 
-  # @return [PLCloudInstance] abstraction layer object used for managing and retrieving info about VM instance
+  # @return [PLCloudUtilInstance] abstraction layer object used for managing and retrieving info about VM instance
   def vm_instance(vm_id)
-    PLCloudInstance.new(vm_id, self)
+    PLCloudUtilInstance.new(vm_id, self)
   end
 
 

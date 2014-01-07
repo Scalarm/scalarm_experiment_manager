@@ -1,5 +1,7 @@
 require 'yaml'
 
+require 'clouds/cloud_factory'
+
 # methods necessary to implement by subclasses
 # start_monitoring() - starting a background job which monitors scheduled jobs/vms etc. and handle their state, e.g. restart if necessary or delete db information
 # default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
@@ -47,8 +49,8 @@ class InfrastructureFacade
   def self.get_registered_infrastructures
     {
         plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
-        amazon: { label: 'Amazon Elastic Compute Cloud', facade: AmazonFacade.new },
-        plcloud: { label: 'PLGrid Cloud', facade: PLCloudFacade.new }
+        amazon: { label: 'Amazon Elastic Compute Cloud', facade: CloudFactory.create_facade('amazon') },
+        plcloud: { label: 'PLGrid Cloud', facade: CloudFactory.create_facade('plcloud') }
     }
   end
 

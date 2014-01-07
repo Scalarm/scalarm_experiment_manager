@@ -10,4 +10,8 @@ class CloudSecrets < EncryptedMongoActiveRecord
     'cloud_secrets'
   end
 
+  def all_for_cloud(cloud_name)
+    find_all_by('cloud_name', cloud_name)
+  end
+
 end

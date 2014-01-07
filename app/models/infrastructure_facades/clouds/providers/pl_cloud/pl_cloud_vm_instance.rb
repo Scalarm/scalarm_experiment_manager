@@ -1,0 +1,2 @@
+class PlCloudVmInstance < CloudVmInstance
+end

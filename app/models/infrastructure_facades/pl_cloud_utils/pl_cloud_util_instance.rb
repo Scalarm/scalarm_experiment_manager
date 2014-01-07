@@ -7,7 +7,7 @@
 # or PLCloudClient.vm_instance method.
 # User can obtain information and perform some tasks on VM which id
 # is equal to vm_id attribute of this class.
-class PLCloudInstance
+class PLCloudUtilInstance
 
     # see: https://github.com/OpenNebula/one/blob/master/include/VirtualMachine.h
 
@@ -114,7 +114,7 @@ class PLCloudInstance
   attr_reader :info
 
   # @param [Fixnum] vm_id
-  # @param [PLCloudClient] plc_client
+  # @param [PLCloudUtil] plc_client
   def initialize(vm_id, plc_client)
     @vm_id = vm_id
     @plc_client = plc_client

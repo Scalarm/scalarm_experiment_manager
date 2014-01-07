@@ -1,0 +1,2 @@
+class AmazonVmInstance < CloudVmInstance
+end

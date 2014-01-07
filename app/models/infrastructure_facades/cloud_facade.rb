@@ -1,69 +1,91 @@
-require 'securerandom'
-require 'rest-client'
+class CloudFacade < InfrastructureFacade
 
-require_relative 'pl_cloud_credentials/pl_cloud_secrets'
-require_relative 'pl_cloud_credentials/pl_cloud_image'
+  # Creates specific cloud facade instance
+  # @param [Class] client_class
+  def initialize(client_class)
+    @client_class = client_class
+    @short_name = client_class.short_name
+    @full_name = client_class.full_name
+  end
 
-require_relative 'pl_cloud_utils/pl_cloud_util'
-require_relative 'pl_cloud_utils/pl_cloud_util_instance'
-
-class PLCloudFacade < InfrastructureFacade
-
-  VM_NAME_PREFIX = 'scalarm_'
-
+  # implements InfrasctuctureFacade
   def current_state(user)
-    plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
+    cloud_secrets =
+        CloudSecrets.all_for_cloud(@short_name).find_by_user_id(user.id)
 
-    return Rails.logger.info("No information available") if plc_secrets.nil?
-    plc_client = PLCloudUtil.new(plc_secrets)
+    return Rails.logger.info("No information available due to lack of credentials for #{@full_name}") if cloud_secrets.nil?
+
+    client = @client_class.new(cloud_secrets)
 
     begin
-      # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with VM state ACTIVE (3)
-      num = (plc_client.all_vm_info.values.select { |vm| vm['NAME'] =~ /^#{VM_NAME_PREFIX}/ && vm['STATE'] == '3'}).count
+      # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with running state
+      num = (client.all_vm_instances.values.select { |vm| vm.name =~ /^#{VM_NAME_PREFIX}/ && vm.state == :running}).count
       "You have #{num} Scalarm virtual machines running"
     rescue Exception => ex
       "No information available due to exception - #{ex}"
     end
   end
 
+  # implements InfrasctuctureFacade
   def start_monitoring
     while true do
       begin
-        Rails.logger.info("[plcloud] #{Time.now} - monitoring thread is working")
-        plcloud_vms = PLCloudVm.all.group_by(&:user_id)
+        Rails.logger.info("[#{@short_name}] #{Time.now} - monitoring thread is working")
+        vm_records = CloudVmRecord.all_for_cloud(@short_name).group_by(&:user_id)
 
-        plcloud_vms.each do |user_id, vm_list|
+        vm_records.each do |user_id, user_vm_records|
           user = ScalarmUser.find_by_id(user_id)
-          plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
-          if plc_secrets.nil?
-            Rails.logger.info("We cannot monitor PLCloud VMs for #{user.login} due secrets lacking")
+          secrets = CloudSecrets.all_for_cloud(@short_name).find_by_user_id(user.id)
+          if secrets.nil?
+            Rails.logger.info("We cannot monitor #{@full_name} VMs for #{user.login} due secrets lacking")
             next
           end
 
-          plc_client = PLCloudUtil.new(plc_secrets)
+          client = @client_class.new(secrets)
 
-          vm_list.each do |plc_vm|
-            Rails.logger.info("[PLC vm #{plc_vm.vm_id}] checking")
-            vm_instance = plc_client.vm_instance(plc_vm.vm_id)
+          user_vm_records.each do |vm_record|
+            vm_tag = "#{@short_name} vm #{vm_record.vm_id}]"
 
-            experiment = DataFarmingExperiment.find_by_id(plc_vm.experiment_id)
+            Rails.logger.info("#{vm_tag} checking")
+            vm_instance = client.vm_instance(vm_record.vm_id)
+
+            experiment = DataFarmingExperiment.find_by_id(vm_record.experiment_id)
+
+            if [:stopped, :terminated].include?(vm_instance.status) or (not vm_instance.exists?)
+              Rails.logger.info("#{vm_tag} This VM is going to be removed from our db as it is terminated")
+              temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(amazon_vm.sm_uuid)
+              temp_pass.destroy unless temp_pass.nil?
+              vm_record.destroy unless vm_record.nil?
+
+            elsif ([:pending, :running].include?(vm_instance.status) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
+              Rails.logger.info("#{vm_tag} This VM is going to be destroyed as it is done or should be done")
+              vm_instance.terminate
+
+            elsif (vm_instance.status == :running) and (not amazon_vm.initialized)
+              Rails.logger.info("#{vm_tag} This VM is going to be initialized with SM now")
+              initialize_sm_on(amazon_vm, vm_instance)
+
+            elsif (vm_instance.status == :pending) and (amazon_vm.created_at + 10.minutes < Time.now)
+              Rails.logger.info("#{vm_tag} This VM will be restarted due to not being run for more then 10 minutes")
+              vm_instance.reboot
+            end
 
             if %w(stop fail).include?(vm_instance.short_vm_state) or (not vm_instance.exists?)
-              Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be removed from our db as it is terminated")
-              sm_temp_password = SimulationManagerTempPassword.find_by_sm_uuid(plc_vm.sm_uuid)
+              Rails.logger.info("#{vm_tag} This VM is going to be removed from our db as it is terminated")
+              sm_temp_password = SimulationManagerTempPassword.find_by_sm_uuid(vm_record.sm_uuid)
               sm_temp_password.destroy if sm_temp_password
-              plc_vm.destroy
+              vm_record.destroy
 
-            elsif (%w(pend actv done).include?(vm_instance.short_vm_state) and (plc_vm.created_at + plc_vm.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
-              Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be destroyed as it is done or should be done")
+            elsif (%w(pend actv done).include?(vm_instance.short_vm_state) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
+              Rails.logger.info("[vm #{vm_record.vm_id}] This VM is going to be destroyed as it is done or should be done")
               vm_instance.delete
 
-            elsif (vm_instance.short_vm_state == 'actv') and (not plc_vm.initialized)
-              Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be initialized with SM now")
-              initialize_sm_on(plc_vm, vm_instance)
+            elsif (vm_instance.short_vm_state == 'actv') and (not vm_record.initialized)
+              Rails.logger.info("[vm #{vm_record.vm_id}] This VM is going to be initialized with SM now")
+              initialize_sm_on(vm_record, vm_instance)
 
-            elsif (vm_instance.short_vm_state == 'pend') and (plc_vm.created_at + 10.minutes < Time.now)
-              Rails.logger.info("[vm #{plc_vm.vm_id}] This VM will be restarted due to not being run for more then 10 minutes")
+            elsif (vm_instance.short_vm_state == 'pend') and (vm_record.created_at + 10.minutes < Time.now)
+              Rails.logger.info("[vm #{vm_record.vm_id}] This VM will be restarted due to not being run for more then 10 minutes")
               vm_instance.reboot
             end
           end
@@ -75,6 +97,7 @@ class PLCloudFacade < InfrastructureFacade
     end
   end
 
+  # implements InfrasctuctureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
     return 'error', 'You have to provide PLCloud secrets first!' if plc_secrets.nil?
@@ -121,6 +144,7 @@ class PLCloudFacade < InfrastructureFacade
 
   end
 
+  # implements InfrasctuctureFacade
   def default_additional_params
     {}
   end
@@ -129,16 +153,19 @@ class PLCloudFacade < InfrastructureFacade
   #  raise 'not implemented'
   #end
 
+  # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
     PLCloudVm.find_all_by_user_id(user.id).map do |instance|
       instance.to_s
     end
   end
 
+  # implements InfrasctuctureFacade
   def add_credentials(user, params, session)
     self.send("handle_#{params[:credential_type]}_credentials", user, params, session)
   end
 
+  # implements InfrasctuctureFacade
   def clean_tmp_credentials(user_id, session)
     if session.include?(:tmp_store_secrets_in_session) and (not user_id.nil?)
       PLCloudSecrets.find_all_by_user_id(user_id).each do |secrets|
@@ -261,12 +288,13 @@ class PLCloudFacade < InfrastructureFacade
 
   def start_simulation_manager_cmd(sm_uuid)
     [
-      'source .rvm/environments/default',
-      "rm -rf scalarm_simulation_manager_#{sm_uuid}",
-      "unzip scalarm_simulation_manager_#{sm_uuid}.zip",
-      "cd scalarm_simulation_manager_#{sm_uuid}",
-      'nohup ruby simulation_manager.rb  >/tmp/mylogfile 2>&1 &'
+        'source .rvm/environments/default',
+        "rm -rf scalarm_simulation_manager_#{sm_uuid}",
+        "unzip scalarm_simulation_manager_#{sm_uuid}.zip",
+        "cd scalarm_simulation_manager_#{sm_uuid}",
+        'nohup ruby simulation_manager.rb  >/tmp/mylogfile 2>&1 &'
     ].join(';')
   end
+
 
 end
