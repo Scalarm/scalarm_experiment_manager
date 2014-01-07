@@ -5,5 +5,5 @@
 # - terminate -> terminates VM
 
 # Provides utils for virtual machines operations
-class CloudVmInstance
+class AbstractVmInstance
 end
