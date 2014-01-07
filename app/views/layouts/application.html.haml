@@ -4,13 +4,14 @@
     %meta(name="viewport" content="width=device-width, initial-scale=1.0")
     = csrf_meta_tags
 
-    %tite
-      = content_for?(:title) ? yield(:title) : t('title')
+    %title Scalarm
 
     = stylesheet_link_tag 'application'
+
     -#= javascript_include_tag 'vendor/modernizr'
-    = javascript_include_tag 'application'
+
   %body
+    = content_for?(:title) ? yield(:title) : t('title')
     = render 'layouts/navbar'
 
     #wrapper
@@ -37,7 +38,9 @@
 
       = yield
 
+    = javascript_include_tag 'application'
     = content_for :javascript do
+
       :javascript
         $(function() {
           if(#{not flash[:notice].nil?}) {
