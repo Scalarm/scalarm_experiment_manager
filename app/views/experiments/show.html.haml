@@ -53,20 +53,5 @@
       new window.ExperimentSpeedometer('#{@experiment.id}').show();
 
       var monitor = new window.ExperimentMonitor('#{@experiment.id}');
-      monitor.generate_html('experiment_stats')
-
-
-
-
-      $('#progressButton').on('click', function() {
-        $('#progressInformationWrapper').slideToggle();
-        $('html, body').animate({ scrollTop: $('#progressInformationWrapper').offset().top }, 1000);
-        return false;
-      });
-
-      $('#schedulingButton').on('click', function() {
-        $('#scheduling_policy_dialog').foundation('reveal', 'open');
-        $('#scheduling-ajax-response').html('');
-        return false;
-      });
+      monitor.generate_html('experiment_stats');
     });

@@ -1,48 +1,38 @@
+- button_classes = 'button radius small expand last-element action-button'
+
 %article
   %h3.subheader
     = t('.actions_header')
     = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
-  %ul.inline-list.last-element
+  .row
     - if @experiment.is_running
-      %li= button_to t('.stop_button'), stop_experiment_path(@experiment.id), :onClick => "return confirm('Are you sure?')", class: 'button radius small last-element'
-      %li= button_to t('.extend_button'), '#', id: 'extensionDialogOpenButton', class: 'button radius small last-element'
-      %li= button_to t('.boost_button'), '#', id: 'boostButton', class: 'button radius small last-element'
-      %li= button_to t('.scheduling_button'), '#', id: 'schedulingButton', class: 'button radius small last-element'
+      .small-2.columns.action-button
+        = button_to t('.stop_button'), stop_experiment_path(@experiment.id), :onClick => "return confirm('Are you sure?')", class: button_classes
+      .small-2.columns.action-button
+        %span#extensionDialogOpenButton{class: button_classes}= t('.extend_button')
+      .small-2.columns.action-button
+        %span#boostButton{class: button_classes}= t('.boost_button')
+      .small-2.columns.action-button
+        %span#schedulingButton{class: button_classes}= t('.scheduling_button')
     - else
-      %li= button_to t('.destroy_button'), experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: 'button radius small last-element'
+      .small-2.columns.action-button
+        = button_to t('.destroy_button'), experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: button_classes
 
-    %li
-      =link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: 'button radius small last-element'
+    .small-2.columns.action-button
+      = link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: button_classes
+
+    .small-2.columns.action-button
+      %span#progressButton{class: button_classes}= t('.progress_information_button')
       %ul#download-dropdown.f-dropdown(data-dropdown-conent)
         %li= link_to t('.binaries_results_button'), "https://#{@storage_manager_url}/experiment/#{@experiment.id}/from/1/to/#{@experiment.experiment_size}", id: 'download-dialog-buttton'
         %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
-    %li= button_to t('.progress_information_button'), '#', id: 'progressButton', class: 'button radius small last-element'
-    %li= image_tag 'loading.gif', id: 'loading-img', style: 'display: none;'
 
 #extension-dialog.reveal-modal(data-reveal="")
 
 - content_for :javascript do
   :javascript
     $(function() {
-      // handling ajax loading of the Extension dialog
-      $('#extensionDialogOpenButton').on('click', function() {
-        $('#actions-loading').show();
-        $('#extension-dialog').load("#{extension_dialog_experiment_path(@experiment.id)}", function() {
-          $('#actions-loading').hide();
-          $('#extension-dialog').foundation('reveal', 'open');
-        });
-
-        return false;
-      });
-
-      $('#boostButton').on('click', function() {
-        $('#actions-loading').show();
-        $('#extension-dialog').load( "#{get_booster_dialog_experiment_path(@experiment.id)}", function() {
-          $('#actions-loading').hide();
-          $('#extension-dialog').foundation('reveal', 'open');
-        } );
-
-        return false;
-      });
+      new window.MonitoringActionButtons("#{extension_dialog_experiment_path(@experiment.id)}",
+                                         "#{get_booster_dialog_experiment_path(@experiment.id)}")
     });

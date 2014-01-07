@@ -496,7 +496,7 @@ class ExperimentsController < ApplicationController
       if @experiment.nil?
         flash[:error] = "Experiment '#{params['id']}' for user '#{@current_user.login}' not found"
 
-        redirect action: :index
+        redirect_to action: :index
       end
 
     elsif (not @sm_user.nil?)
