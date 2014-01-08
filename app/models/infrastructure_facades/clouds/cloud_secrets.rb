@@ -1,5 +1,5 @@
 # Fields:
-# cloud_type: string - cloud name, e.g. 'amazon'
+# cloud_name: string - cloud name, e.g. 'amazon'
 # user_id: ScalarmUser id who has this secrets
 #
 # other fields are user defined and should be of String class to enable encryption!
@@ -8,6 +8,10 @@ class CloudSecrets < EncryptedMongoActiveRecord
 
   def self.collection_name
     'cloud_secrets'
+  end
+
+  def self.encryption_excluded
+    %w(cloud_name user_id)
   end
 
   def all_for_cloud(cloud_name)

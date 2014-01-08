@@ -1,4 +1,4 @@
 # modules containing cloud clients by simple name
 
 amazon: AmazonCloud
-plcloud: PLCloud
+pl_cloud: PLCloud

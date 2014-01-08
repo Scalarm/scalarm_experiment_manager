@@ -8,6 +8,11 @@
 class EncryptedMongoActiveRecord < MongoActiveRecord
   Encryptor.default_options.merge!(:key => Digest::SHA256.hexdigest('QjqjFK}7|Xw8DDMUP-O$yp'))
 
+  # this method should be overriden and provide array of attributes which will not be encrypted
+  def self.encryption_excluded
+    []
+  end
+
   # handling getters and setters for object instance with encryption on-the-fly
   def method_missing(method_name, *args, &block)
     use_encryption = true
@@ -27,7 +32,7 @@ class EncryptedMongoActiveRecord < MongoActiveRecord
     method_name = '_id' if method_name == 'id'
 
     # do not encrypt primary key and foreign keys
-    if method_name.ends_with?('_id')
+    if method_name.ends_with?('_id') or encryption_excluded.include? method_name
       use_encryption = false
     end
 
@@ -48,6 +53,7 @@ class EncryptedMongoActiveRecord < MongoActiveRecord
         begin
           Base64.decode64(attribute).decrypt
         rescue OpenSSL::Cipher::CipherError
+          # this should not be used normally...
           attribute
         end
       else

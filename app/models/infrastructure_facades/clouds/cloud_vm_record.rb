@@ -11,7 +11,7 @@
 # vm_id => string - instance id of the vm
 # sm_uuid => string - uuid of configuration files
 # initialized => boolean - whether or not SM code has been sent to this machind
-# -- special for PLCloud --
+#
 # public_ip => public ip of machine which redirects to ssh port
 # public_ssh_port => port of public machine redirecting to ssh private port
 class CloudVmRecord < MongoActiveRecord
