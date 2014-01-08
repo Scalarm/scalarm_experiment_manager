@@ -1,5 +1,4 @@
 - button_classes = 'button radius small expand last-element action-button'
-
 %article
   %h3.subheader
     = t('.actions_header')
@@ -8,7 +7,7 @@
   .row
     - if @experiment.is_running
       .small-2.columns.action-button
-        = button_to t('.stop_button'), stop_experiment_path(@experiment.id), :onClick => "return confirm('Are you sure?')", class: button_classes
+        %span#stopExperimentButton{class: button_classes}= "Stop experiment"
       .small-2.columns.action-button
         %span#extensionDialogOpenButton{class: button_classes}= t('.extend_button')
       .small-2.columns.action-button
@@ -17,11 +16,9 @@
         %span#schedulingButton{class: button_classes}= t('.scheduling_button')
     - else
       .small-2.columns.action-button
-        = button_to t('.destroy_button'), experiment_path(@experiment.id), method: :delete, onClick: "$('#loading-img').show(); return confirm('Are you sure?')", class: button_classes
-
+        %span#destroyExperimentButton{class: button_classes}= "Destroy experiment"
     .small-2.columns.action-button
       = link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: button_classes
-
     .small-2.columns.action-button
       %span#progressButton{class: button_classes}= t('.progress_information_button')
       %ul#download-dropdown.f-dropdown(data-dropdown-conent)
@@ -29,6 +26,22 @@
         %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
 
 #extension-dialog.reveal-modal(data-reveal="")
+
+#stop_experiment_dialog.reveal-modal(data-reveal="")
+  %h2= t('.stop_dialog.header')
+  .row
+    .small-6.columns.centered
+      = link_to t('.yes'), stop_experiment_path(@experiment.id), class: button_classes, method: :post
+    .small-6.columns.centered
+      %span.no_button{class: button_classes}= t('.no')
+
+#destroy_experiment_dialog.reveal-modal(data-reveal="")
+  %h2= t('.destroy_dialog.header')
+  .row
+    .small-6.columns.centered
+      = link_to t('.yes'), experiment_path(@experiment.id), class: button_classes, method: :delete
+    .small-6.columns.centered
+      %span.no_button{class: button_classes}= t('.no')
 
 - content_for :javascript do
   :javascript

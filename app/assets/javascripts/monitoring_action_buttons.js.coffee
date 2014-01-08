@@ -7,6 +7,8 @@ class window.MonitoringActionButtons
     @boosterButtonListener()
     @schedulingButtonListener()
     @progressTableButtonListener()
+    @stopExperimentButtonListener()
+    @destroyExperimentButtonListener()
 
 
   extendButtonListener: () ->
@@ -33,3 +35,15 @@ class window.MonitoringActionButtons
     $('#progressButton').on 'click', () =>
       $('#progressInformationWrapper').slideToggle()
       $('html, body').animate({ scrollTop: $('#progressInformationWrapper').offset().top }, 1000)
+
+  stopExperimentButtonListener: () ->
+    $('#stopExperimentButton').on 'click', () =>
+      $('#stop_experiment_dialog').foundation('reveal', 'open')
+    $('#stop_experiment_dialog .no_button').on 'click', () =>
+      $('#stop_experiment_dialog').foundation('reveal', 'close')
+
+  destroyExperimentButtonListener: () ->
+    $('#destroyExperimentButton').on 'click', () =>
+      $('#destroy_experiment_dialog').foundation('reveal', 'open')
+    $('#destroy_experiment_dialog .no_button').on 'click', () =>
+      $('#destroy_experiment_dialog').foundation('reveal', 'close')

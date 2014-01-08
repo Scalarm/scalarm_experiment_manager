@@ -10,3 +10,10 @@ en:
       minimum: Minimum
       maximum: Maximum
       step: Step
+    monitoring_actions:
+      stop_dialog:
+        header: "Are you sure you want to stop the experiment?"
+      destroy_dialog:
+        header: "Are you sure you want to destroy the experiment?"
+      yes: "Yes"
+      no: "No"
