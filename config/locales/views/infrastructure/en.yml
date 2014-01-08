@@ -17,3 +17,5 @@ en:
         header: "Are you sure you want to destroy the experiment?"
       yes: "Yes"
       no: "No"
+      stop_button: "Stop experiment"
+      destroy_button: "Destroy experiment"
