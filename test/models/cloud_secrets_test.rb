@@ -1,5 +1,4 @@
 require 'test/unit'
-require 'infrastructure_facades/clouds/cloud_secrets'
 
 # Tests usage of EncryptedMongoActiveRecord with CloudSecrets
 class CloudSecretsTest < Test::Unit::TestCase
@@ -14,7 +13,7 @@ class CloudSecretsTest < Test::Unit::TestCase
 
     # -- when
     cs = CloudSecrets.new('login'=>'cloud_user', 'user_id'=>su.id, 'info'=>5)
-    cs.password = 'secret_password'
+    cs.secret_password = 'my_password'
     cs.other_info = 3
     cs.other_user_id = su2.id
     cs.save
@@ -24,12 +23,12 @@ class CloudSecretsTest < Test::Unit::TestCase
 
     # -- then
     assert_equal(saved_cs.login, 'cloud_user')
-    assert_equal(saved_cs.password, 'secret_password')
+    assert_equal(saved_cs.secret_password, 'my_password')
 
     assert_equal(saved_cs.info, 5)
     assert_equal(saved_cs.other_info, 3)
 
-    #assert_no_match(/secret_password/, saved_cs.to_s, "CloudSecrets password is stored as plain text: #{saved_cs.to_s}")
+    assert_no_match(/my_password/, saved_cs.to_s, "CloudSecrets secret_password is stored as plain text: #{saved_cs.to_s}")
 
     assert_equal(saved_cs.user_id, su.id)
     assert_equal(saved_cs.other_user_id, su2.id)

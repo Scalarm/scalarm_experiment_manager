@@ -1,5 +1,7 @@
 class CloudImageSecrets < EncryptedMongoActiveRecord
-  def self.encryption_excluded
-    %w(cloud_name image_id)
+
+  def self.collection_name
+    'cloud_image_secrets'
   end
+
 end

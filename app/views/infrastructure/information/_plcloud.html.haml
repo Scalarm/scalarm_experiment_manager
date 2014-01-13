@@ -1,10 +1,10 @@
 -# local variables: experiment, user
-- plgrid_secrets_creds = PLCloudSecrets.find_by_user_id(user.id)
-- plgrid_image_creds = PLCloudImage.find_all_by_user_id(user.id)
-- if plgrid_image_creds.empty?
-  -  plgrid_image_creds = nil
+- plcloud_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+- plcloud_image_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+- if plcloud_image_creds.empty?
+  -  plcloud_image_creds = nil
 - else
-  - plgrid_image_creds = plgrid_image_creds.select{|img| img.experiment_id.to_s == experiment.id.to_s}.first
+  - plcloud_image_creds = plcloud_image_creds.select{|img| img.experiment_id.to_s == experiment.id.to_s}.first
 
 .row
   #plcloud-ajax-response.alert-box.radius(style="display: none;")
@@ -26,7 +26,7 @@
               .small-4.columns
                 = text_field_tag :job_counter
               .small-4.columns
-            - images = PLCloudImage.all.map{|i| ["#{i.image_id} --- #{i.login}", i.id]}
+            - images = CloudImageSecrets.all.map{|i| ["#{i.image_id} --- #{i.login}", i.id]}
             .row
               .small-4.columns
                 = label_tag :image_id, t('.submission.image') + ':', class: 'inline right'
@@ -71,21 +71,21 @@
 
               .row
                 .small-4.columns
-                  = label_tag :login, t('.credentials.login') + ':', class: 'inline right'
+                  = label_tag :stored_login, t('.credentials.login') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :login, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.login
+                  = text_field_tag :stored_login, plcloud_secrets_creds.nil? ? '' : plcloud_secrets_creds.login
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag :password, t('.credentials.password') + ':', class: 'inline right'
+                  = label_tag :stored_secret_password, t('.credentials.password') + ':', class: 'inline right'
                 .small-4.columns
-                  = password_field_tag :password, plgrid_secrets_creds.nil? ? '' : plgrid_secrets_creds.password
+                  = password_field_tag :stored_secret_password, plcloud_secrets_creds.nil? ? '' : plcloud_secrets_creds.secret_password
                 .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :save_settings, t('.credentials.save_settings') + ':', class: 'inline right'
                 .small-4.columns
-                  = check_box_tag :save_settings, '1', (not plgrid_secrets_creds.nil?)
+                  = check_box_tag :save_settings, '1', (not plcloud_secrets_creds.nil?)
                 .small-4.columns
               .row
                 .small-12.columns.text-center
@@ -101,21 +101,21 @@
               %legend= t('.images.title')
               .row
                 .small-4.columns
-                  = label_tag :image_id, t('.images.image_id') + ':', class: 'inline right'
+                  = label_tag :stored_image_id, t('.images.image_id') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :image_id, plgrid_image_creds.nil? ? '' : plgrid_image_creds.ami_id
-                .small-4.columns
-              .row
-                .small-4.columns
-                  = label_tag :image_login, t('.images.login') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :image_login, plgrid_image_creds.nil? ? '' : plgrid_image_creds.login
+                  = text_field_tag :stored_image_id, plcloud_image_creds.nil? ? '' : plcloud_image_creds.ami_id
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag :image_password, t('.images.password') + ':', class: 'inline right'
+                  = label_tag :stored_image_login, t('.images.login') + ':', class: 'inline right'
                 .small-4.columns
-                  = password_field_tag :image_password, plgrid_image_creds.nil? ? '' : plgrid_image_creds.password
+                  = text_field_tag :stored_image_login, plcloud_image_creds.nil? ? '' : plcloud_image_creds.login
+                .small-4.columns
+              .row
+                .small-4.columns
+                  = label_tag :stored_secret_image_password, t('.images.password') + ':', class: 'inline right'
+                .small-4.columns
+                  = password_field_tag :stored_secret_image_password, plcloud_image_creds.nil? ? '' : plcloud_image_creds.secret_image_password
                 .small-4.columns
               .row
                 .small-4.columns

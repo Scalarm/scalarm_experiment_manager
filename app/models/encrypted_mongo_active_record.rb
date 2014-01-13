@@ -1,9 +1,10 @@
-# MongoActiveRecord with automatic encrypt/decrypt when using setters/getters
+# MongoActiveRecord with automatic encrypt/decrypt
+# for all attributes with 'secret_' prefix when using setters/getters
 # Important: when using constructor to set attributes, e.g.
-# EncryptedMongoActiveRecord.new({'login'=>'my_login'}), the attribute IS NOT encrypted
+# EncryptedMongoActiveRecord.new({'secret_login'=>'my_login'}), the attribute IS NEVER encrypted
 # to encrypt attribute use:
 # record = EncryptedMongoActiveRecord.new({})
-# record.password = 'secret_password'
+# record.secret_password = 'my_password'
 # record.save
 class EncryptedMongoActiveRecord < MongoActiveRecord
   Encryptor.default_options.merge!(:key => Digest::SHA256.hexdigest('QjqjFK}7|Xw8DDMUP-O$yp'))
@@ -15,10 +16,15 @@ class EncryptedMongoActiveRecord < MongoActiveRecord
 
   # handling getters and setters for object instance with encryption on-the-fly
   def method_missing(method_name, *args, &block)
-    use_encryption = true
+    use_encryption = false
+    method_name = method_name.to_s
 
-    #Rails.logger.debug("MongoRecord: #{method_name} - #{args.join(',')}")
-    method_name = method_name.to_s; setter = false
+    # encrypt only attributes starting with 'secret_'
+    if method_name.start_with?('secret_')
+      use_encryption = true
+    end
+
+    setter = false
     if method_name.ends_with? '='
       method_name.chop!
       setter = true
@@ -30,11 +36,6 @@ class EncryptedMongoActiveRecord < MongoActiveRecord
     end
 
     method_name = '_id' if method_name == 'id'
-
-    # do not encrypt primary key and foreign keys
-    if method_name.ends_with?('_id') or encryption_excluded.include? method_name
-      use_encryption = false
-    end
 
     if setter
       if use_encryption

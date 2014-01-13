@@ -1,4 +1,9 @@
+require_relative 'clouds/vm_instance.rb'
+
 class CloudFacade < InfrastructureFacade
+
+  # prefix for all created and managed VMs
+  VM_NAME_PREFIX = 'scalarm_'
 
   # sleep time between vm checking
   PROBE_TIME = 60
@@ -14,16 +19,17 @@ class CloudFacade < InfrastructureFacade
   # implements InfrasctuctureFacade
   def current_state(user)
     cloud_secrets =
-        CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+        CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
 
     return Rails.logger.info("No information available due to lack of credentials for #{@full_name}") if cloud_secrets.nil?
 
     client = @client_class.new(cloud_secrets)
 
+    # FIXME
     begin
       # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with running state
       num = (client.all_vm_instances.values.select { |vm| vm.name =~ /^#{VM_NAME_PREFIX}/ && vm.state == :running}).count
-      "You have #{num} Scalarm virtual machines running"
+      "You have #{num} Scalarm virtual machines running" # TODO: info about initializing?
     rescue Exception => ex
       "No information available due to exception - #{ex}"
     end
@@ -47,20 +53,20 @@ class CloudFacade < InfrastructureFacade
           client = @client_class.new(secrets)
 
           user_vm_records.each do |vm_record|
-            vm_tag = "#{@short_name} vm #{vm_record.vm_id}]"
+            vm_tag = "[#{@short_name} vm #{vm_record.vm_id}]"
 
             Rails.logger.info("#{vm_tag} checking")
             vm_instance = client.vm_instance(vm_record.vm_id)
 
             experiment = DataFarmingExperiment.find_by_id(vm_record.experiment_id)
 
-            if [:stopped, :terminated].include?(vm_instance.status) or (not vm_instance.exists?)
+            if [:deactivated, :error].include?(vm_instance.status) or (not vm_instance.exists?)
               Rails.logger.info("#{vm_tag} This VM is going to be removed from our db as it is terminated")
               temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(amazon_vm.sm_uuid)
               temp_pass.destroy unless temp_pass.nil?
               vm_record.destroy unless vm_record.nil?
 
-            elsif ([:pending, :running].include?(vm_instance.status) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
+            elsif ([:initializing, :running].include?(vm_instance.status) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
               Rails.logger.info("#{vm_tag} This VM is going to be destroyed as it is done or should be done")
               vm_instance.terminate
 
@@ -68,7 +74,7 @@ class CloudFacade < InfrastructureFacade
               Rails.logger.info("#{vm_tag} This VM is going to be initialized with SM now")
               initialize_sm_on(vm_record, vm_instance)
 
-            elsif ([:pending, :running].include?(vm_instance.status) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
+            elsif ((vm_instance.status == :initializing) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
               Rails.logger.info("#{vm_tag} This VM will be restarted due to not being run for more then 10 minutes")
               vm_instance.reboot
             end
@@ -84,21 +90,23 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
+
     cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
     return 'error', 'You have to provide PLCloud secrets first!' if cloud_secrets.nil?
 
-    exp_image_id = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, 'image_id'=>additional_params['image_id']).image_id
+    exp_image_id = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, 'image_id'=>additional_params[:image_id]).image_id
     return 'error', 'You have to provide PLCloud Image information first!' if exp_image_id.nil?
 
     cloud_client = @client_class.new(cloud_secrets)
 
     timestamp = Time.now.to_i
 
-    sched_instances = cloud_client.create_instances("#{VM_NAME_PREFIX}#{timestamp}", exp_image_id, instances_count)
+    sched_instances = cloud_client.create_instances("#{VM_NAME_PREFIX}#{timestamp}", exp_image_id, instances_count, additional_params)
 
     sched_instances.each do |vm_instance|
-
-      plc_vm = PLCloudVm.new({
+      public_ssh_address = vm_instance.public_ssh_address
+      plc_vm = CloudVmRecord.new({
+                                 cloud_name: @short_name,
                                  user_id: user.id,
                                  experiment_id: experiment_id,
                                  created_at: Time.now,
@@ -106,9 +114,9 @@ class CloudFacade < InfrastructureFacade
                                  vm_id: vm_instance.vm_id,
                                  sm_uuid: SecureRandom.uuid,
                                  initialized: false,
-                                 start_at: additional_params['start_at'],
-                                 public_ip: vm_instance.public_host,
-                                 public_ssh_port: vm_instance.public_ssh_port
+                                 start_at: additional_params[:start_at], # TODO: check
+                                 public_host: public_ssh_address[:ip],
+                                 public_ssh_port: public_ssh_address[:port]
                              })
       plc_vm.save
     end
@@ -128,7 +136,7 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
-    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user_id) do |instance|
+    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id) do |instance|
       instance.to_s
     end
   end
@@ -157,14 +165,16 @@ class CloudFacade < InfrastructureFacade
   private
 
   def handle_secrets_credentials(user, params, session)
+
     credentials = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
 
     if credentials.nil?
       credentials = CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user.id})
     end
 
-    credentials.login = params[:login]
-    credentials.password = params[:password]
+    (params.keys.select {|k| k.start_with? 'stored_' }).each do |secret_key|
+      credentials.send("#{secret_key.to_s.sub(/^stored_/, '')}=", params[secret_key])
+    end
     credentials.save
 
     if params.include?('store_secrets_in_session')
@@ -180,19 +190,21 @@ class CloudFacade < InfrastructureFacade
     credentials = CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
 
     if credentials.nil?
-      credentials = CloudImageSecrets.new({'user_id' => user.id, 'experiment_id' => params[:experiment_id]})
+      credentials = CloudImageSecrets.new({'cloud_name' => @short_name, 'user_id' => user.id,
+                                           'experiment_id' => params[:experiment_id]})
     else
       credentials = credentials.select {|image_creds| image_creds.experiment_id == params[:experiment_id]}
       if credentials.blank?
-        credentials = CloudImageSecrets.new({'user_id' => user.id, 'experiment_id' => params[:experiment_id]})
+        credentials = CloudImageSecrets.new({'cloud_name' => @short_name, 'user_id' => user.id,
+                                             'experiment_id' => params[:experiment_id]})
       else
         credentials = credentials.first
       end
     end
 
-    credentials.image_id = params[:image_id]
-    credentials.login = params[:image_login]
-    credentials.password = params[:image_password]
+    (params.keys.select {|k| k.start_with? 'stored_' }).each do |secret_key|
+      credentials.send("#{secret_key.to_s.sub(/^stored_/, '')}=", params[secret_key])
+    end
     credentials.save
 
     if params.include?('store_template_in_session')
@@ -215,23 +227,23 @@ class CloudFacade < InfrastructureFacade
 
     prepare_configuration_for_simulation_manager(vm_record.sm_uuid, vm_record.user_id, vm_record.experiment_id, vm_record.start_at)
 
-    vm_image = PLCloudImage.find_by_image_id(vm_instance.image_id.to_s)
+    vm_image = CloudImageSecrets.find_by_image_id(vm_instance.image_id.to_s)
+    image_login = vm_image.image_login
+    image_password = vm_image.secret_image_password
 
-    error_counter = 0
+        error_counter = 0
     while true
       begin
         #  upload the code to the VM - use only password authentication
-        Net::SCP.start(public_host, vm_image.login,
-                       port: public_ssh_port, password: vm_image.password, auth_methods: ssh_auth_methods) do |scp|
+        Net::SCP.start(public_host, image_login,
+                       port: public_ssh_port, password: image_password, auth_methods: ssh_auth_methods) do |scp|
           scp.upload! "/tmp/scalarm_simulation_manager_#{vm_record.sm_uuid}.zip", '.'
         end
 
-        'No such file or directory'
-
         # execute simulation manager on VM - use only password auth
         # NOTE: VM should have rvm installed
-        Net::SSH.start(public_host, vm_image.login,
-                       port: public_ssh_port, password: vm_image.password, auth_methods: ssh_auth_methods) do |ssh|
+        Net::SSH.start(public_host, image_login,
+                       port: public_ssh_port, password: image_password, auth_methods: ssh_auth_methods) do |ssh|
           output = ssh.exec!("ls /tmp/mylogfile")
           Rails.logger.debug "SM checking output: #{output}"
 

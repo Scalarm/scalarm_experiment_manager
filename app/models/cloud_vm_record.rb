@@ -3,7 +3,7 @@
 #
 # Attributes
 # -- generic --
-# cloud_type => string - name of the cloud, e.g. 'plcloud', 'amazon'
+# cloud_name => string - name of the cloud, e.g. 'plcloud', 'amazon'
 # user_id => integer - the user who scheduled this job - mongoid in the future
 # experiment_id => the experiment which should be computed by this job
 # created_at => time - when this job were scheduled
@@ -20,7 +20,7 @@ class CloudVmRecord < MongoActiveRecord
     'vm_records'
   end
 
-  def all_for_cloud(cloud_name)
+  def self.all_for_cloud(cloud_name)
     find_all_by('cloud_name', cloud_name)
   end
 

@@ -10,11 +10,7 @@ class CloudSecrets < EncryptedMongoActiveRecord
     'cloud_secrets'
   end
 
-  def self.encryption_excluded
-    %w(cloud_name user_id)
-  end
-
-  def all_for_cloud(cloud_name)
+  def self.all_for_cloud(cloud_name)
     find_all_by('cloud_name', cloud_name)
   end
 

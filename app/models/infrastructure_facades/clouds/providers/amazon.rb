@@ -1,4 +1,4 @@
-require_relative 'infrastructure_facades/clouds/abstract_cloud_client'
+require 'infrastructure_facades/clouds/abstract_cloud_client'
 
 module AmazonCloud
 
@@ -16,7 +16,7 @@ module AmazonCloud
       # list of all vm instances ids
     end
 
-    def create_instances(base_name, image_id, number)
+    def create_instances(base_name, image_id, number, params)
       # list of AbstractVmInstance
     end
 
@@ -27,7 +27,7 @@ module AmazonCloud
       # String: name of virtual machine instance
     end
 
-    def state(id)
+    def status(id)
       # one of: [:pending, :running, :shutting_down, :terminated, :stopping, :stopped]
     end
 
@@ -39,12 +39,9 @@ module AmazonCloud
       # nil -- terminates VM
     end
 
-    def public_host(id)
-      # String: public host of VM -- dynamically gets hostname from API
-    end
+    # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
+    def public_ssh_address(id)
 
-    def public_ssh_port(id)
-      # String: public ssh port of VM -- dynamically gets hostname from API
     end
 
   end

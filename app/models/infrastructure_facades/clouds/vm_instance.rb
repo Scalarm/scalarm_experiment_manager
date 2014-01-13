@@ -6,12 +6,16 @@
 # - public_host -> String: public host of VM -- dynamically gets hostname from API
 # - public_ssh_port -> String: public ssh port of VM -- dynamically gets hostname from API
 
-# Prov@instance_ides utils for virtual machines operations
+# Provides utils for virtual machines operations
 class VmInstance
 
   def initialize(instance_id, cloud_client)
     @client = cloud_client
     @instance_id = instance_id
+  end
+
+  def vm_id
+    @instance_id
   end
 
   # -- delegation methods --
@@ -20,8 +24,8 @@ class VmInstance
     @client.name(@instance_id)
   end
 
-  def state
-    @client.state(@instance_id)
+  def status
+    @client.status(@instance_id)
   end
 
   def exists?
@@ -32,12 +36,8 @@ class VmInstance
     @client.terminate(@instance_id)
   end
 
-  def public_host
-    @client.public_host(@instance_id)
-  end
-
-  def public_ssh_port
-    @client.public_ssh_port(@instance_id)
+  def public_ssh_address
+    @client.public_ssh_address(@instance_id)
   end
 
 end

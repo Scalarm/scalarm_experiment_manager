@@ -146,7 +146,7 @@ CONTEXT = [
       str_args = "[\"#{args.join('", "')}\"]"
 
       RestClient.post url, str_args,
-                      'One-User' => @secrets.login, 'One-Secret' => @secrets.password,
+                      'One-User' => @secrets.login, 'One-Secret' => @secrets.secret_password,
                       :content_type => :json, :accept => :json
     rescue
       Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
@@ -163,7 +163,7 @@ CONTEXT = [
 
     # TODO: use CA, "ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER" to RestClient Resource
 
-    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
+    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
 
     payload = [{'proto' => 'tcp', 'port' => port.to_i}].to_json
 
@@ -193,7 +193,7 @@ CONTEXT = [
   # @return [Hash] {<private_port_num> => {ip: <public_ip>, port: <public_port_num>}}
   # @param [String] vm_ip virtual machine's private ip
   def redirections_for(vm_ip)
-    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
+    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
     resp = dnat[vm_ip].get
     data = JSON.parse resp
 
