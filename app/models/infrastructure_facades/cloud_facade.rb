@@ -62,7 +62,7 @@ class CloudFacade < InfrastructureFacade
 
             if [:deactivated, :error].include?(vm_instance.status) or (not vm_instance.exists?)
               Rails.logger.info("#{vm_tag} This VM is going to be removed from our db as it is terminated")
-              temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(amazon_vm.sm_uuid)
+              temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(vm_record.sm_uuid)
               temp_pass.destroy unless temp_pass.nil?
               vm_record.destroy unless vm_record.nil?
 
@@ -91,11 +91,14 @@ class CloudFacade < InfrastructureFacade
   # implements InfrasctuctureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
 
+    Rails.logger.debug("[#{@short_name}] Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}")
+
     cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
     return 'error', 'You have to provide PLCloud secrets first!' if cloud_secrets.nil?
 
-    exp_image_id = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, 'image_id'=>additional_params[:image_id]).image_id
-    return 'error', 'You have to provide PLCloud Image information first!' if exp_image_id.nil?
+    exp_image = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, '_id'=>BSON::ObjectId(additional_params['image_id']))
+    return 'error', 'You have to provide PLCloud Image information first!' if exp_image.nil? or exp_image.image_id.nil?
+    exp_image_id = exp_image.image_id
 
     cloud_client = @client_class.new(cloud_secrets)
 
@@ -109,12 +112,13 @@ class CloudFacade < InfrastructureFacade
                                  cloud_name: @short_name,
                                  user_id: user.id,
                                  experiment_id: experiment_id,
+                                 image_id: exp_image_id,
                                  created_at: Time.now,
-                                 time_limit: additional_params[:time_limit],
+                                 time_limit: additional_params['time_limit'],
                                  vm_id: vm_instance.vm_id,
                                  sm_uuid: SecureRandom.uuid,
                                  initialized: false,
-                                 start_at: additional_params[:start_at], # TODO: check
+                                 start_at: additional_params['start_at'],
                                  public_host: public_ssh_address[:ip],
                                  public_ssh_port: public_ssh_address[:port]
                              })
@@ -227,7 +231,7 @@ class CloudFacade < InfrastructureFacade
 
     prepare_configuration_for_simulation_manager(vm_record.sm_uuid, vm_record.user_id, vm_record.experiment_id, vm_record.start_at)
 
-    vm_image = CloudImageSecrets.find_by_image_id(vm_instance.image_id.to_s)
+    vm_image = CloudImageSecrets.find_by_image_id(vm_record.image_id.to_s)
     image_login = vm_image.image_login
     image_password = vm_image.secret_image_password
 
@@ -255,10 +259,10 @@ class CloudFacade < InfrastructureFacade
 
         break
       rescue Exception => e
-        Rails.logger.debug("Exception #{e} occured while communication with #{vm_record.public_ip}:#{vm_record.public_ssh_port} --- #{error_counter}")
+        Rails.logger.debug("Exception #{e} occured while communication with #{vm_record.public_host}:#{vm_record.public_ssh_port} --- #{error_counter}")
         error_counter += 1
         if error_counter > 10
-          vm_instance.delete
+          vm_instance.terminate
           break
         end
       end

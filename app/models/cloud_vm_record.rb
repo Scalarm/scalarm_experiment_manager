@@ -12,7 +12,7 @@
 # sm_uuid => string - uuid of configuration files
 # initialized => boolean - whether or not SM code has been sent to this machind
 #
-# public_ip => public ip of machine which redirects to ssh port
+# public_host => public hostname of machine which redirects to ssh port
 # public_ssh_port => port of public machine redirecting to ssh private port
 class CloudVmRecord < MongoActiveRecord
 
