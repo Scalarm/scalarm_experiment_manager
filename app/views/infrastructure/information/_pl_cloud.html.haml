@@ -1,23 +1,23 @@
 -# local variables: experiment, user
-- plcloud_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-- plcloud_image_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-- if plcloud_image_creds.empty?
-  -  plcloud_image_creds = nil
+- pl_cloud_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+- pl_cloud_image_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+- if pl_cloud_image_creds.empty?
+  -  pl_cloud_image_creds = nil
 - else
-  - plcloud_image_creds = plcloud_image_creds.select{|img| img.experiment_id.to_s == experiment.id.to_s}.first
+  - pl_cloud_image_creds = pl_cloud_image_creds.select{|img| img.experiment_id.to_s == experiment.id.to_s}.first
 
 .row
-  #plcloud-ajax-response.alert-box.radius(style="display: none;")
+  #pl_cloud-ajax-response.alert-box.radius(style="display: none;")
 
 .row
   %dl.accordion(data-accordion="")
     %dd
-      %a(href='#plcloud-submission-panel')= t('infrastructure.information.submission_label')
-      .content#plcloud-submission-panel
+      %a(href='#pl_cloud-submission-panel')= t('infrastructure.information.submission_label')
+      .content#pl_cloud-submission-panel
         %p
           = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
             = hidden_field_tag 'experiment_id', experiment.id
-            = hidden_field_tag 'infrastructure_type', 'plcloud'
+            = hidden_field_tag 'infrastructure_type', 'pl_cloud'
             = hidden_field_tag 'security_group', 'quicklaunch-1'
 
             .row
@@ -51,17 +51,17 @@
             .row
               .small-12.columns.text-center
                 = submit_tag t('infrastructure.information.submit'), class: 'button radius'
-                = image_tag 'loading.gif', class: 'plcloud-submission-busy', style: 'display: none;'
+                = image_tag 'loading.gif', class: 'pl_cloud-submission-busy', style: 'display: none;'
 
             .row
               .small-12.columns
-                #plcloud-submission-ajax-response
+                #pl_cloud-submission-ajax-response
     %dd
-      %a(href='#plcloud-credentials')= t('infrastructure.information.credentials_label')
-      .content#plcloud-credentials
+      %a(href='#pl_cloud-credentials')= t('infrastructure.information.credentials_label')
+      .content#pl_cloud-credentials
         %p
           = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
-            = hidden_field_tag 'infrastructure_type', 'plcloud'
+            = hidden_field_tag 'infrastructure_type', 'pl_cloud'
             = hidden_field_tag 'credential_type', 'secrets'
 
             %h5.subheader= t('.credentials_label')
@@ -73,19 +73,19 @@
                 .small-4.columns
                   = label_tag :stored_login, t('.credentials.login') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :stored_login, plcloud_secrets_creds.nil? ? '' : plcloud_secrets_creds.login
+                  = text_field_tag :stored_login, pl_cloud_secrets_creds.nil? ? '' : pl_cloud_secrets_creds.login
                 .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :stored_secret_password, t('.credentials.password') + ':', class: 'inline right'
                 .small-4.columns
-                  = password_field_tag :stored_secret_password, plcloud_secrets_creds.nil? ? '' : plcloud_secrets_creds.secret_password
+                  = password_field_tag :stored_secret_password, pl_cloud_secrets_creds.nil? ? '' : pl_cloud_secrets_creds.secret_password
                 .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :save_settings, t('.credentials.save_settings') + ':', class: 'inline right'
                 .small-4.columns
-                  = check_box_tag :save_settings, '1', (not plcloud_secrets_creds.nil?)
+                  = check_box_tag :save_settings, '1', (not pl_cloud_secrets_creds.nil?)
                 .small-4.columns
               .row
                 .small-12.columns.text-center
@@ -93,7 +93,7 @@
                   = image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
 
           = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
-            = hidden_field_tag 'infrastructure_type', 'plcloud'
+            = hidden_field_tag 'infrastructure_type', 'pl_cloud'
             = hidden_field_tag 'credential_type', 'image'
             = hidden_field_tag 'experiment_id', experiment.id
 
@@ -103,19 +103,19 @@
                 .small-4.columns
                   = label_tag :stored_image_id, t('.images.image_id') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :stored_image_id, plcloud_image_creds.nil? ? '' : plcloud_image_creds.ami_id
+                  = text_field_tag :stored_image_id, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.ami_id
                 .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :stored_image_login, t('.images.login') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :stored_image_login, plcloud_image_creds.nil? ? '' : plcloud_image_creds.login
+                  = text_field_tag :stored_image_login, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.login
                 .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :stored_secret_image_password, t('.images.password') + ':', class: 'inline right'
                 .small-4.columns
-                  = password_field_tag :stored_secret_image_password, plcloud_image_creds.nil? ? '' : plcloud_image_creds.secret_image_password
+                  = password_field_tag :stored_secret_image_password, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.secret_image_password
                 .small-4.columns
               .row
                 .small-4.columns
@@ -127,15 +127,15 @@
               .row
                 .small-12.columns.text-center
                   = submit_tag t('infrastructure.information.submit'), class: 'button radius'
-                  = image_tag 'loading.gif', class: 'plcloud-credentials-busy', style: 'display: none;'
+                  = image_tag 'loading.gif', class: 'pl_cloud-credentials-busy', style: 'display: none;'
 
     %dd
-      %a(href='#plcloud-vms')= t('infrastructure.information.scheduled_label')
-      .content#plcloud-vms
+      %a(href='#pl_cloud-vms')= t('infrastructure.information.scheduled_label')
+      .content#pl_cloud-vms
         %p
-          %p= @current_states[:plcloud]
+          %p= @current_states[:pl_cloud]
           %ul.circle
-            - @simulation_managers[:plcloud].each do |virtual_machine|
+            - @simulation_managers[:pl_cloud].each do |virtual_machine|
               %li= virtual_machine
 
 :javascript

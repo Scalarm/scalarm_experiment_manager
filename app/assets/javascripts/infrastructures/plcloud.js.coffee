@@ -1,14 +1,14 @@
 class window.PLCloudManager
   constructor: (@dialogId) ->
-    @responsePanel = $('#plcloud-ajax-response')
-    @loading = $('.plcloud-credentials-busy')
+    @responsePanel = $('#pl_cloud-ajax-response')
+    @loading = $('.pl_cloud-credentials-busy')
     @bindToCredentialForm()
     @bindToSubmissionForm()
 
-    $('#plcloud-ajax-response').hide()
+    $('#pl_cloud-ajax-response').hide()
 
   bindToCredentialForm: =>
-    $("#plcloud-credentials form")
+    $("#pl_cloud-credentials form")
       .bind('ajax:before', =>
         @loading.show()
         @responsePanel.html('')
@@ -29,7 +29,7 @@ class window.PLCloudManager
       )
 
   bindToSubmissionForm: () ->
-    $("#plcloud-submission-panel form")
+    $("#pl_cloud-submission-panel form")
       .bind('ajax:before', () =>
         $(@dialogId).foundation('reveal', 'close')
         window.show_loading_notice()

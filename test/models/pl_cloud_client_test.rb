@@ -20,7 +20,7 @@ class PLCloudClientTest < Test::Unit::TestCase
   #
   # NOTE: please check if machines were successfully deleted after tests.
 
-  TEST_USER_LOGIN = '__plcloud_test_user__'
+  TEST_USER_LOGIN = '__pl_cloud_test_user__'
 
   # Called before every test method runs. Can be used
   # to set up fixture information.

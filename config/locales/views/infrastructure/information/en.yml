@@ -36,7 +36,7 @@ en:
           login: Virtual machine login
           password: Virtual machine password
 
-      plcloud:
+      pl_cloud:
         credentials_label: Please, provide your credentials to access the PL-Grid infrastructure
         credentials_link: PLGrid Cloud credentials
         credentials:

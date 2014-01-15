@@ -166,7 +166,7 @@ en:
       no_credentials: You have to provide Grid credentials first!
     job_desc: "<b>Job id</b>: %{job_id}<br/><b>Scheduled at</b>: %{created_at}<br/><b>Experiment id</b>: %{experiment_id}"
 
-  plcloud:
+  pl_cloud:
     login:
       ok: Your credentials have been updated
 

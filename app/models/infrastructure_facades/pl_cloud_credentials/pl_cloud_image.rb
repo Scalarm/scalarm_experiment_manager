@@ -9,7 +9,7 @@ class PLCloudImage < MongoActiveRecord
   Encryptor.default_options.merge!(:key => Digest::SHA256.hexdigest('QjqjFK}7|Xw8DDMUP-O$yp'))
 
   def self.collection_name
-    'plcloud_images'
+    'pl_cloud_images'
   end
 
   def password

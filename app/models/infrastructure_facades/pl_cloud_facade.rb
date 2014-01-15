@@ -29,10 +29,10 @@ class PLCloudFacade < InfrastructureFacade
   def start_monitoring
     while true do
       begin
-        Rails.logger.info("[plcloud] #{Time.now} - monitoring thread is working")
-        plcloud_vms = PLCloudVm.all.group_by(&:user_id)
+        Rails.logger.info("[pl_cloud] #{Time.now} - monitoring thread is working")
+        pl_cloud_vms = PLCloudVm.all.group_by(&:user_id)
 
-        plcloud_vms.each do |user_id, vm_list|
+        pl_cloud_vms.each do |user_id, vm_list|
           user = ScalarmUser.find_by_id(user_id)
           plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
           if plc_secrets.nil?

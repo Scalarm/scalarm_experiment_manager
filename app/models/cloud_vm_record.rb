@@ -3,7 +3,7 @@
 #
 # Attributes
 # -- generic --
-# cloud_name => string - name of the cloud, e.g. 'plcloud', 'amazon'
+# cloud_name => string - name of the cloud, e.g. 'pl_cloud', 'amazon'
 # user_id => integer - the user who scheduled this job - mongoid in the future
 # experiment_id => the experiment which should be computed by this job
 # image_id => id of image in Cloud

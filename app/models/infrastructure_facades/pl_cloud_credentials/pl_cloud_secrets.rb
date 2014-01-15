@@ -12,7 +12,7 @@ class PLCloudSecrets < MongoActiveRecord
   @@CIPHER_IV = "\xA9\x8E\xD0\x031 w0\x1Ed\xEC\xC4\xD4\xEA\x87\e"
 
   def self.collection_name
-    'plcloud_secrets'
+    'pl_cloud_secrets'
   end
 
   def password
