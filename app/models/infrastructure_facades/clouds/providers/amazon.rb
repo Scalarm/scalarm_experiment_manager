@@ -16,7 +16,7 @@ module AmazonCloud
       # list of all vm instances ids
     end
 
-    def create_instances(base_name, image_id, number, params)
+    def schedule_vm_instances(base_name, image_id, number, params)
       # list of AbstractVmInstance
     end
 
@@ -39,9 +39,17 @@ module AmazonCloud
       # nil -- terminates VM
     end
 
+    def reinitialize(id)
+      # Amazon reboot
+    end
+
     # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
 
+    end
+
+    def vm_record_info(vm_record)
+      "Type: #{instance_type}"
     end
 
   end

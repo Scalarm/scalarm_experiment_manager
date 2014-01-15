@@ -11,7 +11,6 @@ class PLCloudFacade < InfrastructureFacade
 
   VM_NAME_PREFIX = 'scalarm_'
 
-  # fixme: returns always true
   def current_state(user)
     plc_secrets = PLCloudSecrets.find_by_user_id(user.id)
 

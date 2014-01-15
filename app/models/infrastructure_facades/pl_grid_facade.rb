@@ -14,6 +14,10 @@ class PLGridFacade < InfrastructureFacade
     @ui_grid_host = 'ui.grid.cyfronet.pl'
   end
 
+  def short_name
+    'plgrid'
+  end
+
   def current_state(user)
     jobs = PlGridJob.find_all_by_user_id(user.id)
     jobs_count = if jobs.nil?

@@ -5,8 +5,10 @@ class CloudFacade < InfrastructureFacade
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
 
-  # sleep time between vm checking
+  # sleep time between vm checking [seconds]
   PROBE_TIME = 60
+  # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
+  MAX_VM_INIT_TIME = 10.minutes
 
   # Creates specific cloud facade instance
   # @param [Class] client_class
@@ -16,21 +18,42 @@ class CloudFacade < InfrastructureFacade
     @full_name = client_class.full_name
   end
 
+  def cloud_client_instance(user_id)
+    cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+    cloud_secrets and cloud_client = @client_class.new(cloud_secrets) or nil
+  end
+
+  # implements InfrastructureFacade
+  def short_name
+    @short_name
+  end
+
   # implements InfrasctuctureFacade
   def current_state(user)
-    cloud_secrets =
-        CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+    cloud_client = cloud_client_instance(user.id)
 
-    return Rails.logger.info("No information available due to lack of credentials for #{@full_name}") if cloud_secrets.nil?
+    if cloud_client.nil?
+      # TODO: translate
+      msg = "No information available due to lack of credentials for #{@full_name}"
+      Rails.logger.info(log_format msg)
+      return msg
+    end
 
-    client = @client_class.new(cloud_secrets)
-
-    # FIXME
     begin
+      # select all vm ids that are recorded and belong to Cloud and User
+      record_vm_ids = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+      vm_ids = cloud_client.all_vm_ids & record_vm_ids.map {|rec| rec.image_id}
+
       # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with running state
-      num = (client.all_vm_instances.values.select { |vm| vm.name =~ /^#{VM_NAME_PREFIX}/ && vm.state == :running}).count
-      "You have #{num} Scalarm virtual machines running" # TODO: info about initializing?
+      num = ((vm_ids.map {|vm_id| cloud_client.vm_instance(vm_id)}).select do |vm|
+        vm.name =~ /^#{VM_NAME_PREFIX}/ and vm.state == :running
+      end).count
+
+      # TODO: translate
+      "You have #{num} Scalarm virtual machines running"
     rescue Exception => ex
+      # TODO: translate
+      Rails.logger.error(log_format "current state exception:\n#{ex.backtrace}")
       "No information available due to exception - #{ex}"
     end
   end
@@ -39,50 +62,53 @@ class CloudFacade < InfrastructureFacade
   def start_monitoring
     while true do
       begin
-        Rails.logger.info("[#{@short_name}] #{Time.now} - monitoring thread is working")
-        vm_records = CloudVmRecord.all_for_cloud(@short_name).group_by(&:user_id)
+        Rails.logger.info(log_format 'monitoring thread is working')
+        vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
 
         vm_records.each do |user_id, user_vm_records|
           user = ScalarmUser.find_by_id(user_id)
           secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
           if secrets.nil?
-            Rails.logger.info("We cannot monitor #{@full_name} VMs for #{user.login} due secrets lacking")
+            Rails.logger.info(log_format "We cannot monitor VMs for #{user.login} due secrets lacking")
             next
           end
 
           client = @client_class.new(secrets)
 
           user_vm_records.each do |vm_record|
-            vm_tag = "[#{@short_name} vm #{vm_record.vm_id}]"
+            vm_id = vm_record.vm_id
+            Rails.logger.info(log_format 'checking', vm_id)
 
-            Rails.logger.info("#{vm_tag} checking")
-            vm_instance = client.vm_instance(vm_record.vm_id)
+            vm_instance = client.vm_instance(vm_id)
+
 
             experiment = DataFarmingExperiment.find_by_id(vm_record.experiment_id)
 
             if [:deactivated, :error].include?(vm_instance.status) or (not vm_instance.exists?)
-              Rails.logger.info("#{vm_tag} This VM is going to be removed from our db as it is terminated")
+              Rails.logger.info(log_format 'This VM is going to be removed from our db as it is terminated', vm_id)
               temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(vm_record.sm_uuid)
               temp_pass.destroy unless temp_pass.nil?
               vm_record.destroy unless vm_record.nil?
 
-            elsif ([:initializing, :running].include?(vm_instance.status) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
-              Rails.logger.info("#{vm_tag} This VM is going to be destroyed as it is done or should be done")
+            elsif (vm_record.time_limit_exceeded?) or experiment.nil? or (not experiment.is_running)
+              Rails.logger.info(log_format 'This VM is going to be destroyed as it is done or should be done', vm_id)
               vm_instance.terminate
 
-            elsif (vm_instance.status == :running) and (not vm_record.initialized)
-              Rails.logger.info("#{vm_tag} This VM is going to be initialized with SM now")
+            elsif (vm_instance.status == :running) and (not vm_record.sm_initialized)
+              Rails.logger.info(log_format 'This VM is going to be initialized with SM now', vm_id)
               initialize_sm_on(vm_record, vm_instance)
 
-            elsif ((vm_instance.status == :initializing) and (vm_record.created_at + vm_record.time_limit.to_i.minutes < Time.now)) or experiment.nil? or (not experiment.is_running)
-              Rails.logger.info("#{vm_tag} This VM will be restarted due to not being run for more then 10 minutes")
-              vm_instance.reboot
+            elsif (vm_instance.status == :initializing) and (vm_record.created_at + MAX_VM_INIT_TIME < Time.now)
+              Rails.logger.info(
+                log_format "This VM will be restarted due to not being run for more than #{MAX_VM_INIT_TIME} minutes", vm_id)
+              vm_instance.reinitialize
+              vm_record.created_at = Time.now
             end
 
           end
         end
       rescue Exception => e
-        Rails.logger.info("Exception #{e} in #{@full_name} monitoring")
+        Rails.logger.info(log_format "Monitoring exception:\n#{e.backtrace}")
       end
       sleep(PROBE_TIME)
     end
@@ -91,28 +117,28 @@ class CloudFacade < InfrastructureFacade
   # implements InfrasctuctureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
 
-    Rails.logger.debug("[#{@short_name}] Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}")
+    Rails.logger.debug(log_format "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}")
+    cloud_client = cloud_client_instance(user.id)
 
-    cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-    return 'error', 'You have to provide PLCloud secrets first!' if cloud_secrets.nil?
+    # TODO: translate
+    return 'error', "You have to provide #{@short_name} secrets first!" if cloud_client.nil?
 
-    exp_image = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, '_id'=>BSON::ObjectId(additional_params['image_id']))
-    return 'error', 'You have to provide PLCloud Image information first!' if exp_image.nil? or exp_image.image_id.nil?
-    exp_image_id = exp_image.image_id
+    exp_image = CloudImageSecrets.find_by_query('_id'=>BSON::ObjectId(additional_params['image_id']))
+    # TODO: translate
+    return 'error', 'You have to provide image information first!' if exp_image.nil? or exp_image.image_id.nil?
+    return 'error', 'This image belongs to other user' if exp_image.user_id != user.id
+    return 'error', 'This image is for other Cloud' if exp_image.cloud_name != @short_name
 
-    cloud_client = @client_class.new(cloud_secrets)
-
-    timestamp = Time.now.to_i
-
-    sched_instances = cloud_client.create_instances("#{VM_NAME_PREFIX}#{timestamp}", exp_image_id, instances_count, additional_params)
+    sched_instances = cloud_client.schedule_vm_instances("#{VM_NAME_PREFIX}#{experiment_id}", exp_image.image_id,
+                                                    instances_count, additional_params).map { |vm_id| cloud_client.vm_instance(vm_id) }
 
     sched_instances.each do |vm_instance|
       public_ssh_address = vm_instance.public_ssh_address
-      plc_vm = CloudVmRecord.new({
+      vm_record = CloudVmRecord.new({
                                  cloud_name: @short_name,
                                  user_id: user.id,
                                  experiment_id: experiment_id,
-                                 image_id: exp_image_id,
+                                 image_id: exp_image.image_id,
                                  created_at: Time.now,
                                  time_limit: additional_params['time_limit'],
                                  vm_id: vm_instance.vm_id,
@@ -122,9 +148,10 @@ class CloudFacade < InfrastructureFacade
                                  public_host: public_ssh_address[:ip],
                                  public_ssh_port: public_ssh_address[:port]
                              })
-      plc_vm.save
+      vm_record.save
     end
 
+    # TODO translate
     return 'ok', "You have scheduled #{sched_instances.size} virtual machines on #{@full_name}!"
 
   end
@@ -227,7 +254,7 @@ class CloudFacade < InfrastructureFacade
     public_ssh_port = vm_record.public_ssh_port
     ssh_auth_methods = %w(password)
 
-    Rails.logger.debug("Initializing SM on #{public_host}:#{public_ssh_port}")
+    Rails.logger.debug(log_format "Initializing SM on #{public_host}:#{public_ssh_port}", vm_record.vm_id)
 
     prepare_configuration_for_simulation_manager(vm_record.sm_uuid, vm_record.user_id, vm_record.experiment_id, vm_record.start_at)
 
@@ -235,7 +262,7 @@ class CloudFacade < InfrastructureFacade
     image_login = vm_image.image_login
     image_password = vm_image.secret_image_password
 
-        error_counter = 0
+    error_counter = 0
     while true
       begin
         #  upload the code to the VM - use only password authentication
@@ -249,17 +276,18 @@ class CloudFacade < InfrastructureFacade
         Net::SSH.start(public_host, image_login,
                        port: public_ssh_port, password: image_password, auth_methods: ssh_auth_methods) do |ssh|
           output = ssh.exec!("ls /tmp/mylogfile")
-          Rails.logger.debug "SM checking output: #{output}"
+          Rails.logger.debug(log_format "SM checking output: #{output}", vm_record.vm_id)
 
           return unless output.include?('No such file or directory')
 
           output = ssh.exec!(start_simulation_manager_cmd(vm_record.sm_uuid))
-          Rails.logger.debug "SM exec output: #{output}"
+          Rails.logger.debug(log_format "SM exec output: #{output}", vm_record.vm_id)
         end
 
         break
       rescue Exception => e
-        Rails.logger.debug("Exception #{e} occured while communication with #{vm_record.public_host}:#{vm_record.public_ssh_port} --- #{error_counter}")
+        Rails.logger.debug(log_format(%Q(Exception #{e} occured while communication with
+#{vm_record.public_host}:#{vm_record.public_ssh_port} - #{error_counter} tries), vm_record.vm_id))
         error_counter += 1
         if error_counter > 10
           vm_instance.terminate
@@ -270,7 +298,7 @@ class CloudFacade < InfrastructureFacade
       sleep(20)
     end
 
-    vm_record.initialized = true
+    vm_record.sm_initialized = true
     vm_record.save
   end
 

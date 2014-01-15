@@ -22,21 +22,16 @@ module PLCloud
       @plc_util.all_vm_info.keys.map {|i| i.to_i}
     end
 
-    # TODO: return value is vm_instance, think about ids
-    def create_instances(base_name, image_id, number, params)
-      @plc_util.create_instances(base_name, image_id, number).map do |vm_id|
-        vm_instance(vm_id)
-      end
+    def schedule_vm_instances(base_name, image_id, number, params)
+      @plc_util.create_instances(base_name, image_id, number)
     end
 
     ## -- VM instance methods --
 
-    # TODO: VM name is constant, consider using vm_record
     def name(id)
       @plc_util.vm_info(id)['NAME']
     end
 
-    # TODO
     STATES_MAPPING = {
         'INIT'=> :initializing,
         'PENDING'=> :initializing,
@@ -64,11 +59,19 @@ module PLCloud
       @plc_util.delete_instance(id)
     end
 
+    def reinitialize(id)
+      @plc_util.resubmit(id)
+    end
+
     # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
       # String: public host of VM -- dynamically gets hostname from API
       vmi = @plc_util.vm_instance(id)
       vmi.redirections[22] or vmi.redirect_port(22)
+    end
+
+    def vm_record_info(vm_record)
+      ''
     end
 
   end

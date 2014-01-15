@@ -10,6 +10,7 @@ require 'clouds/cloud_factory'
 # get_running_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
 # current_state(user) - returns a string describing summary of current infrastructure state
 # add_credentials(user, params, session) - save credentials to database or session based on request parameters
+# short_name - short name of infrastructure, e.g. 'plgrid'
 
 class InfrastructureFacade
 
@@ -48,10 +49,10 @@ class InfrastructureFacade
   # TODO should this be taken from a configuration file ?
   def self.get_registered_infrastructures
     {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
-        amazon: { label: 'Amazon Elastic Compute Cloud', facade: CloudFactory.create_facade('amazon') },
-        plcloud: { label: 'PLGrid Cloud', facade: CloudFactory.create_facade('pl_cloud') }
-    }
+        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
+    }.merge(
+        CloudFactory.infrastructures_hash
+    )
   end
 
   def self.start_monitoring
@@ -71,6 +72,13 @@ class InfrastructureFacade
     status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
 
     render json: response_msg, status: status
+  end
+
+  # @param [String] message main message
+  # @param [String] task_id optional id of task about which is message (e.g. VM id)
+  # @return [String] message formatted for logger
+  def log_format(message, task_id=nil)
+    "[#{short_name}]#{task_id and "[#{task_id.to_s}]"} #{Time.now} - #{message}"
   end
 
 end

@@ -1,11 +1,3 @@
-# Methods:
-# - name -> String: name of virtual machine instance
-# - state -> one of: [:pending, :running, :shutting_down, :terminated, :stopping, :stopped]
-# - exists? -> true if VM exists (instance with given @instance_id is still available)
-# - terminate -> nil -- terminates VM
-# - public_host -> String: public host of VM -- dynamically gets hostname from API
-# - public_ssh_port -> String: public ssh port of VM -- dynamically gets hostname from API
-
 # Provides utils for virtual machines operations
 class VmInstance
 
@@ -34,6 +26,10 @@ class VmInstance
 
   def terminate
     @client.terminate(@instance_id)
+  end
+
+  def reboot
+    @client.reboot(@instance_id)
   end
 
   def public_ssh_address
