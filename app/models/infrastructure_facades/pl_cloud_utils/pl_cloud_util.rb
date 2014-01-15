@@ -46,6 +46,10 @@ class PLCloudUtil
     execute('onevm', ['delete', vm_id])
   end
 
+  def resubmit(vm_id)
+    execute('onevm', ['resubmit', vm_id])
+  end
+
   # @return [PLCloudUtilInstance] abstraction layer object used for managing and retrieving info about VM instance
   def vm_instance(vm_id)
     PLCloudUtilInstance.new(vm_id, self)

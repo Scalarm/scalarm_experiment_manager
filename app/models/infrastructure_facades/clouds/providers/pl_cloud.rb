@@ -19,7 +19,7 @@ module PLCloud
     end
 
     def all_vm_ids
-      @plc_util.all_vm_info.keys.map {|i| i.to_i}
+      @plc_util.all_vm_info.keys.map {|i| i.to_s}
     end
 
     def schedule_vm_instances(base_name, image_id, number, params)
@@ -52,7 +52,7 @@ module PLCloud
     end
 
     def exists?(id)
-      @plc_util.all_vm_info.has_key? id
+      @plc_util.all_vm_info.has_key? id.to_i
     end
 
     def terminate(id)

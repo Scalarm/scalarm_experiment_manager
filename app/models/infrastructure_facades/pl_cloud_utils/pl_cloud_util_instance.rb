@@ -177,8 +177,4 @@ class PLCloudUtilInstance
     @plc_client.execute('onevm', ['reboot', @vm_id])
   end
 
-  def resubmit
-
-  end
-
 end

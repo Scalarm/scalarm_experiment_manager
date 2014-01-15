@@ -28,8 +28,8 @@ class VmInstance
     @client.terminate(@instance_id)
   end
 
-  def reboot
-    @client.reboot(@instance_id)
+  def reinitialize
+    @client.reinitialize(@instance_id)
   end
 
   def public_ssh_address

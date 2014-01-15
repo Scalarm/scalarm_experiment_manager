@@ -42,7 +42,7 @@ class CloudFacade < InfrastructureFacade
     begin
       # select all vm ids that are recorded and belong to Cloud and User
       record_vm_ids = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-      vm_ids = cloud_client.all_vm_ids & record_vm_ids.map {|rec| rec.image_id}
+      vm_ids = cloud_client.all_vm_ids.map {|i| i} & record_vm_ids.map {|rec| rec.image_id}
 
       # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with running state
       num = ((vm_ids.map {|vm_id| cloud_client.vm_instance(vm_id)}).select do |vm|
@@ -100,9 +100,10 @@ class CloudFacade < InfrastructureFacade
 
             elsif (vm_instance.status == :initializing) and (vm_record.created_at + MAX_VM_INIT_TIME < Time.now)
               Rails.logger.info(
-                log_format "This VM will be restarted due to not being run for more than #{MAX_VM_INIT_TIME} minutes", vm_id)
+                log_format "This VM will be restarted due to not being run for more than #{MAX_VM_INIT_TIME/60} minutes", vm_id)
               vm_instance.reinitialize
               vm_record.created_at = Time.now
+              vm_record.save
             end
 
           end

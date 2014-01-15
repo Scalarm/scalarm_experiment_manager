@@ -27,7 +27,7 @@ class AbstractCloudClient
   end
 
   def vm_instance(instance_id)
-    VmInstance.new(instance_id, self)
+    VmInstance.new(instance_id.to_s, self)
   end
 
   # @return [Hash] instance_id => specific AbstractVmInstance
