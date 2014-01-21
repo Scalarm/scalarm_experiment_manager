@@ -1,0 +1,11 @@
+en:
+  infrastructure_facades:
+    cloud:
+      provide_secrets: "You have to provide %{cloud_name} secrets first!"
+      provide_image_secrets: "You have to provide image information first!"
+      image_permission: "This image belongs to other user"
+      image_cloud_error: "This image is for other Cloud"
+      scheduled_info: "You have scheduled %{count} virtual machines on %{cloud_name}!"
+      current_state_no_creds: "No information available due to lack of credentials for %{cloud_name}"
+      current_state_count: "You have %{count} Scalarm virtual machines running"
+      current_state_exception: "No information available due to exception: %{exception}"

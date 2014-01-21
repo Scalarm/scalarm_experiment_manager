@@ -78,7 +78,7 @@ class InfrastructureFacade
   # @param [String] task_id optional id of task about which is message (e.g. VM id)
   # @return [String] message formatted for logger
   def log_format(message, task_id=nil)
-    "[#{short_name}]#{task_id and "[#{task_id.to_s}]"} #{Time.now} - #{message}"
+    "[#{short_name}]#{task_id and "[#{task_id.to_s}]"} #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
   end
 
 end
