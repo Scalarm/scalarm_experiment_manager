@@ -42,10 +42,8 @@ class CloudFacade < InfrastructureFacade
       record_vm_ids = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
       vm_ids = cloud_client.all_vm_ids.map {|i| i} & record_vm_ids.map {|rec| rec.image_id}
 
-      # select all vm's with name starting with 'scalarm_' (predefined name prefix) and with running state
-      num = ((vm_ids.map {|vm_id| cloud_client.vm_instance(vm_id)}).select do |vm|
-        vm.exists? and vm.name =~ /^#{VM_NAME_PREFIX}/ # and vm.state == :running
-      end).count
+      # select all existing vm's
+      num = ((vm_ids.map {|vm_id| cloud_client.vm_instance(vm_id)}).select {|vm| vm.exists? }).count
 
       I18n.t('infrastructure_facades.cloud.current_state_count', count: num.to_s)
     rescue Exception => ex
@@ -128,7 +126,6 @@ class CloudFacade < InfrastructureFacade
                                                     instances_count, additional_params).map { |vm_id| cloud_client.vm_instance(vm_id) }
 
     sched_instances.each do |vm_instance|
-      public_ssh_address = vm_instance.public_ssh_address
       vm_record = CloudVmRecord.new({
                                  cloud_name: @short_name,
                                  user_id: user.id,
@@ -140,8 +137,6 @@ class CloudFacade < InfrastructureFacade
                                  sm_uuid: SecureRandom.uuid,
                                  initialized: false,
                                  start_at: additional_params['start_at'],
-                                 public_host: public_ssh_address[:ip],
-                                 public_ssh_port: public_ssh_address[:port]
                              })
       vm_record.save
     end
@@ -248,6 +243,7 @@ class CloudFacade < InfrastructureFacade
     Rails.logger.debug(log_format "Initializing SM on #{vm_record.public_host}:#{vm_record.public_ssh_port}",
                                   vm_record.vm_id)
 
+    vm_record.update_ssh_address(vm_instance) if not vm_record.public_host or not vm_record.public_ssh_port
     prepare_configuration_for_simulation_manager(vm_record.sm_uuid, vm_record.user_id, vm_record.experiment_id, vm_record.start_at)
 
     error_counter = 0
@@ -268,7 +264,7 @@ class CloudFacade < InfrastructureFacade
 
         break
       rescue Exception => e
-        Rails.logger.debug(log_format("Exception #{e} occured while communication with"\
+        Rails.logger.debug(log_format("Exception #{e} occured while communication with "\
 "#{vm_record.public_host}:#{vm_record.public_ssh_port} - #{error_counter} tries", vm_record.vm_id))
         error_counter += 1
         if error_counter > 10

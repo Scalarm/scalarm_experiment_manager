@@ -57,6 +57,15 @@ class CloudVmRecord < MongoActiveRecord
     @image_cache
   end
 
+  def update_ssh_address(vm_instance)
+    public_ssh_address = vm_instance.public_ssh_address
+
+    self.public_host = public_ssh_address[:ip]
+    self.public_ssh_port = public_ssh_address[:port]
+
+    self.save
+  end
+
   # additional info for specific cloud should be provided by CloudClient
   def to_s
     "Id: #{vm_id}, Launched at: #{created_at}, Time limit: #{time_limit}, "

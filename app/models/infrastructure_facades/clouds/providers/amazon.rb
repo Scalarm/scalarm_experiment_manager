@@ -4,6 +4,12 @@ module AmazonCloud
 
   class CloudClient < AbstractCloudClient
 
+    def initialize(secrets)
+      super(secrets)
+      @ec2 = AWS::EC2.new(access_key_id: secrets.secret_access_key_id,
+                          secret_access_key: secrets.secret_access_key)
+    end
+
     def self.short_name
       'amazon'
     end
@@ -13,43 +19,69 @@ module AmazonCloud
     end
 
     def all_vm_ids
-      # list of all vm instances ids
+      @ec2.instances.map {|inst| inst.id}
     end
 
     def schedule_vm_instances(base_name, image_id, number, params)
-      # list of AbstractVmInstance
+      instances = @ec2.regions['us-east-1'].instances.create(:image_id => image_id,
+                                  :count => number,
+                                  :instance_type => params[:instance_type],
+                                  :security_groups => [ params[:security_group] ])
+      instances = [instances] if instances.class != [].class
+      instances.map {|i| i.id }
     end
 
 
     ## -- VM instance methods --
 
-    def name(id)
-      # String: name of virtual machine instance
-    end
+    STATES_MAPPING = {
+      pending: :initializing,
+      running: :running,
+      shutting_down: :deactivated,
+      terminated: :deactivated,
+      stopping: :deactivated,
+      stopped: :deactivated
+    }
 
     def status(id)
-      # one of: [:pending, :running, :shutting_down, :terminated, :stopping, :stopped]
-    end
-
-    def exists?(id)
-      # true if VM exists (instance with given id is still available)
+      STATES_MAPPING[ec2_instance(id).status]
     end
 
     def terminate(id)
-      # nil -- terminates VM
+      ec2_instance(id).terminate
     end
 
     def reinitialize(id)
-      # Amazon reboot
+      ec2_instance(id).reboot
     end
 
     # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
-
+      {ip: ec2_instance(id).public_dns_name, port: '22'}
     end
 
     def vm_record_info(vm_record)
       "Type: #{instance_type}"
+    end
+
+    # -- additional Amazon methods --
+
+    def self.amazon_instance_types
+      [
+          ['Micro (Up to 2 EC2 Compute Units, 613 MB RAM)', 't1.micro'],
+          ['Small (1 EC2 Compute Unit, 1.7 GB RAM)', "m1.small"],
+      #['Medium (2 EC2 Compute Unit, 3.75 GB RAM)', "m1.medium"],
+      # ["Large (4 EC2 Compute Unit, 1.7 GB RAM)", "m1.large"],
+      # ["Extra Large (8 EC2 Compute Unit, 15 GB RAM)", "m1.xlarge"],
+      #['High-CPU Medium (5 EC2 Compute Unit, 1.7 GB RAM)', "c1.medium"],
+      #['High-CPU Extra Large (20 EC2 Compute Unit, 7 GB RAM)', "c1.xlarge"]
+      ]
+    end
+
+    private
+
+    def ec2_instance(id)
+      @ec2.instances[id]
     end
 
   end

@@ -1,6 +1,6 @@
 -# local variables: experiment, user
-- pl_cloud_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-- pl_cloud_image_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+- pl_cloud_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>'pl_cloud', 'user_id'=>user.id)
+- pl_cloud_image_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>'pl_cloud', 'user_id'=>user.id)
 - if pl_cloud_image_creds.empty?
   -  pl_cloud_image_creds = nil
 - else
@@ -26,7 +26,7 @@
               .small-4.columns
                 = text_field_tag :job_counter
               .small-4.columns
-            - images = CloudImageSecrets.all.map{|i| ["#{i.image_id} --- #{i.login}", i.id]}
+            - images = CloudImageSecrets.find_all_by_cloud_name('pl_cloud').map{|i| ["#{i.image_id} --- #{i.login}", i.id]}
             .row
               .small-4.columns
                 = label_tag :image_id, t('.submission.image') + ':', class: 'inline right'
@@ -103,13 +103,13 @@
                 .small-4.columns
                   = label_tag :stored_image_id, t('.images.image_id') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :stored_image_id, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.ami_id
+                  = text_field_tag :stored_image_id, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.image_id
                 .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :stored_image_login, t('.images.login') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :stored_image_login, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.login
+                  = text_field_tag :stored_image_login, pl_cloud_image_creds.nil? ? '' : pl_cloud_image_creds.image_login
                 .small-4.columns
               .row
                 .small-4.columns

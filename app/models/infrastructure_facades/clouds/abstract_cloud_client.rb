@@ -2,7 +2,7 @@
 # - all_vm_ids -> list of all vm instances ids
 # - schedule_vm_instances(base_instace_name, image_id, number) => list of AbstractVmInstance
 # Methods for checking and changing virtual machine state (taking vm id)
-# - name -> String: name of virtual machine instance
+# - name -> String: name of virtual machine instance # TODO: deprecated
 # - state -> one of: [:intializing, :running, :deactivated, :rebooting, :error]
 # - exists? -> true if VM exists (instance with given @instance_id is still available)
 # - terminate -> nil -- terminates VM
@@ -33,6 +33,10 @@ class AbstractCloudClient
   # @return [Hash] instance_id => specific AbstractVmInstance
   def all_vm_instances
     Hash[all_vm_ids.map {|i| [i, vm_instance(i)]}]
+  end
+
+  def exists?(id)
+    all_vm_ids.include?(id)
   end
 
   # TODO: use

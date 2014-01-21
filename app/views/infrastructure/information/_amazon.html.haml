@@ -1,6 +1,8 @@
+- require 'infrastructure_facades/clouds/providers/amazon' # Amazon::CloudClient
+
 -# local variables: experiment, user
-- amazon_secrets_creds = AmazonSecrets.find_by_user_id(user.id)
-- amazon_ami_creds = AmazonAmi.find_all_by_user_id(user.id)
+- amazon_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>'amazon', 'user_id'=>user.id)
+- amazon_ami_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>'amazon', 'user_id'=>user.id)
 - if amazon_ami_creds.empty?
   -  amazon_ami_creds = nil
 - else
@@ -26,7 +28,7 @@
               .small-4.columns
                 = text_field_tag :job_counter
               .small-4.columns
-            - images = AmazonAmi.all.map{|i| ["#{i.ami_id} --- #{i.login}", i.id]}
+            - images = CloudImageSecrets.find_all_by_cloud_name('amazon').map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
             .row
               .small-4.columns
                 = label_tag :image_id, t('.image_label') + ':', class: 'inline right'
@@ -37,7 +39,7 @@
               .small-4.columns
                 = label_tag :instance_type, t('.vm_type') + ':', class: 'inline right'
               .small-4.columns
-                = select_tag :instance_type, options_for_select(AmazonVm.amazon_instance_types)
+                = select_tag :instance_type, options_for_select(AmazonCloud::CloudClient.amazon_instance_types)
               .small-4.columns
             .row
               .small-4.columns
@@ -75,15 +77,15 @@
               %legend= t('.credentials.secrets')
               .row
                 .small-4.columns
-                  = label_tag :access_key, t('.credentials.secrets') + ':', class: 'inline right'
+                  = label_tag :stored_secret_access_key_id, t('.credentials.secrets') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.access_key
+                  = text_field_tag :stored_secret_access_key_id, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_access_key_id
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag :secret_access_key, t('.credentials.secret_key') + ':', class: 'inline right'
+                  = label_tag :stored_secret_access_key, t('.credentials.secret_key') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :secret_access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_key
+                  = text_field_tag :stored_secret_access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_access_key
                 .small-4.columns
               .row
                 .small-4.columns
@@ -98,34 +100,34 @@
 
           = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
             = hidden_field_tag 'infrastructure_type', 'amazon'
-            = hidden_field_tag 'credential_type', 'ami'
+            = hidden_field_tag 'credential_type', 'image'
             = hidden_field_tag 'experiment_id', experiment.id
 
             %fieldset
               %legend= t('.images_label')
               .row
                 .small-4.columns
-                  = label_tag :ami_id, t('.images.image_id') + ':', class: 'inline right'
+                  = label_tag :stored_image_id, t('.images.image_id') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :ami_id, amazon_ami_creds.nil? ? '' : amazon_ami_creds.ami_id
-                .small-4.columns
-              .row
-                .small-4.columns
-                  = label_tag :ami_login, t('.images.login') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :ami_login, amazon_ami_creds.nil? ? '' : amazon_ami_creds.login
+                  = text_field_tag :stored_image_id, amazon_ami_creds.nil? ? '' : amazon_ami_creds.image_id
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag :ami_password, t('.images.password') + ':', class: 'inline right'
+                  = label_tag :stored_image_login, t('.images.login') + ':', class: 'inline right'
                 .small-4.columns
-                  = password_field_tag :ami_password, amazon_ami_creds.nil? ? '' : amazon_ami_creds.password
+                  = text_field_tag :stored_image_login, amazon_ami_creds.nil? ? '' : amazon_ami_creds.image_login
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag :store_ami_in_session, t('.credentials.store_in_session') + ':', class: 'inline right'
+                  = label_tag :stored_secret_image_password, t('.images.password') + ':', class: 'inline right'
                 .small-4.columns
-                  = check_box_tag :store_ami_in_session, '1', false
+                  = password_field_tag :stored_secret_image_password, amazon_ami_creds.nil? ? '' : amazon_ami_creds.secret_image_password
+                .small-4.columns
+              .row
+                .small-4.columns
+                  = label_tag :store_image_in_session, t('.credentials.store_in_session') + ':', class: 'inline right'
+                .small-4.columns
+                  = check_box_tag :store_image_in_session, '1', false
                 .small-4.columns
 
               .row

@@ -28,10 +28,6 @@ module PLCloud
 
     ## -- VM instance methods --
 
-    def name(id)
-      @plc_util.vm_info(id)['NAME']
-    end
-
     STATES_MAPPING = {
         'INIT'=> :initializing,
         'PENDING'=> :initializing,
@@ -49,10 +45,6 @@ module PLCloud
       STATES_MAPPING[
         PLCloudUtilInstance::VM_STATES[@plc_util.vm_info(id)['STATE'].to_i]
       ]
-    end
-
-    def exists?(id)
-      @plc_util.all_vm_info.has_key? id.to_i
     end
 
     def terminate(id)
