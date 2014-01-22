@@ -78,7 +78,7 @@ class CloudFacade < InfrastructureFacade
 
             experiment = DataFarmingExperiment.find_by_id(vm_record.experiment_id)
 
-            if [:deactivated, :error].include?(vm_instance.status) or (not vm_instance.exists?)
+            if (not vm_instance.exists?) or [:deactivated, :error].include?(vm_instance.status)
               Rails.logger.info(log_format 'This VM is going to be removed from our db as it is terminated', vm_id)
               temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(vm_record.sm_uuid)
               temp_pass.destroy unless temp_pass.nil?

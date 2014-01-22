@@ -35,6 +35,7 @@ class AbstractCloudClient
     Hash[all_vm_ids.map {|i| [i, vm_instance(i)]}]
   end
 
+  # standard implementation - can be overriden to more specific
   def exists?(id)
     all_vm_ids.include?(id)
   end

@@ -27,8 +27,8 @@ module AmazonCloud
                                   :count => number,
                                   :instance_type => params[:instance_type],
                                   :security_groups => [ params[:security_group] ])
-      instances = [instances] if instances.class != [].class
-      instances.map {|i| i.id }
+      instances = [instances] if instances.kind_of?(Array)
+      instances.map &:id
     end
 
 
@@ -64,6 +64,10 @@ module AmazonCloud
       "Type: #{instance_type}"
     end
 
+    def exists?(id)
+      ec2_instance(id).exists?
+    end
+
     # -- additional Amazon methods --
 
     def self.amazon_instance_types
@@ -77,8 +81,6 @@ module AmazonCloud
       #['High-CPU Extra Large (20 EC2 Compute Unit, 7 GB RAM)', "c1.xlarge"]
       ]
     end
-
-    private
 
     def ec2_instance(id)
       @ec2.instances[id]
