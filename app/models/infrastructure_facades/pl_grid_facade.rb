@@ -94,9 +94,7 @@ class PLGridFacade < InfrastructureFacade
 
     if credentials = GridCredentials.find_by_user_id(user.id)
       # prepare job executable and descriptor
-      if additional_params['scheduler'] == 'pbs'
-        scheduler.prepare_job_files(sm_uuid, additional_params['grant_id'])
-      end
+      scheduler.prepare_job_files(sm_uuid)
 
       #  upload the code to the Grid user interface machine
       begin
@@ -110,6 +108,7 @@ class PLGridFacade < InfrastructureFacade
             job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id, 'created_at' => Time.now,
                                   'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
                                   'time_limit' => additional_params['time_limit'].to_i })
+            job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
 
             if scheduler.submit_job(ssh, job)
               job.save

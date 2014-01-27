@@ -1,7 +1,7 @@
 class PBSFacade
 
-  def prepare_job_files(sm_uuid, grant_id)
-    IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable(grant_id))
+  def prepare_job_files(sm_uuid)
+    IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
   end
 
   def send_job_files(sm_uuid, scp)
@@ -12,7 +12,12 @@ class PBSFacade
   def submit_job(ssh, job)
     ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
     #  schedule the job with qsub
-    submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | qsub -q plgrid")
+    qsub_cmd = [
+        'qsub',
+        '-q', 'plgrid',
+        "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}"
+    ]
+    submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
     Rails.logger.debug("Output lines: #{submit_job_output}")
 
     if submit_job_output != nil
@@ -73,10 +78,9 @@ class PBSFacade
     end
   end
 
-  def prepare_job_executable(grant_id)
+  def prepare_job_executable
     <<-eos
 #!/bin/bash
-#{grant_id.blank? ? '' : "#PBS -A #{grant_id}"}
 
 if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
 
