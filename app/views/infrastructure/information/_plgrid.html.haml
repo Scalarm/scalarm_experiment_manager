@@ -1,4 +1,5 @@
 - credentials = GridCredentials.find_by_user_id(@current_user.id)
+- grants = PLGridFacade.new.retrieve_grants(credentials)
 
 .row
   #plgrid-login-ajax-response.alert-box.radius(style="display: none;")
@@ -23,7 +24,7 @@
                 .small-4.columns
                   = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
                 .small-4.columns
-                  = text_field_tag :grant_id
+                  = select_tag :grant_id, options_for_select(grants)
                 .small-4.columns
               .row
                 .small-4.columns

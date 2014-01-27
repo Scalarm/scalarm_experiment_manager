@@ -178,4 +178,25 @@ class PLGridFacade < InfrastructureFacade
     { 'scheduler' => 'qsub', 'time_limit' => 300 }
   end
 
+  def retrieve_grants(credentials)
+    return [] if credentials.nil?
+
+    grants, grant_output = [], []
+
+    begin
+      Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+        grant_output = ssh.exec!('plg-show-grants').split("\n").select{|line| line.start_with?('|')}
+      end
+
+      grant_output.each do |line|
+        grant_id = line.split('|')[1].strip
+        grants << grant_id.split('(*)').first.strip unless grant_id.include?('GrantID')
+      end
+    rescue Exception => e
+      Rails.logger.error("Could not read user's grants - #{e}")
+    end
+
+    grants
+  end
+
 end
