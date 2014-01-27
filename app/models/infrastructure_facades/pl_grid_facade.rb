@@ -94,7 +94,9 @@ class PLGridFacade < InfrastructureFacade
 
     if credentials = GridCredentials.find_by_user_id(user.id)
       # prepare job executable and descriptor
-      scheduler.prepare_job_files(sm_uuid)
+      if additional_params['scheduler'] == 'pbs'
+        scheduler.prepare_job_files(sm_uuid, additional_params['grant_id'])
+      end
 
       #  upload the code to the Grid user interface machine
       begin

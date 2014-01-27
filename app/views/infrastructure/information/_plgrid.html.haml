@@ -21,6 +21,12 @@
                 .small-4.columns
               .row
                 .small-4.columns
+                  = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
+                .small-4.columns
+                  = text_field_tag :grant_id
+                .small-4.columns
+              .row
+                .small-4.columns
                   = label_tag :scheduler, t('.submission.scheduler'), class: 'inline right'
                 .small-4.columns
                   = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])

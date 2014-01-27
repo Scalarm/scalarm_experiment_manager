@@ -2,6 +2,7 @@ en:
   infrastructure:
     information:
       instance_counter: Instance counter
+      grant_id: Grant
       time_constraint: Job time constraint [min]
       start_at: 'Start at ("hh:mm:ss" format)'
       submit: Submit

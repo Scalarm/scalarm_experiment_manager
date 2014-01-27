@@ -1,7 +1,7 @@
 class PBSFacade
 
-  def prepare_job_files(sm_uuid)
-    IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
+  def prepare_job_files(sm_uuid, grant_id)
+    IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable(grant_id))
   end
 
   def send_job_files(sm_uuid, scp)
@@ -73,9 +73,10 @@ class PBSFacade
     end
   end
 
-  def prepare_job_executable
+  def prepare_job_executable(grant_id)
     <<-eos
 #!/bin/bash
+#{grant_id.blank? ? '' : "#PBS -A #{grant_id}"}
 
 if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
 
