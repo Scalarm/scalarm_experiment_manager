@@ -120,7 +120,7 @@ class PLGridFacade < InfrastructureFacade
         end
       rescue Net::SSH::AuthenticationFailed => auth_exception
         return 'error', I18n.t('plgrid.job_submission.authentication_failed', ex: auth_exception)
-      rescue Auth => ex
+      rescue Exception => ex
         return 'error', I18n.t('plgrid.job_submission.error', ex: ex)
       end
 
