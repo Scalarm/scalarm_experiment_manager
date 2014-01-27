@@ -10,12 +10,16 @@ namespace :service do
   task :start, [:debug] => [:environment] do |t, args|
     puts 'pumactl -F config/puma.rb -T scalarm start'
     %x[pumactl -F config/puma.rb -T scalarm start]
+
+    monitoring_probe('start')
   end
 
   desc 'Stop the service'
   task :stop, [:debug] => [:environment] do |t, args|
     puts 'pumactl -F config/puma.rb -T scalarm stop'
     %x[pumactl -F config/puma.rb -T scalarm stop]
+
+    monitoring_probe('stop')
   end
 
   desc 'Removing unnecessary digests on production'
@@ -71,4 +75,33 @@ def stop_router
     puts "kill -15 #{pid}"
     system("kill -15 #{pid}")
   end
+end
+
+def monitoring_probe(action)
+  probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
+
+  if action == 'start'
+    monitoring_job_pid = fork {
+      require 'monitoring_probe'
+
+      probe = MonitoringProbe.new
+      probe.start_monitoring
+
+      ExperimentWatcher.watch_experiments
+      InfrastructureFacade.start_monitoring
+
+      sleep(10) while true
+    }
+
+    IO.write(probe_pid_path, monitoring_job_pid)
+
+    Process.detach(monitoring_job_pid)
+
+  elsif action == 'stop'
+    if File.exist?(probe_pid_path)
+      monitoring_job_pid = IO.read(probe_pid_path)
+      Process.kill('TERM', monitoring_job_pid.to_i)
+    end
+  end
+
 end

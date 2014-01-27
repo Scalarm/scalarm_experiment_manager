@@ -176,6 +176,10 @@ class MongoActiveRecord
 
   end
 
+  def self.get_database(db_name)
+    @@client[db_name]
+  end
+
   # INITIALIZATION STUFF
 
   def self.connection_init(storage_manager_url, db_name)

@@ -1,0 +1,29 @@
+%h3.subheader= t('.experiment_info_title')
+
+.content
+  .row
+    .small-3.columns
+      %h5.subheader.right= t('.experiment_name') + ':'
+    .small-9.columns
+      %h5.subheader= @experiment.name
+  .row
+    .small-3.columns
+      %h5.subheader.right= t('.experiment_description') + ':'
+    .small-9.columns
+      %h5.subheader= @experiment.description
+
+  - if @experiment.simulation.nil?
+    %h4.subheader= t('simulations.conduct_experiment.empty_simulation')
+  - else
+    %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
+
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
+      .small-9.columns
+        %h5.subheader= @experiment.simulation.name
+    .row
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
+      .small-9.columns
+        %h5.subheader= @experiment.simulation.description
