@@ -5,7 +5,7 @@ class window.AmazonManager
     @bindToCredentialForm()
     @bindToSubmissionForm()
 
-    $('#pl_cloud-ajax-response').hide()
+    $('#amazon-ajax-response').hide()
 
   bindToCredentialForm: =>
     $("#amazon-credentials form")

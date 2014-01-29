@@ -1,4 +1,8 @@
 en:
+  infrastructures_controller:
+    image_removed: "Removed %{cloud_name} image credentials with id %{image_id}"
+    image_not_found: "Image record not found"
+    permission_denied: "Permission denied"
   infrastructure_facades:
     cloud:
       provide_secrets: "You have to provide %{cloud_name} secrets first!"

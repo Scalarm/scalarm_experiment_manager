@@ -77,6 +77,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :schedule_simulation_managers
       get :infrastructure_info
       post :add_infrastructure_credentials
+      post :remove_image
     end
   end
 

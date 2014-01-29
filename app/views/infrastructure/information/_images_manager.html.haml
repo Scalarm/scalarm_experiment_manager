@@ -1,0 +1,84 @@
+-# local variables: experiment, user
+- require 'infrastructure_facades/clouds/cloud_factory'
+
+.row
+  #images_manager-ajax-response.alert-box.radius(style="display: none;")
+
+.row
+
+  %dl.accordion(data-accordion="")
+    %dd
+      %a(href='#image-submission-panel')= t('.image_submission_label')
+      .content#image-submission-panel
+        %p
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'credential_type', 'image'
+            = hidden_field_tag 'experiment_id', experiment.id
+            %fieldset
+              %legend= t('.add_image')
+              .row
+                .small-4.columns
+                  = label_tag :infrastructure_type, t('.cloud_name') + ':', class: 'inline right'
+                .small-4.columns
+                  = select_tag :infrastructure_type, options_for_select(CloudFactory.provider_names_select)
+                .small-4.columns
+              .row
+                .small-4.columns
+                  = label_tag :image_id, t('.image_id') + ':', class: 'inline right'
+                .small-4.columns
+                  = text_field_tag :image_id, ''
+                .small-4.columns
+              .row
+                .small-4.columns
+                  = label_tag :image_login, t('.login') + ':', class: 'inline right'
+                .small-4.columns
+                  = text_field_tag :image_login, ''
+                .small-4.columns
+              .row
+                .small-4.columns
+                  = label_tag :secret_image_password, t('.password') + ':', class: 'inline right'
+                .small-4.columns
+                  = password_field_tag :secret_image_password, ''
+                .small-4.columns
+
+              .row
+                .small-12.columns.text-center
+                  = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+                  = image_tag 'loading.gif', class: 'image-submission-busy', style: 'display: none;'
+
+    %dd
+      %a(href='#image-table-panel')= t('.image_table_label')
+      .content#image-table-panel
+        %p
+          %table.images{style: 'width: 100%'}
+            %tr
+              %th= t('.cloud_name')
+              %th= t('.image_id')
+              %th= t('.login')
+              %th= t('.actions')
+            %tbody
+              - CloudImageSecrets.find_all_by_user_id(user.id).each do |image|
+                %tr{id: "#{image.cloud_name}-#{image.image_id}"}
+                  %td= CloudFactory.client_class(image.cloud_name).full_name
+                  %td= image.image_id
+                  %td= image.image_login
+                  %td
+                    = button_to t('.remove'), remove_image_infrastructure_path(image_secrets_id: image.id), class: "remove-button button radius tiny", remote: true
+                    -#= image_tag 'loading.gif', class: 'images_manager-busy', style: 'display: none;'
+
+:javascript
+  $("a.remove_image").on("click", function(event) {
+    event.stopPropagation()
+    Rails.logger.info('remove clicked! -----------')
+  });
+
+:javascript
+  $(function() {
+    new window.ImagesManager('#extension-dialog');
+
+    $('p').each(function(index, element) {
+      if($(element).html() == "") {
+        $(element).remove();
+      }
+    });
+  });

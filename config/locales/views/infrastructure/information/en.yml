@@ -43,9 +43,3 @@ en:
           login: UI login
           password: UI password
           save_settings: Save settings
-        images:
-          login: "Virtual machine login"
-          password: "Virtual machine password"
-          session_only: "Store in this session only"
-          title: "PLGrid Cloud image information"
-          image_id: "Image Id"

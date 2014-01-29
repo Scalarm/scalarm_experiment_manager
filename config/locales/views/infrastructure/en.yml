@@ -10,3 +10,17 @@ en:
       minimum: Minimum
       maximum: Maximum
       step: Step
+    booster_dialog:
+      images_manager: "Image management"
+  infrastructure:
+    information:
+      images_manager:
+        add_image: "Add image credentials"
+        login: "Login"
+        password: "Password"
+        cloud_name: "Cloud name"
+        image_id: "Image ID"
+        actions: "Actions"
+        remove: "Remove record"
+        image_submission_label: "Add image credentials"
+        image_table_label: "Manage submitted image credentials"

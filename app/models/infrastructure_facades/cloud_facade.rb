@@ -208,31 +208,19 @@ class CloudFacade < InfrastructureFacade
   end
 
   def handle_image_credentials(user, params, session)
-    credentials = CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+    # TODO: use experiment id for query?
+    credentials = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id,
+                                                      'image_id'=>params[:image_id])
 
-    if credentials.nil?
+    if credentials.nil? # there is no image record with given id - create
       credentials = CloudImageSecrets.new({'cloud_name' => @short_name, 'user_id' => user.id,
-                                           'experiment_id' => params[:experiment_id]})
-    else
-      credentials = credentials.select {|image_creds| image_creds.experiment_id == params[:experiment_id]}
-      if credentials.blank?
-        credentials = CloudImageSecrets.new({'cloud_name' => @short_name, 'user_id' => user.id,
-                                             'experiment_id' => params[:experiment_id]})
-      else
-        credentials = credentials.first
-      end
+                                           'experiment_id'=> params[:experiment_id], 'image_id'=>params[:image_id]})
     end
 
-    (params.keys.select {|k| k.start_with? 'stored_' }).each do |secret_key|
-      credentials.send("#{secret_key.to_s.sub(/^stored_/, '')}=", params[secret_key])
-    end
+    credentials.image_login = params[:image_login]
+    credentials.secret_image_password = params[:secret_image_password]
+
     credentials.save
-
-    if params.include?('store_template_in_session')
-      session[:tmp_store_image_in_session] = params[:experiment_id]
-    else
-      session.delete(:tmp_store_image_in_session)
-    end
 
     'ok'
   end

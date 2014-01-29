@@ -9,12 +9,22 @@
       %a{ href: "##{infrastructure_id}" }= infrastructure_info[:label]
     - first = false if first
 
+  - # images manager
+  %dd{class: "#{first ? 'active' : '' }"}
+    %a{ href: '#images_manager' }= t('.images_manager')
+
 - first = true
 .tabs-content
   - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
     .content{ id: infrastructure_id, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
       = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
     - first = false if first
+
+  - # images manager
+  .content{ id: 'images_manager', class: "#{first ? 'active' : '' }", style: 'width: 100%' }
+    = render partial: 'infrastructure/information/images_manager', locals: { experiment: @experiment, user: @current_user }
+
+
 
 :javascript
   $(function() {

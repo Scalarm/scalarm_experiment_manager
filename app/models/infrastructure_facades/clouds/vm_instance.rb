@@ -13,7 +13,7 @@ class VmInstance
   # -- delegation methods --
 
   def name
-    exists? and @client.name(@instance_id)
+    @client.name(@instance_id)
   end
 
   def status
