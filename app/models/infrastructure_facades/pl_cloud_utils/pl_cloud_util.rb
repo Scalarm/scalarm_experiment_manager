@@ -216,8 +216,16 @@ CONTEXT = [
 
   # @return [Hash] hash: vm_id => vm_info - like in vm_info(vm_id) method for every VM
   def all_vm_info
-    resp = execute('onevm', ['list', '--xml'])
+    resp = execute('onevm', %w(list --xml))
     infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['VM']
+    infos = [infos] unless infos.kind_of?(Array)
+    return Hash[infos.map {|i| [i['ID'].to_i, i]}]
+  end
+
+  # @return [Hash] hash: image_id => parsed xml image info
+  def all_images_info
+    resp = execute('oneimage', %w(list --xml))
+    infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['IMAGE']
     infos = [infos] unless infos.kind_of?(Array)
     return Hash[infos.map {|i| [i['ID'].to_i, i]}]
   end

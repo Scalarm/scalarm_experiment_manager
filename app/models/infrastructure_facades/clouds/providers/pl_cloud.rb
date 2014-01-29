@@ -18,6 +18,10 @@ module PLCloud
       'PLGrid Cloud'
     end
 
+    def all_images_info
+      Hash[@plc_util.all_images_info.map {|id, info| [id, info['NAME']]}]
+    end
+
     def all_vm_ids
       @plc_util.all_vm_info.keys.map {|i| i.to_s}
     end
@@ -64,6 +68,10 @@ module PLCloud
 
     def vm_record_info(vm_record)
       ''
+    end
+
+    def all_image_ids
+      # TODO
     end
 
   end

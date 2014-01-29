@@ -46,4 +46,8 @@ class CloudFactory
     Hash[CLIENT_CLASSES.map {|sn, cli| [cli.full_name, sn]}]
   end
 
+  def self.provider_names
+    PROVIDER_NAMES
+  end
+
 end

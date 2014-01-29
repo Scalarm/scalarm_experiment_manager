@@ -1,10 +1,21 @@
 class window.ImagesManager
   constructor: (@dialogId) ->
     @responsePanel = $('#images_manager-ajax-response')
+    @cloudSelect = $('#cloud-select select')
 #    @loading = $('.images_manager-busy')
     @bindToRemoveButton()
+    @cloudSelect.change(@cloudChanged)
+    @cloudChanged()
 
 #    $('#images_manager-ajax-response').hide()
+
+  cloudChanged: =>
+    $('div[id^="image-id-row-"]').hide()
+    $('div[id^="image-id-row-"] > select, input').prop('disabled', true)
+
+    cloudName = @cloudSelect.val()
+    $("#image-id-row-#{cloudName}").show()
+    $("#image-id-row-#{cloudName} > select, input").prop('disabled', false)
 
   bindToRemoveButton: =>
     $(".images form")

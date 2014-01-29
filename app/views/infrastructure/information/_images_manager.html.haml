@@ -19,15 +19,22 @@
               .row
                 .small-4.columns
                   = label_tag :infrastructure_type, t('.cloud_name') + ':', class: 'inline right'
-                .small-4.columns
+                .small-4.columns#cloud-select
                   = select_tag :infrastructure_type, options_for_select(CloudFactory.provider_names_select)
                 .small-4.columns
-              .row
-                .small-4.columns
-                  = label_tag :image_id, t('.image_id') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :image_id, ''
-                .small-4.columns
+              - CloudFactory.provider_names.map do |cloud_name|
+                - secrets = CloudSecrets.find_by_query('cloud_name'=>cloud_name, 'user_id'=>user.id)
+                .row{id: "image-id-row-#{cloud_name}"}
+                  .small-4.columns
+                    = label_tag :image_id, t('.image_id') + ':', class: 'inline right'
+                  .small-4.columns{id: "#select-#{cloud_name}"}
+                    - unless secrets.nil?
+                      - imgs_info = CloudFactory.client_class(cloud_name).new(secrets).all_images_info
+                      - select_hash = Hash[imgs_info.map{|id, info| ["#{id} (#{info})", id]}]
+                      = select_tag :image_id, options_for_select(select_hash)
+                    - else
+                      = text_field_tag :image_id, ''
+                  .small-4.columns
               .row
                 .small-4.columns
                   = label_tag :image_login, t('.login') + ':', class: 'inline right'
@@ -65,12 +72,6 @@
                   %td
                     = button_to t('.remove'), remove_image_infrastructure_path(image_secrets_id: image.id), class: "remove-button button radius tiny", remote: true
                     -#= image_tag 'loading.gif', class: 'images_manager-busy', style: 'display: none;'
-
-:javascript
-  $("a.remove_image").on("click", function(event) {
-    event.stopPropagation()
-    Rails.logger.info('remove clicked! -----------')
-  });
 
 :javascript
   $(function() {

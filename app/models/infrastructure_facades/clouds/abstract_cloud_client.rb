@@ -1,4 +1,5 @@
 # Methods to implement by subclasses:
+# - all_image_ids -> get hash: image_id => image_name of all images owned by cloud user
 # - all_vm_ids -> list of all vm instances ids
 # - schedule_vm_instances(base_instace_name, image_id, number) => list of AbstractVmInstance
 # Methods for checking and changing virtual machine state (taking vm id)

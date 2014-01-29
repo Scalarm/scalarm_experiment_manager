@@ -1,4 +1,5 @@
 require 'infrastructure_facades/clouds/abstract_cloud_client'
+require 'aws-sdk'
 
 module AmazonCloud
 
@@ -18,8 +19,12 @@ module AmazonCloud
       'Amazon Elastic Compute Cloud'
     end
 
+    def all_images_info
+      Hash[@ec2.images.with_owner('self').map {|i| [i.image_id, i.name] }]
+    end
+
     def all_vm_ids
-      @ec2.instances.map {|inst| inst.id}
+      @ec2.instances.map(&:id)
     end
 
     def schedule_vm_instances(base_name, image_id, number, params)
