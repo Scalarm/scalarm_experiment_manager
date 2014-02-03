@@ -76,7 +76,7 @@ class SimulationsController < ApplicationController
     end
 
     respond_to do |format|
-      format.json { render json: { status: (flash[:error].nil? ? 'ok' : 'error'), id: simulation.id.to_s } }
+      format.json { render json: { status: (flash[:error].nil? ? 'ok' : 'error'), simulation_id: simulation.id.to_s } }
       format.html { redirect_to :action => :index }
     end
   end
