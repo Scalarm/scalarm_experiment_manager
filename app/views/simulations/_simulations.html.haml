@@ -6,7 +6,7 @@
       %h4.subheader= t('simulation_scenario_list.empty_list')
 
   - else
-    %table(style="width: 100%;")
+    %table.simulations
       %tr
         %th= t('simulations.registration.simulation_name')
         %th= t('simulations.registration.input_writer')
@@ -24,4 +24,4 @@
             %td= simulation.executor.nil? ? t('simulations.empty_component') : simulation.executor.name
             %td= simulation.output_reader.nil? ? t('simulations.empty_component') : simulation.output_reader.name
             %td= simulation.progress_monitor.nil? ? t('simulations.empty_component') : simulation.progress_monitor.name
-            %td= submit_tag t('simulations.deregister_button'), class: 'button tiny radius'
+            %td.actions= submit_tag t('simulations.deregister_button'), class: 'button tiny radius'

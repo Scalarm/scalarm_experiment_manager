@@ -15,23 +15,19 @@ class Simulation < MongoActiveRecord
   end
 
   def input_writer
-    SimulationInputWriter.find_by_id(self.input_writer_id)
+    self.input_writer_id.nil? ? nil : SimulationInputWriter.find_by_id(self.input_writer_id)
   end
 
   def executor
-    SimulationExecutor.find_by_id(self.executor_id)
+    self.executor_id.nil? ? nil : SimulationExecutor.find_by_id(self.executor_id)
   end
 
   def output_reader
-    SimulationOutputReader.find_by_id(self.output_reader_id)
+    self.output_reader_id.nil? ? nil : SimulationOutputReader.find_by_id(self.output_reader_id)
   end
 
   def progress_monitor
-    if self.progress_monitor_id.nil?
-      nil
-    else
-      SimulationProgressMonitor.find_by_id(self.progress_monitor_id)
-    end
+    self.progress_monitor_id.nil? ? nil : SimulationProgressMonitor.find_by_id(self.progress_monitor_id)
   end
 
   def set_simulation_binaries(filename, binary_data)

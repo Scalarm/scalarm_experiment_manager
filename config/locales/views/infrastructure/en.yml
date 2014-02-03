@@ -19,3 +19,6 @@ en:
       no: "No"
       stop_button: "Stop experiment"
       destroy_button: "Destroy experiment"
+  simulations:
+    registration:
+      select_file: "or insert file:"
