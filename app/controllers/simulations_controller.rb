@@ -153,6 +153,36 @@ class SimulationsController < ApplicationController
     render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
 
+  require 'csv'
+  def upload_parameter_space
+    i = 0
+    parameters = { values: [] }
+    CSV.parse(params[:file_content]) do |row|
+      Rails.logger.debug("row: #{row}")
+      if i == 0
+        parameters[:columns] = row
+      elsif i == 1
+        row.each_with_index do |token, index|
+          begin
+            if JSON.parse(token).kind_of?(Array)
+              parameters[:values] << 'Multiple values'
+            else
+              parameters[:values] << 'Single value'
+            end
+          rescue Exception => e
+            parameters[:values] << 'Single value'
+          end
+        end
+      end
+      i += 1
+    end
+
+    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation_parameters = @simulation.input_parameters
+
+    render json: { status: 'ok', columns: render_to_string(partial: 'simulations/import/parameter_selection_table', object: parameters) }
+  end
+
   private
 
   def load_simulation

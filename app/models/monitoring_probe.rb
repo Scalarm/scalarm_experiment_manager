@@ -20,19 +20,19 @@ class MonitoringProbe
 
       slog('monitoring_probe', "lock file exists? #{File.exists?(lock_file_path)}")
 
-    if File.exists?(lock_file_path)
-      log('the lock file exists')
-    else
-      log('there is no lock file so we create one')
-      IO.write(lock_file_path, Thread.current.object_id)
+      if File.exists?(lock_file_path)
+        log('the lock file exists')
+      else
+        log('there is no lock file so we create one')
+        IO.write(lock_file_path, Thread.current.object_id)
 
-      at_exit{ File.delete(lock_file_path) if File.exist?(lock_file_path) }
+        at_exit{ File.delete(lock_file_path) if File.exist?(lock_file_path) }
 
-      while true
-        monitor
-        sleep(60)
+        while true
+          monitor
+          sleep(60)
+        end
       end
-    end
 
     end
   end
@@ -46,7 +46,7 @@ class MonitoringProbe
   end
 
   def monitor
-    measurements = @metrics.reduce([]) do |acc, metric_type| 
+    measurements = @metrics.reduce([]) do |acc, metric_type|
       acc + self.send("monitor_#{metric_type}")
     end
 
@@ -69,17 +69,10 @@ class MonitoringProbe
 
       doc = {"date" => measurement_table[1], "value" => measurement_table[2]}
 
-      # puts "Last inserted value: #{last_value}"
-
       if not last_value.nil?
 
-        last_date = if last_value["date"].class.name == "String" then
-                      DateTime.strptime(last_value["date"], TIME_FORMAT).to_time
-                    else
-                      last_value["date"]
-                    end
-
-        current_date = DateTime.strptime(doc["date"], TIME_FORMAT).to_time
+        last_date = last_value["date"]
+        current_date = doc["date"]
 
         next if last_date > current_date
       end
@@ -107,7 +100,7 @@ class MonitoringProbe
 
     cpu_util = 100.0 - cpu_idle
 
-    [ [ 'System___NULL___CPU', Time.now.strftime(TIME_FORMAT), cpu_util.to_i.to_s] ]
+    [ [ 'System___NULL___CPU', Time.now, cpu_util.to_i.to_s] ]
   end
 
   # monitoring free memory in the system [MB]
@@ -122,7 +115,7 @@ class MonitoringProbe
             mem_line[3]
           end
 
-    [ [ "System___NULL___Mem", Time.now.strftime(TIME_FORMAT), free_mem ] ]
+    [ [ "System___NULL___Mem", Time.now, free_mem ] ]
   end
   
   ## monitors various metric related to block devices utilization

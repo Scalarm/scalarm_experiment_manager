@@ -1,0 +1,13 @@
+%h4= t('.section_header')
+
+%table(style="width: 100%")
+  %thead
+    %th
+    %th= t('.parameter_id')
+    %th= t('.parameters_per_row')
+  %tbody
+    - parameter_selection_table[:columns].each_with_index do |parameter, index|
+      %tr
+        %td= check_box_tag('param_' + parameter, "1", @simulation_parameters.keys.include?(parameter))
+        %td= parameter + " (#{@simulation_parameters[parameter]})"
+        %td= parameter_selection_table[:values][index]

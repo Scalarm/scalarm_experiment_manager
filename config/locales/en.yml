@@ -139,6 +139,7 @@ en:
       input_parametrization_types: Parametrization
       input_parameter_values: Parameter values
       input_doe: Design of Experiment
+      import: Import parameter space
 
       submit_button: Start experiment
       experiment_size_button: Calculate experiment size
@@ -154,6 +155,10 @@ en:
 
       parameters_values_tab:
         header: Specify values for each input parameter you want to explore
+
+    import_tab:
+      header: Import parameter space from a CSV file
+
 
   plgrid:
     login:
