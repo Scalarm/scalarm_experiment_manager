@@ -95,7 +95,19 @@ class DataFarmingExperiment < MongoActiveRecord
       end
     end
 
+
+
     params_with_range
+  end
+
+  def parameters_with_multiple_values
+    result = self.range_arguments
+
+    self.doe_info.each do |triple|
+      result += triple[1]
+    end
+
+    result
   end
 
   #def parametrization_of(parameter_uid)
