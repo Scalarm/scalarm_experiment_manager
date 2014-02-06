@@ -365,14 +365,16 @@ class DataFarmingExperiment < MongoActiveRecord
   end
 
   def create_result_csv
+  	moes = self.moe_names
+  	
     CSV.generate do |csv|
-      csv << self.parameters.flatten + self.moe_names
+      csv << self.parameters.flatten + moes
 
       self.find_simulation_docs_by({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_doc|
         values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
         # getting values of results in a specific order
         # moe_values = self.moe_names.reduce([]){ |tab, moe_name| tab + [ simulation_doc['result'][moe_name] || '' ] }
-        moe_values = self.moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
+        moe_values = moes.map{|moe_name| simulation_doc['result'][moe_name] || '' }
 
         csv << values + moe_values
       end

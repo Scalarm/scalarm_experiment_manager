@@ -4,8 +4,6 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
-  include ActionController::Live
-
   before_filter :load_experiment, except: [:index]
 
   def index
@@ -85,25 +83,29 @@ class ExperimentsController < ApplicationController
 
 # TODO reimplement to have everything in the experiment object
   def file_with_configurations
-    # file_path = "/tmp/configurations_#{@experiment.id}.txt"
-    # File.delete(file_path) if File.exist?(file_path)
-    # File.open(file_path, 'w') do |file|
-      # file.puts(@experiment.create_result_csv)
-    # end
-    # send_file(file_path, type: 'text/plain')
+    file_path = "/tmp/configurations_#{@experiment.id}.txt"
+
+    File.delete(file_path) if File.exist?(file_path)
+
+    File.open(file_path, 'w') do |file|
+      file.puts(@experiment.create_result_csv)
+    end
     
-    response.headers['Content-Type'] = 'text/event-stream'
-    response.headers['Content-Disposition'] = 'attachment; filename="configurations_' + @experiment.id.to_s + '.csv"'
+    send_file(file_path, type: 'text/plain')
 
-      response.stream.write("#{(@experiment.parameters.flatten + @experiment.moe_names).join(',')}\n")
+    # response.headers['Content-Type'] = 'text/event-stream'
+    # response.headers['Content-Disposition'] = 'attachment; filename="configurations_' + @experiment.id.to_s + '.csv"'
 
-      @experiment.find_simulation_docs_by({ is_done: true }, { fields: { values: 1, result: 1, _id: 0 } }).each do |simulation_doc| 
-        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
-        moe_values = @experiment.moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
-        response.stream.write("#{(values + moe_values).join(',')}\n")
-      end
+    # moe_names = @experiment.moe_names
+    # response.stream.write("#{(@experiment.parameters.flatten + moe_names).join(',')}\n")
 
-    response.stream.close
+    # @experiment.find_simulation_docs_by({ is_done: true }, { fields: { values: 1, result: 1, _id: 0 } }).each do |simulation_doc| 
+    #   values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+    #   moe_values = moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
+    #   response.stream.write("#{(values + moe_values).join(',')}\n")
+    # end
+
+    # response.stream.close
   end
 
   def start_experiment
