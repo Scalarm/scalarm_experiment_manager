@@ -16,7 +16,9 @@ require 'experiment_extensions/simulation_scheduler'
 #simulation_id: id of a simulation which is executed during the experiment
 #user_id: ObjectId
 #time_constraint_in_sec: integer - threshold for simulation execution
-#experiment_input: JSON structure defining parametrization of the used simulation - basically it is an extended version of a simulation input structure; extended with information about parametrization of each parameter -  "parametrizationType" : "value",      "in_doe" : false
+#experiment_input: JSON structure defining parametrization of the used simulation 
+# - basically it is an extended version of a simulation input structure; extended with information about parametrization of each parameter 
+#   -  "parametrizationType" : "value",      "in_doe" : false
 #doe_info: information about used DoE methods - an array of triples, [ doe_method_id, array_of_parameter_ids, array_of_lists_with_values_for_each_simulation ]
 #scheduling_policy: string -
 #run_counter: integer - how many times each simulation should be executed
@@ -366,9 +368,11 @@ class DataFarmingExperiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + self.moe_names
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
+      self.find_simulation_docs_by({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_doc|
         values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
-        moe_values = self.moe_names.reduce([]){ |tab, moe_name| tab << simulation_doc['result'][moe_name] || '' }
+        # getting values of results in a specific order
+        # moe_values = self.moe_names.reduce([]){ |tab, moe_name| tab + [ simulation_doc['result'][moe_name] || '' ] }
+        moe_values = self.moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
 
         csv << values + moe_values
       end
