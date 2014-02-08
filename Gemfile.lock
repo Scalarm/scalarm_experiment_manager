@@ -55,6 +55,8 @@ GEM
       railties (>= 3.1)
     hike (1.2.3)
     i18n (0.6.9)
+    i18n-js (2.1.2)
+      i18n
     jbuilder (1.5.3)
       activesupport (>= 3.0.0)
       multi_json (>= 1.2.0)
@@ -359,6 +361,7 @@ DEPENDENCIES
   foundation-rails
   haml
   highcharts-rails
+  i18n-js
   jbuilder (~> 1.2)
   jit-rails
   jquery-rails

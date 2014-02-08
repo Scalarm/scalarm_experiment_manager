@@ -608,9 +608,12 @@ select {
 }
 
 article#experiment_stats {
-  position: relative;
-  min-height: 210px;
+  position: relative;  
   font-size: 15px;
+
+  .content {
+    min-height: 150px;
+  }
 
   .row {
     margin-bottom: 10px;

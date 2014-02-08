@@ -177,21 +177,27 @@ class MongoActiveRecord
   end
 
   def self.get_database(db_name)
-    @@client[db_name]
+    if @@client.nil?
+      nil
+    else
+      @@client[db_name]
+    end
   end
 
   # INITIALIZATION STUFF
 
   def self.connection_init(storage_manager_url, db_name)
     begin
-      @@client = MongoClient.new(storage_manager_url.split(':')[0], storage_manager_url.split(':')[1])
+      Rails.logger.debug("MongoActiveRecord initialized with URL '#{storage_manager_url}' and DB '#{db_name}'")
+
+      @@client = MongoClient.new(storage_manager_url.split(':')[0], storage_manager_url.split(':')[1], { connect_timeout: 5.0 })
       @@db = @@client[db_name]
       @@grid = Mongo::Grid.new(@@db)
-      Rails.logger.debug("MongoActiveRecord initialized with URL '#{storage_manager_url}' and DB '#{db_name}'")
 
       return true
     rescue Exception => e
       Rails.logger.debug "Could not initialize connection with MongoDB --- #{e}"
+      @@client = @@db = @@grid = nil
     end
 
     false

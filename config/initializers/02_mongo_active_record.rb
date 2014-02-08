@@ -11,7 +11,9 @@ unless MongoActiveRecord.connection_init('localhost', config['db_name'])
                                                config['information_service_pass'])
   storage_manager_list = information_service.get_list_of('db_routers')
 
-  db_router_url = storage_manager_list.sample
-  slog('mongo_active_record', "Connecting to '#{db_router_url}'")
-  MongoActiveRecord.connection_init(db_router_url, config['db_name'])
+  unless storage_manager_list.blank?
+	db_router_url = storage_manager_list.sample
+    slog('mongo_active_record', "Connecting to '#{db_router_url}'")
+	MongoActiveRecord.connection_init(db_router_url, config['db_name'])
+  end
 end
