@@ -16,7 +16,8 @@ class ExperimentsController < ApplicationController
     config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
     information_service = InformationService.new(config['information_service_url'], config['information_service_user'], config['information_service_pass'])
 
-    @storage_manager_url = information_service.get_list_of('storage').sample
+    @storage_manager_url = information_service.get_list_of('storage')
+    @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
 
     @error_flag = false
 
@@ -168,7 +169,7 @@ class ExperimentsController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to experiment_path(data_farming_experiment.id) }
-      format.json { render :json => {status: 'ok', experiment_id: data_farming_experiment.id} }
+      format.json { render json: { status: 'ok', experiment_id: data_farming_experiment.id } }
     end
   end
 

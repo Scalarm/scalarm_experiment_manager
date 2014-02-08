@@ -3,26 +3,27 @@
     = t('.actions_header')
     = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
-  .row
-    - if @experiment.is_running
+  .content
+    .row
+      - if @experiment.is_running
+        .small-2.columns.action-button
+          %span#stopExperimentButton{class: button_classes}= t('.stop_button')
+        .small-2.columns.action-button
+          %span#extensionDialogOpenButton{class: button_classes}= t('.extend_button')
+        .small-2.columns.action-button
+          %span#boostButton{class: button_classes}= t('.boost_button')
+        .small-2.columns.action-button
+          %span#schedulingButton{class: button_classes}= t('.scheduling_button')
+      - else
+        .small-2.columns.action-button
+          %span#destroyExperimentButton{class: button_classes}= t('.destroy_button')
       .small-2.columns.action-button
-        %span#stopExperimentButton{class: button_classes}= t('.stop_button')
+        = link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: button_classes
       .small-2.columns.action-button
-        %span#extensionDialogOpenButton{class: button_classes}= t('.extend_button')
-      .small-2.columns.action-button
-        %span#boostButton{class: button_classes}= t('.boost_button')
-      .small-2.columns.action-button
-        %span#schedulingButton{class: button_classes}= t('.scheduling_button')
-    - else
-      .small-2.columns.action-button
-        %span#destroyExperimentButton{class: button_classes}= t('.destroy_button')
-    .small-2.columns.action-button
-      = link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: button_classes
-    .small-2.columns.action-button
-      %span#progressButton{class: button_classes}= t('.progress_information_button')
-      %ul#download-dropdown.f-dropdown(data-dropdown-conent)
-        %li= link_to t('.binaries_results_button'), log_bank_url(@storage_manager_url, @experiment)
-        %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
+        %span#progressButton{class: button_classes}= t('.progress_information_button')
+        %ul#download-dropdown.f-dropdown(data-dropdown-conent)
+          %li= link_to t('.binaries_results_button'), log_bank_url(@storage_manager_url, @experiment)
+          %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
 
 #extension-dialog.reveal-modal(data-reveal="")
 
