@@ -31,7 +31,7 @@
       .small-9.columns
         %h5.subheader= @simulation.description
 
-  %section.panel.radius.simulation_input.last-element
+  %section.panel.radius.simulation_input
     %h3.subheader= t('.input_header')
 
     %dl.tabs(data-tab="")
@@ -41,6 +41,8 @@
         = link_to t('.input_parameter_values'), '#parameters_values_tab'
       %dd
         = link_to t('.input_doe'), '#doe'
+
+
     .tabs-content
       #parametrization_types.content.active(style="width: 100%")
         = render 'parametrization_tab'
@@ -49,6 +51,8 @@
       #doe.content(style="width: 100%")
         = render 'doe_tab'
 
+
+    %hr
     .row.submit-section
 
       = hidden_field_tag 'simulation_id', @simulation._id
@@ -58,7 +62,8 @@
       = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
 
       .row
-        .small-6.columns(style="text-align: right;")= t('.time_constraint_label') + ':'
+        .small-6.columns
+          = label_tag :execution_time_constraint, t('.time_constraint_label') + ':', class: 'right inline'
         .small-6.columns
           = text_field_tag 'execution_time_constraint', 3600
       -#.row
@@ -77,3 +82,6 @@
   - content_for :javascript do
     :javascript
       var experimentInput = $.parseJSON(#{raw @simulation.input_specification.to_json});
+
+%section#import.panel.radius.last-element
+  = render 'import_tab'

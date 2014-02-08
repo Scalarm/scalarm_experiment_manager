@@ -1,9 +1,9 @@
 require 'zip'
 require 'infrastructure_facades/infrastructure_facade'
+require 'csv'
 
 
 class ExperimentsController < ApplicationController
-
   before_filter :load_experiment, except: [:index]
 
   def index
@@ -82,15 +82,31 @@ class ExperimentsController < ApplicationController
     redirect_to action: :index
   end
 
+# TODO reimplement to have everything in the experiment object
   def file_with_configurations
     file_path = "/tmp/configurations_#{@experiment.id}.txt"
+
     File.delete(file_path) if File.exist?(file_path)
 
     File.open(file_path, 'w') do |file|
       file.puts(@experiment.create_result_csv)
     end
-
+    
     send_file(file_path, type: 'text/plain')
+
+    # response.headers['Content-Type'] = 'text/event-stream'
+    # response.headers['Content-Disposition'] = 'attachment; filename="configurations_' + @experiment.id.to_s + '.csv"'
+
+    # moe_names = @experiment.moe_names
+    # response.stream.write("#{(@experiment.parameters.flatten + moe_names).join(',')}\n")
+
+    # @experiment.find_simulation_docs_by({ is_done: true }, { fields: { values: 1, result: 1, _id: 0 } }).each do |simulation_doc| 
+    #   values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+    #   moe_values = moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
+    #   response.stream.write("#{(values + moe_values).join(',')}\n")
+    # end
+
+    # response.stream.close
   end
 
   def start_experiment
@@ -154,6 +170,69 @@ class ExperimentsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to experiment_path(data_farming_experiment.id) }
       format.json { render json: { status: 'ok', experiment_id: data_farming_experiment.id } }
+    end
+  end
+
+  def start_import_based_experiment
+    i, parameters, parameter_values = 0, [], []
+
+    CSV.parse(params[:parameter_space_file].read) do |row|
+      if i == 0
+        parameters = row
+      else
+        row_values = []
+        row.each do |cell|
+          begin
+            parsed_cell = JSON.parse(cell)
+            row_values << parsed_cell.map(&:to_f)
+          rescue Exception => e
+            row_values << [ cell.to_f ]
+          end
+        end
+        p = row_values[0]
+        1.upto(row_values.size - 1).each do |i|
+          p = p.product(row_values[i])
+        end
+        parameter_values += p.map(&:flatten)
+      end
+
+      i += 1
+    end
+
+    @simulation = if params['simulation_id']
+                    Simulation.find_by_id params['simulation_id']
+                  elsif params['simulation_name']
+                    Simulation.find_by_name params['simulation_name']
+                  else
+                    nil
+                  end
+
+    # create the new type of experiment object
+    experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
+                                            'is_running' => true,
+                                            'run_counter' => params[:run_index].to_i,
+                                            'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
+                                            'doe_info' => [ [ 'csv_import', parameters, parameter_values ] ],
+                                            'start_at' => Time.now,
+                                            'user_id' => @current_user.id,
+                                            'scheduling_policy' => 'monte_carlo'
+                                            })
+    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+    experiment.experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    experiment.user_id = @current_user.id unless @current_user.nil?
+    experiment.labels = experiment.parameters.flatten.join(',')
+    experiment.save
+    experiment.experiment_id = experiment.id
+    experiment.save
+    # create progress bar
+    experiment.insert_initial_bar
+    experiment.create_simulation_table
+
+    respond_to do |format|
+      format.html { redirect_to experiment_path(experiment.id) }
+      format.json { render :json => {status: 'ok', experiment_id: experiment.id} }
     end
   end
 

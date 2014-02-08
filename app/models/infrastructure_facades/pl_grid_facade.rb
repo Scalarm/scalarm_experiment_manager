@@ -108,6 +108,7 @@ class PLGridFacade < InfrastructureFacade
             job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id, 'created_at' => Time.now,
                                   'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
                                   'time_limit' => additional_params['time_limit'].to_i })
+            job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
 
             if scheduler.submit_job(ssh, job)
               job.save
@@ -118,7 +119,7 @@ class PLGridFacade < InfrastructureFacade
         end
       rescue Net::SSH::AuthenticationFailed => auth_exception
         return 'error', I18n.t('plgrid.job_submission.authentication_failed', ex: auth_exception)
-      rescue Auth => ex
+      rescue Exception => ex
         return 'error', I18n.t('plgrid.job_submission.error', ex: ex)
       end
 
@@ -175,6 +176,27 @@ class PLGridFacade < InfrastructureFacade
 
   def default_additional_params
     { 'scheduler' => 'qsub', 'time_limit' => 300 }
+  end
+
+  def retrieve_grants(credentials)
+    return [] if credentials.nil?
+
+    grants, grant_output = [], []
+
+    begin
+      Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+        grant_output = ssh.exec!('plg-show-grants').split("\n").select{|line| line.start_with?('|')}
+      end
+
+      grant_output.each do |line|
+        grant_id = line.split('|')[1].strip
+        grants << grant_id.split('(*)').first.strip unless grant_id.include?('GrantID')
+      end
+    rescue Exception => e
+      Rails.logger.error("Could not read user's grants - #{e}")
+    end
+
+    grants
   end
 
 end

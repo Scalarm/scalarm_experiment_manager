@@ -96,8 +96,10 @@ while true
     Dir.chdir(simulation_dir) do |path|
       puts Dir.pwd
 
-      input_writer_output = %x[#{code_base_dir}/input_writer input.json]
-      puts "Input writer output: #{input_writer_output}"
+      if File.exist?("#{code_base_dir}/input_writer")
+        input_writer_output = %x[#{code_base_dir}/input_writer input.json]
+        puts "Input writer output: #{input_writer_output}"
+      end
     end
 
     # 6c. run an executor of this simulation
@@ -160,8 +162,10 @@ while true
     Dir.chdir(simulation_dir) do |path|
       puts Dir.pwd
 
-      output_reader_output = %x[#{code_base_dir}/output_reader]
-      puts "Output reader output: #{output_reader_output}"
+      if File.exist?("#{code_base_dir}/output_reader")
+        output_reader_output = %x[#{code_base_dir}/output_reader]
+        puts "Output reader output: #{output_reader_output}"
+      end
     end
 
     # 6e. upload output json to experiment manager and set the run simulation as done

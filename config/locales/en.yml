@@ -33,7 +33,7 @@ en:
     destroy_button: "Destroy"
     empty_list: There is no simulation registered. Go to registration form and register new simulations.
   simulation_scenario_list:
-    label: "Select experiment to run"
+    label: "Select simulation scenario to conduct a new experiment"
     empty_list: There is no experiment defined to run. Go to registration form and define new experiments.
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
@@ -106,12 +106,12 @@ en:
 
   simulations:
     deregister_button: Deregister
-    go_to_registriation: Go to registration form
+    go_to_registriation: Register new simulation or adapter
     empty_component: <N/A>
 
     registration:
       title: Simulation registration
-      experiments_label: Register simulation
+      experiments_label: Simulation scenario registration
       simulation_name: Simulation name
       simulation_description: Simulation description
       simulation_input: Input definition
@@ -139,6 +139,7 @@ en:
       input_parametrization_types: Parametrization
       input_parameter_values: Parameter values
       input_doe: Design of Experiment
+      import: Import parameter space
 
       submit_button: Start experiment
       experiment_size_button: Calculate experiment size
@@ -154,6 +155,10 @@ en:
 
       parameters_values_tab:
         header: Specify values for each input parameter you want to explore
+
+    import_tab:
+      header: Import parameter space from a CSV file
+
 
   plgrid:
     login:

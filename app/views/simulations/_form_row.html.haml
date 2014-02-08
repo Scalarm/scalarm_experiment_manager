@@ -1,4 +1,27 @@
 .row
-  .small-3.columns= label_tag form_row, t("simulations.registration.#{form_row}") + ':', class: 'inline right'
-  .small-6.columns= input_element
-  .small-3.columns
+  .small-3.columns= label_tag "#{form_row}_id", t("simulations.registration.#{form_row}") + ':', class: 'inline right'
+  .small-4.columns= input_element
+
+  - if %w(input_writer executor output_reader progress_monitor).include?(form_row)
+    .small-2.columns
+      = label_tag form_row + '_box', t('simulations.registration.select_file'), class: 'inline left'
+      = check_box_tag(form_row + '_box', '1', false, class: 'right')
+    .small-3.columns
+      = file_field_tag(form_row, disabled: 'disabled')
+  - else
+    .small-1.columns
+
+  = content_for :javascript do
+    :javascript
+      $(function() {
+        $("##{form_row}_box").on('change', function() {
+          if($(this).is(':checked')) {
+            $("##{form_row}_id").prop( "disabled", true );
+            $("##{form_row}").prop( "disabled", false );
+            //$("##{form_row}").click();
+          } else {
+            $("##{form_row}").prop( "disabled", true );
+            $("##{form_row}_id").prop( "disabled", false );
+          }
+        });
+      });

@@ -12,7 +12,12 @@ class PBSFacade
   def submit_job(ssh, job)
     ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
     #  schedule the job with qsub
-    submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | qsub -q plgrid")
+    qsub_cmd = [
+        'qsub',
+        '-q', 'plgrid',
+        "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}"
+    ]
+    submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
     Rails.logger.debug("Output lines: #{submit_job_output}")
 
     if submit_job_output != nil

@@ -736,10 +736,8 @@ article#experiment_stats {
     -o-box-shadow:#555 2px 2px 8px;
     box-shadow:#555 2px 2px 8px;
     opacity:0.9;
-    filter:alpha(opacity=90);
+    filter: alpha(opacity=90);
     font-size:10px;
-    //font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
-//    font-family: 'Ubuntu', sans-serif;
     padding:7px;
 }
 
@@ -754,4 +752,19 @@ article#experiment_stats {
 
 .action-button {
   padding-left: 0px;
+}
+
+table.simulations {
+  table-layout: fixed;
+  width: 100%;
+
+  td {
+    width: 20%;
+    word-wrap: break-word;
+    text-align: center;
+  }
+
+  td.actions {
+    text-align: center;
+  }
 }

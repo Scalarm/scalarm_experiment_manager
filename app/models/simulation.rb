@@ -1,7 +1,15 @@
 # Attributes
-# name, description => string
-# input_writer_id, executor_id, output_reader_id => references
-# simulation_binaries_id => references to a file kept in GridFS
+#_id:
+#name:
+#description
+#input_specification:
+#user_id:
+#simulation_binaries_id:
+#input_writer_id
+#executor_id
+#output_reader_id
+#progress_monitor_id
+#created_at: timestamp
 
 require_relative 'simulation_elements/simulation_executor'
 require_relative 'simulation_elements/simulation_input_writer'
@@ -15,23 +23,19 @@ class Simulation < MongoActiveRecord
   end
 
   def input_writer
-    SimulationInputWriter.find_by_id(self.input_writer_id)
+    self.input_writer_id.nil? ? nil : SimulationInputWriter.find_by_id(self.input_writer_id)
   end
 
   def executor
-    SimulationExecutor.find_by_id(self.executor_id)
+    self.executor_id.nil? ? nil : SimulationExecutor.find_by_id(self.executor_id)
   end
 
   def output_reader
-    SimulationOutputReader.find_by_id(self.output_reader_id)
+    self.output_reader_id.nil? ? nil : SimulationOutputReader.find_by_id(self.output_reader_id)
   end
 
   def progress_monitor
-    if self.progress_monitor_id.nil?
-      nil
-    else
-      SimulationProgressMonitor.find_by_id(self.progress_monitor_id)
-    end
+    self.progress_monitor_id.nil? ? nil : SimulationProgressMonitor.find_by_id(self.progress_monitor_id)
   end
 
   def set_simulation_binaries(filename, binary_data)
@@ -69,5 +73,41 @@ class Simulation < MongoActiveRecord
     ##end
     #code_base_dir
   end
+
+  def input_parameters
+    parameters = {}
+
+    JSON.parse(self.input_specification).each do |group|
+      group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          param_uid = DataFarmingExperiment.parameter_uid(group, entity, parameter)
+          parameters[param_uid] = input_parameter_label_for(param_uid)
+        end
+      end
+    end
+
+    parameters
+  end
+
+  def input_parameter_label_for(uid)
+    entity_group_id, entity_id, parameter_id = uid.split(DataFarmingExperiment::ID_DELIM)
+
+    JSON.parse(self.input_specification).each do |entity_group|
+      if entity_group['id'] == entity_group_id
+        entity_group['entities'].each do |entity|
+          if entity['id'] == entity_id
+            entity['parameters'].each do |parameter|
+              if parameter['id'] == parameter_id
+                return "#{entity_group['label']} - #{entity['label']} - #{parameter['label']}"
+              end
+            end
+          end
+        end
+      end
+    end
+
+    nil
+  end
+
 
 end
