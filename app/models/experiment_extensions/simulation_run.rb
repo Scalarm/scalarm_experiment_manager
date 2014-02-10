@@ -60,9 +60,7 @@ module SimulationRun
   def find_simulation_docs_by(query, options = { sort: [ ['id', :asc] ] })
     simulations = []
 
-    simulation_collection.find(query, options).each{|doc|
-      #Rails.logger.debug("Doc: #{doc}");
-      simulations << doc}
+    simulation_collection.find(query, options).each{ |doc| simulations << doc }
 
     simulations
   end

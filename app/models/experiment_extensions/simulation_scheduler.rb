@@ -50,7 +50,7 @@ module SimulationScheduler
   end
 
   def fetch_instance_from_db
-    Rails.logger.debug("Scheduling_policy is set to #{self.scheduling_policy}")
+    #Rails.logger.debug("Scheduling_policy is set to #{self.scheduling_policy}")
     begin
       self.send("#{self.scheduling_policy}_scheduling")
     rescue Exception => e
@@ -78,7 +78,7 @@ module SimulationScheduler
   end
 
   def next_simulation_id_with_seek
-    Rails.logger.debug('Simulation id with seek')
+    #Rails.logger.debug('Simulation id with seek')
     next_simulation_id = -1
 
     while next_simulation_id < 0
@@ -92,13 +92,13 @@ module SimulationScheduler
                           0
                         end
 
-      Rails.logger.debug("Current experiment seek is #{experiment_seek}")
+      #Rails.logger.debug("Current experiment seek is #{experiment_seek}")
       next_simulation_id = IO.read(file_with_ids_path, 4, 4*experiment_seek)
       return nil if next_simulation_id.nil?
 
       next_simulation_id = next_simulation_id.unpack('i').first
-      Rails.logger.debug("Next simulation id is #{next_simulation_id}")
-      simulation = self.find_simulation_docs_by({id: next_simulation_id}, {limit: 1}).first
+      #Rails.logger.debug("Next simulation id is #{next_simulation_id}")
+      simulation = self.find_simulation_docs_by({ id: next_simulation_id }, { limit: 1 }).first
 
       next if simulation.nil? or (simulation['to_sent'] == true)
       next_simulation_id = -1

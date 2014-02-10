@@ -254,16 +254,16 @@ class ExperimentsController < ApplicationController
 
     # create the new type of experiment object
     experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                            'experiment_input' => @experiment_input,
-                                            'run_counter' => params[:run_index].to_i,
-                                            'name' => @simulation.name,
-                                            'doe_info' => doe_info
-                                           })
+                                 'experiment_input' => @experiment_input,
+                                 'run_counter' => params[:run_index].to_i,
+                                 'name' => @simulation.name,
+                                 'doe_info' => doe_info
+                                })
 
     experiment_size = experiment.experiment_size(true)
     Rails.logger.debug("Experiment size is #{experiment_size}")
 
-    render :json => {experiment_size: experiment_size}
+    render json: { experiment_size: experiment_size }
   end
 
   ### Progress monitoring API

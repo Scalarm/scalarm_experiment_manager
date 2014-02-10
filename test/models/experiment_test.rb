@@ -1,9 +1,153 @@
+require 'test/unit'
 require 'test_helper'
+require 'mocha/test_unit'
 
 class ExperimentTest < Test::Unit::TestCase
 
-  # test "the truth" do
-  #   assert true
-  # end
+  def setup
+    i, @parameters, @parameter_values = 0, [], []
+
+    CSV.foreach(File.join(__dir__, 'experiment_52f257042acf1465af000001.csv')) do |row|
+      if i == 0
+        @parameters = row
+      else
+        row_values = []
+        row.each do |cell|
+          begin
+            parsed_cell = JSON.parse(cell)
+            row_values << parsed_cell.map(&:to_f)
+          rescue Exception => e
+            row_values << [ cell.to_f ]
+          end
+        end
+        p = row_values[0]
+        1.upto(row_values.size - 1).each do |i|
+          p = p.product(row_values[i])
+        end
+        @parameter_values += p.map(&:flatten)
+      end
+
+      i += 1
+    end
+
+    @simulation = Simulation.new({ 'input_specification' => "[\n  {\n    \"id\": \"clustering\",\n    \"label\": \"Clustering\",\n\n    \"entities\": [\n      {\n        \"id\": \"phase_1\",\n        \"label\": \"Phase 1 - kdist\",\n        \"parameters\": [\n          {\n            \"id\": \"minpts\",\n            \"label\": \"Neighbourhood counter\",\n            \"type\": \"integer\",\n            \"min\": 250,\n            \"max\": 260\n          }\n        ]\n      }\n    ] \n  }\n]" })
+
+    Rails.configuration.experiment_seeks = {}
+  end
+
+
+  def test_experiment_generation_from_csv
+    experiment = Experiment.new({ 'doe_info' => [ [ 'csv_import', @parameters, @parameter_values ] ] })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    assert_equal 24206, experiment.experiment_size
+    assert_equal 2, experiment.parameters.flatten.size
+  end
+
+  def test_file_with_ids_creation
+    experiment = Experiment.new({ 'doe_info' => [ [ 'csv_import', @parameters, @parameter_values ] ], 'debug' => true })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
+
+    experiment.create_file_with_ids
+
+    simulation_ids = []
+    0.upto(experiment.experiment_size*2 - 1).each do |experiment_seek|
+      next_simulation_id = IO.read(experiment.file_with_ids_path, 4, 4*experiment_seek)
+      simulation_ids << next_simulation_id.unpack('i').first unless next_simulation_id.nil?
+    end
+
+    assert_equal 24206, simulation_ids.size
+
+    1.upto(experiment.experiment_size).each do |sim_id|
+      assert simulation_ids.include?(sim_id)
+    end
+  end
+
+  def test_next_simulation_id_with_seek
+    experiment = Experiment.new({ 'doe_info' => [ [ 'csv_import', @parameters, @parameter_values ] ], 'debug' => true })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
+
+    experiment.create_file_with_ids
+
+    experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
+
+    simulation_ids = []
+
+    while not (simulation_id = experiment.next_simulation_id_with_seek).nil?
+      simulation_ids << simulation_id
+    end
+
+    assert_equal 24206, simulation_ids.size
+
+    1.upto(experiment.experiment_size).each do |sim_id|
+      assert simulation_ids.include?(sim_id)
+    end
+  end
+
+  def test_get_next_instance
+    experiment = Experiment.new({
+                                    'doe_info' => [ [ 'csv_import', @parameters, @parameter_values ] ],
+                                    'scheduling_policy' => 'monte_carlo',
+                                    'debug' => true
+                                })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
+
+    experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
+    experiment.expects(:save_simulation).at_least_once
+    experiment.expects(:naive_partition_based_simulation_hash).returns(nil)
+
+    simulation_ids = []
+
+    while not (simulation_run = experiment.get_next_instance).nil?
+      simulation_ids << simulation_run['id']
+    end
+
+    assert_equal 24206, simulation_ids.size
+
+    1.upto(experiment.experiment_size).each do |sim_id|
+      assert simulation_ids.include?(sim_id)
+    end
+  end
+
+  def test_get_next_instance_multi_threaded
+    experiment = Experiment.new({
+                                    'doe_info' => [ [ 'csv_import', @parameters, @parameter_values ] ],
+                                    'scheduling_policy' => 'monte_carlo',
+                                    'debug' => true
+                                })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
+
+    experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
+    experiment.expects(:save_simulation).at_least_once
+    experiment.expects(:naive_partition_based_simulation_hash).at_least_once.returns(nil)
+
+    simulation_ids = []
+    threads = []
+
+    8.times do
+      threads << Thread.new do
+        while not (simulation_run = experiment.get_next_instance).nil?
+          simulation_ids << simulation_run['id']
+        end
+      end
+
+      threads.each{|t| t.join}
+    end
+
+    assert_equal 24206, simulation_ids.size
+
+    1.upto(experiment.experiment_size).each do |sim_id|
+      assert simulation_ids.include?(sim_id)
+    end
+  end
+
   
 end

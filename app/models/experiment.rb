@@ -41,9 +41,10 @@ class Experiment < MongoActiveRecord
     'experiments'
   end
 
-  #def self.find_by_id(experiment_id)
-  #  self.find_by('id', experiment_id)
-  #end
+  def initialize(attributes)
+
+    super(attributes)
+  end
 
   def self.get_running_experiments
     experiments = []
@@ -205,7 +206,7 @@ class Experiment < MongoActiveRecord
       end
 
       self.cached_value_list = value_list
-      self.save_and_cache unless debug
+      self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
     end
 
     self.cached_value_list
@@ -222,7 +223,7 @@ class Experiment < MongoActiveRecord
 
 
       self.cached_multiple_list = multiply_list
-      self.save_and_cache unless debug
+      self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
     end
 
     self.cached_multiple_list
@@ -240,8 +241,8 @@ class Experiment < MongoActiveRecord
 
   def experiment_size(debug = false)
     if self.size.nil?
-      self.size = self.value_list.reduce(1){|acc, x| acc * x.size}
-      self.save_and_cache unless debug
+      self.size = self.value_list(debug).reduce(1){|acc, x| acc * x.size}
+      self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
     end
 
     self.size
