@@ -186,7 +186,7 @@ class SimulationsController < ApplicationController
   private
 
   def load_simulation
-    @experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
+    @experiment = Experiment.find_by_id(params[:experiment_id])
     #Rails.logger.debug("Experiment: #{@experiment}")
     @simulation = @experiment.find_simulation_docs_by({id: params[:id].to_i}, {limit: 1}).first
     #Rails.logger.debug("Simulation: #{@simulation}")

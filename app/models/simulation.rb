@@ -80,7 +80,7 @@ class Simulation < MongoActiveRecord
     JSON.parse(self.input_specification).each do |group|
       group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          param_uid = DataFarmingExperiment.parameter_uid(group, entity, parameter)
+          param_uid = Experiment.parameter_uid(group, entity, parameter)
           parameters[param_uid] = input_parameter_label_for(param_uid)
         end
       end
@@ -90,7 +90,7 @@ class Simulation < MongoActiveRecord
   end
 
   def input_parameter_label_for(uid)
-    entity_group_id, entity_id, parameter_id = uid.split(DataFarmingExperiment::ID_DELIM)
+    entity_group_id, entity_id, parameter_id = uid.split(Experiment::ID_DELIM)
 
     JSON.parse(self.input_specification).each do |entity_group|
       if entity_group['id'] == entity_group_id

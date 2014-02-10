@@ -1,4 +1,4 @@
-module DataFarmingExperimentProgressBar
+module ExperimentProgressBar
   CANVAS_WIDTH = 960.0
   MINIMUM_SLOT_WIDTH = 2.0
   PROGRESS_BAR_THRESHOLD = 10000

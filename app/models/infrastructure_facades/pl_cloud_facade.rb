@@ -46,7 +46,7 @@ class PLCloudFacade < InfrastructureFacade
             Rails.logger.info("[PLC vm #{plc_vm.vm_id}] checking")
             vm_instance = plc_client.vm_instance(plc_vm.vm_id)
 
-            experiment = DataFarmingExperiment.find_by_id(plc_vm.experiment_id)
+            experiment = Experiment.find_by_id(plc_vm.experiment_id)
 
             if %w(stop fail).include?(vm_instance.short_vm_state) or (not vm_instance.exists?)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be removed from our db as it is terminated")

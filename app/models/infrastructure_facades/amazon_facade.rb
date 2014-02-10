@@ -38,7 +38,7 @@ class AmazonFacade < InfrastructureFacade
           vm_list.each do |amazon_vm|
             Rails.logger.info("[vm #{amazon_vm.vm_id}] checking")
             vm_instance = ec2.instances[amazon_vm.vm_id]
-            experiment = DataFarmingExperiment.find_by_id(amazon_vm.experiment_id)
+            experiment = Experiment.find_by_id(amazon_vm.experiment_id)
 
             if [:stopped, :terminated].include?(vm_instance.status)
               Rails.logger.info("[vm #{amazon_vm.vm_id}] This VM is going to be removed from our db as it is terminated")

@@ -42,7 +42,7 @@ class PLGridFacade < InfrastructureFacade
             job_list.each do |job|
               scheduler = create_scheduler_facade(job.scheduler_type)
               ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
-              experiment = DataFarmingExperiment.find_by_id(job.experiment_id)
+              experiment = Experiment.find_by_id(job.experiment_id)
               Rails.logger.info("Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}")
 
               if experiment.nil? or not experiment.is_running

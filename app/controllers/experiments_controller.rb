@@ -124,13 +124,13 @@ class ExperimentsController < ApplicationController
                  JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
                end
 
-    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
+    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
     # prepare scenario parametrization in the old fashion
     @scenario_parametrization = {}
     @experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          parameter_uid = DataFarmingExperiment.parameter_uid(entity_group, entity, parameter)
+          parameter_uid = Experiment.parameter_uid(entity_group, entity, parameter)
           @scenario_parametrization[parameter_uid] = parameter['parametrizationType']
         end
       end
@@ -140,7 +140,7 @@ class ExperimentsController < ApplicationController
     experiment_description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
 
     # create the new type of experiment object
-    data_farming_experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
                                                          'experiment_input' => @experiment_input,
                                                          'name' => experiment_name,
                                                          'description' => experiment_description,
@@ -153,23 +153,23 @@ class ExperimentsController < ApplicationController
                                                          'scheduling_policy' => 'monte_carlo'
                                                         })
 
-    data_farming_experiment.user_id = @current_user.id unless @current_user.nil?
-    data_farming_experiment.labels = data_farming_experiment.parameters.flatten.join(',')
-    data_farming_experiment.save
-    data_farming_experiment.experiment_id = data_farming_experiment.id
-    data_farming_experiment.save
+    experiment.user_id = @current_user.id unless @current_user.nil?
+    experiment.labels = experiment.parameters.flatten.join(',')
+    experiment.save
+    experiment.experiment_id = experiment.id
+    experiment.save
     # create progress bar
-    data_farming_experiment.insert_initial_bar
-    data_farming_experiment.create_simulation_table
+    experiment.insert_initial_bar
+    experiment.create_simulation_table
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
       computing_power = JSON.parse(params[:computing_power])
-      InfrastructureFacade.schedule_simulation_managers(@current_user, data_farming_experiment.id, computing_power['type'], computing_power['resource_counter'])
+      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, computing_power['type'], computing_power['resource_counter'])
     end
 
     respond_to do |format|
-      format.html { redirect_to experiment_path(data_farming_experiment.id) }
-      format.json { render json: { status: 'ok', experiment_id: data_farming_experiment.id } }
+      format.html { redirect_to experiment_path(experiment.id) }
+      format.json { render json: { status: 'ok', experiment_id: experiment.id } }
     end
   end
 
@@ -208,7 +208,7 @@ class ExperimentsController < ApplicationController
                   end
 
     # create the new type of experiment object
-    experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
                                             'is_running' => true,
                                             'run_counter' => params[:run_index].to_i,
                                             'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
@@ -219,7 +219,7 @@ class ExperimentsController < ApplicationController
                                             })
     experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
     experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-    experiment.experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
 
     experiment.user_id = @current_user.id unless @current_user.nil?
     experiment.labels = experiment.parameters.flatten.join(',')
@@ -250,10 +250,10 @@ class ExperimentsController < ApplicationController
                else
                  JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
                end
-    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
+    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
-    experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
                                             'experiment_input' => @experiment_input,
                                             'run_counter' => params[:run_index].to_i,
                                             'name' => @simulation.name,
@@ -320,7 +320,7 @@ class ExperimentsController < ApplicationController
     moes_info = {}
 
     moes = @experiment.result_names
-    moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map { |x| [DataFarmingExperiment.output_parameter_label_for(x), x] }
+    moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map { |x| [Experiment.output_parameter_label_for(x), x] }
 
     done_instance = @experiment.find_simulation_docs_by({'is_done' => true}, {limit: 1, fields: %w(arguments)}).first
 
@@ -571,7 +571,7 @@ class ExperimentsController < ApplicationController
   def load_experiment
     #Rails.logger.debug("Loading experiment --- #{params.include?('id')} --- #{@current_user.nil?}")
     if params.include?('id') and not @current_user.nil?
-      @experiment = DataFarmingExperiment.find_by_query({'user_id' => @current_user.id, '_id' => BSON::ObjectId(params['id'])})
+      @experiment = Experiment.find_by_query({'user_id' => @current_user.id, '_id' => BSON::ObjectId(params['id'])})
 
       if @experiment.nil?
         flash[:error] = "Experiment '#{params['id']}' for user '#{@current_user.login}' not found"
@@ -586,7 +586,7 @@ class ExperimentsController < ApplicationController
 
         render json: { status: 'error', reason: error_msg }, status: 403
       else
-        @experiment = DataFarmingExperiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
+        @experiment = Experiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
 
         if @experiment.nil?
           error_msg = t('experiment_not_found', experiment_id: params['id'], user: @sm_user.sm_uuid)
