@@ -5,75 +5,78 @@
   %section.panel.radius
     %h3.subheader= t('experiments.information_panel.experiment_info_title')
 
-    .row
-      .small-3.columns
-        %h5.subheader.right= t('experiments.information_panel.experiment_name') + ':'
-      .small-6.columns
-        %h5.subheader= text_field_tag :experiment_name
-      .small-3.columns
-    .row
-      .small-3.columns
-        %h5.subheader.right= t('experiments.information_panel.experiment_description') + ':'
-      .small-6.columns
-        %h5.subheader= text_area_tag :experiment_description
-      .small-3.columns
+    .content
+      .row
+        .small-3.columns
+          %h5.subheader.right= t('experiments.information_panel.experiment_name') + ':'
+        .small-6.columns
+          %h5.subheader= text_field_tag :experiment_name
+        .small-3.columns
+      .row
+        .small-3.columns
+          %h5.subheader.right= t('experiments.information_panel.experiment_description') + ':'
+        .small-6.columns
+          %h5.subheader= text_area_tag :experiment_description
+        .small-3.columns
 
-    %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
+      %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
 
-    .row
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
-      .small-9.columns
-        %h5.subheader= @simulation.name
-    .row
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
-      .small-9.columns
-        %h5.subheader= @simulation.description
+      .row
+        .small-3.columns
+          %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
+        .small-9.columns
+          %h5.subheader= @simulation.name
+      .row
+        .small-3.columns
+          %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
+        .small-9.columns
+          %h5.subheader= @simulation.description
 
   %section.panel.radius.simulation_input
     %h3.subheader= t('.input_header')
 
-    %dl.tabs(data-tab="")
-      %dd.active
-        = link_to t('.input_parametrization_types'), '#parametrization_types'
-      %dd
-        = link_to t('.input_parameter_values'), '#parameters_values_tab'
-      %dd
-        = link_to t('.input_doe'), '#doe'
+    .content
+
+      %dl.tabs(data-tab="")
+        %dd.active
+          = link_to t('.input_parametrization_types'), '#parametrization_types'
+        %dd
+          = link_to t('.input_parameter_values'), '#parameters_values_tab'
+        %dd
+          = link_to t('.input_doe'), '#doe'
 
 
-    .tabs-content
-      #parametrization_types.content.active(style="width: 100%")
-        = render 'parametrization_tab'
-      #parameters_values_tab.content(style="width: 100%")
-        = render 'parameters_values_tab'
-      #doe.content(style="width: 100%")
-        = render 'doe_tab'
+      .tabs-content
+        #parametrization_types.content.active(style="width: 100%")
+          = render 'parametrization_tab'
+        #parameters_values_tab.content(style="width: 100%")
+          = render 'parameters_values_tab'
+        #doe.content(style="width: 100%")
+          = render 'doe_tab'
 
 
-    %hr
-    .row.submit-section
+      %hr
+      .row.submit-section
 
-      = hidden_field_tag 'simulation_id', @simulation._id
-      = hidden_field_tag 'experiment_input'
-      = hidden_field_tag 'computing_power'
-      = hidden_field_tag 'doe'
-      = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+        = hidden_field_tag 'simulation_id', @simulation._id
+        = hidden_field_tag 'experiment_input'
+        = hidden_field_tag 'computing_power'
+        = hidden_field_tag 'doe'
+        = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
 
-      .row
-        .small-6.columns
-          = label_tag :execution_time_constraint, t('.time_constraint_label') + ':', class: 'right inline'
-        .small-6.columns
-          = text_field_tag 'execution_time_constraint', 3600
-      -#.row
-      -#  .small-6.columns(style="text-align: right;")= t('.repeatation_label') + ':'
-      -#  .small-6.columns
-      -#    = text_field_tag 'run_index', 1
-      = hidden_field_tag 'run_index', 1
+        .row
+          .small-6.columns
+            = label_tag :execution_time_constraint, t('.time_constraint_label') + ':', class: 'right inline'
+          .small-6.columns
+            = text_field_tag 'execution_time_constraint', 3600
+        -#.row
+        -#  .small-6.columns(style="text-align: right;")= t('.repeatation_label') + ':'
+        -#  .small-6.columns
+        -#    = text_field_tag 'run_index', 1
+        = hidden_field_tag 'run_index', 1
 
-      = submit_tag t('.submit_button'), class: 'button radius last-element'
-      = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+        = submit_tag t('.submit_button'), class: 'button radius last-element'
+        = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
 
   #experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
     %h2.subheader= raw t('.experiment_size_dialog_body')
@@ -85,3 +88,9 @@
 
 %section#import.panel.radius.last-element
   = render 'import_tab'
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      window.toggle_panels_on_title_click();
+    });
