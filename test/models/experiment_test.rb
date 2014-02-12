@@ -154,12 +154,12 @@ class ExperimentTest < Test::Unit::TestCase
 
   def test_naive_partition_based_simulation_hash
     Rails.logger.debug(MongoActiveRecord.get_collection('experiment_52f257042acf1465af000001').db.name)
-    experiment_size = 24206
+    #experiment_size = 24206
+    experiment_size = 5000
 
     experiment = Experiment.new({
                                     'doe_info' => [ [ 'csv_import', @parameters, @parameter_values[0...experiment_size] ] ],
-                                    'scheduling_policy' => 'monte_carlo',
-                                    'debug' => true
+                                    'scheduling_policy' => 'monte_carlo'
                                 })
     experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
 
@@ -168,7 +168,7 @@ class ExperimentTest < Test::Unit::TestCase
     i = 0
     while not (simulation_id = experiment.naive_partition_based_simulation_hash).nil?
       i += 1
-      Rails.logger.debug("#{Time.now} - Size: #{i}") if i % 50 == 0
+      Rails.logger.debug("#{Time.now} - Size: #{i}") if i % 100 == 0
 
       simulation_ids << simulation_id
       experiment.save_simulation({ 'id' => simulation_id, 'to_sent' => 'false' })
@@ -184,16 +184,11 @@ class ExperimentTest < Test::Unit::TestCase
   def test_real_life_get_next_instance
     experiment = Experiment.new({
                                     'doe_info' => [['csv_import', @parameters, @parameter_values]],
-                                    'scheduling_policy' => 'monte_carlo',
-                                    #'debug' => true
+                                    'scheduling_policy' => 'monte_carlo'
                                 })
     experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
 
     File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
-
-        #experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
-        #experiment.expects(:save_simulation).at_least_once
-        #experiment.expects(:naive_partition_based_simulation_hash).at_least_once.returns(nil)
 
     simulation_ids = []
     threads = []
