@@ -68,6 +68,8 @@ all_sent_threshold, error_threshold = 10
 
 while true
 # 6a. get information about next simulation to calculate and store it in input.json file
+  simulation_input = {}
+
   5.times do
     simulation_input = em_proxy.next_simulation(experiment_id)
     puts "Text format of simulation_input: #{simulation_input}"
