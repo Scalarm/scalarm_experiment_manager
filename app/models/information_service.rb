@@ -35,11 +35,14 @@ class InformationService
     req.basic_auth(@username, @password)
     req.set_form_data(data) unless data.nil?
 
-    ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    #ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
 
     begin
-      http = Net::HTTP.new(@host, @port, ssl_options)
-      http.open_timeout = http.ssl_timeout = http.read_timeout = 5; 
+      http = Net::HTTP.new(@host, @port)
+      http.open_timeout = http.ssl_timeout = http.read_timeout = 5
+      http.use_ssl = true
+      http.ssl_version = :SSLv3
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       response = http.request(req) 
       puts "#{Time.now} --- response from Information Service is #{response.body}"
 
