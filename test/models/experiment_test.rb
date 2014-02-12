@@ -33,6 +33,9 @@ class ExperimentTest < Test::Unit::TestCase
     @simulation = Simulation.new({ 'input_specification' => "[\n  {\n    \"id\": \"clustering\",\n    \"label\": \"Clustering\",\n\n    \"entities\": [\n      {\n        \"id\": \"phase_1\",\n        \"label\": \"Phase 1 - kdist\",\n        \"parameters\": [\n          {\n            \"id\": \"minpts\",\n            \"label\": \"Neighbourhood counter\",\n            \"type\": \"integer\",\n            \"min\": 250,\n            \"max\": 260\n          }\n        ]\n      }\n    ] \n  }\n]" })
 
     Rails.configuration.experiment_seeks = {}
+
+    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
+    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
   end
 
 
@@ -136,6 +139,70 @@ class ExperimentTest < Test::Unit::TestCase
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
           simulation_ids << simulation_run['id']
+        end
+      end
+
+      threads.each{|t| t.join}
+    end
+
+    assert_equal 24206, simulation_ids.size
+
+    1.upto(experiment.experiment_size).each do |sim_id|
+      assert simulation_ids.include?(sim_id)
+    end
+  end
+
+  def test_naive_partition_based_simulation_hash
+    Rails.logger.debug(MongoActiveRecord.get_collection('experiment_52f257042acf1465af000001').db.name)
+    experiment_size = 24206
+
+    experiment = Experiment.new({
+                                    'doe_info' => [ [ 'csv_import', @parameters, @parameter_values[0...experiment_size] ] ],
+                                    'scheduling_policy' => 'monte_carlo',
+                                    'debug' => true
+                                })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    simulation_ids = []
+
+    i = 0
+    while not (simulation_id = experiment.naive_partition_based_simulation_hash).nil?
+      i += 1
+      Rails.logger.debug("#{Time.now} - Size: #{i}") if i % 50 == 0
+
+      simulation_ids << simulation_id
+      experiment.save_simulation({ 'id' => simulation_id, 'to_sent' => 'false' })
+    end
+
+    assert_equal experiment_size, simulation_ids.size
+
+    1.upto(experiment.experiment_size).each do |sim_id|
+      assert simulation_ids.include?(sim_id)
+    end
+  end
+
+  def test_real_life_get_next_instance
+    experiment = Experiment.new({
+                                    'doe_info' => [['csv_import', @parameters, @parameter_values]],
+                                    'scheduling_policy' => 'monte_carlo',
+                                    #'debug' => true
+                                })
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+    File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
+
+        #experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
+        #experiment.expects(:save_simulation).at_least_once
+        #experiment.expects(:naive_partition_based_simulation_hash).at_least_once.returns(nil)
+
+    simulation_ids = []
+    threads = []
+
+    8.times do
+      threads << Thread.new do
+        while not (simulation_run = experiment.get_next_instance).nil?
+          simulation_ids << simulation_run['id']
+          Rails.logger.debug("#{Time.now} - #{simulation_ids.size}") if simulation_ids.size % 100 == 0
         end
       end
 

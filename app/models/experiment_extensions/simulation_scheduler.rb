@@ -140,8 +140,8 @@ module SimulationScheduler
     self.find_simulation_docs_by({to_sent: true}, {limit: 1}).first
   end
 
-def naive_partition_based_simulation_hash
-    Rails.logger.debug('Naive partition based simulation')
+  def naive_partition_based_simulation_hash
+    #Rails.logger.debug('Naive partition based simulation')
 
     # TODO experiment_manager size should be taken from the information service
     #manager_counter = ExperimentManager.all.size
@@ -156,11 +156,11 @@ def naive_partition_based_simulation_hash
       partition_end_id = (partition_id == manager_counter) ? self.experiment_size : partition_start_id + partition_size
       query_hash = { 'id' => { '$gt' => partition_start_id, '$lte' => partition_end_id } }
 
-      simulations_in_partition = self.find_simulation_docs_by(query_hash)
+      #simulations_in_partition = self.find_simulation_docs_by(query_hash)
+      simulations_in_partition = self.simulations_count_with(query_hash)
 
       if simulations_in_partition != partition_end_id - partition_start_id
-        Rails.logger.debug("Partition size is #{simulations_in_partition} but should be #{partition_end_id - partition_start_id}")
-
+        #Rails.logger.debug("Partition size is #{simulations_in_partition} but should be #{partition_end_id - partition_start_id}")
         simulation_id = find_unsent_simulation_in(partition_start_id, partition_end_id)
 
         return simulation_id if not simulation_id.nil?
@@ -172,13 +172,12 @@ def naive_partition_based_simulation_hash
 
   def is_simulation_ready_to_run(simulation_id)
     simulation_doc = self.find_simulation_docs_by({id: simulation_id}, {limit: 1}).first
-    Rails.logger.debug("Simulation #{simulation_id} is nil ? #{simulation_doc.nil?}")
-
+    #Rails.logger.debug("Simulation #{simulation_id} is nil ? #{simulation_doc.nil?}")
     simulation_doc.nil? or simulation_doc['to_sent']
   end
 
   def find_unsent_simulation_in(partition_start_id, partition_end_id)
-    Rails.logger.debug("Finding unsent simulation between #{partition_start_id} and #{partition_end_id}")
+    #Rails.logger.debug("Finding unsent simulation between #{partition_start_id} and #{partition_end_id}")
 
     if partition_end_id - partition_start_id < 200 # conquer
       query_hash = { 'id' => { '$gt' => partition_start_id, '$lte' => partition_end_id } }
