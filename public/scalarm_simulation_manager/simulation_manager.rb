@@ -30,9 +30,6 @@ sm_url = information_service.get_storage_managers.sample
 # raise 'No Storage manager URL available' if sm_url.nil?
 sm_proxy = sm_url.nil? ? nil : StorageManager.new(sm_url, config)
 
-# 1a. if the 'start_at' option set -> wait for this moment to start
-sleep(5) while config.include?('start_at') and (Time.parse(config['start_at']) - Time.now > 0)
-
 # 2. check if an experiment id is specified and if there is no experiment id get one
 #if not config.has_key?('experiment_id')
 #  puts 'Getting experiment id'
@@ -63,14 +60,26 @@ end
 # 5. run the initialization script
 # TODO - currently there isn't any
 
+# 1a. if the 'start_at' option set -> wait for this moment to start
+sleep(5) while config.include?('start_at') and (Time.parse(config['start_at']) - Time.now > 0)
+
 # 6. main loop
 all_sent_threshold, error_threshold = 10
 
 while true
 # 6a. get information about next simulation to calculate and store it in input.json file
-  simulation_input = em_proxy.next_simulation(experiment_id)
-  puts "Text format of simulation_input: #{simulation_input}"
-  simulation_input = JSON.parse(simulation_input)
+  5.times do
+    simulation_input = em_proxy.next_simulation(experiment_id)
+    puts "Text format of simulation_input: #{simulation_input}"
+
+    begin
+      simulation_input = JSON.parse(simulation_input)
+      break
+    rescue Exception => e
+      puts "Exception occured: #{e}"
+    end
+  end
+
 
   if simulation_input['status'] == 'all_sent'
     puts 'There is no more simulations to run in this experiment'
