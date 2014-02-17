@@ -16,8 +16,8 @@ namespace :service do
 
   desc 'Stop the service'
   task :stop, [:debug] => [:environment] do |t, args|
-    puts 'pumactl -F config/puma.rb -P tmp/puma.pid -T scalarm stop'
-    %x[pumactl -F config/puma.rb -P tmp/puma.pid -T scalarm stop]
+    puts 'pumactl -F config/puma.rb -T scalarm stop'
+    %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_probe('stop')
   end
