@@ -9,7 +9,7 @@ namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:environment] do |t, args|
     puts 'puma -C config/puma.rb'
-    %x[pumactl -C config/puma.rb]
+    %x[puma -C config/puma.rb]
 
     monitoring_probe('start')
   end
