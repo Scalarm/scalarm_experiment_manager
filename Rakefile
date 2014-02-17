@@ -8,16 +8,16 @@ ScalarmExperimentManager::Application.load_tasks
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:environment] do |t, args|
-    puts 'pumactl -F config/puma.rb -T scalarm start'
-    %x[pumactl -F config/puma.rb -T scalarm start]
+    puts 'puma -C config/puma.rb'
+    %x[pumactl -C config/puma.rb]
 
     monitoring_probe('start')
   end
 
   desc 'Stop the service'
   task :stop, [:debug] => [:environment] do |t, args|
-    puts 'pumactl -F config/puma.rb -T scalarm stop'
-    %x[pumactl -F config/puma.rb -T scalarm stop]
+    puts 'pumactl -F config/puma.rb -P tmp/puma.pid -T scalarm stop'
+    %x[pumactl -F config/puma.rb -P tmp/puma.pid -T scalarm stop]
 
     monitoring_probe('stop')
   end
