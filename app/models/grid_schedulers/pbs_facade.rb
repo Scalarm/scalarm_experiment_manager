@@ -14,7 +14,7 @@ class PBSFacade
     #  schedule the job with qsub
     qsub_cmd = [
         'qsub',
-        '-q', 'plgrid',
+        '-q', job.queue,
         "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}"
     ]
     submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")

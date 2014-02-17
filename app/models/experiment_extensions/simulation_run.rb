@@ -77,4 +77,17 @@ module SimulationRun
     end
   end
 
+  def is_simulation_ready_to_run(simulation_id)
+    simulation_doc = simulation_collection.find_one({ id: simulation_id })
+    simulation_doc.nil? or simulation_doc['to_sent']
+  end
+
+  def create_new_simulation(simulation_id)
+    simulation = generate_simulation_for(simulation_id)
+    simulation['to_sent'] = false
+    simulation['sent_at'] = Time.now
+    save_simulation(simulation)
+
+    simulation
+  end
 end

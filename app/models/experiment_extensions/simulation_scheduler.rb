@@ -107,14 +107,6 @@ module SimulationScheduler
     next_simulation_id
   end
 
-  def create_new_simulation(simulation_id)
-    simulation = generate_simulation_for(simulation_id)
-    simulation['to_sent'] = false
-    simulation['sent_at'] = Time.now
-    save_simulation(simulation)
-
-    simulation
-  end
 
   def generate_simulation_for(simulation_id)
     combination = []
@@ -141,57 +133,41 @@ module SimulationScheduler
   end
 
   def naive_partition_based_simulation_hash
-    #Rails.logger.debug('Naive partition based simulation')
-
-    # TODO experiment_manager size should be taken from the information service
-    #manager_counter = ExperimentManager.all.size
-    manager_counter = 1
-    manager_counter = 1 if manager_counter == 0
-
-    partitions_to_check = 1.upto(manager_counter).to_a.shuffle
-    partition_size = self.experiment_size / manager_counter
-
-    partitions_to_check.each do |partition_id|
-      partition_start_id = partition_size * (partition_id - 1)
-      partition_end_id = (partition_id == manager_counter) ? self.experiment_size : partition_start_id + partition_size
-      query_hash = { 'id' => { '$gt' => partition_start_id, '$lte' => partition_end_id } }
-
-      #simulations_in_partition = self.find_simulation_docs_by(query_hash)
-      simulations_in_partition = self.simulations_count_with(query_hash)
-
-      if simulations_in_partition != partition_end_id - partition_start_id
-        #Rails.logger.debug("Partition size is #{simulations_in_partition} but should be #{partition_end_id - partition_start_id}")
-        simulation_id = find_unsent_simulation_in(partition_start_id, partition_end_id)
-
-        return simulation_id if not simulation_id.nil?
-      end
-    end
-
+    # Rails.logger.debug('Naive partition based simulation')
+     partition_start_id = 0
+     partition_end_id = experiment_size
+     query_hash = { 'id' => { '$gt' => partition_start_id, '$lte' => partition_end_id } }
+    
+     simulations_in_partition = self.simulations_count_with(query_hash)
+    
+     if simulations_in_partition != partition_end_id - partition_start_id
+       simulation_id = find_unsent_simulation_in(partition_start_id, partition_end_id)
+    
+       return simulation_id if not simulation_id.nil?
+     end
+    
     nil
   end
 
-  def is_simulation_ready_to_run(simulation_id)
-    simulation_doc = self.find_simulation_docs_by({ id: simulation_id },
-                                                  { limit: 1, fields: { '_id' => 0, id: 1, to_sent: 1 } }).first
-    #Rails.logger.debug("Simulation #{simulation_id} is nil ? #{simulation_doc.nil?}")
-    simulation_doc.nil? or simulation_doc['to_sent']
-  end
-
   def find_unsent_simulation_in(partition_start_id, partition_end_id)
-    #Rails.logger.debug("Finding unsent simulation between #{partition_start_id} and #{partition_end_id}")
+    # Rails.logger.debug("Finding unsent simulation between #{partition_start_id} and #{partition_end_id}")
 
     if partition_end_id - partition_start_id < 200 # conquer
       query_hash = { id: { '$gt' => partition_start_id, '$lte' => partition_end_id } }
       options_hash = { fields: { 'id' => 1, '_id' => 0 }, sort: [ [ 'id', :asc ] ] }
 
       # getting simulation_run ids from the partition
-      simulations_ids = self.find_simulation_docs_by(query_hash, options_hash).map{ |x| x['id'] }
+      simulations_ids = self.find_simulation_docs_by(query_hash, options_hash)#.map{ |x| x['id'] }
 
       0.upto(partition_end_id - partition_start_id).each do |index|
         correct_id = partition_start_id + index + 1
         actual_id = simulations_ids[index]
 
-        return correct_id if (actual_id.nil? or actual_id != correct_id) and is_simulation_ready_to_run(correct_id)
+        if (actual_id.nil? or actual_id['id'] != correct_id) and
+           (is_simulation_ready_to_run(correct_id) == true)
+
+          return correct_id
+        end
       end
 
     else # divide
@@ -213,7 +189,7 @@ module SimulationScheduler
     next_simulation_id = 1
 
     while next_simulation_id <= experiment_size
-      if simulation_collection.find_one({id: next_simulation_id}).nil?
+      if simulation_collection.find_one({ id: next_simulation_id }).nil?
         return create_new_simulation(next_simulation_id)
       else
         next_simulation_id += 1

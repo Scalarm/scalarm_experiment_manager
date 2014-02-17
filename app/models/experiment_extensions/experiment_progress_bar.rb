@@ -42,7 +42,12 @@ module ExperimentProgressBar
     part_width = CANVAS_WIDTH / experiment_size
     parts_per_slot = [(MINIMUM_SLOT_WIDTH / part_width).ceil, 1].max
     number_of_bars = if parts_per_slot > 1 then
-                       (experiment_size / parts_per_slot).ceil
+                       x = (experiment_size / parts_per_slot).ceil
+                       if x * parts_per_slot < experiment_size
+                        x + 1   
+                      else
+                        x
+                      end
                      else
                        experiment_size
                      end
@@ -153,8 +158,9 @@ module ExperimentProgressBar
 
     0.upto(number_of_bars - 1) do |bar_num|
       bar_doc = {'bar_num' => bar_num, 'bar_parts' => parts_per_slot, 'bar_state' => 0}
-      if (bar_num == number_of_bars - 1) and (parts_per_slot > 1)
-        bar_doc['bar_parts'] = self.experiment_size - number_of_bars * parts_per_slot
+      if (bar_num == number_of_bars - 1) and (parts_per_slot > 1) and (self.experiment_size != number_of_bars * parts_per_slot)
+        bar_doc['bar_parts'] = number_of_bars * parts_per_slot - self.experiment_size
+        puts "Number of parts in the last bar #{bar_doc['bar_parts']}"
       end
 
       next if bar_doc['bar_parts'] <= 0
