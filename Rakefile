@@ -81,6 +81,7 @@ def monitoring_probe(action)
   probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
 
   if action == 'start'
+    Process.daemon(true)
     monitoring_job_pid = fork {
       require 'monitoring_probe'
 
