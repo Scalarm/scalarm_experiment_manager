@@ -35,6 +35,8 @@ class SimulationsController < ApplicationController
       progress_monitor.save
     end
 
+    flash[:notice] = t('new_adapter_added')
+
     redirect_to :action => :index
   end
 
@@ -48,6 +50,8 @@ class SimulationsController < ApplicationController
     elsif params['component_type'] == 'progress_monitor'
       SimulationProgressMonitor.find_by_id(params['component_id']).destroy
     end
+
+    flash[:notice] = t('simulations.adapter_destroyed')
 
     redirect_to :action => :index
   end

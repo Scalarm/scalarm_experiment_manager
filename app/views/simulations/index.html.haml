@@ -14,4 +14,9 @@
 = render 'simulation_output_readers'
 = render 'simulation_progress_monitors'
 
-
+- content_for :javascript do
+  :javascript
+    $(function() {
+      window.toggle_panels_on_title_click();
+      $('.minimized h3.subheader').click();
+    });

@@ -30,3 +30,5 @@ en:
         parameter_id: "Parameter full id"
         section_header: "Select parameters which should be included in the parameter space"
         parameters_per_row: "Values in each row"
+    adapter_destroyed: "The selected adapter has been removed"
+  new_adapter_added: "New adapter has been added."

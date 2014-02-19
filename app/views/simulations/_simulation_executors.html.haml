@@ -1,19 +1,20 @@
-%section.panel.radius
+%section.panel.radius.minimized
   %h3.subheader= t('registered_executors_list.label')
 
-  - if @executors.empty?
-    .panel.callout.radius
-      %h4.subheader= t('registered_executors_list.empty_list')
+  .content
+    - if @executors.empty?
+      .panel.callout.radius
+        %h4.subheader= t('registered_executors_list.empty_list')
 
-  - else
-    - @executors.each do |executor|
-      - is_last = executor == @executors.last
-      = form_tag simulations_destroy_component_path do
-        = hidden_field_tag 'component_type', 'executor'
-        = hidden_field_tag 'component_id', executor._id
+    - else
+      - @executors.each do |executor|
+        - is_last = executor == @executors.last
+        = form_tag simulations_destroy_component_path do
+          = hidden_field_tag 'component_type', 'executor'
+          = hidden_field_tag 'component_id', executor._id
 
-        .row
-          .small-8.columns
-            %h4.subheader= executor.name
-          .small-4.columns
-            = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
+          .row
+            .small-8.columns
+              %h4.subheader= executor.name
+            .small-4.columns
+              = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
