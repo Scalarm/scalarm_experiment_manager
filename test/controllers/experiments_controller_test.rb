@@ -1,7 +1,9 @@
 require 'test_helper'
 
 class ExperimentsControllerTest < ActionController::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+
+  test "experiment_size" do
+    #post(:calculate_experiment_size)
+  end
+
 end

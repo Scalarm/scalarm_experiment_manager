@@ -22,6 +22,7 @@
 //= require jit-yc
 //= require i18n
 //= require i18n/translations
+//= require toastr
 
 
 $(function(){ $(document).foundation(); });

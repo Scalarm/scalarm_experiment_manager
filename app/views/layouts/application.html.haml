@@ -3,15 +3,10 @@
     %meta(charset="utf-8")
     %meta(name="viewport" content="width=device-width, initial-scale=1.0")
     = csrf_meta_tags
-
     %title Scalarm
-
     = stylesheet_link_tag 'application'
 
-    -#= javascript_include_tag 'vendor/modernizr'
-
   %body
-    = content_for?(:title) ? yield(:title) : t('title')
     = render 'layouts/navbar'
 
     #wrapper
@@ -26,16 +21,6 @@
             = link_to image_tag('eda_logo.png'), 'http://www.eda.europa.eu'
       .clearall
 
-      .notice.alert-box.radius.success(style="display: none;")
-        = flash[:notice] if flash[:notice]
-      - content_for :javascript do
-        = javascript_tag("$('.notice').show();") if flash[:notice]
-
-      .error.alert-box.alert.radius(style="display: none;")
-        = flash[:error] if flash[:error]
-      - content_for :javascript do
-        = javascript_tag("$('.error').show();") if flash[:error]
-
       = yield
 
     = javascript_include_tag 'application'
@@ -43,11 +28,26 @@
 
       :javascript
         $(function() {
+          toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "positionClass": "toast-top-right",
+            "onclick": null,
+            "showDuration": "3000",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+          }
+
           if(#{not flash[:notice].nil?}) {
-            setTimeout("window.hide_notice()", 10000);
+            toastr['success']("#{flash[:notice]}");
           }
           if(#{not flash[:error].nil?}) {
-            setTimeout("window.hide_error()", 20000);
+            toastr['error']("#{flash[:error]}");
           }
         });
 
