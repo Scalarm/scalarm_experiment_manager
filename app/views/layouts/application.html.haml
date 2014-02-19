@@ -23,14 +23,13 @@
       = yield
 
     = javascript_include_tag 'application'
-    = content_for :javascript do
-      :javascript
-        $(function() {
-          if(#{not flash[:notice].nil?}) {
-            toastr['success']("#{flash[:notice]}");
-          }
-          if(#{not flash[:error].nil?}) {
-            toastr['error']("#{flash[:error]}");
-          }
-        });
+    :javascript
+      $(function() {
+        if(#{not flash[:notice].nil?}) {
+          toastr['success']("#{flash[:notice]}");
+        }
+        if(#{not flash[:error].nil?}) {
+          toastr['error']("#{flash[:error]}");
+        }
+      });
     = yield :javascript
