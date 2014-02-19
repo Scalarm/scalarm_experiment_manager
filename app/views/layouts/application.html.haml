@@ -19,30 +19,13 @@
             = link_to image_tag('cyfronet_logo.png'), 'http://www.cyfronet.pl'
           .large-2.columns
             = link_to image_tag('eda_logo.png'), 'http://www.eda.europa.eu'
-      .clearall
 
       = yield
 
     = javascript_include_tag 'application'
     = content_for :javascript do
-
       :javascript
         $(function() {
-          toastr.options = {
-            "closeButton": false,
-            "debug": false,
-            "positionClass": "toast-top-right",
-            "onclick": null,
-            "showDuration": "3000",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-          }
-
           if(#{not flash[:notice].nil?}) {
             toastr['success']("#{flash[:notice]}");
           }
@@ -50,5 +33,4 @@
             toastr['error']("#{flash[:error]}");
           }
         });
-
     = yield :javascript

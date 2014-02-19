@@ -1,33 +1,30 @@
 - content_for :title, 'Scalarm - login'
-= javascript_include_tag 'jquery'
 
 %section.panel.radius
   .row
-    .large-6.columns
-      .panel.radius
-        = form_tag login_path do
-          .row
-            .large-5.columns
-              %label.right.inline Login:
-            .large-7.columns
-              = text_field_tag 'username', '', class: 'inline'
-
-          .row
-            .large-5.columns
-              %label.right.inline Password:
-            .large-7.columns
-              = password_field_tag 'password', '', class: 'inline'
-
-          .row
-            .large-4.large-centered.columns
-              = submit_tag 'Submit', class: 'button radius'
-
-    .large-6.columns
-      .panel.radius
+    .small-6.columns
+      = form_tag login_path do
         .row
-          .large-12.large-centered.columns(style="text-align:center;")
-            = link_to t('openid.login', provider: 'Google'), login_openid_google_url, class:'button radius'
+          .small-5.columns
+            %label.right.inline(for='username')= t('user_controller.account.login')
+          .small-7.columns
+            = text_field_tag 'username', '', class: 'inline'
+
+        .row
+          .small-5.columns
+            %label.right.inline(for='password')= t('user_controller.account.password')
+          .small-7.columns
+            = password_field_tag 'password', '', class: 'inline'
+
+        .row
+          .small-12.small-centered.columns(style="text-align: center;")
+            = submit_tag 'Submit', class: 'button radius'
+
+    .small-6.columns
+      .row
+        .small-12.small-centered.columns(style="text-align:center;")
+          = link_to t('openid.login', provider: 'Google'), login_openid_google_url, class:'button radius'
         -#.row
-        -#  .large-12.large-centered.columns(style="text-align:center;")
+        -#  .small-12.small-centered.columns(style="text-align:center;")
         -#    %span.button
         -#      (TODO) Login with PLGrid OpenId
