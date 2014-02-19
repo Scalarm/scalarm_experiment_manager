@@ -14,11 +14,8 @@ window.readParameterSpaceFile = (event) ->
     reader.readAsText(file)
 
 window.importClick = () ->
-  console.log 'Click'
-
   file = document.getElementById('parameter_space_file').files[0]
   if file != undefined
-
     reader = new FileReader()
     reader.onload = (f) ->
       file_content = f.target.result
@@ -30,17 +27,40 @@ window.importClick = () ->
           simulation_id: $('#simulation_id').val()
         },
         success: (data, status, xhr) ->
-          console.log data
+#          console.log data
 #          console.log status
 #          console.log xhr
           $("#parameter_selection").html(data.columns)
+          $('#check-imported-experiment-size').removeClass('disabled')
 
     reader.readAsText(file)
   else
     alert "You must select a file"
 
+window.checkImportedSize = () ->
+  console.log 'Imported clicked'
+  $btn = $(this)
+
+  unless $btn.hasClass('disabled')
+    file = document.getElementById('parameter_space_file').files[0]
+
+    if file != undefined
+      reader = new FileReader()
+      reader.onload = (f) ->
+        file_content = f.target.result
+
+        $.ajax $('#imported-experiment-size-url').val(),
+          method: 'POST',
+          data: {
+            file_content: file_content,
+            simulation_id: $('#simulation_id').val()
+          },
+          success: (data, status, xhr) ->
+            $("#experiment-size-dialog #calculated-experiment-size").html(data.experiment_size);
+            $('#experiment-size-dialog').foundation('reveal', 'open');
+      reader.readAsText(file)
 
 window.bindImportParameterSpaceListeners = (url) ->
   window.import_file_url = url
-#  document.getElementById('parameter_space_file').addEventListener('change', window.readParameterSpaceFile, false)
   document.getElementById('import_submit').addEventListener('click', window.importClick, false)
+  document.getElementById('check-imported-experiment-size').addEventListener('click', window.checkImportedSize, false)

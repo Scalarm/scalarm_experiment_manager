@@ -174,30 +174,7 @@ class ExperimentsController < ApplicationController
   end
 
   def start_import_based_experiment
-    i, parameters, parameter_values = 0, [], []
-
-    CSV.parse(params[:parameter_space_file].read) do |row|
-      if i == 0
-        parameters = row
-      else
-        row_values = []
-        row.each do |cell|
-          begin
-            parsed_cell = JSON.parse(cell)
-            row_values << parsed_cell.map(&:to_f)
-          rescue Exception => e
-            row_values << [ cell.to_f ]
-          end
-        end
-        p = row_values[0]
-        1.upto(row_values.size - 1).each do |i|
-          p = p.product(row_values[i])
-        end
-        parameter_values += p.map(&:flatten)
-      end
-
-      i += 1
-    end
+    importer = ExperimentCsvImporter.new(params[:parameter_space_file].read)
 
     @simulation = if params['simulation_id']
                     Simulation.find_by_id params['simulation_id']
@@ -208,15 +185,15 @@ class ExperimentsController < ApplicationController
                   end
 
     # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                            'is_running' => true,
-                                            'run_counter' => params[:run_index].to_i,
-                                            'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
-                                            'doe_info' => [ [ 'csv_import', parameters, parameter_values ] ],
-                                            'start_at' => Time.now,
-                                            'user_id' => @current_user.id,
-                                            'scheduling_policy' => 'monte_carlo'
-                                            })
+    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+                                  'is_running' => true,
+                                  'run_counter' => params[:run_index].to_i,
+                                  'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
+                                  'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
+                                  'start_at' => Time.now,
+                                  'user_id' => @current_user.id,
+                                  'scheduling_policy' => 'monte_carlo'
+                                })
     experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
     experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
     experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
@@ -264,6 +241,12 @@ class ExperimentsController < ApplicationController
     Rails.logger.debug("Experiment size is #{experiment_size}")
 
     render json: { experiment_size: experiment_size }
+  end
+
+  def calculate_imported_experiment_size
+    importer = ExperimentCsvImporter.new(params[:file_content])
+
+    render json: { experiment_size: importer.parameter_values.size }
   end
 
   ### Progress monitoring API

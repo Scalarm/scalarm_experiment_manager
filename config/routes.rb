@@ -29,6 +29,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :start_experiment
       post :start_import_based_experiment
       post :calculate_experiment_size
+      post :calculate_imported_experiment_size
       get :running_experiments
       get :historical_experiments
     end

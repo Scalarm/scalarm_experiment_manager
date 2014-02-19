@@ -66,9 +66,9 @@ class SimulationsController < ApplicationController
     })
 
     begin
-      set_up_adapter('input_writer', simulation)
-      set_up_adapter('executor', simulation)
-      set_up_adapter('output_reader', simulation)
+      set_up_adapter('input_writer', simulation, false)
+      set_up_adapter('executor', simulation, false)
+      set_up_adapter('output_reader', simulation, false)
 
       set_up_adapter('progress_monitor', simulation, false)
 

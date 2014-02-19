@@ -11,20 +11,19 @@
         = file_field_tag :parameter_space_file
       .small-4.columns
         %span#import_submit.button.radius.small= t('.submit_import')
-        -#= submit_tag t('.submit_import'), class: 'button radius small'
-
     .row
       .small-12.columns#parameter_selection
 
-
     %hr
     .row.submit-section
-      = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+      = hidden_field_tag 'imported-experiment-size-url', calculate_imported_experiment_size_experiments_path
       .row
         .small-6.columns
-          = label_tag :execution_time_constraint, t('simulations.conduct_experiment.time_constraint_label') + ':', class: 'right inline'
-        .small-6.columns
+          = label_tag :execution_time_constraint, t('simulations.conduct_experiment.time_constraint_label') + ':',
+            class: 'right inline'
+        .small-3.columns
           = text_field_tag 'execution_time_constraint', 3600
+        .small-1.columns
       -#.row
       -#  .small-6.columns(style="text-align: right;")= t('.repeatation_label') + ':'
       -#  .small-6.columns
@@ -32,7 +31,7 @@
       = hidden_field_tag 'run_index', 1
 
       = submit_tag t('simulations.conduct_experiment.submit_button'), class: 'button radius last-element'
-      -#= button_tag t('simulations.conduct_experiment.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+      %span#check-imported-experiment-size.button.radius.last-element.disabled= t('simulations.conduct_experiment.experiment_size_button')
 
     = content_for :javascript do
       = javascript_include_tag "simulations_utils"
