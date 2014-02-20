@@ -103,6 +103,8 @@ en:
       show_running: Show/Hide running
       header: Progress information
 
+    import:
+      csv_parameters_not_valid: The provided CSV file is not compatible with the selected simulation
 
   simulations:
     deregister_button: Deregister

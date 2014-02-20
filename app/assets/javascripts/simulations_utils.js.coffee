@@ -32,6 +32,7 @@ window.importClick = () ->
 #          console.log xhr
           $("#parameter_selection").html(data.columns)
           $('#check-imported-experiment-size').removeClass('disabled')
+          $("#import form input[type='submit']").removeAttr('disabled')
 
     reader.readAsText(file)
   else
@@ -49,12 +50,15 @@ window.checkImportedSize = () ->
       reader.onload = (f) ->
         file_content = f.target.result
 
+        data = 
+          file_content: file_content
+          simulation_id: $('#simulation_id').val()
+
+        $("input[id^='param_']:checked").each (index, element) -> data[$(element).attr('id')] = 1
+
         $.ajax $('#imported-experiment-size-url').val(),
           method: 'POST',
-          data: {
-            file_content: file_content,
-            simulation_id: $('#simulation_id').val()
-          },
+          data: data,
           success: (data, status, xhr) ->
             $("#experiment-size-dialog #calculated-experiment-size").html(data.experiment_size);
             $('#experiment-size-dialog').foundation('reveal', 'open');
