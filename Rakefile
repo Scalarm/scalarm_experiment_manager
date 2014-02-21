@@ -48,8 +48,12 @@ namespace :db_router do
                                                  config['information_service_user'],
                                                  config['information_service_pass'])
 
-    config_service_url = information_service.get_list_of('db_config_services').sample
-    start_router(config_service_url) if config_service_url
+    config_services = information_service.get_list_of('db_config_services')
+    puts "Config services: #{config_services.inspect}"
+    unless config_services.blank?
+      config_service_url = config_services.sample
+      start_router(config_service_url) if config_service_url
+    end
   end
 
   task :stop, [:debug] => [:environment] do |t, args|
