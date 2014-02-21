@@ -78,40 +78,43 @@ class AmazonFacade < InfrastructureFacade
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     ec2 = get_ec2_for(user)
-    return 'error', 'You have to provide Amazon secrets first!' if ec2.nil?
+    return 'error', I18n.t('amazon.start_sm.errors.no_secrets') if ec2.nil?
 
-    # user_amis, experiment_ami = AmazonAmi.find_all_by_user_id(user.id), nil
-    # user_amis.each do |ami|
-    #   if ami.experiment_id == experiment_id
-    #     experiment_ami = ami
-    #     break
-    #   end
-    # end
-    experiment_ami = AmazonAmi.find_by_id(additional_params['image_id'])
+    begin
+      experiment_ami = AmazonAmi.find_by_id(additional_params['image_id'])
+    rescue Exception => e
+      return 'error', I18n.t('amazon.login.wrong_image_id')
+    end
 
-    return 'error', 'You have to provide Amazon AMI information first!' if experiment_ami.nil?
+    return 'error', I18n.t('amazon.start_sm.errors.no_ami') if experiment_ami.nil?
 
     ec2_region = ec2.regions['us-east-1']
-    scheduled_instances = ec2_region.instances.create(:image_id => experiment_ami.ami_id,
-                                :count => instances_count,
-                                :instance_type => additional_params[:instance_type],
-                                :security_groups => [ additional_params[:security_group] ])
 
-    scheduled_instances = [ scheduled_instances ] unless scheduled_instances.respond_to?(:each)
+    scheduled_instances = []
+    begin
+      scheduled_instances = ec2_region.instances.create(:image_id => experiment_ami.ami_id,
+                                  :count => instances_count,
+                                  :instance_type => additional_params[:instance_type],
+                                  :security_groups => [ additional_params[:security_group] ])
 
-    scheduled_instances.each do |instance|
-      amazon_vm = AmazonVm.new({
-          user_id: user.id,
-          experiment_id: experiment_id,
-          created_at: Time.now,
-          time_limit: additional_params[:time_limit],
-          vm_id: instance.instance_id,
-          instance_type: instance.instance_type,
-          sm_uuid: SecureRandom.uuid,
-          initialized: false,
-          start_at: additional_params['start_at']
-                         })
-      amazon_vm.save
+      scheduled_instances = [ scheduled_instances ] unless scheduled_instances.respond_to?(:each)
+
+      scheduled_instances.each do |instance|
+        amazon_vm = AmazonVm.new({
+            user_id: user.id,
+            experiment_id: experiment_id,
+            created_at: Time.now,
+            time_limit: additional_params[:time_limit],
+            vm_id: instance.instance_id,
+            instance_type: instance.instance_type,
+            sm_uuid: SecureRandom.uuid,
+            initialized: false,
+            start_at: additional_params['start_at']
+        })
+        amazon_vm.save
+      end
+    rescue Exception => e
+      return 'error', I18n.t('amazon.start_sm.errors.could_not_create_vms')
     end
 
     return 'ok', "You have scheduled #{scheduled_instances.size} virtual machines on Amazon EC2!"

@@ -144,14 +144,10 @@
 
 :javascript
   $(function() {
-    //if(#{ amazon_secrets_creds.nil? } || #{ amazon_ami_creds.nil? }) {
-    //  $('#plgrid-submission-tab form').addClass('disabled');
-    //  $('#plgrid-login-tab').addClass('active');
-    //}
-    //else {
-    //  $('#plgrid-submission-tab').addClass('active');
-    //}
-    new window.AmazonManager('#extension-dialog');
+    new window.InformationDialog('amazon-credentials-panel',
+                                 'amazon-submission-panel',
+                                 '#extension-dialog',
+                                 '.amazon-credentials-busy');
 
     $('p').each(function(index, element) {
       if($(element).html() == "") {

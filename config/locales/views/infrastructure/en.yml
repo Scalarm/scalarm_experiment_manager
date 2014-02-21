@@ -32,3 +32,11 @@ en:
         parameters_per_row: "Values in each row"
     adapter_destroyed: "The selected adapter has been removed"
   new_adapter_added: "New adapter has been added."
+  amazon:
+    login:
+      wrong_image_id: "Illegal image id"
+    start_sm:
+      errors:
+        no_secrets: "You have to provide Amazon secrets first!"
+        no_ami: "You have to provide Amazon AMI information first!"
+        could_not_create_vms: "Exception occured during creating virtual machines"

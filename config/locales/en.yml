@@ -177,10 +177,9 @@ en:
     login:
       ok: Your credentials have been updated
 
-#  amazon:
-#    login:
-#      ok:
-#      error:
+  amazon:
+    login:
+      ok: Your credentials have been updated
 
 
   charts:

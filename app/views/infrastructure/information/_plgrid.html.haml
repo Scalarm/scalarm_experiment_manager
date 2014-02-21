@@ -98,12 +98,8 @@
 
 :javascript
   $(function() {
-    if(#{ credentials.nil? }) {
-      $('#plgrid-submission-tab form').addClass('disabled');
-      $('#plgrid-login-form-panel').addClass('active');
-    } else {
-      $('#plgrid-submission-tab').addClass('active');
-    }
-
-    new window.PLGridManager('#extension-dialog');
+    new window.InformationDialog('plgrid-login-form-panel',
+                                 'plgrid-submission-panel',
+                                 '#extension-dialog',
+                                 '#plgrid-configure-busy');
   });

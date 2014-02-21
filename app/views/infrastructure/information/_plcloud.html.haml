@@ -140,7 +140,11 @@
 
 :javascript
   $(function() {
-    new window.PLCloudManager('#extension-dialog');
+    new window.InformationDialog('plcloud-credentials',
+                                 'plcloud-submission-panel',
+                                 '#extension-dialog',
+                                 '.plcloud-credentials-busy');
+
 
     $('p').each(function(index, element) {
       if($(element).html() == "") {
