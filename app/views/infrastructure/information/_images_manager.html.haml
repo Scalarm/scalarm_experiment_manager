@@ -29,9 +29,12 @@
                     = label_tag :image_id, t('.image_id') + ':', class: 'inline right'
                   .small-4.columns{id: "#select-#{cloud_name}"}
                     - unless secrets.nil?
-                      - imgs_info = CloudFactory.client_class(cloud_name).new(secrets).all_images_info
-                      - select_hash = Hash[imgs_info.map{|id, info| ["#{id} (#{info})", id]}]
-                      = select_tag :image_id, options_for_select(select_hash)
+                      - begin
+                        - imgs_info = CloudFactory.client_class(cloud_name).new(secrets).all_images_info
+                        - select_hash = Hash[imgs_info.map{|id, info| ["#{id} (#{info})", id]}]
+                        = select_tag :image_id, options_for_select(select_hash)
+                      - rescue # image ids cannot be fetched - wrong credentials?
+                        = text_field_tag :image_id, ''
                     - else
                       = text_field_tag :image_id, ''
                   .small-4.columns
