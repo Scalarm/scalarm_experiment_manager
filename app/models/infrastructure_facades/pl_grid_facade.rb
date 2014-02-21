@@ -43,9 +43,12 @@ class PLGridFacade < InfrastructureFacade
               scheduler = create_scheduler_facade(job.scheduler_type)
               ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
               experiment = Experiment.find_by_id(job.experiment_id)
+
+              all, sent, done = experiment.get_statistics unless experiment.nil?
+
               Rails.logger.info("Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}")
 
-              if experiment.nil? or not experiment.is_running
+              if experiment.nil? or (not experiment.is_running) or (all == done)
                 Rails.logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
                 destroy_and_clean_after(job, scheduler, ssh)
 

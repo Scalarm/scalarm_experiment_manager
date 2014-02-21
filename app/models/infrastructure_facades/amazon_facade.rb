@@ -39,6 +39,7 @@ class AmazonFacade < InfrastructureFacade
             Rails.logger.info("[vm #{amazon_vm.vm_id}] checking")
             vm_instance = ec2.instances[amazon_vm.vm_id]
             experiment = Experiment.find_by_id(amazon_vm.experiment_id)
+            all, sent, done = experiment.get_statistics unless experiment.nil?
 
             if [:stopped, :terminated].include?(vm_instance.status)
               Rails.logger.info("[vm #{amazon_vm.vm_id}] This VM is going to be removed from our db as it is terminated")
@@ -57,6 +58,11 @@ class AmazonFacade < InfrastructureFacade
             elsif (vm_instance.status == :pending) and (amazon_vm.created_at + 10.minutes < Time.now)
               Rails.logger.info("[vm #{amazon_vm.vm_id}] This VM will be restarted due to not being run for more then 10 minutes")
               vm_instance.reboot
+
+            elsif experiment.nil? or (not experiment.is_running) or (all == done)
+              Rails.logger.info("[vm #{amazon_vm.vm_id}] This VM is going to be destroyed as there is no simulation left")
+              vm_instance.terminate
+
             end
 
           end
