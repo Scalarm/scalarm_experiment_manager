@@ -47,6 +47,7 @@ class PLCloudFacade < InfrastructureFacade
             vm_instance = plc_client.vm_instance(plc_vm.vm_id)
 
             experiment = Experiment.find_by_id(plc_vm.experiment_id)
+            all, sent, done = experiment.get_statistics unless experiment.nil?
 
             if %w(stop fail).include?(vm_instance.short_vm_state) or (not vm_instance.exists?)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM is going to be removed from our db as it is terminated")
@@ -65,6 +66,10 @@ class PLCloudFacade < InfrastructureFacade
             elsif (vm_instance.short_vm_state == 'pend') and (plc_vm.created_at + 10.minutes < Time.now)
               Rails.logger.info("[vm #{plc_vm.vm_id}] This VM will be restarted due to not being run for more then 10 minutes")
               vm_instance.reboot
+
+            elsif experiment.nil? or (experiment.is_running == false) or (all == done)
+              Rails.logger.info("[vm #{plc_vm.vm_id}] This VM will be destroy due to experiment finishing")
+              vm_instance.delete
             end
           end
         end
