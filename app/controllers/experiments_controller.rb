@@ -1,10 +1,11 @@
 require 'zip'
 require 'infrastructure_facades/infrastructure_facade'
+require 'csv'
 
 
 class ExperimentsController < ApplicationController
-
   before_filter :load_experiment, except: [:index]
+  before_filter :load_simulation, only: [ :start_experiment, :start_import_based_experiment ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -14,9 +15,12 @@ class ExperimentsController < ApplicationController
 
   def show
     config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    information_service = InformationService.new(config['information_service_url'], config['information_service_user'], config['information_service_pass'])
+    information_service = InformationService.new(config['information_service_url'], 
+                                                 config['information_service_user'], 
+                                                 config['information_service_pass'])
 
-    @storage_manager_url = information_service.get_list_of('storage').sample
+    @storage_manager_url = information_service.get_list_of('storage')
+    @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
 
     @error_flag = false
 
@@ -81,39 +85,47 @@ class ExperimentsController < ApplicationController
     redirect_to action: :index
   end
 
+# TODO reimplement to have everything in the experiment object
   def file_with_configurations
     file_path = "/tmp/configurations_#{@experiment.id}.txt"
+
     File.delete(file_path) if File.exist?(file_path)
 
     File.open(file_path, 'w') do |file|
       file.puts(@experiment.create_result_csv)
     end
-
+    
     send_file(file_path, type: 'text/plain')
+
+    # response.headers['Content-Type'] = 'text/event-stream'
+    # response.headers['Content-Disposition'] = 'attachment; filename="configurations_' + @experiment.id.to_s + '.csv"'
+
+    # moe_names = @experiment.moe_names
+    # response.stream.write("#{(@experiment.parameters.flatten + moe_names).join(',')}\n")
+
+    # @experiment.find_simulation_docs_by({ is_done: true }, { fields: { values: 1, result: 1, _id: 0 } }).each do |simulation_doc| 
+    #   values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+    #   moe_values = moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
+    #   response.stream.write("#{(values + moe_values).join(',')}\n")
+    # end
+
+    # response.stream.close
   end
 
   def start_experiment
-    @simulation = if params['simulation_id']
-                    Simulation.find_by_id params['simulation_id']
-                  elsif params['simulation_name']
-                    Simulation.find_by_name params['simulation_name']
-                  else
-                    nil
-                  end
-
     doe_info = if params['doe'].blank?
                  []
                else
                  JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
                end
 
-    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
+    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
     # prepare scenario parametrization in the old fashion
     @scenario_parametrization = {}
     @experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          parameter_uid = DataFarmingExperiment.parameter_uid(entity_group, entity, parameter)
+          parameter_uid = Experiment.parameter_uid(entity_group, entity, parameter)
           @scenario_parametrization[parameter_uid] = parameter['parametrizationType']
         end
       end
@@ -123,36 +135,85 @@ class ExperimentsController < ApplicationController
     experiment_description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
 
     # create the new type of experiment object
-    data_farming_experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
-                                                         'experiment_input' => @experiment_input,
-                                                         'name' => experiment_name,
-                                                         'description' => experiment_description,
-                                                         'is_running' => true,
-                                                         'run_counter' => params[:run_index].to_i,
-                                                         'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
-                                                         'doe_info' => doe_info,
-                                                         'start_at' => Time.now,
-                                                         'user_id' => @current_user.id,
-                                                         'scheduling_policy' => 'monte_carlo'
-                                                        })
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
+                                 'experiment_input' => @experiment_input,
+                                 'name' => experiment_name,
+                                 'description' => experiment_description,
+                                 'is_running' => true,
+                                 'run_counter' => params[:run_index].to_i,
+                                 'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
+                                 'doe_info' => doe_info,
+                                 'start_at' => Time.now,
+                                 'user_id' => @current_user.id,
+                                 'scheduling_policy' => 'monte_carlo'
+                                })
 
-    data_farming_experiment.user_id = @current_user.id unless @current_user.nil?
-    data_farming_experiment.labels = data_farming_experiment.parameters.flatten.join(',')
-    data_farming_experiment.save
-    data_farming_experiment.experiment_id = data_farming_experiment.id
-    data_farming_experiment.save
+    experiment.user_id = @current_user.id unless @current_user.nil?
+    experiment.labels = experiment.parameters.flatten.join(',')
+    experiment.save
+    experiment.experiment_id = experiment.id
+    experiment.save
     # create progress bar
-    data_farming_experiment.insert_initial_bar
-    data_farming_experiment.create_simulation_table
+    experiment.insert_initial_bar
+    experiment.create_simulation_table
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
       computing_power = JSON.parse(params[:computing_power])
-      InfrastructureFacade.schedule_simulation_managers(@current_user, data_farming_experiment.id, computing_power['type'], computing_power['resource_counter'])
+      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, computing_power['type'], computing_power['resource_counter'])
     end
 
     respond_to do |format|
-      format.html { redirect_to experiment_path(data_farming_experiment.id) }
-      format.json { render :json => {status: 'ok', experiment_id: data_farming_experiment.id} }
+      format.html { redirect_to experiment_path(experiment.id) }
+      format.json { render json: { status: 'ok', experiment_id: experiment.id } }
+    end
+  end
+
+  def start_import_based_experiment
+    parameters_to_include = params.keys.select{ |parameter|
+      parameter.start_with?('param_') and params[parameter] == '1'
+    }.map{ |parameter| parameter.split('param_').last }
+
+    importer = ExperimentCsvImporter.new(params[:parameter_space_file].read, parameters_to_include)
+
+    are_csv_parameters_not_valid = importer.parameters.any? do |param_uid| 
+      not @simulation.input_parameters.include?(param_uid)
+    end
+
+    if are_csv_parameters_not_valid
+      flash[:error] = t('experiments.import.csv_parameters_not_valid')
+
+      respond_to do |format|
+        format.html { redirect_to simulations_path }
+        format.json { render json: { status: 'error', msg: flash[:error] } }
+      end      
+    else
+      # create the new type of experiment object
+      experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+                                    'is_running' => true,
+                                    'run_counter' => params[:run_index].to_i,
+                                    'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
+                                    'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
+                                    'start_at' => Time.now,
+                                    'user_id' => @current_user.id,
+                                    'scheduling_policy' => 'monte_carlo'
+                                  })
+      experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+      experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+      experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+
+      experiment.user_id = @current_user.id unless @current_user.nil?
+      experiment.labels = experiment.parameters.flatten.join(',')
+      experiment.save
+      experiment.experiment_id = experiment.id
+      experiment.save
+      # create progress bar
+      experiment.insert_initial_bar
+      experiment.create_simulation_table
+
+      respond_to do |format|
+        format.html { redirect_to experiment_path(experiment.id) }
+        format.json { render :json => {status: 'ok', experiment_id: experiment.id} }
+      end
     end
   end
 
@@ -170,20 +231,30 @@ class ExperimentsController < ApplicationController
                else
                  JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
                end
-    @experiment_input = DataFarmingExperiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
+    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
-    experiment = DataFarmingExperiment.new({'simulation_id' => @simulation.id,
-                                            'experiment_input' => @experiment_input,
-                                            'run_counter' => params[:run_index].to_i,
-                                            'name' => @simulation.name,
-                                            'doe_info' => doe_info
-                                           })
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
+                                 'experiment_input' => @experiment_input,
+                                 'run_counter' => params[:run_index].to_i,
+                                 'name' => @simulation.name,
+                                 'doe_info' => doe_info
+                                })
 
     experiment_size = experiment.experiment_size(true)
     Rails.logger.debug("Experiment size is #{experiment_size}")
 
-    render :json => {experiment_size: experiment_size}
+    render json: { experiment_size: experiment_size }
+  end
+
+  def calculate_imported_experiment_size
+    parameters_to_include = params.keys.select{ |parameter|
+      parameter.start_with?('param_') and params[parameter] == '1'
+    }.map{ |parameter| parameter.split('param_').last }
+
+    importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
+
+    render json: { experiment_size: importer.parameter_values.size }
   end
 
   ### Progress monitoring API
@@ -203,7 +274,7 @@ class ExperimentsController < ApplicationController
     end
 
     stats = {
-        all: sims_generated, sent: sims_sent, done_num: sims_done,
+        all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
         done_percentage: "'%.2f'" % ((sims_done.to_f / @experiment.experiment_size) * 100),
         generated: [sims_generated, @experiment.experiment_size].min,
         progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
@@ -240,7 +311,7 @@ class ExperimentsController < ApplicationController
     moes_info = {}
 
     moes = @experiment.result_names
-    moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map { |x| [DataFarmingExperiment.output_parameter_label_for(x), x] }
+    moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map { |x| [Experiment.output_parameter_label_for(x), x] }
 
     done_instance = @experiment.find_simulation_docs_by({'is_done' => true}, {limit: 1, fields: %w(arguments)}).first
 
@@ -340,6 +411,14 @@ class ExperimentsController < ApplicationController
                       end
 
       results = results.map{ |simulation|
+        unless simulation.include?('sent_at') and simulation.include?('id') and simulation.include?('values')
+          next
+        end
+
+        if (params[:simulations] == 'completed') and (not simulation.include?('done_at'))
+          next
+        end
+
         split_values = simulation['values'].split(',')
         modified_values = @experiment.range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
         time_column = if params[:simulations] == 'running'
@@ -483,12 +562,12 @@ class ExperimentsController < ApplicationController
   def load_experiment
     #Rails.logger.debug("Loading experiment --- #{params.include?('id')} --- #{@current_user.nil?}")
     if params.include?('id') and not @current_user.nil?
-      @experiment = DataFarmingExperiment.find_by_query({'user_id' => @current_user.id, '_id' => BSON::ObjectId(params['id'])})
+      @experiment = Experiment.find_by_query({'user_id' => @current_user.id, '_id' => BSON::ObjectId(params['id'])})
 
       if @experiment.nil?
         flash[:error] = "Experiment '#{params['id']}' for user '#{@current_user.login}' not found"
 
-        redirect action: :index
+        redirect_to action: :index
       end
 
     elsif (not @sm_user.nil?)
@@ -498,7 +577,7 @@ class ExperimentsController < ApplicationController
 
         render json: { status: 'error', reason: error_msg }, status: 403
       else
-        @experiment = DataFarmingExperiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
+        @experiment = Experiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
 
         if @experiment.nil?
           error_msg = t('experiment_not_found', experiment_id: params['id'], user: @sm_user.sm_uuid)
@@ -509,5 +588,15 @@ class ExperimentsController < ApplicationController
       end
     end
   end
+
+  def load_simulation
+    @simulation = if params['simulation_id']
+                    Simulation.find_by_id params['simulation_id']
+                  elsif params['simulation_name']
+                    Simulation.find_by_name params['simulation_name']
+                  else
+                    nil
+                  end
+  end   
 
 end

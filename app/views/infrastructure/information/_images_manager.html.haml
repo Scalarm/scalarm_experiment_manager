@@ -68,17 +68,21 @@
               %th= t('.actions')
             %tbody
               - CloudImageSecrets.find_all_by_user_id(user.id).each do |image|
-                %tr{id: "#{image.cloud_name}-#{image.image_id}"}
+                - row_id = "info-row-#{image.cloud_name}-#{image.image_id}"
+                %tr{id: "#{row_id}"}
                   %td= CloudFactory.client_class(image.cloud_name).full_name
                   %td= image.image_id
                   %td= image.image_login
                   %td
                     = button_to t('.remove'), remove_image_infrastructure_path(image_secrets_id: image.id), class: "remove-button button radius tiny", remote: true
-                    -#= image_tag 'loading.gif', class: 'images_manager-busy', style: 'display: none;'
+                    = image_tag 'loading.gif', class: "#{image.cloud_name}-#{image.image_id}-busy", style: 'display: none;'
 
 :javascript
   $(function() {
-    new window.ImagesManager('#extension-dialog');
+    new window.ImagesManagerDialog('image-submission-panel',
+                                 '#cloud-select',
+                                 '#extension-dialog',
+                                 '.image-submission-busy');
 
     $('p').each(function(index, element) {
       if($(element).html() == "") {

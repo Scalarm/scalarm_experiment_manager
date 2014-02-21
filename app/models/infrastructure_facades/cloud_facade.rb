@@ -20,7 +20,8 @@ class CloudFacade < InfrastructureFacade
 
   def cloud_client_instance(user_id)
     cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
-    cloud_secrets and cloud_client = @client_class.new(cloud_secrets) or nil
+    cloud_client = @client_class.new(cloud_secrets) if cloud_secrets
+    cloud_secrets and cloud_client or nil
   end
 
   # implements InfrastructureFacade
@@ -47,7 +48,7 @@ class CloudFacade < InfrastructureFacade
 
       I18n.t('infrastructure_facades.cloud.current_state_count', count: num.to_s)
     rescue Exception => ex
-      Rails.logger.error(log_format "current state exception:\n#{ex.backtrace}")
+      Rails.logger.error(log_format "current state exception:\n#{ex.backtrace.join("\n")}")
       I18n.t('infrastructure_facades.cloud.current_state_exception', exception: ex.to_s)
     end
   end

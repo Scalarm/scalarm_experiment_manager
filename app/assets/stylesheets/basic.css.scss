@@ -12,7 +12,7 @@ padding: 0;
   position: relative;
   max-width: 960px;
   background: url(image_path('bg03.jpg')) repeat;
-  margin-top: 25px;
+  margin-top: 40px;
   margin-right: auto;
   margin-left: auto;
   margin-bottom: 5px;
@@ -56,10 +56,18 @@ header {
 }
 
 footer {
-    padding: 0 20px;
-    color: #333;
-    clear: both;
-    margin: 40px 10px 0 10px;
+  padding: 0 20px;
+  clear: both;
+  margin: 10px 10px 0 10px;
+  background: url(image_path('bg03.jpg')) repeat;
+  max-width: 960px;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 5px;
+  /* curved border radius */
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
 }
 
 /* basics */
@@ -608,9 +616,12 @@ select {
 }
 
 article#experiment_stats {
-  position: relative;
-  min-height: 210px;
+  position: relative;  
   font-size: 15px;
+
+  .content {
+    min-height: 150px;
+  }
 
   .row {
     margin-bottom: 10px;
@@ -733,10 +744,8 @@ article#experiment_stats {
     -o-box-shadow:#555 2px 2px 8px;
     box-shadow:#555 2px 2px 8px;
     opacity:0.9;
-    filter:alpha(opacity=90);
+    filter: alpha(opacity=90);
     font-size:10px;
-    //font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
-//    font-family: 'Ubuntu', sans-serif;
     padding:7px;
 }
 
@@ -747,4 +756,23 @@ article#experiment_stats {
 
 .last-element {
   margin-bottom: 0px;
+}
+
+.action-button {
+  padding-left: 0px;
+}
+
+table.simulations {
+  table-layout: fixed;
+  width: 100%;
+
+  td {
+    width: 20%;
+    word-wrap: break-word;
+    text-align: center;
+  }
+
+  td.actions {
+    text-align: center;
+  }
 }

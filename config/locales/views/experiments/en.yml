@@ -1,6 +1,8 @@
 en:
   experiments:
-    show:
+    click_to_expand: "(click to expand)"
+
+    information_panel:
       experiment_info_title: Experiment information
       experiment_name: Name
       experiment_description: Description
@@ -14,3 +16,4 @@ en:
       histograms: "Histograms"
       regression_trees: Regression trees
       scatter_plots: Scatter plots
+

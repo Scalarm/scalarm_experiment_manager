@@ -1,31 +1,34 @@
-%section#main
-  .row.large-5.large-centered.columns
-    .panel.radius
-      = form_tag user_controller_change_password_path do
-        .row
-          .large-6.columns
-            %label.right.inline Login:
-          .large-6.columns
-            %span.inline= @current_user.login
+%section#main.panel.radius
+  .row.small-12.small-centered.columns
+    = form_tag user_controller_change_password_path do
+      .row
+        .small-5.columns
+          %label.right.inline= t('.login')
+        .small-5.columns(style="line-height: 31px; vertical-align: middle;font-size: larger;" )
+          %span.inline= @current_user.login
+        .small-1.columns
 
-        .row
-          .large-6.columns
-            %label.right.inline Certificate DN:
-          .large-6.columns
-            %span.inline= @current_user.dn
+      .row
+        .small-5.columns
+          %label.right.inline= t('.certificate')
+        .small-4.columns(style="line-height: 31px; vertical-align: middle;font-size: larger;" )
+          %span.inline= @current_user.dn || t('.empty_dn')
+        .small-1.columns
 
-        .row
-          .large-6.columns
-            %label.right.inline Password:
-          .large-6.columns
-            = password_field_tag 'password', '', class: 'inline'
+      .row
+        .small-5.columns
+          %label.right.inline(for='password')= t('.password')
+        .small-4.columns
+          = password_field_tag 'password', '', class: 'inline'
+        .small-1.columns
 
-        .row
-          .large-6.columns
-            %label.right.inline Repeat password:
-          .large-6.columns
-            = password_field_tag 'password_repeat', '', class: 'inline'
+      .row
+        .small-5.columns
+          %label.right.inline(for='password_repeat')= t('.repeat_password')
+        .small-4.columns
+          = password_field_tag 'password_repeat', '', class: 'inline'
+        .small-1.columns
 
-        .row
-          .large-6.large-centered.columns
-            = submit_tag 'Change password', class: 'button'
+      .row
+        .small-6.small-centered.columns(style="text-align:center;")
+          = submit_tag t('.change_password'), class: 'button radius'

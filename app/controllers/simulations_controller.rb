@@ -1,3 +1,4 @@
+require 'json'
 require 'simulation'
 
 class SimulationsController < ApplicationController
@@ -34,6 +35,8 @@ class SimulationsController < ApplicationController
       progress_monitor.save
     end
 
+    flash[:notice] = t('new_adapter_added')
+
     redirect_to :action => :index
   end
 
@@ -48,27 +51,38 @@ class SimulationsController < ApplicationController
       SimulationProgressMonitor.find_by_id(params['component_id']).destroy
     end
 
+    flash[:notice] = t('simulations.adapter_destroyed')
+
     redirect_to :action => :index
   end
 
   def upload_simulation
     simulation = Simulation.new({
-        'input_writer_id' => params['input_writer_id'],
-        'executor_id' => params['executor_id'],
-        'output_reader_id' => params['output_reader_id'],
-        'name' => params['simulation_name'],
-        'description' => params['simulation_description'],
-        'input_specification' => params['simulation_input'].read,
-        'user_id' => @current_user.id,
-        'created_at' => Time.now
-                   })
+      'name' => params['simulation_name'],
+      'description' => params['simulation_description'],
+      'input_specification' => params['simulation_input'].read,
+      'user_id' => @current_user.id,
+      'created_at' => Time.now
+    })
 
-    simulation.progress_monitor_id = params['progress_monitor_id'] if params['progress_monitor_id']
-    simulation.set_simulation_binaries(params['simulation_binaries'].original_filename, params['simulation_binaries'].read)
+    begin
+      set_up_adapter('input_writer', simulation, false)
+      set_up_adapter('executor', simulation, false)
+      set_up_adapter('output_reader', simulation, false)
 
-    simulation.save
+      set_up_adapter('progress_monitor', simulation, false)
 
-    redirect_to :action => :index
+      simulation.set_simulation_binaries(params['simulation_binaries'].original_filename, params['simulation_binaries'].read)
+
+      simulation.save
+    rescue Exception => e
+      Rails.logger.error("Exception occurred: #{e}")
+    end
+
+    respond_to do |format|
+      format.json { render json: { status: (flash[:error].nil? ? 'ok' : 'error'), simulation_id: simulation.id.to_s } }
+      format.html { redirect_to :action => :index }
+    end
   end
 
   def destroy_simulation
@@ -77,14 +91,11 @@ class SimulationsController < ApplicationController
   end
 
   # following methods are used in experiment conducting
-  require 'json'
 
   def conduct_experiment
     @simulation = Simulation.find_by_id(params[:simulation_id])
     @simulation_input = JSON.parse(@simulation.input_specification)
   end
-
-
 
   # a life-cycle of a single simulation
 
@@ -146,13 +157,69 @@ class SimulationsController < ApplicationController
     render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
 
+  require 'csv'
+  def upload_parameter_space
+    i = 0
+    parameters = { values: [] }
+    CSV.parse(params[:file_content]) do |row|
+      Rails.logger.debug("row: #{row}")
+      if i == 0
+        parameters[:columns] = row
+      elsif i == 1
+        row.each_with_index do |token, index|
+          begin
+            if JSON.parse(token).kind_of?(Array)
+              parameters[:values] << 'Multiple values'
+            else
+              parameters[:values] << 'Single value'
+            end
+          rescue Exception => e
+            parameters[:values] << 'Single value'
+          end
+        end
+      end
+      i += 1
+    end
+
+    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation_parameters = @simulation.input_parameters
+
+    render json: { status: 'ok', columns: render_to_string(partial: 'simulations/import/parameter_selection_table', object: parameters) }
+  end
+
   private
 
   def load_simulation
-    @experiment = DataFarmingExperiment.find_by_id(params[:experiment_id])
+    @experiment = Experiment.find_by_id(params[:experiment_id])
     #Rails.logger.debug("Experiment: #{@experiment}")
     @simulation = @experiment.find_simulation_docs_by({id: params[:id].to_i}, {limit: 1}).first
     #Rails.logger.debug("Simulation: #{@simulation}")
+  end
+
+  def set_up_adapter(adapter_type, simulation, mandatory = true)
+
+    if params.include?(adapter_type + '_id')
+      adapter_id = params[adapter_type + '_id']
+      adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
+
+      if not adapter.nil? and adapter.user_id == @current_user.id
+        simulation.send(adapter_type + '_id=', adapter.id)
+      else
+        flash[:error] = "Cannot find Simulation#{adapter_type.camelize} with the #{adapter_id} id"
+        raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory") if mandatory
+      end
+
+    elsif params.include?(adapter_type)
+      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({name: params[adapter_type].original_filename,
+                                           code: params[adapter_type].read,
+                                           user_id: @current_user.id})
+      adapter.save
+      Rails.logger.debug(adapter)
+      simulation.send(adapter_type + '_id=', adapter.id)
+    else
+      #raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory") if mandatory
+    end
+
   end
 
 end

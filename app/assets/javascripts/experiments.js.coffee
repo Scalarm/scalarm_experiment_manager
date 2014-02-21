@@ -142,7 +142,10 @@ class window.ExperimentMonitor
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
 
   progress_bar_listener: (event) =>
-    x = event.x
+    if (window.event)
+      x = window.event.pageX
+    else
+      x = event.clientX
     canvas = $('#exp_progress_bar_2')
 
     x -= canvas.offset().left
@@ -211,7 +214,7 @@ class window.ExperimentMonitor
       $("#p_predicted_finish_time").show()
 
   generate_html: (parent_id) ->
-    $("#experiment_progress_bar").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
+    $("#experiment_progress_bar .content").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
 
     canvas = document.getElementById("exp_progress_bar_2")
     canvas.addEventListener('mousedown', @progress_bar_listener, false)

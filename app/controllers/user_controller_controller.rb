@@ -8,10 +8,10 @@ class UserControllerController < ApplicationController
   include GoogleOpenID
 
   def successful_login
-    unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
+    #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
       session[:intended_controller] = :experiments
       session[:intended_action] = :index
-    end
+    #end
 
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')

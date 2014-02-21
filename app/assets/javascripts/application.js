@@ -14,16 +14,33 @@
 //= require jquery_ujs
 //= require custom.modernizr
 //= require foundation
-//= require turbolinks
 //= require_tree .
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
 //= require highcharts/modules/exporting
 //= require jquery.dataTables.min
 //= require jit-yc
+//= require i18n
+//= require i18n/translations
+//= require toastr
 
 
 $(function(){ $(document).foundation(); });
+
+toastr.options = {
+  "closeButton": false,
+  "debug": false,
+  "positionClass": "toast-top-full-width",
+  "onclick": null,
+  "showDuration": "3000",
+  "hideDuration": "1000",
+  "timeOut": "5000",
+  "extendedTimeOut": "1000",
+  "showEasing": "swing",
+  "hideEasing": "linear",
+  "showMethod": "fadeIn",
+  "hideMethod": "fadeOut"
+}
 
 function string_with_delimeters() {
     var string_copy = this.split("").reverse().join("");

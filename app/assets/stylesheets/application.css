@@ -13,4 +13,5 @@
  *= require foundation_and_overrides
  *= require_tree .
  *= require jquery.dataTables
+ *= require toastr
  */

@@ -1,0 +1,9 @@
+en:
+  user_controller:
+    account:
+      login: "Login:"
+      certificate: "Certificate DN:"
+      password: "Password:"
+      repeat_password: "Repeat password:"
+      change_password: "Change password"
+      empty_dn: "<N/A>"

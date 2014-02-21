@@ -6,8 +6,8 @@ class ExperimentWatcher
     Thread.new do
       while true do
         Rails.logger.debug("[experiment_watcher] #{Time.now} --- running")
-        DataFarmingExperiment.get_running_experiments.each do |experiment|
-          Rails.logger.debug("Experiment: #{experiment}")
+        Experiment.get_running_experiments.each do |experiment|
+          #Rails.logger.debug("Experiment: #{experiment}")
           begin
             experiment.find_simulation_docs_by({is_done: false, to_sent: false}).each do |simulation|
               Rails.logger.debug("#{Time.now - simulation['sent_at']} ? #{experiment.time_constraint_in_sec * 2}")

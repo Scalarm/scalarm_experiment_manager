@@ -1,4 +1,3 @@
-require 'infrastructure_facades/clouds/cloud_factory'
 
 class InfrastructuresController < ApplicationController
 
@@ -49,7 +48,6 @@ class InfrastructuresController < ApplicationController
       msg = I18n.t('infrastructures_controller.image_not_found')
       render json: { status: 'error', msg: msg }
     end
-
   end
 
   # ============================ PRIVATE METHODS ============================

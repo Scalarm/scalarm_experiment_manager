@@ -1,46 +1,21 @@
+- content_for :title, 'Scalarm - monitoring'
+
 = render 'experiment_links'
 = render 'analysis_charts'
 
 %section.panel.radius
-  %h3.subheader= t('.experiment_info_title')
-
-  .row
-    .small-3.columns
-      %h5.subheader.right= t('.experiment_name') + ':'
-    .small-9.columns
-      %h5.subheader= @experiment.name
-  .row
-    .small-3.columns
-      %h5.subheader.right= t('.experiment_description') + ':'
-    .small-9.columns
-      %h5.subheader= @experiment.description
-
-
-  - if @experiment.simulation.nil?
-    %h4.subheader= t('simulations.conduct_experiment.empty_simulation')
-  - else
-    %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
-
-    .row
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
-      .small-9.columns
-        %h5.subheader= @experiment.simulation.name
-    .row
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
-      .small-9.columns
-        %h5.subheader= @experiment.simulation.description
+  = render 'information_panel'
 
 %section.panel.radius.last-element#monitoring_section
   = render 'monitoring_stats'
 
   %article#experiment_progress_bar
     %h3.subheader= t('.progress_bar_header')
+    .content
 
   = render 'monitoring_actions'
 
-%section.panel.radius.last-element(style="display: none; margin-top: 20px;" id="progressInformationWrapper")
+%section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 20px;")
   = render 'monitoring_table'
 
 = render 'scheduling_policy_dialog'
@@ -53,20 +28,7 @@
       new window.ExperimentSpeedometer('#{@experiment.id}').show();
 
       var monitor = new window.ExperimentMonitor('#{@experiment.id}');
-      monitor.generate_html('experiment_stats')
-
-
-
-
-      $('#progressButton').on('click', function() {
-        $('#progressInformationWrapper').slideToggle();
-        $('html, body').animate({ scrollTop: $('#progressInformationWrapper').offset().top }, 1000);
-        return false;
-      });
-
-      $('#schedulingButton').on('click', function() {
-        $('#scheduling_policy_dialog').foundation('reveal', 'open');
-        $('#scheduling-ajax-response').html('');
-        return false;
-      });
+      monitor.generate_html('experiment_stats');
+      
+      window.toggle_panels_on_title_click();
     });

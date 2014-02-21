@@ -1,31 +1,32 @@
 %article#experiment_stats
   %h3.subheader= t('experiments.show.stats_header')
 
-  .row
-    .small-3.columns
-      %strong ALL:
-    .small-9.columns
-      %span#exp_all_counter 0
+  .content
+    .row
+      .small-3.columns
+        %strong ALL:
+      .small-9.columns
+        %span#exp_all_counter 0
 
-  .row
-    .small-3.columns
-      %strong RUNNING:
-    .small-9.columns
-      %span#exp_sent_counter 0
+    .row
+      .small-3.columns
+        %strong RUNNING:
+      .small-9.columns
+        %span#exp_sent_counter 0
 
-  .row
-    .small-3.columns
-      %strong DONE:
-    .small-9.columns
-      %span#exp_done_counter 0
-      (
-      %span#exp_done_percentage_counter
-      \% COMPLETED )
+    .row
+      .small-3.columns
+        %strong DONE:
+      .small-9.columns
+        %span#exp_done_counter 0
+        (
+        %span#exp_done_percentage_counter
+        \% COMPLETED )
 
-  .row#avg_execution_time(style="display: none;")
-    .small-3.columns
-      %strong Average simulation execution time:
-    .small-9.columns
-      %span#execution_time_avg 0
+    .row#avg_execution_time(style="display: none;")
+      .small-3.columns
+        %strong Average simulation execution time:
+      .small-9.columns
+        %span#execution_time_avg 0
 
-  .speedometer{id: "speedometer_#{@experiment.id}"}
+    .speedometer{id: "speedometer_#{@experiment.id}"}

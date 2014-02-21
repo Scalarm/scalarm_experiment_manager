@@ -3,49 +3,33 @@
     %meta(charset="utf-8")
     %meta(name="viewport" content="width=device-width, initial-scale=1.0")
     = csrf_meta_tags
-
-    %tite
-      = content_for?(:title) ? yield(:title) : t('title')
-
+    %title Scalarm
     = stylesheet_link_tag 'application'
-    -#= javascript_include_tag 'vendor/modernizr'
-    = javascript_include_tag 'application'
+
   %body
     = render 'layouts/navbar'
 
     #wrapper
-      %header
-        .row
-          .large-8.columns
-            %h1
-              = content_for?(:title) ? yield(:title) : t('title')
-          .large-2.columns
-            = link_to image_tag('cyfronet_logo.png'), 'http://www.cyfronet.pl'
-          .large-2.columns
-            = link_to image_tag('eda_logo.png'), 'http://www.eda.europa.eu'
-      .clearall
-
-      .notice.alert-box.radius.success(style="display: none;")
-        = flash[:notice] if flash[:notice]
-      - content_for :javascript do
-        = javascript_tag("$('.notice').show();") if flash[:notice]
-
-      .error.alert-box.alert.radius(style="display: none;")
-        = flash[:error] if flash[:error]
-      - content_for :javascript do
-        = javascript_tag("$('.error').show();") if flash[:error]
-
       = yield
 
-    = content_for :javascript do
-      :javascript
-        $(function() {
-          if(#{not flash[:notice].nil?}) {
-            setTimeout("window.hide_notice()", 10000);
-          }
-          if(#{not flash[:error].nil?}) {
-            setTimeout("window.hide_error()", 20000);
-          }
-        });
+    %footer
+      .row
+        .small-8.columns
+          = raw t('copyright')
+        .small-2.columns
+          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 'http://www.cyfronet.pl'
+        .small-2.columns
+          = link_to image_tag('eda_logo.png', size: "64x64"), 'http://www.eda.europa.eu'
 
+
+    = javascript_include_tag 'application'
+    :javascript
+      $(function() {
+        if(#{not flash[:notice].nil?}) {
+          toastr['success']("#{flash[:notice]}");
+        }
+        if(#{not flash[:error].nil?}) {
+          toastr['error']("#{flash[:error]}");
+        }
+      });
     = yield :javascript
