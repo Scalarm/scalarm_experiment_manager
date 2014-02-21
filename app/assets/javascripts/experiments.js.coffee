@@ -142,7 +142,10 @@ class window.ExperimentMonitor
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
 
   progress_bar_listener: (event) =>
-    x = event.x
+    if (window.event)
+      x = window.event.pageX
+    else
+      x = event.clientX
     canvas = $('#exp_progress_bar_2')
 
     x -= canvas.offset().left
