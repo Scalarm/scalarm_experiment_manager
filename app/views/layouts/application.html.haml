@@ -10,17 +10,17 @@
     = render 'layouts/navbar'
 
     #wrapper
-      %header
-        .row
-          .large-8.columns
-            %h1
-              = content_for?(:title) ? yield(:title) : t('title')
-          .large-2.columns
-            = link_to image_tag('cyfronet_logo.png'), 'http://www.cyfronet.pl'
-          .large-2.columns
-            = link_to image_tag('eda_logo.png'), 'http://www.eda.europa.eu'
-
       = yield
+
+    %footer
+      .row
+        .small-8.columns
+          = raw t('copyright')
+        .small-2.columns
+          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 'http://www.cyfronet.pl'
+        .small-2.columns
+          = link_to image_tag('eda_logo.png', size: "64x64"), 'http://www.eda.europa.eu'
+
 
     = javascript_include_tag 'application'
     :javascript
