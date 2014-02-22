@@ -5,8 +5,7 @@ class window.ImagesManagerDialog
     @responseDialog = $(@responseDialog)
 
     @bindToAddImageForm()
-    # FIXME
-#    @bindToRemoveButton()
+    @bindToRemoveButtons()
 
     @cloudSelect.change(@cloudChanged)
     @cloudChanged()
@@ -29,13 +28,17 @@ class window.ImagesManagerDialog
     $("#image-id-row-#{cloudName} select").prop('disabled', false)
     $("#image-id-row-#{cloudName} input").prop('disabled', false)
 
-# FIXME
-#  bindToRemoveButton: =>
-#    $(".images form")# TODO: constructor arg
-#    .bind('ajax:before', => $("##{event.target.id}-busy").show())
-#    .bind('ajax:success', (data, status, xhr) =>
-#        toastr.success(status.msg)
-##        $("##{status.cloud_name}-#{status.image_id}").remove()
-#      )
-#    .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
-#    .bind('ajax:complete', () => $("##{event.target.id}-busy").hide())
+  bindToRemoveButtons: ->
+    $(".images tr[id]").each( ->
+      row_id = this['id']
+      row_loading = $(".#{row_id}-busy")
+      $("##{row_id} form")
+      .bind('ajax:before', => row_loading.show())
+      .bind('ajax:success', (data, status, xhr) =>
+          toastr.success(status.msg)
+          $("##{row_id}").remove()
+        )
+      .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
+      .bind('ajax:complete', () => row_loading.hide())
+    );
+

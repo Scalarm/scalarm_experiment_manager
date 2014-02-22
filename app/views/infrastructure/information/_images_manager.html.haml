@@ -70,12 +70,21 @@
               - CloudImageSecrets.find_all_by_user_id(user.id).each do |image|
                 - row_id = "info-row-#{image.cloud_name}-#{image.image_id}"
                 %tr{id: "#{row_id}"}
-                  %td= CloudFactory.client_class(image.cloud_name).full_name
-                  %td= image.image_id
-                  %td= image.image_login
                   %td
-                    = button_to t('.remove'), remove_image_infrastructure_path(image_secrets_id: image.id), class: "remove-button button radius tiny", remote: true
-                    = image_tag 'loading.gif', class: "#{image.cloud_name}-#{image.image_id}-busy", style: 'display: none;'
+                    .small-12.columns.text-center
+                      =CloudFactory.client_class(image.cloud_name).full_name
+                  %td
+                    .small-12.columns.text-center
+                      = image.image_id
+                  %td
+                    .small-12.columns.text-center
+                      = image.image_login
+                  %td
+                    .small-12.columns.text-center
+                      = button_to t('.remove'), remove_image_infrastructure_path(image_secrets_id: image.id), class: "remove-button button radius tiny", remote: true, form: { "data-type" => "json" }
+                  %td
+                    .small-12.columns.text-center
+                      = image_tag 'loading.gif', class: "#{row_id}-busy", size: '24x24', style: 'display: none;'
 
 :javascript
   $(function() {

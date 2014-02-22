@@ -41,7 +41,7 @@ class InfrastructuresController < ApplicationController
       image_id = img_secrets.image_id
 
       img_secrets.destroy
-      long_cloud_name = CloudFactory.client_class(cloud_name)
+      long_cloud_name = CloudFactory.client_class(cloud_name).full_name
       msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
       render json: { status: 'ok', msg: msg, cloud_name: cloud_name, image_id: image_id }
     else
