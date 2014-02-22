@@ -70,10 +70,6 @@ module PLCloud
       ''
     end
 
-    def all_image_ids
-      # TODO
-    end
-
   end
 
 end

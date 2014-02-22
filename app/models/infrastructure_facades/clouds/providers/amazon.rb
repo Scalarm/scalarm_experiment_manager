@@ -65,6 +65,7 @@ module AmazonCloud
       {ip: ec2_instance(id).public_dns_name, port: '22'}
     end
 
+    # TODO: translate or remove
     def vm_record_info(vm_record)
       "Type: #{instance_type}"
     end

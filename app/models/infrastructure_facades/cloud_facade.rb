@@ -20,8 +20,7 @@ class CloudFacade < InfrastructureFacade
 
   def cloud_client_instance(user_id)
     cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
-    cloud_client = @client_class.new(cloud_secrets) if cloud_secrets
-    cloud_secrets and cloud_client or nil
+    cloud_secrets ? @client_class.new(cloud_secrets) : nil
   end
 
   # implements InfrastructureFacade
@@ -41,7 +40,7 @@ class CloudFacade < InfrastructureFacade
     begin
       # select all vm ids that are recorded and belong to Cloud and User
       record_vm_ids = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-      vm_ids = cloud_client.all_vm_ids.map {|i| i} & record_vm_ids.map {|rec| rec.image_id}
+      vm_ids = cloud_client.all_vm_ids.map {|i| i} & record_vm_ids.map {|rec| rec.vm_id}
 
       # select all existing vm's
       num = ((vm_ids.map {|vm_id| cloud_client.vm_instance(vm_id)}).select {|vm| vm.exists? }).count
@@ -124,9 +123,16 @@ class CloudFacade < InfrastructureFacade
     return 'error', I18n.t('infrastructure_facades.cloud.provide_secrets', cloud_name: @short_name) if cloud_client.nil?
 
     exp_image = CloudImageSecrets.find_by_query('_id'=>BSON::ObjectId(additional_params['image_id']))
-    return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets') if exp_image.nil? or exp_image.image_id.nil?
-    return 'error', I18n.t('infrastructure_facades.cloud.image_permission') if exp_image.user_id != user.id
-    return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error') if exp_image.cloud_name != @short_name
+    if exp_image.nil? or exp_image.image_id.nil?
+      return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
+    elsif cloud_client.image_exists? exp_image.image_id
+      return 'error', I18n.t('infrastructure_facades.cloud.image_not_exists',
+                             image_id: exp_image.image_id, cloud_name: cloud_client.full_name)
+    elsif exp_image.user_id != user.id
+      return 'error', I18n.t('infrastructure_facades.cloud.image_permission')
+    elsif exp_image.cloud_name != @short_name
+      return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
+    end
 
     sched_instances = cloud_client.schedule_vm_instances("#{VM_NAME_PREFIX}#{experiment_id}", exp_image.image_id,
                                                     instances_count, additional_params).map { |vm_id| cloud_client.vm_instance(vm_id) }
