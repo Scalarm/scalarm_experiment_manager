@@ -269,9 +269,19 @@ class ExperimentsController < ApplicationController
     sims_generated, sims_sent, sims_done = @experiment.get_statistics
 
     if sims_generated > @experiment.experiment_size
-      @experiment.experiment_size = sims_generated
-      @experiment.save
+      Rails.logger.error("FATAL - too many simulations generated for experiment #{@experiment.inspect}")
+      sims_generated = @experiment.experiment_size
     end
+
+    if sims_done + sims_sent > @experiment.experiment_size
+      Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.inspect}")
+      sims_done = @experiment.experiment_size - sims_sent
+    end
+
+    #if sims_generated > @experiment.experiment_size
+    #  @experiment.experiment_size = sims_generated
+    #  @experiment.save
+    #end
 
     stats = {
         all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,

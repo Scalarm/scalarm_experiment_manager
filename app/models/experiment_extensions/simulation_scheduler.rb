@@ -62,10 +62,13 @@ module SimulationScheduler
   # scheduling policy methods: monte_carlo, sequential_forward, sequential_backward
   def monte_carlo_scheduling
     simulation_id = next_simulation_id_with_seek
-    return create_new_simulation(simulation_id) if not simulation_id.nil?
+    if (not simulation_id.nil?) and simulation_id > 0 and simulation_id <= experiment_size
+      return create_new_simulation(simulation_id)
+    end
+
 
     simulation = simulation_hash_to_sent
-    if not simulation.nil?
+    if (not simulation.nil?) and simulation['id'] > 0 and simulation['id'] <= experiment_size
       simulation['to_sent'] = false
       self.save_simulation(simulation)
 
@@ -74,7 +77,11 @@ module SimulationScheduler
 
     simulation_id = naive_partition_based_simulation_hash
 
-    return simulation_id.nil? ? nil : create_new_simulation(simulation_id)
+    if (not simulation_id.nil?) and simulation_id > 0 and simulation_id <= experiment_size
+      create_new_simulation(simulation_id)
+    else
+      nil
+    end
   end
 
   def next_simulation_id_with_seek
