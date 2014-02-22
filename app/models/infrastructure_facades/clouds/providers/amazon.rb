@@ -32,7 +32,7 @@ module AmazonCloud
                                   :count => number,
                                   :instance_type => params[:instance_type],
                                   :security_groups => [ params[:security_group] ])
-      instances = [instances] if instances.kind_of?(Array)
+      instances = [instances] unless instances.kind_of?(Array)
       instances.map &:id
     end
 

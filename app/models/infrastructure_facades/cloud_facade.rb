@@ -76,8 +76,8 @@ class CloudFacade < InfrastructureFacade
 
             vm_instance = client.vm_instance(vm_id)
 
-
-            experiment = DataFarmingExperiment.find_by_id(vm_record.experiment_id)
+            experiment = Experiment.find_by_id(vm_record.experiment_id)
+            all, sent, done = experiment.get_statistics unless experiment.nil?
 
             if (not vm_instance.exists?) or [:deactivated, :error].include?(vm_instance.status)
               Rails.logger.info(log_format 'This VM is going to be removed from our db as it is terminated', vm_id)
@@ -85,8 +85,8 @@ class CloudFacade < InfrastructureFacade
               temp_pass.destroy unless temp_pass.nil?
               vm_record.destroy unless vm_record.nil?
 
-            elsif (vm_record.time_limit_exceeded?) or experiment.nil? or (not experiment.is_running)
-              Rails.logger.info(log_format 'This VM is going to be destroyed as it is done or should be done', vm_id)
+            elsif vm_record.time_limit_exceeded?
+              Rails.logger.info(log_format 'This VM is going to be destroyed due to time limit', vm_id)
               vm_instance.terminate
 
             elsif (vm_instance.status == :running) and (not vm_record.sm_initialized)
@@ -99,12 +99,17 @@ class CloudFacade < InfrastructureFacade
               vm_instance.reinitialize
               vm_record.created_at = Time.now
               vm_record.save
+
+            elsif experiment.nil? or (experiment.is_running == false) or (all == done)
+              Rails.logger.info(log_format 'This VM will be destroy due to experiment finishing', vm_id)
+              vm_instance.terminate
+
             end
 
           end
         end
       rescue Exception => e
-        Rails.logger.info(log_format "Monitoring exception:\n#{e.backtrace}")
+        Rails.logger.info(log_format "Monitoring exception:\n#{e.backtrace.join("\n")}")
       end
       sleep(PROBE_TIME)
     end
@@ -136,7 +141,7 @@ class CloudFacade < InfrastructureFacade
                                  time_limit: additional_params['time_limit'],
                                  vm_id: vm_instance.vm_id,
                                  sm_uuid: SecureRandom.uuid,
-                                 initialized: false,
+                                 sm_initialized: false,
                                  start_at: additional_params['start_at'],
                              })
       vm_record.save
