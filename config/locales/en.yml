@@ -132,7 +132,7 @@ en:
       component_header: "%{component} registration"
 
     conduct_experiment:
-      title: Conduct an experiment
+      title: Scalarm - prepare new experiment
       empty_simulation: Simulation for this experiment is unavailable
       simulation_overview_header: Simulation information
 

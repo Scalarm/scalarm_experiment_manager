@@ -1237,11 +1237,11 @@ $side-nav-divider-color: rgb(217, 217, 217); // darken(#fff, 10%);
 
 // Background color for the top bar
 
-$topbar-bg: image-url('bg03.jpg');
+//$topbar-bg: image-url('bg03.jpg');
 
 // Height and margin
 
-$topbar-height: 35px;
+//$topbar-height: 35px;
 // $topbar-margin-bottom: emCalc(30);
 
 // Control Input height for top bar
@@ -1259,12 +1259,12 @@ $topbar-height: 35px;
 //$topbar-dropdown-link-color: black;
 // $topbar-dropdown-link-bg: lighten($topbar-bg, 5%);
 // $topbar-dropdown-toggle-size: 5px;
-$topbar-dropdown-toggle-color: black;
+//$topbar-dropdown-toggle-color: black;
 // $topbar-dropdown-toggle-alpha: 0.5;
 
 // Set the link colors and styles for top-level nav
 
-$topbar-link-color: black;
+//$topbar-link-color: black;
 // $topbar-link-color-hover: #fff;
 // $topbar-link-color-active: #fff;
 // $topbar-link-weight: bold;
