@@ -9,12 +9,10 @@ class ExperimentWatcher
         Experiment.get_running_experiments.each do |experiment|
           #Rails.logger.debug("Experiment: #{experiment}")
           begin
-            experiment.find_simulation_docs_by({is_done: false, to_sent: false}).each do |simulation|
-              Rails.logger.debug("#{Time.now - simulation['sent_at']} ? #{experiment.time_constraint_in_sec * 2}")
-              if Time.now - simulation['sent_at'] >= experiment.time_constraint_in_sec * 2
-                simulation['to_sent'] = true
-                experiment.progress_bar_update(simulation['id'], 'rollback')
-                experiment.save_simulation(simulation)
+            experiment.find_simulation_docs_by({ is_done: false, to_sent: false }).each do |simulation|
+              Rails.logger.debug("#{Time.now - simulation['sent_at']} ? #{experiment.time_constraint_in_sec}")
+              if Time.now - simulation['sent_at'] >= experiment.time_constraint_in_sec
+                experiment.simulation_rollback(simulation['id'])
               end
             end
           rescue Exception => e

@@ -508,6 +508,15 @@ class Experiment < MongoActiveRecord
     values.uniq
   end
 
+  def simulation_rollback(simulation_id)
+    simulation_collection.find_and_modify({
+                                           :query => { 'id' => simulation_id },
+                                           :update => { '$set' => { 'to_sent' => true } }
+                                          })
+
+    progress_bar_update(simulation_id, 'rollback')
+  end
+
   private
 
   def self.nested_json_to_hash(nested_json)
