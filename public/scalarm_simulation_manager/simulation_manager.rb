@@ -53,7 +53,12 @@ if not File.exist?(code_base_dir)
 
   # 4. unzip the repository
   puts %x[unzip -d #{code_base_dir} #{code_base_dir}.zip; unzip -d #{code_base_dir} #{code_base_dir}/simulation_binaries.zip]
-  Dir.foreach(code_base_dir){|filename| next if File.file?("#{code_base_dir}/#{filename}"); File.chmod(0777, "#{code_base_dir}/#{filename}")}
+  
+  Dir.foreach(code_base_dir) do |filename| 
+    next if File.file?("#{code_base_dir}/#{filename}")
+    File.chmod(0777, "#{code_base_dir}/#{filename}")
+  end
+
   puts %x[chmod a+x #{code_base_dir}/*]
 end
 
@@ -83,7 +88,11 @@ while true
   end
 
 
-  if simulation_input['status'] == 'all_sent'
+  if simulation_input.nil? or (not simulation_input.include?('status'))
+    puts "Could not retrieve proper simulation input"
+
+    return
+  elsif simulation_input['status'] == 'all_sent'
     puts 'There is no more simulations to run in this experiment'
 
     break if all_sent_threshold <= 0
