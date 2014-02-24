@@ -8,7 +8,7 @@
 # experiment_id => the experiment which should be computed by this job
 # image_id => id of image in Cloud
 # created_at => time - when this job were scheduled
-# time_limit => time - when this job should be stopped
+# time_limit => time - when this job should be stopped - in minutes
 # vm_id => string - instance id of the vm
 # sm_uuid => string - uuid of configuration files
 # sm_initialized => boolean - whether or not SM code has been sent to this machind
@@ -21,7 +21,9 @@ class CloudVmRecord < MongoActiveRecord
   SSH_AUTH_METHODS = %w(password)
 
   # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
-  MAX_VM_INIT_TIME = 10.minutes
+  def max_init_time
+    self.time_limit > 72*60 ? 30.minutes : 10.minutes
+  end
 
   def self.collection_name
     'vm_records'

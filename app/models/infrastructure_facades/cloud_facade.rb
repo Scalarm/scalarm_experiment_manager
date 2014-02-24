@@ -82,23 +82,28 @@ class CloudFacade < InfrastructureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
 
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
-    cloud_client = cloud_client_instance(user.id)
+    begin
+      cloud_client = cloud_client_instance(user.id)
+    rescue
+      return 'error', I18n.t('infrastructure_facades.cloud.client_problem', cloud_name: @short_name)
+    end
 
     return 'error', I18n.t('infrastructure_facades.cloud.provide_secrets', cloud_name: @short_name) if cloud_client.nil?
 
-    exp_image = CloudImageSecrets.find_by_id(additional_params['image_id'])
-    if exp_image.nil? or exp_image.image_id.nil?
-      return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
-    elsif not cloud_client.image_exists? exp_image.image_id
-      return 'error', I18n.t('infrastructure_facades.cloud.image_not_exists',
-                             image_id: exp_image.image_id, cloud_name: @full_name)
-    elsif exp_image.user_id != user.id
-      return 'error', I18n.t('infrastructure_facades.cloud.image_permission')
-    elsif exp_image.cloud_name != @short_name
-      return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
-    end
-
     begin
+
+      exp_image = CloudImageSecrets.find_by_id(additional_params['image_id'])
+      if exp_image.nil? or exp_image.image_id.nil?
+        return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
+      elsif not cloud_client.image_exists? exp_image.image_id
+        return 'error', I18n.t('infrastructure_facades.cloud.image_not_exists',
+                               image_id: exp_image.image_id, cloud_name: @full_name)
+      elsif exp_image.user_id != user.id
+        return 'error', I18n.t('infrastructure_facades.cloud.image_permission')
+      elsif exp_image.cloud_name != @short_name
+        return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
+      end
+
       sched_instances = cloud_client.schedule_instances("#{VM_NAME_PREFIX}#{experiment_id}", exp_image.image_id,
                                                         instances_count, user.id, experiment_id, additional_params)
 

@@ -34,10 +34,11 @@
                         - select_hash = Hash[imgs_info.map{|id, info| ["#{id} (#{info})", id]}]
                         = select_tag :image_id, options_for_select(select_hash)
                       - rescue # image ids cannot be fetched - wrong credentials?
-                        = text_field_tag :image_id, ''
-                    - else
+                        - secrets = nil
+                    - if secrets.nil?
                       = text_field_tag :image_id, ''
                   .small-4.columns
+                    = label_tag 'No valid'
               .row
                 .small-4.columns
                   = label_tag :image_login, t('.login') + ':', class: 'inline right'

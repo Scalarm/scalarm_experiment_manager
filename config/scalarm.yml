@@ -1,6 +1,6 @@
 # at which port the service should listen
 #information_service_url: scal2.mooo.com:11300
-information_service_url: 172.16.67.57:11300
+information_service_url: 149.156.10.32:26416
 information_service_user: scalarm
 information_service_pass: hidden
 # mongo_activerecord config

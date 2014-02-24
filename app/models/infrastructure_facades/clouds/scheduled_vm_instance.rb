@@ -21,12 +21,14 @@ class ScheduledVmInstance < VmInstance
     if vm_terminated?
       @logger.info 'This VM is going to be destroyed due to time limit'
       remove_record
+      # TODO: vm termination - inform experiment
     elsif ready_to_initialize_sm?
       @logger.info 'This VM is going to be initialized with SM now'
       initialize_sm
     elsif time_limit_exceeded?
       @logger.info 'This VM is going to be destroyed due to time limit'
       terminate
+      # TODO: vm termination - inform experiment
     elsif init_time_exceeded?
       @logger.info "This VM will be restarted due to not being run "\
                 "for more than #{MAX_VM_INIT_TIME/60} minutes"
@@ -48,7 +50,7 @@ class ScheduledVmInstance < VmInstance
   end
 
   def init_time_exceeded?
-    (status == :initializing) and (@record.created_at + MAX_VM_INIT_TIME < Time.now)
+    (status == :initializing) and (@record.created_at + @record.max_init_time < Time.now)
   end
 
   def ready_to_initialize_sm?
