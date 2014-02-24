@@ -381,19 +381,9 @@ class ExperimentsController < ApplicationController
 
     File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
 
-    flash[:notice] = "#{@num_of_new_simulations} simulations were created"
-
-    redirect_to action: :show, id: @experiment.id
-    # TODO - critical fix to be an ajax based action
-    #respond_to do |format|
-    #  format.js {
-    #    render :inline => "
-    #      window.show_notice(\"#{@num_of_new_simulations} simulations were created\");
-    #      setTimeout(\"window.hide_notice();\", 10000);
-    #    "
-    #  }
-    #end
-    #render partial: 'extend_input_values'
+    respond_to do |format|
+      format.js { render partial: 'extend_input_values' }
+    end
   end
 
   def running_simulations_table

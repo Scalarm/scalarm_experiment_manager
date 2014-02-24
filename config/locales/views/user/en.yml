@@ -7,3 +7,6 @@ en:
       repeat_password: "Repeat password:"
       change_password: "Change password"
       empty_dn: "<N/A>"
+  experiments:
+    extend_input_values:
+      extension_response: "%{count} simulations were created"

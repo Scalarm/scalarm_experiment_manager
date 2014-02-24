@@ -1,3 +1,2 @@
-:javascript
-  window.show_notice("#{@num_of_new_simulations} simulations were created");
-  setTimeout("window.hide_notice();", 10000);
+window.Notices.show_notice("#{I18n.t('experiments.extend_input_values.extension_response', { count: @num_of_new_simulations })}");
+window.Notices.hide_notice();
