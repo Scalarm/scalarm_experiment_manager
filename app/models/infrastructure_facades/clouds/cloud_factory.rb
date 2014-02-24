@@ -42,8 +42,14 @@ class CloudFactory
     end]
   end
 
-  def self.provider_names_select
-    Hash[CLIENT_CLASSES.map {|sn, cli| [cli.full_name, sn]}]
+  # Selects only Clouds, for which secrets are defined
+  # @return [Hash<String, String>] full cloud name => short name
+  def self.provider_names_select(user_id)
+    clouds_with_creds = CLIENT_CLASSES.select do |name, _|
+      not CloudSecrets.find_by_query('cloud_name'=>name, 'user_id'=>user_id).nil?
+    end
+
+    Hash[clouds_with_creds.map {|name, client| [client.full_name, name]}]
   end
 
   def self.provider_names

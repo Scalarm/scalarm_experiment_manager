@@ -4,6 +4,9 @@ class window.ImagesManagerDialog
     @loading = $(@loadingImg)
     @responseDialog = $(@responseDialog)
 
+    if @cloudSelect.length <= 0 or (@cloudSelect.length == 1 and @cloudSelect[0].length == 0)
+      $("##{@addImageFormId} form :input").prop('disabled', true)
+
     @bindToAddImageForm()
     @bindToRemoveButtons()
 

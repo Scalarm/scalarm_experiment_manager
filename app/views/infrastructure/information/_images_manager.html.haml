@@ -20,7 +20,7 @@
                 .small-4.columns
                   = label_tag :infrastructure_type, t('.cloud_name') + ':', class: 'inline right'
                 .small-4.columns#cloud-select
-                  = select_tag :infrastructure_type, options_for_select(CloudFactory.provider_names_select)
+                  = select_tag :infrastructure_type, options_for_select(CloudFactory.provider_names_select(user.id))
                 .small-4.columns
               - CloudFactory.provider_names.map do |cloud_name|
                 - secrets = CloudSecrets.find_by_query('cloud_name'=>cloud_name, 'user_id'=>user.id)
@@ -38,7 +38,7 @@
                     - if secrets.nil?
                       = text_field_tag :image_id, ''
                   .small-4.columns
-                    = label_tag 'No valid'
+
               .row
                 .small-4.columns
                   = label_tag :image_login, t('.login') + ':', class: 'inline right'
