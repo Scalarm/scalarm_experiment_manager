@@ -20,6 +20,9 @@ class CloudVmRecord < MongoActiveRecord
 
   SSH_AUTH_METHODS = %w(password)
 
+  # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
+  MAX_VM_INIT_TIME = 10.minutes
+
   def self.collection_name
     'vm_records'
   end
@@ -28,10 +31,6 @@ class CloudVmRecord < MongoActiveRecord
     super(attributes)
 
     @image_cache = nil
-  end
-
-  def time_limit_exceeded?
-    created_at + time_limit.to_i.minutes < Time.now
   end
 
   #  upload file to the VM - use only password authentication
@@ -51,19 +50,14 @@ class CloudVmRecord < MongoActiveRecord
     end
   end
 
-  # TODO: is this can be used?
   def image_instance
-    @image_cache = CloudImageSecrets.find_by_image_id(image_id.to_s) if not @image_cache
+    @image_cache = CloudImageSecrets.find_by_image_id(image_id.to_s) unless @image_cache
     @image_cache
   end
 
-  def update_ssh_address(vm_instance)
-    public_ssh_address = vm_instance.public_ssh_address
-
-    self.public_host = public_ssh_address[:ip]
-    self.public_ssh_port = public_ssh_address[:port]
-
-    self.save
+  def experiment_instance
+    @experiment = Experiment.find_by_id(experiment_id) unless @experiment
+    @experiment
   end
 
   # additional info for specific cloud should be provided by CloudClient

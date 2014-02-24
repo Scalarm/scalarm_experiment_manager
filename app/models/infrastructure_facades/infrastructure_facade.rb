@@ -14,7 +14,13 @@ require 'clouds/cloud_factory'
 
 class InfrastructureFacade
 
-  def prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
+  attr_reader :logger
+
+  def initialize
+    @logger = InfrastructureTaskLogger.new short_name
+  end
+
+  def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
@@ -74,11 +80,26 @@ class InfrastructureFacade
     render json: response_msg, status: status
   end
 
-  # @param [String] message main message
-  # @param [String] task_id optional id of task about which is message (e.g. VM id)
-  # @return [String] message formatted for logger
-  def log_format(message, task_id=nil)
-    "[#{short_name}]#{task_id and "[#{task_id.to_s}]"} #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+end
+
+class InfrastructureTaskLogger
+  def initialize(infrastructure_name, task_id=nil)
+    if task_id
+      @log_format = Proc.new do |message|
+        "[#{infrastructure_name}][#{task_id.to_s}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+      end
+    else
+      @log_format = Proc.new do |message|
+        "[#{infrastructure_name}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+      end
+    end
   end
 
+  def method_missing(method_name, *args, &block)
+    if %w(info debug warn error).include? method_name.to_s
+      Rails.logger.send(method_name.to_s, @log_format.call(args[0], block))
+    else
+      super(method_name, *args, &block)
+    end
+  end
 end

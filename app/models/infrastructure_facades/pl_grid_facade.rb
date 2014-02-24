@@ -11,6 +11,7 @@ require_relative 'infrastructure_facade'
 class PLGridFacade < InfrastructureFacade
 
   def initialize
+    super()
     @ui_grid_host = 'ui.grid.cyfronet.pl'
   end
 
@@ -36,7 +37,7 @@ class PLGridFacade < InfrastructureFacade
   def start_monitoring
     while true do
       begin
-        Rails.logger.info("[plgrid] #{Time.now} - monitoring thread is working")
+        logger.info 'monitoring thread is working'
       #  group jobs by the user_id - for each group - login to the ui using the user credentials
         PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
 
@@ -44,31 +45,32 @@ class PLGridFacade < InfrastructureFacade
 
           Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
             job_list.each do |job|
+              job_logger = InfrastructureTaskLogger.new(short_name, job.job_id)
               scheduler = create_scheduler_facade(job.scheduler_type)
               ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
               experiment = Experiment.find_by_id(job.experiment_id)
 
               all, sent, done = experiment.get_statistics unless experiment.nil?
 
-              Rails.logger.info("Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}")
+              job_logger.info "Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}"
 
               if experiment.nil? or (not experiment.is_running) or (all == done)
-                Rails.logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
+                job_logger.info "Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password"
                 destroy_and_clean_after(job, scheduler, ssh)
 
               #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
               elsif scheduler.is_job_queued(ssh, job) and (job.created_at + 10.minutes < Time.now)
 
-                Rails.logger.info("#{Time.now} - the job will be restarted due to not been run")
+                job_logger.info 'The job will be restarted due to not been run'
                 scheduler.restart(ssh, job)
 
               elsif job.created_at + 24.hours < Time.now
                 #  if the job is running more than 24 h then restart
-                Rails.logger.info("#{Time.now} - the job will be restarted due to being run for 24 hours")
+                job_logger.info 'The job will be restarted due to being run for 24 hours'
                 scheduler.restart(ssh, job)
 
               elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
-                Rails.logger.info("#{Time.now} - the job is done or should be already done - so we will destroy it")
+                job_logger.info 'The job is done or should be already done - so we will destroy it'
                 scheduler.cancel(ssh, job)
                 destroy_and_clean_after(job, scheduler, ssh)
               end
@@ -76,7 +78,7 @@ class PLGridFacade < InfrastructureFacade
           end
         end
       rescue Exception => e
-        Rails.logger.error("[plgrid] An exception occured in the monitoring thread --- #{e}")
+        logger.error "An exception occured in the monitoring thread --- #{e}"
       end
 
       sleep(60)
@@ -84,9 +86,10 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def destroy_and_clean_after(job, scheduler, ssh)
-    Rails.logger.info("Destroying temp pass for #{job.sm_uuid}")
+    job_logger = InfrastructureTaskLogger short_name, job.job_id
+    job_logger.info("Destroying temp pass for #{job.sm_uuid}")
     temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
-    Rails.logger.info("It is nil ? --- #{temp_pass.nil?}")
+    job_logger.info("It is nil ? --- #{temp_pass.nil?}")
     temp_pass.destroy unless temp_pass.nil? || temp_pass.longlife
     job.destroy
     scheduler.clean_after_job(ssh, job)
@@ -200,7 +203,7 @@ class PLGridFacade < InfrastructureFacade
         grants << grant_id.split('(*)').first.strip unless grant_id.include?('GrantID')
       end
     rescue Exception => e
-      Rails.logger.error("Could not read user's grants - #{e}")
+      logger.error("Could not read user's grants - #{e}")
     end
 
     grants

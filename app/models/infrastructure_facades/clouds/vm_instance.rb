@@ -6,6 +6,10 @@ class VmInstance
     @instance_id = instance_id
   end
 
+  def scheduled_instance(vm_record)
+    ScheduledVmInstance(vm_record, @client)
+  end
+
   def vm_id
     @instance_id
   end
