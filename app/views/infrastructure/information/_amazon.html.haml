@@ -1,5 +1,4 @@
 -# local variables: experiment, user
-- amazon_secrets_creds = CloudSecrets.find_by_query('cloud_name'=>'amazon', 'user_id'=>user.id)
 - amazon_ami_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>'amazon', 'user_id'=>user.id)
 - if amazon_ami_creds.empty?
   -  amazon_ami_creds = nil
@@ -61,40 +60,6 @@
             .row
               .small-12.columns
                 #amazon-submission-ajax-response
-    %dd
-      %a(href='#amazon-credentials-panel')= t('infrastructure.information.credentials_label')
-      .content#amazon-credentials-panel
-        %p
-          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
-            = hidden_field_tag 'infrastructure_type', 'amazon'
-            = hidden_field_tag 'credential_type', 'secrets'
-
-            %h5.subheader= t('.credentials_label')
-
-            %fieldset
-              %legend= t('.credentials.secrets')
-              .row
-                .small-4.columns
-                  = label_tag :stored_secret_access_key_id, t('.credentials.secrets') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :stored_secret_access_key_id, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_access_key_id
-                .small-4.columns
-              .row
-                .small-4.columns
-                  = label_tag :stored_secret_access_key, t('.credentials.secret_key') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :stored_secret_access_key, amazon_secrets_creds.nil? ? '' : amazon_secrets_creds.secret_access_key
-                .small-4.columns
-              .row
-                .small-4.columns
-                  = label_tag :store_secrets_in_session, t('.credentials.store_in_session') + ':', class: 'inline right'
-                .small-4.columns
-                  = check_box_tag :store_secrets_in_session, '1', true
-                .small-4.columns
-              .row
-                .small-12.columns.text-center
-                  = submit_tag t('infrastructure.information.submit') , class: 'button radius'
-                  = image_tag 'loading.gif', class: 'amazon-credentials-busy', style: 'display: none;'
 
     %dd
       %a(href='#amazon-vms-panel')= t('infrastructure.information.scheduled_label')

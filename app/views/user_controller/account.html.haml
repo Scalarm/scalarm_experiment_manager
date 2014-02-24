@@ -32,3 +32,30 @@
       .row
         .small-6.small-centered.columns(style="text-align:center;")
           = submit_tag t('.change_password'), class: 'button radius'
+  .row
+    %dl.accordion(data-accordion="")
+      - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+        %dd
+          %a(href="##{infrastructure_id}")= "#{infrastructure_info[:label]} credentials"
+          .content{id: infrastructure_id}
+            = render partial: "infrastructure/credentials/#{infrastructure_id}", locals: { user: @current_user }
+
+      -#%dd
+      -#  %a(href='#credentials-panel')= 'Manage credentials' # TODO: translate
+      -#  .content#credentials-panel
+      -#    - first = true
+      -#    %dl.tabs(data-tab="")
+      -#      - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+      -#        %dd{class: "#{first ? 'active' : '' }"}
+      -#          = render partial: "infrastructure/credentials/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
+      -#        - first = false if first
+
+
+      -#%dd
+      -#  %a(href='#amazon-submission-panel')= 'test1'
+      -#  .content#amazon-submission-panel
+      -#    %p='hello content'
+      -#%dd
+      -#  %a(href='#pl_cloud-submission-panel')= 'test2'
+      -#  .content#pl_cloud-submission-panel
+      -#    %p='world content'
