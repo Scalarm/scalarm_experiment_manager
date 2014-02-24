@@ -125,49 +125,49 @@ class MonitoringProbe
   end
   
   ## monitors various metric related to block devices utilization
-  #def monitor_storage
-  #  storage_measurements = {}
-  #  # get 5 measurements of iostat - the first one is irrelevant
-  #  iostat_out = `iostat -d -m -x 1 5`
-  #  iostat_out_lines = iostat_out.split("\n")
-  #  # analyze each line
-  #  iostat_out_lines.each_with_index do |iostat_out_line, i|
-  #    # line with Device at starts means new a new measurement
-  #    if iostat_out_line.start_with?("Device:")
-  #      storage_metric_names = iostat_out_line.split(" ")
-  #      # get measurements for two first devices
-  #      1.upto(2) do |k|
-  #        if not iostat_out_lines[i+k].nil?
-  #          storage_metric_values = iostat_out_lines[i+k].split(" ")
-  #          device_name = storage_metric_values[storage_metric_names.index("Device:")]
-  #          next if device_name.nil? || device_name.empty?
-  #          puts "Device name -#{device_name}- -#{device_name.nil? || device_name.empty?}-"
-  #
-  #          puts storage_metric_names.join(", ")
-  #          ["rMB/s", "wMB/s", "r/s", "w/s", "await"].each do |system_storage_metric|
-  #            storage_metric_name = "Storage___#{device_name}___#{system_storage_metric.gsub("/", "_")}"
-  #            # insert metric measurement structure
-  #            storage_measurements[storage_metric_name] = [] if not storage_measurements.has_key? storage_metric_name
-  #            # insert metric measurement value
-  #            storage_measurements[storage_metric_name] << storage_metric_values[storage_metric_names.index(system_storage_metric)]
-  #          end
-  #        end
-  #      end
-  #    end
-  #  end
-  #
-  #  storage_metrics = []
-  #  # calculate avg values
-  #  storage_measurements.each do |metric_name, measurements|
-  #    puts measurements
-  #    avg_value = measurements[1..-1].reduce(0.0){|sum, x| sum += x.to_f }
-  #    avg_value /= measurements.size - 1
-  #    storage_metrics << [metric_name, Time.now.strftime("%Y-%m-%d %H:%M:%S"), avg_value]
-  #  end
-  #
-  #  storage_metrics
-  #end
-  #
+  def monitor_storage
+    storage_measurements = {}
+    # get 5 measurements of iostat - the first one is irrelevant
+    iostat_out = `iostat -d -m -x 1 5`
+    iostat_out_lines = iostat_out.split("\n")
+    # analyze each line
+    iostat_out_lines.each_with_index do |iostat_out_line, i|
+      # line with Device at starts means new a new measurement
+      if iostat_out_line.start_with?("Device:")
+        storage_metric_names = iostat_out_line.split(" ")
+        # get measurements for two first devices
+        1.upto(2) do |k|
+          if not iostat_out_lines[i+k].nil?
+            storage_metric_values = iostat_out_lines[i+k].split(" ")
+            device_name = storage_metric_values[storage_metric_names.index("Device:")]
+            next if device_name.nil? || device_name.empty?
+            puts "Device name -#{device_name}- -#{device_name.nil? || device_name.empty?}-"
+
+            puts storage_metric_names.join(", ")
+            ["rMB/s", "wMB/s", "r/s", "w/s", "await"].each do |system_storage_metric|
+              storage_metric_name = "Storage___#{device_name}___#{system_storage_metric.gsub("/", "_")}"
+              # insert metric measurement structure
+              storage_measurements[storage_metric_name] = [] if not storage_measurements.has_key? storage_metric_name
+              # insert metric measurement value
+              storage_measurements[storage_metric_name] << storage_metric_values[storage_metric_names.index(system_storage_metric)]
+            end
+          end
+        end
+      end
+    end
+
+    storage_metrics = []
+    # calculate avg values
+    storage_measurements.each do |metric_name, measurements|
+      puts measurements
+      avg_value = measurements[1..-1].reduce(0.0){|sum, x| sum += x.to_f }
+      avg_value /= measurements.size - 1
+      storage_metrics << [metric_name, Time.now.strftime("%Y-%m-%d %H:%M:%S"), avg_value]
+    end
+
+    storage_metrics
+  end
+
   #def monitor_experiment_manager
   #  log_dir = File.join(@config["installation_dir"], "scalarm_experiment_manager", "log")
   #  return [] if not File.exist?(log_dir)

@@ -20,8 +20,6 @@
 //= require highcharts/modules/exporting
 //= require jquery.dataTables.min
 //= require jit-yc
-//= require i18n
-//= require i18n/translations
 //= require toastr
 
 
