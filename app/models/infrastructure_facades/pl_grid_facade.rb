@@ -48,7 +48,7 @@ class PLGridFacade < InfrastructureFacade
 
               Rails.logger.info("Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}")
 
-              if experiment.nil? or (not experiment.is_running) or (all == done)
+              if experiment.nil? or (not experiment.is_running) or (experiment.experiment_size == done)
                 Rails.logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
                 destroy_and_clean_after(job, scheduler, ssh)
 
