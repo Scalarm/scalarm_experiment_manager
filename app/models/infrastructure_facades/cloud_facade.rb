@@ -98,27 +98,15 @@ class CloudFacade < InfrastructureFacade
       return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
     end
 
-    sched_instances = cloud_client.schedule_vm_instances("#{VM_NAME_PREFIX}#{experiment_id}", exp_image.image_id,
-                                                    instances_count, additional_params).map { |vm_id| cloud_client.vm_instance(vm_id) }
+    begin
+      sched_instances = cloud_client.schedule_instances("#{VM_NAME_PREFIX}#{experiment_id}", exp_image.image_id,
+                                                        instances_count, user.id, experiment_id, additional_params)
 
-    sched_instances.each do |vm_instance|
-      vm_record = CloudVmRecord.new({
-                                 cloud_name: @short_name,
-                                 user_id: user.id,
-                                 experiment_id: experiment_id,
-                                 image_id: exp_image.image_id,
-                                 created_at: Time.now,
-                                 time_limit: additional_params['time_limit'],
-                                 vm_id: vm_instance.vm_id,
-                                 sm_uuid: SecureRandom.uuid,
-                                 sm_initialized: false,
-                                 start_at: additional_params['start_at'],
-                             })
-      vm_record.save
+      ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
+                          cloud_name: @full_name)]
+    rescue Exception => e
+      ['error', I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message)]
     end
-
-    return 'ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
-                        cloud_name: @full_name)
 
   end
 

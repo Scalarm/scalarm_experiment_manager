@@ -75,9 +75,9 @@ class ScheduledVmInstance < VmInstance
   end
 
   def initialize_sm
+    update_record_ssh_address if not @record.public_host or not @record.public_ssh_port
     @logger.debug "Initializing SM on #{@record.public_host}:#{@record.public_ssh_port}"
 
-    update_record_ssh_address if not @record.public_host or not @record.public_ssh_port
     InfrastructureFacade.prepare_configuration_for_simulation_manager(@record.sm_uuid, @record.user_id,
                                                                       @record.experiment_id, @record.start_at)
 

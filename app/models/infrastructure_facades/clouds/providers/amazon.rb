@@ -27,7 +27,7 @@ module AmazonCloud
       @ec2.instances.map(&:id)
     end
 
-    def schedule_vm_instances(base_name, image_id, number, params)
+    def instantiate_vms(base_name, image_id, number, params)
       instances = @ec2.regions['us-east-1'].instances.create(:image_id => image_id,
                                   :count => number,
                                   :instance_type => params[:instance_type],

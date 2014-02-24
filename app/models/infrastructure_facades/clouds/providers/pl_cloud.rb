@@ -26,7 +26,7 @@ module PLCloud
       @plc_util.all_vm_info.keys.map {|i| i.to_s}
     end
 
-    def schedule_vm_instances(base_name, image_id, number, params)
+    def instantiate_vms(base_name, image_id, number, params)
       @plc_util.create_instances(base_name, image_id, number)
     end
 

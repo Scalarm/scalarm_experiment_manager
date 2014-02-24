@@ -1,6 +1,6 @@
 # Methods to implement by subclasses:
 # - all_images_info -> get array of hashes: image_id => image_name for all images permitted to use by cloud user
-# - schedule_vm_instances(base_instace_name, image_id, number) => list of AbstractVmInstance
+# - instantiate_vms(base_instace_name, image_id, number) => list of instance ids
 # - all_images_info -> return array of hashes: image_id =>
 # Methods for checking and changing virtual machine state (taking vm id)
 # - state -> one of: [:intializing, :running, :deactivated, :rebooting, :error]
@@ -33,6 +33,29 @@ class AbstractCloudClient
 
   def scheduled_vm_instance(vm_record)
     ScheduledVmInstance.new(vm_record, self)
+  end
+
+  # Intantiate virtual machines and add records to database
+  # @return [Array<ScheduledVmInstance>]
+  def schedule_instances(base_name, image_id, number, user_id, experiment_id, params)
+    instantiate_vms(base_name, image_id, number, params).map do |vm_id|
+
+      vm_record = CloudVmRecord.new({
+                                        cloud_name: self.class.short_name,
+                                        user_id: user_id,
+                                        experiment_id: experiment_id,
+                                        image_id: image_id,
+                                        created_at: Time.now,
+                                        time_limit: params['time_limit'],
+                                        vm_id: vm_id,
+                                        sm_uuid: SecureRandom.uuid,
+                                        sm_initialized: false,
+                                        start_at: params['start_at'],
+                                    })
+      vm_record.save
+
+      scheduled_vm_instance(vm_record)
+    end
   end
 
   # @return [Hash] instance_id => specific AbstractVmInstance
