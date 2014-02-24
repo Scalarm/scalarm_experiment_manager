@@ -2,6 +2,7 @@ en:
   infrastructures_controller:
     image_removed: "Removed %{cloud_name} image credentials with id %{image_id}"
     image_not_found: "Image record not found"
+    credentials_removed: "Removed credentials for %{name}"
     permission_denied: "Permission denied"
   infrastructure_facades:
     cloud:

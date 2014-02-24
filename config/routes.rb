@@ -81,6 +81,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :infrastructure_info
       post :add_infrastructure_credentials
       post :remove_image
+      post :remove_credentials
     end
   end
 

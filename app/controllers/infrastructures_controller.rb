@@ -50,6 +50,15 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  def remove_credentials
+    secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
+    if secrets
+      secrets.destroy
+      msg = I18n.t('infrastructures_controller.credentials_removed', name: params['cloud_name'])
+      render json: { status: 'ok', msg: msg }
+    end
+  end
+
   # ============================ PRIVATE METHODS ============================
   private
 

@@ -31,6 +31,7 @@ en:
       time_constraint: Job time constraint [min]
       start_at: 'Start at ("hh:mm:ss" format)'
       submit: Submit
+      remove_credentials: Remove credentials
 
       submission_label: Simulation Manager submission
       scheduled_label: Scheduled Simulation Managers
