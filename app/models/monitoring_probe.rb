@@ -84,6 +84,12 @@ class MonitoringProbe
 
   end
 
+  def send_measurement(controller, action, processing_time)
+    table_name = "#{@host}.ExperimentManager___#{controller}___#{action}"
+    doc = { date: Time.now, value: processing_time }
+    @db[table_name].insert(doc)
+  end
+
   # monitors percantage utilization of the CPU [%]
   def monitor_cpu
     cpu_idle = if RUBY_PLATFORM.include?('darwin')
