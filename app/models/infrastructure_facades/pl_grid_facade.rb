@@ -31,9 +31,11 @@ class PLGridFacade < InfrastructureFacade
   # 3. if the job is running more then 24 hours  - restart if yes
   def start_monitoring
     while true do
+      sleep(1) until MongoLock.acquire('PlGridJob')
+
       begin
         Rails.logger.info("[plgrid] #{Time.now} - monitoring thread is working")
-      #  group jobs by the user_id - for each group - login to the ui using the user credentials
+        #  group jobs by the user_id - for each group - login to the ui using the user credentials
         PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
 
           credentials = GridCredentials.find_by_user_id(user_id)
@@ -74,7 +76,8 @@ class PLGridFacade < InfrastructureFacade
       rescue Exception => e
         Rails.logger.error("[plgrid] An exception occured in the monitoring thread --- #{e}")
       end
-
+      
+      MongoLock.release('PlGridJob')      
       sleep(60)
     end
   end
