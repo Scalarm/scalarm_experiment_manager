@@ -56,4 +56,8 @@ class CloudFactory
     PROVIDER_NAMES
   end
 
+  def self.full_name(short_name)
+    client_class(short_name).full_name
+  end
+
 end
