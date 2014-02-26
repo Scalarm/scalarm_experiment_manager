@@ -159,21 +159,12 @@ class PLGridFacade < InfrastructureFacade
       credentials.password = params[:password]
     end
 
-    if params[:save_settings] == 'false'
-      session[:tmp_plgrid_credentials] = true
-    else
-      session.delete(:tmp_plgrid_credentials)
-    end
-
     credentials.save
 
     'ok'
   end
 
   def clean_tmp_credentials(user_id, session)
-    if session.include?(:tmp_plgrid_credentials)
-      GridCredentials.find_by_user_id(user_id).destroy
-    end
   end
 
   def create_scheduler_facade(type)

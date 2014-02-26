@@ -138,18 +138,6 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def clean_tmp_credentials(user_id, session)
-    if session.include?(:tmp_store_secrets_in_session) and (not user_id.nil?)
-      CloudSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user_id).each do |secrets|
-        secrets.destroy
-      end
-    end
-
-    if session.include?(:tmp_store_image_in_session) and (not user_id.nil?)
-      CloudImageSecrets.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user_id).each do |image|
-        image.destroy if image.experiment_id.to_s == session[:tmp_store_image_in_session].to_s
-      end
-    end
-
   end
 
   private
@@ -166,12 +154,6 @@ class CloudFacade < InfrastructureFacade
       credentials.send("#{secret_key.to_s.sub(/^stored_/, '')}=", params[secret_key])
     end
     credentials.save
-
-    if params.include?('store_secrets_in_session')
-      session[:tmp_store_secrets_in_session] = true
-    else
-      session.delete(:tmp_store_secrets_in_session)
-    end
 
     'ok'
   end

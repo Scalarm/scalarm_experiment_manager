@@ -9,21 +9,18 @@ en:
           host: User Interface (UI) host
           login: UI login
           password: UI password
-          save_settings: Save settings
       amazon:
         credentials_label: Please, provide your credentials to Amazon EC2
         credentials:
           secrets: Amazon EC2 secrets
           key_id: Access Key Id
           secret_key: Secret Access Key
-          store_in_session: Store in this session only
       pl_cloud:
         credentials_label: Please, provide your credentials to access the PL-Grid infrastructure
         credentials:
           secrets: PLGrid Cloud secrets
           login: UI login
           password: UI password
-          save_settings: Save settings
 
     information:
       instance_counter: Instance counter
