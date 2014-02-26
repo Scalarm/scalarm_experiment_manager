@@ -7,8 +7,8 @@
 .row
   %dl.accordion(data-accordion="")
     %dd
-      %a(href='#plgrid-submission-panel')= t('infrastructure.information.submission_label')
-      #plgrid-submission-panel.content
+      %a(href='#submission-panel-plgrid')= t('infrastructure.information.submission_label')
+      #submission-panel-plgrid.content
         %p
           .row
             = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
@@ -49,7 +49,6 @@
               .row
                 .small-12.columns.text-center
                   = submit_tag t('infrastructure.information.submit'), class: 'button radius'
-                  = image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
 
     %dd
       %a(href='#plgrid-jobs-panel')= t('infrastructure.information.scheduled_label')
@@ -59,11 +58,3 @@
           %ul.circle
             - @simulation_managers[:plgrid].each do |plgrid_job|
               %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
-
-:javascript
-  $(function() {
-    new window.InformationDialog('plgrid-login-form-panel',
-                                 'plgrid-submission-panel',
-                                 '#extension-dialog',
-                                 '#plgrid-configure-busy');
-  });

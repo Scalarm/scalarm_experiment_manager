@@ -46,7 +46,7 @@ en:
   infrastructure:
       information:
         images_manager:
-          info: "You can add image credentials for Clouds with valid secrets provided, which can be set in accounts settings."
+          info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."
           login: "Login"
           password: "Password"
           cloud_name: "Cloud name"

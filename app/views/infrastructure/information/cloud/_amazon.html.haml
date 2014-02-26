@@ -11,12 +11,3 @@
 .row
   .small-12.columns
     #amazon-submission-ajax-response
-
-    -#%dd
-    -#  %a(href='#amazon-vms-panel')= t('infrastructure.information.scheduled_label')
-    -#  .content#amazon-vms-panel
-    -#    %p
-    -#      %p= @current_states[:amazon]
-    -#      %ul.circle
-    -#        - @simulation_managers[:amazon].each do |virtual_machine|
-    -#          %li= virtual_machine

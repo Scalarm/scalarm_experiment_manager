@@ -19,23 +19,23 @@ class ScheduledVmInstance < VmInstance
     @logger.info 'checking'
 
     if vm_terminated?
-      @logger.info 'This VM is going to be destroyed due to time limit'
+      @logger.info 'This VM is terminated or invalid, so it will be removed from records'
       remove_record
       # TODO: vm termination - inform experiment
-    elsif ready_to_initialize_sm?
-      @logger.info 'This VM is going to be initialized with SM now'
-      initialize_sm
     elsif time_limit_exceeded?
       @logger.info 'This VM is going to be destroyed due to time limit'
       terminate
       # TODO: vm termination - inform experiment
     elsif init_time_exceeded?
       @logger.info "This VM will be restarted due to not being run "\
-                "for more than #{MAX_VM_INIT_TIME/60} minutes"
+                "for more than #{@record.max_init_time/60} minutes"
       reinitialize_with_record
     elsif experiment_end?
       @logger.info 'This VM will be destroy due to experiment finishing'
       terminate
+    elsif ready_to_initialize_sm?
+      @logger.info 'This VM is going to be initialized with SM now'
+      initialize_sm
     end
   end
 
@@ -58,8 +58,9 @@ class ScheduledVmInstance < VmInstance
   end
 
   def experiment_end?
-    all, sent, done = @record.experiment_instance.get_statistics unless @record.experiment_instance.nil?
-    @record.experiment_instance.nil? or (@record.experiment_instance.is_running == false) or (all == done)
+    done = @record.experiment_instance.get_statistics[2] unless @record.experiment_instance.nil?
+    @record.experiment_instance.nil? or (@record.experiment_instance.is_running == false)\
+      or (@record.experiment_instance.experiment_size == done)
   end
 
   # -- monitoring actions --

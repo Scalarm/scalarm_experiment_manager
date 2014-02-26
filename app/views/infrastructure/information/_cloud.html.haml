@@ -1,13 +1,15 @@
 -require 'infrastructure_facades/clouds/cloud_factory'
 -# local variables: experiment, user
 
+.row{class: 'panel callout radius'}
+  = raw t('infrastructure.information.credentials_info', account_link: link_to('account', user_controller_account_path))
+
 - first = true
 %dl.tabs(data-tab="")
   - CloudFactory.provider_names.each do |cloud_name|
     %dd{class: "#{first ? 'active' : '' }"}
       %a{ href: "##{cloud_name}" }= CloudFactory.full_name(cloud_name)
     - first = false if first
-
 
 - first = true
 .tabs-content
@@ -69,7 +71,6 @@
                   .row
                     .small-12.columns.text-center
                       = submit_tag t('infrastructure.information.submit'), class: 'button radius'
-                      = image_tag 'loading.gif', class: "submission-busy-#{cloud_class.short_name}", style: 'display: none;'
           %dd
             %a(href="#vms-#{cloud_name}")= t('infrastructure.information.scheduled_label')
             .content{id: "vms-#{cloud_name}"}
@@ -78,12 +79,3 @@
                 %ul.circle
                   - @simulation_managers[cloud_name.to_sym].each do |virtual_machine|
                     %li= virtual_machine
-
-
-:javascript
-  $(function() {
-    new window.InformationDialog('plgrid-login-form-panel',
-                                 'plgrid-submission-panel',
-                                 '#extension-dialog',
-                                 '#plgrid-configure-busy');
-  });

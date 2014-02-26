@@ -52,7 +52,6 @@ class InfrastructureFacade
 
   # returns a map of all supported infrastructures
   # infrastructure_id => facade object
-  # TODO should this be taken from a configuration file ?
   def self.get_registered_infrastructures
     {
         plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
