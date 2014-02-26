@@ -21,7 +21,7 @@ class ScheduledVmInstance < VmInstance
     if vm_terminated?
       @logger.info 'This VM is terminated or invalid, so it will be removed from records'
       remove_record
-      # TODO: vm termination - inform experiment
+      # TODO: vm was terminated earlier - inform experiment
     elsif time_limit_exceeded?
       @logger.info 'This VM is going to be destroyed due to time limit'
       terminate

@@ -22,9 +22,7 @@ class CloudVmRecord < MongoActiveRecord
 
   # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
   def max_init_time
-    # FIXME
-    1.seconds
-    #self.time_limit > 72*60 ? 30.minutes : 10.minutes
+    self.time_limit > 72*60 ? 30.minutes : 10.minutes
   end
 
   def self.collection_name
