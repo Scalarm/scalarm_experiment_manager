@@ -14,7 +14,7 @@ class PlGridJob < MongoActiveRecord
 
   # time to wait to job initialization - after that, job will be resubmitted [minutes object]
   def max_init_time
-    self.time_limit > 72*60 ? 30.minutes : 10.minutes
+    self.time_limit.to_i.hours > 72 ? 40.minutes : 20.minutes
   end
 
   def experiment

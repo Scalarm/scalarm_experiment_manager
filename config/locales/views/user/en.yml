@@ -1,6 +1,8 @@
 en:
   user_controller:
     account:
+      manage_scalarm: "Manage your Scalarm account"
+      manage_infrastructures: "Manage your infrastructures credentials"
       login: "Login:"
       certificate: "Certificate DN:"
       password: "Password:"

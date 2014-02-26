@@ -1,5 +1,6 @@
 %section#main.panel.radius
   .row.small-12.small-centered.columns
+    %h3=t('.manage_scalarm')
     = form_tag user_controller_change_password_path do
       .row
         .small-5.columns
@@ -32,6 +33,9 @@
       .row
         .small-6.small-centered.columns(style="text-align:center;")
           = submit_tag t('.change_password'), class: 'button radius'
+
+%section.panel.radius
+  %h3=t('.manage_infrastructures')
   .row
     %dl.accordion(data-accordion="")
       - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
