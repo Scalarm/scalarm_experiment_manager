@@ -27,12 +27,15 @@ en:
 
     information:
       instance_counter: Instance counter
+      image_label: Image
+      vm_type: Instance type
       grant_id: Grant
       time_constraint: Job time constraint [min]
       start_at: 'Start at ("hh:mm:ss" format)'
       submit: Submit
       remove_credentials: Remove credentials
 
+      no_credentials_info: No valid credentials provided for %{cloud_name}
       submission_label: Simulation Manager submission
       scheduled_label: Scheduled Simulation Managers
 
@@ -40,4 +43,6 @@ en:
         scheduler: Scheduler
         scheduled_label: Scheduled jobs
 
+      amazon:
+        security_group: Security group
 

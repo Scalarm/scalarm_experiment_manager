@@ -1,0 +1,81 @@
+-#-# local variables: experiment, user
+-#- pl_cloud_image_creds = CloudImageSecrets.find_all_by_query('cloud_name'=>'pl_cloud', 'user_id'=>user.id)
+-#- if pl_cloud_image_creds.empty?
+-#  -  pl_cloud_image_creds = nil
+-#- else
+-#  - pl_cloud_image_creds = pl_cloud_image_creds.select{|img| img.experiment_id.to_s == experiment.id.to_s}.first
+-#
+-#.row
+-#  #pl_cloud-ajax-response.alert-box.radius(style="display: none;")
+-#
+-#.row
+-#  %dl.accordion(data-accordion="")
+-#    %dd
+-#      %a(href='#pl_cloud-submission-panel')= t('infrastructure.information.submission_label')
+-#      .content#pl_cloud-submission-panel
+-#        %p
+-#          = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
+-#            = hidden_field_tag 'experiment_id', experiment.id
+-#            = hidden_field_tag 'infrastructure_type', 'pl_cloud'
+-#            = hidden_field_tag 'security_group', 'quicklaunch-1'
+-#
+-#            .row
+-#              .small-4.columns
+-#                = label_tag :job_counter, t('infrastructure.information.instance_counter') + ':', class: 'inline right'
+-#              .small-4.columns
+-#                = text_field_tag :job_counter
+-#              .small-4.columns
+-#            - images = CloudImageSecrets.find_all_by_cloud_name('pl_cloud').map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
+-#            .row
+-#              .small-4.columns
+-#                = label_tag :image_id, t('.submission.image') + ':', class: 'inline right'
+-#              .small-4.columns
+-#                = select_tag :image_id, options_for_select(images)
+-#              .small-4.columns
+-#
+-#            .row
+-#              .small-4.columns
+-#                = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
+-#              .small-4.columns
+-#                = text_field_tag :time_limit
+-#              .small-4.columns
+-#
+-#            .row
+-#              .small-4.columns
+-#                = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
+-#              .small-4.columns
+-#                = text_field_tag :start_at
+-#              .small-4.columns
+-#
+-#            .row
+-#              .small-12.columns.text-center
+-#                = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+-#                = image_tag 'loading.gif', class: 'pl_cloud-submission-busy', style: 'display: none;'
+-#
+-#            .row
+-#              .small-12.columns
+-#                #pl_cloud-submission-ajax-response
+-#
+-#    %dd
+-#      %a(href='#pl_cloud-vms')= t('infrastructure.information.scheduled_label')
+-#      .content#pl_cloud-vms
+-#        %p
+-#          %p= @current_states[:pl_cloud]
+-#          %ul.circle
+-#            - @simulation_managers[:pl_cloud].each do |virtual_machine|
+-#              %li= virtual_machine
+-#
+-#:javascript
+-#  $(function() {
+-#    new window.InformationDialog('plcloud-credentials',
+-#                                 'plcloud-submission-panel',
+-#                                 '#extension-dialog',
+-#                                 '.plcloud-credentials-busy');
+-#
+-#
+-#    $('p').each(function(index, element) {
+-#      if($(element).html() == "") {
+-#        $(element).remove();
+-#      }
+-#    });
+-#  });

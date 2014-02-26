@@ -9,7 +9,8 @@
 # - reinitialize -> nil -- reinitializes VM (should work for ALL states)
 # - public_host -> String: public host of VM -- dynamically gets hostname from API
 # - public_ssh_port -> String: public ssh port of VM -- dynamically gets hostname from API
-
+# Class methods
+# - self.instance_types -> Hash<String, String>: instance type desc -> instance type id
 # VM states:
 #  -- initializing (after creation and before running)
 #  -- running (booting and running)

@@ -70,6 +70,12 @@ module PLCloud
       ''
     end
 
+    def self.instance_types
+      {
+          'standard'=> 'Standard (0.5 CPU, 512 MB RAM, x86_64)'
+      }
+    end
+
   end
 
 end

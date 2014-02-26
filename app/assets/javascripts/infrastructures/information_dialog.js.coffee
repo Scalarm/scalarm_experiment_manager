@@ -6,6 +6,8 @@ class window.InformationDialog
     @bindToLoginForm()
     @bindToSubmissionForm()
 
+    $('.disabled :input').prop('disabled', true);
+
   bindToLoginForm: () ->
     $("##{@loginFormId} form")
       .bind('ajax:before', => @loading.show())

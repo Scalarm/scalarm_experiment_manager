@@ -5,6 +5,8 @@ module AmazonCloud
 
   class CloudClient < AbstractCloudClient
 
+    attr_reader :ec2
+
     def initialize(secrets)
       super(secrets)
       @ec2 = AWS::EC2.new(access_key_id: secrets.secret_access_key_id,
@@ -74,18 +76,22 @@ module AmazonCloud
       ec2_instance(id).exists?
     end
 
+    def self.instance_types
+      {
+          't1.micro'=> 'Micro (Up to 2 EC2 Compute Units, 613 MB RAM)',
+          'm1.small'=> 'Small (1 EC2 Compute Unit, 1.7 GB RAM)',
+          'm1.medium'=> 'Medium (2 EC2 Compute Unit, 3.75 GB RAM)',
+          'm1.large'=> 'Large (4 EC2 Compute Unit, 1.7 GB RAM)',
+          'm1.xlarge'=> 'Extra Large (8 EC2 Compute Unit, 15 GB RAM)',
+          'c1.medium'=> 'High-CPU Medium (5 EC2 Compute Unit, 1.7 GB RAM)',
+          'c1.xlarge'=> 'High-CPU Extra Large (20 EC2 Compute Unit, 7 GB RAM)'
+      }
+    end
+
     # -- additional Amazon methods --
 
-    def self.amazon_instance_types
-      [
-          ['Micro (Up to 2 EC2 Compute Units, 613 MB RAM)', 't1.micro'],
-          ['Small (1 EC2 Compute Unit, 1.7 GB RAM)', "m1.small"],
-      #['Medium (2 EC2 Compute Unit, 3.75 GB RAM)', "m1.medium"],
-      # ["Large (4 EC2 Compute Unit, 1.7 GB RAM)", "m1.large"],
-      # ["Extra Large (8 EC2 Compute Unit, 15 GB RAM)", "m1.xlarge"],
-      #['High-CPU Medium (5 EC2 Compute Unit, 1.7 GB RAM)', "c1.medium"],
-      #['High-CPU Extra Large (20 EC2 Compute Unit, 7 GB RAM)', "c1.xlarge"]
-      ]
+    def security_groups
+      @ec2.security_groups.map &:name
     end
 
     def ec2_instance(id)

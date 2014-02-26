@@ -1,0 +1,22 @@
+-# local variables: experiment, user, cloud_client
+
+.row
+  .small-4.columns
+    = label_tag :security_group, t('infrastructure.information.amazon.security_group') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :security_group, options_for_select(cloud_client.security_groups)
+  .small-4.columns
+
+
+.row
+  .small-12.columns
+    #amazon-submission-ajax-response
+
+    -#%dd
+    -#  %a(href='#amazon-vms-panel')= t('infrastructure.information.scheduled_label')
+    -#  .content#amazon-vms-panel
+    -#    %p
+    -#      %p= @current_states[:amazon]
+    -#      %ul.circle
+    -#        - @simulation_managers[:amazon].each do |virtual_machine|
+    -#          %li= virtual_machine

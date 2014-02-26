@@ -60,4 +60,6 @@ class CloudFactory
     client_class(short_name).full_name
   end
 
+  
+
 end

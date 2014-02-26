@@ -16,5 +16,5 @@ en:
       scheduled_info: "You have scheduled %{count} virtual machines on %{cloud_name}!"
       scheduled_error: "Virtual machines scheduling failed, error: %{error}"
       current_state_no_creds: "No information available due to lack of credentials for %{cloud_name}"
-      current_state_count: "You have %{count} Scalarm virtual machines running"
+      current_state_count: "You have %{count} Scalarm virtual machines scheduled"
       current_state_exception: "No information available due to exception: %{exception}"

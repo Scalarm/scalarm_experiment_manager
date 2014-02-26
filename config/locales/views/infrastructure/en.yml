@@ -12,6 +12,7 @@ en:
       step: Step
     booster_dialog:
       images_manager: "Image management"
+      clouds: "Clouds"
     monitoring_actions:
       stop_dialog:
         header: "Are you sure you want to stop the experiment?"
@@ -45,7 +46,7 @@ en:
   infrastructure:
       information:
         images_manager:
-          add_image: "Add image credentials"
+          info: "You can add image credentials for Clouds with valid secrets provided, which can be set in accounts settings."
           login: "Login"
           password: "Password"
           cloud_name: "Cloud name"
