@@ -1,6 +1,7 @@
 require 'test/unit'
 require 'test_helper'
 require 'mocha/test_unit'
+require 'socket'
 
 class MyTest < Test::Unit::TestCase
 
@@ -22,13 +23,17 @@ class MyTest < Test::Unit::TestCase
   COUNT = 20
 
   def test_processes_db
+
+    puts 'Ready to start, press return if other remote tests are here'
+    $stdin.gets.chomp
+
     pids = []
     PROC_NUM.times do |th_i|
       pids << fork do
         sleep(0.1) until MongoLock.acquire('test_job')
         COUNT.times do
           sleep(rand*0.1)
-          LockTestEntry.new({'pid'=>Process.pid, 'time'=>Time.now}).save
+          LockTestEntry.new({'pid'=>"#{Socket.gethostname}-#{Process.pid}", 'time'=>Time.now}).save
         end
         MongoLock.release('test_job')
       end
@@ -36,13 +41,17 @@ class MyTest < Test::Unit::TestCase
 
     pids.each {|pid| Process.wait pid}
 
+    puts 'Entries written, press return if other remote tests are here'
+    $stdin.gets.chomp
+
     data = LockTestEntry.all
 
     data.sort! {|a,b| a.time <=> b.time}
 
     PROC_NUM.times do |th_i|
       chunk = data[th_i*COUNT..(th_i+1)*COUNT-1]
-      assert (chunk.map {|e| e.pid }).count(chunk[0].pid) == chunk.size, "#{th_i}: #{chunk.to_s}"
+      assert (chunk.map {|e| e.pid }).count(chunk[0].pid) == chunk.size,
+             "#{th_i}: #{chunk.map{|e| e.pid }.to_s}"
     end
 
   end
