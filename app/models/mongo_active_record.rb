@@ -205,7 +205,11 @@ class MongoActiveRecord
 
   # UTILS
 
-  def self.get_next_sequence(name=self.collection_name)
+  def self.next_sequence
+    self.get_next_sequence(self.collection_name)
+  end
+
+  def self.get_next_sequence(name)
     collection = MongoActiveRecord.get_collection('counters')
     collection.find_and_modify({
                                    query: { _id: name },

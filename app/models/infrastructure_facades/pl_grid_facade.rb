@@ -31,7 +31,8 @@ class PLGridFacade < InfrastructureFacade
   # 3. if the job is running more then 24 hours  - restart if yes
   def start_monitoring
     while true do
-      sleep(1) until MongoLock.acquire('PlGridJob')
+      lock = MongoLock.new('PlGridJob')
+      sleep(1) until lock.acquire
 
       begin
         Rails.logger.info("[plgrid] #{Time.now} - monitoring thread is working")
@@ -77,7 +78,7 @@ class PLGridFacade < InfrastructureFacade
         Rails.logger.error("[plgrid] An exception occured in the monitoring thread --- #{e}")
       end
       
-      MongoLock.release('PlGridJob')      
+      lock.release
       sleep(10)
     end
   end

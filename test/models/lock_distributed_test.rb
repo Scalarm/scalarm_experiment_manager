@@ -34,7 +34,7 @@ class LockDistributedTest < Test::Unit::TestCase
         COUNT.times do
           sleep(rand*0.1)
           LockTestEntry.new({
-                                '_id'=>LockTestEntry.get_next_sequence,
+                                '_id'=>LockTestEntry.next_sequence,
                                 'pid'=>"#{Socket.gethostname}-#{Process.pid}"
                             }).save
         end

@@ -1,33 +1,72 @@
+require 'socket'
 
-class MongoLock < MongoActiveRecord
-
+class MongoLockRecord < MongoActiveRecord
   def self.collection_name
     'mongo_locks'
   end
+end
 
-  def self.acquire(collection_name)
-  	collection = self.get_collection(self.collection_name)
+class MongoLock
 
-  	lock_dock = collection.find_and_modify({
-  		query: { collection: collection_name },
-  		update: { '$set' => { collection: collection_name } },
+  def initialize(name, max_time=3.minutes)
+    @locked_pid = nil
+    @locked_time = nil
+    @name = name
+    @max_time = max_time
+  end
+
+  def self.pid
+    "#{Socket.gethostname}-#{Process.pid}"
+  end
+
+  def timeout?
+    @locked_time ? @locked_time + @max_time < Time.now : false
+  end
+
+  def acquire
+    lock_dock = MongoLockRecord.collection.find_and_modify({
+  		query: { name: @name },
+  		update: { '$set' => { name: @name } },
   		upsert: true
     })
 
     if lock_dock.nil? # lock acquired
-      Rails.logger.info "Process #{Process.pid} acquired lock"
+      MongoLockRecord.collection.find_and_modify({
+         query: { name: @name },
+         update: { '$set' => { pid: MongoLock.pid } }
+      })
+
+      Rails.logger.debug "Process #{Socket.gethostname}-#{Process.pid} acquired lock on #{@name}"
       true
     else
-      #Rails.logger.info "Process #{Process.pid}: wait"
+      if lock_dock['pid'] != @locked_pid
+        # TODO: separate threads working in one process are not distinguished
+        # other process took lock in the meantime
+        @locked_pid = lock_dock['pid']
+        @locked_time = Time.now
+      elsif timeout?
+        Rails.logger.debug "Process #{Socket.gethostname}-#{Process.pid} releases lock on #{@name} "\
+          "owned by #{lock_dock['pid']} due to time limit"
+        MongoLock.forced_release(@name)
+      end
+
+      # TODO: behaviour?
       false
     end
 
   end
 
-  def self.release(collection_name)
-    Rails.logger.info "Process #{Process.pid} release lock on #{collection_name}"
-  	collection = self.get_collection(self.collection_name)
-  	collection.remove({ collection: collection_name })
+  def release
+    old_lock = MongoLockRecord.collection.find_and_modify({
+       query: { name: @name, pid: MongoLock.pid },
+       remove: true
+    })
+    Rails.logger.debug "Process #{MongoLock.pid} released lock on #{@name}" if old_lock
+    old_lock ? old_lock['pid'] : nil
+  end
+
+  def self.forced_release(name)
+    MongoLockRecord.collection.remove({ name: name })
   end
 
 end
