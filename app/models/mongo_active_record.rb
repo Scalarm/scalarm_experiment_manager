@@ -203,4 +203,16 @@ class MongoActiveRecord
     false
   end
 
+  # UTILS
+
+  def self.get_next_sequence(name=self.collection_name)
+    collection = MongoActiveRecord.get_collection('counters')
+    collection.find_and_modify({
+                                   query: { _id: name },
+                                   update: { '$inc' => { seq: 1 } },
+                                   new: true,
+                                   upsert: true
+                               })['seq']
+  end
+
 end

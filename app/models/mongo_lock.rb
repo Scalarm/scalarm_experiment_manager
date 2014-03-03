@@ -12,17 +12,20 @@ class MongoLock < MongoActiveRecord
   		query: { collection: collection_name },
   		update: { '$set' => { collection: collection_name } },
   		upsert: true
-	})
+    })
 
-	if lock_dock.nil? # lock acquired
-		true
-	else
-		false
-	end
+    if lock_dock.nil? # lock acquired
+      Rails.logger.info "Process #{Process.pid} acquired lock"
+      true
+    else
+      #Rails.logger.info "Process #{Process.pid}: wait"
+      false
+    end
 
   end
 
   def self.release(collection_name)
+    Rails.logger.info "Process #{Process.pid} release lock on #{collection_name}"
   	collection = self.get_collection(self.collection_name)
   	collection.remove({ collection: collection_name })
   end

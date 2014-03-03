@@ -2,7 +2,7 @@ require 'test/unit'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class MyTest < Test::Unit::TestCase
+class LockTest < Test::Unit::TestCase
 
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
@@ -12,11 +12,17 @@ class MyTest < Test::Unit::TestCase
   def teardown
   end
 
-  THREAD_NUM = 10
-  COUNT_THREAD = 100
+  THREAD_NUM = 3
+  COUNT_THREAD = 20
 
-  PROC_NUM = 10
+  PROC_NUM = 3
   COUNT_PROC = 20
+
+  class LockTestEntry < MongoActiveRecord
+    def self.collection_name
+      'lock_test_entries'
+    end
+  end
 
   def test_lock_write
     data = []
@@ -41,12 +47,6 @@ class MyTest < Test::Unit::TestCase
     end
   end
 
-  class LockTestEntry < MongoActiveRecord
-    def self.collection_name
-      'lock_test_entry'
-    end
-  end
-
   def test_processes_db
     pids = []
     PROC_NUM.times do |th_i|
@@ -54,7 +54,10 @@ class MyTest < Test::Unit::TestCase
         sleep(0.1) until MongoLock.acquire('test_job')
         COUNT_PROC.times do
           sleep(rand*0.1)
-          LockTestEntry.new({'pid'=>Process.pid, 'time'=>Time.now}).save
+          LockTestEntry.new({
+                                '_id'=>LockTestEntry.get_next_sequence,
+                                'pid'=>Process.pid
+                            }).save
         end
         MongoLock.release('test_job')
       end
@@ -64,13 +67,18 @@ class MyTest < Test::Unit::TestCase
 
     data = LockTestEntry.all
 
-    data.sort! {|a,b| a.time <=> b.time}
+    data.sort! {|a,b| a._id <=> b._id}
 
     PROC_NUM.times do |th_i|
       chunk = data[th_i*COUNT_PROC..(th_i+1)*COUNT_PROC-1]
-      assert (chunk.map {|e| e.pid }).count(chunk[0].pid) == chunk.size, "#{th_i}: #{chunk.to_s}"
+      assert (chunk.map {|e| e.pid }).count(chunk[0].pid) == chunk.size,
+             "#{th_i}: #{(chunk.map {|e| "#{e._id}. #{e.pid}"})}"
     end
+  end
 
+  def test_seq
+    assert (1..4).map{ MongoActiveRecord.get_next_sequence('test') } == (1..4).to_a
+    assert (1..5).map{ LockTestEntry.get_next_sequence } == (1..5).to_a
   end
 
 end

@@ -3,7 +3,10 @@ require 'test_helper'
 require 'mocha/test_unit'
 require 'socket'
 
-class MyTest < Test::Unit::TestCase
+class LockDistributedTest < Test::Unit::TestCase
+
+  PROC_NUM = 5
+  COUNT = 50
 
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
@@ -19,9 +22,6 @@ class MyTest < Test::Unit::TestCase
     end
   end
 
-  PROC_NUM = 10
-  COUNT = 20
-
   def test_processes_db
 
     puts 'Ready to start, press return if other remote tests are here'
@@ -33,7 +33,10 @@ class MyTest < Test::Unit::TestCase
         sleep(0.1) until MongoLock.acquire('test_job')
         COUNT.times do
           sleep(rand*0.1)
-          LockTestEntry.new({'pid'=>"#{Socket.gethostname}-#{Process.pid}", 'time'=>Time.now}).save
+          LockTestEntry.new({
+                                '_id'=>LockTestEntry.get_next_sequence,
+                                'pid'=>"#{Socket.gethostname}-#{Process.pid}"
+                            }).save
         end
         MongoLock.release('test_job')
       end
@@ -46,7 +49,7 @@ class MyTest < Test::Unit::TestCase
 
     data = LockTestEntry.all
 
-    data.sort! {|a,b| a.time <=> b.time}
+    data.sort! {|a,b| a.id <=> b.id}
 
     PROC_NUM.times do |th_i|
       chunk = data[th_i*COUNT..(th_i+1)*COUNT-1]
@@ -55,5 +58,13 @@ class MyTest < Test::Unit::TestCase
     end
 
   end
+
+  # Util to check what generation time is written into ObjectID
+  #def test_time
+  #  hostname = Socket.gethostname
+  #  LockTestEntry.new({'test'=>hostname}).save
+  #  entry = LockTestEntry.find_by_test hostname
+  #  puts entry._id.generation_time
+  #end
 
 end
