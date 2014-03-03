@@ -8,7 +8,7 @@ end
 
 class MongoLock
 
-  def initialize(name, max_time=3.minutes)
+  def initialize(name, max_time=30.minutes)
     @locked_pid = nil
     @locked_time = nil
     @name = name
@@ -16,7 +16,7 @@ class MongoLock
   end
 
   def self.pid
-    "#{Socket.gethostname}-#{Process.pid}"
+    "#{Socket.gethostname}-#{Process.pid}-#{Thread.current.object_id}"
   end
 
   def timeout?
@@ -40,7 +40,6 @@ class MongoLock
       true
     else
       if lock_dock['pid'] != @locked_pid
-        # TODO: separate threads working in one process are not distinguished
         # other process took lock in the meantime
         @locked_pid = lock_dock['pid']
         @locked_time = Time.now
@@ -50,7 +49,6 @@ class MongoLock
         MongoLock.forced_release(@name)
       end
 
-      # TODO: behaviour?
       false
     end
 

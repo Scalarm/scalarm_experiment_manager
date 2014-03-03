@@ -30,7 +30,8 @@ class LockDistributedTest < Test::Unit::TestCase
     pids = []
     PROC_NUM.times do |th_i|
       pids << fork do
-        sleep(0.1) until MongoLock.acquire('test_job')
+        lock = MongoLock.new('test_job')
+        sleep(0.1) until lock.acquire
         COUNT.times do
           sleep(rand*0.1)
           LockTestEntry.new({
@@ -38,7 +39,7 @@ class LockDistributedTest < Test::Unit::TestCase
                                 'pid'=>"#{Socket.gethostname}-#{Process.pid}"
                             }).save
         end
-        MongoLock.release('test_job')
+        lock.release
       end
     end
 
