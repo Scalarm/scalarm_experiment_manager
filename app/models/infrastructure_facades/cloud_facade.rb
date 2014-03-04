@@ -53,24 +53,28 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def start_monitoring
+    lock = MongoLock.new(short_name)
     while true do
-      begin
-        logger.info 'monitoring thread is working'
-        vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
+      if lock.acquire
+        begin
+          logger.info 'monitoring thread is working'
+          vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
 
-        vm_records.each do |user_id, user_vm_records|
-          secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
-          if secrets.nil?
-            logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
-            next
+          vm_records.each do |user_id, user_vm_records|
+            secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+            if secrets.nil?
+              logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
+              next
+            end
+
+            client = @client_class.new(secrets)
+            (user_vm_records.map {|r| client.scheduled_vm_instance(r)}).each &:monitor
+
           end
-
-          client = @client_class.new(secrets)
-          (user_vm_records.map {|r| client.scheduled_vm_instance(r)}).each &:monitor
-
+        rescue Exception => e
+          logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
         end
-      rescue Exception => e
-        logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
+        lock.release
       end
       sleep(PROBE_TIME)
     end

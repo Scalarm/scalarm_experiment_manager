@@ -10,6 +10,9 @@ require_relative 'infrastructure_facade'
 
 class PLGridFacade < InfrastructureFacade
 
+  # sleep time between vm checking [seconds]
+  PROBE_TIME = 60
+
   def initialize
     super()
     @ui_grid_host = 'ui.grid.cyfronet.pl'
@@ -35,57 +38,57 @@ class PLGridFacade < InfrastructureFacade
   # 2. if the job is started correctly and is not stuck in a queue - restart if yes
   # 3. if the job is running more then 24 hours  - restart if yes
   def start_monitoring
+    lock = MongoLock.new(short_name)
     while true do
-      lock = MongoLock.new('PlGridJob')
-      sleep(1) until lock.acquire
+      if lock.acquire
+        begin
+          Rails.logger.info("[plgrid] #{Time.now} - monitoring thread is working")
+          #  group jobs by the user_id - for each group - login to the ui using the user credentials
+          PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
 
-      begin
-        Rails.logger.info("[plgrid] #{Time.now} - monitoring thread is working")
-        #  group jobs by the user_id - for each group - login to the ui using the user credentials
-        PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
+            credentials = GridCredentials.find_by_user_id(user_id)
 
-          credentials = GridCredentials.find_by_user_id(user_id)
+            Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+              job_list.each do |job|
+                job_logger = InfrastructureTaskLogger.new(short_name, job.job_id)
+                scheduler = create_scheduler_facade(job.scheduler_type)
+                ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
+                experiment = Experiment.find_by_id(job.experiment_id)
 
-          Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-            job_list.each do |job|
-              job_logger = InfrastructureTaskLogger.new(short_name, job.job_id)
-              scheduler = create_scheduler_facade(job.scheduler_type)
-              ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
-              experiment = Experiment.find_by_id(job.experiment_id)
+                all, sent, done = experiment.get_statistics unless experiment.nil?
 
-              all, sent, done = experiment.get_statistics unless experiment.nil?
+                job_logger.info "Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}"
 
-              job_logger.info "Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}"
+                if experiment.nil? or (not experiment.is_running) or (experiment.experiment_size == done)
+                  job_logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
+                  destroy_and_clean_after(job, scheduler, ssh)
 
-              if experiment.nil? or (not experiment.is_running) or (experiment.experiment_size == done)
-                job_logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
-                destroy_and_clean_after(job, scheduler, ssh)
+                #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
+                elsif scheduler.is_job_queued(ssh, job) and (job.created_at + job.max_init_time < Time.now)
 
-              #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
-              elsif scheduler.is_job_queued(ssh, job) and (job.created_at + job.max_init_time < Time.now)
+                  job_logger.info 'The job will be restarted due to not been run'
+                  scheduler.restart(ssh, job)
 
-                job_logger.info 'The job will be restarted due to not been run'
-                scheduler.restart(ssh, job)
+                elsif job.created_at + 24.hours < Time.now
+                  #  if the job is running more than 24 h then restart
+                  job_logger.info 'The job will be restarted due to being run for 24 hours'
+                  scheduler.restart(ssh, job)
 
-              elsif job.created_at + 24.hours < Time.now
-                #  if the job is running more than 24 h then restart
-                job_logger.info 'The job will be restarted due to being run for 24 hours'
-                scheduler.restart(ssh, job)
-
-              elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
-                job_logger.info 'The job is done or should be already done - so we will destroy it'
-                scheduler.cancel(ssh, job)
-                destroy_and_clean_after(job, scheduler, ssh)
+                elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
+                  job_logger.info 'The job is done or should be already done - so we will destroy it'
+                  scheduler.cancel(ssh, job)
+                  destroy_and_clean_after(job, scheduler, ssh)
+                end
               end
             end
           end
+        rescue Exception => e
+          Rails.logger.error("[plgrid] An exception occured in the monitoring thread --- #{e}")
         end
-      rescue Exception => e
-        Rails.logger.error("[plgrid] An exception occured in the monitoring thread --- #{e}")
+
+        lock.release
       end
-      
-      lock.release
-      sleep(60)
+      sleep(PROBE_TIME)
     end
   end
 

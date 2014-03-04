@@ -15,7 +15,7 @@ class MongoLock
     @max_time = max_time
   end
 
-  def self.pid
+  def self.global_pid
     "#{Socket.gethostname}-#{Process.pid}-#{Thread.current.object_id}"
   end
 
@@ -33,10 +33,10 @@ class MongoLock
     if lock_dock.nil? # lock acquired
       MongoLockRecord.collection.find_and_modify({
          query: { name: @name },
-         update: { '$set' => { pid: MongoLock.pid } }
+         update: { '$set' => { pid: MongoLock.global_pid } }
       })
 
-      Rails.logger.debug "Process #{Socket.gethostname}-#{Process.pid} acquired lock on #{@name}"
+      Rails.logger.debug "Process #{MongoLock.global_pid} acquired lock on #{@name}"
       true
     else
       if lock_dock['pid'] != @locked_pid
@@ -44,7 +44,7 @@ class MongoLock
         @locked_pid = lock_dock['pid']
         @locked_time = Time.now
       elsif timeout?
-        Rails.logger.debug "Process #{Socket.gethostname}-#{Process.pid} releases lock on #{@name} "\
+        Rails.logger.debug "Process #{MongoLock.global_pid} releases lock on #{@name} "\
           "owned by #{lock_dock['pid']} due to time limit"
         MongoLock.forced_release(@name)
       end
@@ -56,10 +56,10 @@ class MongoLock
 
   def release
     old_lock = MongoLockRecord.collection.find_and_modify({
-       query: { name: @name, pid: MongoLock.pid },
+       query: { name: @name, pid: MongoLock.global_pid },
        remove: true
     })
-    Rails.logger.debug "Process #{MongoLock.pid} released lock on #{@name}" if old_lock
+    Rails.logger.debug "Process #{MongoLock.global_pid} released lock on #{@name}" if old_lock
     old_lock ? old_lock['pid'] : nil
   end
 
