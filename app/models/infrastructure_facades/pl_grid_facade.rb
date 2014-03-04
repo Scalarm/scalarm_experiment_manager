@@ -45,6 +45,8 @@ class PLGridFacade < InfrastructureFacade
 
           credentials = GridCredentials.find_by_user_id(user_id)
 
+          next if job_list.blank? or credentials.nil?
+
           Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
             job_list.each do |job|
               job_logger = InfrastructureTaskLogger.new(short_name, job.job_id)
@@ -52,7 +54,7 @@ class PLGridFacade < InfrastructureFacade
               ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
               experiment = Experiment.find_by_id(job.experiment_id)
 
-              all, sent, done = experiment.get_statistics unless experiment.nil?
+              _, _, done = experiment.get_statistics unless experiment.nil?
 
               job_logger.info "Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}"
 
