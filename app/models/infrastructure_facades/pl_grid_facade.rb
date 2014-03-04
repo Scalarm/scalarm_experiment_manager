@@ -86,7 +86,7 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def destroy_and_clean_after(job, scheduler, ssh)
-    job_logger = InfrastructureTaskLogger short_name, job.job_id
+    job_logger = InfrastructureTaskLogger.new short_name, job.job_id
     job_logger.info("Destroying temp pass for #{job.sm_uuid}")
     temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
     job_logger.info("It is nil ? --- #{temp_pass.nil?}")
