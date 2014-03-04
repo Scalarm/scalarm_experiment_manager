@@ -32,6 +32,10 @@ information_service_user: secret_user
 information_service_pass: secret_password
 # mongo_activerecord config
 db_name: 'scalarm_db'
+monitoring:
+  db_name: 'scalarm_monitoring'
+  interval: 30
+  metrics: 'cpu'
 ```
 
 The second file, 'puma.rb', is a standard configuration file for the Puma server:
