@@ -1,12 +1,7 @@
-%section#main
-  .row.large-5.large-centered.columns
-    .panel.radius
-      = form_tag user_controller_change_password_path do
-        .row
-          .large-6.columns
-            %label.right.inline Login:
-          .large-6.columns
-            %span.inline= @current_user.login
+%header
+  .row
+    .small-12.small-centered.columns(style="text-align: center;")
+      %h2= t('account-title')
 
 %section#main.panel.radius
   .row.small-12.small-centered.columns
@@ -43,7 +38,7 @@
         .small-6.small-centered.columns(style="text-align:center;")
           = submit_tag t('.change_password'), class: 'button radius'
 
-%section.panel.radius
+%section.panel.radius(style="margin-top: 15px;")
   %h3=t('.manage_infrastructures')
   .row
     %dl.accordion(data-accordion="")

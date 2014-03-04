@@ -103,7 +103,7 @@ class PLGridFacade < InfrastructureFacade
     scheduler = create_scheduler_facade(additional_params['scheduler'])
 
     # prepare locally code of a simulation manager to upload with a configuration file
-    prepare_configuration_for_simulation_manager(sm_uuid, user.id, experiment_id, additional_params['start_at'])
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user.id, experiment_id, additional_params['start_at'])
 
     if credentials = GridCredentials.find_by_user_id(user.id)
       # prepare job executable and descriptor

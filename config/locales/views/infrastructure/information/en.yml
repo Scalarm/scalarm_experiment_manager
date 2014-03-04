@@ -32,7 +32,7 @@ en:
       submit: Submit
       remove_credentials: Remove credentials
 
-      credentials_info: To submit virtual machine into Cloud service, you must provide valid credentials in %{account_link} page.
+      credentials_info: Please, provide valid credentials to your Cloud of choice in the %{account_link} panel, before scheduling virtual machines.
       no_credentials_info: No valid credentials provided for %{cloud_name}
       submission_label: Simulation Manager submission
       scheduled_label: Scheduled Simulation Managers
