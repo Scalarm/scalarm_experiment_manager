@@ -54,7 +54,7 @@ class PLGridFacade < InfrastructureFacade
 
               all, sent, done = experiment.get_statistics unless experiment.nil?
 
-              Rails.logger.info("Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}")
+              job_logger.info "Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}"
 
               if experiment.nil? or (not experiment.is_running) or (experiment.experiment_size == done)
                 job_logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
@@ -89,7 +89,7 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def destroy_and_clean_after(job, scheduler, ssh)
-    job_logger = InfrastructureTaskLogger short_name, job.job_id
+    job_logger = InfrastructureTaskLogger.new short_name, job.job_id
     job_logger.info("Destroying temp pass for #{job.sm_uuid}")
     temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
     job_logger.info("It is nil ? --- #{temp_pass.nil?}")
