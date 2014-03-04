@@ -1,0 +1,102 @@
+-# local variables: experiment, user
+- require 'infrastructure_facades/clouds/cloud_factory'
+
+.row
+  #images_manager-ajax-response.alert-box.radius(style="display: none;")
+
+.row{class: 'panel callout radius'}
+  = raw t('.info', account_link: link_to('account', user_controller_account_path))
+
+.row
+  %dl.accordion(data-accordion="")
+    %dd
+      %a(href='#image-submission-panel')= t('.image_submission_label')
+      .content#image-submission-panel
+        .row
+          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
+            = hidden_field_tag 'credential_type', 'image'
+            = hidden_field_tag 'experiment_id', experiment.id
+            .row
+              .small-4.columns
+                = label_tag :infrastructure_type, t('.cloud_name') + ':', class: 'inline right'
+              .small-4.columns#cloud-select
+                = select_tag :infrastructure_type, options_for_select(CloudFactory.provider_names_select(user.id))
+              .small-4.columns
+            - CloudFactory.provider_names.map do |cloud_name|
+              - secrets = CloudSecrets.find_by_query('cloud_name'=>cloud_name, 'user_id'=>user.id)
+              .row{id: "image-id-row-#{cloud_name}"}
+                .small-4.columns
+                  = label_tag :image_id, t('.image_id') + ':', class: 'inline right'
+                .small-4.columns{id: "#select-#{cloud_name}"}
+                  - unless secrets.nil?
+                    - begin
+                      - imgs_info = CloudFactory.client_class(cloud_name).new(secrets).all_images_info
+                      - select_hash = Hash[imgs_info.map{|id, info| ["#{id} (#{info})", id]}]
+                      = select_tag :image_id, options_for_select(select_hash)
+                    - rescue # image ids cannot be fetched - wrong credentials?
+                      - secrets = nil
+                  - if secrets.nil?
+                    = text_field_tag :image_id, ''
+                .small-4.columns
+
+            .row
+              .small-4.columns
+                = label_tag :image_login, t('.login') + ':', class: 'inline right'
+              .small-4.columns
+                = text_field_tag :image_login, ''
+              .small-4.columns
+            .row
+              .small-4.columns
+                = label_tag :secret_image_password, t('.password') + ':', class: 'inline right'
+              .small-4.columns
+                = password_field_tag :secret_image_password, ''
+              .small-4.columns
+
+            .row
+              .small-12.columns.text-center
+                = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+                = image_tag 'loading.gif', class: 'image-submission-busy', style: 'display: none;'
+
+    %dd
+      %a(href='#image-table-panel')= t('.image_table_label')
+      .content#image-table-panel
+        %p
+          %table.images{style: 'width: 100%'}
+            %tr
+              %th= t('.cloud_name')
+              %th= t('.image_id')
+              %th= t('.login')
+              %th= t('.actions')
+            %tbody
+              - CloudImageSecrets.find_all_by_user_id(user.id).each do |image|
+                - row_id = "info-row-#{image.cloud_name}-#{image.image_id}"
+                %tr{id: "#{row_id}"}
+                  %td
+                    .small-12.columns.text-center
+                      =CloudFactory.client_class(image.cloud_name).full_name
+                  %td
+                    .small-12.columns.text-center
+                      = image.image_id
+                  %td
+                    .small-12.columns.text-center
+                      = image.image_login
+                  %td
+                    .small-12.columns.text-center
+                      = button_to t('.remove'), remove_image_infrastructure_path(image_secrets_id: image.id), class: "remove-button button radius tiny", remote: true, form: { "data-type" => "json" }
+                  %td
+                    .small-12.columns.text-center
+                      = image_tag 'loading.gif', class: "#{row_id}-busy", size: '24x24', style: 'display: none;'
+
+:javascript
+  $(function() {
+    new window.ImagesManagerDialog('image-submission-panel',
+                                 '#cloud-select',
+                                 '#extension-dialog',
+                                 '.image-submission-busy');
+
+    $('p').each(function(index, element) {
+      if($(element).html() == "") {
+        $(element).remove();
+      }
+    });
+  });

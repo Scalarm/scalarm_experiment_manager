@@ -1,22 +1,27 @@
+-tabs_map={plgrid: 'PL-Grid', cloud: t('.clouds'), images_manager: t('.images_manager')}
+
 %h2= t('experiments.monitoring_actions.booster.header')
 
 %a.close-reveal-modal &#215;
 
 - first = true
 %dl.tabs(data-tab="")
-  - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+  - tabs_map.each do |tab_id, tab_title|
     %dd{class: "#{first ? 'active' : '' }"}
-      %a{ href: "##{infrastructure_id}" }= infrastructure_info[:label]
+      %a{ href: "##{tab_id.to_s}" }= tab_title
     - first = false if first
 
 - first = true
 .tabs-content
-  - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+  - tabs_map.each do |infrastructure_id, infrastructure_info|
     .content{ id: infrastructure_id, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
       = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
     - first = false if first
 
+
 :javascript
   $(function() {
     $(document).foundation();
+
+    new window.InformationDialog('#extension-dialog');
   });

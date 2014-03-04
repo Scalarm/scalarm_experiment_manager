@@ -2,7 +2,7 @@ require 'rest-client'
 require 'json'
 require 'xmlsimple'
 
-class PLCloudClient
+class PLCloudUtil
   PLCLOUD_URL = 'https://149.156.10.32:3443'
   DNAT_URL = 'https://149.156.10.32:8401/dnat'
 
@@ -46,9 +46,13 @@ class PLCloudClient
     execute('onevm', ['delete', vm_id])
   end
 
-  # @return [PLCloudInstance] abstraction layer object used for managing and retrieving info about VM instance
+  def resubmit(vm_id)
+    execute('onevm', ['resubmit', vm_id])
+  end
+
+  # @return [PLCloudUtilInstance] abstraction layer object used for managing and retrieving info about VM instance
   def vm_instance(vm_id)
-    PLCloudInstance.new(vm_id, self)
+    PLCloudUtilInstance.new(vm_id, self)
   end
 
 
@@ -146,7 +150,7 @@ CONTEXT = [
       str_args = "[\"#{args.join('", "')}\"]"
 
       RestClient.post url, str_args,
-                      'One-User' => @secrets.login, 'One-Secret' => @secrets.password,
+                      'One-User' => @secrets.login, 'One-Secret' => @secrets.secret_password,
                       :content_type => :json, :accept => :json
     rescue
       Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
@@ -163,7 +167,7 @@ CONTEXT = [
 
     # TODO: use CA, "ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER" to RestClient Resource
 
-    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
+    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
 
     payload = [{'proto' => 'tcp', 'port' => port.to_i}].to_json
 
@@ -193,7 +197,7 @@ CONTEXT = [
   # @return [Hash] {<private_port_num> => {ip: <public_ip>, port: <public_port_num>}}
   # @param [String] vm_ip virtual machine's private ip
   def redirections_for(vm_ip)
-    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.password)
+    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
     resp = dnat[vm_ip].get
     data = JSON.parse resp
 
@@ -212,8 +216,16 @@ CONTEXT = [
 
   # @return [Hash] hash: vm_id => vm_info - like in vm_info(vm_id) method for every VM
   def all_vm_info
-    resp = execute('onevm', ['list', '--xml'])
+    resp = execute('onevm', %w(list --xml))
     infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['VM']
+    infos = [infos] unless infos.kind_of?(Array)
+    return Hash[infos.map {|i| [i['ID'].to_i, i]}]
+  end
+
+  # @return [Hash] hash: image_id => parsed xml image info
+  def all_images_info
+    resp = execute('oneimage', %w(list --xml))
+    infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['IMAGE']
     infos = [infos] unless infos.kind_of?(Array)
     return Hash[infos.map {|i| [i['ID'].to_i, i]}]
   end

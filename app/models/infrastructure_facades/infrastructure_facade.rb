@@ -1,5 +1,7 @@
 require 'yaml'
 
+require 'clouds/cloud_factory'
+
 # methods necessary to implement by subclasses
 # start_monitoring() - starting a background job which monitors scheduled jobs/vms etc. and handle their state, e.g. restart if necessary or delete db information
 # default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
@@ -8,10 +10,17 @@ require 'yaml'
 # get_running_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
 # current_state(user) - returns a string describing summary of current infrastructure state
 # add_credentials(user, params, session) - save credentials to database or session based on request parameters
+# short_name - short name of infrastructure, e.g. 'plgrid'
 
 class InfrastructureFacade
 
-  def prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
+  attr_reader :logger
+
+  def initialize
+    @logger = InfrastructureTaskLogger.new short_name
+  end
+
+  def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
@@ -43,13 +52,12 @@ class InfrastructureFacade
 
   # returns a map of all supported infrastructures
   # infrastructure_id => facade object
-  # TODO should this be taken from a configuration file ?
   def self.get_registered_infrastructures
     {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
-        amazon: { label: 'Amazon Elastic Compute Cloud', facade: AmazonFacade.new },
-        plcloud: { label: 'PLGrid Cloud', facade: PLCloudFacade.new }
-    }
+        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
+    }.merge(
+        CloudFactory.infrastructures_hash
+    )
   end
 
   def self.start_monitoring
@@ -71,4 +79,26 @@ class InfrastructureFacade
     render json: response_msg, status: status
   end
 
+end
+
+class InfrastructureTaskLogger
+  def initialize(infrastructure_name, task_id=nil)
+    if task_id
+      @log_format = Proc.new do |message|
+        "[#{infrastructure_name}][#{task_id.to_s}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+      end
+    else
+      @log_format = Proc.new do |message|
+        "[#{infrastructure_name}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+      end
+    end
+  end
+
+  def method_missing(method_name, *args, &block)
+    if %w(info debug warn error).include? method_name.to_s
+      Rails.logger.send(method_name.to_s, @log_format.call(args[0], block))
+    else
+      super(method_name, *args, &block)
+    end
+  end
 end

@@ -1,12 +1,14 @@
 en:
   user_controller:
     account:
+      manage_scalarm: "Manage your Scalarm account"
+      manage_infrastructures: "Manage your infrastructures credentials"
       login: "Login:"
       certificate: "Certificate DN:"
       password: "Password:"
       repeat_password: "Repeat password:"
       change_password: "Change password"
-      empty_dn: "<N/A>"
+      empty_dn: "<N/A>"      
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

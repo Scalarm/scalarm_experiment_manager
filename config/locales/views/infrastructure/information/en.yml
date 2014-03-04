@@ -1,52 +1,46 @@
 en:
   infrastructure:
-    information:
-      instance_counter: Instance counter
-      grant_id: Grant
-      time_constraint: Job time constraint [min]
-      start_at: 'Start at ("hh:mm:ss" format)'
-      submit: Submit
-
-      submission_label: Simulation Manager submission
+    credentials:
       credentials_label: Credentials
-      scheduled_label: Scheduled Simulation Managers
-
       plgrid:
-        scheduler: Scheduler
         credentials_label: Please, provide your credentials to the PL-Grid infrastructure
         credentials:
+          secrets: PL-Grid secrets
           host: User Interface (UI) host
           login: UI login
           password: UI password
-          save_settings: Save settings
-        scheduled_label: Scheduled jobs
-
       amazon:
-        vm_type: VM type
-        image_label: VM image
         credentials_label: Please, provide your credentials to Amazon EC2
-
         credentials:
           secrets: Amazon EC2 secrets
           key_id: Access Key Id
           secret_key: Secret Access Key
-          store_in_session: Store in this session only
-        images_label: Amazon EC2 image information
-        images:
-          image_id: Amazon Image Id
-          login: Virtual machine login
-          password: Virtual machine password
-
-      plcloud:
+      pl_cloud:
         credentials_label: Please, provide your credentials to access the PL-Grid infrastructure
-        credentials_link: PLGrid Cloud credentials
         credentials:
+          secrets: PLGrid Cloud secrets
           login: UI login
           password: UI password
-          save_settings: Save settings
-        images:
-          login: "Virtual machine login"
-          password: "Virtual machine password"
-          session_only: "Store in this session only"
-          title: "PLGrid Cloud image information"
-          image_id: "Image Id"
+
+    information:
+      instance_counter: Instance counter
+      image_label: Image
+      vm_type: Instance type
+      grant_id: Grant
+      time_constraint: Job time constraint [min]
+      start_at: 'Start at ("hh:mm:ss" format)'
+      submit: Submit
+      remove_credentials: Remove credentials
+
+      credentials_info: To submit virtual machine into Cloud service, you must provide valid credentials in %{account_link} page.
+      no_credentials_info: No valid credentials provided for %{cloud_name}
+      submission_label: Simulation Manager submission
+      scheduled_label: Scheduled Simulation Managers
+
+      plgrid:
+        scheduler: Scheduler
+        scheduled_label: Scheduled jobs
+
+      amazon:
+        security_group: Security group
+

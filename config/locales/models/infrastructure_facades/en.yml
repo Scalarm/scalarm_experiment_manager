@@ -1,0 +1,20 @@
+en:
+  infrastructures_controller:
+    image_removed: "Removed %{cloud_name} image credentials with id %{image_id}"
+    image_not_found: "Image record not found"
+    credentials_removed: "Removed credentials for %{name}"
+    credentials_not_removed: "There was no credentials for %{name} to remove"
+    permission_denied: "Permission denied"
+  infrastructure_facades:
+    cloud:
+      provide_secrets: "You have to provide %{cloud_name} secrets first!"
+      client_problem: "Problem connecting with %{cloud_name} - please check provided cloud credentials."
+      provide_image_secrets: "You have to provide image information first!"
+      image_not_exists: "Image %{image_id} does not exists on %{cloud_name}. Please verify it."
+      image_permission: "This image belongs to other user"
+      image_cloud_error: "This image is for other Cloud"
+      scheduled_info: "You have scheduled %{count} virtual machines on %{cloud_name}!"
+      scheduled_error: "Virtual machines scheduling failed, error: %{error}"
+      current_state_no_creds: "No information available due to lack of credentials for %{cloud_name}"
+      current_state_count: "You have %{count} Scalarm virtual machines scheduled"
+      current_state_exception: "No information available due to exception: %{exception}"

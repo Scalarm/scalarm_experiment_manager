@@ -12,6 +12,11 @@ class PlGridJob < MongoActiveRecord
     'grid_jobs'
   end
 
+  # time to wait to job initialization - after that, job will be resubmitted [minutes object]
+  def max_init_time
+    self.time_limit.to_i.hours > 72 ? 40.minutes : 20.minutes
+  end
+
   def experiment
     if @attributes.include?('experiment_id')
       Experiment.find_by_id(self.experiment_id)

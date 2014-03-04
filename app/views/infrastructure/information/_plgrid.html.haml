@@ -7,8 +7,8 @@
 .row
   %dl.accordion(data-accordion="")
     %dd
-      %a(href='#plgrid-submission-panel')= t('infrastructure.information.submission_label')
-      #plgrid-submission-panel.content
+      %a(href='#submission-panel-plgrid')= t('infrastructure.information.submission_label')
+      #submission-panel-plgrid.content
         %p
           .row
             = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
@@ -49,44 +49,7 @@
               .row
                 .small-12.columns.text-center
                   = submit_tag t('infrastructure.information.submit'), class: 'button radius'
-                  = image_tag 'loading.gif', id: 'plgrid-submission-busy', style: 'display: none;'
-    %dd
-      %a(href='#plgrid-login-form-panel')= t('infrastructure.information.credentials_label')
-      .content#plgrid-login-form-panel
-        %p.row
-          = form_tag add_infrastructure_credentials_infrastructure_path, remote: true, class: 'custom' do
-            = hidden_field_tag 'infrastructure_type', 'plgrid'
 
-            %h5.subheader= t('.credentials_label')
-
-            .row
-              .small-4.columns
-                = label_tag :host, t('.credentials.host') + ':', class: 'inline right'
-              .small-4.columns
-                = text_field_tag :host, credentials.nil? ? '' : credentials.host
-              .small-4.columns
-            .row
-              .small-4.columns
-                = label_tag :username, t('.credentials.login') + ':', class: 'inline right'
-              .small-4.columns
-                = text_field_tag :username, credentials.nil? ? '' : credentials.login
-              .small-4.columns
-            .row
-              .small-4.columns
-                = label_tag :password, t('.credentials.password') + ':', class: 'inline right'
-              .small-4.columns
-                = password_field_tag :password, credentials.nil? ? '' : credentials.password
-              .small-4.columns
-            .row
-              .small-4.columns
-                = label_tag :save_settings, t('.credentials.save_settings') + ':', class: 'inline right'
-              .small-4.columns
-                = check_box_tag :save_settings, '1', (not credentials.nil?)
-              .small-4.columns
-            .row
-              .small-12.columns.text-center
-                = submit_tag t('infrastructure.information.submit'), class: 'button radius'
-                = image_tag 'loading.gif', id: 'plgrid-configure-busy', style: 'display: none;'
     %dd
       %a(href='#plgrid-jobs-panel')= t('infrastructure.information.scheduled_label')
       #plgrid-jobs-panel.content
@@ -95,11 +58,3 @@
           %ul.circle
             - @simulation_managers[:plgrid].each do |plgrid_job|
               %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
-
-:javascript
-  $(function() {
-    new window.InformationDialog('plgrid-login-form-panel',
-                                 'plgrid-submission-panel',
-                                 '#extension-dialog',
-                                 '#plgrid-configure-busy');
-  });

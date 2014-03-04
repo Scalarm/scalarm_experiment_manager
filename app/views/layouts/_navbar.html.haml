@@ -1,6 +1,10 @@
 - unless @current_user.nil?
   .fixed
     %nav.top-bar
+      %ul.title-area(style="margin-left: 5px; margin-right: 5px;")
+        %li.name
+          %h1= content_for?(:title) ? yield(:title) : t('title')
+
       %section.top-bar-section
         %ul.title-area
           %li.name

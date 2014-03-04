@@ -12,7 +12,7 @@
 class PLCloudVm < MongoActiveRecord
 
   def self.collection_name
-    'plcloud_vms'
+    'pl_cloud_vms'
   end
 
   def to_s

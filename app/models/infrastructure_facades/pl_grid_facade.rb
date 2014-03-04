@@ -11,7 +11,12 @@ require_relative 'infrastructure_facade'
 class PLGridFacade < InfrastructureFacade
 
   def initialize
+    super()
     @ui_grid_host = 'ui.grid.cyfronet.pl'
+  end
+
+  def short_name
+    'plgrid'
   end
 
   def current_state(user)
@@ -42,6 +47,7 @@ class PLGridFacade < InfrastructureFacade
 
           Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
             job_list.each do |job|
+              job_logger = InfrastructureTaskLogger.new(short_name, job.job_id)
               scheduler = create_scheduler_facade(job.scheduler_type)
               ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
               experiment = Experiment.find_by_id(job.experiment_id)
@@ -51,22 +57,22 @@ class PLGridFacade < InfrastructureFacade
               Rails.logger.info("Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}")
 
               if experiment.nil? or (not experiment.is_running) or (experiment.experiment_size == done)
-                Rails.logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
+                job_logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
                 destroy_and_clean_after(job, scheduler, ssh)
 
               #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
-              elsif scheduler.is_job_queued(ssh, job) and (job.created_at + 10.minutes < Time.now)
+              elsif scheduler.is_job_queued(ssh, job) and (job.created_at + job.max_init_time < Time.now)
 
-                Rails.logger.info("#{Time.now} - the job will be restarted due to not been run")
+                job_logger.info 'The job will be restarted due to not been run'
                 scheduler.restart(ssh, job)
 
               elsif job.created_at + 24.hours < Time.now
                 #  if the job is running more than 24 h then restart
-                Rails.logger.info("#{Time.now} - the job will be restarted due to being run for 24 hours")
+                job_logger.info 'The job will be restarted due to being run for 24 hours'
                 scheduler.restart(ssh, job)
 
               elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
-                Rails.logger.info("#{Time.now} - the job is done or should be already done - so we will destroy it")
+                job_logger.info 'The job is done or should be already done - so we will destroy it'
                 scheduler.cancel(ssh, job)
                 destroy_and_clean_after(job, scheduler, ssh)
               end
@@ -83,9 +89,10 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def destroy_and_clean_after(job, scheduler, ssh)
-    Rails.logger.info("Destroying temp pass for #{job.sm_uuid}")
+    job_logger = InfrastructureTaskLogger short_name, job.job_id
+    job_logger.info("Destroying temp pass for #{job.sm_uuid}")
     temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
-    Rails.logger.info("It is nil ? --- #{temp_pass.nil?}")
+    job_logger.info("It is nil ? --- #{temp_pass.nil?}")
     temp_pass.destroy unless temp_pass.nil? || temp_pass.longlife
     job.destroy
     scheduler.clean_after_job(ssh, job)
@@ -155,21 +162,12 @@ class PLGridFacade < InfrastructureFacade
       credentials.password = params[:password]
     end
 
-    if params[:save_settings] == 'false'
-      session[:tmp_plgrid_credentials] = true
-    else
-      session.delete(:tmp_plgrid_credentials)
-    end
-
     credentials.save
 
     'ok'
   end
 
   def clean_tmp_credentials(user_id, session)
-    if session.include?(:tmp_plgrid_credentials)
-      GridCredentials.find_by_user_id(user_id).destroy
-    end
   end
 
   def create_scheduler_facade(type)

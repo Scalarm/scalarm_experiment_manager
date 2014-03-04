@@ -1,28 +1,27 @@
 class window.InformationDialog
-  constructor: (@loginFormId, @submissionFormId, @responseDialog, @loadingImg) ->
-    @loading = $(@loadingImg)
-    @responseDialog = $(@responseDialog)
+  constructor: (@responseDialogId) ->
+    @responseDialog = $(@responseDialogId)
 
-    @bindToLoginForm()
-    @bindToSubmissionForm()
+    @bindToSubmissionForms()
 
-  bindToLoginForm: () ->
-    $("##{@loginFormId} form")
-      .bind('ajax:before', => @loading.show())
-      .bind('ajax:success', (data, status, xhr) => toastr.success(status.msg))
-      .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
-      .bind('ajax:complete', () => @loading.hide())
+    $('.disabled :input').prop('disabled', true);
 
-  bindToSubmissionForm: () ->
-    $("##{@submissionFormId} form")
-      .bind('ajax:before', () =>
-        @responseDialog.foundation('reveal', 'close')
+  bindToSubmissionForms: () ->
+    $responseDialog = @responseDialog
+    $("div[id^=\"submission-panel-\"]").each( ->
+      panel_id = this['id']
+      $("##{panel_id} form")
+      .bind('ajax:before', () ->
+        $responseDialog.foundation('reveal', 'close')
         window.show_loading_notice()
       )
-      .bind 'ajax:success', (data, status, xhr) ->
+
+      .bind('ajax:success', (data, status, xhr) ->
         window.hide_notice()
 
         if status.status == 'error'
           toastr.error(status.msg)
         else if status.status == 'ok'
           toastr.success(status.msg)
+      )
+    )

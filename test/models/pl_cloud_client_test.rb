@@ -20,7 +20,7 @@ class PLCloudClientTest < Test::Unit::TestCase
   #
   # NOTE: please check if machines were successfully deleted after tests.
 
-  TEST_USER_LOGIN = '__plcloud_test_user__'
+  TEST_USER_LOGIN = '__pl_cloud_test_user__'
 
   # Called before every test method runs. Can be used
   # to set up fixture information.
@@ -48,7 +48,7 @@ class PLCloudClientTest < Test::Unit::TestCase
     image = PLCloudImage.find_by_user_id(user.id)
     assert(image, "No PLCloud for user #{TEST_USER_LOGIN}.
       Please create associated PLCloudImage for this user (see comments in test source file).")
-    plcc = PLCloudClient.new(secrets)
+    plcc = PLCloudUtil.new(secrets)
 
     # --- create ---
 

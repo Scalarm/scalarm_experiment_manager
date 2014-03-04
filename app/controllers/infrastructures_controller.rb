@@ -30,6 +30,37 @@ class InfrastructuresController < ApplicationController
     render json: { status: status, msg: I18n.t("#{params[:infrastructure_type]}.login.#{status}") }
   end
 
+  def remove_image
+    img_secrets = CloudImageSecrets.find_by_id(params[:image_secrets_id])
+    if img_secrets and img_secrets.user_id != @current_user.id
+      render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
+    end
+
+    if img_secrets
+      cloud_name = img_secrets.cloud_name
+      image_id = img_secrets.image_id
+
+      img_secrets.destroy
+      msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
+      render json: { status: 'ok', msg: msg, cloud_name: CloudFactory.full_name(cloud_name), image_id: image_id }
+    else
+      msg = I18n.t('infrastructures_controller.image_not_found')
+      render json: { status: 'error', msg: msg }
+    end
+  end
+
+  def remove_credentials
+    secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
+    if secrets
+      secrets.destroy
+      msg = I18n.t('infrastructures_controller.credentials_removed', name: CloudFactory.full_name(params[:cloud_name]))
+      render json: { status: 'ok', msg: msg }
+    else
+      msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.full_name(params[:cloud_name]))
+      render json: { status: 'error', msg: msg }
+    end
+  end
+
   # ============================ PRIVATE METHODS ============================
   private
 
