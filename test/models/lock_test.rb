@@ -105,6 +105,43 @@ class LockTest < Test::Unit::TestCase
 
   end
 
+  def test_lock_two_threads
+    count = 3
+    queue = Queue.new
+
+    writer = Thread.new do
+      w_lock = MongoLock.new 'writer'
+      assert(w_lock.acquire)
+      count.times do
+        queue << 1
+        sleep 1
+      end
+      w_lock.release
+    end
+
+    reader = Thread.new do
+      require 'timeout'
+      r_lock = MongoLock.new 'reader'
+      assert(r_lock.acquire)
+      begin
+        results = []
+        Timeout::timeout count*2 do
+          count.times do
+            results << queue.pop
+          end
+        end
+        assert_equal results.size, count
+        assert_equal (results.inject :+), count
+      rescue Timeout::Error
+        assert false, 'timeout waiting for reader'
+      end
+      r_lock.release
+    end
+
+    [writer, reader].each {|t| t.join}
+
+  end
+
   #def test_seq
   #  assert (1..4).map{ MongoActiveRecord.get_next_sequence('test') } == (1..4).to_a
   #  assert (1..5).map{ LockTestEntry.next_sequence } == (1..5).to_a

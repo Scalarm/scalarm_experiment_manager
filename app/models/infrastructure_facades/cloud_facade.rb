@@ -5,9 +5,6 @@ class CloudFacade < InfrastructureFacade
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
 
-  # sleep time between vm checking [seconds]
-  PROBE_TIME = 60
-
   # Creates specific cloud facade instance
   # @param [Class] client_class
   def initialize(client_class)
@@ -52,31 +49,18 @@ class CloudFacade < InfrastructureFacade
   end
 
   # implements InfrasctuctureFacade
-  def start_monitoring
-    lock = MongoLock.new(short_name)
-    while true do
-      if lock.acquire
-        begin
-          logger.info 'monitoring thread is working'
-          vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
+  def monitoring_loop
+    vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
 
-          vm_records.each do |user_id, user_vm_records|
-            secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
-            if secrets.nil?
-              logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
-              next
-            end
-
-            client = @client_class.new(secrets)
-            (user_vm_records.map {|r| client.scheduled_vm_instance(r)}).each &:monitor
-
-          end
-        rescue Exception => e
-          logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
-        end
-        lock.release
+    vm_records.each do |user_id, user_vm_records|
+      secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+      if secrets.nil?
+        logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
+        next
       end
-      sleep(PROBE_TIME)
+
+      client = @client_class.new(secrets)
+      (user_vm_records.map {|r| client.scheduled_vm_instance(r)}).each &:monitor
     end
   end
 
