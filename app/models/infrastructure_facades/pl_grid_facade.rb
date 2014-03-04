@@ -56,7 +56,7 @@ class PLGridFacade < InfrastructureFacade
                 destroy_and_clean_after(job, scheduler, ssh)
 
               #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
-              elsif scheduler.is_job_queued(ssh, job) and (job.created_at + 10.seconds < Time.now)
+              elsif scheduler.is_job_queued(ssh, job) and (job.created_at + 10.minutes < Time.now)
 
                 Rails.logger.info("#{Time.now} - the job will be restarted due to not been run")
                 scheduler.restart(ssh, job)
@@ -79,7 +79,7 @@ class PLGridFacade < InfrastructureFacade
       end
       
       lock.release
-      sleep(10)
+      sleep(60)
     end
   end
 
