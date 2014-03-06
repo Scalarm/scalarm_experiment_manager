@@ -1,5 +1,9 @@
 class PBSFacade
 
+  def self.name
+    'PBS'
+  end
+
   def prepare_job_files(sm_uuid)
     IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
   end

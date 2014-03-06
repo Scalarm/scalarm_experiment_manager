@@ -1,6 +1,85 @@
 
 class InfrastructuresController < ApplicationController
 
+  def index
+    render 'infrastructure/index'
+  end
+
+  def tree
+    data = {
+      name: "Scalarm",
+      children: tree_infrastructures
+    }
+    #
+    #Rails.logger.info '---------------'
+    #Rails.logger.info data
+    #Rails.logger.info '---------------'
+
+    #data = {
+    #    name: "ROOT",
+    #    children: [
+    #        {
+    #            name: "A",
+    #            children: [
+    #                { name: "A1" },
+    #                { name: "A2" },
+    #                { name: "A3" }
+    #            ]
+    #        },
+    #        {
+    #            name: "B",
+    #            children: [
+    #                { name: "B1" },
+    #                { name: "B2" },
+    #                { name: "B3" }
+    #            ]
+    #        }
+    #    ]
+    #}
+
+    render json: data
+  end
+
+  def tree_infrastructures
+    [
+      *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
+        {
+          name: inf[:label],
+          children: inf[:facade].subtree
+        }
+      end),
+      {
+        name: 'Clouds',
+        children:
+          InfrastructureFacade.cloud_infrastructures.values.map do |inf|
+            {
+                name: inf[:label],
+                children: inf[:facade].subtree
+            }
+          end
+      }
+    ]
+
+    #[
+    #  {
+    #    name: "A",
+    #    children: [
+    #      { name: "A1" },
+    #      { name: "A2" },
+    #      { name: "A3" }
+    #    ]
+    #  },
+    #  {
+    #    name: "B",
+    #    children: [
+    #      { name: "B1" },
+    #      { name: "B2" },
+    #      { name: "B3" }
+    #    ]
+    #  }
+    #]
+  end
+
   def infrastructure_info
     infrastructure_info = {}
 

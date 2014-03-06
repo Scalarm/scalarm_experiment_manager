@@ -30,6 +30,10 @@ class PLGridFacade < InfrastructureFacade
     "Currently #{jobs_count} jobs are scheduled or running."
   end
 
+  def subtree
+    scheduler_facade_classes.values.map {|cls| {name: cls.name}}
+  end
+
   # for each job check
   # 1. if the experiment is still running - destroy the job otherwise
   # 2. if the job is started correctly and is not stuck in a queue - restart if yes
@@ -172,12 +176,12 @@ class PLGridFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
+  def scheduler_facade_classes
+    { 'qsub' => PBSFacade, 'glite' => GliteFacade }
+  end
+
   def create_scheduler_facade(type)
-    if type == 'qsub'
-      PBSFacade.new
-    elsif type == 'glite'
-      GliteFacade.new
-    end
+    scheduler_facade_classes[type].new
   end
 
   def default_additional_params

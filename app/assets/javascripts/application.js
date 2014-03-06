@@ -21,6 +21,7 @@
 //= require jquery.dataTables.min
 //= require jit-yc
 //= require toastr
+//= require d3
 
 
 $(function(){ $(document).foundation(); });

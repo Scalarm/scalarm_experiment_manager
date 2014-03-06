@@ -11,6 +11,7 @@ require 'clouds/cloud_factory'
 # current_state(user) - returns a string describing summary of current infrastructure state
 # add_credentials(user, params, session) - save credentials to database or session based on request parameters
 # short_name - short name of infrastructure, e.g. 'plgrid'
+# subtree - subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
 
 class InfrastructureFacade
 
@@ -53,11 +54,17 @@ class InfrastructureFacade
   # returns a map of all supported infrastructures
   # infrastructure_id => facade object
   def self.get_registered_infrastructures
+    non_cloud_infrastructures.merge(cloud_infrastructures)
+  end
+
+  def self.non_cloud_infrastructures
     {
         plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
-    }.merge(
-        CloudFactory.infrastructures_hash
-    )
+    }
+  end
+
+  def self.cloud_infrastructures
+    CloudFactory.infrastructures_hash
   end
 
   def self.start_monitoring

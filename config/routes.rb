@@ -24,6 +24,9 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'simulations/destroy_simulation'
   post 'simulations/conduct_experiment'
 
+  get 'infrastructures' => 'infrastructures#index'
+  get 'infrastructures/tree'
+
   resources :experiments do
     collection do
       post :start_experiment

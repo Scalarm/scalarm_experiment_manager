@@ -17,6 +17,10 @@ class CloudFacade < InfrastructureFacade
     super()
   end
 
+  def subtree
+    [{name: 'TODO'}]
+  end
+
   def cloud_client_instance(user_id)
     cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
     cloud_secrets ? @client_class.new(cloud_secrets) : nil

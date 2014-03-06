@@ -1,5 +1,9 @@
 class GliteFacade
 
+  def self.name
+    'gLite'
+  end
+
   def prepare_job_files(sm_uuid)
     IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
     IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid))

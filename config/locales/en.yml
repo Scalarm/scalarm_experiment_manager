@@ -28,6 +28,7 @@ en:
   navbar:
     experiments_link: Experiment view
     simulations_link: Simulation view
+    infrastructures_link: Infrastructure view
     account_link: "Logged as '%{login}'"
     logout_link: Logout
 
