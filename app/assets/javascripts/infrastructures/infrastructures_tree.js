@@ -19,46 +19,77 @@ function InfrastructuresTree() {
         .append("svg:g")
         .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
+    function leaf_path(name) {
+        return "infrastructures/sm_nodes?name=" + name;
+    }
 
-//    var root = {
-//        name: "ROOT",
-//        children: [
-//            {
-//                name: "A",
-//                children: [
-//                    { name: "A1" },
-//                    { name: "A2" },
-//                    { name: "A3" }
-//                ]
-//            },
-//            {
-//                name: "B",
-//                children: [
-//                    { name: "B1" },
-//                    { name: "B2" },
-//                    { name: "B3" }
-//                ]
-//            }
-//        ]
-//    };
+    function fetch_tree(path) {
+        d3.json(path, function(json) {
+            update(json);
+        });
+    }
 
+    var base_tree_path = "infrastructures/tree";
 
-//    root.x0 = h / 2;
-//    root.y0 = 0;
-//
-//    function toggleAll(d) {
-//        if (d.children) {
-//            d.children.forEach(toggleAll);
-//            toggle(d);
-//        }
-//    }
-//
-//    // Initialize the display to show a few nodes.
-//    root.children.forEach(toggleAll);
-//    toggle(root.children[1]);
-//    toggle(root.children[1].children[2]);
+    var root;
 
-   function update(source, root) {
+    d3.json(base_tree_path, function(data) {
+        root = data;
+        root.x0 = h / 2;
+        root.y0 = 0;
+
+        update(root);
+
+        var leaves = find_leaves(root);
+
+        leaves.forEach(function(leaf) {
+            var url = leaf_path(leaf['short']);
+
+            setInterval(function() {
+                d3.json(url, function(child_json) {
+                    if (!leaf['_children'] && !childs_equal(leaf['children'], child_json)) {
+                        if (leaf['children']) {
+                            leaf['children'] = child_json;
+                        } else {
+                            leaf['_children'] = child_json;
+                        }
+                        update(leaf);
+                    }
+                });
+            }, 3000);
+        });
+
+    });
+
+    function childs_equal(childs_a, childs_b) {
+        if (typeof childs_a == 'undefined') {
+            childs_a = null;
+        }
+        if (!childs_a && !childs_a || !childs_a && childs_b || childs_a && !childs_b
+            || childs_a.length !== childs_b.length) {
+            return false;
+        }
+
+        var names_array_fun = function(d) {return d.name};
+        var array_a = childs_a.map(names_array_fun).sort();
+        var array_b = childs_b.map(names_array_fun).sort();
+
+        for (var i=0, len=array_a.length; i<len; ++i) {
+            if (array_a[i] !== array_b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function has_children(p) {
+        return p['_children'] || p['children'];
+    }
+    function is_collapsed(p) {
+        return p['_children'] || !p['children'];
+    }
+
+    function update(source) {
         var duration = d3.event && d3.event.altKey ? 5000 : 500;
 
         // Compute the new tree layout.
@@ -148,7 +179,7 @@ function InfrastructuresTree() {
         });
     }
 
-// Toggle children.
+    // Toggle children.
     function toggle(d) {
         if (d.children) {
             d._children = d.children;
@@ -159,15 +190,16 @@ function InfrastructuresTree() {
         }
     }
 
-    var tree_path = "infrastructures/tree";
-
-    function fetch_tree() {
-        $.getJSON(tree_path, function(data) {
-            update(data, data);
-        });
+    function find_leaves(root) {
+        var leaves = [];
+        function find_leaf(p) {
+            if ('children' in p) {
+                p['children'].forEach(function(child) {find_leaf(child)});
+            } else {
+                leaves.push(p);
+            }
+        }
+        find_leaf(root);
+        return leaves
     }
-
-    setInterval(fetch_tree, 5*1000);
-
-    fetch_tree();
 }

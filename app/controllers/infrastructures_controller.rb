@@ -8,34 +8,9 @@ class InfrastructuresController < ApplicationController
   def tree
     data = {
       name: "Scalarm",
+      type: 'root',
       children: tree_infrastructures
     }
-    #
-    #Rails.logger.info '---------------'
-    #Rails.logger.info data
-    #Rails.logger.info '---------------'
-
-    #data = {
-    #    name: "ROOT",
-    #    children: [
-    #        {
-    #            name: "A",
-    #            children: [
-    #                { name: "A1" },
-    #                { name: "A2" },
-    #                { name: "A3" }
-    #            ]
-    #        },
-    #        {
-    #            name: "B",
-    #            children: [
-    #                { name: "B1" },
-    #                { name: "B2" },
-    #                { name: "B3" }
-    #            ]
-    #        }
-    #    ]
-    #}
 
     render json: data
   end
@@ -45,39 +20,31 @@ class InfrastructuresController < ApplicationController
       *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
         {
           name: inf[:label],
-          children: inf[:facade].subtree
+          type: 'infrastructure',
+          short: inf[:facade].short_name
         }
       end),
       {
         name: 'Clouds',
+        type: 'infrastructure',
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
             {
                 name: inf[:label],
-                children: inf[:facade].subtree
+                type: 'leaf',
+                short: inf[:facade].short_name
             }
           end
       }
     ]
+  end
 
-    #[
-    #  {
-    #    name: "A",
-    #    children: [
-    #      { name: "A1" },
-    #      { name: "A2" },
-    #      { name: "A3" }
-    #    ]
-    #  },
-    #  {
-    #    name: "B",
-    #    children: [
-    #      { name: "B1" },
-    #      { name: "B2" },
-    #      { name: "B3" }
-    #    ]
-    #  }
-    #]
+  def sm_nodes
+      # TODO: delegate to infrastructures hash by name
+      render json: [
+          {name: "#{params[:name]}-1"},
+          {name: "#{params[:name]}-2"}
+      ]
   end
 
   def infrastructure_info

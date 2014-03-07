@@ -26,6 +26,7 @@ ScalarmExperimentManager::Application.routes.draw do
 
   get 'infrastructures' => 'infrastructures#index'
   get 'infrastructures/tree'
+  get 'infrastructures/sm_nodes'
 
   resources :experiments do
     collection do
