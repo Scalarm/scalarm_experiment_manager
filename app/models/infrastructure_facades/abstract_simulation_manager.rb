@@ -4,14 +4,14 @@
 # - stop: stops and terminates SM with its computational resources (e.g. terminates VM)
 # - status: returns status TODO
 
-class AbstractScheduledJob
+class AbstractSimulationManager
   attr_reader :record
 
   def initialize(record)
     @record = record
   end
 
-  def tree_node
+  def to_hash
     {
         name: name
     }

@@ -1,8 +1,8 @@
 require_relative 'clouds/vm_instance.rb'
-require_relative 'scheduled_jobs_containter.rb'
+require_relative 'simulation_managers_container.rb'
 
 class CloudFacade < InfrastructureFacade
-  include ScheduledJobsContainter
+  include SimulationManagersContainer
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
@@ -68,7 +68,7 @@ class CloudFacade < InfrastructureFacade
           end
 
           client = @client_class.new(secrets)
-          (user_vm_records.map {|r| client.scheduled_vm_instance(r)}).each &:monitor
+          (user_vm_records.map {|r| client.cloud_simulation_manager(r)}).each &:monitor
 
         end
       rescue Exception => e
@@ -185,7 +185,7 @@ class CloudFacade < InfrastructureFacade
       []
     else
       client = @client_class.new(secrets)
-      vm_records.map {|r| client.scheduled_vm_instance(r)}
+      vm_records.map {|r| client.cloud_simulation_manager(r)}
     end
   end
 

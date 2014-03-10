@@ -1,6 +1,6 @@
 require 'infrastructure_facades/abstract_scheduled_job'
 
-class ScheduledPLGridJob < AbstractScheduledJob
+class PlGridSimulationManager < AbstractSimulationManager
   attr_reader :logger
 
   def initialize(plgrid_job_record)

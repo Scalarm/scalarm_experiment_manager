@@ -1,6 +1,6 @@
 require 'infrastructure_facades/abstract_scheduled_job'
 
-class ScheduledVmInstance < AbstractScheduledJob
+class CloudSimulationManager < AbstractSimulationManager
   attr_reader :vm
   attr_reader :logger
 

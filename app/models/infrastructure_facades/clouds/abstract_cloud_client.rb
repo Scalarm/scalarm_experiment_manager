@@ -19,7 +19,7 @@
 #  -- error (state that shouldn't occur)
 
 require_relative 'vm_instance'
-require_relative 'scheduled_vm_instance'
+require_relative 'cloud_simulation_manager'
 
 class AbstractCloudClient
 
@@ -32,12 +32,12 @@ class AbstractCloudClient
     VmInstance.new(instance_id.to_s, self)
   end
 
-  def scheduled_vm_instance(vm_record)
-    ScheduledVmInstance.new(vm_record, self)
+  def cloud_simulation_manager(vm_record)
+    CloudSimulationManager.new(vm_record, self)
   end
 
   # Intantiate virtual machines and add records to database
-  # @return [Array<ScheduledVmInstance>]
+  # @return [Array<CloudSimulationManager>]
   def schedule_instances(base_name, image_id, number, user_id, experiment_id, params)
     instantiate_vms(base_name, image_id, number, params).map do |vm_id|
 
@@ -55,7 +55,7 @@ class AbstractCloudClient
                                     })
       vm_record.save
 
-      scheduled_vm_instance(vm_record)
+      cloud_simulation_manager(vm_record)
     end
   end
 

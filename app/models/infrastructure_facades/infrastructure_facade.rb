@@ -111,7 +111,7 @@ class InfrastructureFacade
     [self]
   end
 
-  # @return [Array<ScheduledJobsContainter>] scheduled jobs containers for all registered infrastructures
+  # @return [Array<SimulationManagersContainer>] scheduled jobs containers for all registered infrastructures
   def self.get_registered_sm_containters
     # FIXME - use classes not instances
     get_registered_infrastructures.values.map do |inf|

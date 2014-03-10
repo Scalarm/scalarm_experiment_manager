@@ -23,14 +23,14 @@ class InfrastructuresController < ApplicationController
   def tree_infrastructures
     [
       *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
-        inf[:facade].tree_node
+        inf[:facade].to_hash
       end),
       {
         name: 'Clouds',
         type: 'infrastructure',
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
-            inf[:facade].tree_node
+            inf[:facade].to_hash
           end
       }
     ]

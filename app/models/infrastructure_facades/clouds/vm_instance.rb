@@ -7,7 +7,7 @@ class VmInstance
   end
 
   def scheduled_instance(vm_record)
-    ScheduledVmInstance(vm_record, @client)
+    CloudSimulationManager(vm_record, @client)
   end
 
   def vm_id
