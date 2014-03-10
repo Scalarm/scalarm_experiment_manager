@@ -27,7 +27,7 @@ class InfrastructuresController < ApplicationController
       end),
       {
         name: 'Clouds',
-        type: 'infrastructure',
+        type: 'clouds_meta',
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
             inf[:facade].to_hash
@@ -101,6 +101,20 @@ class InfrastructuresController < ApplicationController
     else
       msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.long_name(params[:cloud_name]))
       render json: { status: 'error', msg: msg }
+    end
+  end
+
+  def stop_sm
+    container = InfrastructureFacade.get_registered_sm_containters[params['sm_container_name']]
+    if container
+      sm = container.simulation_manager(params['resource_id'], @current_user.id)
+      if sm
+        sm.stop
+      else
+        # TODO error msg
+      end
+    else
+      # TODO error msg
     end
   end
 

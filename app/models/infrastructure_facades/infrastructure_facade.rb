@@ -113,7 +113,6 @@ class InfrastructureFacade
 
   # @return [Array<SimulationManagersContainer>] scheduled jobs containers for all registered infrastructures
   def self.get_registered_sm_containters
-    # FIXME - use classes not instances
     get_registered_infrastructures.values.map do |inf|
       Hash[inf[:facade].sm_containers.map {|container| [container.short_name, container]}]
     end.reduce :merge

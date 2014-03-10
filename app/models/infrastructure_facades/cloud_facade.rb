@@ -141,6 +141,32 @@ class CloudFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
+
+  def all_user_simulation_managers(user_id)
+    query = {'cloud_name'=>@short_name, 'user_id'=>user_id}
+    vm_records = CloudVmRecord.find_all_by_query(query)
+    secrets = CloudSecrets.find_by_query(query)
+    if secrets.nil?
+      []
+    else
+      client = @client_class.new(secrets)
+      vm_records.map {|r| client.cloud_simulation_manager(r)}
+    end
+  end
+
+  def simulation_manager(resource_id, user_id)
+    query = {'cloud_name'=>@short_name, 'user_id'=>user_id}
+    vm_record = CloudVmRecord.find_by_query(query.merge('vm_id'=>resource_id))
+    secrets = CloudSecrets.find_by_query(query)
+    if vm_record and secrets
+      client = @client_class.new(secrets)
+      client.cloud_simulation_manager(vm_record)
+    else
+      nil
+    end
+
+  end
+
   private
 
   def handle_secrets_credentials(user, params, session)
@@ -177,16 +203,5 @@ class CloudFacade < InfrastructureFacade
     'ok'
   end
 
-  def scheduled_jobs(user_id)
-    query = {'cloud_name'=>@short_name, 'user_id'=>user_id}
-    vm_records = CloudVmRecord.find_all_by_query(query)
-    secrets = CloudSecrets.find_by_query(query)
-    if secrets.nil?
-      []
-    else
-      client = @client_class.new(secrets)
-      vm_records.map {|r| client.cloud_simulation_manager(r)}
-    end
-  end
 
 end
