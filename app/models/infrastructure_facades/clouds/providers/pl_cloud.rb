@@ -14,7 +14,7 @@ module PLCloud
       'pl_cloud'
     end
 
-    def self.full_name
+    def self.long_name
       'PLGrid Cloud'
     end
 
@@ -74,6 +74,19 @@ module PLCloud
       {
           'standard'=> 'Standard (0.5 CPU, 512 MB RAM, x86_64)'
       }
+    end
+
+
+    def sm_nodes
+      # TODO generic function and real SM read
+      [
+          {
+              name: 'plcloud-001'
+          },
+          {
+              name: 'plcloud-002'
+          }
+      ]
     end
 
   end

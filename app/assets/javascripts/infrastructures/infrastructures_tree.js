@@ -20,7 +20,7 @@ function InfrastructuresTree() {
         .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
     function leaf_path(name) {
-        return "infrastructures/sm_nodes?name=" + name;
+        return "/infrastructures/sm_nodes?name=" + name;
     }
 
     function fetch_tree(path) {
@@ -29,7 +29,7 @@ function InfrastructuresTree() {
         });
     }
 
-    var base_tree_path = "infrastructures/tree";
+    var base_tree_path = "/infrastructures/tree";
 
     var root;
 

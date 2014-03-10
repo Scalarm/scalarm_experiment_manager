@@ -1,7 +1,19 @@
-class PBSFacade
+class PBSFacade < PLGridSchedulerBase
 
-  def self.name
+  def self.long_name
     'PBS'
+  end
+
+  def self.short_name
+    'qsub'
+  end
+
+  def long_name
+    self.class.long_name
+  end
+
+  def short_name
+    self.class.short_name
   end
 
   def prepare_job_files(sm_uuid)
@@ -93,4 +105,5 @@ cd scalarm_simulation_manager_$1
 ruby simulation_manager.rb
     eos
   end
+
 end

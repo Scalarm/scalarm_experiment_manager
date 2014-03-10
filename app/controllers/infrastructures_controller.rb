@@ -5,6 +5,7 @@ class InfrastructuresController < ApplicationController
     render 'infrastructure/index'
   end
 
+  # GET a root of Infrastructures Tree. This method is used directly by javascript tree.
   def tree
     data = {
       name: "Scalarm",
@@ -15,36 +16,32 @@ class InfrastructuresController < ApplicationController
     render json: data
   end
 
+  # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
+  # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
+  # are fetched recursivety with tree_node methods of every concrete facade.
+  # This method is used by tree method.
   def tree_infrastructures
     [
       *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
-        {
-          name: inf[:label],
-          type: 'infrastructure',
-          short: inf[:facade].short_name
-        }
+        inf[:facade].tree_node
       end),
       {
         name: 'Clouds',
         type: 'infrastructure',
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
-            {
-                name: inf[:label],
-                type: 'leaf',
-                short: inf[:facade].short_name
-            }
+            inf[:facade].tree_node
           end
       }
     ]
   end
 
+  # Get Simulation Manager nodes for Infrastructure Tree for given containter name
+  # and current user.
+  # GET params:
+  # - name: name of Simulation Manager containter
   def sm_nodes
-      # TODO: delegate to infrastructures hash by name
-      render json: [
-          {name: "#{params[:name]}-1"},
-          {name: "#{params[:name]}-2"}
-      ]
+    render json: InfrastructureFacade.get_registered_sm_containters[params[:name]].sm_nodes(@current_user.id)
   end
 
   def infrastructure_info
@@ -88,7 +85,7 @@ class InfrastructuresController < ApplicationController
 
       img_secrets.destroy
       msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
-      render json: { status: 'ok', msg: msg, cloud_name: CloudFactory.full_name(cloud_name), image_id: image_id }
+      render json: { status: 'ok', msg: msg, cloud_name: CloudFactory.long_name(cloud_name), image_id: image_id }
     else
       msg = I18n.t('infrastructures_controller.image_not_found')
       render json: { status: 'error', msg: msg }
@@ -99,10 +96,10 @@ class InfrastructuresController < ApplicationController
     secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
     if secrets
       secrets.destroy
-      msg = I18n.t('infrastructures_controller.credentials_removed', name: CloudFactory.full_name(params[:cloud_name]))
+      msg = I18n.t('infrastructures_controller.credentials_removed', name: CloudFactory.long_name(params[:cloud_name]))
       render json: { status: 'ok', msg: msg }
     else
-      msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.full_name(params[:cloud_name]))
+      msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.long_name(params[:cloud_name]))
       render json: { status: 'error', msg: msg }
     end
   end

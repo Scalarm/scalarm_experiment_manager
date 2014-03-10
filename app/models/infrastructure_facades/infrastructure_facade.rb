@@ -11,7 +11,7 @@ require 'clouds/cloud_factory'
 # current_state(user) - returns a string describing summary of current infrastructure state
 # add_credentials(user, params, session) - save credentials to database or session based on request parameters
 # short_name - short name of infrastructure, e.g. 'plgrid'
-# subtree - subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
+# tree_node - subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
 
 class InfrastructureFacade
 
@@ -75,6 +75,48 @@ class InfrastructureFacade
         infrastructure_information[:facade].start_monitoring
       end
     end
+  end
+
+  # Creates node or subtree:
+  # - if there is only one ScheduledJobContainer, creates node
+  # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
+  # @return [Hash] node (or subtree) for infrastructure in infrastructure tree
+  def tree_node
+    smc = sm_containers
+    if smc.count == 1
+      {
+          name: smc[0].long_name,
+          type: 'sm_containter',
+          short: smc[0].short_name
+      }
+    else
+      {
+          name: self.long_name,
+          type: 'meta_infrastructure',
+          short: self.short_name,
+          children: smc.map do |container|
+            {
+                name: container.long_name,
+                type: 'sm_container',
+                short: container.short_name
+            }
+          end
+      }
+    end
+  end
+
+  # Could be overriden in subclasses if there are many ScheduledJobsContainers for infrastructure.
+  # By default, infrastructure is also a ScheduledJobsContainer (one node on tree).
+  def sm_containers
+    [self]
+  end
+
+  # @return [Array<ScheduledJobsContainter>] scheduled jobs containers for all registered infrastructures
+  def self.get_registered_sm_containters
+    # FIXME - use classes not instances
+    get_registered_infrastructures.values.map do |inf|
+      Hash[inf[:facade].sm_containers.map {|container| [container.short_name, container]}]
+    end.reduce :merge
   end
 
   def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)

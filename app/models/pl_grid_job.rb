@@ -5,6 +5,7 @@
 # time_limit => time - when this job should be stopped - in minutes
 # job_id => string - glite id of the job
 # sm_uuid => string - uuid of configuration files
+# scheduler_type => string - short name of scheduler, eg. pbs
 
 class PlGridJob < MongoActiveRecord
 

@@ -1,7 +1,21 @@
-class GliteFacade
+require_relative 'pl_grid_scheduler_base'
 
-  def self.name
+class GliteFacade < PLGridSchedulerBase
+
+  def self.long_name
     'gLite'
+  end
+
+  def self.short_name
+    'glite'
+  end
+
+  def long_name
+    self.class.long_name
+  end
+
+  def short_name
+    self.class.short_name
   end
 
   def prepare_job_files(sm_uuid)

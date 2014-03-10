@@ -3,8 +3,8 @@ require 'fileutils'
 require 'net/ssh'
 require 'net/scp'
 
-require 'grid_schedulers/glite_facade'
-require 'grid_schedulers/pbs_facade'
+require 'plgrid/grid_schedulers/glite_facade'
+require 'plgrid/grid_schedulers/pbs_facade'
 
 require_relative 'infrastructure_facade'
 
@@ -13,6 +13,10 @@ class PLGridFacade < InfrastructureFacade
   def initialize
     super()
     @ui_grid_host = 'ui.grid.cyfronet.pl'
+  end
+
+  def long_name
+    'PL-Grid'
   end
 
   def short_name
@@ -28,10 +32,6 @@ class PLGridFacade < InfrastructureFacade
                  end
 
     "Currently #{jobs_count} jobs are scheduled or running."
-  end
-
-  def subtree
-    scheduler_facade_classes.values.map {|cls| {name: cls.name}}
   end
 
   # for each job check
@@ -177,7 +177,11 @@ class PLGridFacade < InfrastructureFacade
   end
 
   def scheduler_facade_classes
-    { 'qsub' => PBSFacade, 'glite' => GliteFacade }
+    Hash[[PBSFacade, GliteFacade].map {|f| [f.short_name, f]}]
+  end
+
+  def scheduler_facades
+    Hash[(scheduler_facade_classes.map {|name, cls| [name, cls.new]})]
   end
 
   def create_scheduler_facade(type)
@@ -186,6 +190,27 @@ class PLGridFacade < InfrastructureFacade
 
   def default_additional_params
     { 'scheduler' => 'qsub', 'time_limit' => 300 }
+  end
+
+  # Overrides
+  def sm_containers
+    scheduler_facades.values
+  end
+
+  # Overrides
+  def tree_node
+    {
+        name: long_name,
+        type: 'meta_infrastructure',
+        short: short_name,
+        children: scheduler_facade_classes.map { |sched_name, sched_facade|
+          {
+              name: sched_facade.name,
+              type: 'sm_container',
+              short: sched_name
+          }
+        }
+    }
   end
 
   def retrieve_grants(credentials)

@@ -1,6 +1,8 @@
 require_relative 'clouds/vm_instance.rb'
+require_relative 'scheduled_jobs_containter.rb'
 
 class CloudFacade < InfrastructureFacade
+  include ScheduledJobsContainter
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
@@ -13,12 +15,8 @@ class CloudFacade < InfrastructureFacade
   def initialize(client_class)
     @client_class = client_class
     @short_name = client_class.short_name
-    @full_name = client_class.full_name
+    @long_name = client_class.long_name
     super()
-  end
-
-  def subtree
-    [{name: 'TODO'}]
   end
 
   def cloud_client_instance(user_id)
@@ -26,10 +24,9 @@ class CloudFacade < InfrastructureFacade
     cloud_secrets ? @client_class.new(cloud_secrets) : nil
   end
 
-  # implements InfrastructureFacade
-  def short_name
-    @short_name
-  end
+  # implements ScheduledJobsContainter
+  attr_reader :long_name
+  attr_reader :short_name
 
   # implements InfrasctuctureFacade
   def current_state(user)
@@ -37,7 +34,7 @@ class CloudFacade < InfrastructureFacade
 
     if cloud_client.nil?
       logger.info  'current state in GUI: lack of credentials'
-      return I18n.t('infrastructure_facades.cloud.current_state_no_creds', cloud_name: @full_name)
+      return I18n.t('infrastructure_facades.cloud.current_state_no_creds', cloud_name: @long_name)
     end
 
     begin
@@ -60,6 +57,7 @@ class CloudFacade < InfrastructureFacade
     while true do
       begin
         logger.info 'monitoring thread is working'
+        # TODO change to scheduled_jobs when mongo_lock branch will be merged
         vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
 
         vm_records.each do |user_id, user_vm_records|
@@ -101,7 +99,7 @@ class CloudFacade < InfrastructureFacade
         return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
       elsif not cloud_client.image_exists? exp_image.image_id
         return 'error', I18n.t('infrastructure_facades.cloud.image_not_exists',
-                               image_id: exp_image.image_id, cloud_name: @full_name)
+                               image_id: exp_image.image_id, cloud_name: @long_name)
       elsif exp_image.user_id != user.id
         return 'error', I18n.t('infrastructure_facades.cloud.image_permission')
       elsif exp_image.cloud_name != @short_name
@@ -112,7 +110,7 @@ class CloudFacade < InfrastructureFacade
                                                         instances_count, user.id, experiment_id, additional_params)
 
       ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
-                          cloud_name: @full_name)]
+                          cloud_name: @long_name)]
     rescue Exception => e
       ['error', I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message)]
     end
@@ -180,5 +178,15 @@ class CloudFacade < InfrastructureFacade
     'ok'
   end
 
+  def scheduled_jobs(user_id)
+    vm_records = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+    secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+    if secrets.nil?
+      []
+    else
+      client = @client_class.new(secrets)
+      vm_records.map {|r| client.scheduled_vm_instance(r)}
+    end
+  end
 
 end

@@ -8,7 +8,7 @@
 %dl.tabs(data-tab="")
   - CloudFactory.provider_names.each do |cloud_name|
     %dd{class: "#{first ? 'active' : '' }"}
-      %a{ href: "##{cloud_name}" }= CloudFactory.full_name(cloud_name)
+      %a{ href: "##{cloud_name}" }= CloudFactory.long_name(cloud_name)
     - first = false if first
 
 - first = true
@@ -25,7 +25,7 @@
       .row
         - if cloud_client.nil?
           .row{class: 'panel callout radius'}
-            = t('infrastructure.information.no_credentials_info', cloud_name: CloudFactory.full_name(cloud_name))
+            = t('infrastructure.information.no_credentials_info', cloud_name: CloudFactory.long_name(cloud_name))
         %dl.accordion(data-accordion="")
           %dd
             %a(href="#submission-panel-#{cloud_class.short_name}")= t 'infrastructure.information.submission_label'

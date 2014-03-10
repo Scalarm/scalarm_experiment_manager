@@ -17,7 +17,7 @@ module AmazonCloud
       'amazon'
     end
 
-    def self.full_name
+    def self.long_name
       'Amazon Elastic Compute Cloud'
     end
 
@@ -96,6 +96,18 @@ module AmazonCloud
 
     def ec2_instance(id)
       @ec2.instances[id]
+    end
+
+    def sm_nodes
+      # TODO generic function and real SM read
+      [
+          {
+              name: 'amazon-01'
+          },
+          {
+              name: 'amazon-02'
+          }
+      ]
     end
 
   end

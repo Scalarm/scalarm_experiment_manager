@@ -38,7 +38,7 @@ class CloudFactory
   def self.infrastructures_hash
     Hash[PROVIDER_NAMES.map do |name|
       c_class = client_class(name)
-      [c_class.short_name.to_sym, {label: c_class.full_name, facade: CloudFacade.new(c_class)}]
+      [c_class.short_name.to_sym, {label: c_class.long_name, facade: CloudFacade.new(c_class)}]
     end]
   end
 
@@ -49,15 +49,15 @@ class CloudFactory
       not CloudSecrets.find_by_query('cloud_name'=>name, 'user_id'=>user_id).nil?
     end
 
-    Hash[clouds_with_creds.map {|name, client| [client.full_name, name]}]
+    Hash[clouds_with_creds.map {|name, client| [client.long_name, name]}]
   end
 
   def self.provider_names
     PROVIDER_NAMES
   end
 
-  def self.full_name(short_name)
-    client_class(short_name).full_name
+  def self.long_name(short_name)
+    client_class(short_name).long_name
   end
 
   
