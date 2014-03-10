@@ -48,8 +48,10 @@ class PlGridFacade < InfrastructureFacade
         PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
           credentials = GridCredentials.find_by_user_id(user_id)
           next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
-          # FIXME SSH
-          (job_list.map {|job| PlGridSimulationManager.new(job, credentials)}).each &:monitor
+
+          Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+            (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
+          end
 
         end
       rescue Exception => e
