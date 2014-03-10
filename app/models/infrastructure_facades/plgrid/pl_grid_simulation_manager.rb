@@ -94,7 +94,7 @@ class PlGridSimulationManager < AbstractSimulationManager
   end
 
   def scheduler
-    @scheduler ||= PLGridFacade.create_scheduler_facade(record.scheduler_type)
+    @scheduler ||= PlGridFacade.create_scheduler_facade(record.scheduler_type)
   end
 
 end

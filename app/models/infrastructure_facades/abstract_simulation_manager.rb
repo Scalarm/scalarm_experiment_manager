@@ -22,7 +22,8 @@ class AbstractSimulationManager
   end
 
   def experiment_end?
-    done = experiment.get_statistics[2] unless experiment.nil?
-    experiment.nil? or (experiment.is_running == false) or (experiment.experiment_size == done)
+    experiment.nil? or
+        (experiment.is_running == false) or
+        (experiment.experiment_size == experiment.get_statistics[2])
   end
 end

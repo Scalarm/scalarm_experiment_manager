@@ -42,9 +42,10 @@ class Experiment < MongoActiveRecord
   end
 
   def initialize(attributes)
-
     super(attributes)
   end
+
+
 
   def self.get_running_experiments
     experiments = []

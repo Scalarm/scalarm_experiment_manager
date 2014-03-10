@@ -8,7 +8,7 @@ require 'plgrid/grid_schedulers/pbs_facade'
 
 require_relative 'infrastructure_facade'
 
-class PLGridFacade < InfrastructureFacade
+class PlGridFacade < InfrastructureFacade
 
   def initialize
     super()
@@ -48,7 +48,7 @@ class PLGridFacade < InfrastructureFacade
         PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
           credentials = GridCredentials.find_by_user_id(user_id)
           next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
-
+          # FIXME SSH
           (job_list.map {|job| PlGridSimulationManager.new(job, credentials)}).each &:monitor
 
         end

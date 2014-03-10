@@ -1,6 +1,6 @@
 require_relative 'pl_grid_scheduler_base'
 
-class GliteFacade < PLGridSchedulerBase
+class GliteFacade < PlGridSchedulerBase
 
   def self.long_name
     'gLite'

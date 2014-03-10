@@ -4,7 +4,7 @@
 
 require 'infrastructure_facades/plgrid/pl_grid_simulation_manager'
 
-class PLGridSchedulerBase
+class PlGridSchedulerBase
   include SimulationManagersContainer
 
   def scheduled_jobs(user_id)

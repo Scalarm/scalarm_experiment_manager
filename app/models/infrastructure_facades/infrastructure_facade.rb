@@ -59,7 +59,7 @@ class InfrastructureFacade
 
   def self.non_cloud_infrastructures
     {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
+        plgrid: { label: 'PL-Grid', facade: PlGridFacade.new }
     }
   end
 

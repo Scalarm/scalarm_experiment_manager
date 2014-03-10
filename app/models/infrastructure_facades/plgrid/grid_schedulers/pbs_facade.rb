@@ -1,4 +1,4 @@
-class PBSFacade < PLGridSchedulerBase
+class PBSFacade < PlGridSchedulerBase
 
   def self.long_name
     'PBS'
