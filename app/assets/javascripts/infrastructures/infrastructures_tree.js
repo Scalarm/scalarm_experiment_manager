@@ -56,7 +56,7 @@ function InfrastructuresTree() {
                         update(leaf);
                     }
                 });
-            }, 3000);
+            }, 30000);
         });
 
     });

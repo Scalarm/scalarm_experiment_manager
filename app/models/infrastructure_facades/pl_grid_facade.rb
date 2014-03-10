@@ -43,50 +43,17 @@ class PLGridFacade < InfrastructureFacade
       sleep(1) until MongoLock.acquire('PlGridJob')
 
       begin
-        Rails.logger.info("[plgrid] #{Time.now} - monitoring thread is working")
+        logger.info "monitoring thread is working"
         #  group jobs by the user_id - for each group - login to the ui using the user credentials
         PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
-
           credentials = GridCredentials.find_by_user_id(user_id)
+          next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
 
-          next if job_list.blank? or credentials.nil?
+          (job_list.map {|job| PlGridSimulationManager.new(job, credentials)}).each &:monitor
 
-          Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-            job_list.each do |job|
-              job_logger = InfrastructureTaskLogger.new(short_name, job.job_id)
-              scheduler = create_scheduler_facade(job.scheduler_type)
-              ssh.exec!('voms-proxy-init --voms vo.plgrid.pl') if job.scheduler_type == 'glite' # generate new proxy if glite
-              experiment = Experiment.find_by_id(job.experiment_id)
-
-              _, _, done = experiment.get_statistics unless experiment.nil?
-
-              job_logger.info "Experiment: #{job.experiment_id} --- nil?: #{experiment.nil?}"
-
-              if experiment.nil? or (not experiment.is_running) or (experiment.experiment_size == done)
-                job_logger.info("Experiment '#{job.experiment_id}' is no longer running => destroy the job and temp password")
-                destroy_and_clean_after(job, scheduler, ssh)
-
-              #  if the job is not running although it should (create_at + 10.minutes > Time.now) - restart = cancel + start
-              elsif scheduler.is_job_queued(ssh, job) and (job.created_at + job.max_init_time < Time.now)
-
-                job_logger.info 'The job will be restarted due to not been run'
-                scheduler.restart(ssh, job)
-
-              elsif job.created_at + 24.hours < Time.now
-                #  if the job is running more than 24 h then restart
-                job_logger.info 'The job will be restarted due to being run for 24 hours'
-                scheduler.restart(ssh, job)
-
-              elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
-                job_logger.info 'The job is done or should be already done - so we will destroy it'
-                scheduler.cancel(ssh, job)
-                destroy_and_clean_after(job, scheduler, ssh)
-              end
-            end
-          end
         end
       rescue Exception => e
-        Rails.logger.error("[plgrid] An exception occured in the monitoring thread --- #{e}")
+        logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
       end
       
       MongoLock.release('PlGridJob')      
@@ -94,19 +61,9 @@ class PLGridFacade < InfrastructureFacade
     end
   end
 
-  def destroy_and_clean_after(job, scheduler, ssh)
-    job_logger = InfrastructureTaskLogger.new short_name, job.job_id
-    job_logger.info("Destroying temp pass for #{job.sm_uuid}")
-    temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(job.sm_uuid)
-    job_logger.info("It is nil ? --- #{temp_pass.nil?}")
-    temp_pass.destroy unless temp_pass.nil? || temp_pass.longlife
-    job.destroy
-    scheduler.clean_after_job(ssh, job)
-  end
-
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
-    scheduler = create_scheduler_facade(additional_params['scheduler'])
+    scheduler = self.class.create_scheduler_facade(additional_params['scheduler'])
 
     # prepare locally code of a simulation manager to upload with a configuration file
     InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user.id, experiment_id, additional_params['start_at'])
@@ -176,15 +133,15 @@ class PLGridFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
-  def scheduler_facade_classes
+  def self.scheduler_facade_classes
     Hash[[PBSFacade, GliteFacade].map {|f| [f.short_name, f]}]
   end
 
-  def scheduler_facades
+  def self.scheduler_facades
     Hash[(scheduler_facade_classes.map {|name, cls| [name, cls.new]})]
   end
 
-  def create_scheduler_facade(type)
+  def self.create_scheduler_facade(type)
     scheduler_facade_classes[type].new
   end
 
@@ -194,11 +151,11 @@ class PLGridFacade < InfrastructureFacade
 
   # Overrides
   def sm_containers
-    scheduler_facades.values
+    self.class.scheduler_facades.values
   end
 
   # Overrides
-  def tree_node
+  def to_hash
     {
         name: long_name,
         type: 'meta_infrastructure',

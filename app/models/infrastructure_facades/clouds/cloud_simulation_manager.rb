@@ -1,4 +1,4 @@
-require 'infrastructure_facades/abstract_scheduled_job'
+require 'infrastructure_facades/abstract_simulation_manager'
 
 class CloudSimulationManager < AbstractSimulationManager
   attr_reader :vm
@@ -74,12 +74,6 @@ class CloudSimulationManager < AbstractSimulationManager
 
   def ready_to_initialize_sm?
     (@vm.status == :running) and (not record.sm_initialized)
-  end
-
-  def experiment_end?
-    done = record.experiment_instance.get_statistics[2] unless record.experiment_instance.nil?
-    record.experiment_instance.nil? or (record.experiment_instance.is_running == false)\
-      or (record.experiment_instance.experiment_size == done)
   end
 
   # -- monitoring actions --

@@ -57,7 +57,6 @@ class CloudFacade < InfrastructureFacade
     while true do
       begin
         logger.info 'monitoring thread is working'
-        # TODO change to scheduled_jobs when mongo_lock branch will be merged
         vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
 
         vm_records.each do |user_id, user_vm_records|
@@ -179,8 +178,9 @@ class CloudFacade < InfrastructureFacade
   end
 
   def scheduled_jobs(user_id)
-    vm_records = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
-    secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+    query = {'cloud_name'=>@short_name, 'user_id'=>user_id}
+    vm_records = CloudVmRecord.find_all_by_query(query)
+    secrets = CloudSecrets.find_by_query(query)
     if secrets.nil?
       []
     else
