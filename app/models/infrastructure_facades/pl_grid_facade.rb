@@ -162,11 +162,11 @@ class PlGridFacade < InfrastructureFacade
         name: long_name,
         type: 'meta_infrastructure',
         short: short_name,
-        children: scheduler_facade_classes.map { |sched_name, sched_facade|
+        children: self.class.scheduler_facade_classes.values.map { |sched_facade|
           {
-              name: sched_facade.name,
+              name: sched_facade.long_name,
               type: 'sm_container',
-              short: sched_name
+              short: sched_facade.short_name
           }
         }
     }

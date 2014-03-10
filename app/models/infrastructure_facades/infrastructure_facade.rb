@@ -11,7 +11,7 @@ require 'clouds/cloud_factory'
 # current_state(user) - returns a string describing summary of current infrastructure state
 # add_credentials(user, params, session) - save credentials to database or session based on request parameters
 # short_name - short name of infrastructure, e.g. 'plgrid'
-# tree_node - subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
+# to_hash - hash representing subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
 
 class InfrastructureFacade
 
@@ -77,11 +77,11 @@ class InfrastructureFacade
     end
   end
 
-  # Creates node or subtree:
+  # Used mainly to create node or subtree:
   # - if there is only one ScheduledJobContainer, creates node
   # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
   # @return [Hash] node (or subtree) for infrastructure in infrastructure tree
-  def tree_node
+  def to_hash
     smc = sm_containers
     if smc.count == 1
       {

@@ -1,15 +1,15 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.2'
+gem 'rails', '4.0.3'
 gem 'racc'
 
 # wrapper for R interpreter
 gem 'rinruby'
 
-gem 'mongo'
 gem 'bson'
 gem 'bson_ext'
+gem 'mongo'
 
 # Amazon EC2 connector
 gem 'aws-sdk'
@@ -28,6 +28,8 @@ gem 'uglifier', '>= 1.3.0'
 # Use CoffeeScript for .js.coffee assets and views
 gem 'coffee-rails', '~> 4.0.0'
 
+gem 'foundation-icons-sass-rails'
+
 # See https://github.com/sstephenson/execjs#readme for more supported runtimes
 gem 'therubyracer', platforms: :ruby
 
@@ -37,7 +39,6 @@ gem 'haml'
 gem 'foundation-rails'
 gem 'highcharts-rails'
 gem 'jit-rails'
-gem 'i18n-js'
 
 # Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
 # gem 'turbolinks'

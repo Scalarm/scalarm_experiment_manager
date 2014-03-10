@@ -47,6 +47,10 @@ function InfrastructuresTree() {
 
             setInterval(function() {
                 d3.json(url, function(child_json) {
+                    if (child_json.length == 0) {
+                        child_json = null
+                    }
+
                     if (!leaf['_children'] && !childs_equal(leaf['children'], child_json)) {
                         if (leaf['children']) {
                             leaf['children'] = child_json;
