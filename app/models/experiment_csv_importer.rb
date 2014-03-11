@@ -1,3 +1,5 @@
+require 'csv'
+
 class ExperimentCsvImporter
   attr_accessor :parameters, :parameter_values
 

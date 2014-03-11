@@ -1,3 +1,4 @@
+require 'csv'
 require 'test/unit'
 require 'test_helper'
 require 'mocha/test_unit'
