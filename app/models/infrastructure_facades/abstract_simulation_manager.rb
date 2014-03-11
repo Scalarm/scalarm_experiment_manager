@@ -13,7 +13,8 @@ class AbstractSimulationManager
 
   def to_hash
     {
-        name: name
+        name: name,
+        type: 'sm-node'
     }
   end
 

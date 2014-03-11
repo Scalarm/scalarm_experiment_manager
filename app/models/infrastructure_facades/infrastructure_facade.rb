@@ -86,18 +86,18 @@ class InfrastructureFacade
     if smc.count == 1
       {
           name: smc[0].long_name,
-          type: 'sm_containter',
+          type: 'sm-container-node',
           short: smc[0].short_name
       }
     else
       {
           name: self.long_name,
-          type: 'meta_infrastructure',
+          type: 'meta-node',
           short: self.short_name,
           children: smc.map do |container|
             {
                 name: container.long_name,
-                type: 'sm_container',
+                type: 'sm-container-node',
                 short: container.short_name
             }
           end

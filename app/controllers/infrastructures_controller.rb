@@ -8,8 +8,8 @@ class InfrastructuresController < ApplicationController
   # GET a root of Infrastructures Tree. This method is used directly by javascript tree.
   def tree
     data = {
-      name: "Scalarm",
-      type: 'root',
+      name: 'Scalarm',
+      type: 'root-node',
       children: tree_infrastructures
     }
 
@@ -27,7 +27,7 @@ class InfrastructuresController < ApplicationController
       end),
       {
         name: 'Clouds',
-        type: 'clouds_meta',
+        type: 'meta-node',
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
             inf[:facade].to_hash

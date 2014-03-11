@@ -1,7 +1,7 @@
 function InfrastructuresTree() {
 
-    var m = [20, 120, 20, 120],
-        w = 1280 - m[1] - m[3],
+    var m = [20, 80, 20, 80],
+        w = 1000 - m[1] - m[3],
         h = 800 - m[0] - m[2],
         i = 0;
 
@@ -108,7 +108,7 @@ function InfrastructuresTree() {
 
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append("svg:g")
-            .attr("class", "node")
+            .attr("class", function(d) { return "node " + d.type })
             .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
             .on("click", function(d) { toggle(d); update(d); });
 
@@ -117,9 +117,6 @@ function InfrastructuresTree() {
             .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
         nodeEnter.append("svg:text")
-            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dy", ".35em")
-            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
             .text(function(d) { return d.name; })
             .style("fill-opacity", 1e-6);
 
