@@ -24,8 +24,8 @@ class LockDistributedTest < Test::Unit::TestCase
 
   def test_processes_db
 
-    puts 'Ready to start, press return if other remote tests are here'
-    $stdin.gets.chomp
+    #puts 'Ready to start, press return if other remote tests are here'
+    #$stdin.gets.chomp
 
     pids = []
     PROC_NUM.times do |th_i|
@@ -45,8 +45,8 @@ class LockDistributedTest < Test::Unit::TestCase
 
     pids.each {|pid| Process.wait pid}
 
-    puts 'Entries written, press return if other remote tests are here'
-    $stdin.gets.chomp
+    #puts 'Entries written, press return if other remote tests are here'
+    #$stdin.gets.chomp
 
     data = LockTestEntry.all
 

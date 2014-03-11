@@ -1,7 +1,14 @@
 require 'test/unit'
+require 'test_helper'
+require 'mocha/test_unit'
 
 # Tests usage of EncryptedMongoActiveRecord with CloudSecrets
 class CloudSecretsTest < Test::Unit::TestCase
+
+  def setup
+    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
+    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+  end
 
   def test_encryption
     # -- given
