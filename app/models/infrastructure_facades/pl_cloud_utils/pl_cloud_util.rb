@@ -227,7 +227,7 @@ CONTEXT = [
     resp = execute('oneimage', %w(list --xml))
     infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['IMAGE']
     infos = [infos] unless infos.kind_of?(Array)
-    return Hash[infos.map {|i| [i['ID'].to_i, i]}]
+    return Hash[infos.map {|i| [i['ID'], i]}]
   end
 
 end
