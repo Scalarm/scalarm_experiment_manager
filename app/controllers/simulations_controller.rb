@@ -143,6 +143,14 @@ class SimulationsController < ApplicationController
   end
 
   def show
+    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    information_service = InformationService.new(config['information_service_url'],
+                                                 config['information_service_user'],
+                                                 config['information_service_pass'])
+
+    @storage_manager_url = information_service.get_list_of('storage')
+    @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
+
     if @simulation.nil?
       @simulation = @experiment.generate_simulation_for(params[:id].to_i)
       @experiment.save_simulation(@simulation)

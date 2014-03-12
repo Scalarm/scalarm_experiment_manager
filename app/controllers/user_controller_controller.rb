@@ -20,7 +20,6 @@ class UserControllerController < ApplicationController
   end
 
   def login
-    Rails.logger.debug("Flash #{flash[:error]}")
     if request.post?
       begin
         session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id

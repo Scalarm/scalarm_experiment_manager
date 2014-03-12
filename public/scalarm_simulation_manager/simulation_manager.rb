@@ -119,6 +119,7 @@ while true
       if File.exist?("#{code_base_dir}/input_writer")
         input_writer_output = %x[#{code_base_dir}/input_writer input.json]
         puts "Input writer output: #{input_writer_output}"
+        IO.write('_stdout.txt', "Input writer output: #{input_writer_output}")
       end
     end
 
@@ -151,6 +152,7 @@ while true
             while true
               progress_monitor_output = %x[#{code_base_dir}/progress_monitor]
               puts "[progress monitor] script output: #{progress_monitor_output}"
+              IO.write('_stdout.txt', "[progress monitor] script output: #{progress_monitor_output}")
 
               em_proxy.send_results_from('intermediate_result.json', true, experiment_id, simulation_id)
 
@@ -171,6 +173,7 @@ while true
 
       executor_output = %x[#{code_base_dir}/executor]
       puts "Executor output: #{executor_output}"
+      IO.write('_stdout.txt', "Executor output: #{executor_output}")
       # 6c.2. killing progress monitor process
       unless progress_monitor_pid.nil?
         puts "Killing the '#{progress_monitor_pid}' process"
@@ -185,6 +188,7 @@ while true
       if File.exist?("#{code_base_dir}/output_reader")
         output_reader_output = %x[#{code_base_dir}/output_reader]
         puts "Output reader output: #{output_reader_output}"
+        IO.write('_stdout.txt', "Output reader output: #{output_reader_output}")
       end
     end
 
@@ -196,6 +200,8 @@ while true
       puts 'Uploading binary output'
       sm_proxy.upload_binary_output(experiment_id, simulation_input['simulation_id'], output_binary_file)
     end
+
+    sm_proxy.upload_stdout(experiment_id, simulation_input['simulation_id'], File.join(simulation_dir, '_stdout.txt'))
 
     # 6f. go to the 6 point
   end
