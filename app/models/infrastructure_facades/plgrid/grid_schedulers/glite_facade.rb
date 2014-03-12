@@ -1,6 +1,7 @@
 require_relative 'pl_grid_scheduler_base'
 
 class GliteFacade < PlGridSchedulerBase
+  include SimulationManagersContainer
 
   def self.long_name
     'gLite'

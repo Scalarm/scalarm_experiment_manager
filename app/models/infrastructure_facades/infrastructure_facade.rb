@@ -3,7 +3,9 @@ require 'yaml'
 require 'clouds/cloud_factory'
 
 # methods necessary to implement by subclasses
-# start_monitoring() - starting a background job which monitors scheduled jobs/vms etc. and handle their state, e.g. restart if necessary or delete db information
+# monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
+#   and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
+#   mutually excluded.
 # default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
 # start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
 # clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
@@ -14,6 +16,9 @@ require 'clouds/cloud_factory'
 # to_hash - hash representing subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
 
 class InfrastructureFacade
+
+  # sleep time between vm checking [seconds]
+  PROBE_TIME = 60
 
   attr_reader :logger
 
@@ -61,6 +66,22 @@ class InfrastructureFacade
     {
         plgrid: { label: 'PL-Grid', facade: PlGridFacade.new }
     }
+  end
+
+  def start_monitoring
+    lock = MongoLock.new(short_name)
+    while true do
+      if lock.acquire
+        begin
+          logger.info 'monitoring thread is working'
+          monitoring_loop
+        rescue Exception => e
+          logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
+        end
+        lock.release
+      end
+      sleep(PROBE_TIME)
+    end
   end
 
   def self.cloud_infrastructures

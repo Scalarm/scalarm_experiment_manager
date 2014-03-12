@@ -38,9 +38,9 @@ class PlGridFacade < InfrastructureFacade
   # 1. if the experiment is still running - destroy the job otherwise
   # 2. if the job is started correctly and is not stuck in a queue - restart if yes
   # 3. if the job is running more then 24 hours  - restart if yes
-  def start_monitoring
-    while true do
-      sleep(1) until MongoLock.acquire('PlGridJob')
+  def monitoring_loop
+    #  group jobs by the user_id - for each group - login to the ui using the user credentials
+    PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
 
       begin
         logger.info "monitoring thread is working"
@@ -54,12 +54,7 @@ class PlGridFacade < InfrastructureFacade
           end
 
         end
-      rescue Exception => e
-        logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
       end
-      
-      MongoLock.release('PlGridJob')      
-      sleep(60)
     end
   end
 

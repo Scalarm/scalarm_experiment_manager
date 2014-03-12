@@ -1,4 +1,5 @@
 class PBSFacade < PlGridSchedulerBase
+  include SimulationManagersContainer
 
   def self.long_name
     'PBS'
