@@ -11,13 +11,6 @@ class AbstractSimulationManager
     @record = record
   end
 
-  def to_hash
-    {
-        name: name,
-        type: 'sm-node'
-    }
-  end
-
   def experiment
     @experiment ||= Experiment.find_by_id(record.experiment_id)
   end
@@ -26,5 +19,9 @@ class AbstractSimulationManager
     experiment.nil? or
         (experiment.is_running == false) or
         (experiment.experiment_size == experiment.get_statistics[2])
+  end
+
+  def name
+    record.resource_id
   end
 end

@@ -18,6 +18,10 @@ class PlGridJob < MongoActiveRecord
     self.time_limit.to_i.hours > 72 ? 40.minutes : 20.minutes
   end
 
+  def resource_id
+    self.job_id
+  end
+
   def experiment
     if @attributes.include?('experiment_id')
       Experiment.find_by_id(self.experiment_id)

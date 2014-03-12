@@ -108,13 +108,12 @@ function InfrastructuresTree() {
 
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append("svg:g")
-            .attr("class", function(d) { return "node " + d.type })
+            .attr("class", function(d) { return "node " + d.type + (d._children ? " with-children-node" : "") })
             .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
             .on("click", function(d) { toggle(d); update(d); });
 
         nodeEnter.append("svg:circle")
             .attr("r", 1e-6)
-            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
         nodeEnter.append("svg:text")
             .text(function(d) { return d.name; })
@@ -127,7 +126,6 @@ function InfrastructuresTree() {
 
         nodeUpdate.select("circle")
             .attr("r", circleRadius)
-            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);

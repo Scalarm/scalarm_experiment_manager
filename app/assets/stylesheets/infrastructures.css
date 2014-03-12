@@ -25,6 +25,10 @@
     transform: translate(0px,30px);
 }
 
+.with-children-node circle {
+    fill: lightsteelblue;
+}
+
 path.link {
     fill: none;
     stroke: #ababab;

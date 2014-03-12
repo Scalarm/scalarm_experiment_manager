@@ -42,22 +42,21 @@ class PlGridFacade < InfrastructureFacade
     while true do
       sleep(1) until MongoLock.acquire('PlGridJob')
 
-      # FIXME monitoring disabled for desiging tree
-      #begin
-      #  logger.info "monitoring thread is working"
-      #  #  group jobs by the user_id - for each group - login to the ui using the user credentials
-      #  PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
-      #    credentials = GridCredentials.find_by_user_id(user_id)
-      #    next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
-      #
-      #    Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-      #      (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
-      #    end
-      #
-      #  end
-      #rescue Exception => e
-      #  logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
-      #end
+      begin
+        logger.info "monitoring thread is working"
+        #  group jobs by the user_id - for each group - login to the ui using the user credentials
+        PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
+          credentials = GridCredentials.find_by_user_id(user_id)
+          next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
+
+          Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+            (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
+          end
+
+        end
+      rescue Exception => e
+        logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
+      end
       
       MongoLock.release('PlGridJob')      
       sleep(60)

@@ -10,11 +10,7 @@ class CloudSimulationManager < AbstractSimulationManager
     @logger = InfrastructureTaskLogger.new(cloud_client.class.short_name, vm_record.vm_id)
   end
 
-  # -- AbstractScheduledJob interface implementation --
-
-  def name
-    record.vm_id
-  end
+  # -- AbstractSimulationManager interface implementation --
 
   def monitor
     logger.info 'checking'
@@ -55,7 +51,7 @@ class CloudSimulationManager < AbstractSimulationManager
   end
 
   def ssh_session(&block)
-    record.ssh_session(&block)
+    record.use_ssh(&block)
   end
 
   # -- monitoring cases --

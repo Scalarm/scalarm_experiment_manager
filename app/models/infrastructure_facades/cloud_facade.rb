@@ -24,11 +24,8 @@ class CloudFacade < InfrastructureFacade
     cloud_secrets ? @client_class.new(cloud_secrets) : nil
   end
 
-  # implements ScheduledJobsContainter
-  attr_reader :long_name
-  attr_reader :short_name
+  # -- InfrasctuctureFacade implementation --
 
-  # implements InfrasctuctureFacade
   def current_state(user)
     cloud_client = cloud_client_instance(user.id)
 
@@ -52,7 +49,6 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  # implements InfrasctuctureFacade
   def start_monitoring
     while true do
       begin
@@ -77,11 +73,7 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  # --
-
-  # implements InfrasctuctureFacade
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
-
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
     begin
       cloud_client = cloud_client_instance(user.id)
@@ -116,7 +108,6 @@ class CloudFacade < InfrastructureFacade
 
   end
 
-  # implements InfrasctuctureFacade
   def default_additional_params
     {}
   end
@@ -125,27 +116,37 @@ class CloudFacade < InfrastructureFacade
   #  raise 'not implemented'
   #end
 
-  # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
     CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id) do |instance|
       instance.to_s
     end
   end
 
-  # implements InfrasctuctureFacade
   def add_credentials(user, params, session)
     self.send("handle_#{params[:credential_type]}_credentials", user, params, session)
   end
 
-  # implements InfrasctuctureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
+  # --
+
+  # -- AbstractSimulationManager implementation --
+
+  attr_reader :long_name
+  attr_reader :short_name
+
+  def sm_record(resource_id, user_id)
+    CloudVmRecord.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id, 'vm_id'=>resource_id)
+  end
+
+  def all_user_sm_records(user_id)
+    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+  end
 
   def all_user_simulation_managers(user_id)
-    query = {'cloud_name'=>@short_name, 'user_id'=>user_id}
-    vm_records = CloudVmRecord.find_all_by_query(query)
-    secrets = CloudSecrets.find_by_query(query)
+    vm_records = all_user_sm_records(user_id)
+    secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
     if secrets.nil?
       []
     else
@@ -164,8 +165,9 @@ class CloudFacade < InfrastructureFacade
     else
       nil
     end
-
   end
+
+  # --
 
   private
 

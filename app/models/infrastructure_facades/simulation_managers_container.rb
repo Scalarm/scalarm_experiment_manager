@@ -5,6 +5,13 @@
 module SimulationManagersContainer
   # @return [Array<Hash>] collection of simulation managers tree nodes
   def sm_nodes(user_id)
-    all_user_simulation_managers(user_id).map &:to_hash
+    all_user_sm_records(user_id).map {|r| self.class.to_hash(r) }
+  end
+
+  def self.to_hash(record)
+    {
+        name: record.resource_id,
+        type: 'sm-node'
+    }
   end
 end

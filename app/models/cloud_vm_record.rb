@@ -25,6 +25,10 @@ class CloudVmRecord < MongoActiveRecord
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
   end
 
+  def resource_id
+    self.vm_id
+  end
+
   def self.collection_name
     'vm_records'
   end
