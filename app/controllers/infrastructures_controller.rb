@@ -41,7 +41,13 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - name: name of Simulation Manager containter
   def sm_nodes
-    render json: InfrastructureFacade.get_registered_sm_containters[params[:name]].sm_nodes(@current_user.id)
+    container = InfrastructureFacade.get_registered_sm_containters[params[:name]]
+    unless container.nil?
+      render json: container.sm_nodes(@current_user.id)
+    else
+      Rails.logger.error "Requested Simulation Managers container does not exist: #{params[:name]}"
+      render json: []
+    end
   end
 
   def infrastructure_info

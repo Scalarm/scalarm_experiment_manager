@@ -36,6 +36,10 @@ class SessionsControllerTest < ActionController::TestCase
       assert_equal resp_hash.size, count
       assert_equal resp_hash.map {|h| h['name']}.sort, id_values.map(&:to_s).sort
     end
+
+    get :sm_nodes, {name: 'invalid_name'}, {user: tmp_user_id}
+    resp_hash = JSON.parse(response.body)
+    assert_equal resp_hash.size, 0
   end
 
 end
