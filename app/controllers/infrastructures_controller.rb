@@ -111,16 +111,25 @@ class InfrastructuresController < ApplicationController
   end
 
   def stop_sm
-    container = InfrastructureFacade.get_registered_sm_containters[params['sm_container_name']]
+    container = InfrastructureFacade.get_registered_sm_containters[params['sm_container']]
     if container
       sm = container.simulation_manager(params['resource_id'], @current_user.id)
       if sm
-        sm.stop
+        begin
+          sm.stop
+          # TODO: translate
+          render json: { status: 'ok', msg: "Stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
+        rescue Exception => e
+          # TODO: translate
+          render json: { status: 'error', msg: "Exception when stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
+        end
       else
-        # TODO error msg
+        # TODO: translate
+        render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
       end
     else
-      # TODO error msg
+      # TODO: translate
+      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
     end
   end
 

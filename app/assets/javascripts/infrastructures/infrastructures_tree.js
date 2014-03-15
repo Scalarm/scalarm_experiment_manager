@@ -17,7 +17,7 @@ function InfrastructuresTree() {
         .attr("width", w + m[1] + m[3])
         .attr("height", h + m[0] + m[2])
         .append("svg:g")
-        .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+            .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
     function leaf_path(name) {
         return "/infrastructures/sm_nodes?name=" + name;
@@ -30,11 +30,14 @@ function InfrastructuresTree() {
             }
 
             if (!local_root['_children'] && !childs_equal(local_root['children'], child_json)) {
-                if (local_root['children']) {
+                if (local_root['children']) { // is expanded
                     local_root['children'] = child_json;
-                } else {
+                } else { // is collapsed
                     local_root['_children'] = child_json;
                 }
+                child_json.forEach(function(child) {
+                    child['sm_container'] = local_root['short'];
+                });
                 update(local_root);
             }
         });
@@ -51,15 +54,15 @@ function InfrastructuresTree() {
 
         update(root);
 
-        var leaves = find_leaves(root);
+        var leaves = findLeaves(root);
 
         leaves.forEach(function(leaf) {
             var url = leaf_path(leaf['short']);
 
-            var fun = function() {fetch_nodes(leaf, url)};
+            var fetch_leaf_nodes = function() {fetch_nodes(leaf, url)};
 
-            fun();
-            setInterval(fun, 30000);
+            fetch_leaf_nodes();
+            setInterval(fetch_leaf_nodes, 30000);
         });
 
     });
@@ -131,7 +134,7 @@ function InfrastructuresTree() {
 
         gSmNodes.append("svg:g").call(function(g) {
             g.append("svg:path")
-                .attr("d", "m 0,0 30,30 250,0 0,-60 -250,0 z")
+                .attr("d", "m 0,0 20,20 250,0 0,-40 -250,0 z") // "label" path
                 .attr("class", "sm-label")
                 .style("fill-opacity", 1e-6)
                 .attr("transform", "scale(1e-6)");
@@ -139,21 +142,17 @@ function InfrastructuresTree() {
                 .attr("r", 1e-6)
                 .attr("class", function(d) { return d._children ? "children-collapsed" : ""; });
             g.append("svg:text")
-                .text(function(d) { return "NODE: " + d.name; })
+                .attr("class", "label-text")
+                .text(function(d) { return d.name; })
                 .style("fill-opacity", 1e-6);
+
+            var stopGroup = g.append("svg:g").attr("class", "stop");
+            stopGroup.append("svg:rect")
+                .attr("width", 16).attr("height", 16).attr("rx", 1).attr("ry", 1)
+                .attr("class", "stop");
+            stopGroup.append("svg:text").attr("transform", "translate(26,0)").text("stop").attr("class", "stop");
+            stopGroup.on("click", function(d) { stopSm(d) });
         });
-
-
-
-//        nodeEnter.append("svg:image")
-//            .attr("xlink:href", "/assets/foundation-icons/fi-stop.svg")
-//            .attr("width", 30).attr("height", 30);
-
-
-//        nodeEnter.append("svg:path")
-//            .attr("d", "m 12.071448,83.625893 0,-17.583621 15.227862,8.79181 15.227862,8.791811 -15.227861,8.79181 \
-//                15.227863,8.791807 z m 0,33.840107 -177.786848,0 0,-67.68022 177.786848,0 z")
-//            .attr("style", "fill:#ececec;fill-opacity:1;stroke:none");
 
         // Transition nodes to their new position.
         var nodeUpdate = gNodes.transition()
@@ -234,16 +233,22 @@ function InfrastructuresTree() {
         }
     }
 
-    function find_leaves(root) {
+    function findLeaves(root) {
         var leaves = [];
-        function find_leaf(p) {
+        function findLeaf(p) {
             if ('children' in p) {
-                p['children'].forEach(function(child) {find_leaf(child)});
+                p['children'].forEach(function(child) {findLeaf(child)});
             } else {
                 leaves.push(p);
             }
         }
-        find_leaf(root);
+        findLeaf(root);
         return leaves
+    }
+
+    function stopSm(d) {
+        var url = "/infrastructures/stop_sm?sm_container="
+            + d['sm_container'] + "&resource_id=" + d['name'];
+        d3.json(url, function(json) {});
     }
 }

@@ -28,7 +28,7 @@ class PlGridSchedulerBase
   def simulation_manager(resource_id, user_id)
     job = sm_record(resource_id, user_id)
     credentials = GridCredentials.find_by_user_id(user_id)
-    credentials.nil? ? [] : jobs.map { |r| PlGridSimulationManager.new(r, credentials) }
+    credentials.nil? ? nil : PlGridSimulationManager.new(job)
   end
 
 end

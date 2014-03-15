@@ -14,11 +14,6 @@
     transform: translate(-20px,.3em);
 }
 
-.sm-node text {
-    text-anchor: start;
-    transform: translate(20px,.3em);
-}
-
 .sm-container-node text,
 .meta-node text {
     text-anchor: middle;
@@ -35,9 +30,24 @@ path.link {
     stroke-width: 1.5px;
 }
 
-path.stop {
+text.label-text {
+  text-anchor: start;
+  transform: translate(22px,-6px);
+}
+
+g.stop {
+  cursor: pointer;
+}
+
+rect.stop {
   fill: red;
   stroke-width: 0;
+  transform: translate(22px, 0);
+}
+
+text.stop {
+  fill: red;
+  transform: translate(40px, 12px);
 }
 
 path.sm-label {
