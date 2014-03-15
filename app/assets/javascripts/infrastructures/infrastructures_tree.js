@@ -23,9 +23,20 @@ function InfrastructuresTree() {
         return "/infrastructures/sm_nodes?name=" + name;
     }
 
-    function fetch_tree(path) {
-        d3.json(path, function(json) {
-            update(json);
+    function fetch_nodes(local_root, url) {
+        d3.json(url, function(child_json) {
+            if (child_json.length == 0) {
+                child_json = null
+            }
+
+            if (!local_root['_children'] && !childs_equal(local_root['children'], child_json)) {
+                if (local_root['children']) {
+                    local_root['children'] = child_json;
+                } else {
+                    local_root['_children'] = child_json;
+                }
+                update(local_root);
+            }
         });
     }
 
@@ -45,22 +56,10 @@ function InfrastructuresTree() {
         leaves.forEach(function(leaf) {
             var url = leaf_path(leaf['short']);
 
-            setInterval(function() {
-                d3.json(url, function(child_json) {
-                    if (child_json.length == 0) {
-                        child_json = null
-                    }
+            var fun = function() {fetch_nodes(leaf, url)};
 
-                    if (!leaf['_children'] && !childs_equal(leaf['children'], child_json)) {
-                        if (leaf['children']) {
-                            leaf['children'] = child_json;
-                        } else {
-                            leaf['_children'] = child_json;
-                        }
-                        update(leaf);
-                    }
-                });
-            }, 30000);
+            fun();
+            setInterval(fun, 30000);
         });
 
     });
@@ -113,7 +112,7 @@ function InfrastructuresTree() {
             .on("click", function(d) { toggle(d); update(d); });
 
         nodeEnter.append("svg:circle")
-            .attr("r", 1e-6)
+            .attr("r", 1e-6);
 
         nodeEnter.append("svg:text")
             .text(function(d) { return d.name; })
@@ -125,7 +124,7 @@ function InfrastructuresTree() {
             .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
         nodeUpdate.select("circle")
-            .attr("r", circleRadius)
+            .attr("r", circleRadius);
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
