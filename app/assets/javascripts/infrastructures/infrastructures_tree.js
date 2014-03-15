@@ -102,38 +102,84 @@ function InfrastructuresTree() {
         nodes.forEach(function(d) { d.y = d.depth * 180; });
 
         // Update the nodes…
-        var node = vis.selectAll("g.node")
+        var gNodes = vis.selectAll("g.node")
             .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
         // Enter any new nodes at the parent's previous position.
-        var nodeEnter = node.enter().append("svg:g")
-            .attr("class", function(d) { return "node " + d.type + (d._children ? " with-children-node" : "") })
+        var gNodesEnter = gNodes.enter().append("svg:g")
+            .attr("class", function(d) { return ["node", d.type].join(" ") })
             .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
             .on("click", function(d) { toggle(d); update(d); });
 
-        nodeEnter.append("svg:circle")
-            .attr("r", 1e-6);
+//        gNodesEnter.filter(function(x){return x.type != "sm-node"})
 
-        nodeEnter.append("svg:text")
+        var gs = gNodesEnter.append("svg:g");
+
+        var gMetaNodes = gs.filter(function(d) {return d.type != 'sm-node'});
+        var gSmNodes = gs.filter(function(d) {return d.type == 'sm-node'});
+
+        // ---
+
+        gMetaNodes.append("svg:circle")
+            .attr("r", 1e-6)
+            .attr("class", function(d) { return d._children ? "children-collapsed" : ""; });
+        gMetaNodes.append("svg:text")
             .text(function(d) { return d.name; })
             .style("fill-opacity", 1e-6);
 
+        // ---
+
+        gSmNodes.append("svg:g").call(function(g) {
+            g.append("svg:path")
+                .attr("d", "m 0,0 30,30 250,0 0,-60 -250,0 z")
+                .attr("class", "sm-label")
+                .style("fill-opacity", 1e-6)
+                .attr("transform", "scale(1e-6)");
+            g.append("svg:circle")
+                .attr("r", 1e-6)
+                .attr("class", function(d) { return d._children ? "children-collapsed" : ""; });
+            g.append("svg:text")
+                .text(function(d) { return "NODE: " + d.name; })
+                .style("fill-opacity", 1e-6);
+        });
+
+
+
+//        nodeEnter.append("svg:image")
+//            .attr("xlink:href", "/assets/foundation-icons/fi-stop.svg")
+//            .attr("width", 30).attr("height", 30);
+
+
+//        nodeEnter.append("svg:path")
+//            .attr("d", "m 12.071448,83.625893 0,-17.583621 15.227862,8.79181 15.227862,8.791811 -15.227861,8.79181 \
+//                15.227863,8.791807 z m 0,33.840107 -177.786848,0 0,-67.68022 177.786848,0 z")
+//            .attr("style", "fill:#ececec;fill-opacity:1;stroke:none");
+
         // Transition nodes to their new position.
-        var nodeUpdate = node.transition()
+        var nodeUpdate = gNodes.transition()
             .duration(duration)
             .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
+        nodeUpdate.select("path")
+            .style("fill-opacity", 1)
+            .attr("transform", "scale(1)");
+
         nodeUpdate.select("circle")
-            .attr("r", circleRadius);
+            .attr("r", circleRadius)
+            .attr("class", function(d) { return d._children ? "children-collapsed" : ""; });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
 
         // Transition exiting nodes to the parent's new position.
-        var nodeExit = node.exit().transition()
+        var nodeExit = gNodes.exit().transition()
             .duration(duration)
             .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
             .remove();
+
+        nodeExit.select("path")
+            .style("fill-opacity", 1e-6)
+            .attr("transform", "scale(1e-6)");
 
         nodeExit.select("circle")
             .attr("r", 1e-6);

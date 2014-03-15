@@ -25,7 +25,7 @@
     transform: translate(0px,30px);
 }
 
-.with-children-node circle {
+circle.children-collapsed {
     fill: lightsteelblue;
 }
 
@@ -35,3 +35,13 @@ path.link {
     stroke-width: 1.5px;
 }
 
+path.stop {
+  fill: red;
+  stroke-width: 0;
+}
+
+path.sm-label {
+  fill: #fff;
+  stroke-width: 1.5px;
+  stroke: steelblue;
+}
