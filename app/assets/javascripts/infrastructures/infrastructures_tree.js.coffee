@@ -34,39 +34,45 @@ class window.InfrastructuresTree
         d3.json(url, (child_json) =>
           child_json = null if child_json.length == 0
 
-          if !local_root['_children'] && !@childsEqual(local_root['children'], child_json)
-            child_json = [] if child_json == null
+          # Perform action only if node [is expanded or was not initialized before]
+          # and when fetched children are not the same as in node
+          if not local_root['_children'] and not @childsEqual(local_root['children'], child_json)
             if (local_root['children']) # is expanded
               local_root['children'] = child_json
             else # is collapsed
               local_root['_children'] = child_json
 
             child_json.forEach((child) =>
-              child['sm_container'] = local_root['short'])
+              child['sm_container'] = local_root['short']
+            ) if child_json = null
 
             @updateTree(local_root);
         )
 
-      for leaf in leaves
-        url = @leafPath(leaf['short'])
-        fetchLeafNodes = => fetchUpdateNodes(leaf, url)
+      leaves.forEach((leaf) =>
+        fetchLeafNodes = => fetchUpdateNodes(leaf, @leafPath(leaf['short']))
         fetchLeafNodes()
-        setInterval(fetchLeafNodes, 30000)
+        setInterval(fetchLeafNodes, 3000)
+      )
     )
 
   leafPath: (name) ->
     "/infrastructures/sm_nodes?name=#{name}"
 
-  childsEqual: (childs_a, childs_b) =>
-    if typeof childs_a == 'undefined'
-      childs_a = null
+  # Compare children arrays: childs_local should be taken from current tree
+  # childs_remote should be fetched from server.
+  childsEqual: (childs_local, childs_remote) ->
+    childs_local = null if typeof childs_local is 'undefined'
 
-    if !childs_a && !childs_a || !childs_a && childs_b || childs_a && !childs_b || childs_a.length != childs_b.length
+    if not childs_local? and not childs_remote?
+      return true
+
+    if (not childs_local? and childs_remote?) or (childs_local? and not childs_remote?) or (childs_local.length != childs_remote.length)
       return false
 
     names_array_fun = (d) => d.name
-    array_a = childs_a.map(names_array_fun).sort()
-    array_b = childs_b.map(names_array_fun).sort()
+    array_a = childs_local.map(names_array_fun).sort()
+    array_b = childs_remote.map(names_array_fun).sort()
 
     for i in [0..array_a.length]
       if (array_a[i] != array_b[i])
@@ -136,7 +142,7 @@ class window.InfrastructuresTree
 
     # ---
 
-    gSmNodes.append("svg:g").call((g) ->
+    gSmNodes.append("svg:g").call((g) =>
       g.append("svg:path")
         .attr("d", "m 0,0 20,20 250,0 0,-40 -250,0 z") # "label" path
         .attr("class", "sm-label")
@@ -155,7 +161,7 @@ class window.InfrastructuresTree
       .attr("width", 16).attr("height", 16).attr("rx", 1).attr("ry", 1)
       .attr("class", "stop")
       stopGroup.append("svg:text").attr("transform", "translate(26,0)").text("stop").attr("class", "stop")
-      stopGroup.on("click", (d) => stopSm(d))
+      stopGroup.on("click", (d) => @stopSm(d))
     )
 
     # Transition nodes to their new position.
