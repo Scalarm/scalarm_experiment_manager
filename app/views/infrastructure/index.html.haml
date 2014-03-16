@@ -2,8 +2,10 @@
   = content_tag :h3, t('infrastructure.tree_title'), class: 'subheader'
   #infrastructures-tree
 
+  #node-dialog.reveal-modal(data-reveal="")
+
 - content_for :javascript do
   :javascript
-    new window.InfrastructuresTree()
+    new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'node-dialog')
 
 

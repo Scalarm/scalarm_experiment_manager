@@ -1,5 +1,8 @@
 class window.InfrastructuresTree
-  constructor: ->
+  constructor: (@baseSmDialogUrl, genericDialogId) ->
+    @dialog = $("##{genericDialogId}")
+    PROBE_INTERVAL = 30000
+
     baseTreePath = "/infrastructures/tree"
     @root = null
 
@@ -44,7 +47,7 @@ class window.InfrastructuresTree
 
             child_json.forEach((child) =>
               child['sm_container'] = local_root['short']
-            ) if child_json = null
+            ) if child_json != null
 
             @updateTree(local_root);
         )
@@ -52,7 +55,7 @@ class window.InfrastructuresTree
       leaves.forEach((leaf) =>
         fetchLeafNodes = => fetchUpdateNodes(leaf, @leafPath(leaf['short']))
         fetchLeafNodes()
-        setInterval(fetchLeafNodes, 3000)
+        setInterval(fetchLeafNodes, PROBE_INTERVAL)
       )
     )
 
@@ -151,6 +154,7 @@ class window.InfrastructuresTree
       g.append("svg:circle")
         .attr("r", 1e-6)
         .attr("class", (d) => d._children and "children-collapsed" or "")
+        .on("click", (d) => @smDialog(d))
       g.append("svg:text")
         .attr("class", "label-text")
         .text((d) => d.name)
@@ -230,3 +234,11 @@ class window.InfrastructuresTree
     )
 
     null
+
+  smDialog: (d) ->
+    @dialog.load @smDialogPath(d['sm_container'], d['name']), =>
+#          @actionLoading.hide()
+      @dialog.foundation('reveal', 'open')
+
+  smDialogPath: (container, resource_id) ->
+    "#{@baseSmDialogUrl}?sm_container=#{container}&resource_id=#{resource_id}"

@@ -1,3 +1,5 @@
+class NoSuchSmContainerError < StandardError; end
+class NoSuchSmError < StandardError; end
 
 class InfrastructuresController < ApplicationController
 
@@ -111,25 +113,51 @@ class InfrastructuresController < ApplicationController
   end
 
   def stop_sm
+    begin
+      get_sm_proxy(params['sm_container'], params['resource_id']).stop
+      render json: { status: 'ok', msg: "Stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
+    rescue NoSuchSmContainerError => e
+      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
+    rescue NoSuchSmError => e
+      render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
+    rescue Exception => e
+      render json: { status: 'error', msg: "Exception when stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
+    end
+  end
+
+  # Mandatory GET params:
+  # - sm_container: Simulation Manager container name
+  # - resource_id: Unique ID of resource for SM (eg. vm_id)
+  def get_sm_dialog
+    begin
+      @sm_proxy = get_sm_proxy(params['sm_container'], params['resource_id'])
+      render inline: render_to_string(partial: 'sm_dialog')
+    rescue NoSuchSmContainerError => e
+      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
+    rescue NoSuchSmError => e
+      render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
+    rescue Exception => e
+      render json: { status: 'error', msg: "Exception when getting Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
+    end
+  end
+
+  # @param [String] sm_container Simulation Manager container name
+  # @param [String] resource_id Unique ID of resource for SM (eg. vm_id)
+  # @raise [NoSuchSmError]
+  # @raise [NoSuchSmContainerError]
+  def get_sm_proxy(sm_container, resource_id)
     container = InfrastructureFacade.get_registered_sm_containters[params['sm_container']]
     if container
       sm = container.simulation_manager(params['resource_id'], @current_user.id)
       if sm
-        begin
-          sm.stop
-          # TODO: translate
-          render json: { status: 'ok', msg: "Stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
-        rescue Exception => e
-          # TODO: translate
-          render json: { status: 'error', msg: "Exception when stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
-        end
+        return sm
       else
-        # TODO: translate
-        render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
+        Rails.logger.error "No such computational resource: #{params['resource_id']}@#{params['sm_container']}"
+        raise NoSuchSmError
       end
     else
-      # TODO: translate
-      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
+      Rails.logger.error "No such simulation managers container: #{params['sm_container']}"
+      raise NoSuchSmContainerError
     end
   end
 

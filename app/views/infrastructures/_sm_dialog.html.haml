@@ -1,0 +1,10 @@
+%h2= t('infrastructure.tree.sm_dialog.header')
+
+%a.close-reveal-modal &#215;
+
+:javascript
+  $(function() {
+    $(document).foundation();
+
+    new window.SmDialog("#node-dialog");
+  });

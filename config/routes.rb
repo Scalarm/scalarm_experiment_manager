@@ -88,6 +88,10 @@ ScalarmExperimentManager::Application.routes.draw do
       post :remove_image
       post :remove_credentials
     end
+
+    collection do
+      get :get_sm_dialog
+    end
   end
 
   # Example of regular route:

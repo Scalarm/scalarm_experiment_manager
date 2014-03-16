@@ -45,6 +45,9 @@ en:
         could_not_create_vms: "Exception occured during creating virtual machines"
   infrastructure:
     tree_title: 'Computational resources tree'
+    tree:
+      sm_dialog:
+        header: 'Simulation Manager options'
     information:
       images_manager:
         info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."
