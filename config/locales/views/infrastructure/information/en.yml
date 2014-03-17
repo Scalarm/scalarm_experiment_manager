@@ -41,6 +41,9 @@ en:
         scheduler: Scheduler
         scheduled_label: Scheduled jobs
 
+        submission:
+          nodes: "Nodes"
+          ppn: "Cores per node"
       amazon:
         security_group: Security group
 

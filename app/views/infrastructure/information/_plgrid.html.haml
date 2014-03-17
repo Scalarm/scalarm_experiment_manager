@@ -28,10 +28,22 @@
                 .small-4.columns
               .row
                 .small-4.columns
-                  = label_tag :scheduler, t('.submission.scheduler'), class: 'inline right'
+                  = label_tag :scheduler, t('.submission.scheduler') + ':', class: 'inline right'
                 .small-4.columns
                   = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
                 .small-4.columns
+
+              .row
+                .small-4.columns
+                  = label_tag :nodes, t('.submission.nodes') + ':', class: 'inline right'
+                .small-1.columns
+                  = text_field_tag :nodes, 1, class: 'right'
+                .small-2.columns
+                  = label_tag :ppn, t('.submission.ppn') + ':', class: 'inline right'
+                .small-1.columns
+                  = text_field_tag :ppn, 1, class: 'right'
+                .small-2.columns
+
               .row
                 .small-4.columns
                   = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'

@@ -110,6 +110,8 @@ class PLGridFacade < InfrastructureFacade
                                   'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
                                   'time_limit' => additional_params['time_limit'].to_i })
             job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
+            job.nodes = additional_params['nodes'] unless additional_params['nodes'].blank?
+            job.ppn = additional_params['ppn'] unless additional_params['ppn'].blank?
 
             if scheduler.submit_job(ssh, job)
               job.save
