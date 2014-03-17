@@ -98,18 +98,6 @@ module AmazonCloud
       @ec2.instances[id]
     end
 
-    def sm_nodes
-      # TODO generic function and real SM read
-      [
-          {
-              name: 'amazon-01'
-          },
-          {
-              name: 'amazon-02'
-          }
-      ]
-    end
-
   end
 
 end

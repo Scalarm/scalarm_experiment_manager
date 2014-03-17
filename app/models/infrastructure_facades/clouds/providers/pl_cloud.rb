@@ -76,19 +76,6 @@ module PLCloud
       }
     end
 
-
-    def sm_nodes
-      # TODO generic function and real SM read
-      [
-          {
-              name: 'plcloud-001'
-          },
-          {
-              name: 'plcloud-002'
-          }
-      ]
-    end
-
   end
 
 end
