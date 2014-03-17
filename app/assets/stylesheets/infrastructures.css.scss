@@ -20,6 +20,10 @@
     transform: translate(0px,30px);
 }
 
+.sm-node circle {
+  fill: lightsteelblue;
+}
+
 circle.children-collapsed {
     fill: lightsteelblue;
 }
@@ -35,19 +39,22 @@ text.label-text {
   transform: translate(22px,-6px);
 }
 
-g.stop {
-  cursor: pointer;
-}
-
 rect.stop {
-  fill: red;
+  fill: firebrick;
+  cursor: pointer;
   stroke-width: 0;
-  transform: translate(22px, 0);
 }
 
-text.stop {
-  fill: red;
-  transform: translate(40px, 12px);
+path.info {
+  fill: steelblue;
+  cursor: pointer;
+  stroke-width: 0;
+}
+
+path.restart {
+  fill: seagreen;
+  cursor: pointer;
+  stroke-width: 0;
 }
 
 path.sm-label {

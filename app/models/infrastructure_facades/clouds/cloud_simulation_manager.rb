@@ -40,6 +40,12 @@ class CloudSimulationManager < AbstractSimulationManager
     @vm.terminate
   end
 
+  def restart
+    # TODO with or without record?
+    #@vm.reinitialize
+    reinitialize_with_record
+  end
+
   def job_status
     raise NotImplementedError
   end

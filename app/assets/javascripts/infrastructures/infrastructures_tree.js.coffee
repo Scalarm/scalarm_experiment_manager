@@ -107,7 +107,11 @@ class window.InfrastructuresTree
 
   stopSm: (d) ->
     url = "/infrastructures/stop_sm?sm_container=#{d['sm_container']}&resource_id=#{d['name']}"
-    d3.json(url, (json) =>)
+    d3.json(url, (json) =>) # TODO use response
+
+  restartSm: (d) ->
+    url = "/infrastructures/restart_sm?sm_container=#{d['sm_container']}&resource_id=#{d['name']}"
+    d3.json(url, (json) =>) # TODO use response
 
   updateTree: (source) ->
     duration = (d3.event && d3.event.altKey) and 5000 or 500
@@ -160,12 +164,32 @@ class window.InfrastructuresTree
         .text((d) => d.name)
         .style("fill-opacity", 1e-6)
 
-      stopGroup = g.append("svg:g").attr("class", "stop")
-      stopGroup.append("svg:rect")
+
+      # info button
+      g.append("svg:path")
+      .attr("d", "M 5,0 C 2.2384,0 0,2.239067 0,5.000267 0,7.7616 2.2384,10 5,10 7.7616,10 10,7.7616 10,5.000267 10,2.239067 7.7616,0 5,0 z m 0.5101333,7.781333 c 0,0.096 -0.077867,0.173867 -0.1738666,0.173867 H 4.6637333 c -0.096,0 -0.1738666,-0.07773 -0.1738666,-0.173867 V 4.552267 c 0,-0.096 0.077867,-0.173867 0.1738666,-0.173867 h 0.6725334 c 0.096,0 0.1738666,0.07773 0.1738666,0.173867 v 3.229066 z m -0.5142666,-4.1236 c -0.3293334,0 -0.6024,-0.273066 -0.6024,-0.610533 0,-0.337333 0.2730666,-0.6024 0.6024,-0.6024 0.3374666,0 0.6105333,0.264933 0.6105333,0.6024 1.333e-4,0.337467 -0.2730667,0.610533 -0.6105333,0.610533 z")
+      .style("transform", "translate(22px,0) scale(1.6)")
+      .on("click", (d) => @stopSm(d))
+      .attr("class", "info")
+      .on("click", (d) => @smDialog(d))
+
+      # restart button
+      g.append("svg:path")
+      .attr("d", "M 9.986427,0.989754 C 9.985427,0.910434 9.940087,0.836909 9.867315,0.801061 9.794695,0.764651 9.70749,0.771141 9.640932,0.817291 L 8.782754,1.418652 8.715184,1.466212 C 7.790449,0.564102 6.521229,0 5.114851,0 2.294442,0 0,2.243141 0,5 0,7.756859 2.294587,10 5.114851,10 6.815903,10 8.401454,9.176075 9.355787,7.795811 9.393757,7.740491 9.408047,7.67345 9.395057,7.608389 9.382067,7.543329 9.343517,7.485463 9.287207,7.448346 L 8.007592,6.580247 C 7.881984,6.498957 7.712629,6.530147 7.628168,6.652507 7.062499,7.46994 6.125202,7.957972 5.119615,7.957972 c -1.668712,0 -3.026435,-1.326916 -3.026435,-2.957689 0,-1.630772 1.357723,-2.957689 3.026435,-2.957689 0.704272,0 1.350215,0.239359 1.864487,0.635091 L 6.83958,2.7793 5.980825,3.380519 c -0.06569,0.04629 -0.100487,0.125607 -0.08822,0.204358 0.01169,0.07875 0.06786,0.145083 0.145532,0.170487 L 9.71196,4.978831 c 0.06656,0.02272 0.139468,0.01171 0.197508,-0.02865 0.05761,-0.04093 0.09081,-0.105425 0.09052,-0.173733 L 9.986418,0.989754 z")
+      .style("transform", "translate(46px,0) scale(1.6)")
+      .on("click", (d) => @restartSm(d))
+      .attr("class", "restart")
+      .on("click", (d) => @restartSm(d))
+
+      # stop button
+      g.append("svg:rect")
       .attr("width", 16).attr("height", 16).attr("rx", 1).attr("ry", 1)
       .attr("class", "stop")
-      stopGroup.append("svg:text").attr("transform", "translate(26,0)").text("stop").attr("class", "stop")
-      stopGroup.on("click", (d) => @stopSm(d))
+      .style("transform", "translate(70px, 0)")
+      .on("click", (d) => @stopSm(d))
+
+
+
     )
 
     # Transition nodes to their new position.

@@ -2,6 +2,7 @@
 # - name: name of resource (eg. PLGrid Job ID, VM ID)
 # - monitor: checks SM state and takes necessary actions
 # - stop: stops and terminates SM with its computational resources (e.g. terminates VM)
+# - restart: reschedules SM resource (e.g. reschedules grid job)
 # - status: returns status TODO
 
 class AbstractSimulationManager

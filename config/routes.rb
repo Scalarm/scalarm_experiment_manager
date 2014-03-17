@@ -28,6 +28,7 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'infrastructures/tree'
   get 'infrastructures/sm_nodes'
   get 'infrastructures/stop_sm'
+  get 'infrastructures/restart_sm'
 
   resources :experiments do
     collection do

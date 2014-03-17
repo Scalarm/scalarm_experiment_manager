@@ -125,6 +125,19 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  def restart_sm
+    begin
+      get_sm_proxy(params['sm_container'], params['resource_id']).restart
+      render json: { status: 'ok', msg: "Restarting Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
+    rescue NoSuchSmContainerError => e
+      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
+    rescue NoSuchSmError => e
+      render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
+    rescue Exception => e
+      render json: { status: 'error', msg: "Exception when restarting Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
+    end
+  end
+
   # Mandatory GET params:
   # - sm_container: Simulation Manager container name
   # - resource_id: Unique ID of resource for SM (eg. vm_id)

@@ -50,6 +50,13 @@ class PlGridSimulationManager < AbstractSimulationManager
     end
   end
 
+  def restart
+    logger.info 'The job will be restarted on users\'s demand'
+    use_ssh do |ssh|
+      scheduler.restart(ssh, record)
+    end
+  end
+
   def job_status
     use_ssh do |ssh|
       raise NotImplementedError
