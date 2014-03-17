@@ -47,7 +47,7 @@ en:
     tree_title: 'Computational resources tree'
     tree:
       sm_dialog:
-        header: 'Simulation Manager options'
+        header: 'Simulation Manager information'
     information:
       images_manager:
         info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."

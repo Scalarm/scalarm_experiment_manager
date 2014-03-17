@@ -47,7 +47,6 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  # implements InfrasctuctureFacade
   def monitoring_loop
     vm_records = CloudVmRecord.find_all_by_cloud_name(@short_name).group_by(&:user_id)
 
@@ -121,7 +120,7 @@ class CloudFacade < InfrastructureFacade
 
   # --
 
-  # -- AbstractSimulationManager implementation --
+  # -- SimulationManagerContainer implementation --
 
   attr_reader :long_name
   attr_reader :short_name

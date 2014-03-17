@@ -143,7 +143,9 @@ class InfrastructuresController < ApplicationController
   # - resource_id: Unique ID of resource for SM (eg. vm_id)
   def get_sm_dialog
     begin
-      @sm_proxy = get_sm_proxy(params['sm_container'], params['resource_id'])
+      @sm_container = get_sm_container(params['sm_container'])
+      @sm = @sm_container.simulation_manager(params['resource_id'], @current_user.id)
+      raise NoSuchSmError.new if @sm.nil?
       render inline: render_to_string(partial: 'sm_dialog')
     rescue NoSuchSmContainerError => e
       render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
@@ -154,24 +156,31 @@ class InfrastructuresController < ApplicationController
     end
   end
 
-  # @param [String] sm_container Simulation Manager container name
+  # TODO move to infrastructures facade (with exceptions)?
+
+  # @param [String] sm_container_name Simulation Manager container name
   # @param [String] resource_id Unique ID of resource for SM (eg. vm_id)
   # @raise [NoSuchSmError]
   # @raise [NoSuchSmContainerError]
-  def get_sm_proxy(sm_container, resource_id)
-    container = InfrastructureFacade.get_registered_sm_containters[params['sm_container']]
-    if container
-      sm = container.simulation_manager(params['resource_id'], @current_user.id)
-      if sm
-        return sm
-      else
-        Rails.logger.error "No such computational resource: #{params['resource_id']}@#{params['sm_container']}"
-        raise NoSuchSmError
-      end
+  def get_sm_proxy(sm_container_name, resource_id)
+    sm = get_sm_container(sm_container_name).simulation_manager(resource_id, @current_user.id)
+    if sm.nil?
+      Rails.logger.error "No such computational resource: #{sm_container_name}@#{resource_id}"
+      raise NoSuchSmError.new
     else
-      Rails.logger.error "No such simulation managers container: #{params['sm_container']}"
-      raise NoSuchSmContainerError
+      sm
     end
+  end
+
+  def get_sm_container(sm_container_name)
+    container = InfrastructureFacade.get_registered_sm_containters[sm_container_name]
+    if container.nil?
+      Rails.logger.error "No such simulation managers container: #{sm_container_name}"
+      raise NoSuchSmContainerError.new
+    else
+      container
+    end
+
   end
 
   # ============================ PRIVATE METHODS ============================

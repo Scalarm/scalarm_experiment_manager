@@ -1,6 +1,9 @@
 # Methods to implement in classes including/subclasses
-# - all_user_simulation_managers(user_id): returns array of specific SimulationManagers
+# - sm_record(resource_id, user_id)
+# - all_user_sm_records(user_id)
 # - simulation_manager(resource_id, user_id): returns SimulationManager for given container-unique ID (eg. vm_id, job_id)
+# - all_user_simulation_managers(user_id): returns array of specific SimulationManagers
+
 
 module SimulationManagersContainer
   # @return [Array<Hash>] collection of simulation managers tree nodes
