@@ -10,7 +10,7 @@ class ExperimentsController < ApplicationController
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-    @simulations = @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
+    @simulations = @current_user.get_simulation_scenarios
   end
 
   def show
