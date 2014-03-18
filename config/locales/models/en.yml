@@ -1,0 +1,3 @@
+en:
+  simulations:
+    destroy: "Simulation '%{name}' has been deregistered."

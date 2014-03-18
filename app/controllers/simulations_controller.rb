@@ -86,7 +86,10 @@ class SimulationsController < ApplicationController
   end
 
   def destroy_simulation
-    Simulation.find_by_id(params['component_id']).destroy
+    sim = Simulation.find_by_id(params['component_id'])
+    flash[:notice] = t('simulations.destroy', name: sim.name)
+    sim.destroy
+
     redirect_to :action => :index
   end
 
