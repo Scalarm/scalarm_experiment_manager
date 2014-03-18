@@ -1,4 +1,5 @@
 - content_for :title, t('.title')
+- content_for :help, raw(t('help.simulations.conduct'))
 
 = form_tag start_experiment_experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
 

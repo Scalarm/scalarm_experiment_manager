@@ -12,6 +12,9 @@
     #wrapper
       .notice.alert-box.radius.success(style="display: none;")
 
+      .panel.radius.callout.help(style="display: none;")
+        = content_for?(:help) ? yield(:help) : t('help.no_help')
+
       = yield
 
     %footer
@@ -19,9 +22,9 @@
         .small-8.columns
           = raw t('copyright')
         .small-2.columns
-          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 'http://www.cyfronet.pl'
+          -#= link_to image_tag('agh_logo.jpg'), 'http://www.agh.edu.pl'
         .small-2.columns
-          = link_to image_tag('eda_logo.png', size: "64x64"), 'http://www.eda.europa.eu'
+          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 'http://www.cyfronet.pl'
 
 
     = javascript_include_tag 'application'

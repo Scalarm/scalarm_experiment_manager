@@ -3,10 +3,11 @@
 %section.panel.radius.list
   = content_tag :h3, t('historical_experiments.label'), class: 'subheader'
 
-  - if @historical_experiments.blank?
-    %p No historical experiment available
-  - else
-    - @historical_experiments.each do |experiment|
-      - start_time, finish_time = experiment.start_at.strftime('%Y-%m-%d %H:%M'), experiment.end_at.strftime('%Y-%m-%d %H:%M')
-      - link_text = "#{experiment.name}, started at: #{start_time}, stopped at: #{finish_time}"
-      = button_to link_text, experiment_path(experiment.id), class: 'button expand', method: :get
+  .content
+    - if @historical_experiments.blank?
+      %p= t('.no_experiments')
+    - else
+      - @historical_experiments.each do |experiment|
+        - start_time, finish_time = experiment.start_at.strftime('%Y-%m-%d %H:%M'), experiment.end_at.strftime('%Y-%m-%d %H:%M')
+        - link_text = t('.link_text', { name: experiment.name, start_time: start_time, finish_time: finish_time })
+        = button_to link_text, experiment_path(experiment.id), class: 'button expand radius', method: :get

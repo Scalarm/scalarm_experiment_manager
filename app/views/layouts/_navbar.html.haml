@@ -19,6 +19,8 @@
           = yield :navbar
 
         %ul.right
+          %li
+            = link_to_function t('navbar.help_button'), "$('.help').toggle(400, 'swing');"
           %li.divider
           %li
             = link_to t('navbar.account_link', login: @current_user.login), user_controller_account_path

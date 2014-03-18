@@ -40,7 +40,7 @@ en:
     empty_list: There is no experiment defined to run. Go to registration form and define new experiments.
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
-    label: Running experiments (click on the experiment to go to the monitoring panel)
+    label: Running experiments
   historical_experiments:
       label: Historical experiments
   login_success: "You have log in successfully"

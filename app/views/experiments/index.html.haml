@@ -1,7 +1,14 @@
 - content_for :title, 'Scalarm - experiments'
+- content_for :help, raw(t('help.experiments.summary'))
 
 = render partial: 'running_experiments', locals: { show_close_button: false }
 
 = render partial: 'simulations/simulation_scenarios', locals: { show_close_button: false }
 
 = render partial: 'historical_experiments', locals: { show_close_button: false }
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      window.toggle_panels_on_title_click();
+    });
