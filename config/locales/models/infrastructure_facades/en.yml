@@ -4,6 +4,8 @@ en:
     image_not_found: "Image record not found"
     credentials_removed: "Removed credentials for %{name}"
     credentials_not_removed: "There was no credentials for %{name} to remove"
+    priv_machine_creds_removed: "Removed %{name} private resource credentials"
+    priv_machine_creds_not_removed: "There was no credentials in database to remove"
     permission_denied: "Permission denied"
   infrastructure_facades:
     cloud:

@@ -1,6 +1,6 @@
 # Fields:
 # host: ip/dns address of the machine
-# ssh_port
+# port
 # user_id: ScalarmUser id who has this secrets
 #
 # login: ssh login

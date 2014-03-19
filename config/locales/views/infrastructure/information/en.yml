@@ -21,6 +21,8 @@ en:
           secrets: PLGrid Cloud secrets
           login: UI login
           password: UI password
+      private_machine:
+        credentials_label: Please, provide your credentials to access private resources
 
     information:
       instance_counter: Instance counter

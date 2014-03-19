@@ -1,4 +1,4 @@
--tabs_map={plgrid: 'PL-Grid', cloud: t('.clouds'), images_manager: t('.images_manager')}
+-tabs_map={plgrid: 'PL-Grid', cloud: t('.clouds'), images_manager: t('.images_manager'), private_machines_manager: t('.images_manager')}
 
 %h2= t('experiments.monitoring_actions.booster.header')
 
@@ -13,9 +13,9 @@
 
 - first = true
 .tabs-content
-  - tabs_map.each do |infrastructure_id, infrastructure_info|
-    .content{ id: infrastructure_id, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
-      = render partial: "infrastructure/information/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
+  - tabs_map.each do |tab_id, infrastructure_info|
+    .content{ id: tab_id, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
+      = render partial: "infrastructure/information/#{tab_id}", locals: { experiment: @experiment, user: @current_user }
     - first = false if first
 
 

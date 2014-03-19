@@ -82,10 +82,10 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def add_credentials(user, params, session)
-    credentials = CloudImageSecrets.new(
+    credentials = PrivateMachineCredentials.new(
         'user_id'=>user.id,
         'host'=>params[:host],
-        'ssh_port'=>params[:ssh_port],
+        'port'=>params[:port],
         'login'=>params[:login]
     )
     credentials.secret_password = params[:secret_password]

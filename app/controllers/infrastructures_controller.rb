@@ -49,6 +49,23 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  def remove_private_machine_creds
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:private_machine_creds_id])
+    if machine_creds and machine_creds.user_id != @current_user.id
+      render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
+    end
+
+    if machine_creds
+      name = machine_creds.machine_desc
+      machine_creds.destroy
+      msg = I18n.t('infrastructures_controller.priv_machine_creds_removed', name: name)
+      render json: { status: 'ok', msg: msg }
+    else
+      msg = I18n.t('infrastructures_controller.priv_machine_creds_not_removed')
+      render json: { status: 'error', msg: msg }
+    end
+  end
+
   def remove_credentials
     secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
     if secrets
