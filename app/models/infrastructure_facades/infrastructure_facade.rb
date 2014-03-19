@@ -16,7 +16,7 @@ require 'clouds/cloud_factory'
 class InfrastructureFacade
 
   # sleep time between vm checking [seconds]
-  PROBE_TIME = 60
+  PROBE_TIME = 10
 
   attr_reader :logger
 
@@ -58,7 +58,8 @@ class InfrastructureFacade
   # infrastructure_id => facade object
   def self.get_registered_infrastructures
     {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
+        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
+        private_machine: { label: 'Private resources', facade: PrivateMachineFacade.new }
     }.merge(
         CloudFactory.infrastructures_hash
     )

@@ -18,3 +18,7 @@ en:
       current_state_no_creds: "No information available due to lack of credentials for %{cloud_name}"
       current_state_count: "You have %{count} Scalarm virtual machines scheduled"
       current_state_exception: "No information available due to exception: %{exception}"
+    private_machine:
+      unknown_machine_id: "There is no requested private resource in database"
+      no_permissions: "Scalarm user #{scalarm_login} has no registered credentials for machine #{name}"
+      scheduled_info: "You have scheduled %{count} tasks on %{machine_name}!"
