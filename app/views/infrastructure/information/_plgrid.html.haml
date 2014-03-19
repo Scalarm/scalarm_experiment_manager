@@ -14,18 +14,21 @@
             = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
               = hidden_field_tag 'experiment_id', experiment.id
               = hidden_field_tag 'infrastructure_type', 'plgrid'
+
               .row
                 .small-4.columns
                   = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
                 .small-4.columns
                   = text_field_tag :job_counter
                 .small-4.columns
+
               .row
                 .small-4.columns
                   = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
                 .small-4.columns
                   = select_tag :grant_id, options_for_select(grants)
                 .small-4.columns
+
               .row
                 .small-4.columns
                   = label_tag :scheduler, t('.submission.scheduler') + ':', class: 'inline right'
@@ -70,3 +73,15 @@
           %ul.circle
             - @simulation_managers[:plgrid].each do |plgrid_job|
               %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
+
+:javascript
+  $(function() {
+    $('#scheduler').on('change', function() {
+      if(this.value == 'glite') {
+        $('#nodes').parents('.row').first().hide();
+      }
+      else {
+        $('#nodes').parents('.row').first().show();
+      }
+    });
+  });
