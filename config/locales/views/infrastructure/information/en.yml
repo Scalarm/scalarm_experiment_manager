@@ -46,3 +46,5 @@ en:
       amazon:
         security_group: Security group
 
+      private_machine:
+        machine_id: 'Private resource'

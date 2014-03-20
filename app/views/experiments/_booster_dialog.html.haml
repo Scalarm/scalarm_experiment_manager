@@ -1,4 +1,4 @@
--tabs_map={plgrid: 'PL-Grid', cloud: t('.clouds'), images_manager: t('.images_manager'), private_machines_manager: t('.images_manager')}
+-tabs=[:plgrid, :cloud]
 
 %h2= t('experiments.monitoring_actions.booster.header')
 
@@ -6,14 +6,14 @@
 
 - first = true
 %dl.tabs(data-tab="")
-  - tabs_map.each do |tab_id, tab_title|
+  - tabs.each do |tab_id|
     %dd{class: "#{first ? 'active' : '' }"}
-      %a{ href: "##{tab_id.to_s}" }= tab_title
+      %a{ href: "##{tab_id.to_s}" }= t(".#{tab_id}")
     - first = false if first
 
 - first = true
 .tabs-content
-  - tabs_map.each do |tab_id, infrastructure_info|
+  - tabs.each do |tab_id|
     .content{ id: tab_id, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
       = render partial: "infrastructure/information/#{tab_id}", locals: { experiment: @experiment, user: @current_user }
     - first = false if first

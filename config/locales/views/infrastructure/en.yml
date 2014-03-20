@@ -11,9 +11,8 @@ en:
       maximum: Maximum
       step: Step
     booster_dialog:
-      images_manager: "Image management"
-      clouds: "Clouds"
-      images_manager: "Private resources management"
+      plgrid: "PL-Grid"
+      cloud: "Clouds"
     monitoring_actions:
       stop_dialog:
         header: "Are you sure you want to stop the experiment?"
