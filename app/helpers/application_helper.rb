@@ -13,7 +13,7 @@ module ApplicationHelper
     end
 
   def button_classes
-    'button radius small expand last-element action-button'
+    'button radius small expand action-button'
   end
 
 end

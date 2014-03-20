@@ -34,7 +34,7 @@ class InfrastructureFacade
     config = YAML::load_file File.join(Rails.root, 'config', 'scalarm.yml')
     sm_config = {
         experiment_id: experiment_id,
-        user_id: user_id,
+        #user_id: user_id,
         information_service_url: config['information_service_url'],
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,

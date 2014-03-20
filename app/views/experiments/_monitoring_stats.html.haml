@@ -8,11 +8,12 @@
       .small-9.columns
         %span#exp_all_counter 0
 
-    .row
-      .small-3.columns
-        %strong RUNNING:
-      .small-9.columns
-        %span#exp_sent_counter 0
+    - if @experiment.is_running
+      .row
+        .small-3.columns
+          %strong RUNNING:
+        .small-9.columns
+          %span#exp_sent_counter 0
 
     .row
       .small-3.columns

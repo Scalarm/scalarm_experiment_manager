@@ -25,6 +25,11 @@
           %li= link_to t('.binaries_results_button'), log_bank_url(@storage_manager_url, @experiment)
           %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
 
+    .row
+      - if @experiment.is_running
+        .small-3.columns.action-button
+          = link_to t('.get_sm_button'), simulation_manager_experiment_path, class: button_classes
+
 #extension-dialog.reveal-modal(data-reveal="")
 
 #stop_experiment_dialog.reveal-modal(data-reveal="")

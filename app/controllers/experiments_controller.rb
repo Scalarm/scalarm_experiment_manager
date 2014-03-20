@@ -82,6 +82,10 @@ class ExperimentsController < ApplicationController
 
     @experiment.save_and_cache
 
+    SimulationManagerTempPassword.find_all_by_experiment_id(@experiment.id.to_s).each do |tmp_pass|
+      tmp_pass.destroy
+    end
+
     redirect_to action: :index
   end
 
@@ -555,6 +559,14 @@ class ExperimentsController < ApplicationController
     @param_type = {}
     @param_type['type'] = @parametrization_type
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
+  end
+
+  def simulation_manager
+    sm_uuid = SecureRandom.uuid
+    # prepare locally code of a simulation manager to upload with a configuration file
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
+
+    send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
   end
 
   private

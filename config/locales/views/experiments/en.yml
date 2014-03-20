@@ -23,3 +23,5 @@ en:
     running_experiments:
       link_text: "%{name}, started at: %{start_time}"
       no_experiments: "There is no experiment running currently"
+    monitoring_actions:
+      get_sm_button: "Download Simulation Manager"
