@@ -21,29 +21,22 @@ class ScheduledPrivateMachine
   def monitor
     @logger.info 'checking'
 
-    # TODO: add monitoring cases and actions:
-    # - SM initialized task is dead -> initialize_sm
-    # - init time exceede -> mark as "problematic"
-    # - when terminated_task -> wait for termination, repeat if needed
-
     use_ssh do |ssh|
-      if not machine_alive?
-        logger.info 'This machine is not responding, so it will be removed from records'
-        remove_record
-        # TODO: machine was terminated earlier - inform experiment
-      elsif time_limit_exceeded?
+      if time_limit_exceeded?
         logger.info 'This machine\'s task is going to be destroyed due to time limit'
         terminate_task(ssh)
         remove_record
-        # TODO: machine termination - inform experiment
       elsif init_time_exceeded?
-        logger.info "This task has problems with initialization "\
-                  "for more than #{@record.max_init_time/60} minutes"
-        reinitialize_with_record
+        logger.info "This task was not initialized for more than #{@record.max_init_time/60} minutes, \
+so Simulation Manager initialization attempts will be discontinued"
+        mark_init_time_exceeded
       elsif experiment_end?
-        logger.info 'This task will be destroy due to experiment finishing'
+        logger.info 'This task will be destroyed due to experiment finishing'
         terminate_task(ssh)
         remove_record
+      elsif sm_terminated?(ssh)
+        logger.info 'Simulation Manager is terminated, but experiment has not been completed. Reporting error.'
+        mark_sm_failed(ssh)
       elsif ready_to_initialize_sm?
         logger.info 'This machine is going to be initialized with SM now'
         initialize_sm(ssh)
@@ -52,30 +45,25 @@ class ScheduledPrivateMachine
   end
 
   def status
-    # TODO
-    :running
+    record.error ? :error : :running
   end
 
   # -- monitoring cases --
 
-  def machine_alive?
-    10.times do
-      %x(ping -c 1 #{record.credentials.host})
-      return true if $?.exitstatus == 0
-    end
-    false
-  end
-
   def time_limit_exceeded?
-    @record.created_at + @record.time_limit.to_i.minutes < Time.now
+    record.created_at + record.time_limit.to_i.minutes < Time.now
   end
 
   def init_time_exceeded?
-    (status == :initializing) and (@record.created_at + @record.max_init_time < Time.now)
+    (status != :error) and (not record.sm_initialized) and (@record.created_at + @record.max_init_time < Time.now)
   end
 
   def ready_to_initialize_sm?
     (status == :running) and (not @record.sm_initialized)
+  end
+
+  def sm_terminated?(ssh)
+    status == :running and record.sm_initialized and ssh.exec!("ps #{record.pid} | tail -n +2").blank?
   end
 
   def experiment_end?
@@ -86,6 +74,7 @@ class ScheduledPrivateMachine
 
   # -- monitoring actions --
 
+  # TODO: inform experiments about termination
   def remove_record
     temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(@record.sm_uuid)
     temp_pass.destroy unless temp_pass.nil?
@@ -96,10 +85,15 @@ class ScheduledPrivateMachine
     ssh.exec! "kill -9 #{record.pid}"
   end
 
-  def reinitialize_with_record
-    # TODO: should not restart physical machine - think about solution
-    @record.created_at = Time.now
-    @record.save
+  def mark_init_time_exceeded
+    record.error = 'Simulation Manager initialization time exceeded'
+    record.save
+  end
+
+  def mark_sm_failed(ssh)
+    record.error = 'Simulation Manager terminated'
+    record.error_log = ssh.exec! "tail -10 #{record.log_path}"
+    record.save
   end
 
   def initialize_sm(ssh)
@@ -111,11 +105,12 @@ class ScheduledPrivateMachine
     while true
       begin
         record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
-        output = ssh.exec!(start_simulation_manager_cmd(record.sm_uuid))
+        log_path = "/tmp/sm_log_#{record.sm_uuid}"
+        output = ssh.exec!(start_simulation_manager_cmd)
         @logger.debug "SM process id: #{output}"
         record.pid = output.to_i
         if record.pid <= 0
-          # TODO: invalid SM initialization state?
+          record.error = "Starting Simulation Manager failed with output: #{output}"
         end
         break
       rescue Exception => e
@@ -123,7 +118,7 @@ class ScheduledPrivateMachine
 "#{record.machine_desc} - #{error_counter} tries"
         error_counter += 1
         if error_counter > 10
-          # TODO: invalid state?
+          record.error = "Could not communicate with host. Last error: #{e}"
           break
         end
       end
@@ -135,14 +130,14 @@ class ScheduledPrivateMachine
     record.save
   end
 
-  def start_simulation_manager_cmd(sm_uuid)
-    sm_dir_name = "scalarm_simulation_manager_#{sm_uuid}"
+  def start_simulation_manager_cmd
+    sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
     chain(
         mute('source .rvm/environments/default'),
         mute(rm(sm_dir_name, true)),
         mute("unzip #{sm_dir_name}.zip"),
         mute(cd(sm_dir_name)),
-        run_in_background('ruby simulation_manager.rb', '/tmp/mylogfile', '&1')
+        run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
     )
   end
 

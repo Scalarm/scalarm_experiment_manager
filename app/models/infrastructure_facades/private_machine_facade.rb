@@ -24,11 +24,40 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def monitoring_loop
-    # TODO: use one ssh session per user@host:port (group)
-    machine_records = PrivateMachineRecord.all.each do |record|
-      Net::SSH.start(record.credentials.host, record.credentials.login,
-                     password: record.credentials.secret_password) do |ssh|
-        ScheduledPrivateMachine.new(record, ssh).monitor
+    machine_records = PrivateMachineRecord.all.group_by {|r| r.private_machine_id}
+    machine_records.each do |creds_id, records|
+      creds = PrivateMachineCredentials.find_by_id(creds_id)
+      if creds.nil?
+        logger.error "Credentials missing: #{creds_id}, affected records: #{records.map &:id}"
+        next
+      end
+      logger.debug "Monitoring private resources on: #{creds.machine_desc} (#{records.count} tasks)"
+      begin
+        Net::SSH.start(creds.host, creds.login, password: creds.secret_password) do |ssh|
+          records.each do |r|
+            if r.ssh_error
+              r.ssh_error = nil
+              r.error = nil
+              r.save
+            end
+            ScheduledPrivateMachine.new(r, ssh).monitor
+          end
+        end
+      rescue Net::SSH::AuthenticationFailed
+        logger.error "Invalid credendials provided for #{creds.machine_desc}"
+        records.each do |r|
+          r.ssh_error = true
+          r.error = 'Invalid credentials'
+          r.save
+        end
+      rescue SocketError => e
+        logger.error "Cannot connect with #{creds.machine_desc}: #{e}"
+        records.each do |r|
+          r.ssh_error = true
+          r.error = "Socket error: #{e}"
+          r.save
+        end
+        # TODO: add warning message to record
       end
     end
   end

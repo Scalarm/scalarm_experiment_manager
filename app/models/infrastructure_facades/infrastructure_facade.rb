@@ -16,7 +16,7 @@ require 'clouds/cloud_factory'
 class InfrastructureFacade
 
   # sleep time between vm checking [seconds]
-  PROBE_TIME = 60
+  PROBE_TIME = 10
 
   attr_reader :logger
 
