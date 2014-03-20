@@ -39,10 +39,11 @@ class InfrastructuresController < ApplicationController
     if img_secrets
       cloud_name = img_secrets.cloud_name
       image_id = img_secrets.image_id
+      long_cloud_name = CloudFactory.full_name(cloud_name)
 
       img_secrets.destroy
       msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
-      render json: { status: 'ok', msg: msg, cloud_name: CloudFactory.full_name(cloud_name), image_id: image_id }
+      render json: { status: 'ok', msg: msg, cloud_name: long_cloud_name, image_id: image_id }
     else
       msg = I18n.t('infrastructures_controller.image_not_found')
       render json: { status: 'error', msg: msg }
