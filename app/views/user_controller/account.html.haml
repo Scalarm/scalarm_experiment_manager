@@ -47,5 +47,5 @@
       - tabs.each do |tab_id|
         %dd
           %a(href="##{tab_id}")= t(".#{tab_id}")
-          .content{id: tab_id}
+          .content{id: tab_id, class: params[:active_tab] == tab_id.to_s ? 'active' : ''}
             = render partial: "infrastructure/credentials/#{tab_id}", locals: { user: @current_user }

@@ -1,6 +1,6 @@
 class window.PrivateMachinesManagerDialog
-  constructor: (addMachineFormId, responseDialogId, @machinesTableId, loadingImgId) ->
-    @addMachineForm = $("##{addMachineFormId} form")
+  constructor: (@addMachinePanelId, responseDialogId, @machinesTableId, loadingImgId) ->
+    @addMachineForm = $("##{addMachinePanelId} form")
 
     @loading = $("##{@loadingImgId}")
     @responseDialog = $("##{responseDialogId}")
@@ -14,7 +14,10 @@ class window.PrivateMachinesManagerDialog
     .bind('ajax:before', => @loading.show())
     .bind('ajax:success', (data, status, xhr) => toastr.success(status.msg))
     .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
-    .bind('ajax:complete', () => @loading.hide())
+    .bind('ajax:complete', () =>
+        @loading.hide()
+        window.location = "/user_controller/account?active_tab=private_machines_manager##{@addMachinePanelId}"
+      )
 
   bindToRemoveButtons: ->
     $("##{@machinesTableId} tr[id]").each( ->
