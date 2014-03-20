@@ -8,6 +8,8 @@ en:
     priv_machine_creds_not_removed: "There was no credentials in database to remove"
     permission_denied: "Permission denied"
   infrastructure_facades:
+    plgrid:
+      current_state: "Currently %{jobs_count} jobs are scheduled or running."
     cloud:
       provide_secrets: "You have to provide %{cloud_name} secrets first!"
       client_problem: "Problem connecting with %{cloud_name} - please check provided cloud credentials."
@@ -24,3 +26,4 @@ en:
       unknown_machine_id: "There is no requested private resource in database"
       no_permissions: "Scalarm user #{scalarm_login} has no registered credentials for machine #{name}"
       scheduled_info: "You have scheduled %{count} tasks on %{machine_name}!"
+      current_state: "Currently %{tasks} tasks are scheduled or running on private resources."

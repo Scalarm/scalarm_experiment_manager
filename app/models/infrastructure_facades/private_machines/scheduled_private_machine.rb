@@ -28,24 +28,24 @@ class ScheduledPrivateMachine
 
     use_ssh do |ssh|
       if not machine_alive?
-        @logger.info 'This machine is not responding, so it will be removed from records'
+        logger.info 'This machine is not responding, so it will be removed from records'
         remove_record
         # TODO: machine was terminated earlier - inform experiment
       elsif time_limit_exceeded?
-        @logger.info 'This machine\'s task is going to be destroyed due to time limit'
+        logger.info 'This machine\'s task is going to be destroyed due to time limit'
         terminate_task(ssh)
         remove_record
         # TODO: machine termination - inform experiment
       elsif init_time_exceeded?
-        @logger.info "This task has problems with initialization "\
+        logger.info "This task has problems with initialization "\
                   "for more than #{@record.max_init_time/60} minutes"
         reinitialize_with_record
       elsif experiment_end?
-        @logger.info 'This task will be destroy due to experiment finishing'
+        logger.info 'This task will be destroy due to experiment finishing'
         terminate_task(ssh)
         remove_record
       elsif ready_to_initialize_sm?
-        @logger.info 'This VM is going to be initialized with SM now'
+        logger.info 'This machine is going to be initialized with SM now'
         initialize_sm(ssh)
       end
     end

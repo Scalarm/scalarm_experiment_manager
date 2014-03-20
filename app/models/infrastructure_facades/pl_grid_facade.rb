@@ -21,13 +21,7 @@ class PLGridFacade < InfrastructureFacade
 
   def current_state(user)
     jobs = PlGridJob.find_all_by_user_id(user.id)
-    jobs_count = if jobs.nil?
-                   0
-                 else
-                   jobs.size
-                 end
-
-    "Currently #{jobs_count} jobs are scheduled or running."
+    I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
   end
 
   # for each job check

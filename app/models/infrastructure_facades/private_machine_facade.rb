@@ -17,8 +17,9 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def current_state(user)
-    # FIXME
-    'Not available yet'
+    records = PrivateMachineRecord.find_all_by_user_id(user.id)
+    tasks = records.nil? ? 0 : records.size
+    I18n.t('infrastructure_facades.private_machine.current_state', tasks: tasks.to_s)
   end
 
   # implements InfrasctuctureFacade
@@ -40,7 +41,7 @@ class PrivateMachineFacade < InfrastructureFacade
   def start_simulation_managers(user, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
-    machine_creds = PrivateMachineCredentials.find_by_id(params['private_machine_id'])
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:machine_id])
 
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
@@ -49,17 +50,19 @@ class PrivateMachineFacade < InfrastructureFacade
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
 
-    PrivateMachineRecord.new({
-        user_id: user.id,
-        experiment_id: experiment_id,
-        private_machine_id: private_machine_id,
-        created_at: Time.now,
-        time_limit: params['time_limit'],
-        start_at: params['start_at'],
-        sm_uuid: SecureRandom.uuid,
-        sm_initialized: false
-                             })
-    ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: sched_instances.size,
+    instances_count.times do
+      PrivateMachineRecord.new({
+          user_id: user.id,
+          experiment_id: experiment_id,
+          private_machine_id: params[:machine_id],
+          created_at: Time.now,
+          time_limit: params[:time_limit],
+          start_at: params[:start_at],
+          sm_uuid: SecureRandom.uuid,
+          sm_initialized: false
+                               }).save
+    end
+    ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: instances_count,
                         machine_name: machine_creds.machine_desc)]
 
   end
@@ -75,7 +78,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
-    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id) do |instance|
+    PrivateMachineRecord.find_all_by_user_id(user.id) do |instance|
       instance.to_s
     end
   end

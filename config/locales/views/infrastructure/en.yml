@@ -13,6 +13,7 @@ en:
     booster_dialog:
       plgrid: "PL-Grid"
       cloud: "Clouds"
+      private_machine: "Private resources"
     monitoring_actions:
       stop_dialog:
         header: "Are you sure you want to stop the experiment?"

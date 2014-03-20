@@ -15,7 +15,7 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
   end
 
   def machine_desc
-    "#{login}@#{host}:#{ssh_port}"
+    "#{login}@#{host}:#{port}"
   end
 
 end
