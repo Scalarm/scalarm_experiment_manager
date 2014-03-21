@@ -11,7 +11,7 @@
 class PrivateMachineCredentials < EncryptedMongoActiveRecord
 
   def self.collection_name
-    'private_machine_secrets'
+    'private_machine_credentials'
   end
 
   def machine_desc
