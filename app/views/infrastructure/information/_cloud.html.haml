@@ -77,5 +77,21 @@
               %p
                 %p= @current_states[cloud_name.to_sym]
                 %ul.circle
-                  - @simulation_managers[cloud_name.to_sym].each do |virtual_machine|
-                    %li= virtual_machine
+                  - @simulation_managers[cloud_name.to_sym].each do |vm_record|
+                    %li
+                      - begin
+                        %strong= t('.sm_info.vm_id') + ': '
+                        =vm_record.vm_id.to_s + ', '
+                        %strong= t('infrastructure.information.launched_at') + ': '
+                        =vm_record.created_at.to_s + ', '
+                        %strong= t('infrastructure.information.time_limit') + ': '
+                        =vm_record.time_limit.to_s + ', '
+                        %strong= t('infrastructure.information.experiment_id') + ': '
+                        =vm_record.experiment_id.to_s
+                        %br
+                        %strong= t('.sm_info.ssh_address') + ': '
+                        =(vm_record.public_host ? "#{vm_record.public_host}:#{vm_record.public_ssh_port}" : t('.sm_info.no_ssh_address')) + ', '
+                        %strong= t('.sm_info.login') + ': '
+                        =vm_record.image_instance.image_login.to_s
+                      - rescue Exception => e
+                        =t('infrastructure.information.sm_record_error', error: e.to_s)

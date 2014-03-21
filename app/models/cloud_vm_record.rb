@@ -31,8 +31,6 @@ class CloudVmRecord < MongoActiveRecord
 
   def initialize(attributes)
     super(attributes)
-
-    @image_cache = nil
   end
 
   #  upload file to the VM - use only password authentication
@@ -53,13 +51,11 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def image_instance
-    @image_cache = CloudImageSecrets.find_by_image_id(image_id.to_s) unless @image_cache
-    @image_cache
+    @image ||= CloudImageSecrets.find_by_image_id(image_id.to_s)
   end
 
   def experiment_instance
-    @experiment = Experiment.find_by_id(experiment_id) unless @experiment
-    @experiment
+    @experiment ||= Experiment.find_by_id(experiment_id) unless @experiment
   end
 
   # additional info for specific cloud should be provided by CloudClient

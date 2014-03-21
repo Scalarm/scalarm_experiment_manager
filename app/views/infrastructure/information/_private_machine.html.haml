@@ -18,9 +18,9 @@
             .small-4.columns
           .row
             .small-4.columns
-              = label_tag :machine_id, t('.machine_id') + ':', class: 'inline right'
+              = label_tag :machine_desc, t('.machine_id') + ':', class: 'inline right'
             .small-4.columns
-              = select_tag :machine_id, options_for_select(machines)
+              = select_tag :machine_desc, options_for_select(machines)
             .small-4.columns
           .row
             .small-4.columns
@@ -43,5 +43,29 @@
       %p
         %p= @current_states[:private_machine]
         %ul.circle
-          - @simulation_managers[:private_machine].each do |machine|
-            %li= machine
+          - @simulation_managers[:private_machine].each do |record|
+            %li
+              - begin
+                %strong= t('.sm_info.machine_desc') + ': '
+                =record.credentials.machine_desc.to_s + ', '
+                %strong= t('.sm_info.pid') + ': '
+                =(record.pid ? record.pid.to_s : '-') + ', '
+                %strong= t('infrastructure.information.launched_at') + ': '
+                =record.created_at.to_s + ', '
+                %strong= t('infrastructure.information.time_limit') + ': '
+                =record.time_limit.to_s
+                %br
+                %strong= t('infrastructure.information.experiment_id') + ': '
+                =record.experiment_id.to_s
+                - if record.error
+                  %br
+                  %strong= t('.sm_info.error') + ': '
+                  =record.error.to_s
+                  - if record.error_log
+                    %br
+                    %strong= t('.sm_info.error_log') + ': '
+                    %br
+                    =raw(record.error_log.sub('\n', '<br/>'))
+
+              - rescue Exception => e
+                =t('infrastructure.information.sm_record_error', error: e.to_s)

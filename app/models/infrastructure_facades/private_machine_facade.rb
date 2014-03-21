@@ -70,7 +70,7 @@ class PrivateMachineFacade < InfrastructureFacade
   def start_simulation_managers(user, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
-    machine_creds = PrivateMachineCredentials.find_by_id(params[:machine_id])
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:machine_desc])
 
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
@@ -83,7 +83,7 @@ class PrivateMachineFacade < InfrastructureFacade
       PrivateMachineRecord.new({
           user_id: user.id,
           experiment_id: experiment_id,
-          private_machine_id: params[:machine_id],
+          private_machine_id: params[:machine_desc],
           created_at: Time.now,
           time_limit: params[:time_limit],
           start_at: params[:start_at],
@@ -107,9 +107,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
-    PrivateMachineRecord.find_all_by_user_id(user.id) do |instance|
-      instance.to_s
-    end
+    PrivateMachineRecord.find_all_by_user_id(user.id)
   end
 
   # implements InfrasctuctureFacade

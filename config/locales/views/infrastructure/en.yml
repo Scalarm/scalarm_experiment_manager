@@ -67,3 +67,16 @@ en:
           machine_table_label: "Manage submitted resources credentials"
 
           table_label: "Manage submitted private resources credentials"
+      information:
+        cloud:
+          sm_info:
+            vm_id: "VM ID"
+            ssh_address: "SSH address"
+            no_ssh_address: "Not available"
+            login: "Login"
+        private_machine:
+          sm_info:
+            machine_desc: "Address"
+            error: "Error occured"
+            error_log: "Error log"
+            pid: "PID"

@@ -114,9 +114,7 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
-    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id) do |instance|
-      instance.to_s
-    end
+    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
   end
 
   # implements InfrasctuctureFacade

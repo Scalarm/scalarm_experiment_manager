@@ -57,4 +57,7 @@
           %p{ id: 'plgrid_info' }= @current_states[:plgrid]
           %ul.circle
             - @simulation_managers[:plgrid].each do |plgrid_job|
-              %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
+              - begin
+                %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
+              - rescue Exception => e
+                %li= t('infrastructure.information.sm_record_error', error: e.to_s)

@@ -34,6 +34,11 @@ en:
       submit: Submit
       remove_credentials: Remove credentials
 
+      launched_at: 'Launched at'
+      time_limit: 'Time limit'
+      sm_record_error: "Sorry, cannot retrieve information about simulation manager due to error: %{error}"
+      experiment_id: "Experiment ID"
+
       credentials_info: Please, provide valid credentials to your Cloud of choice in the %{account_link} panel, before scheduling virtual machines.
       no_credentials_info: No valid credentials provided for %{cloud_name}
       submission_label: Simulation Manager submission
