@@ -55,22 +55,6 @@ class PrivateMachineRecord < MongoActiveRecord
     @experiment ||= Experiment.find_by_id(experiment_id)
   end
 
-  # TODO: this should be moved to view
-  def to_s
-    if credentials.nil?
-      'Credentials missing!'
-    else
-      msg = "Task description: #{task_desc}, Launched at: #{created_at}, Time limit: #{time_limit}"
-      if error
-        msg += ", An error occured: #{error}"
-        if error_log
-          msg += ", Details: \n#{error_log}"
-        end
-      end
-      msg
-    end
-  end
-
   def log_path
     "/tmp/log_sm_#{sm_uuid}"
   end

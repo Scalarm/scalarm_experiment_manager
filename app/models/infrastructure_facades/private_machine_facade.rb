@@ -35,6 +35,7 @@ class PrivateMachineFacade < InfrastructureFacade
       begin
         Net::SSH.start(creds.host, creds.login, password: creds.secret_password) do |ssh|
           records.each do |r|
+            # Clear possible SSH error as SSH connection is now successful
             if r.ssh_error
               r.ssh_error = nil
               r.error = nil
@@ -43,22 +44,26 @@ class PrivateMachineFacade < InfrastructureFacade
             ScheduledPrivateMachine.new(r, ssh).monitor
           end
         end
-      rescue Net::SSH::AuthenticationFailed
-        logger.error "Invalid credendials provided for #{creds.machine_desc}"
-        records.each do |r|
-          r.ssh_error = true
-          r.error = 'Invalid credentials'
-          r.save
-        end
-      rescue SocketError => e
+      rescue Net::SSH::AuthenticationFailed, SocketError, Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
         logger.error "Cannot connect with #{creds.machine_desc}: #{e}"
         records.each do |r|
           r.ssh_error = true
-          r.error = "Socket error: #{e}"
+          r.error = "Connection error: #{e}"
           r.save
         end
-        # TODO: add warning message to record
+        check_record_expiration(r)
+      rescue Exception => e
+        logger.error "Unknown exception on monitoring private resource #{creds.machine_desc}: #{e}"
+        check_record_expiration(r)
       end
+    end
+  end
+
+  # Used if cannot execute ScheduledPrivateMachine.monitor: remove record when it should be removed
+  def check_record_expiration(private_machine_record)
+    machine = ScheduledPrivateMachine.new(r)
+    if machine.time_limit_exceeded? or experiment_end?
+      machine.remove_record
     end
   end
 

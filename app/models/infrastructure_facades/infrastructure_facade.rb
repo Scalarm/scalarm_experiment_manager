@@ -73,7 +73,7 @@ class InfrastructureFacade
           logger.info 'monitoring thread is working'
           monitoring_loop
         rescue Exception => e
-          logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
+          logger.error "Monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
         lock.release
       end

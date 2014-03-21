@@ -57,11 +57,11 @@
                 %br
                 %strong= t('infrastructure.information.experiment_id') + ': '
                 =record.experiment_id.to_s
-                - if record.error
+                - unless record.error.nil?
                   %br
                   %strong= t('.sm_info.error') + ': '
                   =record.error.to_s
-                  - if record.error_log
+                  - unless record.error_log.nil?
                     %br
                     %strong= t('.sm_info.error_log') + ': '
                     %br

@@ -55,7 +55,8 @@ class CloudFacade < InfrastructureFacade
     vm_records.each do |user_id, user_vm_records|
       secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
       if secrets.nil?
-        logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
+        user = ScalarmUser.find_by_id(user_id)
+        logger.info "We cannot monitor VMs for #{user.id} due secrets lacking"
         next
       end
 
