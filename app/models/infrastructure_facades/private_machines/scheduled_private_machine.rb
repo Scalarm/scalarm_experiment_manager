@@ -15,11 +15,11 @@ class ScheduledPrivateMachine
   end
 
   def upload_file(local_path, remote_path='.')
-    @record.upload_file local_path, remote_path
+    record.upload_file local_path, remote_path
   end
 
   def monitor
-    @logger.info 'checking'
+    logger.info 'checking'
 
     use_ssh do |ssh|
       if time_limit_exceeded?
@@ -78,7 +78,7 @@ so Simulation Manager initialization attempts will be discontinued"
   def remove_record
     temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(@record.sm_uuid)
     temp_pass.destroy unless temp_pass.nil?
-    @record.destroy
+    record.destroy
   end
 
   def terminate_task(ssh)
@@ -97,7 +97,7 @@ so Simulation Manager initialization attempts will be discontinued"
   end
 
   def initialize_sm(ssh)
-    @logger.debug "Initializing SM on #{record.credentials.host}:#{record.credentials.ssh_port}"
+    logger.debug "Initializing SM on #{record.credentials.host}:#{record.credentials.ssh_port}"
 
     InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
                                                                       record.experiment_id, record.start_at)
@@ -107,7 +107,7 @@ so Simulation Manager initialization attempts will be discontinued"
         record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
         log_path = "/tmp/sm_log_#{record.sm_uuid}"
         output = ssh.exec!(start_simulation_manager_cmd)
-        @logger.debug "SM process id: #{output}"
+        logger.debug "SM process id: #{output}"
         record.pid = output.to_i
         if record.pid <= 0
           record.error = "Starting Simulation Manager failed with output: #{output}"

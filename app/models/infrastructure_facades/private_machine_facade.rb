@@ -33,37 +33,43 @@ class PrivateMachineFacade < InfrastructureFacade
       end
       logger.debug "Monitoring private resources on: #{creds.machine_desc} (#{records.count} tasks)"
       begin
-        Net::SSH.start(creds.host, creds.login, password: creds.secret_password) do |ssh|
+        creds.ssh_start do |ssh|
           records.each do |r|
-            # Clear possible SSH error as SSH connection is now successful
-            if r.ssh_error
-              r.ssh_error = nil
-              r.error = nil
-              r.save
+            begin
+              # Clear possible SSH error as SSH connection is now successful
+              if r.ssh_error
+                r.ssh_error, r.error = nil, nil
+                r.save
+              end
+              ScheduledPrivateMachine.new(r, ssh).monitor
+            rescue Exception => e
+              logger.error "Exception on monitoring private resource #{creds.machine_desc}: #{e.class} - #{e}"
+              check_record_expiration(r)
             end
-            ScheduledPrivateMachine.new(r, ssh).monitor
           end
         end
-      rescue Net::SSH::AuthenticationFailed, SocketError, Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
-        logger.error "Cannot connect with #{creds.machine_desc}: #{e}"
-        records.each do |r|
-          r.ssh_error = true
-          r.error = "Connection error: #{e}"
-          r.save
-        end
-        check_record_expiration(r)
       rescue Exception => e
-        logger.error "Unknown exception on monitoring private resource #{creds.machine_desc}: #{e}"
-        check_record_expiration(r)
+        logger.error "SSH connection error on #{creds.machine_desc}: #{e.class} - #{e}"
+        records.each do |r|
+          unless check_record_expiration(r)
+            r.ssh_error = true
+            r.error = "SSH connection error: (#{e.class}) #{e}"
+            r.save
+          end
+        end
       end
     end
   end
 
   # Used if cannot execute ScheduledPrivateMachine.monitor: remove record when it should be removed
   def check_record_expiration(private_machine_record)
-    machine = ScheduledPrivateMachine.new(r)
-    if machine.time_limit_exceeded? or experiment_end?
+    machine = ScheduledPrivateMachine.new(private_machine_record)
+    if machine.time_limit_exceeded? or machine.experiment_end?
+      logger.info "Removing private machine record #{private_machine_record.task_desc} due to expiration or experiment end"
       machine.remove_record
+      true
+    else
+      false
     end
   end
 
@@ -120,7 +126,7 @@ class PrivateMachineFacade < InfrastructureFacade
     credentials = PrivateMachineCredentials.new(
         'user_id'=>user.id,
         'host'=>params[:host],
-        'port'=>params[:port],
+        'port'=>params[:port].to_i,
         'login'=>params[:login]
     )
     credentials.secret_password = params[:secret_password]

@@ -11,8 +11,6 @@
 
 class PrivateMachineRecord < MongoActiveRecord
 
-  SSH_AUTH_METHODS = %w(password)
-
   # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
   def max_init_time
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
@@ -28,23 +26,6 @@ class PrivateMachineRecord < MongoActiveRecord
 
   def initialize(attributes)
     super(attributes)
-  end
-
-  #  upload file to the VM - use only password authentication
-  def upload_file(local_path, remote_path='.')
-    Net::SCP.start(credentials.host, credentials.login,
-                   port: credentials.ssh_port, password: credentials.secret_password,
-                   auth_methods: SSH_AUTH_METHODS) do |scp|
-      scp.upload! local_path, remote_path
-    end
-  end
-
-  def ssh_session
-    Net::SSH.start(credentials.host, credentials.login,
-              port: credentials.ssh_port, password: credentials.secret_password,
-              auth_methods: SSH_AUTH_METHODS) do |ssh|
-      yield ssh
-    end
   end
 
   def credentials
