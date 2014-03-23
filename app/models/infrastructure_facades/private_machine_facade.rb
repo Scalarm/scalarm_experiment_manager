@@ -17,9 +17,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def current_state(user)
-    records = PrivateMachineRecord.find_all_by_user_id(user.id)
-    tasks = records.nil? ? 0 : records.size
-    I18n.t('infrastructure_facades.private_machine.current_state', tasks: tasks.to_s)
+    I18n.t('infrastructure_facades.private_machine.current_state', tasks: count_scheduled_tasks(user))
   end
 
   # implements InfrasctuctureFacade
@@ -104,7 +102,6 @@ class PrivateMachineFacade < InfrastructureFacade
     end
     ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: instances_count,
                         machine_name: machine_creds.machine_desc)]
-
   end
 
   # implements InfrasctuctureFacade
@@ -119,6 +116,11 @@ class PrivateMachineFacade < InfrastructureFacade
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
     PrivateMachineRecord.find_all_by_user_id(user.id)
+  end
+
+  def count_scheduled_tasks(user)
+    records = get_running_simulation_managers(user)
+    records.nil? ? 0 : records.size
   end
 
   # implements InfrasctuctureFacade
