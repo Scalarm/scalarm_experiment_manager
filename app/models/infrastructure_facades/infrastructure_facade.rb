@@ -74,6 +74,7 @@ class InfrastructureFacade
           monitoring_loop
         rescue Exception => e
           logger.error "Monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
+          # TODO: add 'clean_expired' method to each InfrastructureFacade to remove invalid outdated records
         end
         lock.release
       end

@@ -18,9 +18,9 @@
             .small-4.columns
           .row
             .small-4.columns
-              = label_tag :machine_desc, t('.machine_id') + ':', class: 'inline right'
+              = label_tag :credentials_id, t('.machine_id') + ':', class: 'inline right'
             .small-4.columns
-              = select_tag :machine_desc, options_for_select(machines)
+              = select_tag :credentials_id, options_for_select(machines)
             .small-4.columns
           .row
             .small-4.columns

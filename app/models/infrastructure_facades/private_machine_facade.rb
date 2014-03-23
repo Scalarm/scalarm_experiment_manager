@@ -22,11 +22,12 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def monitoring_loop
-    machine_records = PrivateMachineRecord.all.group_by {|r| r.private_machine_id}
+    machine_records = PrivateMachineRecord.all.group_by {|r| r.credentials_id}
     machine_records.each do |creds_id, records|
       creds = PrivateMachineCredentials.find_by_id(creds_id)
       if creds.nil?
         logger.error "Credentials missing: #{creds_id}, affected records: #{records.map &:id}"
+        records.map {|r| check_record_expiration(r)}
         next
       end
       logger.debug "Monitoring private resources on: #{creds.machine_desc} (#{records.count} tasks)"
@@ -75,11 +76,11 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   # Params hash:
-  # - 'private_machine_id' => id of PrivateMachineCredentials record - this machine will be initialized
+  # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
   def start_simulation_managers(user, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
-    machine_creds = PrivateMachineCredentials.find_by_id(params[:machine_desc])
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
 
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
@@ -92,7 +93,7 @@ class PrivateMachineFacade < InfrastructureFacade
       PrivateMachineRecord.new({
           user_id: user.id,
           experiment_id: experiment_id,
-          private_machine_id: params[:machine_desc],
+          credentials_id: params[:credentials_id],
           created_at: Time.now,
           time_limit: params[:time_limit],
           start_at: params[:start_at],

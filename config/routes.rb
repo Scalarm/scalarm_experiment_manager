@@ -82,7 +82,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :add_infrastructure_credentials
       post :remove_image
       post :remove_credentials
-      post :remove_private_machine_creds
+      post :remove_private_machine_credentials
     end
   end
 

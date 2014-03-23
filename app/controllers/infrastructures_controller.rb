@@ -50,8 +50,8 @@ class InfrastructuresController < ApplicationController
     end
   end
 
-  def remove_private_machine_creds
-    machine_creds = PrivateMachineCredentials.find_by_id(params[:private_machine_creds_id])
+  def remove_private_machine_credentials
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
     if machine_creds and machine_creds.user_id != @current_user.id
       render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
     end

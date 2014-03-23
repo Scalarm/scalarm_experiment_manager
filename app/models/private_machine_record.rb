@@ -2,7 +2,7 @@
 # -- generic --
 # user_id => integer - the user who scheduled this job - mongoid in the future
 # experiment_id => the experiment which should be computed by this job
-# private_machine_id => id of PrivateMachineCredentials
+# credentials_id => id of PrivateMachineCredentials
 # created_at => time - when this job were scheduled
 # time_limit => time - when this job should be stopped - in minutes
 # pid => PID of SimulationManager process executed at remote machine
@@ -29,7 +29,7 @@ class PrivateMachineRecord < MongoActiveRecord
   end
 
   def credentials
-    @credentials ||= PrivateMachineCredentials.find_by_id(private_machine_id)
+    @credentials ||= PrivateMachineCredentials.find_by_id(credentials_id)
   end
 
   def experiment
