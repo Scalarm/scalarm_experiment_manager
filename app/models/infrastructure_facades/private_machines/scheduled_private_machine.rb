@@ -15,7 +15,11 @@ class ScheduledPrivateMachine
   end
 
   def upload_file(local_path, remote_path='.')
-    record.upload_file local_path, remote_path
+    record.credentials.upload_file local_path, remote_path
+  end
+
+  def ssh_start(&block)
+    record.credentials.ssh_start(&block)
   end
 
   def monitor
@@ -27,7 +31,7 @@ class ScheduledPrivateMachine
         terminate_task(ssh)
         remove_record
       elsif init_time_exceeded?
-        logger.info "This task was not initialized for more than #{@record.max_init_time/60} minutes, \
+        logger.info "This task was not initialized for more than #{record.max_init_time/60} minutes, \
 so Simulation Manager initialization attempts will be discontinued"
         mark_init_time_exceeded
       elsif experiment_end?
@@ -67,16 +71,16 @@ so Simulation Manager initialization attempts will be discontinued"
   end
 
   def experiment_end?
-    done = @record.experiment.get_statistics[2] unless @record.experiment.nil?
-    @record.experiment.nil? or (@record.experiment.is_running == false)\
-      or (@record.experiment.experiment_size == done)
+    done = record.experiment.get_statistics[2] unless record.experiment.nil?
+    record.experiment.nil? or (record.experiment.is_running == false)\
+      or (record.experiment.experiment_size == done)
   end
 
   # -- monitoring actions --
 
   # TODO: inform experiments about termination
   def remove_record
-    temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(@record.sm_uuid)
+    temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(record.sm_uuid)
     temp_pass.destroy unless temp_pass.nil?
     record.destroy
   end
@@ -104,7 +108,7 @@ so Simulation Manager initialization attempts will be discontinued"
     error_counter = 0
     while true
       begin
-        record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
+        upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
         log_path = "/tmp/sm_log_#{record.sm_uuid}"
         output = ssh.exec!(start_simulation_manager_cmd)
         logger.debug "SM process id: #{output}"
@@ -114,7 +118,7 @@ so Simulation Manager initialization attempts will be discontinued"
         end
         break
       rescue Exception => e
-        @logger.warn "Exception #{e} occured while communication with "\
+        logger.warn "Exception #{e} occured while communication with "\
 "#{record.machine_desc} - #{error_counter} tries"
         error_counter += 1
         if error_counter > 10
@@ -151,8 +155,7 @@ so Simulation Manager initialization attempts will be discontinued"
       raise String("No credentials for private machine, for user_id: #{user_id} in job_id: #{job_id}") if credentials.nil?
 
       logger.info 'starting new ssh session'
-      Net::SSH.start(credentials.host, credentials.login,
-                     password: credentials.password) do |ssh|
+      ssh_start do |ssh|
         yield ssh
       end
     else
