@@ -178,6 +178,13 @@ while true
       unless progress_monitor_pid.nil?
         puts "Killing the '#{progress_monitor_pid}' process"
         Process.kill('TERM', progress_monitor_pid)
+        begin
+          Timeout::timeout(3) do
+            Process.wait(progress_monitor_pid)
+          end
+        rescue Timeout::Error
+          puts "Waiting for child #{progress_monitor_pid} timeout"
+        end
       end
     end
 
