@@ -23,38 +23,44 @@ class PrivateMachineFacade < InfrastructureFacade
   # implements InfrasctuctureFacade
   def monitoring_loop
     machine_records = PrivateMachineRecord.all.group_by {|r| r.credentials_id}
+    machine_threads = []
     machine_records.each do |creds_id, records|
-      creds = PrivateMachineCredentials.find_by_id(creds_id)
-      if creds.nil?
+      credentials = PrivateMachineCredentials.find_by_id(creds_id)
+      if credentials.nil?
         logger.error "Credentials missing: #{creds_id}, affected records: #{records.map &:id}"
         records.map {|r| check_record_expiration(r)}
         next
       end
-      logger.debug "Monitoring private resources on: #{creds.machine_desc} (#{records.count} tasks)"
-      begin
-        creds.ssh_start do |ssh|
-          records.each do |r|
-            begin
-              # Clear possible SSH error as SSH connection is now successful
-              if r.ssh_error
-                r.ssh_error, r.error = nil, nil
-                r.save
-              end
-              ScheduledPrivateMachine.new(r, ssh).monitor
-            rescue Exception => e
-              logger.error "Exception on monitoring private resource #{creds.machine_desc}: #{e.class} - #{e}"
-              check_record_expiration(r)
+      machine_threads << Thread.start { monitor_machine_records(credentials, records) }
+    end
+    machine_threads.map &:join
+  end
+
+  def monitor_machine_records(credentials, records)
+    logger.debug "Monitoring private resources on: #{credentials.machine_desc} (#{records.count} tasks)"
+    begin
+      credentials.ssh_start do |ssh|
+        records.each do |r|
+          begin
+            # Clear possible SSH error as SSH connection is now successful
+            if r.ssh_error
+              r.ssh_error, r.error = nil, nil
+              r.save
             end
+            ScheduledPrivateMachine.new(r, ssh).monitor
+          rescue Exception => e
+            logger.error "Exception on monitoring private resource #{credentials.machine_desc}: #{e.class} - #{e}"
+            check_record_expiration(r)
           end
         end
-      rescue Exception => e
-        logger.error "SSH connection error on #{creds.machine_desc}: #{e.class} - #{e}"
-        records.each do |r|
-          unless check_record_expiration(r)
-            r.ssh_error = true
-            r.error = "SSH connection error: (#{e.class}) #{e}"
-            r.save
-          end
+      end
+    rescue Exception => e
+      logger.error "SSH connection error on #{credentials.machine_desc}: #{e.class} - #{e}"
+      records.each do |r|
+        unless check_record_expiration(r)
+          r.ssh_error = true
+          r.error = "SSH connection error: (#{e.class}) #{e}"
+          r.save
         end
       end
     end
