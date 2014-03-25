@@ -22,8 +22,6 @@ class ExperimentsController < ApplicationController
     @storage_manager_url = information_service.get_list_of('storage')
     @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
 
-    @error_flag = false
-
     begin
       if Time.now - @experiment.start_at > 30
         Thread.new do
@@ -34,23 +32,10 @@ class ExperimentsController < ApplicationController
 
     rescue Exception => e
       flash[:error] = "Problem occured during loading experiment info - #{e}"
-      @error_flag = true
       #@experiment.destroy
       #flash[:notice] = 'Your experiment has been destroyed.'
       redirect_to action: :index
     end
-
-    unless @error_flag
-      #@running_experiments = [] # @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-      #@historical_experiments = [] #@current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-      #@simulations = [] # @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
-
-      @simulation_managers = {}
-      InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-        @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(@current_user)
-      end
-    end
-
   end
 
   def running_experiments

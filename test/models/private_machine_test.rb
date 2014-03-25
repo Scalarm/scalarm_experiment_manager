@@ -46,5 +46,22 @@ class PrivateMachineTest < Test::Unit::TestCase
     assert user2_records.all? {|r| r.user_id == user2.id}
   end
 
+  def test_monitoring_loop_ssh_fail
+    # tworzę rekord, którego metoda ssh_start rzuca wyjątkiem
+    # powinienem sprawdzić, czy error coś zawiera, ale łamałbym GWT
+    # uruchamiam monitoring_loop
+    # sprawdzam, czy wykonała się metoda ScheduledPrivateMachine.new(r, ssh) (nie powinna się wykonać z ssh)
+    # sprawdzam, czy metoda error i ssh_error zwraca != null
+
+    # given
+    rec = PrivateMachineRecord.find_by_id("a")
+    assert_nil rec
+
+    #pm_record = PrivateMachineCredentials.new({})
+
+    # when
+
+    # then
+  end
   
 end

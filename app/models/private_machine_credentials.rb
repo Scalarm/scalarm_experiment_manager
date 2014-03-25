@@ -29,7 +29,7 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
 
   def ssh_start
     Net::SSH.start(host, login, port: port.to_i, password: secret_password,
-                   auth_methods: SSH_AUTH_METHODS, timeout: 10) do |ssh|
+                   auth_methods: SSH_AUTH_METHODS, timeout: 30) do |ssh|
       yield ssh
     end
   end

@@ -179,7 +179,7 @@ while true
         puts "Killing the '#{progress_monitor_pid}' process"
         Process.kill('TERM', progress_monitor_pid)
         begin
-          Timeout::timeout(3) do
+          Timeout::timeout(15) do
             Process.wait(progress_monitor_pid)
           end
         rescue Timeout::Error
