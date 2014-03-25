@@ -168,8 +168,12 @@ class MongoActiveRecord
     value = value.first if value.is_a? Enumerable
 
     if parameter == 'id'
-      value = BSON::ObjectId(value.to_s)
-      parameter = '_id'
+      begin
+        value = BSON::ObjectId(value.to_s)
+        parameter = '_id'
+      rescue BSON::InvalidObjectId
+        return nil
+      end
     end
 
     collection = Object.const_get(name).send(:collection)
