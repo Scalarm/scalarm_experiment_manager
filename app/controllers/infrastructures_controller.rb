@@ -39,12 +39,30 @@ class InfrastructuresController < ApplicationController
     if img_secrets
       cloud_name = img_secrets.cloud_name
       image_id = img_secrets.image_id
+      long_cloud_name = CloudFactory.full_name(cloud_name)
 
       img_secrets.destroy
       msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
-      render json: { status: 'ok', msg: msg, cloud_name: CloudFactory.full_name(cloud_name), image_id: image_id }
+      render json: { status: 'ok', msg: msg, cloud_name: long_cloud_name, image_id: image_id }
     else
       msg = I18n.t('infrastructures_controller.image_not_found')
+      render json: { status: 'error', msg: msg }
+    end
+  end
+
+  def remove_private_machine_credentials
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
+    if machine_creds and machine_creds.user_id != @current_user.id
+      render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
+    end
+
+    if machine_creds
+      name = machine_creds.machine_desc
+      machine_creds.destroy
+      msg = I18n.t('infrastructures_controller.priv_machine_creds_removed', name: name)
+      render json: { status: 'ok', msg: msg }
+    else
+      msg = I18n.t('infrastructures_controller.priv_machine_creds_not_removed')
       render json: { status: 'error', msg: msg }
     end
   end

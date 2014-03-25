@@ -1,5 +1,6 @@
 class window.ImagesManagerDialog
-  constructor: (@addImageFormId, @cloudSelectId, @responseDialog, @loadingImg) ->
+  constructor: (@addImagePanelId, @cloudSelectId, @responseDialog, @loadingImg) ->
+    @addImageForm = $("##{@addImagePanelId} form")
     @cloudSelect = $("#{@cloudSelectId} select")
     @loading = $(@loadingImg)
     @responseDialog = $(@responseDialog)
@@ -15,11 +16,14 @@ class window.ImagesManagerDialog
 
 
   bindToAddImageForm: () ->
-    $("##{@addImageFormId} form")
+    @addImageForm
     .bind('ajax:before', => @loading.show())
     .bind('ajax:success', (data, status, xhr) => toastr.success(status.msg))
     .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
-    .bind('ajax:complete', () => @loading.hide())
+    .bind('ajax:complete', () =>
+        @loading.hide()
+        window.location = "/user_controller/account?active_tab=images_manager##{@addImagePanelId}"
+      )
 
   cloudChanged: =>
     $('div[id^="image-id-row-"]').hide()

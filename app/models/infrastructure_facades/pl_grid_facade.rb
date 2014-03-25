@@ -21,13 +21,7 @@ class PLGridFacade < InfrastructureFacade
 
   def current_state(user)
     jobs = PlGridJob.find_all_by_user_id(user.id)
-    jobs_count = if jobs.nil?
-                   0
-                 else
-                   jobs.size
-                 end
-
-    "Currently #{jobs_count} jobs are scheduled or running."
+    I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
   end
 
   # for each job check
@@ -61,9 +55,8 @@ class PLGridFacade < InfrastructureFacade
             job_logger.info 'The job will be restarted due to not been run'
             scheduler.restart(ssh, job)
 
-          elsif job.created_at + 24.hours < Time.now
-            #  if the job is running more than 24 h then restart
-            job_logger.info 'The job will be restarted due to being run for 24 hours'
+          elsif job.created_at + job.queue_time_constraint.minutes < Time.now
+            job_logger.info "The job will be restarted due to being run for #{job.queue_time_constraint.minutes} minutes"
             scheduler.restart(ssh, job)
 
           elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)

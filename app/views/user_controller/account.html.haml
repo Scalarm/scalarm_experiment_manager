@@ -1,6 +1,8 @@
 - content_for :title, 'Scalarm'
 - content_for :help, raw(t('help.users.summary'))
 
+-tabs=[:plgrid, :pl_cloud, :amazon, :images_manager, :private_machines_manager]
+
 %header
   .row
     .small-12.small-centered.columns(style="text-align: center;")
@@ -45,28 +47,8 @@
   %h3=t('.manage_infrastructures')
   .row
     %dl.accordion(data-accordion="")
-      - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+      - tabs.each do |tab_id|
         %dd
-          %a(href="##{infrastructure_id}")= "#{infrastructure_info[:label]} credentials"
-          .content{id: infrastructure_id}
-            = render partial: "infrastructure/credentials/#{infrastructure_id}", locals: { user: @current_user }
-
-      -#%dd
-      -#  %a(href='#credentials-panel')= 'Manage credentials' # TODO: translate
-      -#  .content#credentials-panel
-      -#    - first = true
-      -#    %dl.tabs(data-tab="")
-      -#      - InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      -#        %dd{class: "#{first ? 'active' : '' }"}
-      -#          = render partial: "infrastructure/credentials/#{infrastructure_id}", locals: { experiment: @experiment, user: @current_user }
-      -#        - first = false if first
-
-
-      -#%dd
-      -#  %a(href='#amazon-submission-panel')= 'test1'
-      -#  .content#amazon-submission-panel
-      -#    %p='hello content'
-      -#%dd
-      -#  %a(href='#pl_cloud-submission-panel')= 'test2'
-      -#  .content#pl_cloud-submission-panel
-      -#    %p='world content'
+          %a(href="##{tab_id}")= t(".#{tab_id}")
+          .content{id: tab_id, class: params[:active_tab] == tab_id.to_s ? 'active' : ''}
+            = render partial: "infrastructure/credentials/#{tab_id}", locals: { user: @current_user }

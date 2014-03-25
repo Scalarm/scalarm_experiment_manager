@@ -15,13 +15,13 @@ require 'clouds/cloud_factory'
 # short_name - short name of infrastructure, e.g. 'plgrid'
 class InfrastructureFacade
 
-  # sleep time between vm checking [seconds]
-  PROBE_TIME = 60
-
   attr_reader :logger
 
   def initialize
     @logger = InfrastructureTaskLogger.new short_name
+    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
+    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
@@ -58,7 +58,8 @@ class InfrastructureFacade
   # infrastructure_id => facade object
   def self.get_registered_infrastructures
     {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new }
+        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
+        private_machine: { label: 'Private resources', facade: PrivateMachineFacade.new }
     }.merge(
         CloudFactory.infrastructures_hash
     )
@@ -72,11 +73,12 @@ class InfrastructureFacade
           logger.info 'monitoring thread is working'
           monitoring_loop
         rescue Exception => e
-          logger.error "Monitoring exception: #{e}\n#{e.backtrace.join("\n")}"
+          logger.error "Monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
+          # TODO: add 'clean_expired' method to each InfrastructureFacade to remove invalid outdated records
         end
         lock.release
       end
-      sleep(PROBE_TIME)
+      sleep(@polling_interval_sec)
     end
   end
 

@@ -4,7 +4,10 @@
   .small-4.columns
     = label_tag :security_group, t('infrastructure.information.amazon.security_group') + ':', class: 'inline right'
   .small-4.columns
-    = select_tag :security_group, options_for_select(cloud_client.security_groups)
+    - begin
+      = select_tag :security_group, options_for_select(cloud_client.security_groups)
+    - rescue
+      = label_tag :security_group, t('.invalid_credentials'), class: 'inline left'
   .small-4.columns
 
 

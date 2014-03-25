@@ -8,7 +8,12 @@ en:
       password: "Password:"
       repeat_password: "Repeat password:"
       change_password: "Change password"
-      empty_dn: "<N/A>"      
+      empty_dn: "<N/A>"
+      plgrid: "PL-Grid credentials"
+      pl_cloud: "PLGrid Cloud credentials"
+      amazon: "Amazon Elastic Compute Cloud credentials"
+      images_manager: "Cloud virtual machine images management"
+      private_machines_manager: "Private resources credentials"
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

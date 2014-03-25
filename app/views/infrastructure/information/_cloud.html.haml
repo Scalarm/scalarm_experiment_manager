@@ -20,16 +20,17 @@
       - cloud_client = (creds.nil? ? nil : cloud_class.new(creds))
     - rescue
       - cloud_client = nil
+    - invalid_credentials = (cloud_client.nil? or not cloud_client.valid_credentials?)
     .content{ id: cloud_name, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
       - first = false if first
       .row
-        - if cloud_client.nil?
+        - if invalid_credentials
           .row{class: 'panel callout radius'}
             = t('infrastructure.information.no_credentials_info', cloud_name: CloudFactory.full_name(cloud_name))
         %dl.accordion(data-accordion="")
           %dd
             %a(href="#submission-panel-#{cloud_class.short_name}")= t 'infrastructure.information.submission_label'
-            .content{id: "submission-panel-#{cloud_class.short_name}", class: "#{cloud_client.nil? ? 'disabled' : ''}"}
+            .content{id: "submission-panel-#{cloud_class.short_name}", class: "#{invalid_credentials ? 'disabled' : ''}"}
               %p
                 = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
                   = hidden_field_tag 'experiment_id', experiment.id
@@ -41,7 +42,7 @@
                     .small-4.columns
                       = text_field_tag :job_counter
                     .small-4.columns
-                  - images = CloudImageSecrets.find_all_by_cloud_name(cloud_name).map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
+                  - images = CloudImageSecrets.find_all_by_query(user_id: user.id, cloud_name: cloud_name).map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
                   .row
                     .small-4.columns
                       = label_tag :image_id, t('infrastructure.information.image_label') + ':', class: 'inline right'
@@ -54,7 +55,7 @@
                     .small-4.columns
                       = select_tag :instance_type, options_for_select(cloud_class.instance_types.map{|k, desc| [desc, k]})
                     .small-4.columns
-                  - unless cloud_client.nil?
+                  - unless invalid_credentials
                     = render partial: "infrastructure/information/cloud/#{cloud_name}", locals: { cloud_client: cloud_client }
                   .row
                     .small-4.columns
@@ -77,5 +78,21 @@
               %p
                 %p= @current_states[cloud_name.to_sym]
                 %ul.circle
-                  - @simulation_managers[cloud_name.to_sym].each do |virtual_machine|
-                    %li= virtual_machine
+                  - @simulation_managers[cloud_name.to_sym].each do |vm_record|
+                    %li
+                      - begin
+                        %strong= t('.sm_info.vm_id') + ': '
+                        =vm_record.vm_id.to_s + ', '
+                        %strong= t('infrastructure.information.launched_at') + ': '
+                        =vm_record.created_at.to_s + ', '
+                        %strong= t('infrastructure.information.time_limit') + ': '
+                        =vm_record.time_limit.to_s + ', '
+                        %strong= t('infrastructure.information.experiment_id') + ': '
+                        =vm_record.experiment_id.to_s
+                        %br
+                        %strong= t('.sm_info.ssh_address') + ': '
+                        =(vm_record.public_host ? "#{vm_record.public_host}:#{vm_record.public_ssh_port}" : t('.sm_info.no_ssh_address')) + ', '
+                        %strong= t('.sm_info.login') + ': '
+                        =vm_record.image_instance.image_login.to_s
+                      - rescue Exception => e
+                        =t('infrastructure.information.sm_record_error', error: e.to_s)

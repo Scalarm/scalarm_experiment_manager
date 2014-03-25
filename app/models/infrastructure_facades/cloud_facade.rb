@@ -55,6 +55,7 @@ class CloudFacade < InfrastructureFacade
     vm_records.each do |user_id, user_vm_records|
       secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
       if secrets.nil?
+        user = ScalarmUser.find_by_id(user_id)
         logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
         next
       end
@@ -114,9 +115,7 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
-    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id) do |instance|
-      instance.to_s
-    end
+    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
   end
 
   # implements InfrasctuctureFacade
@@ -147,7 +146,6 @@ class CloudFacade < InfrastructureFacade
   end
 
   def handle_image_credentials(user, params, session)
-    # TODO: use experiment id for query?
     credentials = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id,
                                                       'image_id'=>params[:image_id])
 

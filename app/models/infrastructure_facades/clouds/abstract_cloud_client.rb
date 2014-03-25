@@ -28,6 +28,14 @@ class AbstractCloudClient
     @secrets = secrets
   end
 
+  def valid_credentials?
+    begin
+      not all_vm_ids.nil?
+    rescue
+      false
+    end
+  end
+
   def vm_instance(instance_id)
     VmInstance.new(instance_id.to_s, self)
   end
