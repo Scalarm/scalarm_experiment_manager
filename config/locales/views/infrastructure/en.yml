@@ -74,6 +74,8 @@ en:
             ssh_address: "SSH address"
             no_ssh_address: "Not available"
             login: "Login"
+          amazon:
+            invalid_credentials: "Cannot fetch (invalid credentials)"
         private_machine:
           sm_info:
             machine_desc: "Address"

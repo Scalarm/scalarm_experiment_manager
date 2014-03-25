@@ -20,16 +20,17 @@
       - cloud_client = (creds.nil? ? nil : cloud_class.new(creds))
     - rescue
       - cloud_client = nil
+    - invalid_credentials = (cloud_client.nil? or not cloud_client.valid_credentials?)
     .content{ id: cloud_name, class: "#{first ? 'active' : '' }", style: 'width: 100%' }
       - first = false if first
       .row
-        - if cloud_client.nil?
+        - if invalid_credentials
           .row{class: 'panel callout radius'}
             = t('infrastructure.information.no_credentials_info', cloud_name: CloudFactory.full_name(cloud_name))
         %dl.accordion(data-accordion="")
           %dd
             %a(href="#submission-panel-#{cloud_class.short_name}")= t 'infrastructure.information.submission_label'
-            .content{id: "submission-panel-#{cloud_class.short_name}", class: "#{cloud_client.nil? ? 'disabled' : ''}"}
+            .content{id: "submission-panel-#{cloud_class.short_name}", class: "#{invalid_credentials ? 'disabled' : ''}"}
               %p
                 = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
                   = hidden_field_tag 'experiment_id', experiment.id
@@ -54,7 +55,7 @@
                     .small-4.columns
                       = select_tag :instance_type, options_for_select(cloud_class.instance_types.map{|k, desc| [desc, k]})
                     .small-4.columns
-                  - unless cloud_client.nil?
+                  - unless invalid_credentials
                     = render partial: "infrastructure/information/cloud/#{cloud_name}", locals: { cloud_client: cloud_client }
                   .row
                     .small-4.columns
