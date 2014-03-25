@@ -55,9 +55,8 @@ class PLGridFacade < InfrastructureFacade
             job_logger.info 'The job will be restarted due to not been run'
             scheduler.restart(ssh, job)
 
-          elsif job.created_at + 24.hours < Time.now
-            #  if the job is running more than 24 h then restart
-            job_logger.info 'The job will be restarted due to being run for 24 hours'
+          elsif job.created_at + job.queue_time_constraint.minutes < Time.now
+            job_logger.info "The job will be restarted due to being run for #{job.queue_time_constraint.minutes} minutes"
             scheduler.restart(ssh, job)
 
           elsif scheduler.is_done(ssh, job) or (job.created_at + job.time_limit.minutes < Time.now)
