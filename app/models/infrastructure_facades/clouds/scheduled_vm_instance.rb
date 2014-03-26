@@ -58,9 +58,9 @@ class ScheduledVmInstance < VmInstance
   end
 
   def experiment_end?
-    done = @record.experiment_instance.get_statistics[2] unless @record.experiment_instance.nil?
-    @record.experiment_instance.nil? or (@record.experiment_instance.is_running == false)\
-      or (@record.experiment_instance.experiment_size == done)
+    done = @record.experiment.get_statistics[2] unless @record.experiment.nil?
+    @record.experiment.nil? or (@record.experiment.is_running == false)\
+      or (@record.experiment.experiment_size == done)
   end
 
   # -- monitoring actions --

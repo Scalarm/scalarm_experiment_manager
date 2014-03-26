@@ -45,9 +45,9 @@
                   - images = CloudImageSecrets.find_all_by_query(user_id: user.id, cloud_name: cloud_name).map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
                   .row
                     .small-4.columns
-                      = label_tag :image_id, t('infrastructure.information.image_label') + ':', class: 'inline right'
+                      = label_tag :image_secrets_id, t('infrastructure.information.image_label') + ':', class: 'inline right'
                     .small-4.columns
-                      = select_tag :image_id, options_for_select(images)
+                      = select_tag :image_secrets_id, options_for_select(images)
                     .small-4.columns
                   .row
                     .small-4.columns
@@ -93,6 +93,6 @@
                         %strong= t('.sm_info.ssh_address') + ': '
                         =(vm_record.public_host ? "#{vm_record.public_host}:#{vm_record.public_ssh_port}" : t('.sm_info.no_ssh_address')) + ', '
                         %strong= t('.sm_info.login') + ': '
-                        =vm_record.image_instance.image_login.to_s
+                        =vm_record.image_secrets.image_login.to_s
                       - rescue Exception => e
                         =t('infrastructure.information.sm_record_error', error: e.to_s)

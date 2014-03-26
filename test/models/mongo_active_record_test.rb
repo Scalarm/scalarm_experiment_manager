@@ -63,10 +63,5 @@ class MongoActiveRecordTest < Test::Unit::TestCase
     assert_equal results_id1[0], {id: 1, name: 'hello'}
   end
 
-  def test_find_by_id
-    TestRecord.new
-
-
-  end
 
 end

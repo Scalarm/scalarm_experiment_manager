@@ -6,7 +6,7 @@
 # cloud_name => string - name of the cloud, e.g. 'pl_cloud', 'amazon'
 # user_id => integer - the user who scheduled this job - mongoid in the future
 # experiment_id => the experiment which should be computed by this job
-# image_id => id of image in Cloud
+# image_secrets_id => id of CloudImageSecrets
 # created_at => time - when this job were scheduled
 # time_limit => time - when this job should be stopped - in minutes
 # vm_id => string - instance id of the vm
@@ -35,27 +35,27 @@ class CloudVmRecord < MongoActiveRecord
 
   #  upload file to the VM - use only password authentication
   def upload_file(local_path, remote_path='.')
-    Net::SCP.start(public_host, image_instance.image_login,
-              port: public_ssh_port, password: image_instance.secret_image_password,
+    Net::SCP.start(public_host, image_secrets.image_login,
+              port: public_ssh_port, password: image_secrets.secret_image_password,
               auth_methods: SSH_AUTH_METHODS) do |scp|
       scp.upload! local_path, remote_path
     end
   end
 
   def ssh_session
-    Net::SSH.start(public_host, image_instance.image_login,
-              port: public_ssh_port, password: image_instance.secret_image_password,
+    Net::SSH.start(public_host, image_secrets.image_login,
+              port: public_ssh_port, password: image_secrets.secret_image_password,
               auth_methods: SSH_AUTH_METHODS) do |ssh|
       yield ssh
     end
   end
 
-  def image_instance
-    @image ||= CloudImageSecrets.find_by_image_id(image_id.to_s)
+  def image_secrets
+    @image_secrets ||= CloudImageSecrets.find_by_id(image_secrets_id)
   end
 
-  def experiment_instance
-    @experiment ||= Experiment.find_by_id(experiment_id) unless @experiment
+  def experiment
+    @experiment ||= Experiment.find_by_id(experiment_id)
   end
 
   # additional info for specific cloud should be provided by CloudClient

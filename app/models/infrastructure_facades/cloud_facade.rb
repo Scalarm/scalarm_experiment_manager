@@ -81,7 +81,7 @@ class CloudFacade < InfrastructureFacade
 
     begin
 
-      exp_image = CloudImageSecrets.find_by_id(additional_params['image_id'])
+      exp_image = CloudImageSecrets.find_by_id(additional_params['image_secrets_id'])
       if exp_image.nil? or exp_image.image_id.nil?
         return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
       elsif not cloud_client.image_exists? exp_image.image_id
@@ -93,15 +93,39 @@ class CloudFacade < InfrastructureFacade
         return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
       end
 
-      sched_instances = cloud_client.schedule_instances("#{VM_NAME_PREFIX}#{experiment_id}", exp_image.image_id,
+      sched_instances = schedule_vm_instances(cloud_client, "#{VM_NAME_PREFIX}#{experiment_id}", exp_image,
                                                         instances_count, user.id, experiment_id, additional_params)
 
       ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
                           cloud_name: @full_name)]
     rescue Exception => e
+      Rails.logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
       ['error', I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message)]
     end
 
+  end
+
+  # Intantiate virtual machines and add records to database
+  # @return [Array<ScheduledVmInstance>]
+  def schedule_vm_instances(cloud_client, base_name, image_secrets, number, user_id, experiment_id, params)
+    cloud_client.instantiate_vms(base_name, image_secrets.image_id, number, params).map do |vm_id|
+
+      vm_record = CloudVmRecord.new({
+                                        cloud_name: cloud_client.class.short_name,
+                                        user_id: user_id,
+                                        experiment_id: experiment_id,
+                                        image_secrets_id: image_secrets.id,
+                                        created_at: Time.now,
+                                        time_limit: params['time_limit'],
+                                        vm_id: vm_id.to_s,
+                                        sm_uuid: SecureRandom.uuid,
+                                        sm_initialized: false,
+                                        start_at: params['start_at'],
+                                    })
+      vm_record.save
+
+      cloud_client.scheduled_vm_instance(vm_record)
+    end
   end
 
   # implements InfrasctuctureFacade
@@ -146,13 +170,8 @@ class CloudFacade < InfrastructureFacade
   end
 
   def handle_image_credentials(user, params, session)
-    credentials = CloudImageSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id,
-                                                      'image_id'=>params[:image_id])
-
-    if credentials.nil? # there is no image record with given id - create
-      credentials = CloudImageSecrets.new({'cloud_name' => @short_name, 'user_id' => user.id,
-                                           'experiment_id'=> params[:experiment_id], 'image_id'=>params[:image_id]})
-    end
+    credentials = CloudImageSecrets.new(cloud_name: @short_name, user_id: user.id,
+                                        image_id: params[:image_id])
 
     credentials.image_login = params[:image_login]
     credentials.secret_image_password = params[:secret_image_password]
