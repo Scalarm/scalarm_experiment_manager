@@ -48,9 +48,9 @@ class PlGridJob < MongoActiveRecord
 
     if walltime < 60
       55
-    elsif walltime > 60 and walltime < 72*60
+    elsif walltime >= 60 and walltime < 72*60
       72*60 - 5
-    elsif walltime > 72*60
+    elsif walltime >= 72*60
       168*60 - 5
     end
   end
