@@ -10,7 +10,7 @@ class ExperimentsController < ApplicationController
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-    @simulations = @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
+    @simulations = @current_user.get_simulation_scenarios
   end
 
   def show
@@ -22,8 +22,6 @@ class ExperimentsController < ApplicationController
     @storage_manager_url = information_service.get_list_of('storage')
     @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
 
-    @error_flag = false
-
     begin
       if Time.now - @experiment.start_at > 30
         Thread.new do
@@ -34,23 +32,10 @@ class ExperimentsController < ApplicationController
 
     rescue Exception => e
       flash[:error] = "Problem occured during loading experiment info - #{e}"
-      @error_flag = true
       #@experiment.destroy
       #flash[:notice] = 'Your experiment has been destroyed.'
       redirect_to action: :index
     end
-
-    unless @error_flag
-      #@running_experiments = [] # @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-      #@historical_experiments = [] #@current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-      #@simulations = [] # @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
-
-      @simulation_managers = {}
-      InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-        @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(@current_user)
-      end
-    end
-
   end
 
   def running_experiments
@@ -68,7 +53,7 @@ class ExperimentsController < ApplicationController
   def get_booster_dialog
     @simulation_managers, @current_states = {}, {}
     InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(@current_user)
+      @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_infrastructure_sm_records(@current_user)
       @current_states[infrastructure_id] = infrastructure_info[:facade].current_state(@current_user)
     end
 
@@ -81,6 +66,10 @@ class ExperimentsController < ApplicationController
     @experiment.end_at = Time.now
 
     @experiment.save_and_cache
+
+    SimulationManagerTempPassword.find_all_by_experiment_id(@experiment.id.to_s).each do |tmp_pass|
+      tmp_pass.destroy
+    end
 
     redirect_to action: :index
   end
@@ -555,6 +544,14 @@ class ExperimentsController < ApplicationController
     @param_type = {}
     @param_type['type'] = @parametrization_type
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
+  end
+
+  def simulation_manager
+    sm_uuid = SecureRandom.uuid
+    # prepare locally code of a simulation manager to upload with a configuration file
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
+
+    send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
   end
 
   private

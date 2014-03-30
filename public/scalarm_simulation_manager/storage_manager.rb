@@ -18,4 +18,15 @@ class StorageManager
     %x[#{cmd}]
   end
 
+  def upload_stdout(experiment_id, simulation_id, file_path)
+    url = "https://#{@address}/experiment/#{experiment_id}/simulation/#{simulation_id}/stdout"
+    cmd = <<-eos
+      curl -X PUT -u #{@user}:#{@pass} --insecure -3 "#{url}" -F "file=@#{file_path}"
+    eos
+    puts cmd
+
+    %x[#{cmd}]
+  end
+
+
 end

@@ -36,7 +36,7 @@ class MonitoringProbe
 
         while true
           monitor
-          sleep(60)
+          sleep(@interval)
         end
       end
 

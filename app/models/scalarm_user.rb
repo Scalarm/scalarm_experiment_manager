@@ -22,7 +22,7 @@ class ScalarmUser < MongoActiveRecord
   end
 
   def get_simulation_scenarios
-    Simulation.find_all_by_user_id(self.id)
+    Simulation.find_all_by_user_id(self.id).sort { |s1, s2| s2.created_at <=> s1.created_at }
   end
 
   def password=(pass)

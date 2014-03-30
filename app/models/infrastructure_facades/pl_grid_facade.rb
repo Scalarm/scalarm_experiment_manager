@@ -25,13 +25,11 @@ class PlGridFacade < InfrastructureFacade
 
   def current_state(user)
     jobs = PlGridJob.find_all_by_user_id(user.id)
-    jobs_count = if jobs.nil?
-                   0
-                 else
-                   jobs.size
-                 end
+    I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
+  end
 
-    "Currently #{jobs_count} jobs are scheduled or running."
+  def count_scheduled_jobs(user)
+    # FIXME
   end
 
   # for each job check
@@ -52,7 +50,6 @@ class PlGridFacade < InfrastructureFacade
           Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
             (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
           end
-
         end
       end
     end
@@ -82,6 +79,8 @@ class PlGridFacade < InfrastructureFacade
                                   'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
                                   'time_limit' => additional_params['time_limit'].to_i })
             job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
+            job.nodes = additional_params['nodes'] unless additional_params['nodes'].blank?
+            job.ppn = additional_params['ppn'] unless additional_params['ppn'].blank?
 
             if scheduler.submit_job(ssh, job)
               job.save
@@ -106,9 +105,10 @@ class PlGridFacade < InfrastructureFacade
     raise 'not implemented'
   end
 
-  def get_running_simulation_managers(user, experiment = nil)
-    PlGridJob.find_all_by_user_id(user.id)
-  end
+  # FIXME remove
+  #def get_running_simulation_managers(user, experiment = nil)
+  #  PlGridJob.find_all_by_user_id(user.id)
+  #end
 
   def add_credentials(user, params, session)
     credentials = GridCredentials.find_by_user_id(user.id)
@@ -135,7 +135,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def self.scheduler_facades
-    Hash[(scheduler_facade_classes.map {|name, cls| [name, cls.new]})]
+    Hash[scheduler_facade_classes.map {|name, cls| [name, cls.new]}]
   end
 
   def self.create_scheduler_facade(type)
@@ -147,7 +147,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   # Overrides
-  def sm_containers
+  def get_sm_containers
     self.class.scheduler_facades.values
   end
 
@@ -155,12 +155,12 @@ class PlGridFacade < InfrastructureFacade
   def to_hash
     {
         name: long_name,
-        type: 'meta-node',
+        type: TREE_META,
         short: short_name,
-        children: self.class.scheduler_facade_classes.values.map { |sched_facade|
+        children: get_sm_containers.map { |sched_facade|
           {
               name: sched_facade.long_name,
-              type: 'sm-container-node',
+              type: TREE_SM_CONTAINER,
               short: sched_facade.short_name
           }
         }

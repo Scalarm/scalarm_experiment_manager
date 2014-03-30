@@ -1,33 +1,29 @@
 %h2
-  Simulation
-  = @simulation['id']
+  = t '.title', id: @simulation['id']
+
 %a.close-reveal-modal &#215;
 
-.row
-  %b
-    Status:
+.row.small-button-margin
+  %b= t('.status_section')
   - if @simulation['is_done']
-    completed
+    = t('.status.completed')
   - elsif @simulation['to_sent']
-    not sent
+    = t('.status.to_send')
   - else
-    running
+    = t('.status.running')
 
 - if not @simulation['to_sent']
-  .row
-    %b
-      Started at:
-    = @simulation['sent_at']
+  .row.small-button-margin
+    %b= t('.started_at')
+    = @simulation['sent_at'].localtime
 
 - if @simulation['is_done']
-  .row
-    %b
-      Completed at:
-    = @simulation['done_at']
+  .row.small-button-margin
+    %b= t('.completed_at')
+    = @simulation['done_at'].localtime
 
 .row
-  %h4
-    Input:
+  %h4= t('.input_section')
   %ul
     - @simulation['arguments'].split(',').each_with_index do |argument, index|
       %li
@@ -37,11 +33,17 @@
 
 - if @simulation['is_done']
   .row
-    %h4
-      Output:
+    %h4= t('.output_section')
     %ul
       - @simulation['result'].each do |moe_name, moe_value|
         %li
-          %b
-            = moe_name + ':'
+          %b= moe_name + ':'
           = moe_value
+
+  .row
+    %h4= t('.binary_output_header')
+    = link_to 'click to download', log_bank_simulation_binaries_url(@storage_manager_url, @experiment, @simulation['id'])
+
+  .row
+    %h4= t('.stdout_header')
+    = link_to 'click to download', log_bank_simulation_stdout_url(@storage_manager_url, @experiment, @simulation['id'])

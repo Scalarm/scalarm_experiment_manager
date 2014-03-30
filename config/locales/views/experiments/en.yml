@@ -17,3 +17,11 @@ en:
       regression_trees: Regression trees
       scatter_plots: Scatter plots
 
+    historical_experiments:
+      no_experiments: "No historical experiment available"
+      link_text: "%{name}, started at: %{start_time}, stopped at: %{finish_time}"
+    running_experiments:
+      link_text: "%{name}, started at: %{start_time}"
+      no_experiments: "There is no experiment running currently"
+    monitoring_actions:
+      get_sm_button: "Download Simulation Manager"

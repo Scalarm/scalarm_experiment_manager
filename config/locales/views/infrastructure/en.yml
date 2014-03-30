@@ -11,8 +11,9 @@ en:
       maximum: Maximum
       step: Step
     booster_dialog:
-      images_manager: "Image management"
-      clouds: "Clouds"
+      plgrid: "PL-Grid"
+      cloud: "Clouds"
+      private_machine: "Private resources"
     monitoring_actions:
       stop_dialog:
         header: "Are you sure you want to stop the experiment?"
@@ -44,6 +45,17 @@ en:
         no_ami: "You have to provide Amazon AMI information first!"
         could_not_create_vms: "Exception occured during creating virtual machines"
   infrastructure:
+    credentials:
+      images_manager:
+        info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."
+        login: "Login"
+        password: "Password"
+        cloud_name: "Cloud name"
+        image_id: "Image ID"
+        actions: "Actions"
+        remove: "Remove record"
+        image_submission_label: "Add image credentials"
+        image_table_label: "Manage submitted image credentials"
     tree_title: 'Computational resources tree'
     tree:
       sm_dialog:

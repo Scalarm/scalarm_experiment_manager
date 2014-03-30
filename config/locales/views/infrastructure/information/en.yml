@@ -21,6 +21,8 @@ en:
           secrets: PLGrid Cloud secrets
           login: UI login
           password: UI password
+      private_machine:
+        credentials_label: Please, provide your credentials to access private resources
 
     information:
       instance_counter: Instance counter
@@ -32,6 +34,11 @@ en:
       submit: Submit
       remove_credentials: Remove credentials
 
+      launched_at: 'Launched at'
+      time_limit: 'Time limit'
+      sm_record_error: "Sorry, cannot retrieve information about simulation manager due to error: %{error}"
+      experiment_id: "Experiment ID"
+
       credentials_info: Please, provide valid credentials to your Cloud of choice in the %{account_link} panel, before scheduling virtual machines.
       no_credentials_info: No valid credentials provided for %{cloud_name}
       submission_label: Simulation Manager submission
@@ -41,6 +48,11 @@ en:
         scheduler: Scheduler
         scheduled_label: Scheduled jobs
 
+        submission:
+          nodes: "Nodes"
+          ppn: "Cores per node"
       amazon:
         security_group: Security group
 
+      private_machine:
+        machine_id: 'Private resource'

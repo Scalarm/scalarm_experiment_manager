@@ -108,7 +108,7 @@ class PLCloudUtil
 
     ids = resp.to_s.scan(RE_ID)
     if ids.length > 0
-      ids.map {|i| i[0].to_i}
+      ids.map {|i| i[0]}
     else
       Rails.logger.error("Error creating PLCloud instance(s): #{resp}")
       Rails.logger.error("Used template config:\n#{template_conf}")

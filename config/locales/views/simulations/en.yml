@@ -1,0 +1,15 @@
+en:
+  simulations:
+    show:
+      title: "Simulation %{id}"
+      status_section: "Status:"
+      status:
+        completed: completed
+        to_send: not sent
+        running: running
+      started_at: "Started at:"
+      completed_at: "Completed at:"
+      input_section: "Input:"
+      output_section: "Output:"
+      binary_output_header: "Binary output:"
+      stdout_header: "Simulation STDOUT:"

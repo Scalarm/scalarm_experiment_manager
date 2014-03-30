@@ -1,4 +1,5 @@
 require 'infrastructure_facades/abstract_simulation_manager'
+require 'infrastructure_facades/infrastructure_task_logger'
 
 class CloudSimulationManager < AbstractSimulationManager
   attr_reader :vm
@@ -89,6 +90,7 @@ class CloudSimulationManager < AbstractSimulationManager
   def reinitialize_with_record
     @vm.reinitialize
     record.created_at = Time.now
+    record.sm_initialized = false
     record.save
   end
 

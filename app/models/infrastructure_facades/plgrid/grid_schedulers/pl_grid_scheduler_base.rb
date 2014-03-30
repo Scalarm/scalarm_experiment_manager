@@ -11,12 +11,12 @@ class PlGridSchedulerBase
     PlGridJob.find_by_query('scheduler_type'=>short_name, 'user_id'=>user_id, 'job_id'=>resource_id)
   end
 
-  def all_user_sm_records(user_id)
+  def all_sm_records_for(user_id)
     PlGridJob.find_all_by_query('scheduler_type'=>short_name, 'user_id'=>user_id)
   end
 
-  def all_user_simulation_managers(user_id)
-    jobs = all_user_sm_records(user_id)
+  def simulation_managers_for(user_id)
+    jobs = all_sm_records_for(user_id)
     credentials = GridCredentials.find_by_user_id(user_id)
     if credentials.nil?
       []

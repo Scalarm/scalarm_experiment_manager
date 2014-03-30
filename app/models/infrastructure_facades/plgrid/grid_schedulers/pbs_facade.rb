@@ -32,8 +32,10 @@ class PBSFacade < PlGridSchedulerBase
     qsub_cmd = [
         'qsub',
         '-q', job.queue,
-        "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}"
+        "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}",
+        "#{job.nodes.blank? ? '' : "-l nodes=#{job.nodes}:ppn=#{job.ppn}"}"
     ]
+    #Rails.logger.debug("QSUB cmd: #{qsub_cmd.join(' ')}")
     submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
     Rails.logger.debug("Output lines: #{submit_job_output}")
 

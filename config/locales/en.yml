@@ -41,7 +41,7 @@ en:
     empty_list: There is no experiment defined to run. Go to registration form and define new experiments.
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
-    label: Running experiments (click on the experiment to go to the monitoring panel)
+    label: Running experiments
   historical_experiments:
       label: Historical experiments
   login_success: "You have log in successfully"
@@ -169,7 +169,7 @@ en:
   plgrid:
     login:
       ok: Your credentials have been updated
-      error: An erroc occured
+      error: An error occured
     job_submission:
       authentication_failed: "An exception occured during authentication - %{ex}. Please check if the host is available and the username and password are correct."
       error: "An exception occured - %{ex}. Please check if the host is available and the username and password are correct."
@@ -180,10 +180,17 @@ en:
   pl_cloud:
     login:
       ok: Your credentials have been updated
+      error: An error occured
 
   amazon:
     login:
       ok: Your credentials have been updated
+      error: An error occured
+
+  private_machine:
+    login:
+      ok: Your credentials have been added
+      error: An error occured on adding credentials
 
 
   charts:

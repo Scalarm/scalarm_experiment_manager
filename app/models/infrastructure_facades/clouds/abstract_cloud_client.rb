@@ -28,6 +28,14 @@ class AbstractCloudClient
     @secrets = secrets
   end
 
+  def valid_credentials?
+    begin
+      not all_vm_ids.nil?
+    rescue
+      false
+    end
+  end
+
   def vm_instance(instance_id)
     VmInstance.new(instance_id.to_s, self)
   end
@@ -35,30 +43,7 @@ class AbstractCloudClient
   def cloud_simulation_manager(vm_record)
     CloudSimulationManager.new(vm_record, self)
   end
-
-  # Intantiate virtual machines and add records to database
-  # @return [Array<CloudSimulationManager>]
-  def schedule_instances(base_name, image_id, number, user_id, experiment_id, params)
-    instantiate_vms(base_name, image_id, number, params).map do |vm_id|
-
-      vm_record = CloudVmRecord.new({
-                                        cloud_name: self.class.short_name,
-                                        user_id: user_id,
-                                        experiment_id: experiment_id,
-                                        image_id: image_id,
-                                        created_at: Time.now,
-                                        time_limit: params['time_limit'],
-                                        vm_id: vm_id,
-                                        sm_uuid: SecureRandom.uuid,
-                                        sm_initialized: false,
-                                        start_at: params['start_at'],
-                                    })
-      vm_record.save
-
-      cloud_simulation_manager(vm_record)
-    end
-  end
-
+  
   # @return [Hash] instance_id => specific AbstractVmInstance
   def all_vm_instances
     Hash[all_vm_ids.map {|i| [i, vm_instance(i)]}]

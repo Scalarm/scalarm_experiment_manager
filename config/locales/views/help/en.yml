@@ -1,0 +1,149 @@
+en:
+  help:
+    no_help: No help information is available for this page
+    experiments:
+      summary: "
+      <p>This page aggregates information about experiments in Scalarm.
+       The following sections contain:
+       <ul>
+        <li>a list of currently running experiments,</li>
+        <li>registered simulation scenarios that you can use to create a new experiment,</li>
+        <li>and a list of historical experiments, i.e. experiments which were stopped but not destroyed.</li>
+       </ul>
+       Click an element of a list to go to either a monitoring view of an experiment or to a page for creating new experiment.
+      </p>
+      "
+
+      monitoring: "
+      <p>This is the main view for actions related to a single experiment. It is divided into sections related to:
+      <ul>
+        <li>experiment information</li>
+        <li>progress monitoring</li>
+        <li>links to other simulations (the left side)</li>
+        <li>links to statistical analysis methods (the right side)</li>
+      </ul>
+      </p>
+
+      <p>
+      The experiment progress bar indicates status of simulation runs with colors:
+      <ul>
+        <li>gray - the simulation run is ready to execute</li>
+        <li>dark green - the simulation run is currently running</li>
+        <li>light green - the simulation run has been finished</li>
+      </ul>
+      In any time you can click on any progress bar part to see more information about particular simulation run.
+      </p>
+
+      <p>
+      Below the progress bar there are several action buttons which enables you to:
+      <ul>
+        <li>extend the parameter space - the <tt>'Extend'</tt> button,</li>
+        <li>increase computational power for the experiment - the <tt>'Booster'</tt> button,</li>
+        <li>set the order in which simulation runs are executed - the <tt>'Set scheduling'</tt> button,</li>
+        <li>download results both structural (in CSV format) and binaries - the <tt>'Download results'</tt> button,</li>
+        <li>show results of completed simulations or show intermediate results of the running simulations - the <tt>'Show progress'</tt> button,</li>
+      </ul>
+      </p>
+
+      <p>
+      On the right side are three images clicking which shows windows for different data exploration methods:
+      <ul>
+        <li>the first image indicates the histogram analysis</li>
+        <li>the second image is related to regression tree-based analysis</li>
+        <li>the third image is related to scatter plots</li>
+      </ul>
+      Links for the listed methods are also available at the navigation bar.
+      </p>
+      "
+
+    simulations:
+      summary: "
+      <p>
+      This view aggregates information about registered simulation scenarios and individual adapters. In subsequent
+      sections you can:
+      <ul>
+        <li>select scenario to create new experiment,</li>
+        <li>click the <tt>'Register new simulation or adapter</tt>' button to go to the registration form,</li>
+        <li>show registered simulation scenarios with used adapters and deregister them,</li>
+        <li>show registered adapters (each adapter type has a separate section) and deregister them if they are not used
+        in a simulation scenarios</li>
+      </ul>
+      </p>
+      "
+      deregister: Click this button to deregister and remove this adapter from Scalarm.
+      conduct: "
+      <p>Here you can specify parameter space for a newly created experiment, which will use the selected simulation scenario.</p>
+      <p>
+      The first section below enables you to provide a descriptive summary for your experiment. If not provided, the experiment
+      will have name and description taken from the used simulation. The experiment name is used then on the experiment
+      list for identification.
+      </p>
+      <p>
+      In the second section, the parameter space specification takes place. It is divided into 3 steps represented by tabs:
+        <ul>
+        <li><strong>Parametrization</strong> is where you select parametrization type for each input parameter,</li>
+        <li><strong>Parameter values</strong> is where you provide actual values which will be used for each parameter
+        to generate the parameter space. Each parametrization type requires different values.</li>
+        <li><strong>Design of Experiment (optional)</strong> is where you can collect parameters into groups and apply DoE
+        methods to sample the parameter space in a specific way. In this step only parameters with the 'Range' parametrization type
+        can be used. Firstly, select a DoE method you want to use and then add parameters to this group.</li>
+        </ul>
+      In any time you can check how many parameter space elements will be created with the specified parametrization.
+      Besides parametrization you can specify time constraint for a single simulation run. This value will be used by Scalarm
+      to detect any failures in simulation runs.
+      </p>
+      <p>
+      <strong>(optional)</strong> The experiment parameter space can be also specified by providing a CSV file with
+      information about parameter space elements. In this case, the CSV file should have parameter ids as the header.
+      In subsequent rows, there can be either one value or a list of values (a cartesian product will be generated).
+      To use this option: choose the CSV file to import -> click the 'Import' button, select columns from the file which
+       should be imported -> Click the 'Start experiment' button.
+      <br/>In any time you can check how many parameter space elements will be created with the imported file.
+      </p>
+      "
+      register: "<p>
+      Here you can register a new simulation scenario to be used in data farming experiments. To register a simulation
+      scenario you need to provide:
+      <ul>
+        <li>name to identify the scenario afterwards, and optionally a meaningful description</li>
+        <li>compressed simulation binaries which hold the actual simulation logic (currently we support the ZIP format and
+         we encourage to have all files in a 'simulation_binaries' folder)</li>
+        <li>input description (in the JSON format), which contains information about simulation parameters - this file is
+        then used to prepare the parameter space for experiments</li>
+        <li>input_reader which is a script executed before simulation. Its main goal is to transform input values from
+        the JSON form, i.e. the form supported by Scalarm, to any form support by the simulation. It is given a path to
+        a JSON file with input values for the simulation.</li>
+        <li>executor intends to start the simulation and pass input parameters in a simulation-dependant way</li>
+        <li>output_reader intends to transform the simulation results from a simulation-dependant form into
+        the Scalarm-compatible form, i.e. JSON</li>
+        <li>progress_monitor is responsible for transforming intermediate results from application-specific form to
+        Scalarm-compatible JSON document. It is called by a Simulation manager child process.</li>
+      </ul>
+      </p>
+
+      <p>The 'executor' adapter is the only mandatory element. Other adapters are optional - we encourage to use them
+      to split responsibility for different aspects of running simulations. Adapters can be uploaded while registering
+      simulation scenario or may by uploaded separately.</p>
+      "
+
+    users:
+      summary: "
+      <p>
+      Here you can set or change credentials to:
+      <ul>
+        <li>your Scalarm account</li>
+        <li>computational infrastructures supported by Scalarm</li>
+      </ul>
+      </p>
+      <p>
+      Each infrastructure may require different access information, e.g. to access PL-Grid User Interface host with login and
+      password is sufficient, but Amazon EC2 requires different secret keys.
+      </p>
+      <p>
+      Credentials are utilized to schedule Simulation Managers
+      (workers) onto different infrastructures and to monitor them afterwards. In any time, you can remove credentials from Scalarm.
+      Internally, Scalarm keeps credentials in an encrypted form, where the encryption parameters can be set for each Scalarm
+      installation separately.
+      </p>
+
+      "

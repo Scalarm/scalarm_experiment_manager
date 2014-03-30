@@ -29,7 +29,7 @@ class InfrastructuresController < ApplicationController
       end),
       {
         name: 'Clouds',
-        type: 'meta-node',
+        type: InfrastructureFacade.TREE_META,
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
             inf[:facade].to_hash
@@ -43,7 +43,7 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - name: name of Simulation Manager containter
   def sm_nodes
-    container = InfrastructureFacade.get_registered_sm_containters[params[:name]]
+    container = InfrastructureFacade.get_registered_sm_containters[params[:name].to_sym]
     unless container.nil?
       render json: container.sm_nodes(@current_user.id)
     else
@@ -100,6 +100,23 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  def remove_private_machine_credentials
+    machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
+    if machine_creds and machine_creds.user_id != @current_user.id
+      render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
+    end
+
+    if machine_creds
+      name = machine_creds.machine_desc
+      machine_creds.destroy
+      msg = I18n.t('infrastructures_controller.priv_machine_creds_removed', name: name)
+      render json: { status: 'ok', msg: msg }
+    else
+      msg = I18n.t('infrastructures_controller.priv_machine_creds_not_removed')
+      render json: { status: 'error', msg: msg }
+    end
+  end
+
   def remove_credentials
     secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
     if secrets
@@ -114,7 +131,7 @@ class InfrastructuresController < ApplicationController
 
   def stop_sm
     begin
-      get_sm_proxy(params['sm_container'], params['resource_id']).stop
+      get_simulation_manager(params['sm_container'], params['resource_id']).stop
       render json: { status: 'ok', msg: "Stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
     rescue NoSuchSmContainerError => e
       render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
@@ -127,7 +144,7 @@ class InfrastructuresController < ApplicationController
 
   def restart_sm
     begin
-      get_sm_proxy(params['sm_container'], params['resource_id']).restart
+      get_simulation_manager(params['sm_container'], params['resource_id']).restart
       render json: { status: 'ok', msg: "Restarting Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
     rescue NoSuchSmContainerError => e
       render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
@@ -162,7 +179,7 @@ class InfrastructuresController < ApplicationController
   # @param [String] resource_id Unique ID of resource for SM (eg. vm_id)
   # @raise [NoSuchSmError]
   # @raise [NoSuchSmContainerError]
-  def get_sm_proxy(sm_container_name, resource_id)
+  def get_simulation_manager(sm_container_name, resource_id)
     sm = get_sm_container(sm_container_name).simulation_manager(resource_id, @current_user.id)
     if sm.nil?
       Rails.logger.error "No such computational resource: #{sm_container_name}@#{resource_id}"
@@ -173,7 +190,7 @@ class InfrastructuresController < ApplicationController
   end
 
   def get_sm_container(sm_container_name)
-    container = InfrastructureFacade.get_registered_sm_containters[sm_container_name]
+    container = InfrastructureFacade.get_registered_sm_containters[sm_container_name.to_sym]
     if container.nil?
       Rails.logger.error "No such simulation managers container: #{sm_container_name}"
       raise NoSuchSmContainerError.new

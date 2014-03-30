@@ -1,5 +1,6 @@
 require 'net/ssh'
 require 'infrastructure_facades/abstract_simulation_manager'
+require 'infrastructure_facades/infrastructure_task_logger'
 
 class PlGridSimulationManager < AbstractSimulationManager
   attr_reader :logger
@@ -82,7 +83,7 @@ class PlGridSimulationManager < AbstractSimulationManager
 
   #  if the job is running more than 24 h then restart
   def max_time_exceeded?
-    record.created_at + 24.hours < Time.now
+    record.created_at + record.queue_time_constraint.minutes < Time.now
   end
 
   def time_limit_exceeded?
