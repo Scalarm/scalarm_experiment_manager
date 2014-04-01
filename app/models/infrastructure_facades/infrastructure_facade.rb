@@ -19,9 +19,6 @@ class InfrastructureFacade
 
   def initialize
     @logger = InfrastructureTaskLogger.new short_name
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
-    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
@@ -66,6 +63,7 @@ class InfrastructureFacade
   end
 
   def start_monitoring
+    configure_polling_interval
     lock = MongoLock.new(short_name)
     while true do
       if lock.acquire
@@ -80,6 +78,12 @@ class InfrastructureFacade
       end
       sleep(@polling_interval_sec)
     end
+  end
+
+  def configure_polling_interval
+    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
+    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 
   def self.start_monitoring
