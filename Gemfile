@@ -14,6 +14,9 @@ gem 'bson_ext'
 # Amazon EC2 connector
 gem 'aws-sdk'
 
+# Google Compute Engine connector
+gem 'google-api-client'
+
 gem 'rubyzip'
 gem 'encryptor'
 gem 'net-ssh'

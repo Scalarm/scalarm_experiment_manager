@@ -1,7 +1,7 @@
 # Methods to implement by subclasses:
 # - all_images_info -> get array of hashes: image_id => image_name for all images permitted to use by cloud user
-# - instantiate_vms(base_instace_name, image_id, number) => list of instance ids
-# - all_images_info -> return array of hashes: image_id =>
+# - instantiate_vms(base_instace_name, image_id, number) => list of instance ids (Strings)
+# - all_vm_ids -> get array of VM ids (Strings)
 # Methods for checking and changing virtual machine state (taking vm id)
 # - state -> one of: [:intializing, :running, :deactivated, :rebooting, :error]
 # - exists? -> true if VM exists (instance with given @instance_id is still available)
