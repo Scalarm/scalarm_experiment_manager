@@ -24,12 +24,8 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def current_state(user)
-    jobs = PlGridJob.find_all_by_user_id(user.id)
+    jobs = get_all_sm_records user_id: user.id
     I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
-  end
-
-  def count_scheduled_jobs(user)
-    # FIXME
   end
 
   # for each job check
@@ -57,7 +53,7 @@ class PlGridFacade < InfrastructureFacade
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
-    scheduler = self.class.create_scheduler_facade(additional_params['scheduler'])
+    scheduler = self.class.create_scheduler_facade(additional_params['scheduler'].to_s)
 
     # prepare locally code of a simulation manager to upload with a configuration file
     InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user.id, experiment_id, additional_params['start_at'])
@@ -101,15 +97,6 @@ class PlGridFacade < InfrastructureFacade
     end
   end
 
-  def stop_simulation_managers(user, instances_count, experiment = nil)
-    raise 'not implemented'
-  end
-
-  # FIXME remove
-  #def get_running_simulation_managers(user, experiment = nil)
-  #  PlGridJob.find_all_by_user_id(user.id)
-  #end
-
   def add_credentials(user, params, session)
     credentials = GridCredentials.find_by_user_id(user.id)
 
@@ -131,7 +118,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def self.scheduler_facade_classes
-    Hash[[PBSFacade, GliteFacade].map {|f| [f.short_name, f]}]
+    Hash[[PBSFacade, GliteFacade].map {|f| [f.short_name.to_sym, f]}]
   end
 
   def self.scheduler_facades
@@ -148,26 +135,10 @@ class PlGridFacade < InfrastructureFacade
 
   # Overrides
   def get_sm_containers
-    self.class.scheduler_facades.values
+    self.class.scheduler_facades
   end
 
-  # Overrides
-  def to_hash
-    {
-        name: long_name,
-        type: TREE_META,
-        short: short_name,
-        children: get_sm_containers.map { |sched_facade|
-          {
-              name: sched_facade.long_name,
-              type: TREE_SM_CONTAINER,
-              short: sched_facade.short_name
-          }
-        }
-    }
-  end
-
-  def retrieve_grants(credentials)
+ def retrieve_grants(credentials)
     return [] if credentials.nil?
 
     grants, grant_output = [], []

@@ -20,11 +20,14 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
       :default_additional_params,
       :start_simulation_managers,
       :clean_tmp_credentials,
-      :all_sm_records_for,
       :current_state,
       :add_credentials,
       :short_name,
       :to_hash,
+      :get_sm_record,
+      :get_all_sm_records,
+      :get_simulation_manager,
+      :get_all_simulation_managers,
       :get_sm_containers
   ]
 

@@ -20,6 +20,10 @@ class PrivateMachineRecord < MongoActiveRecord
     'private_machine_records'
   end
 
+  def resource_id
+    task_desc
+  end
+
   def task_desc
     "#{credentials.nil? ? '[credentials missing!]' : credentials.machine_desc} (#{pid.nil? ? 'init' : pid})"
   end

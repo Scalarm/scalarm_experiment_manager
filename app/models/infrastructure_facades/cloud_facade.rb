@@ -28,7 +28,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def monitoring_loop
-    get_container_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
+    get_container_all_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
       secrets = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
       if secrets.nil?
         user = ScalarmUser.find_by_id(user_id)
@@ -118,18 +118,16 @@ class CloudFacade < InfrastructureFacade
   attr_reader :long_name
   attr_reader :short_name
 
-  def get_sm_record(resource_id, user_id=nil, experiment_id=nil)
-    CloudVmRecord.find_by_query(cloud_name: @short_name, vm_id: resource_id,
-                                user_id: user_id, experiment_id: experiment_id)
+  def get_container_sm_record(id, params)
+    CloudVmRecord.find_by_query({id: id, cloud_name: @short_name}.merge(params))
   end
 
-  def get_container_sm_records(user_id=nil, experiment_id=nil)
-    CloudVmRecord.find_all_by_query(cloud_name: @short_name, user_id: user_id, experiment_id: experiment_id)
+  def get_container_all_sm_records(params)
+    CloudVmRecord.find_all_by_query({cloud_name: @short_name}.merge(params))
   end
 
-  def get_simulation_manager(resource_id, user_id)
-    query = {cloud_name: @short_name, user_id: user_id}
-    vm_record = CloudVmRecord.find_by_query(query.merge(vm_id: resource_id))
+  def get_container_simulation_manager(id, params)
+    vm_record = get_container_sm_record(id, params)
     secrets = CloudSecrets.find_by_query(query)
     if vm_record and secrets
       client = @client_class.new(secrets)
@@ -139,8 +137,8 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  def get_container_simulation_managers(user_id, experiment_id=nil)
-    vm_records = get_container_sm_records(user_id)
+  def get_container_all_simulation_managers(params)
+    vm_records = get_container_all_sm_records(params)
     secrets = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
     if secrets.nil?
       []

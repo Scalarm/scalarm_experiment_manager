@@ -5,19 +5,18 @@
 # - simulation_managers_for(user_id): returns array of specific SimulationManagers
 # - long_name -> String
 # - short_name -> String - used as container id
+require_relative 'tree_utils'
 
 module SimulationManagersContainer
-  TREE_SM_NODE = 'sm-node'
-
   # @return [Array<Hash>] collection of simulation managers tree nodes
   def sm_nodes(user_id)
-    all_sm_records_for(user_id).map {|r| SimulationManagersContainer.to_hash(r) }
+    get_container_all_sm_records({user_id: user_id}).map {|r| SimulationManagersContainer.to_hash(r) }
   end
 
   def self.to_hash(record)
     {
         name: record.resource_id,
-        type: TREE_SM_NODE
+        type: TreeUtils::TREE_SM_NODE
     }
   end
 end

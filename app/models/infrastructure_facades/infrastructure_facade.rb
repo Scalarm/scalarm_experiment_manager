@@ -1,6 +1,7 @@
 require 'yaml'
 
 require_relative 'infrastructure_task_logger'
+require_relative 'tree_utils'
 require 'clouds/cloud_factory'
 
 # Methods necessary to implement by subclasses
@@ -25,19 +26,8 @@ class InfrastructureFacade
 
   attr_reader :logger
 
-  # -- Infrastructures tree constants
-
-  TREE_SM_CONTAINER = 'sm-container-node'
-  TREE_META = 'meta-node'
-
-
-  # --
-
   def initialize
     @logger = InfrastructureTaskLogger.new short_name
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
-    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
@@ -88,6 +78,10 @@ class InfrastructureFacade
   end
 
   def start_monitoring
+    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
+    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
+
     lock = MongoLock.new(short_name)
     while true do
       if lock.acquire
@@ -114,35 +108,27 @@ class InfrastructureFacade
     end
   end
 
-  def get_infrastructure_sm_records(user_id, experiment_id=nil)
-    (get_sm_containers.map {|smc| smc.get_container_sm_records(user_id, experiment_id)}).flatten
-  end
-
-  def get_infrastructure_simulation_managers(user_id, experiment_id=nil)
-    (get_sm_containers.map {|smc| smc.get_container_simulation_managers(user_id, experiment_id)}).flatten
-  end
-
   # Used mainly to create node or subtree:
   # - if there is only one ScheduledJobContainer, creates node
   # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
   # @return [Hash] node (or subtree) for infrastructure in infrastructure tree
   def to_hash
-    smc = get_sm_containers
+    smc = get_sm_containers.values
     if smc.count == 1
       {
           name: smc[0].long_name,
-          type: TREE_SM_CONTAINER,
+          type: TreeUtils::TREE_SM_CONTAINER,
           short: smc[0].short_name
       }
     else
       {
           name: self.long_name,
-          type: TREE_META,
+          type: TreeUtils::TREE_META,
           short: self.short_name,
           children: smc.map do |container|
             {
                 name: container.long_name,
-                type: TREE_SM_CONTAINER,
+                type: TreeUtils::TREE_SM_CONTAINER,
                 short: container.short_name
             }
           end
@@ -153,14 +139,32 @@ class InfrastructureFacade
   # Could be overriden in subclasses if there are many ScheduledJobsContainers for infrastructure.
   # By default, infrastructure is also a ScheduledJobsContainer (one node on tree).
   def get_sm_containers
-    [self]
+    {short_name.to_sym => self}
+  end
+
+  def is_self_sm_container?
+    get_sm_containers.values.count == 1 and get_sm_containers.values[0] == self
+  end
+
+  def get_sm_record(id, params)
+    (get_sm_containers.values.map {|smc| smc.get_container_sm_record(id, params)}).flatten
+  end
+
+  def get_all_sm_records(params)
+    (get_sm_containers.values.map {|smc| smc.get_container_all_sm_records(params)}).flatten
+  end
+
+  def get_simulation_manager(id, params)
+    (get_sm_containers.values.map {|smc| smc.get_container_simulation_manager(id, params)}).flatten
+  end
+
+  def get_all_simulation_managers(params)
+    (get_sm_containers.values.map {|smc| smc.get_container_all_simulation_managers(params)}).flatten
   end
 
   # @return [Array<SimulationManagersContainer>] scheduled jobs containers for all registered infrastructures
   def self.get_registered_sm_containters
-    get_registered_infrastructures.values.map do |inf|
-      Hash[inf[:facade].get_sm_containers.map {|container| [container.short_name.to_sym, container]}]
-    end.reduce :merge
+    get_registered_infrastructures.values.map {|inf| inf[:facade].get_sm_containers}.reduce :merge
   end
 
   def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)

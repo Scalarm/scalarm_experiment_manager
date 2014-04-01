@@ -138,37 +138,20 @@ class PrivateMachineFacade < InfrastructureFacade
     'private_machine'
   end
 
-  def get_sm_record(resource_id, user_id=nil, experiment_id=nil)
-    PrivateMachineRecord.find_by_query(id: BSON::ObjectId(resource_id), user_id: user_id, experiment_id: experiment_id)
+  def get_container_sm_record(id, params={})
+    PrivateMachineRecord.find_by_query({id: id}.merge(params))
   end
 
-  def get_container_sm_records(user_id=nil, experiment_id=nil)
-    PrivateMachineRecord.find_all_by_query(user_id: user_id, experiment_id: experiment_id)
+  def get_container_all_sm_records(params={})
+    PrivateMachineRecord.find_all_by_query(params)
   end
 
-  def get_simulation_manager(resource_id, user_id)
-    PrivateMachineSimulationManager.new(get_sm_record(resource_id, user_id))
-
-    query = {cloud_name: @short_name, user_id: user_id}
-    vm_record = CloudVmRecord.find_by_query(query.merge(vm_id: resource_id))
-    secrets = CloudSecrets.find_by_query(query)
-    if vm_record and secrets
-      client = @client_class.new(secrets)
-      client.cloud_simulation_manager(vm_record)
-    else
-      nil
-    end
+  def get_container_simulation_manager(id, params={})
+    PrivateMachineSimulationManager.new(get_container_sm_record(id, params))
   end
 
-  def get_container_simulation_managers(user_id, experiment_id=nil)
-    vm_records = get_container_sm_records(user_id)
-    secrets = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
-    if secrets.nil?
-      []
-    else
-      client = @client_class.new(secrets)
-      vm_records.map {|r| client.cloud_simulation_manager(r)}
-    end
+  def get_container_all_simulation_managers(params={})
+    get_container_all_sm_records(params).map {|r| PrivateMachineSimulationManager.new(r)}
   end
 
   # --

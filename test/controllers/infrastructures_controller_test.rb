@@ -24,7 +24,7 @@ class SessionsControllerTest < ActionController::TestCase
 
     scheduler_names.each do |sname|
       id_values.each do |i|
-        PlGridJob.new('user_id'=>tmp_user_id, 'scheduler_type'=>sname,
+        PlGridJob.new('user_id'=>tmp_user_id, 'scheduler_type'=>sname.to_s,
                       'job_id'=>i.to_s).save
       end
     end

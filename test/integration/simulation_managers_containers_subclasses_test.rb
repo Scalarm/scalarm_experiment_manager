@@ -1,4 +1,3 @@
-require 'csv'
 require 'test/unit'
 require 'test_helper'
 require 'mocha/test_unit'
@@ -22,10 +21,10 @@ class SimulationManagersContainersSubclassesTest < Test::Unit::TestCase
   }
 
   METHODS = [
-      :sm_record,
-      :all_sm_records_for,
-      :simulation_manager,
-      :simulation_managers_for,
+      :get_container_sm_record,
+      :get_container_all_sm_records,
+      :get_container_simulation_manager,
+      :get_container_all_simulation_managers,
       :long_name,
       :short_name
   ]
@@ -37,7 +36,7 @@ class SimulationManagersContainersSubclassesTest < Test::Unit::TestCase
     # then
     assert_equal SUBCLASSES.count, sm_container_hash.count, sm_container_hash
     SUBCLASSES.each do |id, sm_container_class|
-      assert sm_container_hash.has_key?(id), "not registered sm_container: #{id}, #{sm_container_hash.map{|i,c| "#{i} -> #{c.class}"}}"
+      assert sm_container_hash.has_key?(id), sm_container_hash.to_s #"not registered sm_container: #{id}, #{sm_container_hash.map{|i,c| "#{i} -> #{c.class}"}}"
       assert_equal sm_container_hash[id].class, sm_container_class, "invalid class for sm_container: #{id} -> #{sm_container_class}"
     end
   end
@@ -48,7 +47,7 @@ class SimulationManagersContainersSubclassesTest < Test::Unit::TestCase
 
     # when, then
     assert_nothing_thrown do
-      get_sm_containers.each do |sm_container|
+      sm_containers.each do |sm_container|
         assert METHODS.each {|method| assert sm_container.respond_to?(method), "no method #{method} in #{sm_container}"}
       end
     end

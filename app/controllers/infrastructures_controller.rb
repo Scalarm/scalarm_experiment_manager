@@ -1,3 +1,5 @@
+require 'infrastructure_facades/tree_utils'
+
 class NoSuchSmContainerError < StandardError; end
 class NoSuchSmError < StandardError; end
 
@@ -29,7 +31,7 @@ class InfrastructuresController < ApplicationController
       end),
       {
         name: 'Clouds',
-        type: InfrastructureFacade.TREE_META,
+        type: TreeUtils::TREE_META,
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
             inf[:facade].to_hash
