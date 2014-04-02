@@ -76,7 +76,7 @@ module AmazonCloud
       ec2_instance(id).exists?
     end
 
-    def self.instance_types
+    def instance_types
       {
           't1.micro'=> 'Micro (Up to 2 EC2 Compute Units, 613 MB RAM)',
           'm1.small'=> 'Small (1 EC2 Compute Unit, 1.7 GB RAM)',

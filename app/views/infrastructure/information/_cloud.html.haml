@@ -49,13 +49,13 @@
                     .small-4.columns
                       = select_tag :image_secrets_id, options_for_select(images)
                     .small-4.columns
-                  .row
-                    .small-4.columns
-                      = label_tag :instance_type, t('infrastructure.information.vm_type') + ':', class: 'inline right'
-                    .small-4.columns
-                      = select_tag :instance_type, options_for_select(cloud_class.instance_types.map{|k, desc| [desc, k]})
-                    .small-4.columns
                   - unless invalid_credentials
+                    .row
+                      .small-4.columns
+                        = label_tag :instance_type, t('infrastructure.information.vm_type') + ':', class: 'inline right'
+                      .small-4.columns
+                        = select_tag :instance_type, options_for_select(cloud_client.instance_types.map{|k, desc| [desc, k]})
+                      .small-4.columns
                     = render partial: "infrastructure/information/cloud/#{cloud_name}", locals: { cloud_client: cloud_client }
                   .row
                     .small-4.columns

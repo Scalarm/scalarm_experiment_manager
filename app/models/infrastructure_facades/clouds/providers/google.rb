@@ -1,4 +1,5 @@
 require 'infrastructure_facades/clouds/abstract_cloud_client'
+require 'infrastructure_facades/infrastructure_error'
 require 'google/api_client'
 require 'google/api_client/auth/key_utils'
 require 'json'
@@ -16,6 +17,7 @@ module GoogleCloud
 
     def initialize(secrets)
       super(secrets)
+      raise Infrastructure::InvalidCredentialsError unless check_secrets(secrets)
       @api_client = Google::APIClient.new(application_name: 'scalarm', application_version: 1)
       key = Google::APIClient::KeyUtils.load_from_pkcs12(secrets.secret_key_file, secrets.secret_key_passphrase)
       asserter = Google::APIClient::JWTAsserter.new(secrets.gservice_email,
@@ -32,25 +34,18 @@ module GoogleCloud
       'Google Compute Engine'
     end
 
-    # TODO decision: ids -> resources urls?
-
-    # TODO error handling method?
-
-    # TODO images can be fetch from various sources (eg. debian-cloud) and user repo
-    # TODO which we should use?
     def all_images_info
-      result = execute @compute_api.images.list, project: @secrets.project
-      result = parse_result_or_raise_error(result)
-      Hash[result['items'].map {|i| [i['selfLink'], i['name']]}]
+      result = execute! @compute_api.images.list, project: @secrets.project
+      result = parse_result(result)
+      Hash[result['items'].map {|i| [i['name'], i['name']]}]
     end
 
     def all_vm_ids
-      result = execute @compute_api.instances.list, project: @secrets.project, zone: DEFAULT_ZONE
-      result = parse_result_or_raise_error(result)
+      result = execute! @compute_api.instances.list, project: @secrets.project, zone: DEFAULT_ZONE
+      result = parse_result(result)
       result.has_key?('items') ? result['items'].map {|i| i['name']} : []
     end
 
-    # FIXME no network param?
     # Blocks until all insert requests are done. Sends requests for each VM in separate thread.
     # @param [Hash] params additional params hash (Symbol => String): instance_type: one of self.instance_types string
     def instantiate_vms(base_name, image_id, number, params)
@@ -61,16 +56,14 @@ module GoogleCloud
         Thread.start do
           instance_name = generate_instance_name(base_name)
 
-          body = instances_insert_body(instance_name, machine_type_url(params[:instance_type]), network_url, image_id)
-          puts "body for #{base_name} #{image_id}: #{body}"
+          insert_body = instances_insert_body(instance_name, machine_type_url(params[:instance_type]),
+                                       network_url, image_url(image_id))
 
-          insert_result = execute(@compute_api.instances.insert, {project: @secrets.project, zone: DEFAULT_ZONE}, body)
-          insert_result = parse_result_or_raise_error(insert_result)
-          done_result = wait_for_done(insert_result['name'])
-
-          instance_info = get_instance_info(instance_name)
+          insert_result = parse_result(execute!(@compute_api.instances.insert,
+                                                {project: @secrets.project, zone: DEFAULT_ZONE}, insert_body))
+          wait_for_done(insert_result['name'])
           ids_array_lock.synchronize do
-            ids_array = parse_result_or_raise_error(instance_info)['name'] # TODO !
+            ids_array << instance_name
           end
         end
       end
@@ -100,43 +93,40 @@ module GoogleCloud
     }
 
     def status(id)
-      STATES_MAPPING[parse_result_or_raise_error(get_instance_info(id))['status']]
+      STATES_MAPPING[parse_result(get_instance_info(id))['status']]
     end
 
     def terminate(id)
-      parse_result_or_raise_error(instance_delete(id))
+      instance_delete(id)
     end
 
-    # TODO WARNING: instance remains in RUNNING mode through the reset
+    # WARNING: instance remains in RUNNING state through the reset
     def reinitialize(id)
-      parse_result_or_raise_error(instance_reset(id))
+      instance_reset(id)
     end
 
     # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
       {
-          ip: parse_result_or_raise_error(get_instance_info(id))['networkInterfaces'][0]['accessConfigs'][0]['natIP'],
+          ip: parse_result(get_instance_info(id))['networkInterfaces'][0]['accessConfigs'][0]['natIP'],
           port: '22'
       }
     end
 
-    # TODO
-    def self.instance_types
-      {
-          'f1-micro'=> 'Micro (TODO)'
-      }
+    def instance_types
+      Hash[(parse_result(get_instance_types)['items'].select {|i| not i.has_key? 'deprecated'}).map do |i|
+        [i['name'], "#{i['guestCpus']} CPUs, #{i['memoryMb']} MB RAM"]
+      end]
     end
 
     # --- Utils ---
 
-
-    # TODO
     def generate_instance_name(base)
-      "scalarm-#{SecureRandom.uuid}"
+      "scalarm-#{SecureRandom.hex(8)}"
     end
 
     def operation_status(operation_name)
-      result = execute @compute_api.zone_operations.get, project: @secrets.project, zone: DEFAULT_ZONE,
+      result = execute! @compute_api.zone_operations.get, project: @secrets.project, zone: DEFAULT_ZONE,
                        operation: operation_name
       JSON.parse(result.body)['status']
     end
@@ -148,12 +138,12 @@ module GoogleCloud
       result
     end
 
-    def execute(method, parameters, body=nil)
+    def execute!(method, parameters, body=nil)
       query = {api_method: method}
       query.merge!({parameters: parameters})
       query.merge!({body_object: body}) if body
 
-      result = @api_client.execute(query)
+      @api_client.execute!(query)
     end
 
     def network_url(network='default')
@@ -172,19 +162,23 @@ module GoogleCloud
       raise result.error_message if result.error?
       JSON.parse(result.body)
     end
+    
+    def parse_result(result)
+      JSON.parse(result.body)
+    end
 
     def get_instance_info(instance_name)
-      execute @compute_api.instances.get, instance: instance_name, project: @secrets.project, zone: DEFAULT_ZONE
+      execute! @compute_api.instances.get, instance: instance_name, project: @secrets.project, zone: DEFAULT_ZONE
     end
 
     def instance_delete(instance_name)
-      execute @compute_api.instances.delete, instance: instance_name, project: @secrets.project, zone: DEFAULT_ZONE
+      execute! @compute_api.instances.delete, instance: instance_name, project: @secrets.project, zone: DEFAULT_ZONE
     end
 
     # Google doc: Performing a reset on your instance is similar to pressing the reset button on your computer.
     # Note that your instance remains in RUNNING mode through the reset.
     def instance_reset(instance_name)
-      execute @compute_api.instances.reset, instance: instance_name, project: @secrets.project, zone: DEFAULT_ZONE
+      execute! @compute_api.instances.reset, instance: instance_name, project: @secrets.project, zone: DEFAULT_ZONE
     end
 
     def instances_insert_body(instance_name, machine_type_url, network_url, image_id)
@@ -198,14 +192,14 @@ module GoogleCloud
                     initializeParams: {sourceImage: image_id}
                    } ]
       }
+    end
 
-      #{
-      # 'machineType' => DEFAULT_MACHINE,
-      # 'name'  => DEFAULT_INSTANCE_NAME,
-      # "networkInterfaces" => [ { "accessConfigs"=> [ { "name"=> "External NAT", "type"=> "ONE_TO_ONE_NAT" } ], "network"=> "https://www.googleapis.com/compute/v1/projects/scalarm-tests-1/global/networks/default" } ],
-      # "disks"=> [ { "boot"=> true, "type"=> "PERSISTENT", "mode"=> "READ_WRITE", "deviceName"=> "rest-test",  'autoDelete'=>true, "initializeParams" => {"sourceImage"=> 'https://www.googleapis.com/compute/v1/projects/scalarm-tests-1/global/images/scalarm-1'} }
-      #           ],
-      #}
+    def get_instance_types
+      execute! @compute_api.machine_types.list, project: @secrets.project, zone: DEFAULT_ZONE
+    end
+
+    def check_secrets(secrets)
+      secrets.secret_key_file and secrets.secret_key_passphrase and secrets.gservice_email and secrets.project
     end
 
   end
