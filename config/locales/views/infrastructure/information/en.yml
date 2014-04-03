@@ -21,6 +21,13 @@ en:
           secrets: PLGrid Cloud secrets
           login: UI login
           password: UI password
+      google:
+        credentials_label: Please, provide your Google Compute Engine project's Service Account credentials
+        credentials:
+          project_id: Project ID
+          gservice_email: Service Account email address
+          private_key: Private key upload
+          key_passphrase: Private key passphrase
       private_machine:
         credentials_label: Please, provide your credentials to access private resources
 

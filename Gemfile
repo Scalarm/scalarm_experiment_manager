@@ -70,3 +70,5 @@ gem 'xml-simple'
 gem 'vmstat'
 
 gem 'mocha', group: :test
+
+gem 'remotipart', '~> 1.0'

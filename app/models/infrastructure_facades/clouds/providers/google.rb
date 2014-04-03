@@ -115,7 +115,7 @@ module GoogleCloud
 
     def instance_types
       Hash[(parse_result(get_instance_types)['items'].select {|i| not i.has_key? 'deprecated'}).map do |i|
-        [i['name'], "#{i['guestCpus']} CPUs, #{i['memoryMb']} MB RAM"]
+        [i['name'], "#{i['name']}: #{i['guestCpus']} CPUs, #{i['memoryMb']} MB RAM"]
       end]
     end
 

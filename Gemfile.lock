@@ -130,6 +130,7 @@ GEM
     rdoc (4.1.1)
       json (~> 1.4)
     ref (1.0.5)
+    remotipart (1.2.1)
     rest-client (1.6.7)
       mime-types (>= 1.16)
     retriable (1.4.1)
@@ -402,6 +403,7 @@ DEPENDENCIES
   puma
   racc
   rails (= 4.0.2)
+  remotipart (~> 1.0)
   rest-client (~> 1.6.7)
   rinruby
   ruby-openid

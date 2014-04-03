@@ -11,6 +11,7 @@ en:
       empty_dn: "<N/A>"
       plgrid: "PL-Grid credentials"
       pl_cloud: "PLGrid Cloud credentials"
+      google: "Google Compute Engine credentials"
       amazon: "Amazon Elastic Compute Cloud credentials"
       images_manager: "Cloud virtual machine images management"
       private_machines_manager: "Private resources credentials"
