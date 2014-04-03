@@ -64,12 +64,7 @@ module AmazonCloud
 
     # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
-      {ip: ec2_instance(id).public_dns_name, port: '22'}
-    end
-
-    # TODO: translate or remove
-    def vm_record_info(vm_record)
-      "Type: #{instance_type}"
+      {host: ec2_instance(id).public_dns_name, port: '22'}
     end
 
     def exists?(id)

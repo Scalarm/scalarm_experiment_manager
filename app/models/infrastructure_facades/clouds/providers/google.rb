@@ -108,7 +108,7 @@ module GoogleCloud
     # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
       {
-          ip: parse_result(get_instance_info(id))['networkInterfaces'][0]['accessConfigs'][0]['natIP'],
+          host: parse_result(get_instance_info(id))['networkInterfaces'][0]['accessConfigs'][0]['natIP'],
           port: '22'
       }
     end

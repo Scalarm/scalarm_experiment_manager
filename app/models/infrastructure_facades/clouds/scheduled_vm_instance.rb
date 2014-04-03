@@ -133,7 +133,7 @@ class ScheduledVmInstance < VmInstance
 
   def update_record_ssh_address
     psa = public_ssh_address
-    @record.public_host, @record.public_ssh_port = psa[:ip], psa[:port]
+    @record.public_host, @record.public_ssh_port = psa[:host], psa[:port]
     @record.save
   end
 
