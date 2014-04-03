@@ -56,7 +56,9 @@
                       .small-4.columns
                         = select_tag :instance_type, options_for_select(cloud_client.instance_types.map{|k, desc| [desc, k]})
                       .small-4.columns
-                    = render partial: "infrastructure/information/cloud/#{cloud_name}", locals: { cloud_client: cloud_client }
+                    - begin
+                      = render partial: "infrastructure/information/cloud/#{cloud_name}", locals: { cloud_client: cloud_client }
+                    - rescue ActionView::MissingTemplate # ignore missing cloud-specific partials
                   .row
                     .small-4.columns
                       = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
