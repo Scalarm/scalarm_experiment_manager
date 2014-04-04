@@ -191,17 +191,17 @@ CONTEXT = [
 
     Rails.logger.debug("Successful PLCloud VM port redirection:\n #{dh['pubIp']}:#{dh['pubPort']} -> #{dh['privIp']}:#{dh['privPort']}")
 
-    {ip: dh['pubIp'], port: dh['pubPort']}
+    {host: dh['pubIp'], port: dh['pubPort']}
   end
 
-  # @return [Hash] {<private_port_num> => {ip: <public_ip>, port: <public_port_num>}}
+  # @return [Hash] {<private_port_num> => {host: <public_ip>, port: <public_port_num>}}
   # @param [String] vm_ip virtual machine's private ip
   def redirections_for(vm_ip)
     dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
     resp = dnat[vm_ip].get
     data = JSON.parse resp
 
-    Hash[data.map {|r| [r['privPort'], {ip: r['pubIp'], port: r['pubPort']}]}]
+    Hash[data.map {|r| [r['privPort'], {host: r['pubIp'], port: r['pubPort']}]}]
   end
 
   # Get VM info with "onevm show <vm_id> --xml"

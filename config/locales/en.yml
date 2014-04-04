@@ -167,7 +167,7 @@ en:
 
   plgrid:
     login:
-      ok: Your credentials have been updated
+      ok: Your PL-Grid credentials have been updated
       error: An error occured
     job_submission:
       authentication_failed: "An exception occured during authentication - %{ex}. Please check if the host is available and the username and password are correct."
@@ -178,13 +178,18 @@ en:
 
   pl_cloud:
     login:
-      ok: Your credentials have been updated
-      error: An error occured
+      ok: Your PL-Grid Cloud credentials have been updated
+      error: An error occured on adding PL-Grid Cloud credentials
 
   amazon:
     login:
-      ok: Your credentials have been updated
+      ok: Your Amazon credentials have been updated
       error: An error occured
+
+  google:
+    login:
+      ok: Your Google Compute Engine credentials have been updated
+      error: An error occured when updating Google Compute Engine credentials
 
   private_machine:
     login:

@@ -26,7 +26,12 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def current_state(user)
-    cloud_client = cloud_client_instance(user.id)
+    begin
+      cloud_client = cloud_client_instance(user.id)
+    rescue Exception => e
+      logger.warn "current state in GUI exception: #{e.class} #{e.to_s}\n#{e.backtrace.join("\n")}"
+      return I18n.t('infrastructure_facades.cloud.current_state_exception', exception: e.to_s)
+    end
 
     if cloud_client.nil?
       logger.info  'current state in GUI: lack of credentials'
@@ -161,9 +166,14 @@ class CloudFacade < InfrastructureFacade
       credentials = CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user.id})
     end
 
-    (params.keys.select {|k| k.start_with? 'stored_' }).each do |secret_key|
-      credentials.send("#{secret_key.to_s.sub(/^stored_/, '')}=", params[secret_key])
+    (params.keys.select {|k| k.start_with? 'stored_' }).each do |key|
+      credentials.send("#{key.to_s.sub(/^stored_/, '')}=", params[key])
     end
+
+    (params.keys.select {|k| k.start_with? 'upload_' }).each do |key|
+      credentials.send("#{key.to_s.sub(/^upload_/, '')}=", params[key].read)
+    end
+
     credentials.save
 
     'ok'

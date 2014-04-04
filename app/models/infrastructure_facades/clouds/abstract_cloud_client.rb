@@ -1,22 +1,20 @@
 # Methods to implement by subclasses:
 # - all_images_info -> get array of hashes: image_id => image_name for all images permitted to use by cloud user
-# - instantiate_vms(base_instace_name, image_id, number) => list of instance ids
-# - all_images_info -> return array of hashes: image_id =>
+# - instantiate_vms(base_instace_name, image_id, number) => list of instance ids (Strings)
+# - all_vm_ids -> get array of VM ids (Strings)
 # Methods for checking and changing virtual machine state (taking vm id)
-# - state -> one of: [:intializing, :running, :deactivated, :rebooting, :error]
+# - status -> one of: [:intializing, :running, :deactivated, :rebooting, :error]
 # - exists? -> true if VM exists (instance with given @instance_id is still available)
 # - terminate -> nil -- terminates VM
 # - reinitialize -> nil -- reinitializes VM (should work for ALL states)
-# - public_host -> String: public host of VM -- dynamically gets hostname from API
-# - public_ssh_port -> String: public ssh port of VM -- dynamically gets hostname from API
-# Class methods
-# - self.instance_types -> Hash<String, String>: instance type desc -> instance type id
+# - public_ssh_address-> Hash: {host: ssh_host, port: ssh_port} for vm
+# - instance_types -> Hash<String, String>: instance type desc -> instance type id
 # VM states:
-#  -- initializing (after creation and before running)
-#  -- running (booting and running)
-#  -- deactivated (after running - machine was send to stop, terminate or deletion)
-#  -- rebooting
-#  -- error (state that shouldn't occur)
+#  -- :initializing (after creation and before running)
+#  -- :running (booting and running)
+#  -- :deactivated (after running - machine was send to stop, terminate or deletion)
+#  -- :rebooting
+#  -- :error (state that shouldn't occur)
 
 require_relative 'vm_instance'
 require_relative 'scheduled_vm_instance'

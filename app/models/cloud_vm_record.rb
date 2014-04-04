@@ -35,17 +35,13 @@ class CloudVmRecord < MongoActiveRecord
 
   #  upload file to the VM - use only password authentication
   def upload_file(local_path, remote_path='.')
-    Net::SCP.start(public_host, image_secrets.image_login,
-              port: public_ssh_port, password: image_secrets.secret_image_password,
-              auth_methods: SSH_AUTH_METHODS) do |scp|
+    Net::SCP.start(public_host, image_secrets.image_login, ssh_params) do |scp|
       scp.upload! local_path, remote_path
     end
   end
 
   def ssh_session
-    Net::SSH.start(public_host, image_secrets.image_login,
-              port: public_ssh_port, password: image_secrets.secret_image_password,
-              auth_methods: SSH_AUTH_METHODS) do |ssh|
+    Net::SSH.start(public_host, image_secrets.image_login, ssh_params) do |ssh|
       yield ssh
     end
   end
@@ -62,6 +58,13 @@ class CloudVmRecord < MongoActiveRecord
   def to_s
     "Id: #{vm_id}, Launched at: #{created_at}, Time limit: #{time_limit}, "
     "SSH address: #{public_host}:#{public_ssh_port}"
+  end
+
+  def ssh_params
+    {
+        port: public_ssh_port, password: image_secrets.secret_image_password,
+        auth_methods: SSH_AUTH_METHODS, paranoid: false, user_known_hosts_file: %w(/dev/null)
+    }
   end
 
 end
