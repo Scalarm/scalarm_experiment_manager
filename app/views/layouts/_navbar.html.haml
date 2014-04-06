@@ -1,28 +1,31 @@
-- unless @current_user.nil?
-  .fixed
-    %nav.top-bar
-      %section.top-bar-section
-        %ul.title-area
-          %li.name
-            %div= content_for?(:title) ? yield(:title) : t('title')
+.fixed  
+  %nav.top-bar
+    %section.top-bar-section
+      %ul.title-area
+        %li.name
+          %div= content_for?(:title) ? yield(:title) : t('title')
 
-      %section.top-bar-section
-        %ul.left
-          %li.divider
-          %li
-            = link_to t('navbar.experiments_link'), experiments_path
-          %li
-            = link_to t('navbar.simulations_link'), simulations_path
-          %li.divider
+    %section.top-bar-section
+      %ul.left
+        %li.divider
+        %li
+          = link_to t('navbar.experiments_link'), experiments_path
+        %li
+          = link_to t('navbar.simulations_link'), simulations_path
+        %li.divider
 
-        - if content_for?(:navbar)
-          = yield :navbar
+      - if content_for?(:navbar)
+        = yield :navbar
 
-        %ul.right
-          %li
-            = link_to_function t('navbar.help_button'), "$('.help').toggle(400, 'swing');"
-          %li.divider
-          %li
-            = link_to t('navbar.account_link', login: @current_user.login), user_controller_account_path
-          %li
-            = link_to t('navbar.logout_link'), logout_path, method: :post
+      %ul.right
+        %li
+          %a(href="#" onclick="$('.help').toggle(400, 'swing'); return false;")
+            %i.fi-info.link{ title: t('.help_button') }
+        %li.divider
+        %li
+          %a(href="#{user_controller_account_path}")
+            %i.fi-torso.link{title: t('.account_link', login: @current_user.login)}
+        %li.divider    
+        %li
+          %a(href="#{logout_path}" data-method="post")
+            %i.fi-eject.link{ title: t('.logout_link') }

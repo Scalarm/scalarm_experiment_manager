@@ -1,3 +1,8 @@
 en:
-  navbar:
-    help_button: "Toggle help"
+  layouts:
+    navbar:
+      experiments_link: Experiment view
+      simulations_link: Simulation view
+      account_link: "Logged as '%{login}'"
+      logout_link: Logout
+      help_button: "Toggle help"

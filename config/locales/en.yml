@@ -25,12 +25,6 @@ en:
   login-title: Scalarm - platform for data farming experiments
   account-title: Account management panel
 
-  navbar:
-    experiments_link: Experiment view
-    simulations_link: Simulation view
-    account_link: "Logged as '%{login}'"
-    logout_link: Logout
-
   registered_simulation_scenario_list:
     label: "Registered simulations"
     destroy_button: "Destroy"
