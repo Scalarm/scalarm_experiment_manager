@@ -2,16 +2,21 @@
   %nav.top-bar
     %section.top-bar-section
       %ul.title-area
-        %li.name
-          %div= content_for?(:title) ? yield(:title) : t('title')
-
+        %li.has-dropdown.not-click
+          %a(href="#")
+            %div(style="vertical-align: middle; padding-top:10px;")
+              = image_tag 'scalarm-white-small.png'
+          %ul.dropdown
+            %li
+              %a{href: experiments_path}
+                %i.fi-clipboard-pencil.small-link
+                = t('.experiments_link')
+            %li
+              %a{href: simulations_path}
+                %i.fi-page-add.small-link
+                = t('.simulations_link')
     %section.top-bar-section
       %ul.left
-        %li.divider
-        %li
-          = link_to t('navbar.experiments_link'), experiments_path
-        %li
-          = link_to t('navbar.simulations_link'), simulations_path
         %li.divider
 
       - if content_for?(:navbar)

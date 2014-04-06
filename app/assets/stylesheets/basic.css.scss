@@ -76,9 +76,11 @@ footer {
 /* nav */
 
 nav {
-  i.link {
+  i {
     color: white; 
-    font-size: 45px;
+
+    &.link { font-size: 45px; }
+    &.small-link { font-size: 28px; }
   }
 
   .menu {

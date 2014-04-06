@@ -19,12 +19,14 @@
 
     %footer
       .row
-        .small-8.columns
+        .small-7.columns
           = raw t('copyright')
+        .small-3.columns
+          = link_to image_tag('scalarm-blue-small.png'), 
+            'http://www.scalarm.com'
         .small-2.columns
-          -#= link_to image_tag('agh_logo.jpg'), 'http://www.agh.edu.pl'
-        .small-2.columns
-          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 'http://www.cyfronet.pl'
+          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 
+            'http://www.cyfronet.pl'
 
 
     = javascript_include_tag 'application'

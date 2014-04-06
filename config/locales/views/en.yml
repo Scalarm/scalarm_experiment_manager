@@ -1,8 +1,8 @@
 en:
   layouts:
     navbar:
-      experiments_link: Experiment view
-      simulations_link: Simulation view
+      experiments_link: Experiments summary
+      simulations_link: Simulation scenarios
       account_link: "Logged as '%{login}'"
       logout_link: Logout
       help_button: "Toggle help"
