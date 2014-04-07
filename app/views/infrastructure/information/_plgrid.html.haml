@@ -4,75 +4,73 @@
 .row
   #plgrid-login-ajax-response.alert-box.radius(style="display: none;")
 
-.row
-  %dl.accordion(data-accordion="")
-    %dd
-      %a(href='#submission-panel-plgrid')= t('infrastructure.information.submission_label')
-      #submission-panel-plgrid.content
-        %p
-          .row
-            = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
-              = hidden_field_tag 'experiment_id', experiment.id
-              = hidden_field_tag 'infrastructure_type', 'plgrid'
+%dl.accordion(data-accordion="")
+  %dd
+    %a(href='#submission-panel-plgrid')= t('infrastructure.information.submission_label')
+    #submission-panel-plgrid.content
+      %p
+        .row
+          = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
+            = hidden_field_tag 'experiment_id', experiment.id
+            = hidden_field_tag 'infrastructure_type', 'plgrid'
 
-              .row
-                .small-4.columns
-                  = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :job_counter
-                .small-4.columns
+            .row
+              .small-4.columns
+                = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
+              .small-4.columns
+                = text_field_tag :job_counter
+              .small-4.columns
 
-              .row
-                .small-4.columns
-                  = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
-                .small-4.columns
-                  = select_tag :grant_id, options_for_select(grants)
-                .small-4.columns
+            .row
+              .small-4.columns
+                = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
+              .small-4.columns
+                = select_tag :grant_id, options_for_select(grants)
+              .small-4.columns
 
-              .row
-                .small-4.columns
-                  = label_tag :scheduler, t('.submission.scheduler') + ':', class: 'inline right'
-                .small-4.columns
-                  = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
-                .small-4.columns
+            .row
+              .small-4.columns
+                = label_tag :scheduler, t('.submission.scheduler') + ':', class: 'inline right'
+              .small-4.columns
+                = select_tag :scheduler, options_for_select([ ['Portable Batch System', 'qsub'], ['gLite', 'glite'] ])
+              .small-4.columns
 
-              .row
-                .small-4.columns
-                  = label_tag :nodes, t('.submission.nodes') + ':', class: 'inline right'
-                .small-1.columns
-                  = text_field_tag :nodes, 1, class: 'right'
-                .small-2.columns
-                  = label_tag :ppn, t('.submission.ppn') + ':', class: 'inline right'
-                .small-1.columns
-                  = text_field_tag :ppn, 1, class: 'right'
-                .small-2.columns
+            .row
+              .small-4.columns
+                = label_tag :nodes, t('.submission.nodes') + ':', class: 'inline right'
+              .small-1.columns
+                = text_field_tag :nodes, 1, class: 'right'
+              .small-2.columns
+                = label_tag :ppn, t('.submission.ppn') + ':', class: 'inline right'
+              .small-1.columns
+                = text_field_tag :ppn, 1, class: 'right'
+              .small-2.columns
 
-              .row
-                .small-4.columns
-                  = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :time_limit
-                .small-4.columns
+            .row
+              .small-4.columns
+                = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
+              .small-4.columns
+                = text_field_tag :time_limit
+              .small-4.columns
 
-              .row
-                .small-4.columns
-                  = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
-                .small-4.columns
-                  = text_field_tag :start_at
-                .small-4.columns
+            .row
+              .small-4.columns
+                = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
+              .small-4.columns
+                = text_field_tag :start_at
+              .small-4.columns
 
-              .row
-                .small-12.columns.text-center
-                  = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+            .row
+              .small-12.columns.text-center
+                = submit_tag t('infrastructure.information.submit'), class: 'button radius'
 
-    %dd
-      %a(href='#plgrid-jobs-panel')= t('infrastructure.information.scheduled_label')
-      #plgrid-jobs-panel.content
-        %p.row
-          %p{ id: 'plgrid_info' }= @current_states[:plgrid]
-          %ul.circle
-            - @simulation_managers[:plgrid].each do |plgrid_job|
-              - begin
-                %li= raw(t('plgrid.job_desc', job_id: plgrid_job.job_id, created_at: plgrid_job.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: plgrid_job.experiment_id))
-              - rescue Exception => e
-                %li= t('infrastructure.information.sm_record_error', error: e.to_s)
+  %dd
+    %a(href='#plgrid-jobs-panel')= t('infrastructure.information.scheduled_label')
+    #plgrid-jobs-panel.content
+      .row.columns.small-1.small-centered
+        = image_tag('loading.gif')
+    
+:javascript
+  $(function() {
+    $('#plgrid-jobs-panel').load('#{simulation_managers_info_infrastructure_path(infrastructure_name: 'plgrid')}')
+  });

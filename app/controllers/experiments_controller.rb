@@ -51,12 +51,6 @@ class ExperimentsController < ApplicationController
   end
 
   def get_booster_dialog
-    @simulation_managers, @current_states = {}, {}
-    InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_running_simulation_managers(@current_user)
-      @current_states[infrastructure_id] = infrastructure_info[:facade].current_state(@current_user)
-    end
-
     render inline: render_to_string(partial: 'booster_dialog')
   end
 

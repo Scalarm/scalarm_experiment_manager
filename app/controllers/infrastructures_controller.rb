@@ -79,6 +79,19 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  def simulation_managers_info
+    infrastructure_facade = if params[:infrastructure_name] == 'cloud'
+                             InfrastructureFacade.get_facade_for(params[:cloud_name])
+                            else
+                             InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+                            end
+
+    @current_state_summary = infrastructure_facade.current_state(@current_user)
+    @simulation_managers = infrastructure_facade.get_running_simulation_managers(@current_user)
+
+    render partial: "infrastructure/information/simulation_managers/#{params[:infrastructure_name]}"
+  end
+
   # ============================ PRIVATE METHODS ============================
   private
 
