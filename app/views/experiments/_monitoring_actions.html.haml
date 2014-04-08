@@ -6,8 +6,9 @@
   .content
     .row
       - if @experiment.is_running
-        .small-2.columns.action-button
-          %span#stopExperimentButton{class: button_classes}= t('.stop_button')
+        - if @experiment.user_id == @current_user.id
+          .small-2.columns.action-button
+            %span#stopExperimentButton{class: button_classes}= t('.stop_button')
         .small-2.columns.action-button
           %span#extensionDialogOpenButton{class: button_classes}= t('.extend_button')
         .small-2.columns.action-button
@@ -15,8 +16,9 @@
         .small-2.columns.action-button
           %span#schedulingButton{class: button_classes}= t('.scheduling_button')
       - else
-        .small-2.columns.action-button
-          %span#destroyExperimentButton{class: button_classes}= t('.destroy_button')
+        - if @experiment.user_id == @current_user.id
+          .small-2.columns.action-button
+            %span#destroyExperimentButton{class: button_classes}= t('.destroy_button')
       .small-2.columns.action-button
         = link_to t('.download_results_button'), '#', 'data-dropdown' => 'download-dropdown', class: button_classes
       .small-2.columns.action-button

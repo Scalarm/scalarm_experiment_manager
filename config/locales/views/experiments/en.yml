@@ -30,4 +30,4 @@ en:
       share: "This experiment is now shared with user '%{user}'"
       unshare: "This experiment is no longer shared with user '%{user}'"
 
-    not_found: "Experiment '#{id}' for user '#{user}' not found"
+    not_found: "Experiment '%{id}' for user '%{user}' not found"
