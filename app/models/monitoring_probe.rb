@@ -41,13 +41,18 @@ class MonitoringProbe
     File.join Rails.root, 'tmp', 'em_monitoring.lock'
   end
 
-  def log(message)
-    Rails.logger.debug("[monitoring-probe][#{Thread.current.object_id}] #{message}")
+  def log(message, log_level = 'debug')
+    Rails.logger.send(log_level, "[monitoring-probe][#{Thread.current.object_id}] #{message}")
   end
 
   def monitor
     measurements = @metrics.reduce([]) do |acc, metric_type|
-      acc + self.send("monitor_#{metric_type}")
+      begin
+        acc + self.send("monitor_#{metric_type}")
+      rescue Exception => e
+        log("An exception occurred during monitoring of #{metric_type}", 'error')
+        acc
+      end
     end
 
     send_measurements(measurements)
