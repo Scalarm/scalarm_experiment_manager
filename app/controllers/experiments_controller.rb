@@ -4,7 +4,7 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
-  before_filter :load_experiment, except: [:index]
+  before_filter :load_experiment, except: [:index, :share]
   before_filter :load_simulation, only: [ :start_experiment, :start_import_based_experiment ]
 
   def index
@@ -548,15 +548,59 @@ class ExperimentsController < ApplicationController
     send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
   end
 
+  def share
+    @experiment, @user = nil, nil
+
+    if params.include?('sharing_with_login') and params.include?('id') and not @current_user.nil?
+      experiment_id = BSON::ObjectId(params[:id])
+
+      @experiment = Experiment.find_by_query({ '$and' => [
+        { _id: experiment_id },
+        { user_id: @current_user.id }
+      ]})
+
+      @user = ScalarmUser.find_by_login(params[:sharing_with_login])
+    end
+
+    if @experiment.nil? or @user.nil?
+      flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
+
+      redirect_to action: :index
+    else
+      sharing_list = @experiment.shared_with
+      sharing_list = [ ] if sharing_list.nil?
+      if params[:mode] == 'unshare'
+        sharing_list.delete_if{|x| x == @user.id}
+      else
+        sharing_list << @user.id
+      end
+
+      @experiment.shared_with = sharing_list
+      @experiment.save
+
+      flash[:notice] = t("experiments.sharing.#{params[:mode]}", { user: @user.login })
+
+      redirect_to action: :show, id: @experiment.id.to_s
+    end
+  end
+
   private
 
   def load_experiment
     #Rails.logger.debug("Loading experiment --- #{params.include?('id')} --- #{@current_user.nil?}")
     if params.include?('id') and not @current_user.nil?
-      @experiment = Experiment.find_by_query({'user_id' => @current_user.id, '_id' => BSON::ObjectId(params['id'])})
+      experiment_id = BSON::ObjectId(params[:id])
+
+      @experiment = Experiment.find_by_query({ '$and' => [
+        { _id: experiment_id },
+        { '$or' => [
+          { user_id: @current_user.id },
+          { shared_with: { '$in' => [ @current_user.id ] } }
+        ]}
+      ]})
 
       if @experiment.nil?
-        flash[:error] = "Experiment '#{params['id']}' for user '#{@current_user.login}' not found"
+        flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
 
         redirect_to action: :index
       end

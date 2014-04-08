@@ -63,6 +63,8 @@ ScalarmExperimentManager::Application.routes.draw do
       get :experiment_moes
 
       get :simulation_manager
+
+      post :share
     end
 
     resources :simulations do

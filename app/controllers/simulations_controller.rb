@@ -201,10 +201,26 @@ class SimulationsController < ApplicationController
   private
 
   def load_simulation
-    @experiment = Experiment.find_by_id(params[:experiment_id])
-    #Rails.logger.debug("Experiment: #{@experiment}")
-    @simulation = @experiment.find_simulation_docs_by({id: params[:id].to_i}, {limit: 1}).first
-    #Rails.logger.debug("Simulation: #{@simulation}")
+    @experiment, @simulation = nil, nil
+
+    if params.include?('id') and params.include?('experiment_id') and not @current_user.nil?
+      experiment_id = BSON::ObjectId(params[:experiment_id])
+      Rails.logger.debug("Experiment id : #{experiment_id}")
+
+      @experiment = Experiment.find_by_query({ '$and' => [
+        { _id: experiment_id },
+        { '$or' => [
+          { user_id: @current_user.id },
+          { shared_with: { '$in' => [ @current_user.id ] } }
+        ]}
+      ]})
+
+      Rails.logger.debug("Experiment: #{@experiment} --- #{@experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first}")
+
+      unless @experiment.nil?
+        @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
+      end 
+    end
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)

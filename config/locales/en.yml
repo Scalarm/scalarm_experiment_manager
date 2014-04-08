@@ -90,10 +90,17 @@ en:
       download_results_button: Download results
       binaries_results_button: Simulations output (binaries)
       get_configurations_button: Configurations (CSV)
-      progress_information_button: Show progress
+      progress_information_button: Show progress      
 
       booster:
         header: Increase computational power
+
+      sharing_button: Share
+      share_dialog:
+        header: Share this experiment with others
+      share_with_login: Login of a Scalarm user
+      share: Share
+      unshare: Unshare
 
     monitoring_table:
       show_completed: Show/Hide completed
