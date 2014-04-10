@@ -1,9 +1,8 @@
 require 'infrastructure_facades/tree_utils'
-
-class NoSuchSmContainerError < StandardError; end
-class NoSuchSmError < StandardError; end
+require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructuresController < ApplicationController
+  include InfrastructureErrors
 
   def index
     render 'infrastructure/index'
@@ -13,7 +12,7 @@ class InfrastructuresController < ApplicationController
   def tree
     data = {
       name: 'Scalarm',
-      type: 'root-node',
+      type: TreeUtils::TREE_ROOT,
       children: tree_infrastructures
     }
 
@@ -43,13 +42,18 @@ class InfrastructuresController < ApplicationController
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name
   # and current user.
   # GET params:
-  # - name: name of Simulation Manager containter
+  # - name: name of Infrastructure
+  # - attrs: additional attributes
   def sm_nodes
-    container = InfrastructureFacade.get_registered_sm_containters[params[:name].to_sym]
-    unless container.nil?
-      render json: container.sm_nodes(@current_user.id)
-    else
-      Rails.logger.error "Requested Simulation Managers container does not exist: #{params[:name]}"
+    begin
+      facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+      hash = facade.sm_record_hashes(@current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
+      render json: hash
+    rescue NoSuchInfrastructureError => e
+      Rails.logger.error "Try to fetch SM nodes, but requested infrastructure does not exist: #{e.to_s}"
+      render json: []
+    rescue Exception => e
+      Rails.logger.error "Exception on fetching SM nodes (#{params.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
       render json: []
     end
   end
@@ -119,6 +123,7 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # TODO: delegate to facades
   def remove_credentials
     secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
     if secrets
@@ -131,79 +136,55 @@ class InfrastructuresController < ApplicationController
     end
   end
 
-  def stop_sm
+  def simulation_manager_command
     begin
-      get_simulation_manager(params['sm_container'], params['resource_id']).stop
-      render json: { status: 'ok', msg: "Stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
-    rescue NoSuchSmContainerError => e
-      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
-    rescue NoSuchSmError => e
-      render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
+      if %w(stop restart).include? params[:command]
+        sm = get_simulation_manager(params[:record_id], params[:infrastructure_name])
+        sm.send(params[:command])
+        render json: {status: 'ok', msg: "Executed #{params[:command]} on Simulation Manager"}
+      else
+        render json: {status: 'error', msg: "No such command for Simulation Manager: #{params[:command]}"}
+      end
+    rescue NoSuchSimulationManagerError => e
+      render json: { status: 'error', msg: "No such Simulation Manager" }
+    rescue AccessDeniedError => e
+      render json: { status: 'error', msg: "Access to Simulation Manager denied" }
     rescue Exception => e
-      render json: { status: 'error', msg: "Exception when stopping Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
-    end
-  end
-
-  def restart_sm
-    begin
-      get_simulation_manager(params['sm_container'], params['resource_id']).restart
-      render json: { status: 'ok', msg: "Restarting Simulation Manager #{params['resource_id']}@#{params['sm_container']}..." }
-    rescue NoSuchSmContainerError => e
-      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
-    rescue NoSuchSmError => e
-      render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
-    rescue Exception => e
-      render json: { status: 'error', msg: "Exception when restarting Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
+      render json: { status: 'error', msg: "Error on fetching Simulation Manager: #{e.to_s}" }
     end
   end
 
   # Mandatory GET params:
-  # - sm_container: Simulation Manager container name
-  # - resource_id: Unique ID of resource for SM (eg. vm_id)
+  # - infrastructure_name
+  # - record_id
   def get_sm_dialog
     begin
-      @sm_container = get_sm_container(params['sm_container'])
-      @sm = @sm_container.simulation_manager(params['resource_id'], @current_user.id)
-      raise NoSuchSmError.new if @sm.nil?
+      @simulation_manager = get_simulation_manager(params['record_id'], params['infrastructure_name'])
       render inline: render_to_string(partial: 'sm_dialog')
-    rescue NoSuchSmContainerError => e
-      render json: { status: 'error', msg: "No such container: #{params['sm_container']}" }
-    rescue NoSuchSmError => e
-      render json: { status: 'error', msg: "No such computational resource: #{params['resource_id']}@#{params['sm_container']}" }
+    rescue NoSuchInfrastructureError => e
+      render json: { status: 'error', msg: "No infrastructure: #{params[:infrastructure_name]}" }
+    rescue NoSuchSimulationManagerError => e
+      render json: { status: 'error', msg: "No such Simulation Manager" }
     rescue Exception => e
       render json: { status: 'error', msg: "Exception when getting Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
     end
   end
 
-  # TODO move to infrastructures facade (with exceptions)?
+  def get_simulation_manager(record_id, infrastructure_name)
+    facade = InfrastructureFacade.get_facade_for(infrastructure_name)
+    record = facade.get_sm_record_by_id(record_id)
+    raise NoSuchSimulationManagerError if record.nil?
+    raise AccessDeniedError if record.user_id.to_s != @current_user.id.to_s
 
-  # @param [String] sm_container_name Simulation Manager container name
-  # @param [String] resource_id Unique ID of resource for SM (eg. vm_id)
-  # @raise [NoSuchSmError]
-  # @raise [NoSuchSmContainerError]
-  def get_simulation_manager(sm_container_name, resource_id)
-    sm = get_sm_container(sm_container_name).simulation_manager(resource_id, @current_user.id)
-    if sm.nil?
-      Rails.logger.error "No such computational resource: #{sm_container_name}@#{resource_id}"
-      raise NoSuchSmError.new
-    else
-      sm
-    end
-  end
-
-  def get_sm_container(sm_container_name)
-    container = InfrastructureFacade.get_registered_sm_containters[sm_container_name.to_sym]
-    if container.nil?
-      Rails.logger.error "No such simulation managers container: #{sm_container_name}"
-      raise NoSuchSmContainerError.new
-    else
-      container
-    end
-
+    facade.create_simulation_manager(record)
   end
 
   # ============================ PRIVATE METHODS ============================
   private
+
+  def try_to_get_sm_record(record_id, infrastructure_name)
+
+  end
 
   def collect_infrastructure_info(user_id)
     @infrastructure_info = {}

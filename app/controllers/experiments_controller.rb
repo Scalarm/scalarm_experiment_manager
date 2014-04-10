@@ -53,7 +53,7 @@ class ExperimentsController < ApplicationController
   def get_booster_dialog
     @simulation_managers, @current_states = {}, {}
     InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_infrastructure_sm_records(@current_user)
+      @simulation_managers[infrastructure_id] = infrastructure_info[:facade].get_sm_records(@current_user.id, @experiment.id)
       @current_states[infrastructure_id] = infrastructure_info[:facade].current_state(@current_user)
     end
 

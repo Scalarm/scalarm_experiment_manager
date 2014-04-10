@@ -10,11 +10,7 @@
 # sm_initialized => boolean - whether or not SM code has been sent to this machind
 
 class PrivateMachineRecord < MongoActiveRecord
-
-  # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
-  def max_init_time
-    self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
-  end
+  include SimulationManagerRecord
 
   def self.collection_name
     'private_machine_records'

@@ -30,7 +30,6 @@ class window.InfrastructuresTree
 
       @updateTree(@root)
 
-#      leaves = @findLeaves(@root)
       leaves = @tree.nodes(@root).filter((d) => d['type'] == 'sm-container-node')
 
       fetchUpdateNodes = (local_root, url) =>
@@ -46,21 +45,27 @@ class window.InfrastructuresTree
               local_root['_children'] = child_json
 
             child_json.forEach((child) =>
-              child['sm_container'] = local_root['short']
+              child['infrastructure_name'] = local_root['infrastructure_name']
             ) if child_json != null
 
             @updateTree(local_root);
         )
 
       leaves.forEach((leaf) =>
-        fetchLeafNodes = => fetchUpdateNodes(leaf, @leafPath(leaf['short']))
+        fetchLeafNodes = => fetchUpdateNodes(leaf, @smNodesPath(leaf['infrastructure_name'], leaf['infrastructure_params']))
         fetchLeafNodes()
         setInterval(fetchLeafNodes, PROBE_INTERVAL)
       )
     )
 
-  leafPath: (name) ->
-    "/infrastructures/sm_nodes?name=#{name}"
+  smNodesPath: (name, params_hash) ->
+    base = "/infrastructures/sm_nodes?infrastructure_name=#{name}"
+    base += "&#{@hash_to_query_string(params_hash, 'infrastructure_params')}" if params_hash?
+    base
+
+
+  hash_to_query_string: (params_hash, hash_name) ->
+    Object.keys(params_hash).map((key) => "#{hash_name}[#{key}]=#{params_hash[key]}").join("&")
 
   # Compare children arrays: childs_local should be taken from current tree
   # childs_remote should be fetched from server.
@@ -92,25 +97,16 @@ class window.InfrastructuresTree
       d.children = d._children
       d._children = null
 
-# Old function for finding leaf nodes before fetching SM nodes.
-# It is now defunctional and replaced by matching node types.
-#  findLeaves: (local_root) ->
-#    leaves = []
-#    findLeaf = ((p) =>
-#      if 'children' in p
-#        p['children'].forEach((child) => findLeaf(child))
-#      else
-#        leaves.push(p))
-#
-#    findLeaf(local_root)
-#    leaves
-
   stopSm: (d) ->
-    url = "/infrastructures/stop_sm?sm_container=#{d['sm_container']}&resource_id=#{d['name']}"
-    d3.json(url, (json) =>) # TODO use response
+    @smCommand(d, 'stop')
 
   restartSm: (d) ->
-    url = "/infrastructures/restart_sm?sm_container=#{d['sm_container']}&resource_id=#{d['name']}"
+    @smCommand(d, 'restart')
+
+  # FIXME infrastructure(s) <- url
+  smCommand: (d, command) ->
+    url = "/infrastructure/simulation_manager_command?infrastructure_name=#{d['infrastructure_name']}"
+    url += "&record_id=#{d['record_id']}&command=#{command}"
     d3.json(url, (json) =>) # TODO use response
 
   updateTree: (source) ->
@@ -276,12 +272,12 @@ c -1.668712,0 -3.026435,-1.326916 -3.026435,-2.957689 0,-1.630772 1.357723,-2.95
     null
 
   smDialog: (d) ->
-    @dialog.load @smDialogPath(d['sm_container'], d['name']), =>
+    @dialog.load @smDialogPath(d['infrastructure_name'], d['record_id']), =>
 #          @actionLoading.hide()
       @dialog.foundation('reveal', 'open')
 
-  smDialogPath: (container, resource_id) ->
-    "#{@baseSmDialogUrl}?sm_container=#{container}&resource_id=#{resource_id}"
+  smDialogPath: (infrastructure_name, record_id) ->
+    "#{@baseSmDialogUrl}?infrastructure_name=#{infrastructure_name}&record_id=#{record_id}"
 
   cutText: (text, maxChars) ->
     if text.length > maxChars

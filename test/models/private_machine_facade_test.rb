@@ -49,8 +49,8 @@ class PrivateMachineFacadeTest < Test::Unit::TestCase
     facade = PrivateMachineFacade.new
 
     # when
-    user1_records = facade.get_infrastructure_sm_records(user1_id)
-    user1_exp1_records = facade.get_infrastructure_sm_records(user1_id, experiment1_id)
+    user1_records = facade.get_sm_records(user1_id)
+    user1_exp1_records = facade.get_sm_records(user1_id, experiment1_id)
 
     # then
     assert_equal 3, user1_records.count

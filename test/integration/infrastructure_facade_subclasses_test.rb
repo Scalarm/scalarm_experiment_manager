@@ -23,7 +23,7 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
       :current_state,
       :add_credentials,
       :short_name,
-      :to_hash,
+      :sm_record_to_hash,
       :get_sm_record,
       :get_all_sm_records,
       :get_simulation_manager,

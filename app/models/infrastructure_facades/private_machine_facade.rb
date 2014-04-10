@@ -2,8 +2,6 @@ require_relative 'private_machines/private_machine_simulation_manager.rb'
 require_relative 'shell_commands.rb'
 
 class PrivateMachineFacade < InfrastructureFacade
-  include SimulationManagersContainer
-
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
 
@@ -14,7 +12,7 @@ class PrivateMachineFacade < InfrastructureFacade
   # -- InfrastructureFacade implementation --
 
   def current_state(user)
-    I18n.t('infrastructure_facades.private_machine.current_state', tasks: count_scheduled_tasks(user))
+    I18n.t('infrastructure_facades.private_machine.current_state', tasks: count_scheduled_tasks(user.id))
   end
 
   def monitoring_loop
@@ -108,8 +106,8 @@ class PrivateMachineFacade < InfrastructureFacade
     {}
   end
 
-  def count_scheduled_tasks(user)
-    records = all_sm_records_for(user)
+  def count_scheduled_tasks(user_id)
+    records = get_sm_records(user_id)
     records.nil? ? 0 : records.size
   end
 
@@ -128,8 +126,6 @@ class PrivateMachineFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
-  # -- SimulationManagersContainer implementation --
-
   def long_name
     'Private resources'
   end
@@ -138,23 +134,18 @@ class PrivateMachineFacade < InfrastructureFacade
     'private_machine'
   end
 
-  def get_container_sm_record(id, params={})
-    PrivateMachineRecord.find_by_query({id: id}.merge(params))
+  def get_sm_records(user_id=nil, experiment_id=nil, params={})
+    query = (user_id ? {user_id: user_id} : {})
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+    PrivateMachineRecord.find_all_by_query(query)
   end
 
-  def get_container_all_sm_records(params={})
-    PrivateMachineRecord.find_all_by_query(params)
+  def get_sm_record_by_id(record_id)
+    PrivateMachineRecord.find_by_id(record_id)
   end
 
-  def get_container_simulation_manager(id, params={})
-    PrivateMachineSimulationManager.new(get_container_sm_record(id, params))
+  def create_simulation_manager(record)
+    PrivateMachineSimulationManager.new(record)
   end
-
-  def get_container_all_simulation_managers(params={})
-    get_container_all_sm_records(params).map {|r| PrivateMachineSimulationManager.new(r)}
-  end
-
-  # --
-
 
 end

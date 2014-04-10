@@ -1,6 +1,4 @@
 class PBSFacade < PlGridSchedulerBase
-  include SimulationManagersContainer
-
   def self.long_name
     'PBS'
   end
@@ -96,6 +94,8 @@ class PBSFacade < PlGridSchedulerBase
       false
     end
   end
+
+  # TODO: more attributes to set
 
   def prepare_job_executable
     <<-eos

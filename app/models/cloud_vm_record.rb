@@ -17,13 +17,9 @@
 # public_host => public hostname of machine which redirects to ssh port
 # public_ssh_port => port of public machine redirecting to ssh private port
 class CloudVmRecord < MongoActiveRecord
+  include SimulationManagerRecord
 
   SSH_AUTH_METHODS = %w(password)
-
-  # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
-  def max_init_time
-    self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
-  end
 
   def resource_id
     self.vm_id

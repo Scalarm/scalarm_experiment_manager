@@ -24,7 +24,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def current_state(user)
-    jobs = get_all_sm_records user_id: user.id
+    jobs = get_sm_records(user.id)
     I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
   end
 
@@ -126,16 +126,42 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def self.create_scheduler_facade(type)
-    scheduler_facade_classes[type].new
+    scheduler_facade_classes[type.to_sym].new
+  end
+
+  # Overrides InfrastructureFacade method
+  def to_hash
+    {
+        name: long_name,
+        type: TreeUtils::TREE_META,
+        children: self.class.scheduler_facades.values.map do |scheduler|
+            {
+                name: scheduler.long_name,
+                type: TreeUtils::TREE_SM_CONTAINER,
+                infrastructure_name: short_name,
+                infrastructure_params: {scheduler_type: scheduler.short_name}
+            }
+        end
+    }
+  end
+
+  def get_sm_records(user_id=nil, experiment_id=nil, params={})
+    query = (user_id ? {user_id: user_id} : {})
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+    query.merge!({scheduler_type: params[:scheduler_type]}) if params[:scheduler_type]
+    PlGridJob.find_all_by_query(query)
+  end
+
+  def get_sm_record_by_id(record_id)
+    PlGridJob.find_by_id(record_id)
+  end
+
+  def create_simulation_manager(record)
+    PlGridSimulationManager.new(record)
   end
 
   def default_additional_params
     { 'scheduler' => 'qsub', 'time_limit' => 300 }
-  end
-
-  # Overrides
-  def get_sm_containers
-    self.class.scheduler_facades
   end
 
  def retrieve_grants(credentials)

@@ -1,11 +1,12 @@
 require_relative 'clouds/vm_instance.rb'
-require_relative 'simulation_managers_container.rb'
 
 class CloudFacade < InfrastructureFacade
-  include SimulationManagersContainer
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
+
+  attr_reader :long_name
+  attr_reader :short_name
 
   # Creates specific cloud facade instance
   # @param [Class] client_class
@@ -17,19 +18,23 @@ class CloudFacade < InfrastructureFacade
   end
 
   def cloud_client_instance(user_id)
-    cloud_secrets = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id)
+    cloud_secrets = get_cloud_secrets(user_id)
     cloud_secrets ? @client_class.new(cloud_secrets) : nil
+  end
+
+  def get_cloud_secrets(user_id)
+    @secret ||= CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
   end
 
   # -- InfrasctuctureFacade implementation --
 
   def current_state(user)
-    I18n.t('infrastructure_facades.cloud.current_state_count', count: get_container_sm_records(user.id).count)
+    I18n.t('infrastructure_facades.cloud.current_state_count', count: get_sm_records(user.id).count)
   end
 
   def monitoring_loop
-    get_container_all_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
-      secrets = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
+    get_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
+      secrets = get_cloud_secrets(user_id)
       if secrets.nil?
         user = ScalarmUser.find_by_id(user_id)
         logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
@@ -111,41 +116,31 @@ class CloudFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
-  # --
-
-  # -- SimulationManagersContainer implementation --
-
-  attr_reader :long_name
-  attr_reader :short_name
-
-  def get_container_sm_record(id, params)
-    CloudVmRecord.find_by_query({id: id, cloud_name: @short_name}.merge(params))
-  end
-
-  def get_container_all_sm_records(params)
-    CloudVmRecord.find_all_by_query({cloud_name: @short_name}.merge(params))
-  end
-
-  def get_container_simulation_manager(id, params)
-    vm_record = get_container_sm_record(id, params)
-    secrets = CloudSecrets.find_by_query(query)
-    if vm_record and secrets
-      client = @client_class.new(secrets)
-      client.cloud_simulation_manager(vm_record)
-    else
-      nil
-    end
-  end
-
-  def get_container_all_simulation_managers(params)
-    vm_records = get_container_all_sm_records(params)
-    secrets = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
+  def get_simulation_managers(user_id=nil, experiment_id=nil, params={})
+    vm_records = get_sm_records(user_id, experiment_id, params)
+    secrets = get_cloud_secrets(user_id)
     if secrets.nil?
       []
     else
       client = @client_class.new(secrets)
       vm_records.map {|r| client.cloud_simulation_manager(r)}
     end
+  end
+
+  def get_sm_records(user_id=nil, experiment_id=nil, params={})
+    query = {cloud_name: @short_name}
+    query.merge!({user_id: user_id}) if user_id
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+
+    CloudVmRecord.find_all_by_query(query)
+  end
+
+  def get_sm_record_by_id(record_id)
+    CloudVmRecord.find_by_id(record_id)
+  end
+
+  def create_simulation_manager(record)
+    CloudSimulationManager.new(record, cloud_client_instance(CloudSecrets.find_by_id(record.user_id)))
   end
 
   # --

@@ -2,6 +2,7 @@ require 'yaml'
 
 require_relative 'infrastructure_task_logger'
 require_relative 'tree_utils'
+require_relative 'infrastructure_errors'
 require 'clouds/cloud_factory'
 
 # Methods necessary to implement by subclasses
@@ -19,10 +20,10 @@ require 'clouds/cloud_factory'
 #
 # Methods with default implementation, whose could be overriden:
 # - to_hash - hash representing subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
-# - sm_containters - array with SimulationManagerContainers for this infrastructure
-#     by default the only container is infrastructure itself
+
 
 class InfrastructureFacade
+  include InfrastructureErrors
 
   attr_reader :logger
 
@@ -57,7 +58,10 @@ class InfrastructureFacade
   end
 
   def self.get_facade_for(infrastructure_name)
-    get_registered_infrastructures[infrastructure_name.to_sym][:facade]
+    raise InfrastructureErrors::NoSuchInfrastructureError.new(infrastructure_name) if infrastructure_name.nil?
+    info = get_registered_infrastructures[infrastructure_name.to_sym]
+    raise InfrastructureErrors::NoSuchInfrastructureError.new(infrastructure_name) if info.nil? or not info.has_key? :facade
+    info[:facade]
   end
 
   # returns a map of all supported infrastructures
@@ -80,7 +84,7 @@ class InfrastructureFacade
   def start_monitoring
     config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
     @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
-    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
+    logger.debug "Setting infrastructure monitoring polling interval to #{@polling_interval_sec} seconds"
 
     lock = MongoLock.new(short_name)
     while true do
@@ -98,14 +102,15 @@ class InfrastructureFacade
     end
   end
 
-  def self.start_monitoring
-    get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
-      Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
-
-      Thread.new do
-        infrastructure_information[:facade].start_monitoring
-      end
-    end
+  # FIXME
+  def self.start_all_monitoring_threads
+    #get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
+    #  Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
+    #
+    #  Thread.new do
+    #    infrastructure_information[:facade].start_monitoring
+    #  end
+    #end
   end
 
   # Used mainly to create node or subtree:
@@ -113,58 +118,11 @@ class InfrastructureFacade
   # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
   # @return [Hash] node (or subtree) for infrastructure in infrastructure tree
   def to_hash
-    smc = get_sm_containers.values
-    if smc.count == 1
-      {
-          name: smc[0].long_name,
-          type: TreeUtils::TREE_SM_CONTAINER,
-          short: smc[0].short_name
-      }
-    else
-      {
-          name: self.long_name,
-          type: TreeUtils::TREE_META,
-          short: self.short_name,
-          children: smc.map do |container|
-            {
-                name: container.long_name,
-                type: TreeUtils::TREE_SM_CONTAINER,
-                short: container.short_name
-            }
-          end
-      }
-    end
-  end
-
-  # Could be overriden in subclasses if there are many ScheduledJobsContainers for infrastructure.
-  # By default, infrastructure is also a ScheduledJobsContainer (one node on tree).
-  def get_sm_containers
-    {short_name.to_sym => self}
-  end
-
-  def is_self_sm_container?
-    get_sm_containers.values.count == 1 and get_sm_containers.values[0] == self
-  end
-
-  def get_sm_record(id, params)
-    (get_sm_containers.values.map {|smc| smc.get_container_sm_record(id, params)}).flatten
-  end
-
-  def get_all_sm_records(params)
-    (get_sm_containers.values.map {|smc| smc.get_container_all_sm_records(params)}).flatten
-  end
-
-  def get_simulation_manager(id, params)
-    (get_sm_containers.values.map {|smc| smc.get_container_simulation_manager(id, params)}).flatten
-  end
-
-  def get_all_simulation_managers(params)
-    (get_sm_containers.values.map {|smc| smc.get_container_all_simulation_managers(params)}).flatten
-  end
-
-  # @return [Array<SimulationManagersContainer>] scheduled jobs containers for all registered infrastructures
-  def self.get_registered_sm_containters
-    get_registered_infrastructures.values.map {|inf| inf[:facade].get_sm_containers}.reduce :merge
+    {
+        name: long_name,
+        type: TreeUtils::TREE_SM_CONTAINER,
+        infrastructure_name: short_name
+    }
   end
 
   def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)
@@ -174,6 +132,11 @@ class InfrastructureFacade
     status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
 
     render json: response_msg, status: status
+  end
+
+  # Helper for Infrastrucutres Tree
+  def sm_record_hashes(user_id, experiment_id=nil, params={})
+    get_sm_records(user_id, experiment_id, params).map {|r| r.to_hash }
   end
 
 end

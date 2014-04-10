@@ -1,8 +1,6 @@
 require_relative 'pl_grid_scheduler_base'
 
 class GliteFacade < PlGridSchedulerBase
-  include SimulationManagersContainer
-
   def self.long_name
     'gLite'
   end
@@ -98,6 +96,8 @@ class GliteFacade < PlGridSchedulerBase
       false
     end
   end
+
+  # TODO: more attributes to set
 
   # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
   # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"

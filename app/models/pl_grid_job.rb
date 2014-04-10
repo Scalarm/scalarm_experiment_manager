@@ -8,14 +8,15 @@
 # scheduler_type => string - short name of scheduler, eg. pbs
 
 class PlGridJob < MongoActiveRecord
+  include SimulationManagerRecord
 
   def self.collection_name
     'grid_jobs'
   end
 
-  # time to wait to job initialization - after that, job will be resubmitted [minutes object]
-  def max_init_time
-    self.time_limit.to_i.hours > 72 ? 40.minutes : 20.minutes
+  # Overrides SimulationManagerRecord
+  def hash_params
+    {scheduler_type: scheduler_type}
   end
 
   def resource_id

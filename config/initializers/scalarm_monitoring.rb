@@ -8,7 +8,7 @@ unless Rails.env.test?
 
 # job2 = fork {
 	# Start infrastructure Monitoring
-	InfrastructureFacade.start_monitoring
+	InfrastructureFacade.start_all_monitoring_threads
 	# sleep(10) while true
 # }
 # Process.detach(job2)
