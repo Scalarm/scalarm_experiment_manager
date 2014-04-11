@@ -204,10 +204,11 @@ class SimulationsController < ApplicationController
   def load_simulation
     @experiment, @simulation = nil, nil
 
-    if params.include?('id') and params.include?('experiment_id') and not @current_user.nil?
-      experiment_id = BSON::ObjectId(params[:experiment_id])
-      Rails.logger.debug("Experiment id : #{experiment_id}")
+    return unless params.include?('id') and params.include?('experiment_id')
+    experiment_id = BSON::ObjectId(params[:experiment_id])
+    Rails.logger.debug("Experiment id : #{experiment_id}")
 
+    if not @current_user.nil?
       @experiment = Experiment.find_by_query({ '$and' => [
         { _id: experiment_id },
         { '$or' => [
@@ -216,12 +217,15 @@ class SimulationsController < ApplicationController
         ]}
       ]})
 
-      Rails.logger.debug("Experiment: #{@experiment} --- #{@experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first}")
-
-      unless @experiment.nil?
-        @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
-      end 
+    elsif not @sm_user.nil?
+      unless @sm_user.experiment_id != experiment_id.to_s
+        @experiment = Experiment.find_by_id(experiment_id)
+      end
     end
+
+    unless @experiment.nil?
+      @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
+    end 
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
