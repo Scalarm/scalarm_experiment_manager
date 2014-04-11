@@ -16,4 +16,22 @@ module SimulationManagerRecord
   def hash_params
     {}
   end
+
+  def experiment
+    @experiment ||= Experiment.find_by_id(self.experiment_id)
+  end
+
+  def experiment_end?
+    experiment.nil? or
+        (experiment.is_running == false) or
+        (experiment.experiment_size == experiment.get_statistics[2])
+  end
+
+  def time_limit_exceeded?
+    self.created_at + self.time_limit.to_i.minutes < Time.now
+  end
+
+  def init_time_exceeded?
+    (not self.sm_initialized) and (self.created_at + self.max_init_time < Time.now)
+  end
 end
