@@ -21,6 +21,7 @@
 //= require jquery.dataTables.min
 //= require jit-yc
 //= require toastr
+//= require jquery.remotipart
 //= require d3
 
 

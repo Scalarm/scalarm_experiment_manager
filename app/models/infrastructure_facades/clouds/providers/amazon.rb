@@ -62,24 +62,20 @@ module AmazonCloud
       ec2_instance(id).reboot
     end
 
-    # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
+    # @return [Hash] {:host => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
-      {ip: ec2_instance(id).public_dns_name, port: '22'}
-    end
-
-    # TODO: translate or remove
-    def vm_record_info(vm_record)
-      "Type: #{instance_type}"
+      {host: ec2_instance(id).public_dns_name, port: '22'}
     end
 
     def exists?(id)
       ec2_instance(id).exists?
     end
 
-    def self.instance_types
+    def instance_types
       {
-          't1.micro'=> 'Micro (Up to 2 EC2 Compute Units, 613 MB RAM)',
-          'm1.small'=> 'Small (1 EC2 Compute Unit, 1.7 GB RAM)',
+          't1.micro' => 'Micro (Up to 2 EC2 Compute Units, 613 MB RAM)',
+          'm1.small' => 'Small (1 EC2 Compute Unit, 1.7 GB RAM)',
+          'm3.medium' => 'Medium 3rd generetion (3 EC2 Compute Unit, 3.75 GB RAM)'
           #'m1.medium'=> 'Medium (2 EC2 Compute Unit, 3.75 GB RAM)',
           #'m1.large'=> 'Large (4 EC2 Compute Unit, 1.7 GB RAM)',
           #'m1.xlarge'=> 'Extra Large (8 EC2 Compute Unit, 15 GB RAM)',

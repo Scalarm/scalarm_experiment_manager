@@ -5,23 +5,17 @@ require_relative 'tree_utils'
 require_relative 'infrastructure_errors'
 require 'clouds/cloud_factory'
 
-# Methods necessary to implement by subclasses
-# - monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
-#     and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
-#     mutually excluded.
-# - default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
-# - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# - clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
-# - get_facade_sm_records(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
-# - get_facade_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
-# - current_state(user) - returns a string describing summary of current infrastructure state
-# - add_credentials(user, params, session) - save credentials to database or session based on request parameters
-# - short_name - short name of infrastructure, e.g. 'plgrid'
-#
-# Methods with default implementation, whose could be overriden:
-# - to_hash - hash representing subtree for Infrastructure view tree - array of {name: ..., chilrden: [...]}
-
-
+# methods necessary to implement by subclasses
+# monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
+#   and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
+#   mutually excluded.
+# default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
+# start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
+# clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
+# get_running_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
+# current_state(user) - returns a string describing summary of current infrastructure state
+# add_credentials(user, params, session) - save credentials to database or session based on request parameters
+# short_name - short name of infrastructure, e.g. 'plgrid'
 class InfrastructureFacade
   include InfrastructureErrors
 
@@ -82,10 +76,7 @@ class InfrastructureFacade
   end
 
   def start_monitoring
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
-    logger.debug "Setting infrastructure monitoring polling interval to #{@polling_interval_sec} seconds"
-
+    configure_polling_interval
     lock = MongoLock.new(short_name)
     while true do
       if lock.acquire
@@ -102,15 +93,29 @@ class InfrastructureFacade
     end
   end
 
-  # FIXME
+  def configure_polling_interval
+    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
+    logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
+  end
+
   def self.start_all_monitoring_threads
-    #get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
-    #  Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
-    #
-    #  Thread.new do
-    #    infrastructure_information[:facade].start_monitoring
-    #  end
-    #end
+    get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
+      Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
+
+      Thread.new do
+        infrastructure_information[:facade].start_monitoring
+      end
+    end
+  end
+
+  def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)
+    infrastructure = InfrastructureFacade.get_facade_for(infrastructure_type)
+    additional_params = additional_params || infrastructure.default_additional_params
+
+    status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
+
+    render json: response_msg, status: status
   end
 
   # Used mainly to create node or subtree:
@@ -123,15 +128,6 @@ class InfrastructureFacade
         type: TreeUtils::TREE_SM_CONTAINER,
         infrastructure_name: short_name
     }
-  end
-
-  def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)
-    infrastructure = InfrastructureFacade.get_facade_for(infrastructure_type)
-    additional_params = additional_params || infrastructure.default_additional_params
-
-    status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
-
-    render json: response_msg, status: status
   end
 
   # Helper for Infrastrucutres Tree

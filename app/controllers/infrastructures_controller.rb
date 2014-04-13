@@ -96,10 +96,11 @@ class InfrastructuresController < ApplicationController
     if img_secrets
       cloud_name = img_secrets.cloud_name
       image_id = img_secrets.image_id
+      long_cloud_name = CloudFactory.long_name(cloud_name)
 
       img_secrets.destroy
       msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
-      render json: { status: 'ok', msg: msg, cloud_name: CloudFactory.long_name(cloud_name), image_id: image_id }
+      render json: { status: 'ok', msg: msg, cloud_name: long_cloud_name, image_id: image_id }
     else
       msg = I18n.t('infrastructures_controller.image_not_found')
       render json: { status: 'error', msg: msg }
@@ -136,6 +137,24 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  def simulation_managers_info
+    begin
+      infrastructure_facade = if params[:infrastructure_name] == 'cloud'
+                               InfrastructureFacade.get_facade_for(params[:cloud_name])
+                              else
+                               InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+                              end
+
+      @current_state_summary = infrastructure_facade.current_state(@current_user)
+      @simulation_managers = infrastructure_facade.get_sm_records(@current_user.id)
+
+      render partial: "infrastructure/information/simulation_managers/#{params[:infrastructure_name]}"
+    rescue Exception => e
+      # FIXME
+      render text: "An error occured: #{e.to_s}"
+    end
+  end
+
   def simulation_manager_command
     begin
       if %w(stop restart).include? params[:command]
@@ -153,6 +172,7 @@ class InfrastructuresController < ApplicationController
       render json: { status: 'error', msg: "Error on fetching Simulation Manager: #{e.to_s}" }
     end
   end
+
 
   # Mandatory GET params:
   # - infrastructure_name
@@ -181,10 +201,6 @@ class InfrastructuresController < ApplicationController
 
   # ============================ PRIVATE METHODS ============================
   private
-
-  def try_to_get_sm_record(record_id, infrastructure_name)
-
-  end
 
   def collect_infrastructure_info(user_id)
     @infrastructure_info = {}

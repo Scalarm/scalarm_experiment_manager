@@ -1,5 +1,6 @@
 require 'json'
 require 'simulation'
+require 'csv'
 
 class SimulationsController < ApplicationController
   before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete]
@@ -94,20 +95,21 @@ class SimulationsController < ApplicationController
   end
 
   # following methods are used in experiment conducting
-
   def conduct_experiment
     @simulation = Simulation.find_by_id(params[:simulation_id])
     @simulation_input = JSON.parse(@simulation.input_specification)
   end
 
   # a life-cycle of a single simulation
-
   def mark_as_complete
     response = { status: 'ok' }
 
     begin
       if @simulation.nil? or @simulation['is_done']
-        logger.debug("Experiment Instance #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation.nil?}")
+        msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation.nil?}"
+
+        Rails.logger.error(msg)
+        response = { status: 'error', reason: msg }
       else
         @simulation['is_done'] = true
         @simulation['to_sent'] = false
@@ -124,11 +126,11 @@ class SimulationsController < ApplicationController
       response = { status: 'error', reason: e.to_s }
     end
 
-    render :json => response
+    render json: response
   end
 
   def progress_info
-    response = {status: 'ok'}
+    response = { status: 'ok' }
 
     begin
       if @simulation.nil? or @simulation['is_done']
@@ -139,10 +141,10 @@ class SimulationsController < ApplicationController
       end
     rescue Exception => e
       Rails.logger.debug("Error in the 'progress_info' function - #{e}")
-      response = {status: 'error', reason: e.to_s}
+      response = { status: 'error', reason: e.to_s }
     end
 
-    render :json => response
+    render json: response
   end
 
   def show
@@ -167,8 +169,7 @@ class SimulationsController < ApplicationController
 
     render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
-
-  require 'csv'
+  
   def upload_parameter_space
     i = 0
     parameters = { values: [] }
@@ -201,10 +202,30 @@ class SimulationsController < ApplicationController
   private
 
   def load_simulation
-    @experiment = Experiment.find_by_id(params[:experiment_id])
-    #Rails.logger.debug("Experiment: #{@experiment}")
-    @simulation = @experiment.find_simulation_docs_by({id: params[:id].to_i}, {limit: 1}).first
-    #Rails.logger.debug("Simulation: #{@simulation}")
+    @experiment, @simulation = nil, nil
+
+    return unless params.include?('id') and params.include?('experiment_id')
+    experiment_id = BSON::ObjectId(params[:experiment_id])
+    Rails.logger.debug("Experiment id : #{experiment_id}")
+
+    if not @current_user.nil?
+      @experiment = Experiment.find_by_query({ '$and' => [
+        { _id: experiment_id },
+        { '$or' => [
+          { user_id: @current_user.id },
+          { shared_with: { '$in' => [ @current_user.id ] } }
+        ]}
+      ]})
+
+    elsif not @sm_user.nil?
+      unless @sm_user.experiment_id != experiment_id.to_s
+        @experiment = Experiment.find_by_id(experiment_id)
+      end
+    end
+
+    unless @experiment.nil?
+      @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
+    end 
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)

@@ -26,8 +26,6 @@ class CloudFacade < InfrastructureFacade
     @secret ||= CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
   end
 
-  # -- InfrasctuctureFacade implementation --
-
   def current_state(user)
     I18n.t('infrastructure_facades.cloud.current_state_count', count: get_sm_records(user.id).count)
   end
@@ -42,7 +40,7 @@ class CloudFacade < InfrastructureFacade
       end
 
       client = @client_class.new(secrets)
-      (user_vm_records.map {|r| client.scheduled_vm_instance(r)}).each &:monitor
+      (user_vm_records.map {|r| create_simulation_manager(r)}).each &:monitor
     end
   end
 
@@ -101,7 +99,7 @@ class CloudFacade < InfrastructureFacade
                                     })
       vm_record.save
 
-      cloud_client.scheduled_vm_instance(vm_record)
+      create_simulation_manager(vm_record)
     end
   end
 
@@ -116,16 +114,17 @@ class CloudFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
-  def get_simulation_managers(user_id=nil, experiment_id=nil, params={})
-    vm_records = get_sm_records(user_id, experiment_id, params)
-    secrets = get_cloud_secrets(user_id)
-    if secrets.nil?
-      []
-    else
-      client = @client_class.new(secrets)
-      vm_records.map {|r| client.cloud_simulation_manager(r)}
-    end
-  end
+  # FIXME
+  #def get_simulation_managers(user_id=nil, experiment_id=nil, params={})
+  #  vm_records = get_sm_records(user_id, experiment_id, params)
+  #  secrets = get_cloud_secrets(user_id)
+  #  if secrets.nil?
+  #    []
+  #  else
+  #    client = @client_class.new(secrets)
+  #    vm_records.map {|r| client.cloud_simulation_manager(r)}
+  #  end
+  #end
 
   def get_sm_records(user_id=nil, experiment_id=nil, params={})
     query = {cloud_name: @short_name}
@@ -155,9 +154,14 @@ class CloudFacade < InfrastructureFacade
       credentials = CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user.id})
     end
 
-    (params.keys.select {|k| k.start_with? 'stored_' }).each do |secret_key|
-      credentials.send("#{secret_key.to_s.sub(/^stored_/, '')}=", params[secret_key])
+    (params.keys.select {|k| k.start_with? 'stored_' }).each do |key|
+      credentials.send("#{key.to_s.sub(/^stored_/, '')}=", params[key])
     end
+
+    (params.keys.select {|k| k.start_with? 'upload_' }).each do |key|
+      credentials.send("#{key.to_s.sub(/^upload_/, '')}=", params[key].read)
+    end
+
     credentials.save
 
     'ok'

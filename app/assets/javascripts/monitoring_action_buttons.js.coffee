@@ -9,6 +9,7 @@ class window.MonitoringActionButtons
     @progressTableButtonListener()
     @stopExperimentButtonListener()
     @destroyExperimentButtonListener()
+    @shareButtonListener()
 
 
   extendButtonListener: () ->
@@ -47,3 +48,10 @@ class window.MonitoringActionButtons
       $('#destroy_experiment_dialog').foundation('reveal', 'open')
     $('#destroy_experiment_dialog .no_button').on 'click', () =>
       $('#destroy_experiment_dialog').foundation('reveal', 'close')
+
+  shareButtonListener: () -> 
+    $('#sharingButton').on 'click', () =>
+      $('#share_dialog').foundation('reveal', 'open')
+
+    $('#share_dialog input.unshare').on 'click', () =>
+      $('#share_dialog #mode').val('unshare')

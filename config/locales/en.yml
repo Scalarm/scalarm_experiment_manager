@@ -21,16 +21,9 @@
 
 en:
   title: Scalarm Experiment Manager
-  copyright: "Copyright © 2010-2014 Academic Computer Centre Cyfronet AGH <br/>All rights reserved."
+  copyright: "Copyright © 2010-2014<br/>Academic Computer Centre Cyfronet AGH<br/>All rights reserved."
   login-title: Scalarm - platform for data farming experiments
   account-title: Account management panel
-
-  navbar:
-    experiments_link: Experiment view
-    simulations_link: Simulation view
-    infrastructures_link: Infrastructure view
-    account_link: "Logged as '%{login}'"
-    logout_link: Logout
 
   registered_simulation_scenario_list:
     label: "Registered simulations"
@@ -97,10 +90,17 @@ en:
       download_results_button: Download results
       binaries_results_button: Simulations output (binaries)
       get_configurations_button: Configurations (CSV)
-      progress_information_button: Show progress
+      progress_information_button: Show progress      
 
       booster:
         header: Increase computational power
+
+      sharing_button: Share
+      share_dialog:
+        header: Share this experiment with others
+      share_with_login: Login of a Scalarm user
+      share: Share
+      unshare: Unshare
 
     monitoring_table:
       show_completed: Show/Hide completed
@@ -168,7 +168,7 @@ en:
 
   plgrid:
     login:
-      ok: Your credentials have been updated
+      ok: Your PL-Grid credentials have been updated
       error: An error occured
     job_submission:
       authentication_failed: "An exception occured during authentication - %{ex}. Please check if the host is available and the username and password are correct."
@@ -179,13 +179,18 @@ en:
 
   pl_cloud:
     login:
-      ok: Your credentials have been updated
-      error: An error occured
+      ok: Your PL-Grid Cloud credentials have been updated
+      error: An error occured on adding PL-Grid Cloud credentials
 
   amazon:
     login:
-      ok: Your credentials have been updated
+      ok: Your Amazon credentials have been updated
       error: An error occured
+
+  google:
+    login:
+      ok: Your Google Compute Engine credentials have been updated
+      error: An error occured when updating Google Compute Engine credentials
 
   private_machine:
     login:

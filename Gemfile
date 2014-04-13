@@ -14,6 +14,9 @@ gem 'mongo'
 # Amazon EC2 connector
 gem 'aws-sdk'
 
+# Google Compute Engine connector
+gem 'google-api-client'
+
 gem 'rubyzip'
 gem 'encryptor'
 gem 'net-ssh'
@@ -28,8 +31,6 @@ gem 'uglifier', '>= 1.3.0'
 # Use CoffeeScript for .js.coffee assets and views
 gem 'coffee-rails', '~> 4.0.0'
 
-gem 'foundation-icons-sass-rails'
-
 # See https://github.com/sstephenson/execjs#readme for more supported runtimes
 gem 'therubyracer', platforms: :ruby
 
@@ -39,6 +40,7 @@ gem 'haml'
 gem 'foundation-rails'
 gem 'highcharts-rails'
 gem 'jit-rails'
+gem 'foundation-icons-sass-rails'
 
 # Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
 # gem 'turbolinks'
@@ -69,3 +71,5 @@ gem 'xml-simple'
 gem 'vmstat'
 
 gem 'mocha', group: :test
+
+gem 'remotipart', '~> 1.0'

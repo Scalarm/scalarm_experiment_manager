@@ -59,7 +59,6 @@ module PLCloud
       @plc_util.resubmit(id)
     end
 
-    # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
       # String: public host of VM -- dynamically gets hostname from API
       vmi = @plc_util.vm_instance(id)
@@ -70,7 +69,7 @@ module PLCloud
       ''
     end
 
-    def self.instance_types
+    def instance_types
       {
           'standard'=> 'Standard (0.5 CPU, 512 MB RAM, x86_64)'
       }

@@ -42,10 +42,10 @@ class PLCloudClientTest < Test::Unit::TestCase
     user = ScalarmUser.find_by_login(TEST_USER_LOGIN)
     assert(user, "Test user #{TEST_USER_LOGIN} not available.
       Please create valid ScalarmUser with this login and associated PLCloudCredentials (see comments in test source file).")
-    secrets = PLCloudSecrets.find_by_user_id(user.id)
+    secrets = CloudSecrets.find_by_query(user: user.id, cloud_name: 'pl_cloud')
     assert(secrets, "No PLCloud for user #{TEST_USER_LOGIN}.
       Please create associated PLCloudSecrets for this user (see comments in test source file).")
-    image = PLCloudImage.find_by_user_id(user.id)
+    image = CloudImageSecrets.find_by_query(user: user.id, cloud_name: 'pl_cloud')
     assert(image, "No PLCloud for user #{TEST_USER_LOGIN}.
       Please create associated PLCloudImage for this user (see comments in test source file).")
     plcc = PLCloudUtil.new(secrets)
@@ -105,16 +105,16 @@ class PLCloudClientTest < Test::Unit::TestCase
       while true
         begin
           # use only login/password on ssh
-          output = Net::SSH.start(rdr[:ip], image.login, port: rdr[:port],
+          output = Net::SSH.start(rdr[:host], image.login, port: rdr[:port],
                          password: image.password, auth_methods: %w(password)) do |ssh|
             ssh.exec!('echo hello')
           end
-          assert_equal(output, "hello\n", "VM: #{rdr[:ip]}:#{rdr[:port]} gives ouput: #{output} on 'echo hello' via SSH")
+          assert_equal(output, "hello\n", "VM: #{rdr[:host]}:#{rdr[:port]} gives ouput: #{output} on 'echo hello' via SSH")
           break
         rescue Exception => e
-          puts "Exception #{e} occured while communication with #{rdr[:ip]}:#{rdr[:port]} --- #{error_counter}"
+          puts "Exception #{e} occured while communication with #{rdr[:host]}:#{rdr[:port]} --- #{error_counter}"
           error_counter += 1
-          assert(error_counter <= 10, "Max SSH connections tries for #{rdr[:ip]}:#{rdr[:port]} exceeded.")
+          assert(error_counter <= 10, "Max SSH connections tries for #{rdr[:host]}:#{rdr[:port]} exceeded.")
         end
 
         sleep(5)
