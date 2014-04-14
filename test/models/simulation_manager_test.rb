@@ -21,8 +21,13 @@ class SimulationManagerTest < Test::Unit::TestCase
   ]
 
   def test_has_methods
-    mock_record = Object
-    mock_infrastructure = Object
+    mock_record = mock do
+      stubs(:resource_id).returns('something')
+    end
+
+    mock_infrastructure = mock do
+      stubs(:short_name).returns('anything')
+    end
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
 
     METHOD_NAMES.each do |method_name|
@@ -48,7 +53,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     mock_record.expects(:experiment_end?).returns(false).once
 
     mock_record.expects(:init_time_exceeded?).returns(false).once
-    simulation_manager.expects(:status).returns(:running).at_least_once
+    mock_record.stubs(:max_init_time).returns(20.minutes)
 
     simulation_manager.expects(:sm_terminated?).returns(false).once
     mock_infrastructure.expects(:sm_running?).never
@@ -58,6 +63,9 @@ class SimulationManagerTest < Test::Unit::TestCase
     mock_infrastructure.expects(:initialize_simulation_manager).never
     mock_record.expects(:sm_initialized=).never
     mock_record.expects(:save).never
+
+    # EXECUTION
+    simulation_manager.monitor
 
   end
 

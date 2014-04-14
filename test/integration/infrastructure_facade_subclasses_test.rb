@@ -12,7 +12,8 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
       plgrid: PlGridFacade,
       private_machine: PrivateMachineFacade,
       pl_cloud: CloudFacade,
-      amazon: CloudFacade
+      amazon: CloudFacade,
+      google: CloudFacade
   }
 
   FACADE_METHODS = [
@@ -29,9 +30,11 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
   ]
 
   SM_METHODS = [
-      :terminate_task,
-      :sm_running?,
-      :get_simulation_manager_log
+      :simulation_manager_terminate,
+      :simulation_manager_running?,
+      :simulation_manager_get_log,
+      :simulation_manager_restart,
+      :simulation_manager_status
   ]
 
   def test_get_registered_infrastructures

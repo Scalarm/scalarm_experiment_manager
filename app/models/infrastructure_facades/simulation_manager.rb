@@ -61,11 +61,12 @@ class SimulationManager
   end
 
   def monitor
-    (monitoring_order.map {|c| monitoring_cases[c]}).each do |m|
+    monitoring_order.each do |c| monitoring_cases[c]
+      m = monitoring_cases[c]
       begin
-        if m.condition.()
-          log.info m.message
-          m.action.()
+        if m[:condition].()
+          log.info m[:message]
+          m[:action].()
           break
         end
       rescue Exception => e
@@ -74,34 +75,17 @@ class SimulationManager
     end
   end
 
-  #def monitor
-  #  begin
-  #
-  #    if record.time_limit_exceeded?
-  #      logger.info 'This Simulation Manager is going to be destroyed due to time limit'
-  #      infrastructure.terminate_simulation_manager(record)
-  #      record.destroy
-  #    elsif record.experiment_end?
-  #      logger.info 'This Simulation Manager will be destroyed due to experiment finishing'
-  #      infrastructure.terminate_simulation_manager(record)
-  #      record.destroy
-  #    elsif record.init_time_exceeded?
-  #      logger.info "Initialization time (#{record.max_init_time.minutes} min) exceeded - discontinuing initialization"
-  #      record_init_time_exceeded
-  #    elsif sm_terminated?
-  #      logger.info 'Simulation Manager is terminated, but experiment has not been completed. Reporting error.'
-  #      record_sm_failed
-  #    elsif should_initialize_sm?
-  #      logger.info 'This machine is going to be initialized with Simulation Manager now'
-  #      infrastructure.initialize_simulation_manager(record)
-  #      record.sm_initialized = true
-  #      record.save
-  #    end
-  #
-  #  rescue Exception => e
-  #
-  #  end
-  #end
+  def stop
+    infrastructure.simulation_manager_terminate
+  end
+
+  def restart
+    infrastructure.simulation_manager_restart
+  end
+
+  def status
+    infrastructure.simulation_manager_status
+  end
 
   def sm_terminated?
     status == :running and record.sm_initialized and (not infrastructure.sm_running?)
@@ -118,7 +102,7 @@ class SimulationManager
 
   def record_sm_failed
     record.error = t('simulation_manager_terminated')
-    record.error_log = infrastructure.get_simulation_manager_log(record)
+    record.error_log = infrastructure.simulation_manager_get_log(record)
     record.save
   end
 
