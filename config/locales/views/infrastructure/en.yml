@@ -71,3 +71,5 @@ en:
         remove: "Remove record"
         image_submission_label: "Add image credentials"
         image_table_label: "Manage submitted image credentials"
+  initialization_time_exceeded: "Simulation Manager initialization time exceeded"
+  simulation_manager_terminated: "Simulation Manager terminated"

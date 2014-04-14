@@ -84,4 +84,45 @@ class SimulationManagerRecordTest < Test::Unit::TestCase
 
   # TODO test_init_time_exceeded
 
+  def test_max_init_time_lower
+    sm_record = MockRecord.new
+    sm_record.expects(:time_limit).returns(60*72 - 5).once
+
+    assert_equal 20.minutes, sm_record.max_init_time
+  end
+
+  def test_max_init_time_higher
+    sm_record = MockRecord.new
+    sm_record.expects(:time_limit).returns(60*72 + 5).once
+
+    assert_equal 40.minutes, sm_record.max_init_time
+  end
+
+  def test_init_time_exceeded_true
+    sm_record = MockRecord.new
+    sm_record.expects(:sm_initialized).returns(false).once
+    sm_record.expects(:created_at).returns(25.minutes.ago).once
+    sm_record.expects(:max_init_time).returns(20.minutes).once
+
+    assert sm_record.init_time_exceeded?
+  end
+
+  def test_init_time_exceeded_false
+    sm_record = MockRecord.new
+    sm_record.expects(:sm_initialized).returns(false).once
+    sm_record.expects(:created_at).returns(15.minutes.ago).once
+    sm_record.expects(:max_init_time).returns(20.minutes).once
+
+    assert (not sm_record.init_time_exceeded?)
+  end
+
+  def test_init_time_exceeded_sm_init
+    sm_record = MockRecord.new
+    sm_record.expects(:sm_initialized).returns(true).once
+    sm_record.expects(:created_at).never
+    sm_record.expects(:max_init_time).never
+
+    assert (not sm_record.init_time_exceeded?)
+  end
+
 end

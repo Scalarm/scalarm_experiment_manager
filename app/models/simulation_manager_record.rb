@@ -1,5 +1,6 @@
 module SimulationManagerRecord
-  # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
+  # Time to wait for resource initialization - after that, VM will be reinitialized
+  # @return [Fixnum] time in seconds
   def max_init_time
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
   end

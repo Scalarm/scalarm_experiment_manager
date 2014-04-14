@@ -30,35 +30,35 @@ class SimulationManagerTest < Test::Unit::TestCase
     end
   end
 
-  def test_experiment_end?
-    mock_record = Object
-    #mock_record.stubs()
-
-    mock_infrastructure = Object
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-  end
-
   def test_monitor
     mock_record = Object
+    mock_record.stubs(:resource_id).returns('other-vm')
     mock_infrastructure = Object
+    mock_infrastructure.stubs(:short_name).returns('anything')
+    mock_task_logger = mock
+    mock_task_logger.stub_everything
+    InfrastructureTaskLogger.stubs(:new).returns(mock_task_logger)
 
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
 
     mock_record.expects(:time_limit_exceeded?).returns(false).once
-    mock_infrastructure.expects(:terminate_task).never
-    simulation_manager.expects(:destroy_record).never
+    mock_infrastructure.expects(:terminate_simulation_manager).never
+    mock_record.expects(:destroy).never
+
+    mock_record.expects(:experiment_end?).returns(false).once
 
     mock_record.expects(:init_time_exceeded?).returns(false).once
     simulation_manager.expects(:status).returns(:running).at_least_once
 
-    mock_record.expects(:experiment_end?).returns(false).once
-
     simulation_manager.expects(:sm_terminated?).returns(false).once
-    simulation_manager.expects(:mark_sm_failed).never
+    mock_infrastructure.expects(:sm_running?).never
+    simulation_manager.expects(:record_sm_failed).never
 
-    simulation_manager.expects(:ready_to_initialize_sm?).returns(false).once
-
+    simulation_manager.expects(:should_initialize_sm?).returns(false).once
+    mock_infrastructure.expects(:initialize_simulation_manager).never
+    mock_record.expects(:sm_initialized=).never
+    mock_record.expects(:save).never
 
   end
+
 end

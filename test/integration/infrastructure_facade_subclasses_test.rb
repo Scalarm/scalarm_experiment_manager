@@ -16,19 +16,22 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
   }
 
   FACADE_METHODS = [
-      :monitoring_loop,
+      :short_name,
+      :long_name,
       :default_additional_params,
       :start_simulation_managers,
-      :clean_tmp_credentials,
-      :current_state,
+      # :clean_tmp_credentials, # ?
+      # :current_state, # ?
       :add_credentials,
-      :short_name,
-      :sm_record_to_hash,
-      :get_sm_record,
-      :get_all_sm_records,
-      :get_simulation_manager,
-      :get_all_simulation_managers,
-      :get_sm_containers
+      :remove_credentials, # !
+      :get_sm_records,
+      :create_simulation_manager
+  ]
+
+  SM_METHODS = [
+      :terminate_task,
+      :sm_running?,
+      :get_simulation_manager_log
   ]
 
   def test_get_registered_infrastructures
