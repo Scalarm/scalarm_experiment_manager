@@ -111,6 +111,19 @@ class CloudFacade < InfrastructureFacade
     self.send("handle_#{params[:credential_type]}_credentials", user, params, session)
   end
 
+  def remove_credentials(record_id, user_id, params)
+    record_class = case params[:type]
+                     when 'secrets' then CloudSecrets
+                     when 'image' then CloudImageSecrets
+                     else raise StandardError "Invalid remove parameters: #{params}"
+                   end
+
+    record = record_class.find_by_id(record_id)
+    raise InfrastructureErrors::NoCredentialsError if record.nil?
+    raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
+    record.destroy
+  end
+
   def clean_tmp_credentials(user_id, session)
   end
 
@@ -136,10 +149,6 @@ class CloudFacade < InfrastructureFacade
 
   def get_sm_record_by_id(record_id)
     CloudVmRecord.find_by_id(record_id)
-  end
-
-  def create_simulation_manager(record)
-    CloudSimulationManager.new(record, cloud_client_instance(CloudSecrets.find_by_id(record.user_id)))
   end
 
   # --

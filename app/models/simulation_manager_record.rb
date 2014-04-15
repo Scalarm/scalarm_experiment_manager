@@ -6,16 +6,11 @@ module SimulationManagerRecord
   end
 
   def to_hash
-    {
-        name: self.resource_id,
-        type: TreeUtils::TREE_SM_NODE,
-        record_id: self.id.to_s,
-        infrastructure_params: hash_params
-    }
+    super.merge({ name: self.resource_id })
   end
 
-  def hash_params
-    {}
+  def to_json
+    to_hash.to_json
   end
 
   def experiment

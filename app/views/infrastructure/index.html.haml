@@ -6,6 +6,8 @@
 
 - content_for :javascript do
   :javascript
-    new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'node-dialog')
+    new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'node-dialog',
+      "#{tree_infrastructure_path}", "#{simulation_manager_records_infrastructure_path}",
+      "#{simulation_manager_command_infrastructure_path}")
 
 

@@ -25,8 +25,6 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'simulations/conduct_experiment'
 
   get 'infrastructures' => 'infrastructures#index'
-  get 'infrastructures/tree'
-  get 'infrastructures/sm_nodes'
 
   resources :experiments do
     collection do
@@ -93,13 +91,12 @@ ScalarmExperimentManager::Application.routes.draw do
       post :remove_private_machine_credentials      
     end
 
-    collection do 
-      get :simulation_managers_info
-    end
-
     collection do
+      get :tree
+      get :simulation_managers_info
       get :get_sm_dialog
-      get :simulation_manager_command
+      get :simulation_manager_records
+      post :simulation_manager_command
     end
   end
 

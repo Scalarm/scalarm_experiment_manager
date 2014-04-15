@@ -114,6 +114,13 @@ class PlGridFacade < InfrastructureFacade
     'ok'
   end
 
+  def remove_credentials(record_id, user_id, params)
+    record = GridCredentials.find_by_id(record_id)
+    raise InfrastructureErrors::NoCredentialsError if record.nil?
+    raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
+    record.destroy
+  end
+
   def clean_tmp_credentials(user_id, session)
   end
 
@@ -133,11 +140,9 @@ class PlGridFacade < InfrastructureFacade
   def to_hash
     {
         name: long_name,
-        type: TreeUtils::TREE_META,
         children: self.class.scheduler_facades.values.map do |scheduler|
             {
                 name: scheduler.long_name,
-                type: TreeUtils::TREE_SM_CONTAINER,
                 infrastructure_name: short_name,
                 infrastructure_params: {scheduler_type: scheduler.short_name}
             }
@@ -154,10 +159,6 @@ class PlGridFacade < InfrastructureFacade
 
   def get_sm_record_by_id(record_id)
     PlGridJob.find_by_id(record_id)
-  end
-
-  def create_simulation_manager(record)
-    PlGridSimulationManager.new(record)
   end
 
   def default_additional_params

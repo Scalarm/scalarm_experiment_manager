@@ -60,7 +60,7 @@ class SessionsControllerTest < ActionController::TestCase
     # Fetch Simulation Manager nodes for each sm_container, and check if they match
     # previously generated sm-hashes
     infrastrucutre_names.each do |infrastructure_name|
-      get :sm_nodes, {infrastrucutre_name: infrastructure_name}, {user: @tmp_user_id}
+      get :simulation_manager_records, {infrastrucutre_name: infrastructure_name}, {user: @tmp_user_id}
       sm_nodes = JSON.parse(response.body)
       assert_kind_of Array, sm_nodes
       sm_nodes.each do |node|
@@ -70,7 +70,7 @@ class SessionsControllerTest < ActionController::TestCase
 
   end
 
-  def test_get_sm_nodes_plgrid
+  def test_simulation_manager_records_plgrid
     count = 10
     id_values = (0..count-1).to_a
 
@@ -84,27 +84,26 @@ class SessionsControllerTest < ActionController::TestCase
     end
 
     scheduler_names.each do |sname|
-      get :sm_nodes, {infrastructure_name: 'plgrid', infrastructure_params: {scheduler_type: sname}},
+      get :simulation_manager_records, {infrastructure_name: 'plgrid', infrastructure_params: {scheduler_type: sname}},
           {user: @tmp_user_id}
 
       resp_hash = JSON.parse(response.body)
-      assert_equal resp_hash.size, count
-      assert_equal resp_hash.map {|h| h['name']}.sort, id_values.map(&:to_s).sort
+      assert_equal count, resp_hash.size
+      assert_equal id_values.map(&:to_s).sort, resp_hash.map {|h| h['name']}.sort
       resp_hash.map do |h|
-        assert_includes h, 'infrastructure_params'
-        assert_includes h['infrastructure_params'], 'scheduler_type'
-        assert_equal sname, h['infrastructure_params']['scheduler_type']
+        assert_includes h, 'scheduler_type'
+        assert_equal sname, h['scheduler_type']
       end
     end
 
-    get :sm_nodes, {infrastructure_name: 'plgrid', infrastructure_params: {scheduler_type: 'unknown'}},
+    get :simulation_manager_records, {infrastructure_name: 'plgrid', infrastructure_params: {scheduler_type: 'unknown'}},
         {user: @tmp_user_id}
     resp_hash = JSON.parse(response.body)
     assert_equal resp_hash.size, 0
   end
 
-  def test_sm_nodes_invalid_name
-    get :sm_nodes, {infrastructure_name: 'wrong_name'}, {user: @tmp_user_id}
+  def test_simulation_manager_records_invalid_name
+    get :simulation_manager_records, {infrastructure_name: 'wrong_name'}, {user: @tmp_user_id}
     parsed_response = JSON.parse(response.body)
 
     assert_equal [], parsed_response
@@ -117,7 +116,7 @@ class SessionsControllerTest < ActionController::TestCase
       mock_sm.expects(cmd).once
       InfrastructuresController.any_instance.stubs(:get_simulation_manager).with('1', 'inf').returns(mock_sm)
 
-      get :simulation_manager_command, {record_id: '1', infrastructure_name: 'inf', command: cmd},
+      post :simulation_manager_command, {record_id: '1', infrastructure_name: 'inf', command: cmd},
           {user: @tmp_user_id}
     end
   end

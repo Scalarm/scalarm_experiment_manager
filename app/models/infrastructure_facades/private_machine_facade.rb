@@ -144,8 +144,4 @@ class PrivateMachineFacade < InfrastructureFacade
     PrivateMachineRecord.find_by_id(record_id)
   end
 
-  def create_simulation_manager(record)
-    PrivateMachineSimulationManager.new(record)
-  end
-
 end

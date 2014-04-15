@@ -1,9 +1,9 @@
 class window.InfrastructuresTree
-  constructor: (@baseSmDialogUrl, genericDialogId) ->
+  constructor: (@baseSmDialogUrl, genericDialogId, @tree_infrastructure_path,
+                @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
 
-    baseTreePath = "/infrastructures/tree"
     @root = null
 
     @m = [20, 80, 20, 80]
@@ -23,17 +23,17 @@ class window.InfrastructuresTree
       .append("svg:g")
       .attr("transform", "translate(#{@m[3]}, #{@m[0]})");
 
-    d3.json(baseTreePath, (data) =>
+    $.getJSON(@tree_infrastructure_path, (data) =>
       @root = data
       @root.x0 = @h / 2
       @root.y0 = 0;
 
       @updateTree(@root)
 
-      leaves = @tree.nodes(@root).filter((d) => d['type'] == 'sm-container-node')
+      leaves = @tree.nodes(@root).filter((d) => d['infrastructure_name'])
 
-      fetchUpdateNodes = (local_root, url) =>
-        d3.json(url, (child_json) =>
+      fetchUpdateNodes = (local_root, data) =>
+        $.getJSON(@simulation_manager_records_infrastructure_path, data, (child_json) =>
           child_json = null if child_json.length == 0
 
           # Perform action only if node [is expanded or was not initialized before]
@@ -46,26 +46,26 @@ class window.InfrastructuresTree
 
             child_json.forEach((child) =>
               child['infrastructure_name'] = local_root['infrastructure_name']
+              child['type'] = 'sm-node'
             ) if child_json != null
 
             @updateTree(local_root);
         )
 
       leaves.forEach((leaf) =>
-        fetchLeafNodes = => fetchUpdateNodes(leaf, @smNodesPath(leaf['infrastructure_name'], leaf['infrastructure_params']))
+        leaf['type'] = 'sm-container-node'
+        fetchLeafNodes = => fetchUpdateNodes(leaf, @smRecordsJson(leaf['infrastructure_name'], leaf['infrastructure_params']))
         fetchLeafNodes()
         setInterval(fetchLeafNodes, PROBE_INTERVAL)
       )
     )
 
-  smNodesPath: (name, params_hash) ->
-    base = "/infrastructures/sm_nodes?infrastructure_name=#{name}"
-    base += "&#{@hash_to_query_string(params_hash, 'infrastructure_params')}" if params_hash?
-    base
+  # 1. JSON
+  # 2. helpery <%# infrastructure_ %>
+  # 3. w jquery jest metoda do postowania/getowania z parametrem
 
-
-  hash_to_query_string: (params_hash, hash_name) ->
-    Object.keys(params_hash).map((key) => "#{hash_name}[#{key}]=#{params_hash[key]}").join("&")
+  smRecordsJson: (name, params_hash) ->
+    {'infrastructure_name': name, 'infrastructure_params': params_hash}
 
   # Compare children arrays: childs_local should be taken from current tree
   # childs_remote should be fetched from server.
@@ -105,9 +105,8 @@ class window.InfrastructuresTree
 
   # FIXME infrastructure(s) <- url
   smCommand: (d, command) ->
-    url = "/infrastructure/simulation_manager_command?infrastructure_name=#{d['infrastructure_name']}"
-    url += "&record_id=#{d['record_id']}&command=#{command}"
-    d3.json(url, (json) =>) # TODO use response
+    data = { 'infrastructure_name': d['infrastructure_name'], 'id': d['_id'], 'command': command }
+    $.post(@simulation_manager_command_infrastructure_path, data, (json) =>)
 
   updateTree: (source) ->
     duration = (d3.event && d3.event.altKey) and 5000 or 500

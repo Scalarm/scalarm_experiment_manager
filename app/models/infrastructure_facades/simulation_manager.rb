@@ -48,7 +48,7 @@ class SimulationManager
           condition: lambda {should_initialize_sm?},
           message: 'This machine is going to be initialized with Simulation Manager now',
           action: lambda {
-            infrastructure.initialize_simulation_manager(record)
+            infrastructure.simulation_manager_initialize(record)
             record.sm_initialized = true
             record.save
           }
@@ -76,15 +76,15 @@ class SimulationManager
   end
 
   def stop
-    infrastructure.simulation_manager_terminate
+    infrastructure.simulation_manager_terminate(record)
   end
 
   def restart
-    infrastructure.simulation_manager_restart
+    infrastructure.simulation_manager_restart(record)
   end
 
   def status
-    infrastructure.simulation_manager_status
+    infrastructure.simulation_manager_status(record)
   end
 
   def sm_terminated?

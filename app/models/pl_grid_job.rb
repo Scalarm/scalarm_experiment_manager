@@ -14,11 +14,6 @@ class PlGridJob < MongoActiveRecord
     'grid_jobs'
   end
 
-  # Overrides SimulationManagerRecord
-  def hash_params
-    {scheduler_type: scheduler_type}
-  end
-
   def resource_id
     self.job_id
   end

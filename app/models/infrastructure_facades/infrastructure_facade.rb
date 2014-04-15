@@ -3,6 +3,7 @@ require 'yaml'
 require_relative 'infrastructure_task_logger'
 require_relative 'tree_utils'
 require_relative 'infrastructure_errors'
+require_relative 'simulation_manager'
 require 'clouds/cloud_factory'
 
 # methods necessary to implement by subclasses
@@ -118,6 +119,10 @@ class InfrastructureFacade
     render json: response_msg, status: status
   end
 
+  def create_simulation_manager(record)
+    SimulationManager.new(record, self)
+  end
+
   # Used mainly to create node or subtree:
   # - if there is only one ScheduledJobContainer, creates node
   # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
@@ -125,7 +130,6 @@ class InfrastructureFacade
   def to_hash
     {
         name: long_name,
-        type: TreeUtils::TREE_SM_CONTAINER,
         infrastructure_name: short_name
     }
   end

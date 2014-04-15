@@ -9,13 +9,13 @@
     font-size: 13px;
 }
 
-.root-node text {
-    text-anchor: end;
-    transform: translate(-20px,.3em);
-}
+//.root-node text {
+//    text-anchor: end;
+//    transform: translate(-20px,.3em);
+//}
 
-.sm-container-node text,
-.meta-node text {
+//.sm-container text,
+.node text {
     text-anchor: middle;
     transform: translate(0px,30px);
 }

@@ -11,8 +11,7 @@ class InfrastructuresController < ApplicationController
   # GET a root of Infrastructures Tree. This method is used directly by javascript tree.
   def tree
     data = {
-      name: 'Scalarm',
-      type: TreeUtils::TREE_ROOT,
+      name: I18n.t('infrastructures_controller.tree.root'),
       children: tree_infrastructures
     }
 
@@ -29,8 +28,7 @@ class InfrastructuresController < ApplicationController
         inf[:facade].to_hash
       end),
       {
-        name: 'Clouds',
-        type: TreeUtils::TREE_META,
+        name: I18n.t('infrastructures_controller.tree.clouds'),
         children:
           InfrastructureFacade.cloud_infrastructures.values.map do |inf|
             inf[:facade].to_hash
@@ -42,10 +40,11 @@ class InfrastructuresController < ApplicationController
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name
   # and current user.
   # GET params:
-  # - name: name of Infrastructure
-  # - attrs: additional attributes
-  def sm_nodes
+  # - infrastructure_name: name of Infrastructure
+  # - experiment_id: (optional) experiment_id
+  def simulation_manager_records
     begin
+      Rails.logger.info "PARAAAMS: #{params}"
       facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
       hash = facade.sm_record_hashes(@current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
       render json: hash
@@ -124,18 +123,30 @@ class InfrastructuresController < ApplicationController
     end
   end
 
-  # TODO: delegate to facades
+  # GET param: infrastructure_name
+  # GET param: record_id
   def remove_credentials
-    secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
-    if secrets
-      secrets.destroy
-      msg = I18n.t('infrastructures_controller.credentials_removed', name: CloudFactory.long_name(params[:cloud_name]))
-      render json: { status: 'ok', msg: msg }
-    else
-      msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.long_name(params[:cloud_name]))
-      render json: { status: 'error', msg: msg }
+    begin
+      render json: get_facade_for(params['infrastructure_name']).remove_credentials(params['record_id'], @current_user.id)
+    rescue Exception => e
+      # TODO translate
+      Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace}"
+      render json: {status: 'error', msg: "Remove credentials failed: #{e.to_s}"}
     end
   end
+
+  ## TODO: delegate to facades
+  #def remove_credentials
+  #  secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
+  #  if secrets
+  #    secrets.destroy
+  #    msg = I18n.t('infrastructures_controller.credentials_removed', name: CloudFactory.long_name(params[:cloud_name]))
+  #    render json: { status: 'ok', msg: msg }
+  #  else
+  #    msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.long_name(params[:cloud_name]))
+  #    render json: { status: 'error', msg: msg }
+  #  end
+  #end
 
   def simulation_managers_info
     begin
@@ -174,6 +185,7 @@ class InfrastructuresController < ApplicationController
   end
 
 
+  # TODO locals
   # Mandatory GET params:
   # - infrastructure_name
   # - record_id
