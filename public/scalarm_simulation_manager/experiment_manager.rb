@@ -71,7 +71,7 @@ class ExperimentManager
     cpu_info = { model: cmd_out }
     cmd_out = %x[cat /proc/cpuinfo | grep MHz | head -1]
     cmd_out = cmd_out.split(':').last.strip
-    cpu_info[:clock] cmd_out.to_i
+    cpu_info[:clock] = cmd_out.to_i
 
 
     request = Net::HTTP::Post.new(uri.request_uri)
