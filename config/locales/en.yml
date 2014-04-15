@@ -140,6 +140,8 @@ en:
 
       simulation_overview_name: Simulation name
       simulation_overview_description: Simulation description
+      simulation_overview_shared_with: You share it with
+      simulation_overview_shared_by: It is shared by
 
       input_header: Parameter space specification
       input_parametrization_types: Parametrization

@@ -77,7 +77,7 @@ class SimulationsController < ApplicationController
 
       simulation.save
     rescue Exception => e
-      Rails.logger.error("Exception occurred: #{e}")
+      Rails.logger.error("Exception occurred  : #{e}")
     end
 
     respond_to do |format|
@@ -115,6 +115,11 @@ class SimulationsController < ApplicationController
         @simulation['to_sent'] = false
         @simulation['result'] = JSON.parse(params[:result])
         @simulation['done_at'] = Time.now
+        # infrastructure-related info
+        if params.include?('cpu_info')
+          cpu_info = JSON.parse(params[:cpu_info])
+          @simulation['cpu_info'] = cpu_info
+        end
         @experiment.save_simulation(@simulation)
         # TODO adding caching capability
         #@simulation.remove_from_cache

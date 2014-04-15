@@ -2,7 +2,6 @@ require 'time'
 require 'json'
 require 'net/http'
 require 'uri'
-
 require 'fileutils'
 
 require_relative 'experiment_manager'

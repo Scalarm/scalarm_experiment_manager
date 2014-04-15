@@ -32,6 +32,10 @@ class ScalarmUser < MongoActiveRecord
     self.password_salt, self.password_hash = salt, Digest::SHA256.hexdigest(pass + salt)
   end
 
+  def owns?(experiment)
+    id == experiment.user_id
+  end
+
   def self.authenticate_with_password(login, password)
     user = ScalarmUser.find_by_login(login)
 

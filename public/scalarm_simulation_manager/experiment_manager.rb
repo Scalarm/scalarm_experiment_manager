@@ -66,9 +66,17 @@ class ExperimentManager
     http.ssl_version = :SSLv3
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
+    cmd_out = %x[cat /proc/cpuinfo | grep name | head -1]
+    cmd_out = cmd_out.split(':').last.strip
+    cpu_info = { model: cmd_out }
+    cmd_out = %x[cat /proc/cpuinfo | grep MHz | head -1]
+    cmd_out = cmd_out.split(':').last.strip
+    cpu_info[:clock] cmd_out.to_i
+
+
     request = Net::HTTP::Post.new(uri.request_uri)
     request.basic_auth(@user, @pass)
-    request.set_form_data({'result' => results.to_json})
+    request.set_form_data({'result' => results.to_json, cpu_info: cpu_info.to_json})
 
     http.request(request).body
   end

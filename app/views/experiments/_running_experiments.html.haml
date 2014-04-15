@@ -8,5 +8,7 @@
       %p= t('.no_experiments')
     - else
       - @running_experiments.each do |experiment|
-        - link_text = t('.link_text', { name: experiment.name, start_time: experiment.start_at.strftime('%Y-%m-%d %H:%M') })
-        = button_to link_text, experiment_path(experiment.id), class: 'button expand radius', method: :get
+        %a.button.expand.radius.last-element{ href: experiment_path(experiment.id) }
+          - unless @current_user.owns?(experiment)
+            %i.fi-share
+          = t('.link_text', { name: experiment.name, start_time: experiment.start_at.strftime('%Y-%m-%d %H:%M') })
