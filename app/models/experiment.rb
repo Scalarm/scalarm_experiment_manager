@@ -412,8 +412,8 @@ class Experiment < MongoActiveRecord
     # drop progress bar object
     self.progress_bar_table.drop
     # self-drop
-    @@db['experiments_info'].remove({ experiment_id: self.experiment_id })
-    Experiment.destroy({ experiment_id: self.experiment_id })
+    @@db['experiments_info'].remove({ _id: self.id })
+    Experiment.destroy({ _id: self.id })
   end
 
   def result_names

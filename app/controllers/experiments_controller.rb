@@ -31,9 +31,7 @@ class ExperimentsController < ApplicationController
       end
 
     rescue Exception => e
-      flash[:error] = "Problem occured during loading experiment info - #{e}"
-      #@experiment.destroy
-      #flash[:notice] = 'Your experiment has been destroyed.'
+      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
       redirect_to action: :index
     end
   end
@@ -65,34 +63,14 @@ class ExperimentsController < ApplicationController
       tmp_pass.destroy
     end
 
-    redirect_to action: :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: { status: 'ok' } }
+    end  
   end
 
-# TODO reimplement to have everything in the experiment object
   def file_with_configurations
-    file_path = "/tmp/configurations_#{@experiment.id}.txt"
-
-    File.delete(file_path) if File.exist?(file_path)
-
-    File.open(file_path, 'w') do |file|
-      file.puts(@experiment.create_result_csv)
-    end
-    
-    send_file(file_path, type: 'text/plain')
-
-    # response.headers['Content-Type'] = 'text/event-stream'
-    # response.headers['Content-Disposition'] = 'attachment; filename="configurations_' + @experiment.id.to_s + '.csv"'
-
-    # moe_names = @experiment.moe_names
-    # response.stream.write("#{(@experiment.parameters.flatten + moe_names).join(',')}\n")
-
-    # @experiment.find_simulation_docs_by({ is_done: true }, { fields: { values: 1, result: 1, _id: 0 } }).each do |simulation_doc| 
-    #   values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
-    #   moe_values = moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
-    #   response.stream.write("#{(values + moe_values).join(',')}\n")
-    # end
-
-    # response.stream.close
+    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
   end
 
   def create
@@ -299,7 +277,7 @@ class ExperimentsController < ApplicationController
     moes_info[:moes] = moes.map { |label, id| "<option value='#{id}'>#{label}</option>" }.join()
     moes_info[:moes_and_params] = moes_and_params.map { |label, id| "<option value='#{id}'>#{label}</option>" }.join()
 
-    render :json => moes_info
+    render json: moes_info
   end
 
   #  getting parametrization and generated values of every input parameter without default value
@@ -434,7 +412,10 @@ class ExperimentsController < ApplicationController
       flash[:notice] = 'Your experiment is no longer available.'
     end
 
-    redirect_to :action => :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: { status: 'ok' } }
+    end  
   end
 
   # modern version of the next_configuration method;
@@ -453,8 +434,8 @@ class ExperimentsController < ApplicationController
         @experiment.progress_bar_update(simulation_to_send['id'].to_i, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send['id'],
-                               'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
-                               'input_parameters' => Hash[simulation_to_send['arguments'].split(',').zip(simulation_to_send['values'].split(','))] })
+                   'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
+                   'input_parameters' => Hash[simulation_to_send['arguments'].split(',').zip(simulation_to_send['values'].split(','))] })
       else
         simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
       end
@@ -464,7 +445,7 @@ class ExperimentsController < ApplicationController
       simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
     end
 
-    render :json => simulation_doc
+    render json: simulation_doc
   end
 
   def code_base
