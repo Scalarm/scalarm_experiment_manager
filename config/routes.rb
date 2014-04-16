@@ -20,13 +20,12 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'simulations/registration'
   post 'simulations/upload_component'
   post 'simulations/destroy_component'
-  post 'simulations/upload_simulation'
+  post 'simulations' => 'simulations#create'
   post 'simulations/destroy_simulation'
   post 'simulations/conduct_experiment'
 
   resources :experiments do
     collection do
-      post :start_experiment
       post :start_import_based_experiment
       post :calculate_experiment_size
       post :calculate_imported_experiment_size

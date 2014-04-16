@@ -57,7 +57,7 @@ class SimulationsController < ApplicationController
     redirect_to :action => :index
   end
 
-  def upload_simulation
+  def create
     simulation = Simulation.new({
       'name' => params['simulation_name'],
       'description' => params['simulation_description'],
@@ -70,7 +70,6 @@ class SimulationsController < ApplicationController
       set_up_adapter('input_writer', simulation, false)
       set_up_adapter('executor', simulation, false)
       set_up_adapter('output_reader', simulation, false)
-
       set_up_adapter('progress_monitor', simulation, false)
 
       simulation.set_simulation_binaries(params['simulation_binaries'].original_filename, params['simulation_binaries'].read)

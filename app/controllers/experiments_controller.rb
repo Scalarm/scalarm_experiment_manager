@@ -5,7 +5,7 @@ require 'csv'
 
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share]
-  before_filter :load_simulation, only: [ :start_experiment, :start_import_based_experiment ]
+  before_filter :load_simulation, only: [ :create, :start_import_based_experiment ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -95,43 +95,24 @@ class ExperimentsController < ApplicationController
     # response.stream.close
   end
 
-  def start_experiment
-    doe_info = if params['doe'].blank?
-                 []
-               else
-                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
-               end
-
-    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
-    # prepare scenario parametrization in the old fashion
-    @scenario_parametrization = {}
-    @experiment_input.each do |entity_group|
-      entity_group['entities'].each do |entity|
-        entity['parameters'].each do |parameter|
-          parameter_uid = Experiment.parameter_uid(entity_group, entity, parameter)
-          @scenario_parametrization[parameter_uid] = parameter['parametrizationType']
-        end
-      end
-    end
-
-    experiment_name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment_description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+  def create
+    doe_info = []
+    doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameters| parameters.first.nil? } unless params['doe'].blank?
 
     # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'experiment_input' => @experiment_input,
-                                 'name' => experiment_name,
-                                 'description' => experiment_description,
-                                 'is_running' => true,
-                                 'run_counter' => params[:run_index].to_i,
-                                 'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
-                                 'doe_info' => doe_info,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-
-    experiment.user_id = @current_user.id unless @current_user.nil?
+    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+      'is_running' => true,
+      'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+      'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i,
+      'doe_info' => doe_info,
+      'start_at' => Time.now,
+      'user_id' => @current_user.id,
+      'scheduling_policy' => 'monte_carlo'
+    })
+    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+    experiment.experiment_input = Experiment.prepare_experiment_input(
+                                    @simulation, JSON.parse(params['experiment_input']), experiment.doe_info)
     experiment.labels = experiment.parameters.flatten.join(',')
     experiment.save
     experiment.experiment_id = experiment.id
@@ -142,13 +123,15 @@ class ExperimentsController < ApplicationController
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
       computing_power = JSON.parse(params[:computing_power])
-      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, computing_power['type'], computing_power['resource_counter'])
+      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, 
+        computing_power['type'], 
+        computing_power['resource_counter'])
     end
 
     respond_to do |format|
       format.html { redirect_to experiment_path(experiment.id) }
-      format.json { render json: { status: 'ok', experiment_id: experiment.id } }
-    end
+      format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
+    end    
   end
 
   def start_import_based_experiment
@@ -172,19 +155,17 @@ class ExperimentsController < ApplicationController
     else
       # create the new type of experiment object
       experiment = Experiment.new({ 'simulation_id' => @simulation.id,
-                                    'is_running' => true,
-                                    'run_counter' => params[:run_index].to_i,
-                                    'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
-                                    'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
-                                    'start_at' => Time.now,
-                                    'user_id' => @current_user.id,
-                                    'scheduling_policy' => 'monte_carlo'
-                                  })
+        'is_running' => true,
+        'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+        'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i,
+        'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
+        'start_at' => Time.now,
+        'user_id' => @current_user.id,
+        'scheduling_policy' => 'monte_carlo'
+      })
       experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
       experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
-
-      experiment.user_id = @current_user.id unless @current_user.nil?
       experiment.labels = experiment.parameters.flatten.join(',')
       experiment.save
       experiment.experiment_id = experiment.id
@@ -195,7 +176,7 @@ class ExperimentsController < ApplicationController
 
       respond_to do |format|
         format.html { redirect_to experiment_path(experiment.id) }
-        format.json { render :json => {status: 'ok', experiment_id: experiment.id} }
+        format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
       end
     end
   end
@@ -217,7 +198,7 @@ class ExperimentsController < ApplicationController
     @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
+    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
                                  'experiment_input' => @experiment_input,
                                  'run_counter' => params[:run_index].to_i,
                                  'name' => @simulation.name,
