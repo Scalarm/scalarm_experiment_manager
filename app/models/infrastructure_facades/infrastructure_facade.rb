@@ -127,7 +127,7 @@ class InfrastructureFacade
   # - if there is only one ScheduledJobContainer, creates node
   # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
   # @return [Hash] node (or subtree) for infrastructure in infrastructure tree
-  def to_hash
+  def to_h
     {
         name: long_name,
         infrastructure_name: short_name
@@ -136,7 +136,7 @@ class InfrastructureFacade
 
   # Helper for Infrastrucutres Tree
   def sm_record_hashes(user_id, experiment_id=nil, params={})
-    get_sm_records(user_id, experiment_id, params).map {|r| r.to_hash }
+    get_sm_records(user_id, experiment_id, params).map {|r| r.to_h }
   end
 
 end

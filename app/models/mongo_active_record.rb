@@ -74,12 +74,12 @@ class MongoActiveRecord
     end
   end
 
-  def to_hash
+  def to_h
     Hash[@attributes.map {|key, value| [key, (value.kind_of?(BSON::ObjectId) ? value.to_s : value)]}]
   end
 
   def to_json
-    to_hash.to_json
+    to_h.to_json
   end
 
   #### Class Methods ####

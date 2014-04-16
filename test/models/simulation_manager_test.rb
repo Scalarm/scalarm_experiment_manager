@@ -40,9 +40,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     mock_record.stubs(:resource_id).returns('other-vm')
     mock_infrastructure = Object
     mock_infrastructure.stubs(:short_name).returns('anything')
-    mock_task_logger = mock
-    mock_task_logger.stub_everything
-    InfrastructureTaskLogger.stubs(:new).returns(mock_task_logger)
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
 
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
 
@@ -66,6 +64,31 @@ class SimulationManagerTest < Test::Unit::TestCase
 
     # EXECUTION
     simulation_manager.monitor
+
+  end
+
+  def test_delegation
+    mock_record = stub_everything('record')
+    mock_infrastructure = mock('infrastructure') do
+      stubs(:short_name).returns('...')
+      SimulationManager::DELEGATES.each do |delegate|
+        expects("simulation_manager_#{delegate}").with(mock_record).once
+      end
+      expects('simulation_manager_wrong').with(mock_record).never
+    end
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
+    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
+
+    SimulationManager::DELEGATES.each do |delegate|
+      assert_respond_to simulation_manager, delegate
+      assert_nothing_raised do
+        simulation_manager.send(delegate, mock_record)
+      end
+    end
+
+    assert (not simulation_manager.respond_to? :wrong)
+    assert_raises(NoMethodError) {simulation_manager.wrong}
 
   end
 

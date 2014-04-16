@@ -137,7 +137,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   # Overrides InfrastructureFacade method
-  def to_hash
+  def to_h
     {
         name: long_name,
         children: self.class.scheduler_facades.values.map do |scheduler|

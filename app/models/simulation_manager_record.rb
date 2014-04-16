@@ -5,12 +5,12 @@ module SimulationManagerRecord
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
   end
 
-  def to_hash
+  def to_h
     super.merge({ name: self.resource_id })
   end
 
   def to_json
-    to_hash.to_json
+    to_h.to_json
   end
 
   def experiment
