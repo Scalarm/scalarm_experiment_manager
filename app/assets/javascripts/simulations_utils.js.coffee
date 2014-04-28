@@ -53,6 +53,7 @@ window.checkImportedSize = () ->
         data = 
           file_content: file_content
           simulation_id: $('#simulation_id').val()
+          replication_level: $('#import-form #replication_level').val()
 
         $("input[id^='param_']:checked").each (index, element) -> data[$(element).attr('id')] = 1
 

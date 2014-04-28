@@ -98,8 +98,6 @@ class Experiment < MongoActiveRecord
       end
     end
 
-
-
     params_with_range
   end
 
@@ -242,6 +240,7 @@ class Experiment < MongoActiveRecord
   def experiment_size(debug = false)
     if self.size.nil?
       self.size = self.value_list(debug).reduce(1){|acc, x| acc * x.size}
+      self.size *= self.replication_level unless self.replication_level.nil?
       self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
     end
 

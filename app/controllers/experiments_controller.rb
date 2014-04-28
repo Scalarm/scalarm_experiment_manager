@@ -75,13 +75,15 @@ class ExperimentsController < ApplicationController
 
   def create
     doe_info = []
-    doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameters| parameters.first.nil? } unless params['doe'].blank?
+    unless params['doe'].blank?
+      doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameters| parameters.first.nil? } 
+    end
 
     # create the new type of experiment object
     experiment = Experiment.new({ 'simulation_id' => @simulation.id,
       'is_running' => true,
       'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-      'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i,
+      'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
       'doe_info' => doe_info,
       'start_at' => Time.now,
       'user_id' => @current_user.id,
@@ -135,7 +137,7 @@ class ExperimentsController < ApplicationController
       experiment = Experiment.new({ 'simulation_id' => @simulation.id,
         'is_running' => true,
         'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-        'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i,
+        'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
         'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
         'start_at' => Time.now,
         'user_id' => @current_user.id,
@@ -177,8 +179,9 @@ class ExperimentsController < ApplicationController
 
     # create the new type of experiment object
     experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+                                 'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
                                  'experiment_input' => @experiment_input,
-                                 'run_counter' => params[:run_index].to_i,
+                                 'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
                                  'name' => @simulation.name,
                                  'doe_info' => doe_info
                                 })
@@ -195,8 +198,9 @@ class ExperimentsController < ApplicationController
     }.map{ |parameter| parameter.split('param_').last }
 
     importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
+    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
 
-    render json: { experiment_size: importer.parameter_values.size }
+    render json: { experiment_size: importer.parameter_values.size * replication_level }
   end
 
   ### Progress monitoring API
