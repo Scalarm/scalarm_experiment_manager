@@ -181,19 +181,14 @@ class CloudFacade < InfrastructureFacade
     error_counter = 0
     while true
       begin
-        record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
         ssh = shared_ssh_session(record)
-        output = ssh.exec!("ls #{record.log_path}")
-        logger.debug "Previous SM log check: #{output}"
-        return unless output.include?('No such file or directory')
-        output = ssh.exec!(start_simulation_manager_cmd(record))
-        logger.debug "SM exec output: #{output}"
-        break
+        break if log_exists?(ssh) or send_and_launch_sm(record, ssh)
       rescue Exception => e
         logger.warn "Exception #{e} occured while communication with "\
 "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
         error_counter += 1
         if error_counter > 10
+          logger.error 'Exceeded number of SimulationManager installation attempts'
           simulation_manager_stop(record)
           break
         end
@@ -214,6 +209,19 @@ class CloudFacade < InfrastructureFacade
         mute(cd(sm_dir_name)),
         run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
     )
+  end
+
+  def log_exists?(ssh)
+    output = ssh.exec!("ls #{record.log_path}")
+    logger.debug "Previous SM log check: #{output}"
+    not output.include?('No such file or directory')
+  end
+
+  def send_and_launch_sm(record, ssh)
+    record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
+    output = ssh.exec!(start_simulation_manager_cmd(record))
+    logger.debug "Simulation Manager PID: #{output}"
+    (record.pid = output.to_i > 0) ? record.pid : false
   end
 
   # -- Monitoring utils --

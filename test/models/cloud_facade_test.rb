@@ -66,4 +66,38 @@ class CloudFacadeTest < Test::Unit::TestCase
     assert user1_exp1_records.all? {|r| r.user_id == user1_id and r.experiment_id == experiment1_id}
   end
 
+  def test_simulation_manager_install
+
+    # - uruchamiam monitorowanie
+    # - warunki pozwalają na instalację SM
+    # - instalacja przebiega pomyślnie -
+
+    record = stub_everything 'record' do
+      stubs(:vm_id).returns('a')
+      expects(:update_ssh_address!).once
+      stubs(:time_limit_exceeded?).returns(false)
+      stubs(:experiment_end?).returns(false)
+      stubs(:init_time_exceeded?).returns(false)
+      stubs(:sm_terminated?).returns(false)
+    end
+
+    InfrastructureFacade.expects(:prepare_configuration_for_simulation_manager).once
+
+    cloud_client = mock 'cloud_client' do
+      stubs(:vm_instance).returns(stub_everything)
+    end
+
+    facade = CloudFacade.new(cloud_client)
+
+    facade.stubs(:logger).returns(stub_everything)
+    facade.expects(:cloud_client_instance).returns(cloud_client).once
+    facade.expects(:log_exists?).returns(false).once
+    facade.expects(:send_and_launch_sm).returns(10).once
+    facade.expects(:simulation_manager_stop).never
+
+    # EXECUTE
+    facade.simulation_manager_install(record)
+
+  end
+
 end
