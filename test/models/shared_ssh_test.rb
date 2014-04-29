@@ -5,14 +5,15 @@ require 'infrastructure_facades/shared_ssh'
 
 class SharedSshTest < Test::Unit::TestCase
 
+  class MockFacade
+    include SharedSSH
+  end
+
   def setup
+    MockFacade.any_instance.stubs(:logger).returns(stub_everything)
   end
 
   def teardown
-  end
-
-  class MockFacade
-    include SharedSSH
   end
 
   def test_shared_session

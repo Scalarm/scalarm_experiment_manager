@@ -21,13 +21,13 @@ class SimulationManagerTest < Test::Unit::TestCase
   ]
 
   def test_has_methods
-    mock_record = mock do
-      stubs(:resource_id).returns('something')
-    end
+    mock_record = stub_everything
+    mock_record.stubs(:id).returns('id')
+    mock_record.stubs(:max_init_time).returns(1)
 
-    mock_infrastructure = mock do
-      stubs(:short_name).returns('anything')
-    end
+    mock_infrastructure = stub_everything
+    mock_infrastructure.stubs(:short_name).returns('anything')
+
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
 
     METHOD_NAMES.each do |method_name|
@@ -36,7 +36,7 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_nothing
-    mock_record = mock do
+    mock_record = mock 'record' do
       stubs(:resource_id).returns('other-vm')
       expects(:time_limit_exceeded?).returns(false).once
       expects(:destroy).never
@@ -47,11 +47,8 @@ class SimulationManagerTest < Test::Unit::TestCase
       expects(:save).never
     end
 
-    mock_infrastructure = mock do
+    mock_infrastructure = mock 'infrastructure' do
       stubs(:short_name).returns('anything')
-      expects(:terminate_simulation_manager).never
-      expects(:sm_running?).never
-      expects(:initialize_simulation_manager).never
     end
 
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
@@ -61,11 +58,168 @@ class SimulationManagerTest < Test::Unit::TestCase
     simulation_manager.expects(:sm_terminated?).returns(false).once
     simulation_manager.expects(:should_initialize_sm?).returns(false).once
     simulation_manager.expects(:record_sm_failed).never
+    simulation_manager.expects(:install).never
     simulation_manager.expects(:after_monitor).once
 
     # EXECUTION
     simulation_manager.monitor
+  end
 
+  def test_monitor_time_limit
+    mock_record = mock 'record' do
+      stubs(:resource_id).returns('other-vm')
+      expects(:max_init_time).returns(20).once # used for logger message
+      expects(:time_limit_exceeded?).returns(true).once
+      expects(:experiment_end?).never
+      expects(:init_time_exceeded?).never
+      expects(:sm_initialized=).never
+      expects(:save).never
+    end
+
+    mock_infrastructure = mock 'infrastructure' do
+      stubs(:short_name).returns('anything')
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
+    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
+    simulation_manager.expects(:before_monitor).once
+    simulation_manager.expects(:destroy_with_record).once
+    simulation_manager.expects(:sm_terminated?).never
+    simulation_manager.expects(:should_initialize_sm?).never
+    simulation_manager.expects(:record_sm_failed).never
+    simulation_manager.expects(:install).never
+    simulation_manager.expects(:after_monitor).once
+
+    # EXECUTION
+    simulation_manager.monitor
+  end
+
+  def test_monitor_experiment_end
+    mock_record = mock 'record' do
+      stubs(:resource_id).returns('other-vm')
+      expects(:max_init_time).returns(20).once # used for logger message
+      expects(:time_limit_exceeded?).returns(false).once
+      expects(:experiment_end?).returns(true).once
+      expects(:init_time_exceeded?).never
+      expects(:sm_initialized=).never
+      expects(:save).never
+    end
+
+    mock_infrastructure = mock 'infrastructure' do
+      stubs(:short_name).returns('anything')
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
+    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
+    simulation_manager.expects(:before_monitor).once
+    simulation_manager.expects(:destroy_with_record).once
+    simulation_manager.expects(:sm_terminated?).never
+    simulation_manager.expects(:should_initialize_sm?).never
+    simulation_manager.expects(:record_sm_failed).never
+    simulation_manager.expects(:install).never
+    simulation_manager.expects(:after_monitor).once
+
+    # EXECUTION
+    simulation_manager.monitor
+  end
+
+  def test_monitor_init_time_exceeded
+    mock_record = mock 'record' do
+      stubs(:resource_id).returns('other-vm')
+      expects(:max_init_time).returns(20).once # used for logger message
+      expects(:time_limit_exceeded?).returns(false).once
+      expects(:experiment_end?).returns(false).once
+      expects(:init_time_exceeded?).returns(true).once
+      expects(:sm_initialized=).never
+      expects(:save).never
+    end
+
+    mock_infrastructure = mock 'infrastructure' do
+      stubs(:short_name).returns('anything')
+      expects(:simulation_manager_running?).never
+      expects(:simulation_manager_install).never
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
+    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
+    simulation_manager.expects(:before_monitor).once
+    simulation_manager.expects(:record_init_time_exceeded).once
+    simulation_manager.expects(:restart).once
+    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:sm_terminated?).never
+    simulation_manager.expects(:should_initialize_sm?).never
+    simulation_manager.expects(:record_sm_failed).never
+    simulation_manager.expects(:install).never
+    simulation_manager.expects(:after_monitor).once
+
+    # EXECUTION
+    simulation_manager.monitor
+  end
+
+  def test_monitor_sm_terminated
+    mock_record = mock 'record' do
+      stubs(:resource_id).returns('other-vm')
+      expects(:max_init_time).returns(20).once # used for logger message
+      expects(:time_limit_exceeded?).returns(false).once
+      expects(:experiment_end?).returns(false).once
+      expects(:init_time_exceeded?).returns(false).once
+      expects(:sm_initialized=).never
+    end
+
+    mock_infrastructure = mock 'infrastructure' do
+      stubs(:short_name).returns('anything')
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
+    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
+    simulation_manager.expects(:before_monitor).once
+    simulation_manager.expects(:record_init_time_exceeded).never
+    simulation_manager.expects(:restart).never
+    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:sm_terminated?).returns(true).once
+    simulation_manager.expects(:should_initialize_sm?).never
+    simulation_manager.expects(:record_sm_failed).once
+    simulation_manager.expects(:install).never
+    simulation_manager.expects(:after_monitor).once
+
+    # EXECUTION
+    simulation_manager.monitor
+  end
+
+  def test_monitor_try_to_initialize_sm
+    mock_record = mock 'record' do
+      stubs(:resource_id).returns('other-vm')
+      expects(:max_init_time).returns(20).once # used for logger message
+      expects(:time_limit_exceeded?).returns(false).once
+      expects(:experiment_end?).returns(false).once
+      expects(:init_time_exceeded?).returns(false).once
+      expects(:sm_initialized=).with(true).once
+      expects(:save).once
+    end
+
+    mock_infrastructure = mock 'infrastructure' do
+      stubs(:short_name).returns('anything')
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
+    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
+    simulation_manager.expects(:before_monitor).once
+    simulation_manager.expects(:record_init_time_exceeded).never
+    simulation_manager.expects(:restart).never
+    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:sm_terminated?).returns(false).once
+    simulation_manager.expects(:record_sm_failed).never
+    simulation_manager.expects(:should_initialize_sm?).returns(true).once
+    simulation_manager.expects(:install).once
+    simulation_manager.expects(:after_monitor).once
+
+    # EXECUTION
+    simulation_manager.monitor
   end
 
   def test_delegation
@@ -79,6 +233,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     end
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
 
+    SimulationManager.any_instance.stubs(:generate_monitoring_cases).returns(nil)
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
 
     SimulationManager::DELEGATES.each do |delegate|

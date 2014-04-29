@@ -35,7 +35,7 @@ https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q
     glite = GliteFacade.new
     glite.expects(:glite_state).returns('Waiting').once
 
-    assert_equal :initializing, glite.state(Object.new, Object.new)
+    assert_equal :initializing, glite.status(Object.new, Object.new)
   end
 
   def test_parse_status

@@ -6,56 +6,58 @@ class SimulationManager
   attr_reader :infrastructure
   attr_reader :logger
 
+  attr_reader :monitoring_order
+  attr_reader :monitoring_cases
+
   def initialize(record, infrastructure)
     @record = record
     @infrastructure = infrastructure
     @logger = InfrastructureTaskLogger.new(infrastructure.short_name, record.resource_id)
+
+    @monitoring_cases = generate_monitoring_cases
+    @monitoring_order = [:time_limit, :experiment_end, :init_time_exceeded, :sm_terminated, :try_to_initialize_sm]
+  end
+
+  def generate_monitoring_cases
+    {
+        time_limit: {
+            condition: lambda {record.time_limit_exceeded?},
+            message: 'This Simulation Manager is going to be destroyed due to time limit',
+            action: lambda {destroy_with_record}
+        },
+        experiment_end: {
+            condition: lambda {record.experiment_end?},
+            message: 'This Simulation Manager will be destroyed due to experiment finishing',
+            action: lambda {destroy_with_record}
+        },
+        init_time_exceeded: {
+            condition: lambda {record.init_time_exceeded?},
+            message: "Initialization time (#{record.max_init_time.minutes} min) exceeded - discontinuing initialization",
+            action: lambda {
+              record_init_time_exceeded
+              restart
+            }
+        },
+        sm_terminated: {
+            condition: lambda {sm_terminated?},
+            message: 'Simulation Manager is terminated, but experiment has not been completed. Reporting error.',
+            action: lambda {record_sm_failed}
+        },
+        try_to_initialize_sm: {
+            condition: lambda {should_initialize_sm?},
+            message: 'This machine is going to be initialized with Simulation Manager now',
+            action: lambda {
+              install(record)
+              record.sm_initialized = true
+              record.save
+            }
+        }
+    }
   end
 
   # A human-readable Simulation Manager resource name, e.g. id of VM
   def name
     record.resource_id
-  end
-
-  def monitoring_cases
-    {
-      time_limit: {
-          condition: lambda {record.time_limit_exceeded?},
-          message: 'This Simulation Manager is going to be destroyed due to time limit',
-          action: lambda {destroy_with_record}
-      },
-      experiment_end: {
-          condition: lambda {record.experiment_end?},
-          message: 'This Simulation Manager will be destroyed due to experiment finishing',
-          action: lambda {destroy_with_record}
-      },
-      init_time_exceeded: {
-          condition: lambda {record.init_time_exceeded?},
-          message: "Initialization time (#{record.max_init_time.minutes} min) exceeded - discontinuing initialization",
-          action: lambda {
-            record_init_time_exceeded
-            restart
-          }
-      },
-      sm_terminated: {
-          condition: lambda {sm_terminated?},
-          message: 'Simulation Manager is terminated, but experiment has not been completed. Reporting error.',
-          action: lambda {record_sm_failed}
-      },
-      try_to_initialize_sm: {
-          condition: lambda {should_initialize_sm?},
-          message: 'This machine is going to be initialized with Simulation Manager now',
-          action: lambda {
-            install(record)
-            record.sm_initialized = true
-            record.save
-          }
-      }
-    }
-  end
-
-  def monitoring_order
-    [:time_limit, :experiment_end, :init_time_exceeded, :sm_terminated, :try_to_initialize_sm]
   end
 
   def monitor
