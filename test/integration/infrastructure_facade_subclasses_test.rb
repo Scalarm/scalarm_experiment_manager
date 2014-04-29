@@ -24,17 +24,20 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
       # :clean_tmp_credentials, # ?
       # :current_state, # ?
       :add_credentials,
-      :remove_credentials, # !
+      :remove_credentials,
       :get_sm_records,
       :create_simulation_manager
   ]
 
   SM_METHODS = [
-      :simulation_manager_terminate,
+      :simulation_manager_stop,
+      :simulation_manager_restart,
+      :simulation_manager_status,
       :simulation_manager_running?,
       :simulation_manager_get_log,
-      :simulation_manager_restart,
-      :simulation_manager_status
+      :simulation_manager_install,
+      :simulation_manager_before_monitor,
+      :simulation_manager_after_monitor
   ]
 
   def test_get_registered_infrastructures
@@ -57,9 +60,13 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
     # when, then
     assert_nothing_thrown do
       infrastructure_facades.each do |facade|
-        assert FACADE_METHODS.each {|method| assert facade.respond_to?(method), "no method #{method} in #{facade}"}
+        assert (FACADE_METHODS+SM_METHODS).each {|method| assert facade.respond_to?(method), "no method #{method} in #{facade}"}
       end
     end
+  end
+
+  def test_monitoring_plgrid
+
   end
 
 end

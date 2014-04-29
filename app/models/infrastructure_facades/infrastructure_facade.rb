@@ -4,9 +4,9 @@ require_relative 'infrastructure_task_logger'
 require_relative 'tree_utils'
 require_relative 'infrastructure_errors'
 require_relative 'simulation_manager'
-require 'clouds/cloud_factory'
+require_relative 'clouds/cloud_factory'
 
-# methods necessary to implement by subclasses
+# Methods necessary to implement by subclasses
 # monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
 #   and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
 #   mutually excluded.
@@ -17,6 +17,15 @@ require 'clouds/cloud_factory'
 # current_state(user) - returns a string describing summary of current infrastructure state
 # add_credentials(user, params, session) - save credentials to database or session based on request parameters
 # short_name - short name of infrastructure, e.g. 'plgrid'
+#
+# SimulationManager delegate methods to implement
+# - simulation_manager_stop(record)
+# - simulation_manager_restart(record)
+# - simulation_manager_status(record)
+# - simulation_manager_running?(record)
+# - simulation_manager_get_log(record)
+# - simulation_manager_install(record)
+
 class InfrastructureFacade
   include InfrastructureErrors
 
@@ -60,7 +69,7 @@ class InfrastructureFacade
   end
 
   # returns a map of all supported infrastructures
-  # infrastructure_id => facade object
+  # infrastructure_id => {label: long_name, facade: facade_instance}
   def self.get_registered_infrastructures
     non_cloud_infrastructures.merge(cloud_infrastructures)
   end
@@ -76,21 +85,39 @@ class InfrastructureFacade
     CloudFactory.infrastructures_hash
   end
 
-  def start_monitoring
+  def monitoring_thread
     configure_polling_interval
     lock = MongoLock.new(short_name)
     while true do
       if lock.acquire
         begin
           logger.info 'monitoring thread is working'
-          monitoring_loop
+          before_monitoring_loop
+          begin
+            monitoring_loop
+          rescue Exception => e
+            logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
+          end
+          after_monitoring_loop
         rescue Exception => e
-          logger.error "Monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
-          # TODO: add 'clean_expired' method to each InfrastructureFacade to remove invalid outdated records
+          logger.error "Uncaught before/after monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
         lock.release
       end
       sleep(@polling_interval_sec)
+    end
+  end
+
+  # TODO: grouping can be done with special grouping method delegated to each facade
+  def monitoring_loop
+    begin
+      get_simulation_managers.each &:monitor
+    rescue Exception => e
+      logger.error "Uncaught exception on monitoring single computation: #{e.to_s}\n#{e.backtrace.join("\n")}"
+      get_sm_records.select(&:should_destroy?).each do |record|
+        logger.warn "Record #{record.id} will be destroyed"
+        record.destroy
+      end
     end
   end
 
@@ -105,7 +132,7 @@ class InfrastructureFacade
       Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
 
       Thread.new do
-        infrastructure_information[:facade].start_monitoring
+        infrastructure_information[:facade].monitoring_thread
       end
     end
   end
@@ -123,6 +150,10 @@ class InfrastructureFacade
     SimulationManager.new(record, self)
   end
 
+  def get_simulation_managers(*args)
+    get_sm_records(*args).map {|r| create_simulation_manager(r)}
+  end
+
   # Used mainly to create node or subtree:
   # - if there is only one ScheduledJobContainer, creates node
   # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
@@ -138,5 +169,13 @@ class InfrastructureFacade
   def sm_record_hashes(user_id, experiment_id=nil, params={})
     get_sm_records(user_id, experiment_id, params).map {|r| r.to_h }
   end
+
+  def before_monitoring_loop; end
+  def after_monitoring_loop; end
+
+  # -- SimulationManger delegation default implementation --
+
+  def simulation_manager_before_monitor(record); end
+  def simulation_manager_after_monitor(record); end
 
 end

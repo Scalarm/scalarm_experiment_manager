@@ -29,47 +29,58 @@ class GliteFacade < PlGridSchedulerBase
   end
 
   def submit_job(ssh, job)
+    prepare_session(ssh)
     ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
-    #  create a proxy certificate for the user
-    ssh.exec!('voms-proxy-init --voms vo.plgrid.pl')
-    #  schedule the job with glite wms
-
     #  schedule the job with glite wms
     submit_job_output = ssh.exec!("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl")
-    Rails.logger.debug("Output lines: #{submit_job_output}")
+    Rails.logger.debug("Glite submission output lines: #{submit_job_output}")
 
-    if submit_job_output != nil
-      output_lines = submit_job_output.split("\n")
-
-      output_lines.each_with_index do |line, index|
-        if line.include?('Your job identifier is:')
-          if output_lines[index + 1].start_with?('http')
-            job.job_id = output_lines[index + 1]
-            return true
-          elsif output_lines[index + 2].start_with?('http')
-            job.job_id = output_lines[index + 2]
-            return true
-          end
-        end
-      end
-    end
-
-    false
+    submit_job_output ? (job.job_id = parse_job_id(submit_job_output)) : nil
   end
 
-  def current_state(ssh, job)
-    state_output = ssh.exec!("glite-wms-job-status #{job.job_id}")
-    current_state_line = state_output.split("\n").select{|line| line.start_with?('Current Status:')}.first
+  def self.parse_job_id(submit_job_output)
+    match = submit_job_output.match /Your job identifier is:\s+(\S+)/
+    match ? match[1] : nil
+  end
 
-    current_state_line['Current Status:'.length..-1].strip
+  def glite_state(ssh, job)
+    self.class.parse_job_status(ssh.exec!("glite-wms-job-status #{job.job_id}"))
+  end
+
+  def self.parse_job_status(state_output)
+    match = state_output.match /Current Status:\s+(\S+)/
+    match ? match[1] : nil
   end
 
   def is_done(ssh, job)
-    not %w(Ready Scheduled Running).include?(current_state(ssh, job))
+    not %w(Ready Scheduled Running).include?(glite_state(ssh, job))
   end
 
   def is_job_queued(ssh, job)
-    %w(Ready Scheduled).include?(current_state(ssh, job))
+    %w(Ready Scheduled).include?(glite_state(ssh, job))
+  end
+
+  # --- gLite states:
+  # Submitted -	The job has been submitted by the user but not yet processed by the RB
+  # Waiting	- The job has been accepted by the RB but not yet matched to a CE
+  # Ready	- The job has been assigned to a CE but not yet transferred to it
+  # Scheduled	- The job is waiting in the local batch system queue on the CE
+  # Running	- The job is running on a WN
+  # Done(Success) - The job has finished successfully
+  # Cleared - The Output Sandbox has been retrieved by the user
+
+  STATES_MAPPING = {
+      'Submitted' => :initializing,
+      'Waiting' => :initializing,
+      'Ready' => :initializing,
+      'Scheduled' => :initializing,
+      'Running' => :running,
+      'Done(Success)' => :deactivating,
+      'Cleared' => :deactivating
+  }
+
+  def status(ssh, job)
+    STATES_MAPPING[glite_state(ssh, job)] or :error
   end
 
   def cancel(ssh, job)
@@ -81,8 +92,7 @@ class GliteFacade < PlGridSchedulerBase
   end
 
   def clean_after_job(ssh, job)
-    ssh.exec!("rm scalarm_simulation_manager_#{job.sm_uuid}.zip")
-    ssh.exec!("rm scalarm_job_#{job.sm_uuid}.sh")
+    super
     ssh.exec!("rm scalarm_job_#{job.sm_uuid}.jdl")
   end
 
@@ -97,37 +107,37 @@ class GliteFacade < PlGridSchedulerBase
     end
   end
 
-  # TODO: more attributes to set
-
   # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
   # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
   # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"
   # task - "cream.grid.task.gda.pl:8443/cream-pbs-plgrid"
   # pcss - "creamce.reef.man.poznan.pl:8443/cream-pbs-plgrid"
   def prepare_job_descriptor(uuid)
+    log_path = PlGridJob.log_path(uuid)
     <<-eos
 Executable = "scalarm_job_#{uuid}.sh";
 Arguments = "#{uuid}";
-StdOutput = "scalarm_job.out";
-StdError = "scalarm_job.err";
-OutputSandbox = {"scalarm_job.out", "scalarm_job.err"};
+StdOutput = "#{log_path}";
+StdError = "#{log_path}";
+OutputSandbox = {"#{log_path}"};
 InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
 Requirements = (other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid");
-VirtualOrganisation = "vo.plgrid.pl"; 
+VirtualOrganisation = "vo.plgrid.pl";
     eos
   end
 
-  def prepare_job_executable
-    <<-eos
-#!/bin/bash
-module add plgrid/tools/ruby/2.0.0-p0
+  def prepare_session(ssh)
+    voms_proxy_init(ssh, 'vo.plgrid.pl')
+  end
 
-if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
+  def get_log(ssh, job)
+    output_dir = GliteFacade.parse_get_output ssh.exec!("glite-wms-job-output --dir . #{job.job_id}")
+    ssh.exec!("tail -25 #{output_dir}/#{job.log_path}")
+  end
 
-unzip scalarm_simulation_manager_$1.zip
-cd scalarm_simulation_manager_$1
-ruby simulation_manager.rb
-    eos
+  def self.parse_get_output(output)
+    match = output.match /retrieved and stored in the directory:\s+(\S+)/
+    match ? match[1] : nil
   end
 
 end

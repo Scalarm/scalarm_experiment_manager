@@ -9,6 +9,7 @@ class InfrastructuresController < ApplicationController
   end
 
   # GET a root of Infrastructures Tree. This method is used directly by javascript tree.
+  # Renders JSON
   def tree
     data = {
       name: I18n.t('infrastructures_controller.tree.root'),
@@ -42,9 +43,9 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - infrastructure_name: name of Infrastructure
   # - experiment_id: (optional) experiment_id
+  # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
   def simulation_manager_records
     begin
-      Rails.logger.info "PARAAAMS: #{params}"
       facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
       hash = facade.sm_record_hashes(@current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
       render json: hash
@@ -63,9 +64,6 @@ class InfrastructuresController < ApplicationController
     InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure|
       infrastructure_info[infrastructure_id] = infrastructure[:facade].current_state(@current_user.id)
     end
-
-    infrastructure_info[:private] = 'Not available'
-    infrastructure_info[:amazon] = 'Not available'
 
     render json: infrastructure_info
   end
@@ -86,67 +84,20 @@ class InfrastructuresController < ApplicationController
     render json: { status: status, msg: I18n.t("#{params[:infrastructure_type]}.login.#{status}") }
   end
 
-  def remove_image
-    img_secrets = CloudImageSecrets.find_by_id(params[:image_secrets_id])
-    if img_secrets and img_secrets.user_id != @current_user.id
-      render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
-    end
-
-    if img_secrets
-      cloud_name = img_secrets.cloud_name
-      image_id = img_secrets.image_id
-      long_cloud_name = CloudFactory.long_name(cloud_name)
-
-      img_secrets.destroy
-      msg = I18n.t('infrastructures_controller.image_removed', cloud_name: long_cloud_name, image_id: image_id)
-      render json: { status: 'ok', msg: msg, cloud_name: long_cloud_name, image_id: image_id }
-    else
-      msg = I18n.t('infrastructures_controller.image_not_found')
-      render json: { status: 'error', msg: msg }
-    end
-  end
-
-  def remove_private_machine_credentials
-    machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
-    if machine_creds and machine_creds.user_id != @current_user.id
-      render json: { status: 'error', msg: I18n.t('infrastructures_controller.permission_denied') }
-    end
-
-    if machine_creds
-      name = machine_creds.machine_desc
-      machine_creds.destroy
-      msg = I18n.t('infrastructures_controller.priv_machine_creds_removed', name: name)
-      render json: { status: 'ok', msg: msg }
-    else
-      msg = I18n.t('infrastructures_controller.priv_machine_creds_not_removed')
-      render json: { status: 'error', msg: msg }
-    end
-  end
 
   # GET param: infrastructure_name
   # GET param: record_id
+  # GET param (optional): credential_type
   def remove_credentials
     begin
-      render json: get_facade_for(params['infrastructure_name']).remove_credentials(params['record_id'], @current_user.id)
+      InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+        .remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
+      render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: params[:infrastructure_name])}
     rescue Exception => e
-      # TODO translate
       Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace}"
-      render json: {status: 'error', msg: "Remove credentials failed: #{e.to_s}"}
+      render json: {status: 'error', msg: I18n.t('infrastructures_controller.credentials_not_removed', error: e.to_s)}
     end
   end
-
-  ## TODO: delegate to facades
-  #def remove_credentials
-  #  secrets = CloudSecrets.find_by_query('cloud_name'=>params[:cloud_name], 'user_id'=>BSON::ObjectId(params[:user_id]))
-  #  if secrets
-  #    secrets.destroy
-  #    msg = I18n.t('infrastructures_controller.credentials_removed', name: CloudFactory.long_name(params[:cloud_name]))
-  #    render json: { status: 'ok', msg: msg }
-  #  else
-  #    msg = I18n.t('infrastructures_controller.credentials_not_removed', name: CloudFactory.long_name(params[:cloud_name]))
-  #    render json: { status: 'error', msg: msg }
-  #  end
-  #end
 
   def simulation_managers_info
     begin
@@ -161,11 +112,13 @@ class InfrastructuresController < ApplicationController
 
       render partial: "infrastructure/information/simulation_managers/#{params[:infrastructure_name]}"
     rescue Exception => e
-      # FIXME
+      # FIXME translate
+      Rails.logger.error "Error rendering simulation_managers_info: #{e.to_s}\n#{e.backtrace.join("\n")}"
       render text: "An error occured: #{e.to_s}"
     end
   end
 
+  # FIXME locals
   def simulation_manager_command
     begin
       if %w(stop restart).include? params[:command]
@@ -202,6 +155,9 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # ============================ PRIVATE METHODS ============================
+  private
+
   def get_simulation_manager(record_id, infrastructure_name)
     facade = InfrastructureFacade.get_facade_for(infrastructure_name)
     record = facade.get_sm_record_by_id(record_id)
@@ -211,14 +167,11 @@ class InfrastructuresController < ApplicationController
     facade.create_simulation_manager(record)
   end
 
-  # ============================ PRIVATE METHODS ============================
-  private
-
   def collect_infrastructure_info(user_id)
     @infrastructure_info = {}
 
     InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      @infrastructure_info[infrastructure_id] = infrastructure_info[:facade].current_state(user_id)
+      @infrastructure_info[infrastructure_id] = infrastructure_info[:facade].pbs_state(user_id)
     end
 
     #private_all_machines = SimulationManagerHost.all.count

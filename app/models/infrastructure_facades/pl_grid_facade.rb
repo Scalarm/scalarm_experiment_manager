@@ -7,12 +7,17 @@ require 'plgrid/grid_schedulers/glite_facade'
 require 'plgrid/grid_schedulers/pbs_facade'
 
 require_relative 'infrastructure_facade'
+require_relative 'shared_ssh'
 
 class PlGridFacade < InfrastructureFacade
+  include SharedSSH
+
+  attr_reader :ssh_sessions
 
   def initialize
     super()
     @ui_grid_host = 'ui.grid.cyfronet.pl'
+    @ssh_sessions = {}
   end
 
   def long_name
@@ -28,28 +33,29 @@ class PlGridFacade < InfrastructureFacade
     I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
   end
 
-  # for each job check
-  # 1. if the experiment is still running - destroy the job otherwise
-  # 2. if the job is started correctly and is not stuck in a queue - restart if yes
-  # 3. if the job is running more then 24 hours  - restart if yes
-  def monitoring_loop
-    #  group jobs by the user_id - for each group - login to the ui using the user credentials
-    PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
-
-      begin
-        logger.info "monitoring thread is working"
-        #  group jobs by the user_id - for each group - login to the ui using the user credentials
-        PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
-          credentials = GridCredentials.find_by_user_id(user_id)
-          next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
-
-          Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-            (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
-          end
-        end
-      end
-    end
-  end
+  # TODO: group by user_id
+  # # for each job check
+  # # 1. if the experiment is still running - destroy the job otherwise
+  # # 2. if the job is started correctly and is not stuck in a queue - restart if yes
+  # # 3. if the job is running more then 24 hours  - restart if yes
+  # def monitoring_loop
+  #   #  group jobs by the user_id - for each group - login to the ui using the user credentials
+  #   PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
+  #
+  #     begin
+  #       logger.info "monitoring thread is working"
+  #       #  group jobs by the user_id - for each group - login to the ui using the user credentials
+  #       PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
+  #         credentials = GridCredentials.find_by_user_id(user_id)
+  #         next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
+  #
+  #         Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+  #           (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
+  #         end
+  #       end
+  #     end
+  #   end
+  # end
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
@@ -64,14 +70,14 @@ class PlGridFacade < InfrastructureFacade
 
       #  upload the code to the Grid user interface machine
       begin
-        Net::SCP.start(credentials.host, credentials.login, password: credentials.password) do |scp|
+        credentials.scp_start do |scp|
           scheduler.send_job_files(sm_uuid, scp)
         end
 
-        Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+        credentials.ssh_start do |ssh|
           1.upto(instances_count).each do
             #  retrieve job id and store it in the database for future usage
-            job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id, 'created_at' => Time.now,
+            job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id,
                                   'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
                                   'time_limit' => additional_params['time_limit'].to_i })
             job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
@@ -114,7 +120,7 @@ class PlGridFacade < InfrastructureFacade
     'ok'
   end
 
-  def remove_credentials(record_id, user_id, params)
+  def remove_credentials(record_id, user_id, params=nil)
     record = GridCredentials.find_by_id(record_id)
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
@@ -165,7 +171,7 @@ class PlGridFacade < InfrastructureFacade
     { 'scheduler' => 'qsub', 'time_limit' => 300 }
   end
 
- def retrieve_grants(credentials)
+  def retrieve_grants(credentials)
     return [] if credentials.nil?
 
     grants, grant_output = [], []
@@ -185,5 +191,54 @@ class PlGridFacade < InfrastructureFacade
 
     grants
   end
+
+  # -- SimulationManager delegation methods --
+
+  def simulation_manager_before_monitor(record)
+    PlGridFacade.create_scheduler_facade(record.scheduler_type).prepare_session(shared_ssh_session(record.credentials))
+  end
+
+  def simulation_manager_stop(record)
+    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
+    ssh = shared_ssh_session(record.credentials)
+    scheduler.cancel(ssh, record)
+    scheduler.clean_after_job(ssh, record)
+  end
+
+  def simulation_manager_restart(record)
+    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
+    ssh = shared_ssh_session(record.credentials)
+    scheduler.restart(ssh, record)
+  end
+
+  def simulation_manager_status(record)
+    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
+    ssh = shared_ssh_session(record.credentials)
+    scheduler.status(ssh, record)
+  end
+
+  def simulation_manager_running?(record)
+    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
+    ssh = shared_ssh_session(record.credentials)
+    not scheduler.is_done(ssh, record)
+  end
+
+  def simulation_manager_get_log(record)
+    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
+    ssh = shared_ssh_session(record.credentials)
+    scheduler.get_log(ssh, record)
+  end
+
+  def simulation_manager_install(record)
+    # pass - SM already sent
+  end
+
+  # -- Monitoring utils --
+
+  def after_monitoring_loop
+    close_all_ssh_sessions
+  end
+
+  # --
 
 end

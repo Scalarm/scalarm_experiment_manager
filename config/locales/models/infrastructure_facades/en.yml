@@ -3,7 +3,7 @@ en:
     image_removed: "Removed %{cloud_name} image credentials with id %{image_id}"
     image_not_found: "Image record not found"
     credentials_removed: "Removed credentials for %{name}"
-    credentials_not_removed: "There was no credentials for %{name} to remove"
+    credentials_not_removed: "Error occured on removing credentials: %{error}"
     priv_machine_creds_removed: "Removed %{name} private resource credentials"
     priv_machine_creds_not_removed: "There was no credentials in database to remove"
     permission_denied: "Permission denied"

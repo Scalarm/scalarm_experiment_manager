@@ -29,10 +29,6 @@ class CloudVmRecord < MongoActiveRecord
     'vm_records'
   end
 
-  def initialize(attributes)
-    super(attributes)
-  end
-
   #  upload file to the VM - use only password authentication
   def upload_file(local_path, remote_path='.')
     Net::SCP.start(public_host, image_secrets.image_login, ssh_params) do |scp|
@@ -41,6 +37,10 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def ssh_session
+    Net::SSH.start(public_host, image_secrets.image_login, ssh_params)
+  end
+
+  def ssh_start
     Net::SSH.start(public_host, image_secrets.image_login, ssh_params) do |ssh|
       yield ssh
     end
@@ -63,8 +63,21 @@ class CloudVmRecord < MongoActiveRecord
   def ssh_params
     {
         port: public_ssh_port, password: image_secrets.secret_image_password,
-        auth_methods: SSH_AUTH_METHODS, paranoid: false, user_known_hosts_file: %w(/dev/null)
+        auth_methods: SSH_AUTH_METHODS, paranoid: false, user_known_hosts_file: %w(/dev/null),
+        timeout: 30
     }
+  end
+
+  def update_ssh_address!(vm_instance)
+    if not self.public_host or not self.public_ssh_port
+      psa = vm_instance.public_ssh_address
+      self.public_host, self.public_ssh_port = psa[:host], psa[:port]
+      self.save
+    end
+  end
+
+  def log_path
+    "/tmp/log_sm_#{sm_uuid}"
   end
 
 end

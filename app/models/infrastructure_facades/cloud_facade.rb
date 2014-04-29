@@ -1,6 +1,9 @@
 require_relative 'clouds/vm_instance.rb'
+require_relative 'shared_ssh'
 
 class CloudFacade < InfrastructureFacade
+  include ShellCommands
+  include SharedSSH
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
@@ -8,12 +11,15 @@ class CloudFacade < InfrastructureFacade
   attr_reader :long_name
   attr_reader :short_name
 
+  attr_reader :ssh_sessions
+
   # Creates specific cloud facade instance
   # @param [Class] client_class
   def initialize(client_class)
     @client_class = client_class
     @short_name = client_class.short_name
     @long_name = client_class.long_name
+    @ssh_sessions = {}
     super()
   end
 
@@ -30,19 +36,20 @@ class CloudFacade < InfrastructureFacade
     I18n.t('infrastructure_facades.cloud.current_state_count', count: get_sm_records(user.id).count)
   end
 
-  def monitoring_loop
-    get_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
-      secrets = get_cloud_secrets(user_id)
-      if secrets.nil?
-        user = ScalarmUser.find_by_id(user_id)
-        logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
-        next
-      end
-
-      client = @client_class.new(secrets)
-      (user_vm_records.map {|r| create_simulation_manager(r)}).each &:monitor
-    end
-  end
+  # TODO: groping by user_id in monitoring_loop
+  # def monitoring_loop
+  #   get_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
+  #     secrets = get_cloud_secrets(user_id)
+  #     if secrets.nil?
+  #       user = ScalarmUser.find_by_id(user_id)
+  #       logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
+  #       next
+  #     end
+  #
+  #     client = @client_class.new(secrets)
+  #     (user_vm_records.map {|r| create_simulation_manager(r)}).each &:monitor
+  #   end
+  # end
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
@@ -90,11 +97,9 @@ class CloudFacade < InfrastructureFacade
                                         user_id: user_id,
                                         experiment_id: experiment_id,
                                         image_secrets_id: image_secrets.id,
-                                        created_at: Time.now,
                                         time_limit: params['time_limit'],
                                         vm_id: vm_id.to_s,
                                         sm_uuid: SecureRandom.uuid,
-                                        sm_initialized: false,
                                         start_at: params['start_at'],
                                     })
       vm_record.save
@@ -111,11 +116,11 @@ class CloudFacade < InfrastructureFacade
     self.send("handle_#{params[:credential_type]}_credentials", user, params, session)
   end
 
-  def remove_credentials(record_id, user_id, params)
-    record_class = case params[:type]
+  def remove_credentials(record_id, user_id, type)
+    record_class = case type
                      when 'secrets' then CloudSecrets
                      when 'image' then CloudImageSecrets
-                     else raise StandardError "Invalid remove parameters: #{params}"
+                     else raise StandardError "Usupported type: #{type}"
                    end
 
     record = record_class.find_by_id(record_id)
@@ -127,18 +132,6 @@ class CloudFacade < InfrastructureFacade
   def clean_tmp_credentials(user_id, session)
   end
 
-  # FIXME
-  #def get_simulation_managers(user_id=nil, experiment_id=nil, params={})
-  #  vm_records = get_sm_records(user_id, experiment_id, params)
-  #  secrets = get_cloud_secrets(user_id)
-  #  if secrets.nil?
-  #    []
-  #  else
-  #    client = @client_class.new(secrets)
-  #    vm_records.map {|r| client.cloud_simulation_manager(r)}
-  #  end
-  #end
-
   def get_sm_records(user_id=nil, experiment_id=nil, params={})
     query = {cloud_name: @short_name}
     query.merge!({user_id: user_id}) if user_id
@@ -149,6 +142,84 @@ class CloudFacade < InfrastructureFacade
 
   def get_sm_record_by_id(record_id)
     CloudVmRecord.find_by_id(record_id)
+  end
+
+  # -- SimulationManager delegation methods --
+
+  def simulation_manager_stop(record)
+    cloud_client_instance(record.user_id).terminate(record.vm_id)
+  end
+
+  def simulation_manager_restart(record)
+    cloud_client_instance(record.user_id).reinitialize(record.vm_id)
+  end
+
+  def simulation_manager_status(record)
+    cloud_client_instance(record.user_id).status(record.vm_id)
+  end
+
+  def simulation_manager_running?(record)
+    vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
+    if vm.exists? and vm.status == :running
+      not shared_ssh_session(record).exec!("ps #{record.pid} | tail -n +2").blank?
+    else
+      false
+    end
+  end
+
+  def simulation_manager_get_log(record)
+    shared_ssh_session(record).exec! "tail -25 #{record.log_path}"
+  end
+
+  def simulation_manager_install(record)
+    vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
+    record.update_ssh_address!(vm)
+    logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
+
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
+                                                                      record.experiment_id, record.start_at)
+    error_counter = 0
+    while true
+      begin
+        record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
+        ssh = shared_ssh_session(record)
+        output = ssh.exec!("ls #{record.log_path}")
+        logger.debug "Previous SM log check: #{output}"
+        return unless output.include?('No such file or directory')
+        output = ssh.exec!(start_simulation_manager_cmd(record))
+        logger.debug "SM exec output: #{output}"
+        break
+      rescue Exception => e
+        logger.warn "Exception #{e} occured while communication with "\
+"#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
+        error_counter += 1
+        if error_counter > 10
+          simulation_manager_stop(record)
+          break
+        end
+      end
+
+      sleep(20)
+    end
+  end
+
+  # -- Simulation Manager installation --
+
+  def start_simulation_manager_cmd(record)
+    sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
+    chain(
+        mute('source .rvm/environments/default'),
+        mute(rm(sm_dir_name, true)),
+        mute("unzip #{sm_dir_name}.zip"),
+        mute(cd(sm_dir_name)),
+        run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
+    )
+  end
+
+  # -- Monitoring utils --
+
+  def after_monitoring_loop
+    close_all_ssh_sessions
   end
 
   # --
@@ -187,6 +258,5 @@ class CloudFacade < InfrastructureFacade
 
     'ok'
   end
-
 
 end

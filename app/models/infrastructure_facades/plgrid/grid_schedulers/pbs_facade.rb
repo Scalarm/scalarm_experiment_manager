@@ -31,7 +31,9 @@ class PBSFacade < PlGridSchedulerBase
         'qsub',
         '-q', job.queue,
         "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}",
-        "#{job.nodes.blank? ? '' : "-l nodes=#{job.nodes}:ppn=#{job.ppn}"}"
+        "#{job.nodes.blank? ? '' : "-l nodes=#{job.nodes}:ppn=#{job.ppn}"}",
+        '-j oe', # mix stderr with stdout
+        '-o', job.log_path # output log
     ]
     #Rails.logger.debug("QSUB cmd: #{qsub_cmd.join(' ')}")
     submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
@@ -52,7 +54,7 @@ class PBSFacade < PlGridSchedulerBase
     false
   end
 
-  def current_state(ssh, job)
+  def pbs_state(ssh, job)
     state_output = ssh.exec!("qstat #{job.job_id}")
     state_output.split("\n").each do |line|
       if line.start_with?(job.job_id.split('.').first)
@@ -68,20 +70,42 @@ class PBSFacade < PlGridSchedulerBase
   end
 
   def is_done(ssh, job)
-    %w(C).include?(current_state(ssh, job))
+    %w(C).include?(pbs_state(ssh, job))
   end
 
   def is_job_queued(ssh, job)
-    %w(Q T W U).include?(current_state(ssh, job))
+    %w(Q T W U).include?(pbs_state(ssh, job))
+  end
+
+  # States from man qstat:
+  # C -  Job is completed after having run/
+  # E -  Job is exiting after having run.
+  # H -  Job is held.
+  # Q -  job is queued, eligible to run or routed.
+  # R -  job is running.
+  # T -  job is being moved to new location.
+  # W -  job is waiting for its execution time
+  # (-a option) to be reached.
+  # S -  (Unicos only) job is suspend.
+
+  STATES_MAPPING = {
+      'C'=>:deactivating,
+      'E'=>:deactivating,
+      'H'=>:running,
+      'Q'=>:initializing,
+      'R'=>:running,
+      'T'=>:running,
+      'W'=>:initializing,
+      'S'=>:error,
+      'U'=>:deactivating # probably it's not in queue
+  }
+
+  def status(ssh, job)
+    STATES_MAPPING[pbs_state(ssh, job)] or :error
   end
 
   def cancel(ssh, job)
     ssh.exec!("qdel #{job.job_id}")
-  end
-
-  def clean_after_job(ssh, job)
-    # ssh.exec!("rm scalarm_simulation_manager_#{job.sm_uuid}.zip")
-    # ssh.exec!("rm scalarm_job_#{job.sm_uuid}.sh")
   end
 
   def restart(ssh, job)
@@ -95,18 +119,10 @@ class PBSFacade < PlGridSchedulerBase
     end
   end
 
-  # TODO: more attributes to set
-
-  def prepare_job_executable
-    <<-eos
-#!/bin/bash
-
-if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
-
-unzip scalarm_simulation_manager_$1.zip
-cd scalarm_simulation_manager_$1
-ruby simulation_manager.rb
-    eos
+  def get_log(ssh, job)
+    output = ssh.exec! "tail -25 #{job.log_path}"
+    ssh.exec! "rm #{job.log_path}"
+    output
   end
 
 end

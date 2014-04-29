@@ -27,6 +27,23 @@ class GridCredentials < MongoActiveRecord
     self.hashed_password = encrypted_password
   end
 
+  def ssh_start
+    Net::SSH.start(host, login, password: password) do |ssh|
+      yield ssh
+    end
+  end
+
+  def ssh_session
+    Net::SSH.start(host, login, password: password)
+  end
+
+  def scp_start
+    Net::SCP.start(host, login, password: password) do |ssh|
+      yield ssh
+    end
+  end
+
+  # -----------
   private
 
   def self.cipher

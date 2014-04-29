@@ -3,7 +3,7 @@ require 'json'
 require 'infrastructure_facades/tree_utils'
 require 'infrastructure_facades/infrastructure_errors'
 
-class SessionsControllerTest < ActionController::TestCase
+class InfrastructuresControllerTest < ActionController::TestCase
   tests InfrastructuresController
 
   def setup
@@ -118,6 +118,26 @@ class SessionsControllerTest < ActionController::TestCase
 
       post :simulation_manager_command, {record_id: '1', infrastructure_name: 'inf', command: cmd},
           {user: @tmp_user_id}
+    end
+  end
+
+  def test_remove_credentials
+    InfrastructureFacade.get_registered_infrastructures.each do |facade_id, info|
+      info[:facade].class.any_instance.expects(:remove_credentials).returns(nil).once
+      get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
+          {user: @tmp_user_id}
+
+      assert_equal 'ok', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
+    end
+  end
+
+  def test_remove_credentials_fail
+    InfrastructureFacade.get_registered_infrastructures.each do |facade_id, info|
+      info[:facade].class.any_instance.expects(:remove_credentials).throws(StandardError.new 'some error').once
+      get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
+          {user: @tmp_user_id}
+
+      assert_equal 'error', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
     end
   end
 

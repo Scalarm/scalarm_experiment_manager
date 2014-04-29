@@ -24,10 +24,6 @@ class PrivateMachineRecord < MongoActiveRecord
     "#{credentials.nil? ? '[credentials missing!]' : credentials.machine_desc} (#{pid.nil? ? 'init' : pid})"
   end
 
-  def initialize(attributes)
-    super(attributes)
-  end
-
   def credentials
     @credentials ||= PrivateMachineCredentials.find_by_id(credentials_id)
   end

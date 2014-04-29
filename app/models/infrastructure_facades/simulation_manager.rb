@@ -1,3 +1,4 @@
+require 'set'
 require 'infrastructure_facades/infrastructure_task_logger'
 
 class SimulationManager
@@ -21,23 +22,20 @@ class SimulationManager
       time_limit: {
           condition: lambda {record.time_limit_exceeded?},
           message: 'This Simulation Manager is going to be destroyed due to time limit',
-          action: lambda {
-            stop(record)
-            record.destroy
-          }
+          action: lambda {destroy_with_record}
       },
       experiment_end: {
           condition: lambda {record.experiment_end?},
           message: 'This Simulation Manager will be destroyed due to experiment finishing',
-          action: lambda {
-            stop(record)
-            record.destroy
-          }
+          action: lambda {destroy_with_record}
       },
       init_time_exceeded: {
           condition: lambda {record.init_time_exceeded?},
           message: "Initialization time (#{record.max_init_time.minutes} min) exceeded - discontinuing initialization",
-          action: lambda {record_init_time_exceeded}
+          action: lambda {
+            record_init_time_exceeded
+            restart
+          }
       },
       sm_terminated: {
           condition: lambda {sm_terminated?},
@@ -61,21 +59,35 @@ class SimulationManager
   end
 
   def monitor
-    monitoring_order.each do |c| monitoring_cases[c]
+    logger.info 'checking'
+    before_monitor
+
+    monitoring_order.each do |c|
       m = monitoring_cases[c]
       begin
         if m[:condition].()
-          log.info m[:message]
+          logger.info m[:message]
           m[:action].()
           break
         end
       rescue Exception => e
-        logger.error "Exception on monitoring case #{c.to_s}: #{e.to_s}\n#{e.backtrace}"
+        logger.error "Exception on monitoring case #{c.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+        begin
+          if record.should_destroy?
+            logger.warn 'Simulation manager is going to be destroyed'
+            destroy_with_record
+          end
+        rescue Exception => de
+          logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}, record will be removed"
+          record.destroy
+        end
       end
     end
+
+    after_monitor
   end
 
-  DELEGATES = %w(stop restart status running? get_log install)
+  DELEGATES = %w(stop restart status running? get_log install before_monitor after_monitor).to_set
 
   def method_missing(m, *args, &block)
     if DELEGATES.include? m.to_s
@@ -98,14 +110,21 @@ class SimulationManager
   end
 
   def record_init_time_exceeded
-    record.error = t('initialization_time_exceeded')
+    record.error = I18n.t('initialization_time_exceeded')
+    record.sm_initialized_at = Time.now
+    record.sm_initialized = false
     record.save
   end
 
   def record_sm_failed
-    record.error = t('simulation_manager_terminated')
+    record.error = I18n.t('simulation_manager_terminated')
     record.error_log = get_log
     record.save
+  end
+
+  def destroy_with_record
+    stop(record)
+    record.destroy
   end
 
 end

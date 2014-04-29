@@ -3,7 +3,7 @@
 # experiment_id => the experiment which should be computed by this job
 # created_at => time - when this job were scheduled
 # time_limit => time - when this job should be stopped - in minutes
-# job_id => string - glite id of the job
+# job_id => string - queue system specific id of the job
 # sm_uuid => string - uuid of configuration files
 # scheduler_type => string - short name of scheduler, eg. pbs
 
@@ -54,6 +54,18 @@ class PlGridJob < MongoActiveRecord
     elsif walltime >= 72*60
       168*60 - 5
     end
+  end
+
+  def credentials
+    @credentials ||= GridCredentials.find_by_user_id(user_id)
+  end
+
+  def log_path
+    PlGridJob.log_path(sm_uuid)
+  end
+
+  def self.log_path(uuid)
+    "#{uuid}.log"
   end
 
 end

@@ -27,7 +27,7 @@ class UserControllerController < ApplicationController
 
         successful_login
       rescue Exception => e
-        Rails.logger.debug("Exception: #{e}")
+        Rails.logger.debug("Exception on login: #{e}\n#{e.backtrace.join("\n")}")
         reset_session
         flash[:error] = e.to_s
 

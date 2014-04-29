@@ -14,8 +14,6 @@ class CloudFactory
     m and m[1]
   end
 
-  # TODO: runtime?
-
   PROVIDER_NAMES = ((Dir.new(PROVIDERS_DIR).entries.map {|f| f.match(/^(.*)\.rb$/)}).select { |m| m }).map {|m| m[1]}
   MODULE_NAMES = {}
 

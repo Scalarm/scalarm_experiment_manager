@@ -35,32 +35,33 @@ class SimulationManagerTest < Test::Unit::TestCase
     end
   end
 
-  def test_monitor
-    mock_record = Object
-    mock_record.stubs(:resource_id).returns('other-vm')
-    mock_infrastructure = Object
-    mock_infrastructure.stubs(:short_name).returns('anything')
+  def test_monitor_nothing
+    mock_record = mock do
+      stubs(:resource_id).returns('other-vm')
+      expects(:time_limit_exceeded?).returns(false).once
+      expects(:destroy).never
+      expects(:experiment_end?).returns(false).once
+      expects(:init_time_exceeded?).returns(false).once
+      stubs(:max_init_time).returns(20.minutes)
+      expects(:sm_initialized=).never
+      expects(:save).never
+    end
+
+    mock_infrastructure = mock do
+      stubs(:short_name).returns('anything')
+      expects(:terminate_simulation_manager).never
+      expects(:sm_running?).never
+      expects(:initialize_simulation_manager).never
+    end
+
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
 
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-
-    mock_record.expects(:time_limit_exceeded?).returns(false).once
-    mock_infrastructure.expects(:terminate_simulation_manager).never
-    mock_record.expects(:destroy).never
-
-    mock_record.expects(:experiment_end?).returns(false).once
-
-    mock_record.expects(:init_time_exceeded?).returns(false).once
-    mock_record.stubs(:max_init_time).returns(20.minutes)
-
+    simulation_manager.expects(:before_monitor).once
     simulation_manager.expects(:sm_terminated?).returns(false).once
-    mock_infrastructure.expects(:sm_running?).never
-    simulation_manager.expects(:record_sm_failed).never
-
     simulation_manager.expects(:should_initialize_sm?).returns(false).once
-    mock_infrastructure.expects(:initialize_simulation_manager).never
-    mock_record.expects(:sm_initialized=).never
-    mock_record.expects(:save).never
+    simulation_manager.expects(:record_sm_failed).never
+    simulation_manager.expects(:after_monitor).once
 
     # EXECUTION
     simulation_manager.monitor
@@ -89,7 +90,8 @@ class SimulationManagerTest < Test::Unit::TestCase
 
     assert (not simulation_manager.respond_to? :wrong)
     assert_raises(NoMethodError) {simulation_manager.wrong}
-
   end
+
+
 
 end
