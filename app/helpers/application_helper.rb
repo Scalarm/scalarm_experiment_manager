@@ -1,16 +1,28 @@
 module ApplicationHelper
 
   def log_bank_url(storage_manager_url, experiment)
-    "https://#{storage_manager_url}/experiment/#{experiment.id}/from/1/to/#{experiment.experiment_size}"
+    "https://#{storage_manager_url}/experiments/#{experiment.id}"
+  end
+
+  def log_bank_experiment_size_url(storage_manager_url, experiment)
+    "#{log_bank_url(storage_manager_url, experiment)}/size"
   end
 
   def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
-    "https://#{storage_manager_url}/experiment/#{experiment.id}/simulation/#{simulation_id}"
+    "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
+  end
+
+  def log_bank_simulation_binaries_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
   end
 
   def log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)
-      "https://#{storage_manager_url}/experiment/#{experiment.id}/simulation/#{simulation_id}/stdout"
-    end
+    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
+  end
+
+  def log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)}_size"
+  end
 
   def button_classes
     'button radius small expand action-button'

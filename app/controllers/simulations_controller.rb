@@ -1,6 +1,7 @@
 require 'json'
 require 'simulation'
 require 'csv'
+require 'rest_client'
 
 class SimulationsController < ApplicationController
   before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete]
@@ -165,6 +166,9 @@ class SimulationsController < ApplicationController
       @experiment.save_simulation(@simulation)
     end
 
+    @output_size, @output_size_label, @output_size_err = simulation_output_size
+    @stdout_size, @stdout_size_label, @stdout_size_err = simulation_stdout_size
+
     render partial: 'show'
   end
 
@@ -256,6 +260,86 @@ class SimulationsController < ApplicationController
       #raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory") if mandatory
     end
 
+  end
+
+  def simulation_output_size
+    error, output_size = 1, 0
+
+    unless @simulation.nil? or @storage_manager_url.blank?
+      begin
+        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation['id'])
+
+        if size_response.code == 200
+          output_size = size_response.body.to_i
+          error = 0
+        end
+      rescue Exception => ex
+        Rails.logger.error("An exception occured during communication with Storage Manager")
+        Rails.logger.error("Error: #{ex.inspect}")
+      end
+    end
+
+    return output_size, human_readable_label(output_size), error
+  end
+
+  def simulation_stdout_size
+    error, output_size = 1, 0
+
+    unless @simulation.nil? or @storage_manager_url.blank?
+      begin
+        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['id'])
+
+        if size_response.code == 200
+          output_size = size_response.body.to_i
+          error = 0
+        end
+      rescue Exception => ex
+        Rails.logger.error("An exception occured during communication with Storage Manager")
+        Rails.logger.error("Error: #{ex.inspect}")
+      end
+    end
+
+    return output_size, human_readable_label(output_size), error
+  end
+
+  def human_readable_label(size)
+    if size > 1024
+      size /= 1024
+
+      if size > 1024
+        size /= 1024
+        "#{size} [MB]"
+      else
+        "#{size} [kB]"
+      end
+
+    else
+      "#{size} [B]"
+    end
+  end
+
+  def log_bank_url(storage_manager_url, experiment)
+    "https://#{storage_manager_url}/experiments/#{experiment.id}"
+  end
+
+  def log_bank_experiment_size_url(storage_manager_url, experiment)
+    "#{log_bank_url(storage_manager_url, experiment)}/size"
+  end
+
+  def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
+  end
+
+  def log_bank_simulation_binaries_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
+  end
+
+  def log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
+  end
+
+  def log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)}_size"
   end
 
 end

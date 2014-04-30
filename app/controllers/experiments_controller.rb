@@ -96,6 +96,7 @@ class ExperimentsController < ApplicationController
     experiment.labels = experiment.parameters.flatten.join(',')
     experiment.save
     experiment.experiment_id = experiment.id
+    experiment.experiment_size(true)
     experiment.save
     # create progress bar
     experiment.insert_initial_bar
@@ -149,6 +150,7 @@ class ExperimentsController < ApplicationController
       experiment.labels = experiment.parameters.flatten.join(',')
       experiment.save
       experiment.experiment_id = experiment.id
+      experiment.experiment_size(true)
       experiment.save
       # create progress bar
       experiment.insert_initial_bar
