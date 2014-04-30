@@ -270,7 +270,7 @@ class SimulationsController < ApplicationController
         size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation['id'])
 
         if size_response.code == 200
-          output_size = size_response.body.to_i
+          output_size = JSON.parse(size_response.body)['size']
           error = 0
         end
       rescue Exception => ex
@@ -288,9 +288,9 @@ class SimulationsController < ApplicationController
     unless @simulation.nil? or @storage_manager_url.blank?
       begin
         size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['id'])
-
+        
         if size_response.code == 200
-          output_size = size_response.body.to_i
+          output_size = JSON.parse(size_response.body)['size']
           error = 0
         end
       rescue Exception => ex
