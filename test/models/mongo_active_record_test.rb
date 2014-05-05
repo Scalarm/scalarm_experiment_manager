@@ -7,6 +7,9 @@ class MongoActiveRecordTest < Test::Unit::TestCase
   def setup
   end
 
+  class SomeRecord < MongoActiveRecord
+  end
+
   def test_find_by_id_invalid
     # when, then
     assert_nothing_raised do
@@ -20,6 +23,29 @@ class MongoActiveRecordTest < Test::Unit::TestCase
       assert_nil result_all_nil
       assert_nil result_all_string
     end
+  end
+
+  def test_mixed_attributes_new
+    collection = mock do
+      expects(:save).with('a'=>2, 'b'=>3)
+    end
+
+    SomeRecord.expects(:collection).returns(collection)
+    r = SomeRecord.new({a: 1, 'a'=> 2, b: 3})
+    r.save
+  end
+
+  def test_mixed_attributes_modify
+    collection = mock do
+      expects(:update).with({'_id'=>1}, {'_id'=>1, 'a'=>2}, {:upsert => true})
+    end
+
+    SomeRecord.expects(:collection).returns(collection)
+    r = SomeRecord.new({'_id'=>1, a: 1})
+    r.a = 2
+    r.save
+
+    assert_equal 2, r.a
   end
 
 end

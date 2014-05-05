@@ -19,7 +19,7 @@ class MongoActiveRecord
 
     attributes.each do |parameter_name, parameter_value|
       #parameter_value = BSON::ObjectId(parameter_value) if parameter_name.end_with?("_id")
-      @attributes[parameter_name] = parameter_value
+      @attributes[parameter_name.to_s] = parameter_value
     end
   end
 
