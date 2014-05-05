@@ -140,6 +140,8 @@ en:
 
       simulation_overview_name: Simulation name
       simulation_overview_description: Simulation description
+      simulation_overview_shared_with: You share it with
+      simulation_overview_shared_by: It is shared by
 
       input_header: Parameter space specification
       input_parametrization_types: Parametrization
@@ -150,8 +152,8 @@ en:
       submit_button: Start experiment
       experiment_size_button: Calculate experiment size
       experiment_size_dialog_body: "Calculated experiment size - <span id=\"calculated-experiment-size\"></span> simulations"
-      time_constraint_label: Time constraint for simulation execution ([s])
-      repeatation_label: Execution repeatation of each input parameters combination
+      time_constraint_label: Execution time constraint of a simulation run [min]
+      replication_level_label: Experiment replication level
 
       parametrization_tab:
         header: Specify parametrization for each input parameter below

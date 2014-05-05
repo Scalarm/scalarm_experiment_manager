@@ -1,6 +1,7 @@
 require 'json'
 require 'simulation'
 require 'csv'
+require 'rest_client'
 
 class SimulationsController < ApplicationController
   before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete]
@@ -57,7 +58,7 @@ class SimulationsController < ApplicationController
     redirect_to :action => :index
   end
 
-  def upload_simulation
+  def create
     simulation = Simulation.new({
       'name' => params['simulation_name'],
       'description' => params['simulation_description'],
@@ -70,14 +71,13 @@ class SimulationsController < ApplicationController
       set_up_adapter('input_writer', simulation, false)
       set_up_adapter('executor', simulation, false)
       set_up_adapter('output_reader', simulation, false)
-
       set_up_adapter('progress_monitor', simulation, false)
 
       simulation.set_simulation_binaries(params['simulation_binaries'].original_filename, params['simulation_binaries'].read)
 
       simulation.save
     rescue Exception => e
-      Rails.logger.error("Exception occurred: #{e}")
+      Rails.logger.error("Exception occurred  : #{e}")
     end
 
     respond_to do |format|
@@ -115,6 +115,11 @@ class SimulationsController < ApplicationController
         @simulation['to_sent'] = false
         @simulation['result'] = JSON.parse(params[:result])
         @simulation['done_at'] = Time.now
+        # infrastructure-related info
+        if params.include?('cpu_info')
+          cpu_info = JSON.parse(params[:cpu_info])
+          @simulation['cpu_info'] = cpu_info
+        end
         @experiment.save_simulation(@simulation)
         # TODO adding caching capability
         #@simulation.remove_from_cache
@@ -160,6 +165,9 @@ class SimulationsController < ApplicationController
       @simulation = @experiment.generate_simulation_for(params[:id].to_i)
       @experiment.save_simulation(@simulation)
     end
+
+    @output_size, @output_size_label, @output_size_err = simulation_output_size
+    @stdout_size, @stdout_size_label, @stdout_size_err = simulation_stdout_size
 
     render partial: 'show'
   end
@@ -252,6 +260,86 @@ class SimulationsController < ApplicationController
       #raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory") if mandatory
     end
 
+  end
+
+  def simulation_output_size
+    error, output_size = 1, 0
+
+    unless @simulation.nil? or @storage_manager_url.blank?
+      begin
+        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation['id'])
+
+        if size_response.code == 200
+          output_size = JSON.parse(size_response.body)['size']
+          error = 0
+        end
+      rescue Exception => ex
+        Rails.logger.error("An exception occured during communication with Storage Manager")
+        Rails.logger.error("Error: #{ex.inspect}")
+      end
+    end
+
+    return output_size, human_readable_label(output_size), error
+  end
+
+  def simulation_stdout_size
+    error, output_size = 1, 0
+
+    unless @simulation.nil? or @storage_manager_url.blank?
+      begin
+        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['id'])
+        
+        if size_response.code == 200
+          output_size = JSON.parse(size_response.body)['size']
+          error = 0
+        end
+      rescue Exception => ex
+        Rails.logger.error("An exception occured during communication with Storage Manager")
+        Rails.logger.error("Error: #{ex.inspect}")
+      end
+    end
+
+    return output_size, human_readable_label(output_size), error
+  end
+
+  def human_readable_label(size)
+    if size > 1024
+      size /= 1024
+
+      if size > 1024
+        size /= 1024
+        "#{size} [MB]"
+      else
+        "#{size} [kB]"
+      end
+
+    else
+      "#{size} [B]"
+    end
+  end
+
+  def log_bank_url(storage_manager_url, experiment)
+    "https://#{storage_manager_url}/experiments/#{experiment.id}"
+  end
+
+  def log_bank_experiment_size_url(storage_manager_url, experiment)
+    "#{log_bank_url(storage_manager_url, experiment)}/size"
+  end
+
+  def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
+  end
+
+  def log_bank_simulation_binaries_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
+  end
+
+  def log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
+  end
+
+  def log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)}_size"
   end
 
 end

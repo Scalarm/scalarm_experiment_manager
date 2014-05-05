@@ -165,7 +165,7 @@ function DoeManager() {
         $.ajax({
             type: "POST",
             url: $('#calculate-experiment-size-url').val(),
-            data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val() + "&run_index=" + $('#run_index').val(),
+            data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val() + "&replication_level=" + $('#replication_level').val(),
             success: function(msg) {
                 $("#experiment-size-dialog #calculated-experiment-size").html(msg.experiment_size);
                 $('#experiment-size-dialog').foundation('reveal', 'open');

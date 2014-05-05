@@ -1,7 +1,7 @@
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
 
-= form_tag start_experiment_experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
+= form_tag experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
 
   %section.panel.radius
     %h3.subheader= t('experiments.information_panel.experiment_info_title')
@@ -67,14 +67,14 @@
 
         .row
           .small-6.columns
+            = label_tag :replication_level, t('.replication_level_label') + ':', class: 'right inline'
+          .small-6.columns
+            = text_field_tag 'replication_level', 1
+        .row
+          .small-6.columns
             = label_tag :execution_time_constraint, t('.time_constraint_label') + ':', class: 'right inline'
           .small-6.columns
-            = text_field_tag 'execution_time_constraint', 3600
-        -#.row
-        -#  .small-6.columns(style="text-align: right;")= t('.repeatation_label') + ':'
-        -#  .small-6.columns
-        -#    = text_field_tag 'run_index', 1
-        = hidden_field_tag 'run_index', 1
+            = text_field_tag 'execution_time_constraint', 60
 
         = submit_tag t('.submit_button'), class: 'button radius last-element'
         = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'

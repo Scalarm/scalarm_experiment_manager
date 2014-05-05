@@ -5,7 +5,7 @@ require 'csv'
 
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share]
-  before_filter :load_simulation, only: [ :start_experiment, :start_import_based_experiment ]
+  before_filter :load_simulation, only: [ :create, :start_import_based_experiment ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -31,9 +31,7 @@ class ExperimentsController < ApplicationController
       end
 
     rescue Exception => e
-      flash[:error] = "Problem occured during loading experiment info - #{e}"
-      #@experiment.destroy
-      #flash[:notice] = 'Your experiment has been destroyed.'
+      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
       redirect_to action: :index
     end
   end
@@ -65,76 +63,40 @@ class ExperimentsController < ApplicationController
       tmp_pass.destroy
     end
 
-    redirect_to action: :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: { status: 'ok' } }
+    end  
   end
 
-# TODO reimplement to have everything in the experiment object
   def file_with_configurations
-    file_path = "/tmp/configurations_#{@experiment.id}.txt"
-
-    File.delete(file_path) if File.exist?(file_path)
-
-    File.open(file_path, 'w') do |file|
-      file.puts(@experiment.create_result_csv)
-    end
-    
-    send_file(file_path, type: 'text/plain')
-
-    # response.headers['Content-Type'] = 'text/event-stream'
-    # response.headers['Content-Disposition'] = 'attachment; filename="configurations_' + @experiment.id.to_s + '.csv"'
-
-    # moe_names = @experiment.moe_names
-    # response.stream.write("#{(@experiment.parameters.flatten + moe_names).join(',')}\n")
-
-    # @experiment.find_simulation_docs_by({ is_done: true }, { fields: { values: 1, result: 1, _id: 0 } }).each do |simulation_doc| 
-    #   values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
-    #   moe_values = moe_names.map{|moe_name| simulation_doc['result'][moe_name] || '' }
-    #   response.stream.write("#{(values + moe_values).join(',')}\n")
-    # end
-
-    # response.stream.close
+    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
   end
 
-  def start_experiment
-    doe_info = if params['doe'].blank?
-                 []
-               else
-                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
-               end
-
-    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
-    # prepare scenario parametrization in the old fashion
-    @scenario_parametrization = {}
-    @experiment_input.each do |entity_group|
-      entity_group['entities'].each do |entity|
-        entity['parameters'].each do |parameter|
-          parameter_uid = Experiment.parameter_uid(entity_group, entity, parameter)
-          @scenario_parametrization[parameter_uid] = parameter['parametrizationType']
-        end
-      end
+  def create
+    doe_info = []
+    unless params['doe'].blank?
+      doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameters| parameters.first.nil? } 
     end
-
-    experiment_name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment_description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
 
     # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'experiment_input' => @experiment_input,
-                                 'name' => experiment_name,
-                                 'description' => experiment_description,
-                                 'is_running' => true,
-                                 'run_counter' => params[:run_index].to_i,
-                                 'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
-                                 'doe_info' => doe_info,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-
-    experiment.user_id = @current_user.id unless @current_user.nil?
+    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+      'is_running' => true,
+      'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+      'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
+      'doe_info' => doe_info,
+      'start_at' => Time.now,
+      'user_id' => @current_user.id,
+      'scheduling_policy' => 'monte_carlo'
+    })
+    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+    experiment.experiment_input = Experiment.prepare_experiment_input(
+                                    @simulation, JSON.parse(params['experiment_input']), experiment.doe_info)
     experiment.labels = experiment.parameters.flatten.join(',')
     experiment.save
     experiment.experiment_id = experiment.id
+    experiment.experiment_size(true)
     experiment.save
     # create progress bar
     experiment.insert_initial_bar
@@ -142,13 +104,15 @@ class ExperimentsController < ApplicationController
 
     if params.include?(:computing_power) and (not params[:computing_power].empty?)
       computing_power = JSON.parse(params[:computing_power])
-      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, computing_power['type'], computing_power['resource_counter'])
+      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, 
+        computing_power['type'], 
+        computing_power['resource_counter'])
     end
 
     respond_to do |format|
       format.html { redirect_to experiment_path(experiment.id) }
-      format.json { render json: { status: 'ok', experiment_id: experiment.id } }
-    end
+      format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
+    end    
   end
 
   def start_import_based_experiment
@@ -172,22 +136,21 @@ class ExperimentsController < ApplicationController
     else
       # create the new type of experiment object
       experiment = Experiment.new({ 'simulation_id' => @simulation.id,
-                                    'is_running' => true,
-                                    'run_counter' => params[:run_index].to_i,
-                                    'time_constraint_in_sec' => params[:execution_time_constraint].to_i,
-                                    'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
-                                    'start_at' => Time.now,
-                                    'user_id' => @current_user.id,
-                                    'scheduling_policy' => 'monte_carlo'
-                                  })
+        'is_running' => true,
+        'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+        'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
+        'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
+        'start_at' => Time.now,
+        'user_id' => @current_user.id,
+        'scheduling_policy' => 'monte_carlo'
+      })
       experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
       experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
-
-      experiment.user_id = @current_user.id unless @current_user.nil?
       experiment.labels = experiment.parameters.flatten.join(',')
       experiment.save
       experiment.experiment_id = experiment.id
+      experiment.experiment_size(true)
       experiment.save
       # create progress bar
       experiment.insert_initial_bar
@@ -195,7 +158,7 @@ class ExperimentsController < ApplicationController
 
       respond_to do |format|
         format.html { redirect_to experiment_path(experiment.id) }
-        format.json { render :json => {status: 'ok', experiment_id: experiment.id} }
+        format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
       end
     end
   end
@@ -217,9 +180,10 @@ class ExperimentsController < ApplicationController
     @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
+    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+                                 'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
                                  'experiment_input' => @experiment_input,
-                                 'run_counter' => params[:run_index].to_i,
+                                 'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
                                  'name' => @simulation.name,
                                  'doe_info' => doe_info
                                 })
@@ -236,8 +200,9 @@ class ExperimentsController < ApplicationController
     }.map{ |parameter| parameter.split('param_').last }
 
     importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
+    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
 
-    render json: { experiment_size: importer.parameter_values.size }
+    render json: { experiment_size: importer.parameter_values.size * replication_level }
   end
 
   ### Progress monitoring API
@@ -318,7 +283,7 @@ class ExperimentsController < ApplicationController
     moes_info[:moes] = moes.map { |label, id| "<option value='#{id}'>#{label}</option>" }.join()
     moes_info[:moes_and_params] = moes_and_params.map { |label, id| "<option value='#{id}'>#{label}</option>" }.join()
 
-    render :json => moes_info
+    render json: moes_info
   end
 
   #  getting parametrization and generated values of every input parameter without default value
@@ -453,7 +418,10 @@ class ExperimentsController < ApplicationController
       flash[:notice] = 'Your experiment is no longer available.'
     end
 
-    redirect_to :action => :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: { status: 'ok' } }
+    end  
   end
 
   # modern version of the next_configuration method;
@@ -472,8 +440,8 @@ class ExperimentsController < ApplicationController
         @experiment.progress_bar_update(simulation_to_send['id'].to_i, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send['id'],
-                               'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
-                               'input_parameters' => Hash[simulation_to_send['arguments'].split(',').zip(simulation_to_send['values'].split(','))] })
+                   'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
+                   'input_parameters' => Hash[simulation_to_send['arguments'].split(',').zip(simulation_to_send['values'].split(','))] })
       else
         simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
       end
@@ -483,7 +451,7 @@ class ExperimentsController < ApplicationController
       simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
     end
 
-    render :json => simulation_doc
+    render json: simulation_doc
   end
 
   def code_base

@@ -118,7 +118,14 @@ module SimulationScheduler
   def generate_simulation_for(simulation_id)
     combination = []
 
-    id_num = simulation_id - 1
+    if self.replication_level.nil? or (self.replication_level == 1)
+      id_num = simulation_id - 1
+      trial = 1
+    else
+      id_num = (simulation_id - 1) / self.replication_level
+      trial = ((simulation_id - 1) % self.replication_level) + 1
+    end
+    
     self.value_list.each_with_index do |tab, index|
       current_index = id_num / self.multiply_list[index]
       combination[index] = tab[current_index]
@@ -127,8 +134,8 @@ module SimulationScheduler
       # Rails.logger.debug("Index: #{index} - Current index: #{current_index} - Selected Element: #{tab[current_index]} - id_num: #{id_num}")
     end
 
-    columns = %w(id experiment_id is_done to_sent run_index arguments values)
-    values = [simulation_id, self._id, false, true, 1, self.parameters.flatten.join(','), combination.join(',')]
+    columns = %w(id experiment_id is_done to_sent trial arguments values)
+    values = [simulation_id, self._id, false, true, trial, self.parameters.flatten.join(','), combination.join(',')]
 
     Hash[*columns.zip(values).flatten]
   end

@@ -4,7 +4,6 @@
 #“experiment_id” - ObjectId
 #“to_sent” - bool
 #“sent_at”: timestamp
-#
 #“is_done”: bool
 #“done_at”: timestamp
 #“run_index”: integer
@@ -90,4 +89,5 @@ module SimulationRun
 
     simulation
   end
+
 end

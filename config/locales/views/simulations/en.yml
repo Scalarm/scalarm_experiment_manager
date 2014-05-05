@@ -13,3 +13,4 @@ en:
       output_section: "Output:"
       binary_output_header: "Binary output:"
       stdout_header: "Simulation STDOUT:"
+      size: "File size: %{size}"

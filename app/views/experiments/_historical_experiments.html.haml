@@ -9,5 +9,7 @@
     - else
       - @historical_experiments.each do |experiment|
         - start_time, finish_time = experiment.start_at.strftime('%Y-%m-%d %H:%M'), experiment.end_at.strftime('%Y-%m-%d %H:%M')
-        - link_text = t('.link_text', { name: experiment.name, start_time: start_time, finish_time: finish_time })
-        = button_to link_text, experiment_path(experiment.id), class: 'button expand radius', method: :get
+        %a.button.expand.radius.last-element{ href: experiment_path(experiment.id) }
+          - unless @current_user.owns?(experiment)
+            %i.fi-share
+          = t('.link_text', { name: experiment.name, start_time: start_time, finish_time: finish_time })

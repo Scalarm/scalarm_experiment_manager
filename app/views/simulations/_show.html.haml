@@ -42,8 +42,18 @@
 
   .row
     %h4= t('.binary_output_header')
-    = link_to 'click to download', log_bank_simulation_binaries_url(@storage_manager_url, @experiment, @simulation['id'])
+    - if @output_size_err == 0
+      = link_to 'click to download', log_bank_simulation_binaries_url(@storage_manager_url, @experiment, @simulation['id'])
+      %p
+        = t('.size', { size: @output_size_label })
+    - else
+      = t('.output_not_available')
 
   .row
     %h4= t('.stdout_header')
-    = link_to 'click to download', log_bank_simulation_stdout_url(@storage_manager_url, @experiment, @simulation['id'])
+    - if @stdout_size_err == 0
+      = link_to 'click to download', log_bank_simulation_stdout_url(@storage_manager_url, @experiment, @simulation['id'])
+      %p
+        = t('.size', { size: @stdout_size_label })
+    - else
+      = t('.output_not_available')

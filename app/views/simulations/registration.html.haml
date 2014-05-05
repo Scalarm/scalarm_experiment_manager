@@ -5,7 +5,7 @@
   %h3.subheader= t('.experiments_label')
 
   .content
-    = form_tag(simulations_upload_simulation_path, :multipart => true, class: 'custom') do
+    = form_tag(simulations_path, multipart: true, class: 'custom') do
       = render partial: 'form_row', object: 'simulation_name',
         locals: { input_element: text_field_tag('simulation_name') }
       = render partial: 'form_row', object: 'simulation_description',

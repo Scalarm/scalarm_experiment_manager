@@ -11,6 +11,18 @@
       %h5.subheader.right= t('.experiment_description') + ':'
     .small-9.columns
       %h5.subheader= @experiment.description
+  .row
+    - if @current_user.owns?(@experiment)
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_with') + ':'
+      .small-9.columns
+        - share_with_users = @experiment.shared_with.to_a.map{|id| ScalarmUser.find_by_id(id).login }
+        %h5.subheader= share_with_users.blank? ? '-' : share_with_users.join(', ')
+    - else
+      .small-3.columns
+        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_by') + ':'
+      .small-9.columns
+        %h5.subheader= ScalarmUser.find_by_id(@experiment.user_id).login      
 
   - if @experiment.simulation.nil?
     %h4.subheader= t('simulations.conduct_experiment.empty_simulation')
@@ -27,3 +39,5 @@
         %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
       .small-9.columns
         %h5.subheader= @experiment.simulation.description
+
+
