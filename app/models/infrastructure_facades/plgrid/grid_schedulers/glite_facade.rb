@@ -35,7 +35,7 @@ class GliteFacade < PlGridSchedulerBase
     submit_job_output = ssh.exec!("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl")
     Rails.logger.debug("Glite submission output lines: #{submit_job_output}")
 
-    submit_job_output ? (job.job_id = parse_job_id(submit_job_output)) : nil
+    submit_job_output ? (job.job_id = GliteFacade.parse_job_id(submit_job_output)) : nil
   end
 
   def self.parse_job_id(submit_job_output)
@@ -44,7 +44,7 @@ class GliteFacade < PlGridSchedulerBase
   end
 
   def glite_state(ssh, job)
-    self.class.parse_job_status(ssh.exec!("glite-wms-job-status #{job.job_id}"))
+    GliteFacade.parse_job_status(ssh.exec!("glite-wms-job-status #{job.job_id}"))
   end
 
   def self.parse_job_status(state_output)
@@ -75,8 +75,8 @@ class GliteFacade < PlGridSchedulerBase
       'Ready' => :initializing,
       'Scheduled' => :initializing,
       'Running' => :running,
-      'Done(Success)' => :deactivating,
-      'Cleared' => :deactivating
+      'Done(Success)' => :deactivated,
+      'Cleared' => :deactivated
   }
 
   def status(ssh, job)

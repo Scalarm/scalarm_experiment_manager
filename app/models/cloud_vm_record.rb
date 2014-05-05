@@ -8,10 +8,11 @@
 # experiment_id => the experiment which should be computed by this job
 # image_secrets_id => id of CloudImageSecrets
 # created_at => time - when this job were scheduled
+# sm_initialized_at => time - when simulation manager of this job was initialized
 # time_limit => time - when this job should be stopped - in minutes
 # vm_id => string - instance id of the vm
 # sm_uuid => string - uuid of configuration files
-# sm_initialized => boolean - whether or not SM code has been sent to this machind
+# sm_initialized => boolean - whether or not SM code has been sent to this machine
 # vm_init_count => integer - how many times VM was initialized/reinitialized
 #
 # public_host => public hostname of machine which redirects to ssh port

@@ -67,18 +67,12 @@ class CloudFacadeTest < Test::Unit::TestCase
   end
 
   def test_simulation_manager_install
-
-    # - uruchamiam monitorowanie
-    # - warunki pozwalają na instalację SM
-    # - instalacja przebiega pomyślnie -
-
     record = stub_everything 'record' do
       stubs(:vm_id).returns('a')
       expects(:update_ssh_address!).once
       stubs(:time_limit_exceeded?).returns(false)
       stubs(:experiment_end?).returns(false)
       stubs(:init_time_exceeded?).returns(false)
-      stubs(:sm_terminated?).returns(false)
     end
 
     InfrastructureFacade.expects(:prepare_configuration_for_simulation_manager).once

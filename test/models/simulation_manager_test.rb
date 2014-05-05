@@ -215,11 +215,26 @@ class SimulationManagerTest < Test::Unit::TestCase
     simulation_manager.expects(:sm_terminated?).returns(false).once
     simulation_manager.expects(:record_sm_failed).never
     simulation_manager.expects(:should_initialize_sm?).returns(true).once
-    simulation_manager.expects(:install).once
+    simulation_manager.expects(:install).with(mock_record).once
     simulation_manager.expects(:after_monitor).once
 
     # EXECUTION
     simulation_manager.monitor
+  end
+
+  def test_should_initialize_sm_not
+    record = stub_everything 'record' do
+      expects(:sm_initialized).returns(true).once
+    end
+
+    infrastructure = stub_everything
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+    SimulationManager.any_instance.expects(:generate_monitoring_cases).once
+    simulation_manager = SimulationManager.new(record, infrastructure)
+    simulation_manager.expects(:status).returns(:running).once
+
+    assert (not simulation_manager.should_initialize_sm?)
   end
 
   def test_delegation

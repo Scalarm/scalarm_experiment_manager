@@ -90,11 +90,11 @@ class InfrastructuresController < ApplicationController
   # GET param (optional): credential_type
   def remove_credentials
     begin
-      InfrastructureFacade.get_facade_for(params[:infrastructure_name])
-        .remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
-      render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: params[:infrastructure_name])}
+      facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+      facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
+      render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
     rescue Exception => e
-      Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace}"
+      Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace.join("\n")}"
       render json: {status: 'error', msg: I18n.t('infrastructures_controller.credentials_not_removed', error: e.to_s)}
     end
   end

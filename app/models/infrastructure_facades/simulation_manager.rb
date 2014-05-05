@@ -32,7 +32,7 @@ class SimulationManager
         },
         init_time_exceeded: {
             condition: lambda {record.init_time_exceeded?},
-            message: "Initialization time (#{record.max_init_time.minutes} min) exceeded - discontinuing initialization",
+            message: "Initialization time (#{record.max_init_time/60} min) exceeded - discontinuing initialization",
             action: lambda {
               record_init_time_exceeded
               restart
@@ -62,7 +62,7 @@ class SimulationManager
 
   def monitor
     logger.info 'checking'
-    before_monitor
+    before_monitor(record)
 
     monitoring_order.each do |c|
       m = monitoring_cases[c]
@@ -70,7 +70,7 @@ class SimulationManager
         if m[:condition].()
           logger.info m[:message]
           m[:action].()
-          break
+          break # at most one action from all actions should be taken
         end
       rescue Exception => e
         logger.error "Exception on monitoring case #{c.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -80,16 +80,17 @@ class SimulationManager
             destroy_with_record
           end
         rescue Exception => de
-          logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}, record will be removed"
+          logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}"
+          logger.error 'THIS RECORD WILL BE REMOVED - please check if corresponding resource is terminated'
           record.destroy
         end
       end
     end
 
-    after_monitor
+    after_monitor(record)
   end
 
-  DELEGATES = %w(stop restart status running? get_log install before_monitor after_monitor).to_set
+  DELEGATES = %w(stop restart running? get_log install before_monitor after_monitor).to_set
 
   def method_missing(m, *args, &block)
     if DELEGATES.include? m.to_s
@@ -97,6 +98,10 @@ class SimulationManager
     else
       super(m, *args, &block)
     end
+  end
+
+  def status
+    record.error.nil? ? infrastructure.simulation_manager_status(record) : :error
   end
 
   def respond_to_missing?(m, include_all=false)
@@ -114,7 +119,7 @@ class SimulationManager
   def record_init_time_exceeded
     record.error = I18n.t('initialization_time_exceeded')
     record.sm_initialized_at = Time.now
-    record.sm_initialized = false
+    record.sm_initialized = true
     record.save
   end
 

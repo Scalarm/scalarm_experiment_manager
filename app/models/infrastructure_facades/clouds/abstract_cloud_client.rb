@@ -17,7 +17,6 @@
 #  -- :error (state that shouldn't occur)
 
 require_relative 'vm_instance'
-require_relative 'cloud_simulation_manager'
 
 class AbstractCloudClient
 

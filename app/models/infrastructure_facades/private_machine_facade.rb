@@ -95,14 +95,16 @@ class PrivateMachineFacade < InfrastructureFacade
     end
 
     instances_count.times do
-      PrivateMachineRecord.new(
+      record = PrivateMachineRecord.new(
           user_id: user.id,
           experiment_id: experiment_id,
           credentials_id: params[:credentials_id],
           time_limit: params[:time_limit],
           start_at: params[:start_at],
           sm_uuid: SecureRandom.uuid
-      ).save
+      )
+      record.initialize_fields
+      record.save
     end
     ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: instances_count,
                         machine_name: machine_creds.machine_desc)]
@@ -168,7 +170,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def simulation_manager_status(record)
-    record.error ? :error : :running
+    :running
   end
 
   def simulation_manager_running?(record)

@@ -56,6 +56,10 @@ class PlGridJob < MongoActiveRecord
     end
   end
 
+  def max_time_exceeded?
+    self.created_at + self.queue_time_constraint.minutes < Time.now
+  end
+
   def credentials
     @credentials ||= GridCredentials.find_by_user_id(user_id)
   end

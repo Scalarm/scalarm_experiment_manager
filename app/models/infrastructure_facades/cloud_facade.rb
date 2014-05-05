@@ -102,6 +102,7 @@ class CloudFacade < InfrastructureFacade
                                         sm_uuid: SecureRandom.uuid,
                                         start_at: params['start_at'],
                                     })
+      vm_record.initialize_fields
       vm_record.save
 
       create_simulation_manager(vm_record)
@@ -120,7 +121,7 @@ class CloudFacade < InfrastructureFacade
     record_class = case type
                      when 'secrets' then CloudSecrets
                      when 'image' then CloudImageSecrets
-                     else raise StandardError "Usupported type: #{type}"
+                     else raise StandardError.new("Usupported credentials type: #{type}")
                    end
 
     record = record_class.find_by_id(record_id)
@@ -182,7 +183,7 @@ class CloudFacade < InfrastructureFacade
     while true
       begin
         ssh = shared_ssh_session(record)
-        break if log_exists?(ssh) or send_and_launch_sm(record, ssh)
+        break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
       rescue Exception => e
         logger.warn "Exception #{e} occured while communication with "\
 "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
@@ -211,17 +212,17 @@ class CloudFacade < InfrastructureFacade
     )
   end
 
-  def log_exists?(ssh)
-    output = ssh.exec!("ls #{record.log_path}")
-    logger.debug "Previous SM log check: #{output}"
-    not output.include?('No such file or directory')
+  def log_exists?(record, ssh)
+    path_exists = (ssh.exec!(run_and_get_pid "ls #{record.log_path}") == 0)
+    log.warn "Log file already exists: #{record.log_path}" if path_exists
+    path_exists
   end
 
   def send_and_launch_sm(record, ssh)
     record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
     output = ssh.exec!(start_simulation_manager_cmd(record))
     logger.debug "Simulation Manager PID: #{output}"
-    (record.pid = output.to_i > 0) ? record.pid : false
+    (record.pid = output.to_i) > 0 ? record.pid : false
   end
 
   # -- Monitoring utils --

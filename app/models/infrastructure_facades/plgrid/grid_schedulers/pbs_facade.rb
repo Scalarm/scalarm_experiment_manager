@@ -89,15 +89,15 @@ class PBSFacade < PlGridSchedulerBase
   # S -  (Unicos only) job is suspend.
 
   STATES_MAPPING = {
-      'C'=>:deactivating,
-      'E'=>:deactivating,
+      'C'=>:deactivated,
+      'E'=>:deactivated,
       'H'=>:running,
       'Q'=>:initializing,
       'R'=>:running,
       'T'=>:running,
       'W'=>:initializing,
       'S'=>:error,
-      'U'=>:deactivating # probably it's not in queue
+      'U'=>:deactivated # probably it's not in queue
   }
 
   def status(ssh, job)

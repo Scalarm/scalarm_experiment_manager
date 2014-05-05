@@ -271,7 +271,7 @@ c -1.668712,0 -3.026435,-1.326916 -3.026435,-2.957689 0,-1.630772 1.357723,-2.95
     null
 
   smDialog: (d) ->
-    @dialog.load @smDialogPath(d['infrastructure_name'], d['record_id']), =>
+    @dialog.load @smDialogPath(d['infrastructure_name'], d['_id']), =>
 #          @actionLoading.hide()
       @dialog.foundation('reveal', 'open')
 

@@ -1,7 +1,7 @@
 module SimulationManagerRecord
-  def initialize(attributes)
-    time = Time.now
-    super(attributes.merge(sm_initialized_at: time, created_at: time, sm_initialized: false))
+  def initialize_fields
+    self.created_at = self.sm_initialized_at = Time.now
+    self.sm_initialized = false
   end
 
   # Time to wait for resource initialization - after that, VM will be reinitialized

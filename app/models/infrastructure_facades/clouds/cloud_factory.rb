@@ -1,6 +1,3 @@
-# deprecated
-#CONFIG = YAML.load_file(File.join(Rails.root, 'config', 'cloud_modules.yml'))
-
 class CloudFactory
 
   PROVIDERS_DIR = File.join(Rails.root, 'app/models/infrastructure_facades/clouds/providers')
