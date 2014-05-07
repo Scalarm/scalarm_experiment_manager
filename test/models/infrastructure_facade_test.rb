@@ -51,18 +51,16 @@ class InfrastructureFacadeTest < Test::Unit::TestCase
       expects(:monitor).never
     }
 
-    all_sm_records = [rec1, rec2, rec3]
-    all_simulation_managers = [sm1, sm2, sm3]
+    grouped_sm_records = {a: [rec1, rec2, rec3]}
+    grouped_simulation_managers = {a: [sm1, sm2, sm3]}
 
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+
     facade = PlGridFacade.new
 
-    facade.stubs(:get_sm_records).returns(all_sm_records)
-    facade.stubs(:get_simulation_managers).returns(all_simulation_managers)
-
+    facade.stubs(:get_grouped_sm_records).returns(grouped_sm_records)
+    facade.stubs(:get_grouped_simulation_managers).returns(grouped_simulation_managers)
 
     facade.monitoring_loop
-
-
   end
 end

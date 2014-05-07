@@ -131,7 +131,7 @@ class SimulationManager
 
   def destroy_with_record
     stop(record)
-    record.destroy
+    record.destroy if record.error.nil?
   end
 
 end

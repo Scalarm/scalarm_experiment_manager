@@ -81,4 +81,8 @@ class CloudVmRecord < MongoActiveRecord
     "/tmp/log_sm_#{sm_uuid}"
   end
 
+  def monitoring_group
+    self.image_secrets_id
+  end
+
 end

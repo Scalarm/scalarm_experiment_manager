@@ -6,6 +6,8 @@ require_relative 'infrastructure_errors'
 require_relative 'simulation_manager'
 require_relative 'clouds/cloud_factory'
 
+require 'thread_pool'
+
 # Methods necessary to implement by subclasses
 # monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
 #   and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
@@ -111,13 +113,25 @@ class InfrastructureFacade
   # TODO: grouping can be done with special grouping method delegated to each facade
   def monitoring_loop
     begin
-      get_simulation_managers.each &:monitor
-    rescue Exception => e
-      logger.error "Uncaught exception on monitoring single computation: #{e.to_s}\n#{e.backtrace.join("\n")}"
-      get_sm_records.select(&:should_destroy?).each do |record|
-        logger.warn "Record #{record.id} will be destroyed"
-        record.destroy
+      grouped_simulation_managers = get_grouped_simulation_managers
+      pool = ThreadPool.new([grouped_simulation_managers.count, 4].min)
+      grouped_simulation_managers.each do |group, simulation_managers|
+        pool.schedule do
+          begin
+            simulation_managers.each &:monitor
+          rescue Exception => e
+            logger.error "Uncaught exception on monitoring group computation thread (#{group.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
+            get_grouped_sm_records[group].select(&:should_destroy?).each do |record|
+              logger.warn "Record #{record.id} will be destroyed"
+              record.destroy
+            end
+          end
+        end
       end
+    rescue Exception => e
+      logger.error "Uncaught exception in monitoring loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
+    ensure
+      pool.shutdown unless pool.nil?
     end
   end
 
@@ -146,12 +160,22 @@ class InfrastructureFacade
     render json: response_msg, status: status
   end
 
+  def get_grouped_sm_records(*args)
+    get_sm_records(*args).group_by &:monitoring_group
+  end
+
   def create_simulation_manager(record)
     SimulationManager.new(record, self)
   end
 
   def get_simulation_managers(*args)
     get_sm_records(*args).map {|r| create_simulation_manager(r)}
+  end
+
+  def get_grouped_simulation_managers(*args)
+    Hash[get_grouped_sm_records(*args).map do |group, records|
+      [group, records.map {|r| create_simulation_manager(r)}]
+    end]
   end
 
   # Used mainly to create node or subtree:

@@ -40,4 +40,9 @@ module SimulationManagerRecord
     time_limit_exceeded? or time_limit_exceeded?
   end
 
+  # Should be overriden
+  def monitoring_group
+    self.user_id
+  end
+
 end

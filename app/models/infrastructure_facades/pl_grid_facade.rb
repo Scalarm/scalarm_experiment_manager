@@ -3,7 +3,7 @@ require 'fileutils'
 require 'net/ssh'
 require 'net/scp'
 
-require_relative 'infrastructure_facades/plgrid/pl_grid_simulation_manager'
+require_relative 'plgrid/pl_grid_simulation_manager'
 
 require_relative 'plgrid/grid_schedulers/glite_facade'
 require_relative 'plgrid/grid_schedulers/pbs_facade'
