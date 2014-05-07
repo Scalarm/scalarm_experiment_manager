@@ -3,8 +3,10 @@ require 'fileutils'
 require 'net/ssh'
 require 'net/scp'
 
-require 'plgrid/grid_schedulers/glite_facade'
-require 'plgrid/grid_schedulers/pbs_facade'
+require_relative 'infrastructure_facades/plgrid/pl_grid_simulation_manager'
+
+require_relative 'plgrid/grid_schedulers/glite_facade'
+require_relative 'plgrid/grid_schedulers/pbs_facade'
 
 require_relative 'infrastructure_facade'
 require_relative 'shared_ssh'
@@ -191,6 +193,10 @@ class PlGridFacade < InfrastructureFacade
     end
 
     grants
+  end
+
+  def create_simulation_manager(record)
+    PlGridSimulationManager.new(record, self)
   end
 
   # -- SimulationManager delegation methods --
