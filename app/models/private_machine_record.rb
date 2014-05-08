@@ -24,6 +24,18 @@ class PrivateMachineRecord < MongoActiveRecord
     "#{credentials.nil? ? '[credentials missing!]' : credentials.machine_desc} (#{pid.nil? ? 'init' : pid})"
   end
 
+  def upload_file(*args)
+    credentials.upload_file(*args)
+  end
+
+  def ssh_session(*args)
+    credentials.ssh_session(*args)
+  end
+
+  def ssh_start(*args, &block)
+    credentials.ssh_start(*args, &block)
+  end
+
   def credentials
     @credentials ||= PrivateMachineCredentials.find_by_id(credentials_id)
   end

@@ -32,11 +32,8 @@ class SimulationManager
         },
         init_time_exceeded: {
             condition: lambda {record.init_time_exceeded?},
-            message: "Initialization time (#{record.max_init_time/60} min) exceeded - discontinuing initialization",
-            action: lambda {
-              record_init_time_exceeded
-              restart
-            }
+            message: "Initialization time (#{record.max_init_time/60} min) exceeded - will try to restart resource",
+            action: lambda {restart}
         },
         sm_terminated: {
             condition: lambda {sm_terminated?},
@@ -62,32 +59,36 @@ class SimulationManager
 
   def monitor
     logger.info 'checking'
-    before_monitor(record)
+    if record.error
+      logger.info 'Simulation Manager error has been reported, so this resource will not be monitored'
+    else
+      before_monitor(record)
 
-    monitoring_order.each do |c|
-      m = monitoring_cases[c]
-      begin
-        if m[:condition].()
-          logger.info m[:message]
-          m[:action].()
-          break # at most one action from all actions should be taken
-        end
-      rescue Exception => e
-        logger.error "Exception on monitoring case #{c.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+      monitoring_order.each do |c|
+        m = monitoring_cases[c]
         begin
-          if record.should_destroy?
-            logger.warn 'Simulation manager is going to be destroyed'
-            destroy_with_record
+          if m[:condition].()
+            logger.info m[:message]
+            m[:action].()
+            break # at most one action from all actions should be taken
           end
-        rescue Exception => de
-          logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}"
-          logger.error 'THIS RECORD WILL BE REMOVED - please check if corresponding resource is terminated'
-          record.destroy
+        rescue Exception => e
+          logger.error "Exception on monitoring case #{c.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+          begin
+            if record.should_destroy?
+              logger.warn 'Simulation manager is going to be destroyed'
+              record.error = "Monitoring caused exception: #{e.to_s} #{record.error ? "(Previous error: #{record.error})" : ''}"
+              stop
+            end
+          rescue Exception => de
+            logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}"
+            logger.error 'Please check if corresponding resource is terminated!'
+          end
         end
       end
-    end
 
-    after_monitor(record)
+      after_monitor(record)
+    end
   end
 
   DELEGATES = %w(stop restart running? get_log install before_monitor after_monitor).to_set
@@ -116,21 +117,15 @@ class SimulationManager
     status == :running and (not record.sm_initialized)
   end
 
-  def record_init_time_exceeded
-    record.error = I18n.t('initialization_time_exceeded')
-    record.sm_initialized_at = Time.now
-    record.sm_initialized = true
-    record.save
-  end
-
   def record_sm_failed
     record.error = I18n.t('simulation_manager_terminated')
     record.error_log = get_log
     record.save
+    stop
   end
 
   def destroy_with_record
-    stop(record)
+    stop
     record.destroy if record.error.nil?
   end
 

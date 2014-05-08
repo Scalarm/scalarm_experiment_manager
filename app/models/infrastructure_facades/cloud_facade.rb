@@ -4,6 +4,7 @@ require_relative 'shared_ssh'
 class CloudFacade < InfrastructureFacade
   include ShellCommands
   include SharedSSH
+  include ShellBasedInfrastructure
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
@@ -35,21 +36,6 @@ class CloudFacade < InfrastructureFacade
   def current_state(user)
     I18n.t('infrastructure_facades.cloud.current_state_count', count: get_sm_records(user.id).count)
   end
-
-  # TODO: groping by user_id in monitoring_loop
-  # def monitoring_loop
-  #   get_sm_records.group_by(&:user_id).each do |user_id, user_vm_records|
-  #     secrets = get_cloud_secrets(user_id)
-  #     if secrets.nil?
-  #       user = ScalarmUser.find_by_id(user_id)
-  #       logger.info "We cannot monitor VMs for #{user.login} due secrets lacking"
-  #       next
-  #     end
-  #
-  #     client = @client_class.new(secrets)
-  #     (user_vm_records.map {|r| create_simulation_manager(r)}).each &:monitor
-  #   end
-  # end
 
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
@@ -190,6 +176,7 @@ class CloudFacade < InfrastructureFacade
         error_counter += 1
         if error_counter > 10
           logger.error 'Exceeded number of SimulationManager installation attempts'
+          record.error = "Simulation Manager installation failed: #{e.to_s}"
           simulation_manager_stop(record)
           break
         end
@@ -197,32 +184,6 @@ class CloudFacade < InfrastructureFacade
 
       sleep(20)
     end
-  end
-
-  # -- Simulation Manager installation --
-
-  def start_simulation_manager_cmd(record)
-    sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
-    chain(
-        mute('source .rvm/environments/default'),
-        mute(rm(sm_dir_name, true)),
-        mute("unzip #{sm_dir_name}.zip"),
-        mute(cd(sm_dir_name)),
-        run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
-    )
-  end
-
-  def log_exists?(record, ssh)
-    path_exists = (ssh.exec!(run_and_get_pid "ls #{record.log_path}") == 0)
-    log.warn "Log file already exists: #{record.log_path}" if path_exists
-    path_exists
-  end
-
-  def send_and_launch_sm(record, ssh)
-    record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
-    output = ssh.exec!(start_simulation_manager_cmd(record))
-    logger.debug "Simulation Manager PID: #{output}"
-    (record.pid = output.to_i) > 0 ? record.pid : false
   end
 
   # -- Monitoring utils --

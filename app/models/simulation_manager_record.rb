@@ -1,3 +1,16 @@
+# Specific SimulationManagerRecords should have attributes:
+#
+# - user_id => integer - the user who scheduled this job - mongoid in the future
+# - experiment_id => the experiment which should be computed by this job
+# -* created_at => time - when this job were scheduled
+# -* sm_initialized_at => time - when simulation manager of this job was initialized
+# - time_limit => time - when this job should be stopped - in minutes
+# - sm_uuid => string - uuid of configuration files
+# -* sm_initialized => boolean - whether or not SM code has been sent to this machine
+#
+# Fields with * can be initialized with initialize_fields method after creation.
+
+
 module SimulationManagerRecord
   def initialize_fields
     self.created_at = self.sm_initialized_at = Time.now
