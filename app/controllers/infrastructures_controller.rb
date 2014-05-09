@@ -146,7 +146,8 @@ class InfrastructuresController < ApplicationController
   # - record_id
   def get_sm_dialog
     begin
-      @sm_record = get_sm_record(params[:record_id], params[:infrastructure_name])
+      @facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+      @sm_record = get_sm_record(params[:record_id], @facade)
       render inline: render_to_string(partial: 'sm_dialog')
     rescue NoSuchInfrastructureError => e
       render json: { status: 'error', msg: "No infrastructure: #{params[:infrastructure_name]}" }
@@ -161,8 +162,7 @@ class InfrastructuresController < ApplicationController
   private
 
   # Get single SimulationManagerRecord with priviliges check
-  def get_sm_record(record_id, infrastructure_name)
-    facade = InfrastructureFacade.get_facade_for(infrastructure_name)
+  def get_sm_record(record_id, facade)
     record = facade.get_sm_record_by_id(record_id)
     raise NoSuchSimulationManagerError if record.nil?
     raise AccessDeniedError if record.user_id.to_s != @current_user.id.to_s
@@ -173,7 +173,7 @@ class InfrastructuresController < ApplicationController
   # This method automatically clean up infrastructure facade resources
   def yield_simulation_manager(record_id, infrastructure_name, &block)
     facade = InfrastructureFacade.get_facade_for(infrastructure_name)
-    yield facade.yield_simulation_manager(get_sm_record(record_id, infrastructure_name))
+    yield facade.yield_simulation_manager(get_sm_record(record_id, facade))
   end
 
   def collect_infrastructure_info(user_id)

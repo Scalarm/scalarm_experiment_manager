@@ -94,3 +94,15 @@ en:
     tree:
       clouds: "Clouds"
       root: "Scalarm"
+  resource_header: "%{resource_id} on %{facade_name}"
+  resource_state: "Resource state"
+  state:
+    error: "error occured"
+    initialized: "initialized"
+    not_initialized: "not yet initialized"
+  simulation_manager_state: "Simulation Manager application state"
+  error_message: "Error message"
+  sm_initialized_at: "Simulation Manager installed at"
+  created_at: "Created at"
+  time_limit: "Time limit"
+  experiment_id: "Experiment ID"

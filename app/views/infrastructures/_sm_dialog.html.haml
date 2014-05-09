@@ -2,8 +2,47 @@
 
 %a.close-reveal-modal &#215;
 
-%row
-  = @sm_record.resource_id
+- begin
+  - @facade.yield_simulation_manager(@sm_record) do |sm|
+    %h3= t('resource_header', resource_id: @sm_record.resource_id, facade_name: @facade.long_name)
+    %ul
+      %li
+        %strong= t('resource_state') + ': '
+        =sm.resource_status.to_s
+      - record_state = if @sm_record.error
+        - t('state.error')
+      - elsif @sm_record.sm_initialized
+        - t('state.initialized')
+      - else
+        - t('state.not_initialized')
+      %li
+        %strong= t('simulation_manager_state') + ': '
+        =record_state
+      - if @sm_record.error
+        %ul
+          %li
+            %strong= t('error_message') + ': '
+            =@sm_record.error
+            - unless @sm_record.error_log.nil?
+              %li
+                %strong= t('infrastructure.information.sm_info.error_log') + ': '
+                %br
+                = raw(@sm_record.error_log.sub("\n", '<br/>'))
+      - elsif @sm_record.sm_initialized
+        %li
+          %strong= t('sm_initialized_at') + ':'
+          =@sm_record.sm_initialized_at.to_s
+      %li
+        %strong= t('created_at') + ': '
+        =@sm_record.created_at.to_s
+      %li
+        %strong= t('time_limit') + ': '
+        =@sm_record.created_at.since(@sm_record.time_limit.minutes).to_s + ' ' + "(#{@sm_record.time_limit.to_s} minutes)"
+      %li
+        %strong= t('experiment_id') + ': '
+        =@sm_record.experiment_id.to_s
+- rescue Exception => e
+  =t('infrastructure.information.sm_record_error', error: e.to_s)
 
 :javascript
   $(function() {
