@@ -185,7 +185,7 @@ class InfrastructureFacade
   def yield_simulation_manager(record, &block)
     begin
       init_resources
-      create_simulation_manager(record)
+      yield create_simulation_manager(record)
     ensure
       clean_up_resources
     end
