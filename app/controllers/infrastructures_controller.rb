@@ -122,8 +122,10 @@ class InfrastructuresController < ApplicationController
   def simulation_manager_command
     begin
       if %w(stop restart).include? params[:command]
-        sm = get_simulation_manager(params[:record_id], params[:infrastructure_name])
-        sm.send(params[:command])
+        yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
+          sm.send(params[:command])
+          sm.record.destroy if params[:command] == 'stop'
+        end
         render json: {status: 'ok', msg: "Executed #{params[:command]} on Simulation Manager"}
       else
         render json: {status: 'error', msg: "No such command for Simulation Manager: #{params[:command]}"}
@@ -133,7 +135,7 @@ class InfrastructuresController < ApplicationController
     rescue AccessDeniedError => e
       render json: { status: 'error', msg: "Access to Simulation Manager denied" }
     rescue Exception => e
-      render json: { status: 'error', msg: "Error on fetching Simulation Manager: #{e.to_s}" }
+      render json: { status: 'error', msg: "Error on Simulation Manager command invocation: #{e.to_s}" }
     end
   end
 
@@ -144,7 +146,7 @@ class InfrastructuresController < ApplicationController
   # - record_id
   def get_sm_dialog
     begin
-      @simulation_manager = get_simulation_manager(params['record_id'], params['infrastructure_name'])
+      @sm_record = get_sm_record(params[:record_id], params[:infrastructure_name])
       render inline: render_to_string(partial: 'sm_dialog')
     rescue NoSuchInfrastructureError => e
       render json: { status: 'error', msg: "No infrastructure: #{params[:infrastructure_name]}" }
@@ -158,13 +160,20 @@ class InfrastructuresController < ApplicationController
   # ============================ PRIVATE METHODS ============================
   private
 
-  def get_simulation_manager(record_id, infrastructure_name)
+  # Get single SimulationManagerRecord with priviliges check
+  def get_sm_record(record_id, infrastructure_name)
     facade = InfrastructureFacade.get_facade_for(infrastructure_name)
     record = facade.get_sm_record_by_id(record_id)
     raise NoSuchSimulationManagerError if record.nil?
     raise AccessDeniedError if record.user_id.to_s != @current_user.id.to_s
+    record
+  end
 
-    facade.create_simulation_manager(record)
+  # Yield single SimulationManager with priviliges check
+  # This method automatically clean up infrastructure facade resources
+  def yield_simulation_manager(record_id, infrastructure_name, &block)
+    facade = InfrastructureFacade.get_facade_for(infrastructure_name)
+    yield facade.yield_simulation_manager(get_sm_record(record_id, infrastructure_name))
   end
 
   def collect_infrastructure_info(user_id)

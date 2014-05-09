@@ -6,16 +6,18 @@ class SimulationManager
   attr_reader :infrastructure
   attr_reader :logger
 
-  attr_reader :monitoring_order
-  attr_reader :monitoring_cases
-
   def initialize(record, infrastructure)
     @record = record
     @infrastructure = infrastructure
     @logger = InfrastructureTaskLogger.new(infrastructure.short_name, record.resource_id)
+  end
 
-    @monitoring_cases = generate_monitoring_cases
-    @monitoring_order = [:time_limit, :experiment_end, :init_time_exceeded, :sm_terminated, :try_to_initialize_sm]
+  def monitoring_cases
+    @monitoring_cases ||= generate_monitoring_cases
+  end
+
+  def monitoring_order
+    @monitoring_order ||= [:time_limit, :experiment_end, :init_time_exceeded, :sm_terminated, :try_to_initialize_sm]
   end
 
   def generate_monitoring_cases
@@ -91,18 +93,14 @@ class SimulationManager
     end
   end
 
-  DELEGATES = %w(stop restart running? get_log install before_monitor after_monitor).to_set
+  DELEGATES = %w(stop restart resource_status running? get_log install before_monitor after_monitor).to_set
 
   def method_missing(m, *args, &block)
     if DELEGATES.include? m.to_s
-      infrastructure.send("simulation_manager_#{m}", record)
+      infrastructure.send("_simulation_manager_#{m}", record)
     else
       super(m, *args, &block)
     end
-  end
-
-  def status
-    record.error.nil? ? infrastructure.simulation_manager_status(record) : :error
   end
 
   def respond_to_missing?(m, include_all=false)
@@ -110,11 +108,12 @@ class SimulationManager
   end
 
   def sm_terminated?
-    status == :running and record.sm_initialized and (not running?)
+    # checks "should_destroy" one more time to be sure that experiment did not end in the meantime
+    record.error.nil? and record.sm_initialized and (not running?) and (not record.should_destroy?)
   end
 
   def should_initialize_sm?
-    status == :running and (not record.sm_initialized)
+    record.error.nil? and (not record.sm_initialized) and resource_status == :running
   end
 
   def record_sm_failed

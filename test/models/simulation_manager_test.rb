@@ -17,7 +17,10 @@ class SimulationManagerTest < Test::Unit::TestCase
       :monitor,
       :stop,
       :restart,
-      :status
+      :running?,
+      :resource_status,
+      :get_log,
+      :install
   ]
 
   def test_has_methods
@@ -36,7 +39,7 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_nothing
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-vm')
       expects(:time_limit_exceeded?).returns(false).once
       expects(:destroy).never
@@ -66,8 +69,9 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_time_limit
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-vm')
+      stubs(:error).returns(nil)
       expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(true).once
       expects(:experiment_end?).never
@@ -96,7 +100,7 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_experiment_end
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-vm')
       expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(false).once
@@ -126,7 +130,7 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_init_time_exceeded
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-vm')
       expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(false).once
@@ -146,7 +150,6 @@ class SimulationManagerTest < Test::Unit::TestCase
 
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
     simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:record_init_time_exceeded).once
     simulation_manager.expects(:restart).once
     simulation_manager.expects(:destroy_with_record).never
     simulation_manager.expects(:sm_terminated?).never
@@ -160,7 +163,7 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_sm_terminated
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-vm')
       expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(false).once
@@ -191,7 +194,7 @@ class SimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_try_to_initialize_sm
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-vm')
       expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(false).once
@@ -222,7 +225,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     simulation_manager.monitor
   end
 
-  def test_should_initialize_sm_not
+  def test_should_initialize_sm_already_init
     record = stub_everything 'record' do
       expects(:sm_initialized).returns(true).once
     end
@@ -230,9 +233,8 @@ class SimulationManagerTest < Test::Unit::TestCase
     infrastructure = stub_everything
 
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-    SimulationManager.any_instance.expects(:generate_monitoring_cases).once
     simulation_manager = SimulationManager.new(record, infrastructure)
-    simulation_manager.expects(:status).returns(:running).once
+    simulation_manager.expects(:resource_status).returns(:running).never
 
     assert (not simulation_manager.should_initialize_sm?)
   end
@@ -242,9 +244,9 @@ class SimulationManagerTest < Test::Unit::TestCase
     mock_infrastructure = mock('infrastructure') do
       stubs(:short_name).returns('...')
       SimulationManager::DELEGATES.each do |delegate|
-        expects("simulation_manager_#{delegate}").with(mock_record).once
+        expects("_simulation_manager_#{delegate}").with(mock_record).once
       end
-      expects('simulation_manager_wrong').with(mock_record).never
+      expects('_simulation_manager_wrong').with(mock_record).never
     end
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
 
@@ -261,7 +263,5 @@ class SimulationManagerTest < Test::Unit::TestCase
     assert (not simulation_manager.respond_to? :wrong)
     assert_raises(NoMethodError) {simulation_manager.wrong}
   end
-
-
 
 end

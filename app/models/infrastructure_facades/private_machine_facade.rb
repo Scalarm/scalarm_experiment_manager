@@ -162,27 +162,28 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # -- SimulationManager delegation methods --
 
-  def simulation_manager_stop(record)
+  def _simulation_manager_stop(record)
     shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
   end
 
-  def simulation_manager_restart(record)
+  def _simulation_manager_restart(record)
     logger.warn "#{record.task_desc} restart invoked, but it is not supported"
   end
 
-  def simulation_manager_status(record)
+  def _simulation_manager_resource_status(record)
+    # TODO: check connection?
     :running
   end
 
-  def simulation_manager_running?(record)
+  def _simulation_manager_running?(record)
     not shared_ssh_session(record.credentials).exec!("ps #{record.pid} | tail -n +2").blank?
   end
 
-  def simulation_manager_get_log(record)
+  def _simulation_manager_get_log(record)
     shared_ssh_session(record.credentials).exec! "tail -25 #{record.log_path}"
   end
 
-  def simulation_manager_install(record)
+  def _simulation_manager_install(record)
     logger.debug "Installing SM on host #{record.credentials.host}:#{record.credentials.ssh_port}"
 
     InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
@@ -191,7 +192,7 @@ class PrivateMachineFacade < InfrastructureFacade
     error_counter = 0
     while true
       begin
-        ssh = shared_ssh_session(record)
+        ssh = shared_ssh_session(record.credentials)
         break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
       rescue Exception => e
         logger.warn "Exception #{e} occured while communication with "\
@@ -208,34 +209,9 @@ class PrivateMachineFacade < InfrastructureFacade
     end
   end
 
-
-  def start_simulation_manager_cmd(record)
-    sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
-    chain(
-        mute('source .rvm/environments/default'),
-        mute(rm(sm_dir_name, true)),
-        mute("unzip #{sm_dir_name}.zip"),
-        mute(cd(sm_dir_name)),
-        run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
-    )
-  end
-
-  def log_exists?(record, ssh)
-    path_exists = (ssh.exec!(run_and_get_pid "ls #{record.log_path}") == 0)
-    log.warn "Log file already exists: #{record.log_path}" if path_exists
-    path_exists
-  end
-
-  def send_and_launch_sm(record, ssh)
-    record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
-    output = ssh.exec!(start_simulation_manager_cmd(record))
-    logger.debug "Simulation Manager PID: #{output}"
-    (record.pid = output.to_i) > 0 ? record.pid : false
-  end
-
   # -- Monitoring utils --
 
-  def after_monitoring_loop
+  def clean_up_resources
     close_all_ssh_sessions
   end
 

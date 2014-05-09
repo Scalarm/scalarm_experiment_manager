@@ -133,19 +133,19 @@ class CloudFacade < InfrastructureFacade
 
   # -- SimulationManager delegation methods --
 
-  def simulation_manager_stop(record)
+  def _simulation_manager_stop(record)
     cloud_client_instance(record.user_id).terminate(record.vm_id)
   end
 
-  def simulation_manager_restart(record)
+  def _simulation_manager_restart(record)
     cloud_client_instance(record.user_id).reinitialize(record.vm_id)
   end
 
-  def simulation_manager_status(record)
+  def _simulation_manager_resource_status(record)
     cloud_client_instance(record.user_id).status(record.vm_id)
   end
 
-  def simulation_manager_running?(record)
+  def _simulation_manager_running?(record)
     vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
     if vm.exists? and vm.status == :running
       not shared_ssh_session(record).exec!("ps #{record.pid} | tail -n +2").blank?
@@ -154,11 +154,11 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  def simulation_manager_get_log(record)
+  def _simulation_manager_get_log(record)
     shared_ssh_session(record).exec! "tail -25 #{record.log_path}"
   end
 
-  def simulation_manager_install(record)
+  def _simulation_manager_install(record)
     vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
     record.update_ssh_address!(vm)
     logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
@@ -188,7 +188,7 @@ class CloudFacade < InfrastructureFacade
 
   # -- Monitoring utils --
 
-  def after_monitoring_loop
+  def clean_up_resources
     close_all_ssh_sessions
   end
 

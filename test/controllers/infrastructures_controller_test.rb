@@ -10,11 +10,14 @@ class InfrastructuresControllerTest < ActionController::TestCase
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
     MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
 
+    # @tmp_user_id = '1'
+
     @tmp_user = ScalarmUser.new({login: 'test'})
+    # @tmp_user.id = @tmp_user_id
     @tmp_user.save
     @tmp_user_id = @tmp_user.id
 
-    ScalarmUser.stubs(:find_by_id).with(@tmp_user_id).returns(@tmp_user)
+    # ScalarmUser.stubs(:find_by_id).with(@tmp_user_id).returns(@tmp_user)
   end
 
   def teardown
@@ -112,9 +115,10 @@ class InfrastructuresControllerTest < ActionController::TestCase
   def test_simulation_manager_commands
     commands = %w(restart stop)
     commands.each do |cmd|
-      mock_sm = Object
-      mock_sm.expects(cmd).once
-      InfrastructuresController.any_instance.stubs(:get_simulation_manager).with('1', 'inf').returns(mock_sm)
+      mock_sm = mock 'simulation_manager' do
+        expects(cmd).once
+      end
+      InfrastructuresController.any_instance.stubs(:yield_simulation_manager).with('1', 'inf').yields(mock_sm)
 
       post :simulation_manager_command, {record_id: '1', infrastructure_name: 'inf', command: cmd},
           {user: @tmp_user_id}
@@ -139,6 +143,31 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
       assert_equal 'error', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
     end
+  end
+
+  # Integration with PlGridFacade test
+  def test_simulation_manager_pl_grid_command
+    require 'infrastructure_facades/pl_grid_facade'
+    uid = @tmp_user_id
+    record_mock = stub_everything 'record' do
+      stubs(:id).returns('1')
+      stubs(:user_id).returns(uid)
+      stubs(:scheduler_type).returns('glite')
+    end
+    scheduler_mock = stub_everything 'scheduler' do
+      expects(:cancel).once
+    end
+    PlGridFacade.any_instance.expects(:shared_ssh_session).returns(stub_everything)
+    PlGridFacade.any_instance.expects(:get_sm_record_by_id).with('1').returns(record_mock)
+    PlGridFacade.expects(:create_scheduler_facade).returns(scheduler_mock).once
+
+    PlGridFacade.any_instance.expects(:init_resources).once
+    PlGridFacade.any_instance.expects(:clean_up_resources).once
+
+    post :simulation_manager_command, {record_id: '1', infrastructure_name: 'plgrid', command: 'stop'},
+         {user: @tmp_user_id}
+
+    assert_equal 'ok', JSON.parse(response.body)['status'], response.body
   end
 
 end

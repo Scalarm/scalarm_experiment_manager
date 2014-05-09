@@ -105,7 +105,7 @@ class window.InfrastructuresTree
 
   # FIXME infrastructure(s) <- url
   smCommand: (d, command) ->
-    data = { 'infrastructure_name': d['infrastructure_name'], 'id': d['_id'], 'command': command }
+    data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': command }
     $.post(@simulation_manager_command_infrastructure_path, data, (json) =>)
 
   updateTree: (source) ->

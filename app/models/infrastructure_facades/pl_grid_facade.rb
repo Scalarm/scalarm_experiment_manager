@@ -195,57 +195,63 @@ class PlGridFacade < InfrastructureFacade
     grants
   end
 
-  def create_simulation_manager(record)
-    PlGridSimulationManager.new(record, self)
-  end
-
   # -- SimulationManager delegation methods --
 
-  def simulation_manager_before_monitor(record)
+  def _simulation_manager_before_monitor(record)
     PlGridFacade.create_scheduler_facade(record.scheduler_type).prepare_session(shared_ssh_session(record.credentials))
   end
 
-  def simulation_manager_stop(record)
+  def _simulation_manager_stop(record)
     scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     scheduler.cancel(ssh, record)
     scheduler.clean_after_job(ssh, record)
   end
 
-  def simulation_manager_restart(record)
+  def _simulation_manager_restart(record)
     scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     scheduler.restart(ssh, record)
   end
 
-  def simulation_manager_status(record)
+  def _simulation_manager_resource_status(record)
     scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
-    ssh = shared_ssh_session(record.credentials)
+    begin
+      ssh = shared_ssh_session(record.credentials)
+    rescue
+      return :error
+    end
     scheduler.status(ssh, record)
   end
 
-  def simulation_manager_running?(record)
+  def _simulation_manager_running?(record)
     scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     not scheduler.is_done(ssh, record)
   end
 
-  def simulation_manager_get_log(record)
+  def _simulation_manager_get_log(record)
     scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     scheduler.get_log(ssh, record)
   end
 
-  def simulation_manager_install(record)
+  def _simulation_manager_install(record)
     # pass - SM already sent
   end
 
   # -- Monitoring utils --
 
-  def after_monitoring_loop
+  def clean_up_resources
     close_all_ssh_sessions
   end
 
   # --
+
+  private
+
+  def create_simulation_manager(record)
+    PlGridSimulationManager.new(record, self)
+  end
 
 end

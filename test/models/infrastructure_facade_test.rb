@@ -21,7 +21,7 @@ class InfrastructureFacadeTest < Test::Unit::TestCase
     end
   end
 
-  def test_monitoring_loop
+  def test_monitoring_loop_integration
     rec1 = mock('rec1') {
       expects(:should_destroy?).returns(false)
       stubs(:id).returns('1')
@@ -51,16 +51,21 @@ class InfrastructureFacadeTest < Test::Unit::TestCase
       expects(:monitor).never
     }
 
-    grouped_sm_records = {a: [rec1, rec2, rec3]}
-    grouped_simulation_managers = {a: [sm1, sm2, sm3]}
-
+    InfrastructureFacade.any_instance.stubs(:short_name).returns('a')
     InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+    facade = InfrastructureFacade.new
 
-    facade = PlGridFacade.new
+    facade.stubs(:create_simulation_manager).with(rec1).returns(sm1)
+    facade.stubs(:create_simulation_manager).with(rec2).returns(sm2)
+    facade.stubs(:create_simulation_manager).with(rec3).returns(sm3)
 
+    grouped_sm_records = {a: [rec1, rec2, rec3]}
     facade.stubs(:get_grouped_sm_records).returns(grouped_sm_records)
-    facade.stubs(:get_grouped_simulation_managers).returns(grouped_simulation_managers)
 
+    facade.expects(:init_resources).once
+    facade.expects(:clean_up_resources).once
+
+    # execution
     facade.monitoring_loop
   end
 end

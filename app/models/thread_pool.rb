@@ -1,3 +1,5 @@
+# Based on:
+#
 # Copyright (c) 2012, Kim Burgestrand kim@burgestrand.se
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -16,6 +18,8 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# Modified by Scalarm Team
 
 # Example usage:
 #
@@ -63,5 +67,14 @@ class ThreadPool
     @pool.map(&:join)
 
     Rails.logger.debug 'Thread pool: shutted down'
+  end
+
+  def self.use(*args)
+    pool = ThreadPool.new(*args)
+    begin
+      yield pool
+    ensure
+      pool.shutdown
+    end
   end
 end

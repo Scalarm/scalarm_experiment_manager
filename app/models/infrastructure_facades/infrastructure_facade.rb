@@ -21,12 +21,12 @@ require 'thread_pool'
 # short_name - short name of infrastructure, e.g. 'plgrid'
 #
 # SimulationManager delegate methods to implement
-# - simulation_manager_stop(record)
-# - simulation_manager_restart(record)
-# - simulation_manager_status(record)
-# - simulation_manager_running?(record)
-# - simulation_manager_get_log(record)
-# - simulation_manager_install(record)
+# - _simulation_manager_stop(record)
+# - _simulation_manager_restart(record)
+# - _simulation_manager_resource_status(record)
+# - _simulation_manager_running?(record)
+# - _simulation_manager_get_log(record)
+# - _simulation_manager_install(record)
 
 class InfrastructureFacade
   include InfrastructureErrors
@@ -38,6 +38,8 @@ class InfrastructureFacade
   end
 
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
+    Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
+
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
@@ -92,17 +94,11 @@ class InfrastructureFacade
     lock = MongoLock.new(short_name)
     while true do
       if lock.acquire
+        logger.info 'monitoring thread is working'
         begin
-          logger.info 'monitoring thread is working'
-          before_monitoring_loop
-          begin
-            monitoring_loop
-          rescue Exception => e
-            logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
-          end
-          after_monitoring_loop
+          monitoring_loop
         rescue Exception => e
-          logger.error "Uncaught before/after monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
+          logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
         lock.release
       end
@@ -110,28 +106,27 @@ class InfrastructureFacade
     end
   end
 
-  # TODO: grouping can be done with special grouping method delegated to each facade
   def monitoring_loop
     begin
-      grouped_simulation_managers = get_grouped_simulation_managers
-      pool = ThreadPool.new([grouped_simulation_managers.count, 4].min)
-      grouped_simulation_managers.each do |group, simulation_managers|
-        pool.schedule do
-          begin
-            simulation_managers.each &:monitor
-          rescue Exception => e
-            logger.error "Uncaught exception on monitoring group computation thread (#{group.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
-            get_grouped_sm_records[group].select(&:should_destroy?).each do |record|
-              logger.warn "Record #{record.id} will be destroyed"
-              record.destroy
+      yield_grouped_simulation_managers do |grouped_simulation_managers|
+        ThreadPool.use([grouped_simulation_managers.count, 4].min) do |pool|
+          grouped_simulation_managers.each do |group, simulation_managers|
+            pool.schedule do
+              begin
+                simulation_managers.each &:monitor
+              rescue Exception => e
+                logger.error "Uncaught exception on monitoring group computation thread (#{group.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
+                get_grouped_sm_records[group].select(&:should_destroy?).each do |record|
+                  logger.warn "Record #{record.id} will be destroyed"
+                  record.destroy
+                end
+              end
             end
           end
         end
       end
     rescue Exception => e
       logger.error "Uncaught exception in monitoring loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
-    ensure
-      pool.shutdown unless pool.nil?
     end
   end
 
@@ -164,18 +159,38 @@ class InfrastructureFacade
     get_sm_records(*args).group_by &:monitoring_group
   end
 
-  def create_simulation_manager(record)
-    SimulationManager.new(record, self)
+  # Use only for creating _single_ SimulationManager based on some record
+  # For many SM use yield_simulation_managers()
+  # This method ensures that resources used by SM will be cleaned up
+  def yield_simulation_manager(record, &block)
+    begin
+      init_resources
+      create_simulation_manager(record)
+    ensure
+      clean_up_resources
+    end
   end
 
-  def get_simulation_managers(*args)
-    get_sm_records(*args).map {|r| create_simulation_manager(r)}
+  # This method ensures that resources used by SM will be cleaned up
+  def yield_simulation_managers(*args, &block)
+    begin
+      init_resources
+      yield get_sm_records(*args).map {|r| create_simulation_manager(r)}
+    ensure
+      clean_up_resources
+    end
   end
 
-  def get_grouped_simulation_managers(*args)
-    Hash[get_grouped_sm_records(*args).map do |group, records|
-      [group, records.map {|r| create_simulation_manager(r)}]
-    end]
+  # This method ensures that resources used by SM will be cleaned up
+  def yield_grouped_simulation_managers(*args, &block)
+    begin
+      init_resources
+      yield Hash[get_grouped_sm_records(*args).map do |group, records|
+        [group, records.map {|r| create_simulation_manager(r)}]
+      end]
+    ensure
+      clean_up_resources
+    end
   end
 
   # Used mainly to create node or subtree:
@@ -194,12 +209,18 @@ class InfrastructureFacade
     get_sm_records(user_id, experiment_id, params).map {|r| r.to_h }
   end
 
-  def before_monitoring_loop; end
-  def after_monitoring_loop; end
-
   # -- SimulationManger delegation default implementation --
 
-  def simulation_manager_before_monitor(record); end
-  def simulation_manager_after_monitor(record); end
+  def _simulation_manager_before_monitor(record); end
+  def _simulation_manager_after_monitor(record); end
+
+  private
+
+  def create_simulation_manager(record)
+    SimulationManager.new(record, self)
+  end
+
+  def init_resources; end
+  def clean_up_resources; end
 
 end
