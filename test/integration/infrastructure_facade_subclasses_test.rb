@@ -13,7 +13,8 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
       private_machine: PrivateMachineFacade,
       pl_cloud: CloudFacade,
       amazon: CloudFacade,
-      google: CloudFacade
+      google: CloudFacade,
+      dummy: DummyFacade
   }
 
   FACADE_METHODS = [

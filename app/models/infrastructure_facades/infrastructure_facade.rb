@@ -12,11 +12,9 @@ require 'thread_pool'
 #
 # - long_name() -> String - name of infrastructure which will be presented to GUI user; should be localized
 # - short_name() -> String - used as infrastructure id
-# - default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
 # - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# - clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
 # - current_state(user) -> String - summary of current infrastructure state presented in GUI
-# - add_credentials(user, params, session) - save credentials to database or session based on request parameters
+# - add_credentials(user, params, session) -> String ('ok') - save credentials to database
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
 #
 # Database support methods:
@@ -33,7 +31,8 @@ require 'thread_pool'
 #  -- usually cutted to over a dozen of lines)
 # - _simulation_manager_install(record) - sends to computational resource and executes Simulation Manager application
 #
-# Methods which can be overriden:
+# Methods which can be overriden, but not necessarily:
+# - default_additional_params() -> Hash - default additional parameters necessary to start Simulation Managers with the facade
 # - init_resources() - initialize resources needed to perform operations on Simulation Managers
 #   -- this method will be invoked before executing yield_simulation_manager(s) block
 # - clean_up_resources() - close resources needed to perform operations on Simulation Managers
@@ -41,6 +40,8 @@ require 'thread_pool'
 # - create_simulation_manager(record) - create SimulationManager instance on SMRecord base
 #   -- typically you will not override this method, but sometimes custom SimulationManager is needed
 #   -- this method should not be used directly
+# - _simulation_manager_before_monitor(record) - executed before monitoring single resource
+# - _simulation_manager_after_monitor(record) - executed after monitoring single resource
 
 
 class InfrastructureFacade
@@ -93,11 +94,15 @@ class InfrastructureFacade
     non_cloud_infrastructures.merge(cloud_infrastructures)
   end
 
-  def self.non_cloud_infrastructures
-    {
-        plgrid: { label: 'PL-Grid', facade: PlGridFacade.new },
-        private_machine: { label: 'Private resources', facade: PrivateMachineFacade.new }
-    }
+  if Rails.env.development? or Rails.env.test?
+    def self.non_cloud_infrastructures
+      require_relative 'dummy_facade'
+      self._non_cloud_infrastructures.merge(dummy: {label: 'Dummy', facade: DummyFacade.new})
+    end
+  else
+    def self.non_cloud_infrastructures
+      self._non_cloud_infrastructures
+    end
   end
 
   def self.cloud_infrastructures
@@ -224,6 +229,10 @@ class InfrastructureFacade
     get_sm_records(user_id, experiment_id, params).map {|r| r.to_h }
   end
 
+  def default_additional_params
+    {}
+  end
+
   # -- SimulationManger delegation default implementation --
 
   def _simulation_manager_before_monitor(record); end
@@ -237,5 +246,14 @@ class InfrastructureFacade
 
   def init_resources; end
   def clean_up_resources; end
+
+  # TODO: make facade factory
+  # TODO: change to classes, because always all facades are initialized; remove "label"
+  def self._non_cloud_infrastructures
+    {
+        plgrid: { label: 'PL-Grid', facade: PlGridFacade.new },
+        private_machine: { label: 'Private resources', facade: PrivateMachineFacade.new }
+    }
+  end
 
 end
