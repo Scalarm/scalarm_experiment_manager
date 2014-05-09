@@ -1,13 +1,6 @@
-# Attributes
-# -- generic --
-# user_id => integer - the user who scheduled this job - mongoid in the future
-# experiment_id => the experiment which should be computed by this job
-# credentials_id => id of PrivateMachineCredentials
-# created_at => time - when this job were scheduled
-# time_limit => time - when this job should be stopped - in minutes
-# pid => PID of SimulationManager process executed at remote machine
-# sm_uuid => string - uuid of configuration files
-# sm_initialized => boolean - whether or not SM code has been sent to this machind
+# Attributes (besides of generic SimulationManagerRecord's)
+# - credentials_id => id of PrivateMachineCredentials
+# - pid => PID of SimulationManager process executed at remote machine
 
 class PrivateMachineRecord < MongoActiveRecord
   include SimulationManagerRecord

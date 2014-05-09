@@ -106,9 +106,6 @@ class PlGridFacade < InfrastructureFacade
     record.destroy
   end
 
-  def clean_tmp_credentials(user_id, session)
-  end
-
   def self.scheduler_facade_classes
     Hash[[PBSFacade, GliteFacade].map {|f| [f.short_name.to_sym, f]}]
   end

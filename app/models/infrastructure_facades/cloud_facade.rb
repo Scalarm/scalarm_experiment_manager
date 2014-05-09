@@ -95,10 +95,6 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  def default_additional_params
-    {}
-  end
-
   def add_credentials(user, params, session)
     self.send("handle_#{params[:credential_type]}_credentials", user, params, session)
   end
@@ -114,9 +110,6 @@ class CloudFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
     record.destroy
-  end
-
-  def clean_tmp_credentials(user_id, session)
   end
 
   def get_sm_records(user_id=nil, experiment_id=nil, params={})

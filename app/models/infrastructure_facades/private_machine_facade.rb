@@ -52,10 +52,6 @@ class PrivateMachineFacade < InfrastructureFacade
                         machine_name: machine_creds.machine_desc)]
   end
 
-  def default_additional_params
-    {}
-  end
-
   def count_scheduled_tasks(user_id)
     records = get_sm_records(user_id)
     records.nil? ? 0 : records.size
@@ -78,9 +74,6 @@ class PrivateMachineFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
     record.destroy
-  end
-
-  def clean_tmp_credentials(user_id, session)
   end
 
   def long_name

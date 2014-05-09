@@ -9,6 +9,9 @@
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
 #
 # Fields with * can be initialized with initialize_fields method after creation.
+#
+# Subclasses should have methods:
+# - resource_id() -> returns short description of resource, e.g. VM id
 
 
 module SimulationManagerRecord

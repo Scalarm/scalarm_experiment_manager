@@ -37,11 +37,6 @@ class UserControllerController < ApplicationController
   end
 
   def logout
-    InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      # TODO cleaning credentials not supported
-      infrastructure_info[:facade].clean_tmp_credentials(@current_user.id, session)
-    end
-
     reset_session
     flash[:notice] = t('logout_success')
 
