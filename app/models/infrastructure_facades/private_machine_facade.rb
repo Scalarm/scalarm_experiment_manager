@@ -22,65 +22,6 @@ class PrivateMachineFacade < InfrastructureFacade
     I18n.t('infrastructure_facades.private_machine.current_state', tasks: count_scheduled_tasks(user.id))
   end
 
-  # TODO: group by PrivateMachineRecord.credentials_id
-
-  # def monitoring_loop
-  #   machine_records = PrivateMachineRecord.all.group_by {|r| r.credentials_id}
-  #   machine_threads = []
-  #   machine_records.each do |creds_id, records|
-  #     credentials = PrivateMachineCredentials.find_by_id(creds_id)
-  #     if credentials.nil?
-  #       logger.error "Credentials missing: #{creds_id}, affected records: #{records.map &:id}"
-  #       records.map {|r| check_record_expiration(r)}
-  #       next
-  #     end
-  #     machine_threads << Thread.start { monitor_machine_records(credentials, records) }
-  #   end
-  #   machine_threads.map &:join
-  # end
-  #
-  # def monitor_machine_records(credentials, records)
-  #   logger.debug "Monitoring private resources on: #{credentials.machine_desc} (#{records.count} tasks)"
-  #   begin
-  #     credentials.ssh_start do |ssh|
-  #       records.each do |r|
-  #         begin
-  #           # Clear possible SSH error as SSH connection is now successful
-  #           if r.ssh_error
-  #             r.ssh_error, r.error = nil, nil
-  #             r.save
-  #           end
-  #           PrivateMachineSimulationManager.new(r, ssh).monitor
-  #         rescue Exception => e
-  #           logger.error "Exception on monitoring private resource #{credentials.machine_desc}: #{e.class} - #{e}"
-  #           check_record_expiration(r)
-  #         end
-  #       end
-  #     end
-  #   rescue Exception => e
-  #     logger.error "SSH connection error on #{credentials.machine_desc}: #{e.class} - #{e}"
-  #     records.each do |r|
-  #       unless check_record_expiration(r)
-  #         r.ssh_error = true
-  #         r.error = "SSH connection error: (#{e.class}) #{e}"
-  #         r.save
-  #       end
-  #     end
-  #   end
-  # end
-
-  # # Used if cannot execute ScheduledPrivateMachine.monitor: remove record when it should be removed
-  # def check_record_expiration(private_machine_record)
-  #   machine = PrivateMachineSimulationManager.new(private_machine_record)
-  #   if machine.time_limit_exceeded? or machine.experiment_end?
-  #     logger.info "Removing private machine record #{private_machine_record.task_desc} due to expiration or experiment end"
-  #     machine.remove_record
-  #     true
-  #   else
-  #     false
-  #   end
-  # end
-
   # Params hash:
   # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
   def start_simulation_managers(user, instances_count, experiment_id, params = {})

@@ -8,25 +8,40 @@ require_relative 'clouds/cloud_factory'
 
 require 'thread_pool'
 
-# Methods necessary to implement by subclasses
-# monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
-#   and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
-#   mutually excluded.
-# default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
-# start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
-# get_running_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
-# current_state(user) - returns a string describing summary of current infrastructure state
-# add_credentials(user, params, session) - save credentials to database or session based on request parameters
-# short_name - short name of infrastructure, e.g. 'plgrid'
+# Methods necessary to implement by subclasses:
+#
+# - long_name() -> String - name of infrastructure which will be presented to GUI user; should be localized
+# - short_name() -> String - used as infrastructure id
+# - default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
+# - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
+# - clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
+# - current_state(user) -> String - summary of current infrastructure state presented in GUI
+# - add_credentials(user, params, session) - save credentials to database or session based on request parameters
+# - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
+#
+# Database support methods:
+# - get_sm_records(user_id=nil, experiment_id=nil, params={}) -> Array of SimulationManagerRecord subclass instances
+# - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
 #
 # SimulationManager delegate methods to implement
-# - _simulation_manager_stop(record)
-# - _simulation_manager_restart(record)
-# - _simulation_manager_resource_status(record)
-# - _simulation_manager_running?(record)
-# - _simulation_manager_get_log(record)
-# - _simulation_manager_install(record)
+# - _simulation_manager_stop(record) - stop Simulation Manager execution and free used computational resources
+# - _simulation_manager_restart(record) - restart Simulation Manager and/or computational resource (used to reinitialize)
+# - _simulation_manager_resource_status(record) - return one of: [:initializing, :running, :deactivated, :error] state
+#  -- state refers only to state of computational resource (e.g. VM), not to Simulation Manager application state
+# - _simulation_manager_running?(record) - true/false - is Simulation Manager _application_ running? (e.g. check UNIX process state)
+# - _simulation_manager_get_log(record) -> String - get content of Simulation Manager application log file (stdout+stderr)
+#  -- usually cutted to over a dozen of lines)
+# - _simulation_manager_install(record) - sends to computational resource and executes Simulation Manager application
+#
+# Methods which can be overriden:
+# - init_resources() - initialize resources needed to perform operations on Simulation Managers
+#   -- this method will be invoked before executing yield_simulation_manager(s) block
+# - clean_up_resources() - close resources needed to perform operations on Simulation Managers
+#   -- this method will be invoked after executing yield_simulation_manager(s) block
+# - create_simulation_manager(record) - create SimulationManager instance on SMRecord base
+#   -- typically you will not override this method, but sometimes custom SimulationManager is needed
+#   -- this method should not be used directly
+
 
 class InfrastructureFacade
   include InfrastructureErrors

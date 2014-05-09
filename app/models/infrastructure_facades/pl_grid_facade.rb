@@ -35,30 +35,6 @@ class PlGridFacade < InfrastructureFacade
     I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
   end
 
-  # TODO: group by user_id
-  # # for each job check
-  # # 1. if the experiment is still running - destroy the job otherwise
-  # # 2. if the job is started correctly and is not stuck in a queue - restart if yes
-  # # 3. if the job is running more then 24 hours  - restart if yes
-  # def monitoring_loop
-  #   #  group jobs by the user_id - for each group - login to the ui using the user credentials
-  #   PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
-  #
-  #     begin
-  #       logger.info "monitoring thread is working"
-  #       #  group jobs by the user_id - for each group - login to the ui using the user credentials
-  #       PlGridJob.all.group_by(&:user_id).each do |user_id, job_list|
-  #         credentials = GridCredentials.find_by_user_id(user_id)
-  #         next if job_list.blank? or credentials.nil? # we cannot monitor due to secrets lacking...
-  #
-  #         Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
-  #           (job_list.map {|job| PlGridSimulationManager.new(job, ssh)}).each &:monitor
-  #         end
-  #       end
-  #     end
-  #   end
-  # end
-
   def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
     scheduler = self.class.create_scheduler_facade(additional_params['scheduler'].to_s)
