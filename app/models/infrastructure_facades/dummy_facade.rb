@@ -11,7 +11,7 @@ class DummyFacade < InfrastructureFacade
     require 'securerandom'
     (1..instances_count).each do
       record = DummyRecord.new({
-        res_id: SecureRandom.hex(4),
+        res_id: SecureRandom.hex(8),
         user_id: user.id,
         experiment_id: experiment_id,
         sm_uuid: SecureRandom.uuid,
@@ -69,6 +69,18 @@ class DummyFacade < InfrastructureFacade
 
   def _simulation_manager_install(record)
     logger.info "Installing SM: #{record.resource_id}"
+  end
+
+  # Overrides InfrastructureFacade method
+  def to_h
+    {
+        name: long_name,
+        children:
+          [{
+              name: "Inner dummy",
+              infrastructure_name: short_name
+          }]
+    }
   end
 
 end

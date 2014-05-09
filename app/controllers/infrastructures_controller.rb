@@ -173,7 +173,7 @@ class InfrastructuresController < ApplicationController
   # This method automatically clean up infrastructure facade resources
   def yield_simulation_manager(record_id, infrastructure_name, &block)
     facade = InfrastructureFacade.get_facade_for(infrastructure_name)
-    yield facade.yield_simulation_manager(get_sm_record(record_id, facade))
+    facade.yield_simulation_manager(get_sm_record(record_id, facade)) {|sm| yield sm}
   end
 
   def collect_infrastructure_info(user_id)

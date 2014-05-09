@@ -20,8 +20,19 @@
     transform: translate(0px,30px);
 }
 
-.sm-node circle {
-  fill: lightsteelblue;
+circle.sm-error {
+  fill: indianred;
+  stroke: firebrick;
+}
+
+circle.sm-initialized {
+  fill: lightgreen;
+  stroke: forestgreen;
+}
+
+circle.sm-startup  {
+  fill: khaki;
+  stroke: goldenrod;
 }
 
 circle.children-collapsed {
@@ -39,26 +50,12 @@ text.label-text {
   transform: translate(22px,-6px);
 }
 
-rect.stop {
-  fill: firebrick;
+image.button {
   cursor: pointer;
-  stroke-width: 0;
-}
-
-path.info {
-  fill: steelblue;
-  cursor: pointer;
-  stroke-width: 0;
-}
-
-path.restart {
-  fill: seagreen;
-  cursor: pointer;
-  stroke-width: 0;
 }
 
 path.sm-label {
   fill: #fff;
   stroke-width: 1.5px;
-  stroke: steelblue;
+  stroke: slategray;
 }
