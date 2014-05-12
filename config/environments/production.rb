@@ -76,5 +76,6 @@ ScalarmExperimentManager::Application.configure do
   # config.autoflush_log = false
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
+  config.logger = Logger.new(Rails.root.join("log", Rails.env + ".log"), 10, 1024*1024*1024)
   config.log_formatter = ::Logger::Formatter.new
 end

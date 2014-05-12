@@ -86,7 +86,7 @@ class ApplicationController < ActionController::Base
 
   def stop_monitoring
     processing_time = ((Time.now - @action_start_time)*1000).to_i.round
-    Rails.logger.info("[monitoring][#{controller_name}][#{action_name}]#{processing_time}")
+    #Rails.logger.info("[monitoring][#{controller_name}][#{action_name}]#{processing_time}")
     @@probe.send_measurement(controller_name, action_name, processing_time)
   end
 end
