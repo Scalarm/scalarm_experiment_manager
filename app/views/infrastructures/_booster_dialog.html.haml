@@ -11,13 +11,17 @@
   = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
     .row
       .small-4.columns
-        = label_tag :experiment_id, 'Experiment' + ':', class: 'inline right' # TODO id + name?
+        = label_tag :experiment_id, 'Experiment' + ':', class: 'inline right'
       .small-4.columns
-        = select_tag :experiment_id, options_for_select(experiments_select) # TODO get
+        = select_tag :experiment_id, options_for_select(experiments_select)
       .small-4.columns
     .row
       .small-4.columns
-        = label_tag :infrastructure_name, 'Infrastructure' + ':', class: 'inline right' # TODO id + name?
+        = label_tag :infrastructure_info, 'Infrastructure' + ':', class: 'inline right'
       .small-4.columns
-        = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select) # TODO get
+        = select_tag :infrastructure_info, grouped_options_for_select(infrastructures_select)
       .small-4.columns
+
+    .row
+      .small-12.columns.text-center
+        = submit_tag t('infrastructure.information.submit'), class: 'button radius'

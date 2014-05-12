@@ -41,11 +41,21 @@ class InfrastructuresController < ApplicationController
     render json: infrastructure_info
   end
 
+  # GET params:
+  # - experiment_id
+  # - infrastructure_info - JSON Hash with keys: {
+  #     infrastructure_name - short name of infrastructure
+  #     infrastructure_params - Hash with params, eg. PL-Grid scheduler type
+  #   }
+  # - job_counter
   def schedule_simulation_managers
-    experiment_id = (params[:experiment_id] or nil)
+    # TODO: error handling (check parameters)
+    params[:infrastructure_info] = JSON.parse(params[:infrastructure_info]) if params[:infrastructure_info].kind_of? String
 
-    infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_type])
-    status, response_msg = infrastructure.start_simulation_managers(@current_user, params[:job_counter].to_i, experiment_id, params)
+    infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_info][:infrastructure_name])
+    status, response_msg = infrastructure.start_simulation_managers(
+        @current_user.id, params[:job_counter].to_i, params[:experiment_id], params
+    )
 
     render json: { status: status, msg: response_msg }
   end

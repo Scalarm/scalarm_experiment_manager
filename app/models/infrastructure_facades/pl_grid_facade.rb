@@ -35,14 +35,15 @@ class PlGridFacade < InfrastructureFacade
     I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
   end
 
-  def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
+  def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
-    scheduler = self.class.create_scheduler_facade(additional_params['scheduler'].to_s)
+    scheduler_type = additional_params[:infrastructure_info][:infrastructure_params][:scheduler_type]
+    scheduler = self.class.create_scheduler_facade(scheduler_type.to_s)
 
     # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user.id, experiment_id, additional_params['start_at'])
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
 
-    if credentials = GridCredentials.find_by_user_id(user.id)
+    if credentials = GridCredentials.find_by_user_id(user_id)
       # prepare job executable and descriptor
       scheduler.prepare_job_files(sm_uuid)
 
@@ -55,8 +56,8 @@ class PlGridFacade < InfrastructureFacade
         credentials.ssh_start do |ssh|
           1.upto(instances_count).each do
             #  retrieve job id and store it in the database for future usage
-            job = PlGridJob.new({ 'user_id' => user.id, 'experiment_id' => experiment_id,
-                                  'scheduler_type' => additional_params['scheduler'], 'sm_uuid' => sm_uuid,
+            job = PlGridJob.new({ 'user_id' => user_id, 'experiment_id' => experiment_id,
+                                  'scheduler_type' => scheduler_type, 'sm_uuid' => sm_uuid,
                                   'time_limit' => additional_params['time_limit'].to_i })
             job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
             job.nodes = additional_params['nodes'] unless additional_params['nodes'].blank?

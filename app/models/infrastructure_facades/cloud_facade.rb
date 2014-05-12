@@ -37,10 +37,10 @@ class CloudFacade < InfrastructureFacade
     I18n.t('infrastructure_facades.cloud.current_state_count', count: get_sm_records(user.id).count)
   end
 
-  def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
+  def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
     begin
-      cloud_client = cloud_client_instance(user.id)
+      cloud_client = cloud_client_instance(user_id)
     rescue
       return 'error', I18n.t('infrastructure_facades.cloud.client_problem', cloud_name: @short_name)
     end
@@ -55,14 +55,14 @@ class CloudFacade < InfrastructureFacade
       elsif not cloud_client.image_exists? exp_image.image_id
         return 'error', I18n.t('infrastructure_facades.cloud.image_not_exists',
                                image_id: exp_image.image_id, cloud_name: @long_name)
-      elsif exp_image.user_id != user.id
+      elsif exp_image.user_id != user_id
         return 'error', I18n.t('infrastructure_facades.cloud.image_permission')
       elsif exp_image.cloud_name != @short_name
         return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
       end
 
       sched_instances = schedule_vm_instances(cloud_client, "#{VM_NAME_PREFIX}#{experiment_id}", exp_image,
-                                                        instances_count, user.id, experiment_id, additional_params)
+                                                        instances_count, user_id, experiment_id, additional_params)
 
       ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
                           cloud_name: @long_name)]

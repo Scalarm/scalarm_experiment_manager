@@ -24,21 +24,21 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # Params hash:
   # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
-  def start_simulation_managers(user, instances_count, experiment_id, params = {})
+  def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
     machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
 
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
-    elsif machine_creds.user_id != user.id
+    elsif machine_creds.user_id != user_id
       return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
 
     instances_count.times do
       record = PrivateMachineRecord.new(
-          user_id: user.id,
+          user_id: user_id,
           experiment_id: experiment_id,
           credentials_id: params[:credentials_id],
           time_limit: params[:time_limit],
