@@ -1,0 +1,23 @@
+- # TODO: move code to helper?
+- experiments_select = Experiment.get_running_experiments.map { |exp| ["#{exp.name} (#{exp.id})", exp.id] }
+- infrastructures_select = infrastructures_list_to_select_hash(InfrastructureFacade.list_infrastructures)
+
+
+%h2= t('experiments.monitoring_actions.booster.header')
+
+%a.close-reveal-modal &#215;
+
+.content
+  = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
+    .row
+      .small-4.columns
+        = label_tag :experiment_id, 'Experiment' + ':', class: 'inline right' # TODO id + name?
+      .small-4.columns
+        = select_tag :experiment_id, options_for_select(experiments_select) # TODO get
+      .small-4.columns
+    .row
+      .small-4.columns
+        = label_tag :infrastructure_name, 'Infrastructure' + ':', class: 'inline right' # TODO id + name?
+      .small-4.columns
+        = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select) # TODO get
+      .small-4.columns

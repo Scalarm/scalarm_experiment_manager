@@ -49,6 +49,7 @@ class ExperimentsController < ApplicationController
   end
 
   def get_booster_dialog
+    # TODO: change to InfrastructuresController.get_booster_dialog with experiment_id set
     render inline: render_to_string(partial: 'booster_dialog')
   end
 

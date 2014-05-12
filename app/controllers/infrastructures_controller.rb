@@ -1,4 +1,3 @@
-require 'infrastructure_facades/tree_utils'
 require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructuresController < ApplicationController
@@ -8,34 +7,8 @@ class InfrastructuresController < ApplicationController
     render 'infrastructure/index'
   end
 
-  # GET a root of Infrastructures Tree. This method is used directly by javascript tree.
-  # Renders JSON
-  def tree
-    data = {
-      name: I18n.t('infrastructures_controller.tree.root'),
-      children: tree_infrastructures
-    }
-
-    render json: data
-  end
-
-  # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
-  # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
-  # are fetched recursivety with tree_node methods of every concrete facade.
-  # This method is used by tree method.
-  def tree_infrastructures
-    [
-      *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
-        inf[:facade].to_h
-      end),
-      {
-        name: I18n.t('infrastructures_controller.tree.clouds'),
-        children:
-          InfrastructureFacade.cloud_infrastructures.values.map do |inf|
-            inf[:facade].to_h
-          end
-      }
-    ]
+  def list
+    render json: InfrastructureFacade.list_infrastructures
   end
 
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name
@@ -156,6 +129,14 @@ class InfrastructuresController < ApplicationController
     rescue Exception => e
       render json: { status: 'error', msg: "Exception when getting Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
     end
+  end
+
+  # GET params:
+  # - experiment_id (optional)
+  # - infrastructure_name (optional)
+  # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
+  def get_booster_dialog
+    render inline: render_to_string(partial: 'booster_dialog')
   end
 
   # ============================ PRIVATE METHODS ============================

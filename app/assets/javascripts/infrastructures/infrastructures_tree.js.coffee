@@ -1,5 +1,5 @@
 class window.InfrastructuresTree
-  constructor: (@baseSmDialogUrl, genericDialogId, @tree_infrastructure_path,
+  constructor: (@baseSmDialogUrl, genericDialogId, @list_infrastructure_path,
                 @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
@@ -25,12 +25,10 @@ class window.InfrastructuresTree
       .append("svg:g")
       .attr("transform", "translate(#{@m[3]}, #{@m[0]})");
 
-    $.getJSON(@tree_infrastructure_path, (data) =>
-      @root = data
+    $.getJSON(@list_infrastructure_path, (data) =>
+      @root = {"name": "Scalarm", "children": data}
       @root.x0 = @h / 2
       @root.y0 = 0;
-
-      @updateTree(@root)
 
       leaves = @tree.nodes(@root).filter((d) => d['infrastructure_name'])
 
@@ -61,6 +59,8 @@ class window.InfrastructuresTree
         setInterval(fetchLeafNodes, PROBE_INTERVAL)
         @fetchNodesFunctions[leaf['infrastructure_name']] = fetchLeafNodes
       )
+
+      @updateTree(@root)
     )
 
   smRecordsJson: (name, params_hash) ->
@@ -127,21 +127,29 @@ class window.InfrastructuresTree
     gNodesEnter = gNodes.enter().append("svg:g")
       .attr("class", (d) => ["node", d.type].join(" "))
       .attr("transform", "translate(#{source.y0}, #{source.x0})")
-      .on("click", (d) => @toggle(d); @updateTree(d))
 
     gs = gNodesEnter.append("svg:g")
 
-    gMetaNodes = gs.filter((d) => return d.type != 'sm-node')
+    gMetaNodes = gs.filter((d) => d.type != 'sm-node')
     gSmNodes = gs.filter((d) => d.type == 'sm-node')
+    gSmContainerNodes = gs.filter((d) => d.type == 'sm-container-node')
 
     # ---
 
     gMetaNodes.append("svg:circle")
       .attr("r", 1e-6)
       .attr("class", (d) => d._children and 'children-collapsed' or '')
+      .on("click", (d) => @toggle(d); @updateTree(d))
     gMetaNodes.append("svg:text")
       .text((d) => d.name)
       .style("fill-opacity", 1e-6)
+    # boost button
+    gSmContainerNodes.append("svg:image")
+      .attr("width", 16).attr("height", 16).attr("xlink:href", '/assets/plus_icon.png')
+      .style("transform", "translate(12px,0px)")
+      .attr("class", "button")
+      .style("fill-opacity", 1e-6)
+      .on("click", (d) => @boosterDialog(d))
 
     # ---
 
@@ -153,7 +161,6 @@ class window.InfrastructuresTree
         .attr("transform", "scale(1e-6)")
       g.append("svg:circle")
         .attr("r", 1e-6)
-        .attr("class", "sm-startup")
         .on("click", (d) => @smDialog(d))
       g.append("svg:text")
         .attr("class", "label-text")
@@ -206,6 +213,9 @@ class window.InfrastructuresTree
       .attr("class", @selectCircleClass)
 
     nodeUpdate.select("text")
+      .style("fill-opacity", 1)
+
+    nodeUpdate.select("image")
       .style("fill-opacity", 1)
 
     # Transition exiting nodes to the parent's new position.
@@ -264,8 +274,15 @@ class window.InfrastructuresTree
 #          @actionLoading.hide()
       @dialog.foundation('reveal', 'open')
 
+  boosterDialog: (d) ->
+    @dialog.load @boosterDialogPath(d['infrastructure_name'], {}), =>
+      @dialog.foundation('reveal', 'open')
+
   smDialogPath: (infrastructure_name, record_id) ->
     "#{@baseSmDialogUrl}?infrastructure_name=#{infrastructure_name}&record_id=#{record_id}"
+
+  boosterDialogPath: (infrastructure_name, infrastructure_params) ->
+    "/infrastructure/get_booster_dialog" # TODO
 
   cutText: (text, maxChars) ->
     if text.length > maxChars

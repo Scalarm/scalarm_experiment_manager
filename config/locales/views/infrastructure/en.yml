@@ -93,7 +93,6 @@ en:
   infrastructures_controller:
     tree:
       clouds: "Clouds"
-      root: "Scalarm"
   resource_header: "%{resource_id} on %{facade_name}"
   resource_state: "Resource state"
   state:

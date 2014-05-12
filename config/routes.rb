@@ -89,9 +89,11 @@ ScalarmExperimentManager::Application.routes.draw do
     end
 
     collection do
-      get :tree
+      get :list
+      get :tree # TODO should be replaced with list calls
       get :simulation_managers_info
       get :get_sm_dialog
+      get :get_booster_dialog
       get :simulation_manager_records
       post :simulation_manager_command
     end

@@ -1,6 +1,5 @@
 require 'test_helper'
 require 'json'
-require 'infrastructure_facades/tree_utils'
 require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructuresControllerTest < ActionController::TestCase
@@ -26,7 +25,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
   # Helper like: "leaves = @tree.nodes(@root).filter((d) => d['type'] == 'sm-container-node')"
   # in infrastructures_tree view
   def find_sm_containers(root, results)
-    if root['type'] == TreeUtils::TREE_SM_CONTAINER
+    if root['infrastructure_name']
       results << root
     elsif root.has_key?('children')
       root['children'].each {|child| find_sm_containers(child, results)}
@@ -35,7 +34,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
   def test_tree
     # Prepare sm_record_hashes for every known Facade
-    infrastrucutre_names = %w(plgrid pl_cloud amazon private_machine)
+    infrastrucutre_names = %w(plgrid pl_cloud amazon google private_machine dummy)
     infrastrucutre_names.each do |name|
       facade_class = InfrastructureFacade.get_facade_for(name).class
       facade_class.any_instance.stubs(:sm_record_hashes).with(@tmp_user_id).returns(
@@ -47,10 +46,12 @@ class InfrastructuresControllerTest < ActionController::TestCase
       )
     end
 
-    get :tree, {}, {user: @tmp_user_id}
-    tree_root = nil
-    assert_nothing_raised { tree_root = JSON.parse(response.body) }
-    assert_kind_of Hash, tree_root
+    get :list, {}, {user: @tmp_user_id}
+    tree_content = nil
+    assert_nothing_raised { tree_content = JSON.parse(response.body) }
+    assert_kind_of Array, tree_content
+
+    tree_root = {'name'=> 'Scalarm', 'children'=>tree_content}
 
     # Find nodes which will be parents to Simulation Manager nodes, like in tree view
     # AKA "sm_containers"

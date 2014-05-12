@@ -1,7 +1,6 @@
 require 'yaml'
 
 require_relative 'infrastructure_task_logger'
-require_relative 'tree_utils'
 require_relative 'infrastructure_errors'
 require_relative 'simulation_manager'
 require_relative 'clouds/cloud_factory'
@@ -107,6 +106,24 @@ class InfrastructureFacade
 
   def self.cloud_infrastructures
     CloudFactory.infrastructures_hash
+  end
+
+  # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
+  # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
+  # are fetched recursivety with tree_node methods of every concrete facade.
+  def self.list_infrastructures
+    [
+        *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
+          inf[:facade].to_h
+        end),
+        {
+            name: I18n.t('infrastructures_controller.tree.clouds'),
+            children:
+                InfrastructureFacade.cloud_infrastructures.values.map do |inf|
+                  inf[:facade].to_h
+                end
+        }
+    ]
   end
 
   def monitoring_thread
