@@ -76,7 +76,7 @@ module GoogleOpenID
 
       # create new user if there is no such
       unless user
-        user = ScalarmUser.new({ email: resp_email })
+        user = ScalarmUser.new({ login: resp_email, email: resp_email })
         user.save
       end
 
