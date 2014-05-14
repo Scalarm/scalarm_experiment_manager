@@ -141,6 +141,10 @@ class MongoActiveRecord
     end
   end
 
+  def self.where(query, opts = {})
+    self.find_all_by_query(query, opts)
+  end
+
   def self.find_by(parameter, value)
     value = value.first if value.is_a? Enumerable
 
