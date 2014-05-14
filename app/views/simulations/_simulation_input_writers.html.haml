@@ -4,7 +4,7 @@
   .content
     - if @input_writers.empty?
       .panel.callout.radius
-        %h4.subheader= t('registered_input_writers_list.empty_list')
+        %h4.subheader= raw t('registered_input_writers_list.empty_list')
 
     - else
       - @input_writers.each do |input_writer|
