@@ -28,7 +28,7 @@ class EventDispatcher
 
   def dispatch
     query = @last_event_id.nil? ? {  } : { '_id' => { '$gt' => @last_event_id } }
-    events = SystemEvent.find_all_by_query(query, { :sort => [ [ '_id', 'desc' ] ] })
+    events = SystemEvent.where(query, { :sort => [ [ '_id', 'desc' ] ] })
     p "Event count: #{events.size}"
 
     events.each do |event|

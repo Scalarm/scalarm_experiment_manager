@@ -40,7 +40,7 @@ class CloudFacade < InfrastructureFacade
 
     begin
       # select all vm ids that are recorded and belong to Cloud and User
-      record_vm_ids = CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+      record_vm_ids = CloudVmRecord.where('cloud_name'=>@short_name, 'user_id'=>user.id)
       vm_ids = cloud_client.all_vm_ids.map {|i| i} & record_vm_ids.map {|rec| rec.vm_id}
 
       # select all existing vm's
@@ -144,7 +144,7 @@ class CloudFacade < InfrastructureFacade
 
   # implements InfrasctuctureFacade
   def get_running_simulation_managers(user, experiment = nil)
-    CloudVmRecord.find_all_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
+    CloudVmRecord.where('cloud_name'=>@short_name, 'user_id'=>user.id)
   end
 
   # implements InfrasctuctureFacade

@@ -41,7 +41,7 @@
                   .small-4.columns
                     = text_field_tag :job_counter
                   .small-4.columns
-                - images = CloudImageSecrets.find_all_by_query(user_id: user.id, cloud_name: cloud_name).map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
+                - images = CloudImageSecrets.where(user_id: user.id, cloud_name: cloud_name).map{|i| ["#{i.image_id} --- #{i.image_login}", i.id]}
                 .row
                   .small-4.columns
                     = label_tag :image_secrets_id, t('infrastructure.information.image_label') + ':', class: 'inline right'
