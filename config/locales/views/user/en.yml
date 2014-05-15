@@ -18,3 +18,6 @@ en:
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"
+
+  login:
+    required: You have to login first
