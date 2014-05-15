@@ -21,7 +21,7 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
       :long_name,
       :short_name,
       :start_simulation_managers,
-      :current_state,
+      :sm_record_class,
       :add_credentials,
       :remove_credentials,
       :get_sm_records,

@@ -1,27 +1,69 @@
 - # TODO: move code to helper?
+- infrastructure_name = InfrastructureFacade.get_registered_infrastructures.keys.first if infrastructure_name.blank?
 - experiments_select = Experiment.get_running_experiments.map { |exp| ["#{exp.name} (#{exp.id})", exp.id] }
-- infrastructures_select = infrastructures_list_to_select_hash(InfrastructureFacade.list_infrastructures)
+- infrastructures_select_data = infrastructures_list_to_select_data(InfrastructureFacade.list_infrastructures)
+- active_select_value = find_infrastructures_data_value(infrastructures_select_data, infrastructure_name)
 
 
 %h2= t('experiments.monitoring_actions.booster.header')
 
 %a.close-reveal-modal &#215;
 
-.content
-  = form_tag schedule_simulation_managers_infrastructure_path, remote: true, class: 'custom' do
-    .row
-      .small-4.columns
-        = label_tag :experiment_id, 'Experiment' + ':', class: 'inline right'
-      .small-4.columns
-        = select_tag :experiment_id, options_for_select(experiments_select)
-      .small-4.columns
-    .row
-      .small-4.columns
-        = label_tag :infrastructure_info, 'Infrastructure' + ':', class: 'inline right'
-      .small-4.columns
-        = select_tag :infrastructure_info, grouped_options_for_select(infrastructures_select)
-      .small-4.columns
+%dl.accordion(data-accordion="")
+  %dd
+    %a(href="#submission-panel")= t 'infrastructure.information.submission_label'
+    - #TODO:, class: "#{invalid_credentials ? 'disabled' : ''}"}
+    .content{id: "submission-panel", class: 'active'}
+      #scheduler-form
+        = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
+          .row
+            .small-4.columns
+              = label_tag :experiment_id, 'Experiment' + ':', class: 'inline right'
+            .small-4.columns
+              = select_tag :experiment_id, options_for_select(experiments_select, experiment_id.to_s)
+            .small-4.columns
+          .row
+            .small-4.columns
+              = label_tag :infrastructure_info, 'Infrastructure' + ':', class: 'inline right'
+            .small-4.columns
+              = select_tag :infrastructure_info, grouped_options_for_select(infrastructures_select_data, active_select_value)
+            .small-4.columns
 
-    .row
-      .small-12.columns.text-center
-        = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+          .row
+            .small-4.columns
+              = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
+            .small-4.columns
+              = text_field_tag :job_counter
+            .small-4.columns
+
+          #infrastructure_fields
+
+          .row
+            .small-4.columns
+              = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
+            .small-4.columns
+              = text_field_tag :time_limit
+            .small-4.columns
+
+          .row
+            .small-4.columns
+              = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
+            .small-4.columns
+              = text_field_tag :start_at
+            .small-4.columns
+
+          .row#submit-button
+            .small-12.columns.text-center
+              = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+
+  %dd
+    %a(href="#simulation-managers-panel")= t('infrastructure.information.scheduled_label')
+    .content{id: "simulation-managers-panel"}
+      #simulation-managers
+
+
+:javascript
+  $(function() {
+    $(document).foundation();
+    new window.InfrastructuresBooster("#{infrastructure_name}", "#{form_name}");
+  });

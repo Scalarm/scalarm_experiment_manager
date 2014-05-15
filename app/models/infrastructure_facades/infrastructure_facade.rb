@@ -12,7 +12,8 @@ require 'thread_pool'
 # - long_name() -> String - name of infrastructure which will be presented to GUI user; should be localized
 # - short_name() -> String - used as infrastructure id
 # - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# - current_state(user) -> String - summary of current infrastructure state presented in GUI
+# - TODO current_state(user) -> String - summary of current infrastructure state presented in GUI
+# - TODO sm_record_class
 # - add_credentials(user, params, session) -> String ('ok') - save credentials to database
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
 #
@@ -118,6 +119,7 @@ class InfrastructureFacade
         end),
         {
             name: I18n.t('infrastructures_controller.tree.clouds'),
+            category_name: 'cloud',
             children:
                 InfrastructureFacade.cloud_infrastructures.values.map do |inf|
                   inf[:facade].to_h
@@ -248,6 +250,14 @@ class InfrastructureFacade
 
   def default_additional_params
     {}
+  end
+
+  def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
+    query = {}
+    query.merge!({user_id: user_id}) if user_id
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+    query.merge!(attributes) if attributes
+    sm_record_class.collection.count(query)
   end
 
   # -- SimulationManger delegation default implementation --

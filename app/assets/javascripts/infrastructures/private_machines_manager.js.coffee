@@ -3,7 +3,7 @@ class window.PrivateMachinesManagerDialog
     @addMachineForm = $("##{addMachinePanelId} form")
 
     @loading = $("##{@loadingImgId}")
-    @responseDialog = $("##{responseDialogId}")
+    @dialog = $("##{responseDialogId}")
 
     @bindToAddMachineForm()
     @bindToRemoveButtons()

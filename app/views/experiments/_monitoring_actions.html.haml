@@ -72,5 +72,5 @@
   :javascript
     $(function() {
       new window.MonitoringActionButtons("#{extension_dialog_experiment_path(@experiment.id)}",
-                                         "#{get_booster_dialog_experiment_path(@experiment.id)}")
+                                         "#{get_booster_dialog_infrastructure_path(experiment_id: @experiment.id)}")
     });

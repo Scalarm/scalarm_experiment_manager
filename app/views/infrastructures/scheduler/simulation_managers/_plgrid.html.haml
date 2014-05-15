@@ -1,0 +1,16 @@
+%ul.circle
+  - simulation_managers.each do |record|
+    - begin
+      %li
+        =raw(t('plgrid.job_desc', job_id: record.job_id, created_at: record.created_at.strftime('%Y-%m-%d %H:%M'), experiment_id: record.experiment_id))
+        - unless record.error.nil?
+          %br
+          %strong= t('infrastructure.information.sm_info.error') + ': '
+          =record.error.to_s
+          - unless record.error_log.nil?
+            %br
+            %strong= t('infrastructure.information.sm_info.error_log') + ': '
+            %br
+            = raw(record.error_log.sub("\n", '<br/>'))
+    - rescue Exception => e
+      %li= t('infrastructure.information.sm_record_error', error: e.to_s)

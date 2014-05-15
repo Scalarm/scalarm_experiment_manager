@@ -33,8 +33,8 @@ class CloudFacade < InfrastructureFacade
     @secret ||= CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
   end
 
-  def current_state(user)
-    I18n.t('infrastructure_facades.cloud.current_state_count', count: get_sm_records(user.id).count)
+  def sm_record_class
+    CloudVmRecord
   end
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
@@ -177,6 +177,14 @@ class CloudFacade < InfrastructureFacade
 
       sleep(20)
     end
+  end
+
+  def to_h
+    {
+        name: long_name,
+        group: 'cloud',
+        infrastructure_name: short_name,
+    }
   end
 
   # -- Monitoring utils --

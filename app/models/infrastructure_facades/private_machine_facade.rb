@@ -18,8 +18,8 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # -- InfrastructureFacade implementation --
 
-  def current_state(user)
-    I18n.t('infrastructure_facades.private_machine.current_state', tasks: count_scheduled_tasks(user.id))
+  def sm_record_class
+    PrivateMachineRecord
   end
 
   # Params hash:
@@ -32,6 +32,7 @@ class PrivateMachineFacade < InfrastructureFacade
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
     elsif machine_creds.user_id != user_id
+      return 'error', "Access denied" # TODO
       return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
@@ -50,11 +51,6 @@ class PrivateMachineFacade < InfrastructureFacade
     end
     ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: instances_count,
                         machine_name: machine_creds.machine_desc)]
-  end
-
-  def count_scheduled_tasks(user_id)
-    records = get_sm_records(user_id)
-    records.nil? ? 0 : records.size
   end
 
   def add_credentials(user, params, session)

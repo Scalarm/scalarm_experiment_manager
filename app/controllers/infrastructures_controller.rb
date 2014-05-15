@@ -82,22 +82,41 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # GET params
+  # - name
+  # - infrastructure_name
+  # All params will be passed to simulation_managers_info in view
+  def simulation_managers_summary
+    render partial: 'infrastructures/simulation_managers_summary',
+           locals: {
+               long_name: params[:name],
+               infrastructure_name: params[:infrastructure_name],
+               simulation_managers: InfrastructureFacade.get_facade_for(params[:infrastructure_name]).get_sm_records
+           }
+  end
+
+  # GET params
+  # - group (optional)
+  # - infrastructure_name
   def simulation_managers_info
     begin
-      infrastructure_facade = if params[:infrastructure_name] == 'cloud'
-                               InfrastructureFacade.get_facade_for(params[:cloud_name])
-                              else
-                               InfrastructureFacade.get_facade_for(params[:infrastructure_name])
-                              end
+      partial_name = (params['group'] or params['infrastructure_name'])
+      infrastructure_name = params[:infrastructure_name]
+      infrastructure_params = params['infrastructure_params']
+      infrastructure_facade = InfrastructureFacade.get_facade_for(infrastructure_name)
 
-      @current_state_summary = infrastructure_facade.current_state(@current_user)
-      @simulation_managers = infrastructure_facade.get_sm_records(@current_user.id)
+      @simulation_managers = infrastructure_facade.get_sm_records(@current_user.id, nil, infrastructure_params)
 
-      render partial: "infrastructure/information/simulation_managers/#{params[:infrastructure_name]}"
+      render partial: "infrastructures/scheduler/simulation_managers/#{partial_name}",
+             locals: {
+                 long_name: params['name'],
+                 infrastructure_name: infrastructure_name,
+                 infrastructure_params: infrastructure_params
+             }
     rescue Exception => e
       # FIXME translate
       Rails.logger.error "Error rendering simulation_managers_info: #{e.to_s}\n#{e.backtrace.join("\n")}"
-      render text: "An error occured: #{e.to_s}"
+      render text: "An error occured: #{e.to_s}" # TODO: "not available"
     end
   end
 
@@ -144,9 +163,31 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - experiment_id (optional)
   # - infrastructure_name (optional)
+  # - group (optional) - name of meta-infrastructure (eg. 'cloud')
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
-    render inline: render_to_string(partial: 'booster_dialog')
+    render inline: render_to_string(partial: 'booster_dialog', locals: {
+        infrastructure_name: params[:infrastructure_name],
+        form_name: (params[:group] or params[:infrastructure_name]),
+        experiment_id: params[:experiment_id],
+        infrastructure_params: params[:infrastructure_params]
+    })
+  end
+
+  # GET params:
+  # - group (optional)
+  # - infrastructure_name
+  # - infrastructure_params (optional)
+  def get_booster_partial
+    partial_name = (params[:group] or params[:infrastructure_name])
+    begin
+      render partial: "infrastructures/scheduler/#{partial_name}", locals: {
+          infrastructure_name: params[:infrastructure_name],
+          infrastructure_params: params[:infrastructure_params]
+      }
+    rescue ActionView::MissingTemplate
+      render nothing: true
+    end
   end
 
   # ============================ PRIVATE METHODS ============================

@@ -1,6 +1,6 @@
 class window.SmDialog
   constructor: (@responseDialogId) ->
-    @responseDialog = $(@responseDialogId)
+    @dialog = $(@responseDialogId)
 
     $('.disabled :input').prop('disabled', true);
 

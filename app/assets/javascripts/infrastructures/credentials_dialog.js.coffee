@@ -1,7 +1,7 @@
 class window.CredentialsDialog
   constructor: (@loginFormId, @removeFormId, @loadingImg) ->
     @loading = $(@loadingImg)
-    @responseDialog = $(@responseDialog)
+    @dialog = $(@dialog)
     @removeForm = $("##{@removeFormId} form")
     @loginForm = $("##{@loginFormId} form")
 

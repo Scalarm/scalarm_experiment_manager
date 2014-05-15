@@ -1,0 +1,8 @@
+.row
+  %p= "Total count of simulation managers registered for #{long_name}: #{simulation_managers.count}"
+.row
+  - begin
+    = render partial: "infrastructures/scheduler/simulation_managers/#{infrastructure_name}",
+      locals: {simulation_managers: simulation_managers}
+  - rescue ActionView::MissingTemplate
+    = 'Details not available' # TODO translate

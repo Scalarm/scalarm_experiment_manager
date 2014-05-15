@@ -14,10 +14,11 @@
 //    transform: translate(-20px,.3em);
 //}
 
+// meta-node text
 //.sm-container text,
 .node text {
-    text-anchor: middle;
-    transform: translate(0px,30px);
+    text-anchor: end;
+    transform: translate(-15px,-3px);
 }
 
 circle.sm-error {

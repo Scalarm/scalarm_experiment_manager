@@ -1,0 +1,28 @@
+- cloud_name = infrastructure_name
+- images = image_secrets_select_data(@current_user.id, cloud_name)
+- cloud_class = CloudFactory.client_class(cloud_name)
+- creds = CloudSecrets.find_by_query('cloud_name'=>cloud_name, 'user_id'=>@current_user.id)
+- begin
+  - cloud_client = (creds.nil? ? nil : cloud_class.new(creds))
+- rescue
+  - cloud_client = nil
+- invalid_credentials = (cloud_client.nil? or not cloud_client.valid_credentials?)
+
+.row
+  .small-4.columns
+    = label_tag :image_secrets_id, t('infrastructure.information.image_label') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :image_secrets_id, options_for_select(images)
+  .small-4.columns
+
+- begin
+  = render partial: "infrastructures/scheduler/clouds/#{cloud_name}", locals: { cloud_client: cloud_client }
+- rescue ActionView::MissingTemplate
+  - # ignore missing cloud-specific partials
+
+.row
+  .small-4.columns
+    = label_tag :instance_type, t('infrastructure.information.vm_type') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :instance_type, options_for_select(instance_types_select_data(cloud_client))
+  .small-4.columns

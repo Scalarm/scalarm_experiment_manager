@@ -37,7 +37,7 @@
         =@sm_record.created_at.to_s
       %li
         %strong= t('time_limit') + ': '
-        =@sm_record.created_at.since(@sm_record.time_limit.minutes).to_s + ' ' + "(#{@sm_record.time_limit.to_s} minutes)"
+        =@sm_record.created_at.since(@sm_record.time_limit.to_i.minutes).to_s + ' ' + "(#{@sm_record.time_limit.to_s} minutes)"
       %li
         %strong= t('experiment_id') + ': '
         =@sm_record.experiment_id.to_s

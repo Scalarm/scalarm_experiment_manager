@@ -23,8 +23,8 @@ class DummyFacade < InfrastructureFacade
     ['ok', "Scheduled #{instances_count} dummy simulation managers"]
   end
 
-  def current_state(user)
-    "Found #{get_sm_records(user.id).count} records"
+  def sm_record_class
+    DummyRecord
   end
 
   def add_credentials(user, params, session)

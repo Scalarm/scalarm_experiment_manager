@@ -141,8 +141,9 @@ class window.InfrastructuresTree
       .attr("class", (d) => d._children and 'children-collapsed' or '')
       .on("click", (d) => @toggle(d); @updateTree(d))
     gMetaNodes.append("svg:text")
-      .text((d) => d.name)
+      .text((d) => @cutText(d.name, 18))
       .style("fill-opacity", 1e-6)
+      .attr("title", (d) => d.name)
     # boost button
     gSmContainerNodes.append("svg:image")
       .attr("width", 16).attr("height", 16).attr("xlink:href", '/assets/plus_icon.png')
@@ -275,14 +276,21 @@ class window.InfrastructuresTree
       @dialog.foundation('reveal', 'open')
 
   boosterDialog: (d) ->
-    @dialog.load @boosterDialogPath(d['infrastructure_name'], {}), =>
+    @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id']), =>
       @dialog.foundation('reveal', 'open')
 
   smDialogPath: (infrastructure_name, record_id) ->
-    "#{@baseSmDialogUrl}?infrastructure_name=#{infrastructure_name}&record_id=#{record_id}"
+    "#{@baseSmDialogUrl}?" + $.param({
+      infrastructure_name: infrastructure_name,
+      record_id: record_id
+    })
 
-  boosterDialogPath: (infrastructure_name, infrastructure_params) ->
-    "/infrastructure/get_booster_dialog" # TODO
+  boosterDialogPath: (infrastructure_name, experiment_id) ->
+    # TODO: path as parameter
+    "/infrastructure/get_booster_dialog?" + $.param({
+      infrastructure_name: infrastructure_name,
+      experiment_id: experiment_id
+    })
 
   cutText: (text, maxChars) ->
     if text.length > maxChars

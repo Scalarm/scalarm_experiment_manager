@@ -45,7 +45,6 @@ ScalarmExperimentManager::Application.routes.draw do
       post  :destroy
       post  :extend_input_values
       get   :intermediate_results
-      get   :get_booster_dialog
       get   :extension_dialog
       post  :change_scheduling_policy
 
@@ -90,10 +89,11 @@ ScalarmExperimentManager::Application.routes.draw do
 
     collection do
       get :list
-      get :tree # TODO should be replaced with list calls
       get :simulation_managers_info
+      get :simulation_managers_summary
       get :get_sm_dialog
       get :get_booster_dialog
+      get :get_booster_partial
       get :simulation_manager_records
       post :simulation_manager_command
     end

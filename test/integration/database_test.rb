@@ -40,4 +40,9 @@ class DatabaseTest < Test::Unit::TestCase
 
   end
 
+  def test_count
+    5.times { SomeRecord.new({}).save }
+    assert_equal 5, SomeRecord.collection.count
+  end
+
 end

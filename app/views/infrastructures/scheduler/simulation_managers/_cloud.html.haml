@@ -1,0 +1,29 @@
+%ul.circle
+  - simulation_managers.each do |record|
+    %li
+      - begin
+        %strong= t('infrastructure.information.cloud.sm_info.vm_id') + ': '
+        =record.vm_id.to_s + ', '
+        %strong= t('infrastructure.information.launched_at') + ': '
+        =record.created_at.to_s + ', '
+        %strong= t('infrastructure.information.time_limit') + ': '
+        =record.time_limit.to_s + ', '
+        %strong= t('infrastructure.information.experiment_id') + ': '
+        =record.experiment_id.to_s
+        %br
+        %strong= t('infrastructure.information.cloud.sm_info.ssh_address') + ': '
+        =(record.public_host ? "#{record.public_host}:#{record.public_ssh_port}" : t('infrastructure.information.sm_info.no_ssh_address')) + ', '
+        %strong= t('infrastructure.information.cloud.sm_info.login') + ': '
+        =record.image_secrets.image_login.to_s
+
+        - unless record.error.nil?
+          %br
+          %strong= t('infrastructure.information.sm_info.error') + ': '
+          =record.error.to_s
+          - unless record.error_log.nil?
+            %br
+            %strong= t('infrastructure.information.sm_info.error_log') + ': '
+            %br
+            = raw(record.error_log.sub("\n", '<br/>'))
+      - rescue Exception => e
+        =t('infrastructure.information.sm_record_error', error: e.to_s)

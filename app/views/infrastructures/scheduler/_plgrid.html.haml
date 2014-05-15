@@ -1,0 +1,19 @@
+- credentials = GridCredentials.find_by_user_id(@current_user.id)
+- grants = PlGridFacade.new.retrieve_grants(credentials)
+
+.row
+  .small-4.columns
+    = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :grant_id, options_for_select(grants)
+  .small-4.columns
+.row
+  .small-4.columns
+    = label_tag :nodes, t('infrastructure.information.plgrid.submission.nodes') + ':', class: 'inline right'
+  .small-1.columns
+    = text_field_tag :nodes, 1, class: 'right'
+  .small-2.columns
+    = label_tag :ppn, t('infrastructure.information.plgrid.submission.ppn') + ':', class: 'inline right'
+  .small-1.columns
+    = text_field_tag :ppn, 1, class: 'right'
+  .small-2.columns

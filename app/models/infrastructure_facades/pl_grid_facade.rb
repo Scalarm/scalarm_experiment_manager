@@ -30,9 +30,8 @@ class PlGridFacade < InfrastructureFacade
     'plgrid'
   end
 
-  def current_state(user)
-    jobs = get_sm_records(user.id)
-    I18n.t('infrastructure_facades.plgrid.current_state', jobs_count: jobs.nil? ? 0 : jobs.size)
+  def sm_record_class
+    PlGridJob
   end
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})

@@ -48,11 +48,6 @@ class ExperimentsController < ApplicationController
     render partial: 'historical_experiments', locals: { show_close_button: true }
   end
 
-  def get_booster_dialog
-    # TODO: change to InfrastructuresController.get_booster_dialog with experiment_id set
-    render inline: render_to_string(partial: 'booster_dialog')
-  end
-
   # stops the currently running DF experiment (if any)
   def stop
     @experiment.is_running = false

@@ -3,7 +3,7 @@ class window.ImagesManagerDialog
     @addImageForm = $("##{@addImagePanelId} form")
     @cloudSelect = $("#{@cloudSelectId} select")
     @loading = $(@loadingImg)
-    @responseDialog = $(@responseDialog)
+    @dialog = $(@dialog)
 
     if @cloudSelect.length <= 0 or (@cloudSelect.length == 1 and @cloudSelect[0].length == 0)
       $("##{@addImageFormId} form :input").prop('disabled', true)
