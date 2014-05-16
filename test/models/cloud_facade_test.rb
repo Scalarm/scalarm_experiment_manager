@@ -90,7 +90,7 @@ class CloudFacadeTest < Test::Unit::TestCase
     facade.expects(:simulation_manager_stop).never
 
     # EXECUTE
-    facade.simulation_manager_install(record)
+    facade._simulation_manager_install(record)
 
   end
 

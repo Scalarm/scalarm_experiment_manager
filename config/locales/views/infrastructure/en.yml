@@ -52,6 +52,7 @@ en:
         password: "Password"
         cloud_name: "Cloud name"
         image_id: "Image ID"
+        image_label: "Image label"
         actions: "Actions"
         remove: "Remove record"
         image_submission_label: "Add image credentials"
@@ -85,20 +86,27 @@ en:
           machine_desc: "Address"
           pid: "PID"
       sm_info:
-        error: "Error occured"
-        error_log: "Error log"
+        error: "An error occured"
+        error_log: "Error details"
         no_ssh_address: "<no SSH address>"
-  initialization_time_exceeded: "Simulation Manager initialization time exceeded"
-  simulation_manager_terminated: "Simulation Manager terminated"
+        errors:
+          install_failed: 'Simulation Manager installation failed'
+          monitoring: 'Resource monitoring cannot be completed'
+          resource_action: 'Computational resource cannot complete operation'
+          initialization_time_exceeded: "Simulation Manager initialization time exceeded"
+          terminated: "Simulation Manager terminated"
+          start_failed: "Starting Simulation Manager failed"
+          ssh: "Could not communicate with host via SSH"
+          not_started: "Simulation Manager time limit exceeded, but was never initialized"
   infrastructures_controller:
     tree:
       clouds: "Clouds"
   resource_header: "%{resource_id} on %{facade_name}"
   resource_state: "Resource state"
   state:
-    error: "error occured"
+    error: "an error occured"
     initialized: "initialized"
-    not_initialized: "not yet initialized"
+    not_initialized: "waiting for initialization"
   simulation_manager_state: "Simulation Manager application state"
   error_message: "Error message"
   sm_initialized_at: "Simulation Manager installed at"

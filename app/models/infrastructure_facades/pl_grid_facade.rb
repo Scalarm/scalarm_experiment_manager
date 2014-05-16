@@ -209,8 +209,9 @@ class PlGridFacade < InfrastructureFacade
     scheduler.get_log(ssh, record)
   end
 
+  # Empty implementation: SM was already sent and queued on start_simulation_managers
+  # and it should be executed by queuing system.
   def _simulation_manager_install(record)
-    # pass - SM already sent
   end
 
   # -- Monitoring utils --

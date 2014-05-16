@@ -36,10 +36,6 @@ class AbstractCloudClient
   def vm_instance(instance_id)
     VmInstance.new(instance_id.to_s, self)
   end
-
-  def cloud_simulation_manager(vm_record)
-    CloudSimulationManager.new(vm_record, self)
-  end
   
   # @return [Hash] instance_id => specific AbstractVmInstance
   def all_vm_instances

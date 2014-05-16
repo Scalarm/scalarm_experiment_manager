@@ -222,13 +222,8 @@ class InfrastructureFacade
 
   # This method ensures that resources used by SM will be cleaned up
   def yield_grouped_simulation_managers(*args, &block)
-    begin
-      init_resources
-      yield Hash[get_grouped_sm_records(*args).map do |group, records|
-        [group, records.map {|r| create_simulation_manager(r)}]
-      end]
-    ensure
-      clean_up_resources
+    yield_simulation_managers(*args) do |simulation_managers|
+      yield simulation_managers.group_by {|sm| sm.record.monitoring_group}
     end
   end
 

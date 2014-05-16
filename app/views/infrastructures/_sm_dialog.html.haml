@@ -9,12 +9,10 @@
       %li
         %strong= t('resource_state') + ': '
         =sm.resource_status.to_s
-      - record_state = if @sm_record.error
-        - t('state.error')
-      - elsif @sm_record.sm_initialized
-        - t('state.initialized')
-      - else
-        - t('state.not_initialized')
+      - record_state = case @sm_record.state
+        - when :error then t('state.error')
+        - when :initialized then t('state.initialized')
+        - when :before_init then t('state.not_initialized')
       %li
         %strong= t('simulation_manager_state') + ': '
         =record_state
@@ -22,7 +20,7 @@
         %ul
           %li
             %strong= t('error_message') + ': '
-            =@sm_record.error
+            = t('infrastructure.information.sm_info.errors.'+@sm_record.error, default: @sm_record.error)
             - unless @sm_record.error_log.nil?
               %li
                 %strong= t('infrastructure.information.sm_info.error_log') + ': '

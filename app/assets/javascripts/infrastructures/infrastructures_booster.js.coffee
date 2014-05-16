@@ -1,6 +1,6 @@
 class window.InfrastructuresBooster
-  constructor: (@infrastructureName, @group) ->
-    @dialog = $('#dialog')
+  constructor: (@infrastructureName, @group, @dialogId) ->
+    @dialog = $("##{dialogId}")
     @schedulerForm = $('#scheduler-form form')
     @bindToSubmissionForms()
 #    $('.disabled :input').prop('disabled', true)

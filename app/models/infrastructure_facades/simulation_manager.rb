@@ -24,27 +24,30 @@ class SimulationManager
     {
         time_limit: {
             condition: lambda {record.time_limit_exceeded?},
-            message: 'This Simulation Manager is going to be destroyed due to time limit',
-            action: lambda {destroy_with_record}
+            message: 'Time limit exceeded - destroying Simulation Manager',
+            action: lambda {
+              record.store_error('not_started') if record.state == :before_init
+              destroy_with_record
+            }
         },
         experiment_end: {
             condition: lambda {record.experiment_end?},
-            message: 'This Simulation Manager will be destroyed due to experiment finishing',
+            message: 'Experiment finished - destroying Simulation Manager',
             action: lambda {destroy_with_record}
         },
         init_time_exceeded: {
             condition: lambda {record.init_time_exceeded?},
-            message: "Initialization time (#{record.max_init_time/60} min) exceeded - will try to restart resource",
+            message: "Initialization time (#{record.max_init_time/60} min) exceeded - trying to restart resource",
             action: lambda {restart}
         },
         sm_terminated: {
             condition: lambda {sm_terminated?},
-            message: 'Simulation Manager is terminated, but experiment has not been completed. Reporting error.',
+            message: 'Simulation Manager has been terminated untimely - setting to error state',
             action: lambda {record_sm_failed}
         },
         try_to_initialize_sm: {
             condition: lambda {should_initialize_sm?},
-            message: 'This machine is going to be initialized with Simulation Manager now',
+            message: 'Simulation Manager will be initialized now',
             action: lambda {
               install(record)
               record.sm_initialized = true
@@ -62,7 +65,7 @@ class SimulationManager
   def monitor
     logger.info 'checking'
     if record.error
-      logger.info 'Simulation Manager error has been reported, so this resource will not be monitored'
+      logger.info 'Has error flag - skipping'
     else
       before_monitor(record)
 
@@ -79,7 +82,8 @@ class SimulationManager
           begin
             if record.should_destroy?
               logger.warn 'Simulation manager is going to be destroyed'
-              record.error = "Monitoring caused exception: #{e.to_s} #{record.error ? "(Previous error: #{record.error})" : ''}"
+              record.error = 'monitoring'
+              record.error_log = "Exception on monitoring (#{c.to_s}): #{e.to_s}\n#{record.error_log}"
               stop
             end
           rescue Exception => de
@@ -97,7 +101,13 @@ class SimulationManager
 
   def method_missing(m, *args, &block)
     if DELEGATES.include? m.to_s
-      infrastructure.send("_simulation_manager_#{m}", record)
+      begin
+        infrastructure.send("_simulation_manager_#{m}", record)
+      rescue Exception => e
+        logger.warn "Exception on action #{m}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+        record.store_error('resource_action', "#{m}: #{e.to_s}")
+        stop
+      end
     else
       super(m, *args, &block)
     end
@@ -117,15 +127,16 @@ class SimulationManager
   end
 
   def record_sm_failed
-    record.error = I18n.t('simulation_manager_terminated')
-    record.error_log = get_log
-    record.save
+    record.store_error('terminated', get_log)
     stop
   end
 
   def destroy_with_record
-    stop
-    record.destroy if record.error.nil?
+    begin
+      stop
+    ensure
+      record.destroy unless record.state == :error
+    end
   end
 
 end

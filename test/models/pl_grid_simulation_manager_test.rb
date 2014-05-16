@@ -13,7 +13,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_monitor_nothing
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-job')
       expects(:time_limit_exceeded?).returns(false).once
       expects(:destroy).never
@@ -45,7 +45,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
   end
 
   def test_max_time_exceeded?
-    mock_record = mock 'record' do
+    mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-job')
       expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(false).once

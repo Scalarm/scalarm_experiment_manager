@@ -1,4 +1,3 @@
-require_relative 'private_machines/private_machine_simulation_manager.rb'
 require_relative 'shell_commands.rb'
 require_relative 'shared_ssh'
 
@@ -32,7 +31,6 @@ class PrivateMachineFacade < InfrastructureFacade
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
     elsif machine_creds.user_id != user_id
-      return 'error', "Access denied" # TODO
       return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
@@ -101,8 +99,18 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
-    # TODO: check connection?
-    :running
+    begin
+      shared_ssh_session(record.credentials)
+      :running
+    rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
+      # remember this error in case of unable to initialize
+      record.error_log = e.to_s
+      record.save
+      :initializing
+    rescue Exception => e
+      record.store_error('ssh', e.to_s)
+      _simulation_manager_stop(record)
+    end
   end
 
   def _simulation_manager_running?(record)
@@ -129,9 +137,7 @@ class PrivateMachineFacade < InfrastructureFacade
 "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
         error_counter += 1
         if error_counter > 10
-          logger.error 'Exceeded number of SimulationManager installation attempts'
-          record.error = "Simulation Manager installation failed: #{e.to_s}"
-          break
+          record.store_error('install_failed', e.to_s)
         end
       end
 

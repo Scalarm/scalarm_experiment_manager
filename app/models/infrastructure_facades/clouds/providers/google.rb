@@ -1,5 +1,5 @@
 require 'infrastructure_facades/clouds/abstract_cloud_client'
-require 'infrastructure_facades/infrastructure_error'
+require 'infrastructure_facades/infrastructure_errors'
 require 'google/api_client'
 require 'google/api_client/auth/key_utils'
 require 'json'
@@ -17,7 +17,7 @@ module GoogleCloud
 
     def initialize(secrets)
       super(secrets)
-      raise Infrastructure::InvalidCredentialsError unless check_secrets(secrets)
+      raise InfrastructureErrors::InvalidCredentialsError unless check_secrets(secrets)
       @api_client = Google::APIClient.new(application_name: 'scalarm', application_version: 1)
       key = Google::APIClient::KeyUtils.load_from_pkcs12(secrets.secret_key_file, secrets.secret_key_passphrase)
       asserter = Google::APIClient::JWTAsserter.new(secrets.gservice_email,

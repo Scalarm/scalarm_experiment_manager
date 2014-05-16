@@ -7,12 +7,12 @@ class DummyFacade < InfrastructureFacade
     'dummy'
   end
 
-  def start_simulation_managers(user, instances_count, experiment_id, additional_params = {})
+  def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     require 'securerandom'
     (1..instances_count).each do
       record = DummyRecord.new({
         res_id: SecureRandom.hex(8),
-        user_id: user.id,
+        user_id: user_id,
         experiment_id: experiment_id,
         sm_uuid: SecureRandom.uuid,
         time_limit: additional_params['time_limit'].to_i

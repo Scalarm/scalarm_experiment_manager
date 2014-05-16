@@ -20,6 +20,10 @@ module SimulationManagerRecord
     self.sm_initialized = false
   end
 
+  def state
+    (self.error and :error) or (self.sm_initialized and :initialized) or :before_init
+  end
+
   # Time to wait for resource initialization - after that, VM will be reinitialized
   # @return [Fixnum] time in seconds
   def max_init_time
@@ -53,12 +57,18 @@ module SimulationManagerRecord
   end
 
   def should_destroy?
-    time_limit_exceeded? or time_limit_exceeded?
+    (time_limit_exceeded? or time_limit_exceeded?) and record.state != :error
   end
 
   # Should be overriden
   def monitoring_group
     self.user_id
+  end
+
+  def store_error(error, error_log=nil)
+    self.error = error
+    self.error_log = error_log
+    self.save
   end
 
 end

@@ -1,5 +1,6 @@
 require_relative 'clouds/vm_instance.rb'
 require_relative 'shared_ssh'
+require_relative 'infrastructure_errors'
 
 class CloudFacade < InfrastructureFacade
   include ShellCommands
@@ -135,7 +136,31 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
-    cloud_client_instance(record.user_id).status(record.vm_id)
+    vm_status = cloud_client_instance(record.user_id).status(record.vm_id)
+    if vm_status == :running
+      begin
+        # VM is running, so check SSH connection
+        record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+        if record.has_ssh_address?
+          shared_ssh_session(record)
+          :running
+        else
+          :initializing
+        end
+      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, SocketError => e
+        # remember this error in case of unable to initialize
+        record.error_log = e.to_s
+        record.save
+        :initializing
+      rescue Exception => e
+        logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
+"#{e.class} #{e.to_s}"
+        record.store_error('ssh', e.to_s)
+        # _simulation_manager_stop(record) # TODO
+      end
+    else
+      vm_status
+    end
   end
 
   def _simulation_manager_running?(record)
@@ -152,8 +177,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_install(record)
-    vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
-    record.update_ssh_address!(vm)
+    record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
     logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
 
     InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
@@ -169,9 +193,8 @@ class CloudFacade < InfrastructureFacade
         error_counter += 1
         if error_counter > 10
           logger.error 'Exceeded number of SimulationManager installation attempts'
-          record.error = "Simulation Manager installation failed: #{e.to_s}"
-          simulation_manager_stop(record)
-          break
+          record.store_error('install_failed', e.to_s)
+          _simulation_manager_stop(record)
         end
       end
 
@@ -219,8 +242,10 @@ class CloudFacade < InfrastructureFacade
   end
 
   def handle_image_credentials(user, params, session)
+    image_id, label = params[:image_info].split(';')
+
     credentials = CloudImageSecrets.new(cloud_name: @short_name, user_id: user.id,
-                                        image_id: params[:image_id])
+                                        image_id: image_id, label: label)
 
     credentials.image_login = params[:image_login]
     credentials.secret_image_password = params[:secret_image_password]

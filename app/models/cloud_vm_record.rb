@@ -61,12 +61,14 @@ class CloudVmRecord < MongoActiveRecord
     }
   end
 
+  def has_ssh_address?
+    (not self.public_host.blank?) and (not self.public_ssh_port.blank?)
+  end
+
   def update_ssh_address!(vm_instance)
-    if not self.public_host or not self.public_ssh_port
-      psa = vm_instance.public_ssh_address
-      self.public_host, self.public_ssh_port = psa[:host], psa[:port]
-      self.save
-    end
+    psa = vm_instance.public_ssh_address
+    self.public_host, self.public_ssh_port = psa[:host], psa[:port]
+    self.save
   end
 
   def log_path

@@ -69,7 +69,7 @@ class PlGridJob < MongoActiveRecord
   end
 
   def self.log_path(uuid)
-    "#{uuid}.log"
+    "scalarm_job_#{uuid}.log"
   end
 
 end
