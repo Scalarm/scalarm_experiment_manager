@@ -64,7 +64,7 @@ class SimulationManager
 
   def monitor
     logger.info 'checking'
-    if record.error
+    if record.state == :error
       logger.info 'Has error flag - skipping'
     else
       before_monitor(record)
@@ -82,8 +82,7 @@ class SimulationManager
           begin
             if record.should_destroy?
               logger.warn 'Simulation manager is going to be destroyed'
-              record.error = 'monitoring'
-              record.error_log = "Exception on monitoring (#{c.to_s}): #{e.to_s}\n#{record.error_log}"
+              record.store_error('monitoring', "Exception on monitoring (#{c.to_s}): #{e.to_s}\n#{record.error_log}")
               stop
             end
           rescue Exception => de
@@ -119,11 +118,11 @@ class SimulationManager
 
   def sm_terminated?
     # checks "should_destroy" one more time to be sure that experiment did not end in the meantime
-    record.error.nil? and record.sm_initialized and (not running?) and (not record.should_destroy?)
+    (record.state == :initialized) and (not running?) and (not record.should_destroy?)
   end
 
   def should_initialize_sm?
-    record.error.nil? and (not record.sm_initialized) and resource_status == :running
+    (record.state == :before_init) and (resource_status == :running)
   end
 
   def record_sm_failed
