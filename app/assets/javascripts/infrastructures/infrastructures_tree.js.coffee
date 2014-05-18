@@ -187,17 +187,12 @@ class window.InfrastructuresTree
 
       # stop button
       g.append("svg:image")
-      .attr("width", 24).attr("height", 24).attr("xlink:href", '/assets/stop_icon.png')
+      .attr("width", 24).attr("height", 24)
+      .attr("xlink:href", (d) => '/assets/' + (d.error and 'remove' or 'stop') + '_icon.png')
       .style("transform", "translate(192px,-12px)")
       .attr("class", "button")
       .on("click", (d) => @stopSm(d))
 
-      # stop button
-      g.append("svg:image")
-      .attr("width", 24).attr("height", 24).attr("xlink:href", '/assets/stop_icon.png')
-      .style("transform", "translate(192px,-12px)")
-      .attr("class", "button")
-      .on("click", (d) => @stopSm(d))
     )
 
     # Transition nodes to their new position.
