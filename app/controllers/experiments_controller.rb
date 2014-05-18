@@ -221,15 +221,15 @@ class ExperimentsController < ApplicationController
                                  'doe_info' => doe_info
                                 })
 
+    message = nil
     begin
       experiment_size = experiment.experiment_size(true)
     rescue Exception => e
-      experiment_size = 0
+      experiment_size = 0; message = t(e.message)
       Rails.logger.warn("An exception occured: #{t(e.message)}")
     end
-    #Rails.logger.debug("Experiment size is #{experiment_size}")
 
-    render json: { experiment_size: experiment_size, error: t(e.message) }
+    render json: { experiment_size: experiment_size, error: message }
   end
 
   def calculate_imported_experiment_size

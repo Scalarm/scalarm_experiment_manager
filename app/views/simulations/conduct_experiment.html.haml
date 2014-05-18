@@ -78,6 +78,7 @@
 
         = submit_tag t('.submit_button'), class: 'button radius last-element'
         = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+        = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
 
   #experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
     %h2.subheader= raw t('.experiment_size_dialog_body')

@@ -165,8 +165,18 @@ function DoeManager() {
         $.ajax({
             type: "POST",
             url: $('#calculate-experiment-size-url').val(),
-            data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val() + "&replication_level=" + $('#replication_level').val(),
+            //data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val() + "&replication_level=" + $('#replication_level').val(),
+            data: {
+                'simulation_id' : $('#simulation_id').val(),
+                'experiment_input' : $('#experiment_input').val(),
+                'doe' : $('#doe').val(),
+                'replication_level' : $('#replication_level').val()
+            },
+            beforeSend: function(xhr) {
+                $('#conduct-loading').show();
+            },
             success: function(msg) {
+                $('#conduct-loading').hide();
                 $("#experiment-size-dialog #calculated-experiment-size").html(msg.experiment_size);
 
                 if(msg.error != undefined) {
@@ -174,6 +184,10 @@ function DoeManager() {
                 } else {
                     $('#experiment-size-dialog').foundation('reveal', 'open');
                 }
+            },
+            error: function(msg) {
+                toastr.error(msg);
+                $('#conduct-loading').hide();
             }
         });
 

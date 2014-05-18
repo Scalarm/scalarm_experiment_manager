@@ -31,6 +31,7 @@
 
       = submit_tag t('simulations.conduct_experiment.submit_button'), class: 'button radius last-element', disabled: 'disabled'
       %span#check-imported-experiment-size.button.radius.last-element.disabled= t('simulations.conduct_experiment.experiment_size_button')
+      = image_tag 'loading.gif', id: 'conduct-inport-loading', style: 'display: none;'
 
     = content_for :javascript do
       = javascript_include_tag "simulations_utils"
