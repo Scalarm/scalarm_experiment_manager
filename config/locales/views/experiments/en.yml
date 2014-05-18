@@ -31,3 +31,7 @@ en:
       unshare: "This experiment is no longer shared with user '%{user}'"
 
     not_found: "Experiment '%{id}' for user '%{user}' not found"
+
+    errors:
+      zero_size: The size of an experiment must be greater than 0!
+      too_few_parameters: Selected DoE method requires more than 1 parameter.

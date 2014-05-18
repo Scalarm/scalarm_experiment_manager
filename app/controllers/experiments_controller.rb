@@ -74,45 +74,63 @@ class ExperimentsController < ApplicationController
   end
 
   def create
-    doe_info = []
-    unless params['doe'].blank?
-      doe_info = JSON.parse(params['doe']).delete_if { |doe_id, parameters| parameters.first.nil? } 
-    end
+    doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
+    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
+    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
 
     # create the new type of experiment object
-    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
-      'is_running' => true,
-      'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-      'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
-      'doe_info' => doe_info,
-      'start_at' => Time.now,
-      'user_id' => @current_user.id,
-      'scheduling_policy' => 'monte_carlo'
-    })
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
+                                 'is_running' => true,
+                                 'replication_level' => replication_level,
+                                 'time_constraint_in_sec' => time_constraint,
+                                 'doe_info' => doe_info,
+                                 'start_at' => Time.now,
+                                 'user_id' => @current_user.id,
+                                 'scheduling_policy' => 'monte_carlo'
+                                })
     experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
     experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
     experiment.experiment_input = Experiment.prepare_experiment_input(
-                                    @simulation, JSON.parse(params['experiment_input']), experiment.doe_info)
+        @simulation, JSON.parse(params['experiment_input']), experiment.doe_info)
     experiment.labels = experiment.parameters.flatten.join(',')
     experiment.save
     experiment.experiment_id = experiment.id
-    experiment.experiment_size(true)
-    experiment.save
-    # create progress bar
-    experiment.insert_initial_bar
-    experiment.create_simulation_table
-
-    if params.include?(:computing_power) and (not params[:computing_power].empty?)
-      computing_power = JSON.parse(params[:computing_power])
-      InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id, 
-        computing_power['type'], 
-        computing_power['resource_counter'])
+    begin
+      experiment.experiment_size(true)
+    rescue Exception => e
+      Rails.logger.warn("An exception occured: #{t(e.message)}")
+      flash[:error] = t(e.message)
+      experiment.size = 0
     end
 
-    respond_to do |format|
-      format.html { redirect_to experiment_path(experiment.id) }
-      format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
-    end    
+    if experiment.size == 0
+      flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
+      experiment.destroy
+    else
+      experiment.save
+      # create progress bar
+      experiment.insert_initial_bar
+      experiment.create_simulation_table
+
+      if params.include?(:computing_power) and (not params[:computing_power].empty?)
+        computing_power = JSON.parse(params[:computing_power])
+        InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id,
+                                                          computing_power['type'],
+                                                          computing_power['resource_counter'])
+      end
+    end
+
+    unless flash[:error].blank?
+      respond_to do |format|
+        format.html { redirect_to experiments_path }
+        format.json { render json: {status: 'error', message: flash[:error]} }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to experiment_path(experiment.id) }
+        format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
+      end
+    end
   end
 
   def start_import_based_experiment
@@ -150,15 +168,33 @@ class ExperimentsController < ApplicationController
       experiment.labels = experiment.parameters.flatten.join(',')
       experiment.save
       experiment.experiment_id = experiment.id
-      experiment.experiment_size(true)
-      experiment.save
-      # create progress bar
-      experiment.insert_initial_bar
-      experiment.create_simulation_table
+      begin
+        experiment.experiment_size(true)
+      rescue Exception => e
+        Rails.logger.warn("An exception occured: #{t(e.message)}")
+        flash[:error] = t(e.message)
+        experiment.size = 0
+      end
 
-      respond_to do |format|
-        format.html { redirect_to experiment_path(experiment.id) }
-        format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
+      if experiment.size == 0
+        flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
+      else
+        experiment.save
+        # create progress bar
+        experiment.insert_initial_bar
+        experiment.create_simulation_table
+      end
+
+      if flash[:error]
+        respond_to do |format|
+          format.html { redirect_to experiments_path }
+          format.json { render json: { status: 'error', message: flash[:error] } }
+        end
+      else
+        respond_to do |format|
+          format.html { redirect_to experiment_path(experiment.id) }
+          format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
+        end
       end
     end
   end
@@ -172,11 +208,8 @@ class ExperimentsController < ApplicationController
                     nil
                   end
 
-    doe_info = if params['doe'].blank?
-                 []
-               else
-                 JSON.parse(params['doe']).delete_if { |doe_id, parameter_list| parameter_list.first.nil? }
-               end
+    doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
+
     @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
@@ -188,10 +221,15 @@ class ExperimentsController < ApplicationController
                                  'doe_info' => doe_info
                                 })
 
-    experiment_size = experiment.experiment_size(true)
-    Rails.logger.debug("Experiment size is #{experiment_size}")
+    begin
+      experiment_size = experiment.experiment_size(true)
+    rescue Exception => e
+      experiment_size = 0
+      Rails.logger.warn("An exception occured: #{t(e.message)}")
+    end
+    #Rails.logger.debug("Experiment size is #{experiment_size}")
 
-    render json: { experiment_size: experiment_size }
+    render json: { experiment_size: experiment_size, error: t(e.message) }
   end
 
   def calculate_imported_experiment_size

@@ -168,7 +168,12 @@ function DoeManager() {
             data: "simulation_id=" + $('#simulation_id').val() + "&experiment_input=" + $('#experiment_input').val() + "&doe=" + $('#doe').val() + "&replication_level=" + $('#replication_level').val(),
             success: function(msg) {
                 $("#experiment-size-dialog #calculated-experiment-size").html(msg.experiment_size);
-                $('#experiment-size-dialog').foundation('reveal', 'open');
+
+                if(msg.error != undefined) {
+                    toastr.error(msg.error)
+                } else {
+                    $('#experiment-size-dialog').foundation('reveal', 'open');
+                }
             }
         });
 

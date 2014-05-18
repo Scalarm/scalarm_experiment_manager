@@ -59,16 +59,18 @@ class SimulationsController < ApplicationController
   end
 
   def create
+    simulation_input = params[:simulation_input].read
     # input validation
     case true
-      when (params[:simulation_name].blank? or params[:simulation_input].blank? or params[:simulation_binaries].blank?)
+      when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
         flash[:error] = t('simulations.create.bad_params')
 
       when (not Simulation.where({ name: params[:simulation_name], user_id: @current_user.id }).blank?)
         flash[:error] = t('simulations.create.simulation_invalid_name')
+
     end
 
-    unless begin JSON.parse(params[:simulation_input].read) and true rescue false end
+    unless flash[:error].blank? or (begin JSON.parse(simulation_input) and true rescue false end)
       flash[:error] = t('simulations.create.bad_simulation_input')
     end
     # simulation creation
@@ -76,7 +78,7 @@ class SimulationsController < ApplicationController
       simulation = Simulation.new({
         'name' => params[:simulation_name],
         'description' => params[:simulation_description],
-        'input_specification' => params[:simulation_input].read,
+        'input_specification' => simulation_input,
         'user_id' => @current_user.id,
         'created_at' => Time.now
       })
