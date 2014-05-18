@@ -21,3 +21,13 @@ en:
       mandatory_adapter: "Setting up Simulation%{adapter} is mandatory"
       adapter_not_found: "Cannot find Simulation%{adapter} with the %{id} id"
       registered: Your simulation scenario has been registered
+    conduct:
+      doe:
+        add_parameter: "Add parameter"
+        delete_group: "Delete group"
+        create_new_group: "Create"
+        create_group_label: "Create new parameter group with a DoE method:"
+        remove_parameter: "Remove parameter"
+  simulation:
+    conduct:
+      doe:

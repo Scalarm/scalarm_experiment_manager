@@ -4,24 +4,25 @@
       .row
         .large-5.columns
           %label.right.inline
-            Create new parameter group with a DoE method:
+            = t('simulations.conduct.doe.create_group_label')
         .large-5.columns
           = select_tag 'doe_type', select_doe_type
         .large-2.columns
-          = link_to_function 'Create', "doe_manager.createDoeGroup('doe_type');", class: 'button right'
+          = link_to_function t('simulations.conduct.doe.create_new_group'), "doe_manager.createDoeGroup('doe_type');", class: 'button right radius'
 
-%ul#doe-group-template.pricing-table{'style'=>'display: none;'}
+%ul#doe-group-template.pricing-table(style="display: none;")
   %li.title Standard
   %li.price.row
-    .large-8.columns
+    .large-9.columns
       = select_tag('parameters')
-    .large-4.columns
-      = link_to_function('Add parameter', "doe_manager.addParameterInGroup($(this).closest('ul'))", class: 'button right')
-  %li.cta-button= link_to_function 'Delete group', "doe_manager.deleteGroup($(this).closest('ul'))", class: 'button'
+    .large-3.columns
+      = link_to_function(t('simulations.conduct.doe.add_parameter'), "doe_manager.addParameterToGroup($(this).closest('ul'))", class: 'button right radius')
+  %li.cta-button
+    = link_to_function t('simulations.conduct.doe.delete_group'), "doe_manager.deleteGroup($(this).closest('ul'))", class: 'button radius'
 
 - content_for :javascript do
   :javascript
     $(function() {
-      doe_manager = new DoeManager();
+      //doe_manager = new DoeManager();
+      doe_manager = new window.ExperimentDesigner();
     });
-

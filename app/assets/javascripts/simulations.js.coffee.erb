@@ -1,0 +1,229 @@
+
+class window.InputSpace
+
+  constructor: () ->
+    console.log '[InputSpaceManager] - construction'
+
+    document.addEventListener("parametrizationTypeChange", @parametrizationTypeChangeListener, false)
+
+    @bindParametrizationListener()
+
+
+  bindParametrizationListener: () ->
+    $("[data-slug='parametrization_types'] dd[entity-group-id]").each (groupIndex, entityGroup) =>
+      entityGroupId = $(entityGroup).attr('entity-group-id')
+      console.log "entity-group-id: #{$(entityGroup).attr('entity-group-id')}"
+
+      $(entityGroup).find("[entity-id]").each (entityIndex, entity) =>
+        entityId = $(entity).attr('entity-id')
+        console.log "entity-group-id: #{entityGroupId} --- entity-id: #{entityId}"
+
+        $(entity).find("[parameter]").each (_, parameter) =>
+          parameterInfo = JSON.parse($(parameter).attr('parameter'))
+          parameterId = parameterInfo.id
+          [_, ..., parameterIndex] = $(parameter).attr('id').split('_')
+          console.log "entity-group-id: #{entityGroupId} --- entity-id: #{entityId} --- parameter-id: #{parameterId} --- #{parameterIndex}"
+
+          $(parameter).on 'change', =>
+            selectedType = $(parameter).val()
+            # dispatch event to any subscribed listener
+            changeEvent = new CustomEvent "parametrizationTypeChange",
+              detail:
+                parametrizationType: selectedType,
+                entityGroupId: entityGroupId,
+                entityId: entityId,
+                parameterId: parameterId,
+                parameterIndex: parameterIndex
+              bubbles: true,
+              cancelable: true
+
+            document.dispatchEvent(changeEvent)
+
+  parametrizationTypeChangeListener: (event) =>
+    info = event.detail
+    # change DOM in the parameter values tab
+    buildParameterValuesPartial(info.parameterIndex, info.entityGroupId, info.entityId, info.parameterId)
+    # update experiment input json document
+    @updateParametrizationTypeInJSON(info, info.parametrizationType)
+
+  # updates experiment input model stored in global 'experimentInput' variable as JSON
+  updateParametrizationTypeInJSON: (parameterInfo, newParametrizationType) =>
+    entityGroup = (group for group in experimentInput when group.id == parameterInfo.entityGroupId)[0]
+    entity = (entity for entity in entityGroup.entities when entity.id == parameterInfo.entityId)[0]
+    parameter = (parameter for parameter in entity.parameters when parameter.id == parameterInfo.parameterId)[0]
+
+    parameter["parametrizationType"] = newParametrizationType
+
+class window.ExperimentDesigner
+
+  constructor: () ->
+    @doeGroups = []
+    @rangeParameters = []
+    @nextId = 0
+
+    document.addEventListener("parametrizationTypeChange", @parametrizationTypeChangeListener, false)
+    $("body").delegate("#experiment_submit_form", "submit", @updateDoeForSubmit)
+    $("body").delegate("button#check-experiment-size", "click", @checkExperimentSize)
+
+
+  parametrizationTypeChangeListener: (event) =>
+    parameterId = [event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId].join("___")
+
+    if event.detail.parametrizationType == "range"
+      @addRangeParameter(parameterId)
+
+    else
+      # remove already parameter if already chosen
+      $("[id^='doe-group-'] li.bullet-item").each (index, bulletItem) =>
+        if $(bulletItem).is("[param_id]") and ($(bulletItem).attr('param_id') == parameterId)
+          $(bulletItem).find("a.button").click()
+        # remove the parameter from the parameter list
+        @removeRangeParameter(parameterId)
+
+    @updateSelectElements()
+
+  # updating all select elements with parameters
+  updateSelectElements: () =>
+    $("[id^='doe-group-']").each (_, doeGroup) => @addParameterSelectorToGroup($(doeGroup).attr('id'))
+
+  addParameterSelectorToGroup: (doeGroupId) =>
+    selectElement = $("##{doeGroupId} select#parameters").html('')
+
+    for parameter in @rangeParameters
+      parameterLabel = "#{parameter.entityGroup['label']} - #{parameter.entity['label']} - #{parameter.parameter['label']}"
+      option = $("<option value='#{parameter.fullId}'>#{parameterLabel}</option>")
+      selectElement.append(option)
+
+    # disable button if there is no options
+    if selectElement.html() == ''
+      $('#' + doeGroupId + " select#parameters").hide();
+      $('#' + doeGroupId + " .price a.button").hide();
+    else # enable otherwise
+      $('#' + doeGroupId + " select#parameters").show();
+      $('#' + doeGroupId + " .price a.button").show();
+
+  createDoeGroup: (selectId) =>
+    select = $('#' + selectId)
+
+    doe_label = select.find("option[value='" + select.val() + "']").html()
+    doe_id = select.val()
+
+    group = $('#doe-group-template').clone()
+
+    group.find('li.title').html(doe_label)
+    group.attr('id', 'doe-group-' + @nextId)
+    group.attr('doe-id', doe_id)
+
+    $("div.content[data-slug='doe']").append(group)
+    @addParameterSelectorToGroup('doe-group-' + @nextId)
+    group.show()
+
+    @nextId += 1
+
+
+  addParameterToGroup: (groupElement) =>
+    select = groupElement.find('select#parameters')
+    param_label = select.find("option[value='" + select.val() + "']").html()
+    param_id = select.val()
+
+    # button removing this parameter from its group
+    deleteButton = $("<a href='#'></a>").addClass("button radius").on 'click', (event) =>
+      $button = $(event.currentTarget)
+      # get parameter id to remove
+      parameterId = $button.closest('li').attr('param_id')
+      @addRangeParameter(parameterId)
+      # update other select element
+      @updateSelectElements()
+      # remove the row describing parameter
+      $button.closest('li').remove()
+      # prevent from reloading
+      false
+
+    deleteButton.html("<%= I18n.t('simulations.conduct.doe.remove_parameter') %>")
+    # parameter label
+    content = $("<label></label>").css('margin-bottom', '5px').html(param_label);
+    # row describing the parameter
+    paramElement = $("<li></li>").addClass('bullet-item').attr('param_id', param_id).append(content).append(deleteButton)
+
+    # append this parameter row
+    groupElement.find('li.price').after(paramElement)
+    # remove parameter id from range parameter list
+    @removeRangeParameter(param_id)
+    #update select elements
+    @updateSelectElements()
+
+
+  deleteGroup: (groupElement) =>
+    groupElement.find(".bullet-item a.button").click()
+    groupElement.remove()
+
+
+  updateDoeForSubmit: () =>
+    doeTab = []
+    #console.log("Size: " + $("[id^='doe-group-']").length);
+
+    $("[id^='doe-group-']").each (index, doeGroup) =>
+      doeId = $(doeGroup).attr('doe-id');
+      #console.log("Doe id: " + doeId);
+      if(doeId != undefined)
+        parameters = [];
+
+        #console.log("Parameter list size: " + $(doeGroup).find('li.bullet-item').length);
+        $(doeGroup).find('li.bullet-item').each (i, parameterBullet) =>
+          # console.log("Parameter: " + $(parameterBullet).attr('param_id'));
+          parameters.push($(parameterBullet).attr('param_id'))
+
+        doeTab.push([ doeId, parameters ])
+
+    # console.log("Stringified doe: " + JSON.stringify(doeTab));
+    $("input[name='doe']").val(JSON.stringify(doeTab))
+    $("#doe").val(JSON.stringify(doeTab))
+
+
+  checkExperimentSize: () =>
+    updateAllInputParameterValues()
+    @updateDoeForSubmit()
+
+    $.ajax
+      type: "POST",
+      url: $('#calculate-experiment-size-url').val(),
+      data:
+        simulation_id : $('#simulation_id').val(),
+        experiment_input : $('#experiment_input').val(),
+        doe : $('#doe').val(),
+        replication_level : $('#replication_level').val()
+      beforeSend: (xhr) =>
+        $('#conduct-loading').show()
+      success: (msg) =>
+        $('#conduct-loading').hide()
+        $("#experiment-size-dialog #calculated-experiment-size").html(msg.experiment_size)
+
+        if(msg.error != undefined and msg.error != null)
+          toastr.error(msg.error)
+        else
+          $('#experiment-size-dialog').foundation('reveal', 'open');
+      error: (msg) ->
+        toastr.error(msg)
+        $('#conduct-loading').hide()
+
+    return false
+
+
+  # add a parameter to the internal range parameter list
+  addRangeParameter: (fullParameterId) =>
+    id_info = fullParameterId.split('___')
+    entityGroup = (group for group in experimentInput when group.id == id_info[0])[0]
+    entity = (entity for entity in entityGroup.entities when entity.id == id_info[1])[0]
+    parameter = (parameter for parameter in entity.parameters when parameter.id == id_info[2])[0]
+
+    @rangeParameters.push {fullId: fullParameterId, entityGroup: entityGroup, entity: entity, parameter: parameter}
+
+  # remove the parameter from the internal range parameter list
+  removeRangeParameter: (fullParameterId) =>
+    console.log "Removing: #{fullParameterId}"
+    index = -1
+    for parameter, i in @rangeParameters
+      console.log "#{parameter.fullId} --- #{parameter.fullId == fullParameterId}"
+      if parameter.fullId == fullParameterId
+        index = i
+    @rangeParameters.splice(index, 1) if index >= 0

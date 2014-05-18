@@ -4,6 +4,7 @@
  * Date: 6/5/13
  * Time: 1:37 PM
  * To change this template use File | Settings | File Templates.
+ * DEPRECATED - moved to experiment designer
  */
 
 function DoeManager() {
@@ -33,7 +34,10 @@ function DoeManager() {
 
     this.newRangeParamHandler = newRangeParamHandler;
     function newRangeParamHandler(event) {
-        var parameter_id = event.detail.group_id + "___" + event.detail.entity_id + "___" + event.detail.parameter_id;
+        if(event.detail.parametrizationType != "range")
+            return ;
+
+        var parameter_id = event.detail.entityGroupId + "___" + event.detail.entityId + "___" + event.detail.parameterId;
         doe_manager.range_parameters.push(parameter_id);
         // updating all select elements with parameters
         doe_manager.updateAllSelectElements();
@@ -41,7 +45,10 @@ function DoeManager() {
 
     this.newOtherParamHandler = newOtherParamHandler;
     function newOtherParamHandler(event) {
-        var parameter_id = event.detail.entity_id + "___" + event.detail.group_id + "___" + event.detail.parameter_id;
+        if(event.detail.parametrizationType == "range")
+            return ;
+
+        var parameter_id = event.detail.entityGroupId + "___" + event.detail.entityId + "___" + event.detail.parameterId;
         // remove already parameter if already chosen
         $("[id^='doe-group-'] li.bullet-item").each(function (index, bulletItem) {
             if ($(this).is("[param_id]") && ($(this).attr('param_id') == parameter_id)) {
@@ -57,8 +64,8 @@ function DoeManager() {
         doe_manager.updateAllSelectElements();
     }
 
-    document.addEventListener("newRangeParameter", this.newRangeParamHandler, false);
-    document.addEventListener("newOtherParameter", this.newOtherParamHandler, false);
+    document.addEventListener("parametrizationTypeChange", this.newRangeParamHandler, false);
+    document.addEventListener("parametrizationTypeChange", this.newOtherParamHandler, false);
 
     this.putParams = putParams;
     function putParams(paramGroupId) {
