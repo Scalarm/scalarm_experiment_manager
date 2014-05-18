@@ -142,7 +142,6 @@ class InfrastructuresController < ApplicationController
   end
 
 
-  # TODO locals
   # Mandatory GET params:
   # - infrastructure_name
   # - record_id
@@ -150,13 +149,15 @@ class InfrastructuresController < ApplicationController
     begin
       @facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
       @sm_record = get_sm_record(params[:record_id], @facade)
+      raise NoSuchSimulationManagerError.new
       render inline: render_to_string(partial: 'sm_dialog')
     rescue NoSuchInfrastructureError => e
-      render json: { status: 'error', msg: "No infrastructure: #{params[:infrastructure_name]}" }
+      render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.wrong_infrastructure', name: params[:infrastructure_name])})
     rescue NoSuchSimulationManagerError => e
-      render json: { status: 'error', msg: "No such Simulation Manager" }
+      render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.error_sm_removed')})
     rescue Exception => e
-      render json: { status: 'error', msg: "Exception when getting Simulation Manager #{params['resource_id']}@#{params['sm_container']}: #{e}" }
+      Rails.logger("Exception when getting Simulation Manager: #{e.to_s}\n#{e.backtrace.join("\n")}")
+      render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.sm_exception', error: e.to_s)})
     end
   end
 

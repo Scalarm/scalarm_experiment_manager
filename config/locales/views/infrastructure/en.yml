@@ -72,6 +72,8 @@ en:
     tree:
       sm_dialog:
         header: 'Simulation Manager information'
+      error_dialog:
+        header: "An error occured"
     information:
       cloud:
         sm_info:
@@ -101,6 +103,9 @@ en:
   infrastructures_controller:
     tree:
       clouds: "Clouds"
+    error_sm_removed: "Sorry, requested Simulation Manager has been just removed."
+    wrong_infrastructure: "Requested infrastructure does not exists: %{name}"
+    sm_exception: "Exception when getting Simulation Manager: %{error}"
   resource_header: "%{resource_id} on %{facade_name}"
   resource_state: "Resource state"
   state:
