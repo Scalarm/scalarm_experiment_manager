@@ -8,7 +8,8 @@
         .large-5.columns
           = select_tag 'doe_type', select_doe_type
         .large-2.columns
-          = link_to_function t('simulations.conduct.doe.create_new_group'), "doe_manager.createDoeGroup('doe_type');", class: 'button right radius'
+          %span#createDoeGroupBtn.button.right.radius
+            = t('simulations.conduct.doe.create_new_group')
 
 %ul#doe-group-template.pricing-table(style="display: none;")
   %li.title Standard
@@ -16,13 +17,15 @@
     .large-9.columns
       = select_tag('parameters')
     .large-3.columns
-      = link_to_function(t('simulations.conduct.doe.add_parameter'), "doe_manager.addParameterToGroup($(this).closest('ul'))", class: 'button right radius')
-  %li.cta-button
-    = link_to_function t('simulations.conduct.doe.delete_group'), "doe_manager.deleteGroup($(this).closest('ul'))", class: 'button radius'
+      %span.button.right.radius(onclick="doe_manager.addParameterToGroup($(this).closest('ul'))")
+        = t('simulations.conduct.doe.add_parameter')
+  %li.cta-button.row
+    .large-3.columns.large-centered
+      %span.button.right.radius(onclick="doe_manager.deleteGroup($(this).closest('ul'))")
+        = t('simulations.conduct.doe.delete_group')
 
 - content_for :javascript do
   :javascript
     $(function() {
-      //doe_manager = new DoeManager();
-      doe_manager = new window.ExperimentDesigner();
+      $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
     });

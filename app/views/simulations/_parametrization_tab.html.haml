@@ -23,13 +23,3 @@
                           = t('simulations.conduct_experiment.parametrization_tab.parameter_header', label: parameter['label'])
                       .small-7.columns
                         = parametrization_options(parameter, parameter_id)
-                  - content_for :javascript do
-                    :javascript
-                      $(function() {
-                      });
-
-- content_for :javascript do
-  :javascript
-    $(function() {
-      var input_space = new window.InputSpace();
-    });
