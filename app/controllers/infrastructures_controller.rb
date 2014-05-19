@@ -149,7 +149,6 @@ class InfrastructuresController < ApplicationController
     begin
       @facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
       @sm_record = get_sm_record(params[:record_id], @facade)
-      raise NoSuchSimulationManagerError.new
       render inline: render_to_string(partial: 'sm_dialog')
     rescue NoSuchInfrastructureError => e
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.wrong_infrastructure', name: params[:infrastructure_name])})
