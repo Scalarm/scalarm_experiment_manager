@@ -2,43 +2,69 @@
 
 %a.close-reveal-modal &#215;
 
+#destroy_simulation_manager_dialog.reveal-modal(data-reveal="")
+  %h2= t('.destroy_dialog.header')
+  .row
+    .small-6.columns.centered
+      = link_to t('yes'),simulation_manager_command_infrastructure_path(  |
+        command: 'stop', record_id: @sm_record.id, infrastructure_name: @facade.short_name), |
+        id: 'destroy-yes', class: button_classes, method: :post, remote: true |
+    .small-6.columns.centered
+      %span.no_button{class: button_classes}= t('no')
+
 - begin
   - @facade.yield_simulation_manager(@sm_record) do |sm|
-    %h3= t('resource_header', resource_id: @sm_record.resource_id, facade_name: @facade.long_name)
+    %h3= t('.resource_header', resource_id: @sm_record.resource_id, facade_name: @facade.long_name)
+
+    .row
+      .small-2.columns.action-button#restart_simulation_manager_button
+        = link_to raw('<i class="fi-refresh"/>&nbsp;&nbsp;&nbsp;') + t('.restart'), |
+          simulation_manager_command_infrastructure_path(  |
+          command: 'restart', record_id: @sm_record.id, infrastructure_name: @facade.short_name), |
+          class: button_classes, method: :post, remote: true |
+
+      .small-2.columns.action-button#destroy_simulation_manager_button
+        %span#destroyExperimentButton{class: "#{button_classes} alert"}
+          %i.fi-stop
+          = raw '&nbsp;&nbsp;&nbsp;'
+          = t('.stop')
+      .small-8.cloumns
+
     %ul
       %li
-        %strong= t('resource_state') + ': '
+        %strong= t('.resource_state') + ': '
         =sm.resource_status.to_s
       - record_state = case @sm_record.state
-        - when :error then t('state.error')
-        - when :initialized then t('state.initialized')
-        - when :before_init then t('state.not_initialized')
+        - when :error then t('.state.error')
+        - when :initialized then t('.state.initialized')
+        - when :before_init then t('.state.not_initialized')
+        - else t('.state.unknown')
       %li
-        %strong= t('simulation_manager_state') + ': '
+        %strong= t('.simulation_manager_state') + ': '
         =record_state
-      - if @sm_record.error
+      - if @sm_record.state == :error
         %ul
           %li
-            %strong= t('error_message') + ': '
+            %strong= t('.error_message') + ': '
             = t('infrastructure.information.sm_info.errors.'+@sm_record.error, default: @sm_record.error)
             - unless @sm_record.error_log.nil?
               %li
                 %strong= t('infrastructure.information.sm_info.error_log') + ': '
                 %br
                 = raw(@sm_record.error_log.sub("\n", '<br/>'))
-      - elsif @sm_record.sm_initialized
+      - elsif @sm_record.state == :initialized
         %li
-          %strong= t('sm_initialized_at') + ':'
+          %strong= t('.sm_initialized_at') + ':'
           =@sm_record.sm_initialized_at.to_s
       %li
-        %strong= t('created_at') + ': '
+        %strong= t('.created_at') + ': '
         =@sm_record.created_at.to_s
       %li
-        %strong= t('time_limit') + ': '
+        %strong= t('.time_limit') + ': '
         =@sm_record.created_at.since(@sm_record.time_limit.to_i.minutes).to_s + ' ' + "(#{@sm_record.time_limit.to_s} minutes)"
       %li
-        %strong= t('experiment_id') + ': '
-        =@sm_record.experiment_id.to_s
+        %strong= t('.experiment') + ': '
+        = "#{@sm_record.experiment.name} (#{@sm_record.experiment_id})"
 - rescue Exception => e
   =t('infrastructure.information.sm_record_error', error: e.to_s)
 
@@ -46,5 +72,5 @@
   $(function() {
     $(document).foundation();
 
-    new window.SmDialog("#node-dialog");
+    new window.SmDialog("#dialog");
   });

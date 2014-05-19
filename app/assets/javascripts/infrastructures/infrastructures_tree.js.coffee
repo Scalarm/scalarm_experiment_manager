@@ -1,9 +1,12 @@
 class window.InfrastructuresTree
   constructor: (@baseSmDialogUrl, genericDialogId, @list_infrastructure_path,
                 @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
+
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
 
+    # a map of functions for fetching and refreshing infrastructures sub-trees
+    # infrastructure_name => function
     @fetchNodesFunctions = {}
 
     @root = null
@@ -36,9 +39,12 @@ class window.InfrastructuresTree
         $.getJSON(@simulation_manager_records_infrastructure_path, data, (child_json) =>
           child_json = null if child_json.length == 0
 
-          # Perform action only if node [is expanded or was not initialized before]
+          # Old code: Perform action only if node [is expanded or was not initialized before]
           # and when fetched children are not the same as in node
-          if not local_root['_children'] and not @childsEqual(local_root['children'], child_json)
+#          if not local_root['_children'] and not @childsEqual(local_root['children'], child_json)
+
+          # Now - update when fetched children are not the same as in node
+          if not @childsEqual(local_root['children'], child_json)
             if (local_root['children']) # is expanded
               local_root['children'] = child_json
             else # is collapsed
