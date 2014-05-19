@@ -88,6 +88,7 @@ class CloudFacade < InfrastructureFacade
                                         vm_id: vm_id.to_s,
                                         sm_uuid: SecureRandom.uuid,
                                         start_at: params['start_at'],
+                                        instance_type: params['instance_type']
                                     })
       vm_record.initialize_fields
       vm_record.save

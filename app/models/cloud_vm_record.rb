@@ -6,6 +6,7 @@
 # - image_secrets_id => id of CloudImageSecrets
 # - vm_id => string - instance id of the vm
 # - pid => integer - PID of SimulationManager application (if executed)
+# - instance_type => string - name of instance type
 #
 # - public_host => public hostname of machine which redirects to ssh port
 # - public_ssh_port => port of public machine redirecting to ssh private port

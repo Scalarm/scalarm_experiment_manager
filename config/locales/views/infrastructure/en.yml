@@ -81,6 +81,9 @@ en:
           ssh_address: "SSH address"
           no_ssh_address: "Not available"
           login: "Login"
+          pid: "Simulation Manager PID"
+          image: "Image"
+          instance_type: "Instance type"
         amazon:
           invalid_credentials: "Cannot fetch (invalid credentials)"
       private_machine:
@@ -90,7 +93,7 @@ en:
       sm_info:
         error: "An error occured"
         error_log: "Error details"
-        no_ssh_address: "Not available"
+        no_ssh_address: "not available"
         errors:
           install_failed: 'Simulation Manager installation failed'
           monitoring: 'Resource monitoring cannot be completed'
@@ -134,3 +137,7 @@ en:
       resource_id: "Resource ID"
   yes: "Yes"
   no: "No"
+  plgrid:
+    job_desc:
+      nodes: "Nodes count"
+      cores_per_node: "Cores per node"

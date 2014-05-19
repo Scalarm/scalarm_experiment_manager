@@ -1,11 +1,9 @@
-# Attributes
-# user_id => integer - the user who scheduled this job - mongoid in the future
-# experiment_id => the experiment which should be computed by this job
-# created_at => time - when this job were scheduled
-# time_limit => time - when this job should be stopped - in minutes
+# Specific attributes:
 # job_id => string - queue system specific id of the job
-# sm_uuid => string - uuid of configuration files
 # scheduler_type => string - short name of scheduler, eg. pbs
+# grant_id
+# nodes - nodes count
+# ppn - cores per node count
 
 class PlGridJob < MongoActiveRecord
   include SimulationManagerRecord
