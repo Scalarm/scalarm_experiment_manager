@@ -83,44 +83,24 @@ class InfrastructuresController < ApplicationController
   end
 
   # GET params
-  # - name
+  # - name - long name of the infrastructure to be displayed in view
   # - infrastructure_name
+  # - group (optional)
   # All params will be passed to simulation_managers_info in view
   def simulation_managers_summary
     render partial: 'infrastructures/simulation_managers_summary',
            locals: {
                long_name: params[:name],
+               partial_name: (params[:group] or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
                simulation_managers: InfrastructureFacade.get_facade_for(params[:infrastructure_name]).get_sm_records
            }
   end
 
-  # GET params
-  # - group (optional)
-  # - infrastructure_name
-  def simulation_managers_info
-    begin
-      partial_name = (params['group'] or params['infrastructure_name'])
-      infrastructure_name = params[:infrastructure_name]
-      infrastructure_params = params['infrastructure_params']
-      infrastructure_facade = InfrastructureFacade.get_facade_for(infrastructure_name)
-
-      @simulation_managers = infrastructure_facade.get_sm_records(@current_user.id, nil, infrastructure_params)
-
-      render partial: "infrastructures/scheduler/simulation_managers/#{partial_name}",
-             locals: {
-                 long_name: params['name'],
-                 infrastructure_name: infrastructure_name,
-                 infrastructure_params: infrastructure_params
-             }
-    rescue Exception => e
-      # FIXME translate
-      Rails.logger.error "Error rendering simulation_managers_info: #{e.to_s}\n#{e.backtrace.join("\n")}"
-      render text: "An error occured: #{e.to_s}" # TODO: "not available"
-    end
-  end
-
-  # FIXME locals
+  # GET params:
+  # - command - one of: stop, restart; command name that will be executed on simulation manager
+  # - record_id - record id of simulation manager which will execute command
+  # - infrastructure_name - infrastructure id to which simulation manager belongs to
   def simulation_manager_command
     begin
       if %w(stop restart).include? params[:command]
@@ -128,16 +108,16 @@ class InfrastructuresController < ApplicationController
           sm.send(params[:command])
           sm.record.destroy if params[:command] == 'stop'
         end
-        render json: {status: 'ok', msg: "Executed #{params[:command]} on Simulation Manager"}
+        render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else
-        render json: {status: 'error', msg: "No such command for Simulation Manager: #{params[:command]}"}
+        render json: {status: 'error', msg: I18n.t('infrastructures_controller.wrong_command', command: params[:command])}
       end
     rescue NoSuchSimulationManagerError => e
-      render json: { status: 'error', msg: "No such Simulation Manager" }
+      render json: { status: 'error', msg: t('infrastructures_controller.no_such_simulation_manager')}
     rescue AccessDeniedError => e
-      render json: { status: 'error', msg: "Access to Simulation Manager denied" }
+      render json: { status: 'error', msg: t('infrastructures_controller.access_to_sm_denied')}
     rescue Exception => e
-      render json: { status: 'error', msg: "Error on Simulation Manager command invocation: #{e.to_s}" }
+      render json: { status: 'error', msg: t('infrastructures_controller.command_error', error: e.to_s)}
     end
   end
 
@@ -147,9 +127,13 @@ class InfrastructuresController < ApplicationController
   # - record_id
   def get_sm_dialog
     begin
-      @facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
-      @sm_record = get_sm_record(params[:record_id], @facade)
-      render inline: render_to_string(partial: 'sm_dialog')
+      facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+
+      render inline: render_to_string(partial: 'sm_dialog', locals: {
+          facade: facade,
+          record: get_sm_record(params[:record_id], facade),
+          partial_name: (params[:group] or params[:infrastructure_name])
+      })
     rescue NoSuchInfrastructureError => e
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.wrong_infrastructure', name: params[:infrastructure_name])})
     rescue NoSuchSimulationManagerError => e
@@ -181,7 +165,7 @@ class InfrastructuresController < ApplicationController
   def get_booster_partial
     partial_name = (params[:group] or params[:infrastructure_name])
     begin
-      render partial: "infrastructures/scheduler/#{partial_name}", locals: {
+      render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
           infrastructure_name: params[:infrastructure_name],
           infrastructure_params: params[:infrastructure_params]
       }

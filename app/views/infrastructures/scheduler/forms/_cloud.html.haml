@@ -16,7 +16,7 @@
   .small-4.columns
 
 - begin
-  = render partial: "infrastructures/scheduler/clouds/#{cloud_name}", locals: { cloud_client: cloud_client }
+  = render partial: "infrastructures/scheduler/forms/clouds/#{cloud_name}", locals: { cloud_client: cloud_client }
 - rescue ActionView::MissingTemplate
   - # ignore missing cloud-specific partials
 

@@ -2,6 +2,8 @@ class window.InfrastructuresTree
   constructor: (@baseSmDialogUrl, genericDialogId, @list_infrastructure_path,
                 @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
 
+    @loaderHTML = '<div class="row small-1 small-centered"><img src="/assets/loading.gif"/></div>'
+
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
 
@@ -52,6 +54,7 @@ class window.InfrastructuresTree
 
             child_json.forEach((child) =>
               child['infrastructure_name'] = local_root['infrastructure_name']
+              child['group'] = local_root['group']
               child['type'] = 'sm-node'
             ) if child_json != null
 
@@ -272,19 +275,20 @@ class window.InfrastructuresTree
     null
 
   smDialog: (d) ->
-    @dialog.load @smDialogPath(d['infrastructure_name'], d['_id']), =>
-#          @actionLoading.hide()
-      @dialog.foundation('reveal', 'open')
+    params = {infrastructure_name: d['infrastructure_name'], record_id: d['_id']}
+    $.extend(params, {group: d['group']}) if d['group']
+    @dialog.foundation('reveal', 'open')
+    @dialog.html(@loaderHTML)
+    @dialog.load @smDialogPath(params)
+
 
   boosterDialog: (d) ->
-    @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id']), =>
-      @dialog.foundation('reveal', 'open')
+    @dialog.foundation('reveal', 'open')
+    @dialog.html(@loaderHTML)
+    @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id'])
 
-  smDialogPath: (infrastructure_name, record_id) ->
-    "#{@baseSmDialogUrl}?" + $.param({
-      infrastructure_name: infrastructure_name,
-      record_id: record_id
-    })
+  smDialogPath: (params) ->
+    "#{@baseSmDialogUrl}?" + $.param(params)
 
   boosterDialogPath: (infrastructure_name, experiment_id) ->
     # TODO: path as parameter

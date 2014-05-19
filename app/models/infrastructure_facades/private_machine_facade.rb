@@ -102,7 +102,7 @@ class PrivateMachineFacade < InfrastructureFacade
     begin
       shared_ssh_session(record.credentials)
       :running
-    rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
+    rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
       # remember this error in case of unable to initialize
       record.error_log = e.to_s
       record.save

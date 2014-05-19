@@ -2,7 +2,17 @@
   %p= "Total count of simulation managers registered for #{long_name}: #{simulation_managers.count}"
 .row
   - begin
-    = render partial: "infrastructures/scheduler/simulation_managers/#{infrastructure_name}",
-      locals: {simulation_managers: simulation_managers}
+    %ul
+      - simulation_managers.each do |record|
+        %li
+          %strong= t('infrastructures.sm_dialog.resource_id') + ': '
+          =record.resource_id
+          %ul
+            - begin
+              = render partial: "infrastructures/scheduler/simulation_manager_info",
+                  locals: {partial_name: partial_name, record: record}
+            - rescue Exception => e
+              - raise e if e.kind_of? ActionView::MissingTemplate
+              =t('infrastructure.information.sm_record_error', error: e.to_s)
   - rescue ActionView::MissingTemplate
-    = 'Details not available' # TODO translate
+    = t('infrastructure.information.sm_record_no_view')

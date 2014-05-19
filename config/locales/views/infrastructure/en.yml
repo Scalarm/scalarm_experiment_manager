@@ -90,7 +90,7 @@ en:
       sm_info:
         error: "An error occured"
         error_log: "Error details"
-        no_ssh_address: "<no SSH address>"
+        no_ssh_address: "Not available"
         errors:
           install_failed: 'Simulation Manager installation failed'
           monitoring: 'Resource monitoring cannot be completed'
@@ -100,12 +100,18 @@ en:
           start_failed: "Starting Simulation Manager failed"
           ssh: "Could not communicate with host via SSH"
           not_started: "Simulation Manager time limit exceeded, but was never initialized"
+      sm_record_no_view: "Sorry, details are not available"
   infrastructures_controller:
     tree:
       clouds: "Clouds"
     error_sm_removed: "Sorry, requested Simulation Manager has been just removed."
     wrong_infrastructure: "Requested infrastructure does not exists: %{name}"
     sm_exception: "Exception when getting Simulation Manager: %{error}"
+    command_executed: "Command '%{command}' successfully executed on Simulation Manager"
+    wrong_command: "No such command for Simulation Manager: %{command}"
+    no_such_simulation_manager: "No such Simulation Manager"
+    access_to_sm_denied: "Access to Simulation Manager denied"
+    command_error: "Error on Simulation Manager command invocation: %{error}"
   infrastructures:
     sm_dialog:
       error_message: "Error message"
@@ -125,5 +131,6 @@ en:
       stop: "Stop / Remove"
       destroy_dialog:
         header: "Are you sure you want to destroy this Simulation Manager?"
-  yes: "Yes, please"
-  no: "No way"
+      resource_id: "Resource ID"
+  yes: "Yes"
+  no: "No"
