@@ -1,6 +1,11 @@
 require_relative 'clouds/vm_instance.rb'
+require_relative 'shared_ssh'
+require_relative 'infrastructure_errors'
 
 class CloudFacade < InfrastructureFacade
+  include ShellCommands
+  include SharedSSH
+  include ShellBasedInfrastructure
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
