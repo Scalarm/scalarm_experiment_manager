@@ -142,6 +142,10 @@ class MongoActiveRecord
   end
 
   def self.find_all_by_query(query, opts = {})
+    self.where(query, opts)
+  end
+
+  def self.where(query, opts = {})
     collection = Object.const_get(name).send(:collection)
 
     collection.find(query, opts).map do |attributes|

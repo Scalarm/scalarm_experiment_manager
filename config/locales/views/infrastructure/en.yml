@@ -35,6 +35,8 @@ en:
         section_header: "Select parameters which should be included in the parameter space"
         parameters_per_row: "Values in each row"
     adapter_destroyed: "The selected adapter has been removed"
+    create:
+      empty_simulation_input: "Empty simulation input is invalid!"
   new_adapter_added: "New adapter has been added."
   amazon:
     login:

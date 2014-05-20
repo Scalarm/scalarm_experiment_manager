@@ -4,7 +4,7 @@
   .content
     - if @simulations.empty?
       .panel.callout.radius
-        %h4.subheader= t('simulation_scenario_list.empty_list')
+        %h4.subheader= raw t('simulation_scenario_list.empty_list')
 
     - else
       %table.simulations

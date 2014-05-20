@@ -59,30 +59,49 @@ class SimulationsController < ApplicationController
   end
 
   def create
-    simulation = Simulation.new({
-      'name' => params['simulation_name'],
-      'description' => params['simulation_description'],
-      'input_specification' => params['simulation_input'].read,
-      'user_id' => @current_user.id,
-      'created_at' => Time.now
-    })
+    simulation_input = params[:simulation_input].read
+    # input validation
+    case true
+      when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
+        flash[:error] = t('simulations.create.bad_params')
 
-    begin
-      set_up_adapter('input_writer', simulation, false)
-      set_up_adapter('executor', simulation, false)
-      set_up_adapter('output_reader', simulation, false)
-      set_up_adapter('progress_monitor', simulation, false)
+      when (not Simulation.where({ name: params[:simulation_name], user_id: @current_user.id }).blank?)
+        flash[:error] = t('simulations.create.simulation_invalid_name')
 
-      simulation.set_simulation_binaries(params['simulation_binaries'].original_filename, params['simulation_binaries'].read)
-
-      simulation.save
-    rescue Exception => e
-      Rails.logger.error("Exception occurred  : #{e}")
     end
+
+    unless flash[:error].blank? or (begin JSON.parse(simulation_input) and true rescue false end)
+      flash[:error] = t('simulations.create.bad_simulation_input')
+    end
+    # simulation creation
+    if flash[:error].nil?
+      simulation = Simulation.new({
+        'name' => params[:simulation_name],
+        'description' => params[:simulation_description],
+        'input_specification' => simulation_input,
+        'user_id' => @current_user.id,
+        'created_at' => Time.now
+      })
+
+      begin
+        set_up_adapter('input_writer', simulation, false)
+        set_up_adapter('executor', simulation)
+        set_up_adapter('output_reader', simulation, false)
+        set_up_adapter('progress_monitor', simulation, false)
+
+        simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
+
+        simulation.save
+      rescue Exception => e
+        Rails.logger.error("Exception occurred : #{e}")
+      end
+    end
+
+    flash[:notice] = t('simulations.create.registered') if flash[:error].nil?
 
     respond_to do |format|
       format.json { render json: { status: (flash[:error].nil? ? 'ok' : 'error'), simulation_id: simulation.id.to_s } }
-      format.html { redirect_to :action => :index }
+      format.html { redirect_to action: :index }
     end
   end
 
@@ -245,8 +264,10 @@ class SimulationsController < ApplicationController
       if not adapter.nil? and adapter.user_id == @current_user.id
         simulation.send(adapter_type + '_id=', adapter.id)
       else
-        flash[:error] = "Cannot find Simulation#{adapter_type.camelize} with the #{adapter_id} id"
-        raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory") if mandatory
+        if mandatory
+          flash[:error] = t('simulations.create.adapter_not_found', { adapter: adapter_type.camelize, id: adapter_id })
+          raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory")
+        end
       end
 
     elsif params.include?(adapter_type)
@@ -257,7 +278,10 @@ class SimulationsController < ApplicationController
       Rails.logger.debug(adapter)
       simulation.send(adapter_type + '_id=', adapter.id)
     else
-      #raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory") if mandatory
+      if mandatory
+        flash[:error] = t('simulations.create.mandatory_adapter', { adapter: adapter_type.camelize, id: adapter_id })
+        raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory")
+      end
     end
 
   end

@@ -60,9 +60,16 @@ window.checkImportedSize = () ->
         $.ajax $('#imported-experiment-size-url').val(),
           method: 'POST',
           data: data,
+          beforeSend: () ->
+            $('#conduct-import-loading').show()
           success: (data, status, xhr) ->
-            $("#experiment-size-dialog #calculated-experiment-size").html(data.experiment_size);
-            $('#experiment-size-dialog').foundation('reveal', 'open');
+            $('#conduct-import-loading').hide()
+            $("#experiment-size-dialog #calculated-experiment-size").html(data.experiment_size)
+            $('#experiment-size-dialog').foundation('reveal', 'open')
+          error: (msg) ->
+            toastr.error(msg)
+            $('#conduct-import-loading').hide()
+
       reader.readAsText(file)
 
 window.bindImportParameterSpaceListeners = (url) ->

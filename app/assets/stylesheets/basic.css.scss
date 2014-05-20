@@ -73,15 +73,15 @@ footer {
   -webkit-border-radius: 5px;
 }
 
+i {
+  color: white;
+
+  &.link { font-size: 45px; }
+  &.small-link { font-size: 28px; }
+}
+
 /* nav */
-
 nav {
-  i {
-    color: white; 
-
-    &.link { font-size: 45px; }
-    &.small-link { font-size: 28px; }
-  }
 
   .menu {
     width: 940px;

@@ -10,14 +10,14 @@ class ScalarmUser < MongoActiveRecord
   end
 
   def get_running_experiments
-    Experiment.find_all_by_query({ '$or' => [ 
+    Experiment.where({ '$or' => [
       { user_id: self.id }, { shared_with: { '$in' => [ self.id ] } } ] }).select do |experiment|
       experiment.is_running
     end
   end
 
   def get_historical_experiments
-    Experiment.find_all_by_query({ '$or' => [ 
+    Experiment.where({ '$or' => [
       { user_id: self.id }, { shared_with: { '$in' => [ self.id ] } } ] }).select do |experiment|
       experiment.is_running == false
     end

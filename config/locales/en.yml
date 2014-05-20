@@ -28,10 +28,10 @@ en:
   registered_simulation_scenario_list:
     label: "Registered simulations"
     destroy_button: "Destroy"
-    empty_list: There is no simulation registered. Go to registration form and register new simulations.
+    empty_list: There is no simulation registered. Go to <a href='simulations/registration'>registration form</a> and register new simulations.
   simulation_scenario_list:
     label: "Select simulation scenario to conduct a new experiment"
-    empty_list: There is no experiment defined to run. Go to registration form and define new experiments.
+    empty_list: There is no experiment defined to run. Go to <a href='simulations/registration'>registration form</a> and define new experiments.
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
     label: Running experiments
@@ -57,21 +57,21 @@ en:
 
   registered_executors_list:
     label: "Registered simulation executors"
-    empty_list: There is no simulation executor defined to run. Go to registration form and define new ones.
+    empty_list: "There is no simulation executor defined to run. Go to <a href='simulations/registration'>registration form</a> and define new ones."
 
   registered_input_writers_list:
     label: "Registered simulation input writers"
-    empty_list: There is no simulation input writer defined to run. Go to registration form and define new ones.
+    empty_list: There is no simulation input writer defined to run. Go to <a href='simulations/registration'>registration form</a> and define new ones.
 
   registered_output_readers_list:
     label: "Registered simulation output readers"
-    empty_list: There is no simulation output reader defined to run. Go to registration form and define new ones.
+    empty_list: There is no simulation output reader defined to run. Go to <a href='simulations/registration'>registration form</a> and define new ones.
 
   no_running_experiment_response: "No experiment running"
 
   registered_progress_monitors_list:
     label: "Registered simulation progress monitors"
-    empty_list: There is no simulation progress monitor defined to run. Go to registration form and define new ones.
+    empty_list: There is no simulation progress monitor defined to run. Go to <a href='simulations/registration'>registration form</a> and define new ones.
 
   experiments:
     show:

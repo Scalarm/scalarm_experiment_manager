@@ -4,7 +4,7 @@
   .content
     - if @output_readers.empty?
       .panel.callout.radius
-        %h4.subheader= t('registered_output_readers_list.empty_list')
+        %h4.subheader= raw t('registered_output_readers_list.empty_list')
 
     - else
       - @output_readers.each do |output_reader|

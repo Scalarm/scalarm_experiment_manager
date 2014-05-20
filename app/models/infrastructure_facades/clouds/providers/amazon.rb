@@ -75,12 +75,13 @@ module AmazonCloud
       {
           't1.micro' => 'Micro (Up to 2 EC2 Compute Units, 613 MB RAM)',
           'm1.small' => 'Small (1 EC2 Compute Unit, 1.7 GB RAM)',
-          'm3.medium' => 'Medium 3rd generetion (3 EC2 Compute Unit, 3.75 GB RAM)'
+          'm3.medium' => 'Medium 3rd generation (3 EC2 Compute Unit, 3.75 GB RAM)',
           #'m1.medium'=> 'Medium (2 EC2 Compute Unit, 3.75 GB RAM)',
           #'m1.large'=> 'Large (4 EC2 Compute Unit, 1.7 GB RAM)',
-          #'m1.xlarge'=> 'Extra Large (8 EC2 Compute Unit, 15 GB RAM)',
+          #'m1.xlarge'=> 'Extra Large (8 EC2 Compute Unit, 15 GB RAM)'
           #'c1.medium'=> 'High-CPU Medium (5 EC2 Compute Unit, 1.7 GB RAM)',
           #'c1.xlarge'=> 'High-CPU Extra Large (20 EC2 Compute Unit, 7 GB RAM)'
+          'c3.xlarge'=> 'High-CPU Extra Large 3rd generation (14 EC2 Compute Unit, 7.5 GB RAM)'
       }
     end
 

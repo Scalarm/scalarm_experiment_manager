@@ -643,18 +643,23 @@ class Experiment < MongoActiveRecord
         values
 
       when *%w(latinHypercube fractionalFactorial nolhDesign)
-        design_file_path = File.join(Rails.root, 'public', 'designs.R')
-        Rails.logger.info("arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}') design <- #{doe_method_name}(arg) design <- data.matrix(design)")
-        Rails.configuration.r_interpreter.eval("arg <- #{data_frame(parameters_for_doe)}
-            source('#{design_file_path}')
-            design <- #{doe_method_name}(arg)
-            design <- data.matrix(design)")
+        if parameters_for_doe.size < 2
+          raise 'experiments.errors.too_few_parameters'
+        else
+          design_file_path = File.join(Rails.root, 'public', 'designs.R')
+          Rails.logger.info("""arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}')
+                               design <- #{doe_method_name}(arg) design <- data.matrix(design)""")
+          Rails.configuration.r_interpreter.eval("arg <- #{data_frame(parameters_for_doe)}
+              source('#{design_file_path}')
+              design <- #{doe_method_name}(arg)
+              design <- data.matrix(design)")
 
-        values = Rails.configuration.r_interpreter.design.to_a
-        values = values.map{|list| list.map{|num| num.round(5)}}
-        Rails.logger.debug("Design: #{values}")
+          values = Rails.configuration.r_interpreter.design.to_a
+          values = values.map{|list| list.map{|num| num.round(5)}}
+          #Rails.logger.debug("Design: #{values}")
 
-        values
+          values
+        end
     end
   end
 

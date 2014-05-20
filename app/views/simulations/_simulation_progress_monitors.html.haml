@@ -4,7 +4,7 @@
   .content
     - if @progress_monitors.empty?
       .panel.callout.radius
-        %h4.subheader= t('registered_progress_monitors_list.empty_list')
+        %h4.subheader= raw t('registered_progress_monitors_list.empty_list')
 
     - else
       - @progress_monitors.each do |progress_monitor|

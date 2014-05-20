@@ -1,7 +1,7 @@
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
 
-= form_tag experiments_path, onsubmit: 'updateAllInputParameterValues()', id: 'experiment_submit_form' do
+= form_tag experiments_path, id: 'experiment_submit_form' do
 
   %section.panel.radius
     %h3.subheader= t('experiments.information_panel.experiment_info_title')
@@ -78,14 +78,11 @@
 
         = submit_tag t('.submit_button'), class: 'button radius last-element'
         = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+        = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
 
   #experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
     %h2.subheader= raw t('.experiment_size_dialog_body')
     %a.close-reveal-modal &#215;
-
-  - content_for :javascript do
-    :javascript
-      var experimentInput = $.parseJSON(#{raw @simulation.input_specification.to_json});
 
 %section#import.panel.radius.last-element
   = render 'import_tab'
@@ -94,4 +91,11 @@
   :javascript
     $(function() {
       window.toggle_panels_on_title_click();
+
+      var input_space = new window.InputSpace($.parseJSON(#{raw @simulation.input_specification.to_json}));
+      $("#experiment_submit_form").on("submit", function() {
+        input_space.updateAllInputParameterValues()
+      });
+
+      doe_manager = new window.ExperimentDesigner(input_space);
     });

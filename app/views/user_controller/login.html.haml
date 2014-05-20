@@ -28,7 +28,9 @@
     .small-6.columns
       .row
         .small-12.small-centered.columns(style="text-align:center;")
-          = link_to t('openid.login', provider: 'Google'), login_openid_google_url, class:'button radius'
+          %a.button.radius{ href: login_openid_google_url }
+            %i.fi-social-google-plus.small-link
+            = t('openid.login', provider: 'Google')
         -#.row
         -#  .small-12.small-centered.columns(style="text-align:center;")
         -#    %span.button

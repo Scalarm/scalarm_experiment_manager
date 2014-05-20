@@ -74,14 +74,15 @@ module GoogleOpenID
 
       user = ScalarmUser.find_by('email', resp_email)
 
-      if user
-        flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
-        session[:user] = user._id
-        successful_login
-      else
-        flash[:error] = t('openid.google.no_openid_user', email: resp_email)
-        redirect_to login_path
+      # create new user if there is no such
+      unless user
+        user = ScalarmUser.new({ login: resp_email, email: resp_email })
+        user.save
       end
+
+      flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
+      session[:user] = user.id
+      successful_login
 
     else
       flash[:error] = t('openid.google.no_email_provided')
