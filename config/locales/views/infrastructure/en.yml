@@ -109,6 +109,7 @@ en:
   infrastructures_controller:
     tree:
       clouds: "Clouds"
+      plgrid: "PL-Grid"
     error_sm_removed: "Sorry, requested Simulation Manager has been just removed."
     wrong_infrastructure: "Requested infrastructure does not exists: %{name}"
     sm_exception: "Exception when getting Simulation Manager: %{error}"
@@ -143,3 +144,5 @@ en:
     job_desc:
       nodes: "Nodes count"
       cores_per_node: "Cores per node"
+    job_submission:
+      submit_job_failed: "Could not submit job"

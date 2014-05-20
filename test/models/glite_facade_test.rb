@@ -2,7 +2,7 @@ require 'test/unit'
 require 'test_helper'
 require 'mocha'
 
-require 'infrastructure_facades/plgrid/grid_schedulers/glite_facade'
+require 'infrastructure_facades/plgrid/grid_schedulers/glite'
 
 class GliteFacadeTest < Test::Unit::TestCase
 

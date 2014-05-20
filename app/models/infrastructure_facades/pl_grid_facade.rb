@@ -5,9 +5,6 @@ require 'net/scp'
 
 require_relative 'plgrid/pl_grid_simulation_manager'
 
-require_relative 'plgrid/grid_schedulers/glite_facade'
-require_relative 'plgrid/grid_schedulers/pbs_facade'
-
 require_relative 'infrastructure_facade'
 require_relative 'shared_ssh'
 
@@ -15,19 +12,20 @@ class PlGridFacade < InfrastructureFacade
   include SharedSSH
 
   attr_reader :ssh_sessions
+  attr_reader :long_name
+  attr_reader :short_name
 
-  def initialize
-    super()
+  def initialize(scheduler_class)
     @ui_grid_host = 'ui.grid.cyfronet.pl'
     @ssh_sessions = {}
+    @scheduler_class = scheduler_class
+    @long_name = scheduler.long_name
+    @short_name = scheduler.short_name
+    super()
   end
 
-  def long_name
-    'PL-Grid'
-  end
-
-  def short_name
-    'plgrid'
+  def scheduler
+    @scheduler ||= @scheduler_class.new
   end
 
   def sm_record_class
@@ -36,8 +34,6 @@ class PlGridFacade < InfrastructureFacade
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     sm_uuid = SecureRandom.uuid
-    scheduler_type = additional_params[:infrastructure_info][:infrastructure_params][:scheduler_type]
-    scheduler = self.class.create_scheduler_facade(scheduler_type.to_s)
 
     # prepare locally code of a simulation manager to upload with a configuration file
     InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
@@ -54,25 +50,20 @@ class PlGridFacade < InfrastructureFacade
 
         credentials.ssh_start do |ssh|
           1.upto(instances_count).each do
-            #  retrieve job id and store it in the database for future usage
-            job = PlGridJob.new({ 'user_id' => user_id, 'experiment_id' => experiment_id,
-                                  'scheduler_type' => scheduler_type, 'sm_uuid' => sm_uuid,
-                                  'time_limit' => additional_params['time_limit'].to_i })
-            job.grant_id = additional_params['grant_id'] unless additional_params['grant_id'].blank?
-            job.nodes = additional_params['nodes'] unless additional_params['nodes'].blank?
-            job.ppn = additional_params['ppn'] unless additional_params['ppn'].blank?
-            job.initialize_fields
+            job = create_record(user_id, experiment_id, sm_uuid, additional_params)
 
             if scheduler.submit_job(ssh, job)
               job.save
             else
-              return 'error', 'Could not submit job'
+              return 'error', I18n.t('plgrid.job_submission.submit_job_failed')
             end
           end
         end
       rescue Net::SSH::AuthenticationFailed => auth_exception
+        logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
         return 'error', I18n.t('plgrid.job_submission.authentication_failed', ex: auth_exception)
       rescue Exception => ex
+        logger.error "Exception when starting simulation managers for user #{user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
         return 'error', I18n.t('plgrid.job_submission.error', ex: ex)
       end
 
@@ -80,6 +71,24 @@ class PlGridFacade < InfrastructureFacade
     else
       return 'error', I18n.t('plgrid.job_submission.no_credentials')
     end
+  end
+
+  def create_record(user_id, experiment_id, sm_uuid, params)
+    job = PlGridJob.new(
+        user_id:user_id,
+        experiment_id: experiment_id,
+        scheduler_type: scheduler.short_name,
+        sm_uuid: sm_uuid,
+        time_limit: params['time_limit'].to_i
+    )
+
+    job.grant_id = params['grant_id'] unless params['grant_id'].blank?
+    job.nodes = params['nodes'] unless params['nodes'].blank?
+    job.ppn = params['ppn'] unless params['ppn'].blank?
+
+    job.initialize_fields
+
+    job
   end
 
   def add_credentials(user, params, session)
@@ -90,7 +99,7 @@ class PlGridFacade < InfrastructureFacade
       credentials.password = params[:password]
       credentials.host = params[:host]
     else
-      credentials = GridCredentials.new({ 'user_id' => user.id, 'host' => params[:host], 'login' => params[:username] })
+      credentials = GridCredentials.new(user_id: user.id, host: params[:host], login: params[:username])
       credentials.password = params[:password]
     end
 
@@ -106,36 +115,25 @@ class PlGridFacade < InfrastructureFacade
     record.destroy
   end
 
-  def self.scheduler_facade_classes
-    Hash[[PBSFacade, GliteFacade].map {|f| [f.short_name.to_sym, f]}]
-  end
-
-  def self.scheduler_facades
-    Hash[scheduler_facade_classes.map {|name, cls| [name, cls.new]}]
-  end
-
-  def self.create_scheduler_facade(type)
-    scheduler_facade_classes[type.to_sym].new
-  end
-
-  # Overrides InfrastructureFacade method
-  def to_h
-    {
-        name: long_name,
-        children: self.class.scheduler_facades.values.map do |scheduler|
-            {
-                name: scheduler.long_name,
-                infrastructure_name: short_name,
-                infrastructure_params: {scheduler_type: scheduler.short_name}
-            }
-        end
-    }
-  end
+  # TODO: check if can remove
+  # # Overrides InfrastructureFacade method
+  # def to_h
+  #   {
+  #       name: long_name,
+  #       children: self.class.scheduler_facades.values.map do |scheduler|
+  #           {
+  #               name: scheduler.long_name,
+  #               infrastructure_name: short_name,
+  #               infrastructure_params: {scheduler_type: scheduler.short_name}
+  #           }
+  #       end
+  #   }
+  # end
 
   def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = (user_id ? {user_id: user_id} : {})
+    query = {scheduler_type: scheduler.short_name}
+    query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
-    query.merge!({scheduler_type: params[:scheduler_type]}) if params[:scheduler_type]
     PlGridJob.find_all_by_query(query)
   end
 
@@ -144,10 +142,10 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def default_additional_params
-    { 'scheduler' => 'qsub', 'time_limit' => 300 }
+    { 'time_limit' => 300 }
   end
 
-  def retrieve_grants(credentials)
+  def self.retrieve_grants(credentials)
     return [] if credentials.nil?
 
     grants, grant_output = [], []
@@ -171,24 +169,21 @@ class PlGridFacade < InfrastructureFacade
   # -- SimulationManager delegation methods --
 
   def _simulation_manager_before_monitor(record)
-    PlGridFacade.create_scheduler_facade(record.scheduler_type).prepare_session(shared_ssh_session(record.credentials))
+    scheduler.prepare_session(shared_ssh_session(record.credentials))
   end
 
   def _simulation_manager_stop(record)
-    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     scheduler.cancel(ssh, record)
     scheduler.clean_after_job(ssh, record)
   end
 
   def _simulation_manager_restart(record)
-    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     scheduler.restart(ssh, record)
   end
 
   def _simulation_manager_resource_status(record)
-    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     begin
       ssh = shared_ssh_session(record.credentials)
     rescue
@@ -198,13 +193,11 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_running?(record)
-    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     not scheduler.is_done(ssh, record)
   end
 
   def _simulation_manager_get_log(record)
-    scheduler = PlGridFacade.create_scheduler_facade(record.scheduler_type)
     ssh = shared_ssh_session(record.credentials)
     scheduler.get_log(ssh, record)
   end

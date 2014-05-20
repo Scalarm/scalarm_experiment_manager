@@ -3,8 +3,8 @@ require 'test_helper'
 require 'mocha/test_unit'
 
 require 'infrastructure_facades/cloud_facade'
-require 'infrastructure_facades/plgrid/grid_schedulers/glite_facade'
-require 'infrastructure_facades/plgrid/grid_schedulers/pbs_facade'
+require 'infrastructure_facades/plgrid/grid_schedulers/glite'
+require 'infrastructure_facades/plgrid/grid_schedulers/pbs'
 require 'infrastructure_facades/private_machine_facade'
 
 class SimulationManagersContainersSubclassesTest < Test::Unit::TestCase

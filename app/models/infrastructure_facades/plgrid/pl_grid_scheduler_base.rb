@@ -1,6 +1,10 @@
 # Subclasses must implement:
 # - short_name() -> String
 # - long_name() -> String
+# - prepare_job_files(sm_uuid)
+# - send_job_files(sm_uuid, scp)
+# - submit_job(ssh, job)
+# - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
 
 class PlGridSchedulerBase
 

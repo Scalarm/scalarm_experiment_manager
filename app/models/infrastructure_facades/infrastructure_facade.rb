@@ -3,7 +3,6 @@ require 'yaml'
 require_relative 'infrastructure_task_logger'
 require_relative 'infrastructure_errors'
 require_relative 'simulation_manager'
-require_relative 'clouds/cloud_factory'
 
 require 'thread_pool'
 
@@ -81,53 +80,6 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
-  def self.get_facade_for(infrastructure_name)
-    raise InfrastructureErrors::NoSuchInfrastructureError.new(infrastructure_name) if infrastructure_name.nil?
-    info = get_registered_infrastructures[infrastructure_name.to_sym]
-    raise InfrastructureErrors::NoSuchInfrastructureError.new(infrastructure_name) if info.nil? or not info.has_key? :facade
-    info[:facade]
-  end
-
-  # returns a map of all supported infrastructures
-  # infrastructure_id => {label: long_name, facade: facade_instance}
-  def self.get_registered_infrastructures
-    non_cloud_infrastructures.merge(cloud_infrastructures)
-  end
-
-  if Rails.env.development? or Rails.env.test?
-    def self.non_cloud_infrastructures
-      require_relative 'dummy_facade'
-      self._non_cloud_infrastructures.merge(dummy: {label: 'Dummy', facade: DummyFacade.new})
-    end
-  else
-    def self.non_cloud_infrastructures
-      self._non_cloud_infrastructures
-    end
-  end
-
-  def self.cloud_infrastructures
-    CloudFactory.infrastructures_hash
-  end
-
-  # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
-  # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
-  # are fetched recursivety with tree_node methods of every concrete facade.
-  def self.list_infrastructures
-    [
-        *(InfrastructureFacade.non_cloud_infrastructures.values.map do |inf|
-          inf[:facade].to_h
-        end),
-        {
-            name: I18n.t('infrastructures_controller.tree.clouds'),
-            category_name: 'cloud',
-            children:
-                InfrastructureFacade.cloud_infrastructures.values.map do |inf|
-                  inf[:facade].to_h
-                end
-        }
-    ]
-  end
-
   def monitoring_thread
     configure_polling_interval
     lock = MongoLock.new(short_name)
@@ -175,22 +127,9 @@ class InfrastructureFacade
     logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 
-  def self.start_all_monitoring_threads
-    get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
-      Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
-
-      Thread.new do
-        infrastructure_information[:facade].monitoring_thread
-      end
-    end
-  end
-
-  def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)
-    infrastructure = InfrastructureFacade.get_facade_for(infrastructure_type)
+  def schedule_simulation_managers(user_id, experiment_id, job_counter, additional_params=nil)
     additional_params = additional_params || infrastructure.default_additional_params
-
-    status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
-
+    status, response_msg = start_simulation_managers(user_id, job_counter, experiment_id, additional_params)
     render json: response_msg, status: status
   end
 
@@ -268,14 +207,5 @@ class InfrastructureFacade
 
   def init_resources; end
   def clean_up_resources; end
-
-  # TODO: make facade factory
-  # TODO: change to classes, because always all facades are initialized; remove "label"
-  def self._non_cloud_infrastructures
-    {
-        plgrid: { label: 'PL-Grid', facade: PlGridFacade.new },
-        private_machine: { label: 'Private resources', facade: PrivateMachineFacade.new }
-    }
-  end
 
 end

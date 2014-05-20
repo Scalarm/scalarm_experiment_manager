@@ -9,7 +9,8 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
   end
 
   FACADE_CLASSES = {
-      plgrid: PlGridFacade,
+      qsub: PlGridFacade,
+      glite: PlGridFacade,
       private_machine: PrivateMachineFacade,
       pl_cloud: CloudFacade,
       amazon: CloudFacade,
@@ -41,7 +42,7 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
 
   def test_get_registered_infrastructures
     # given, when
-    infrastructures_hash = InfrastructureFacade.get_registered_infrastructures
+    infrastructures_hash = InfrastructureFacadeFactory.get_registered_infrastructures
 
     # then
     assert_equal FACADE_CLASSES.count, infrastructures_hash.count
@@ -54,7 +55,7 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
 
   def test_subclasses_implementation
     # given
-    infrastructure_facades = InfrastructureFacade.get_registered_infrastructures.values.map {|i| i[:facade]}
+    infrastructure_facades = InfrastructureFacadeFactory.get_registered_infrastructures.values.map {|i| i[:facade]}
 
     # when, then
     assert_nothing_thrown do
@@ -62,10 +63,6 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
         assert (FACADE_METHODS+SM_METHODS).each {|method| assert facade.respond_to?(method), "no method #{method} in #{facade}"}
       end
     end
-  end
-
-  def test_monitoring_plgrid
-
   end
 
 end

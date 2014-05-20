@@ -93,7 +93,7 @@ def monitoring_probe(action)
       probe.start_monitoring
 
       ExperimentWatcher.watch_experiments
-      InfrastructureFacade.start_all_monitoring_threads
+      InfrastructureFacadeFactory.start_all_monitoring_threads
 
       sleep(10) while true
     }

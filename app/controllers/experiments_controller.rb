@@ -110,9 +110,8 @@ class ExperimentsController < ApplicationController
 
       if params.include?(:computing_power) and (not params[:computing_power].empty?)
         computing_power = JSON.parse(params[:computing_power])
-        InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id,
-                                                          computing_power['type'],
-                                                          computing_power['resource_counter'])
+        infrastructure = InfrastructureFacadeFactory.get_facade_for(computing_power['type'])
+        infrastructure.schedule_simulation_managers(@current_user.id, experiment.id, computing_power['resource_counter'])
       end
     end
 

@@ -34,9 +34,9 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
   def test_tree
     # Prepare sm_record_hashes for every known Facade
-    infrastrucutre_names = %w(plgrid pl_cloud amazon google private_machine dummy)
+    infrastrucutre_names = %w(qsub glite pl_cloud amazon google private_machine dummy)
     infrastrucutre_names.each do |name|
-      facade_class = InfrastructureFacade.get_facade_for(name).class
+      facade_class = InfrastructureFacadeFactory.get_facade_for(name).class
       facade_class.any_instance.stubs(:sm_record_hashes).with(@tmp_user_id).returns(
           (1..10).map do |i|
             {
@@ -75,10 +75,12 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_simulation_manager_records_plgrid
+    require 'infrastructure_facades/plgrid/pl_grid_factory'
+
     count = 10
     id_values = (0..count-1).to_a
 
-    scheduler_names = PlGridFacade.scheduler_facade_classes.keys.map &:to_s
+    scheduler_names = PlGridFactory.provider_names
 
     scheduler_names.each do |sname|
       id_values.each do |i|
@@ -127,7 +129,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_remove_credentials
-    InfrastructureFacade.get_registered_infrastructures.each do |facade_id, info|
+    InfrastructureFacadeFactory.get_registered_infrastructures.each do |facade_id, info|
       info[:facade].class.any_instance.expects(:remove_credentials).returns(nil).once
       get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
           {user: @tmp_user_id}
@@ -137,7 +139,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_remove_credentials_fail
-    InfrastructureFacade.get_registered_infrastructures.each do |facade_id, info|
+    InfrastructureFacadeFactory.get_registered_infrastructures.each do |facade_id, info|
       info[:facade].class.any_instance.expects(:remove_credentials).throws(StandardError.new 'some error').once
       get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
           {user: @tmp_user_id}
@@ -160,7 +162,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
     end
     PlGridFacade.any_instance.expects(:shared_ssh_session).returns(stub_everything)
     PlGridFacade.any_instance.expects(:get_sm_record_by_id).with('1').returns(record_mock)
-    PlGridFacade.expects(:create_scheduler_facade).returns(scheduler_mock).once
+    PlGridFacade.expects(:scheduler).returns(scheduler_mock).once
 
     PlGridFacade.any_instance.expects(:init_resources).once
     PlGridFacade.any_instance.expects(:clean_up_resources).once
@@ -186,7 +188,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
       .with(@tmp_user_id, 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
       .returns(['ok', 'good']).once
 
-    InfrastructureFacade.expects(:get_facade_for).with('inf_name').returns(facade)
+    InfrastructureFacadeFactory.expects(:get_facade_for).with('inf_name').returns(facade)
 
     get :schedule_simulation_managers, params, {user: @tmp_user_id}
 

@@ -1,3 +1,4 @@
+require 'infrastructure_facades/infrastructure_facade_factory'
 require 'json'
 
 module InfrastructuresHelper
@@ -38,11 +39,11 @@ module InfrastructuresHelper
   end
 
   def infrastructure_long_name(infrastructure_name)
-    InfrastructureFacade.get_facade_for(infrastructure_name).long_name
+    InfrastructureFacadeFactory.get_facade_for(infrastructure_name).long_name
   end
 
   def count_simulation_managers(infrastructure_name, user_id)
-    InfrastructureFacade.get_facade_for(infrastructure_name).count_sm_records(user_id)
+    InfrastructureFacadeFactory.get_facade_for(infrastructure_name).count_sm_records(user_id)
   end
 
 end

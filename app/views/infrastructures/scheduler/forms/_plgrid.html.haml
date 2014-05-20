@@ -1,5 +1,5 @@
 - credentials = GridCredentials.find_by_user_id(@current_user.id)
-- grants = PlGridFacade.new.retrieve_grants(credentials)
+- grants = PlGridFacade.retrieve_grants(credentials)
 
 .row
   .small-4.columns

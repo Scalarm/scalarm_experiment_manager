@@ -204,14 +204,6 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
-  def to_h
-    {
-        name: long_name,
-        group: 'cloud',
-        infrastructure_name: short_name,
-    }
-  end
-
   # -- Monitoring utils --
 
   def clean_up_resources

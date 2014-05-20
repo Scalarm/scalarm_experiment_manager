@@ -1,3 +1,4 @@
+require 'infrastructure_facades/infrastructure_facade_factory'
 require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructuresController < ApplicationController
@@ -8,7 +9,7 @@ class InfrastructuresController < ApplicationController
   end
 
   def list
-    render json: InfrastructureFacade.list_infrastructures
+    render json: InfrastructureFacadeFactory.list_infrastructures
   end
 
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name
@@ -19,7 +20,7 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
   def simulation_manager_records
     begin
-      facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+      facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       hash = facade.sm_record_hashes(@current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
       render json: hash
     rescue NoSuchInfrastructureError => e
@@ -34,7 +35,7 @@ class InfrastructuresController < ApplicationController
   def infrastructure_info
     infrastructure_info = {}
 
-    InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure|
+    InfrastructureFacadeFactory.get_registered_infrastructures.each do |infrastructure_id, infrastructure|
       infrastructure_info[infrastructure_id] = infrastructure[:facade].current_state(@current_user.id)
     end
 
@@ -52,7 +53,7 @@ class InfrastructuresController < ApplicationController
     # TODO: error handling (check parameters)
     params[:infrastructure_info] = JSON.parse(params[:infrastructure_info]) if params[:infrastructure_info].kind_of? String
 
-    infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_info][:infrastructure_name])
+    infrastructure = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_info][:infrastructure_name])
     status, response_msg = infrastructure.start_simulation_managers(
         @current_user.id, params[:job_counter].to_i, params[:experiment_id], params
     )
@@ -61,7 +62,7 @@ class InfrastructuresController < ApplicationController
   end
 
   def add_infrastructure_credentials
-    infrastructure = InfrastructureFacade.get_facade_for(params[:infrastructure_type])
+    infrastructure = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_type])
     status = infrastructure.add_credentials(@current_user, params, session)
 
     render json: { status: status, msg: I18n.t("#{params[:infrastructure_type]}.login.#{status}") }
@@ -73,7 +74,7 @@ class InfrastructuresController < ApplicationController
   # GET param (optional): credential_type
   def remove_credentials
     begin
-      facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+      facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
       render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
     rescue Exception => e
@@ -93,7 +94,7 @@ class InfrastructuresController < ApplicationController
                long_name: params[:name],
                partial_name: (params[:group] or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
-               simulation_managers: InfrastructureFacade.get_facade_for(params[:infrastructure_name]).get_sm_records
+               simulation_managers: InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name]).get_sm_records
            }
   end
 
@@ -127,7 +128,7 @@ class InfrastructuresController < ApplicationController
   # - record_id
   def get_sm_dialog
     begin
-      facade = InfrastructureFacade.get_facade_for(params[:infrastructure_name])
+      facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
 
       render inline: render_to_string(partial: 'sm_dialog', locals: {
           facade: facade,
@@ -139,7 +140,7 @@ class InfrastructuresController < ApplicationController
     rescue NoSuchSimulationManagerError => e
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.error_sm_removed')})
     rescue Exception => e
-      Rails.logger("Exception when getting Simulation Manager: #{e.to_s}\n#{e.backtrace.join("\n")}")
+      Rails.logger.error("Exception when getting Simulation Manager: #{e.to_s}\n#{e.backtrace.join("\n")}")
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.sm_exception', error: e.to_s)})
     end
   end
@@ -188,14 +189,14 @@ class InfrastructuresController < ApplicationController
   # Yield single SimulationManager with priviliges check
   # This method automatically clean up infrastructure facade resources
   def yield_simulation_manager(record_id, infrastructure_name, &block)
-    facade = InfrastructureFacade.get_facade_for(infrastructure_name)
+    facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
     facade.yield_simulation_manager(get_sm_record(record_id, facade)) {|sm| yield sm}
   end
 
   def collect_infrastructure_info(user_id)
     @infrastructure_info = {}
 
-    InfrastructureFacade.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+    InfrastructureFacadeFactory.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
       @infrastructure_info[infrastructure_id] = infrastructure_info[:facade].pbs_state(user_id)
     end
 

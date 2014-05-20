@@ -11,16 +11,6 @@ class InfrastructureFacadeTest < Test::Unit::TestCase
   def teardown
   end
 
-  def test_get_facade_for_fail
-    assert_raises InfrastructureErrors::NoSuchInfrastructureError do
-      InfrastructureFacade.get_facade_for('something_new')
-    end
-
-    assert_raises InfrastructureErrors::NoSuchInfrastructureError do
-      InfrastructureFacade.get_facade_for(nil)
-    end
-  end
-
   def test_monitoring_loop_uncaugth_integration
     rec1 = stub_everything('rec1') {
       expects(:should_destroy?).returns(false)
