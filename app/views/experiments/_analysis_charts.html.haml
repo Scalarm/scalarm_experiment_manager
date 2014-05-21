@@ -1,25 +1,26 @@
-#histogram_analysis_link
+.histogram-analysis
   = image_tag('histogram_icon.png', :size => '100x150')
 
-#histogram_analysis_window.layered_window
-  = image_tag 'close_icon.png', :class => 'close_button'
-  = render :partial => 'basic_statistics_charts', :object => @experiment
-
-#rtree_analysis_link
+.rtree-analysis
   = image_tag('rtree_icon.png', :size => '100x150')
 
-#rtree_analysis_window.layered_window
-  = image_tag 'close_icon.png', :class => 'close_button'
-  = render :partial => 'regression_tree_charts', :object => @experiment
-
-#bivariate_analysis_link
+.bivariate-analysis
   = image_tag('bivariate_icon.png', :size => '100x150')
 
-#bivariate_analysis_window.layered_window
-  = image_tag 'close_icon.png', :class => 'close_button'
-  = render :partial => 'bivariate_analysis', :object => @experiment
+#experiment-analysis-modal.reveal-modal(data-reveal="")
+  %a.close-reveal-modal &#215;
 
-#dialog{:title=>'Dialog Title', :style => 'display:none; overflow-y: auto;'}
-  #expanding_dialog_busy{:style=>'text-align: center;'}
-    %h5 Loading information about current parameter values...
-    = image_tag 'loading.gif'
+  .histogram-analysis-content.content(style="display:none;")
+    = render :partial => 'basic_statistics_charts', :object => @experiment
+
+  .rtree-analysis-content.content(style="display:none;")
+    = render :partial => 'regression_tree_charts', :object => @experiment
+
+  .bivariate-analysis-content.content(style="display:none;")
+    = render :partial => 'bivariate_analysis', :object => @experiment
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      new window.AnalysisLinksManager("#experiment-analysis-modal");
+    });

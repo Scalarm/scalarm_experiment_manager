@@ -333,228 +333,43 @@ select {
     border: medium solid;
 }
 
-#histogram_analysis_link {
+div.histogram-analysis {
     position: absolute;
     top: 0px;
     right: -110px;
 }
 
-#histogram_analysis_window {
-    background-color: #ECF4FF;
-    border-color: #99C7FF;
-}
-
-@-webkit-keyframes histogram_slide {
-    0%   {top: -120%; right: -120%;}
-    50%  {top: 0%;  right: 0%;}
-    100% {top:  50px;  right: 120px;}
-}
-
-.histogram_analysis_window_slide {
-    position: fixed;
-    -webkit-animation-name: histogram_slide;
-    -webkit-animation-duration: 2s;
-}
-
-@-webkit-keyframes histogram_slide_out {
-    100%   {top: -120%; right: -120%; bottom: 200px;}
-    50%  {top: 0%;  right: 0%; bottom: 200px;}
-    0% {top:  50px;  right: 120px; bottom: 20px;}
-}
-
-.histogram_analysis_window_slide_out {
-    position: fixed;
-    -webkit-animation-name: histogram_slide_out;
-    -webkit-animation-duration: 2s;
-}
-
-#rtree_analysis_link {
+div.rtree-analysis {
     position: absolute;
     top: 170px;
     right: -110px;
 }
 
-#rtree_analysis_window {
-    background-color: #E8E8E8;
-    border-color: #A8A8A8;
-}
-
-@-webkit-keyframes rtree_slide {
-    0%   { right: -120%; }
-    50%  { right:    0%; }
-    100% { right: 120px; }
-}
-
-.rtree_analysis_window_slide {
-    position: fixed;
-    -webkit-animation-name: rtree_slide;
-    -webkit-animation-duration: 2s;
-}
-
-@-webkit-keyframes rtree_slide_out {
-    100% {top: 20px; right: -120%; bottom: 20px;}
-    50%  {top: 20px;  right: 0%; bottom: 20px;}
-    0%   {top:  20px;  right: 120px; bottom: 20px;}
-}
-
-.rtree_analysis_window_slide_out {
-    position: fixed;
-    -webkit-animation-name: rtree_slide_out;
-    -webkit-animation-duration: 2s;
-}
-
-#bivariate_analysis_link {
+div.bivariate-analysis {
     position: absolute;
     top: 340px;
     right: -110px;
-}
-
-#bivariate_analysis_window {
-    background-color: #F5FFF2;
-    border-color: #8FFF6F;
-}
-
-@-webkit-keyframes bivariate_slide {
-    0% {bottom: -120%; right: -120%; top: 200px;}
-    50%  {bottom: 0%;  right: 0%; top: 200px;}
-    100%   {bottom:  20px;  right: 120px; top: 20px;}
-}
-
-.bivariate_analysis_window_slide {
-    position: fixed;
-    -webkit-animation-name: bivariate_slide;
-    -webkit-animation-duration: 2s;
-}
-
-@-webkit-keyframes bivariate_slide_out {
-    100% {bottom: -120%; right: -120%; top: 200px;}
-    50%  {bottom: 0%;  right: 0%; top: 200px;}
-    0%   {bottom:  20px;  right: 120px; top: 20px;}
-}
-
-.bivariate_analysis_window_slide_out {
-    position: fixed;
-    -webkit-animation-name: bivariate_slide_out;
-    -webkit-animation-duration: 2s;
 }
 
 /* Experiment links */
 
-#running_experiments_link {
+div.running_experiments_link {
     position: absolute;
     top: 0px;
     left: -110px;
 }
 
-#running_experiments_window {
-    background-color: #ECF4FF;
-    border-color: #99C7FF;
-}
-
-@-webkit-keyframes running_experiments_slide {
-    0%   {top: -120%; left: -120%;}
-    50%  {top: 0%;  left: 0%;}
-    100% {top:  20px;  left: 120px;}
-}
-
-.running_experiments_window_slide {
-    position: fixed;
-    -webkit-animation-name: running_experiments_slide;
-    -webkit-animation-duration: 2s;
-}
-
-@-webkit-keyframes running_experiments_slide_out {
-    100%   {top: -120%; left: -120%; bottom: 200px;}
-    50%  {top: 0%;  left: 0%; bottom: 200px;}
-    0% {top:  20px;  left: 120px; bottom: 20px;}
-}
-
-.running_experiments_window_slide_out {
-    position: fixed;
-    -webkit-animation-name: running_experiments_slide_out;
-    -webkit-animation-duration: 2s;
-}
-
-#available_experiments_link {
+div.available_experiments_link {
     position: absolute;
     top: 170px;
     left: -110px;
 }
 
-#available_experiments_window {
-    background-color: #E8E8E8;
-    border-color: #A8A8A8;
-}
-
-@-webkit-keyframes available_experiments_slide {
-    0%   { left: -120%; }
-    50%  { left:    0%; }
-    100% { left: 120px; }
-}
-
-.available_experiments_window_slide {
-    position: fixed;
-    -webkit-animation-name: available_experiments_slide;
-    -webkit-animation-duration: 2s;
-}
-
-@-webkit-keyframes available_experiments_slide_out {
-    100% {top: 20px; left: -120%; bottom: 20px;}
-    50%  {top: 20px;  left: 0%; bottom: 20px;}
-    0%   {top:  20px;  left: 120px; bottom: 20px;}
-}
-
-.available_experiments_window_slide_out {
-    position: fixed;
-    -webkit-animation-name: available_experiments_slide_out;
-    -webkit-animation-duration: 2s;
-}
-
-.layered_window img.close_button {
-    position: absolute;
-    top: 30px;
-    right: 10px;
-
-    width: 48px;
-    height: 48px;
-}
-
-
-#historical_experiments_link {
+div.historical_experiments_link {
     position: absolute;
     top: 340px;
     left: -110px;
 }
-
-#historical_experiments_window {
-    background-color: #F5FFF2;
-    border-color: #8FFF6F;
-}
-
-@-webkit-keyframes historical_experiments_slide {
-    0% {bottom: -120%; left: -120%; top: 200px;}
-    50%  {bottom: 0%;  left: 0%; top: 200px;}
-    100%   {bottom:  20px;  left: 120px; top: 20px;}
-}
-
-.historical_experiments_window_slide {
-    position: fixed;
-    -webkit-animation-name: historical_experiments_slide;
-    -webkit-animation-duration: 2s;
-}
-
-@-webkit-keyframes historical_experiments_slide_out {
-    100% {bottom: -120%; left: -120%; top: 200px;}
-    50%  {bottom: 0%;  left: 0%; top: 200px;}
-    0%   {bottom:  20px;  left: 120px; top: 20px;}
-}
-
-.historical_experiments_window_slide_out {
-    position: fixed;
-    -webkit-animation-name: historical_experiments_slide_out;
-    -webkit-animation-duration: 2s;
-}
-
 
 /* Login */
 

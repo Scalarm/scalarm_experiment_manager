@@ -286,92 +286,33 @@ class window.ExperimentBooster
         $('#amazon_info').text(resp.amazon)
     )
 
-class window.WindowManager
-  constructor: () ->
-    #experiments windows
-    $("#running_experiments_window .close_button").on 'click', => @close_window("running_experiments")
+class window.ExperimentLinksManager
+  constructor: (@modalSelector) ->
+    @content = $("#{@modalSelector} .content")
+    @busy = $("#{@modalSelector} .busy")
 
-    $("#running_experiments_link, .running_experiments_link").on 'click', =>
-      $('#running_experiments_window').load '/experiments/running_experiments', =>
-        @show_window("running_experiments")
-        $("#running_experiments_window .close_button").on 'click', => @close_window("running_experiments")
-      false
+    $(".running_experiments_link, .available_experiments_link, .historical_experiments_link").click (event) =>
+      actionUrl = $(event.currentTarget).attr("data-action-url")
 
-    $("#available_experiments_window .close_button").on 'click', => @close_window("available_experiments")
+      @busy.show()
 
-    $("#available_experiments_link, .available_experiments_link").on 'click', =>
-      $('#available_experiments_window').load '/simulations/simulation_scenarios', =>
-        @show_window("available_experiments")
-        $("#available_experiments_window .close_button").on 'click', => @close_window("available_experiments")
-      false
+      @content.hide().load actionUrl, =>
+        @busy.hide()
+        @content.show()
 
-    $("#historical_experiments_window .close_button").on 'click', => @close_window("historical_experiments")
-    $("#historical_experiments_link, .historical_experiments_link").on 'click', =>
-      $('#historical_experiments_window').load '/experiments/historical_experiments', =>
-        @show_window("historical_experiments")
-        $("#historical_experiments_window .close_button").on 'click', => @close_window("historical_experiments")
-      false
+      $("#{@modalSelector}").foundation("reveal", "open")
 
-    # analysis charts
-    $("#histogram_analysis_link, .histogram_analysis_link").on 'click', =>
-      @show_window('histogram_analysis')
-      false
-    $("#histogram_analysis_window .close_button").on('click', => @close_window('histogram_analysis'))
 
-    $("#rtree_analysis_link, .rtree_analysis_link").on 'click', =>
-      @show_window('rtree_analysis')
-      false
+class window.AnalysisLinksManager
+  constructor: (@modalSelector) ->
 
-    $("#rtree_analysis_window .close_button").on('click', => @close_window('rtree_analysis'))
+    $(".histogram-analysis, .rtree-analysis, .bivariate-analysis").click (event) =>
+      className = $(event.currentTarget).attr('class').split()[0]
 
-    $("#bivariate_analysis_link, .bivariate_analysis_link").on 'click', =>
-      @show_window("bivariate_analysis")
-      false
-    $("#bivariate_analysis_window .close_button").on('click', => @close_window("bivariate_analysis"))
+      $("#{@modalSelector} .content").hide()
+      $("#{@modalSelector} .#{className}-content").show()
 
-  show_window: (window_name) =>
-    element = $('#' + window_name + '_window')
-
-    if(!element.hasClass(window_name + "_window_slide"))
-      element.removeClass(window_name + "_window_slide_out")
-      element.addClass(window_name +  "_window_slide")
-
-      element.css("top", "20px");
-      element.css("bottom", "20px");
-      if(window_name.match(/experiments$/))
-        element.css("left", "auto")
-      else
-        element.css("right", "auto")
-
-    if (window_name.match(/experiments$/))
-      @set_z_index(window_name + "_window")
-    else
-      @set_z_index(window_name + "_window")
-
-  close_window: (window_name) ->
-    element = $('#' + window_name + '_window')
-
-    element.removeClass(window_name + "_window_slide")
-    element.addClass(window_name + "_window_slide_out")
-
-    element.css("top", "-120%")
-    element.css("bottom", "-20px")
-
-    if (window_name.match(/experiments$/))
-      element.css("left", "-200%")
-    else
-      element.css("right", "-200%");
-
-  set_z_index: (id) ->
-    z_indexes = [$('#histogram_analysis_window').css("z-index"),
-                 $('#rtree_analysis_window').css("z-index"),
-                 $('#bivariate_analysis_window').css("z-index"),
-                 $('#running_experiments_window').css("z-index"),
-                 $('#available_experiments_window').css("z-index"),
-                 $('#historical_experiments_window').css("z-index")]
-
-    largest_z_index = Math.max.apply(Math, z_indexes)
-    $('#' + id).css("z-index", largest_z_index + 1)
+      $("#{@modalSelector}").foundation("reveal", "open")
 
 
 window.show_dialog_for_new_parameter_value = (parameter_id, parameter_label, url, experiment_id) ->
