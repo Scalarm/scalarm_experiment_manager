@@ -4,7 +4,7 @@ module PbsScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
     def self.long_name
-      'PBS'
+      'PL-Grid PBS'
     end
 
     def self.short_name

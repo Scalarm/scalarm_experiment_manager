@@ -1,5 +1,5 @@
-require_relative 'clouds/cloud_factory'
-require_relative 'plgrid/pl_grid_factory'
+require_relative 'clouds/cloud_facade_factory'
+require_relative 'plgrid/pl_grid_facade_factory'
 
 require_relative 'private_machine_facade'
 
@@ -70,11 +70,11 @@ class InfrastructureFacadeFactory
   end
 
   def self.pl_grid_infrastructures
-    PlGridFactory.infrastructures_hash
+    PlGridFacadeFactory.instance.infrastructures_hash
   end
 
   def self.cloud_infrastructures
-    CloudFactory.infrastructures_hash
+    CloudFacadeFactory.instance.infrastructures_hash
   end
 
   # TODO: change to classes, because always all facades are initialized; remove "label"

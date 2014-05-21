@@ -1,6 +1,6 @@
 - cloud_name = infrastructure_name
 - images = image_secrets_select_data(@current_user.id, cloud_name)
-- cloud_class = CloudFactory.client_class(cloud_name)
+- cloud_class = CloudFacadeFactory.instance.client_class(cloud_name)
 - creds = CloudSecrets.find_by_query('cloud_name'=>cloud_name, 'user_id'=>@current_user.id)
 - begin
   - cloud_client = (creds.nil? ? nil : cloud_class.new(creds))

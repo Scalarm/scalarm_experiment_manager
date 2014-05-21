@@ -75,12 +75,12 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_simulation_manager_records_plgrid
-    require 'infrastructure_facades/plgrid/pl_grid_factory'
+    require 'infrastructure_facades/plgrid/pl_grid_facade_factory'
 
     count = 10
     id_values = (0..count-1).to_a
 
-    scheduler_names = PlGridFactory.provider_names
+    scheduler_names = PlGridFacadeFactory.instance..provider_names
 
     scheduler_names.each do |sname|
       id_values.each do |i|

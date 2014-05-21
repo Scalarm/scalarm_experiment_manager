@@ -2,7 +2,7 @@ require 'test/unit'
 require 'test_helper'
 require 'mocha'
 
-require 'infrastructure_facades/clouds/cloud_factory'
+require 'infrastructure_facades/clouds/cloud_facade_factory'
 
 require 'infrastructure_facades/clouds/providers/pl_cloud'
 require 'infrastructure_facades/clouds/providers/amazon'
@@ -24,7 +24,7 @@ class CloudFactorySpecificTest < Test::Unit::TestCase
 
   def test_load_classes
     CLIENT_CLASSES.each do |name, value|
-      assert_equal  value, CloudFactory.client_class(name)
+      assert_equal  value, CloudFacadeFactory.instance.client_class(name)
     end
   end
 

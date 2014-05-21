@@ -4,7 +4,7 @@ module GliteScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
     def self.long_name
-      'gLite'
+      'PL-Grid gLite'
     end
 
     def self.short_name
