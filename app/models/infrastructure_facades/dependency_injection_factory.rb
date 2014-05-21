@@ -22,7 +22,7 @@ class DependencyInjectionFactory
     @provider_names = ((Dir.new(@classes_dir).entries.map {|f| f.match(/^(.*)\.rb$/)}).select { |m| m }).map {|m| m[1]}
 
     @provider_names.each do |name|
-      require_relative provider_path.(name)
+      require_dependency provider_path.(name)
       @module_names[name] = DependencyInjectionFactory.find_module_name(File.read(provider_path.(name)))
     end
 
@@ -36,8 +36,8 @@ class DependencyInjectionFactory
     client_class(short_name).long_name
   end
 
-  def client_class(cloud_name)
-    @client_classes[cloud_name] ||= Object.const_get("#{@module_names[cloud_name]}::#{@dependency_class_name}")
+  def client_class(short_name)
+    @client_classes[short_name] ||= Object.const_get("#{@module_names[short_name]}::#{@dependency_class_name}")
   end
 
 

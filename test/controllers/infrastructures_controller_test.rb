@@ -75,12 +75,12 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_simulation_manager_records_plgrid
-    require 'infrastructure_facades/plgrid/pl_grid_facade_factory'
+    require_dependency 'infrastructure_facades/plgrid/pl_grid_facade_factory'
 
     count = 10
     id_values = (0..count-1).to_a
 
-    scheduler_names = PlGridFacadeFactory.instance..provider_names
+    scheduler_names = PlGridFacadeFactory.instance.provider_names
 
     scheduler_names.each do |sname|
       id_values.each do |i|
@@ -90,12 +90,12 @@ class InfrastructuresControllerTest < ActionController::TestCase
     end
 
     scheduler_names.each do |sname|
-      get :simulation_manager_records, {infrastructure_name: 'plgrid', infrastructure_params: {scheduler_type: sname}},
+      get :simulation_manager_records, {infrastructure_name: sname},
           {user: @tmp_user_id}
 
       resp_hash = JSON.parse(response.body)
-      assert_equal count, resp_hash.size
-      assert_equal id_values.map(&:to_s).sort, resp_hash.map {|h| h['name']}.sort
+      assert_equal count, resp_hash.size, response.body
+      assert_equal id_values.map(&:to_s).sort, resp_hash.map {|h| h['name']}.sort, response.body
       resp_hash.map do |h|
         assert_includes h, 'scheduler_type'
         assert_equal sname, h['scheduler_type']

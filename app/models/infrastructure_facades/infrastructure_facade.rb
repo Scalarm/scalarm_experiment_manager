@@ -80,6 +80,11 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
+  # TODO: for bakckward compatibility
+  def current_state(user_id)
+    "You have #{count_sm_records} Simulation Managers scheduled"
+  end
+
   def monitoring_thread
     configure_polling_interval
     lock = MongoLock.new(short_name)
@@ -186,12 +191,15 @@ class InfrastructureFacade
     {}
   end
 
+  # TODO: use .count method? - it will need every infrastructure to implement this
   def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
-    query = {}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
-    query.merge!(attributes) if attributes
-    sm_record_class.collection.count(query)
+    # query = {}
+    # query.merge!({user_id: user_id}) if user_id
+    # query.merge!({experiment_id: experiment_id}) if experiment_id
+    # query.merge!(attributes) if attributes
+    # sm_record_class.collection.count(query)
+
+    get_sm_records(user_id, experiment_id, attributes).count
   end
 
   # -- SimulationManger delegation default implementation --

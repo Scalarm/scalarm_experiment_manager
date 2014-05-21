@@ -1,5 +1,5 @@
-require_relative 'clouds/cloud_facade_factory'
-require_relative 'plgrid/pl_grid_facade_factory'
+require_dependency 'clouds/cloud_facade_factory'
+require_dependency 'plgrid/pl_grid_facade_factory'
 
 require_relative 'private_machine_facade'
 

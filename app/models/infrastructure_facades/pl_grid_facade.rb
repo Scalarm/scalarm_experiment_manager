@@ -115,21 +115,6 @@ class PlGridFacade < InfrastructureFacade
     record.destroy
   end
 
-  # TODO: check if can remove
-  # # Overrides InfrastructureFacade method
-  # def to_h
-  #   {
-  #       name: long_name,
-  #       children: self.class.scheduler_facades.values.map do |scheduler|
-  #           {
-  #               name: scheduler.long_name,
-  #               infrastructure_name: short_name,
-  #               infrastructure_params: {scheduler_type: scheduler.short_name}
-  #           }
-  #       end
-  #   }
-  # end
-
   def get_sm_records(user_id=nil, experiment_id=nil, params={})
     query = {scheduler_type: scheduler.short_name}
     query.merge!({user_id: user_id}) if user_id
@@ -140,6 +125,11 @@ class PlGridFacade < InfrastructureFacade
   def get_sm_record_by_id(record_id)
     PlGridJob.find_by_id(record_id)
   end
+
+  # TODO: decide about usage of count_sm_records
+  # def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
+  #   super(user_id, experiment_id, {scheduler_type: scheduler.short_name}.merge((attributes or {})))
+  # end
 
   def default_additional_params
     { 'time_limit' => 300 }

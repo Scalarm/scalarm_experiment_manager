@@ -1,6 +1,6 @@
 require_relative '../pl_grid_scheduler_base'
 
-module PbsScheduler
+module QsubScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
     def self.long_name

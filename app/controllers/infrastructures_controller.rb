@@ -193,6 +193,7 @@ class InfrastructuresController < ApplicationController
     facade.yield_simulation_manager(get_sm_record(record_id, facade)) {|sm| yield sm}
   end
 
+  # TODO: unused, remove?
   def collect_infrastructure_info(user_id)
     @infrastructure_info = {}
 
