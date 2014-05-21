@@ -35,8 +35,9 @@ class InfrastructuresController < ApplicationController
   def infrastructure_info
     infrastructure_info = {}
 
-    InfrastructureFacadeFactory.get_registered_infrastructures.each do |infrastructure_id, infrastructure|
-      infrastructure_info[infrastructure_id] = infrastructure[:facade].current_state(@current_user.id)
+    InfrastructureFacadeFactory.get_registered_infrastructure_names.each do |infrastructure_id|
+      facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_id)
+      infrastructure_info[infrastructure_id] = facade.current_state(@current_user.id)
     end
 
     render json: infrastructure_info
@@ -194,30 +195,30 @@ class InfrastructuresController < ApplicationController
   end
 
   # TODO: unused, remove?
-  def collect_infrastructure_info(user_id)
-    @infrastructure_info = {}
-
-    InfrastructureFacadeFactory.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
-      @infrastructure_info[infrastructure_id] = infrastructure_info[:facade].pbs_state(user_id)
-    end
-
-    #private_all_machines = SimulationManagerHost.all.count
-    #private_idle_machines = SimulationManagerHost.select { |x| x.state == 'not_running' }.count
-    #
-    #@infrastructure_info[:private] = "Currently #{private_idle_machines}/#{private_all_machines} machines are idle."
-    @infrastructure_info[:private] = 'Not available'
-    @infrastructure_info[:amazon] = 'Not available'
-    #
-    #user_id = session[:user]
-    #return if user_id.nil?
-    #Rails.logger.debug('Accessing PL-Grid information')
-    #
-    #plgrid_jobs = PlGridJob.find_by_user_id(user_id)
-    #plgrid_jobs
-    #@infrastructure_info[:plgrid] = "Currently #{plgrid_jobs ||} jobs are running."
-    # amazon_instances = (defined? @ec2_running_instances) ? @ec2_running_instances.size : 0
-    #amazon_instances = CloudMachine.where(:user_id => user_id).count
-    #
-    #@infrastructure_info[:amazon] = "Currently #{amazon_instances} Virtual Machines are running."
-  end
+  # def collect_infrastructure_info(user_id)
+  #   @infrastructure_info = {}
+  #
+  #   InfrastructureFacadeFactory.get_registered_infrastructures.each do |infrastructure_id, infrastructure_info|
+  #     @infrastructure_info[infrastructure_id] = infrastructure_info[:facade].pbs_state(user_id)
+  #   end
+  #
+  #   #private_all_machines = SimulationManagerHost.all.count
+  #   #private_idle_machines = SimulationManagerHost.select { |x| x.state == 'not_running' }.count
+  #   #
+  #   #@infrastructure_info[:private] = "Currently #{private_idle_machines}/#{private_all_machines} machines are idle."
+  #   @infrastructure_info[:private] = 'Not available'
+  #   @infrastructure_info[:amazon] = 'Not available'
+  #   #
+  #   #user_id = session[:user]
+  #   #return if user_id.nil?
+  #   #Rails.logger.debug('Accessing PL-Grid information')
+  #   #
+  #   #plgrid_jobs = PlGridJob.find_by_user_id(user_id)
+  #   #plgrid_jobs
+  #   #@infrastructure_info[:plgrid] = "Currently #{plgrid_jobs ||} jobs are running."
+  #   # amazon_instances = (defined? @ec2_running_instances) ? @ec2_running_instances.size : 0
+  #   #amazon_instances = CloudMachine.where(:user_id => user_id).count
+  #   #
+  #   #@infrastructure_info[:amazon] = "Currently #{amazon_instances} Virtual Machines are running."
+  # end
 end

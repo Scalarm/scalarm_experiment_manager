@@ -10,9 +10,11 @@ require 'thread_pool'
 #
 # - long_name() -> String - name of infrastructure which will be presented to GUI user; should be localized
 # - short_name() -> String - used as infrastructure id
+#
+# NOTE: for non-factory infrastructures (eg. private machine) name methods should be implemented as class methods!
+#       because their names are readed from class-scope in InfrastructuresFactory
+#
 # - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# - TODO current_state(user) -> String - summary of current infrastructure state presented in GUI
-# - TODO sm_record_class
 # - add_credentials(user, params, session) -> String ('ok') - save credentials to database
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
 #

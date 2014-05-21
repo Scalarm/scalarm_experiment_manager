@@ -40,6 +40,10 @@ class DependencyInjectionFactory
     @client_classes[short_name] ||= Object.const_get("#{@module_names[short_name]}::#{@dependency_class_name}")
   end
 
+  def get_facade(short_name)
+    @base_facade_class.new(client_class(short_name))
+  end
+
 
   def infrastructures_hash
     Hash[@provider_names.map do |name|

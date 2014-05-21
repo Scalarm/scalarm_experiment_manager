@@ -129,8 +129,9 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_remove_credentials
-    InfrastructureFacadeFactory.get_registered_infrastructures.each do |facade_id, info|
-      info[:facade].class.any_instance.expects(:remove_credentials).returns(nil).once
+    InfrastructureFacadeFactory.get_registered_infrastructure_names.each do |facade_id|
+      facade = InfrastructureFacadeFactory.get_facade_for(facade_id)
+      facade.class.any_instance.expects(:remove_credentials).returns(nil).once
       get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
           {user: @tmp_user_id}
 
@@ -139,12 +140,12 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_remove_credentials_fail
-    InfrastructureFacadeFactory.get_registered_infrastructures.each do |facade_id, info|
-      info[:facade].class.any_instance.expects(:remove_credentials).throws(StandardError.new 'some error').once
-      get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
+    InfrastructureFacadeFactory.get_all_infrastructures.each do |facade|
+      facade.class.any_instance.expects(:remove_credentials).throws(StandardError.new 'some error').once
+      get :remove_credentials, {infrastructure_name: facade.short_name, record_id: 1, type: 'secrets'},
           {user: @tmp_user_id}
 
-      assert_equal 'error', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
+      assert_equal 'error', JSON.parse(response.body)['status'], "facade: #{facade.short_name}, response: #{response.body}"
     end
   end
 

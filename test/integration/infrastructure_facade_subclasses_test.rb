@@ -42,20 +42,20 @@ class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
 
   def test_get_registered_infrastructures
     # given, when
-    infrastructures_hash = InfrastructureFacadeFactory.get_registered_infrastructures
+    infrastructure_names = InfrastructureFacadeFactory.get_registered_infrastructure_names
 
     # then
-    assert_equal FACADE_CLASSES.count, infrastructures_hash.count
+    assert_equal FACADE_CLASSES.count, infrastructure_names.count
     FACADE_CLASSES.each do |id, facade_class|
-      assert infrastructures_hash.has_key?(id), "not registered infrastrucuture: #{id}"
-      assert infrastructures_hash[id].has_key?(:facade), "no facade for #{id}"
-      assert_equal facade_class, infrastructures_hash[id][:facade].class, id.to_s
+      assert infrastructure_names.include?(id.to_s), "not registered infrastrucuture: #{id}; #{infrastructure_names}"
+      assert !!InfrastructureFacadeFactory.get_facade_for(id), "no facade for #{id}"
+      assert_equal facade_class, InfrastructureFacadeFactory.get_facade_for(id).class, id.to_s
     end
   end
 
   def test_subclasses_implementation
     # given
-    infrastructure_facades = InfrastructureFacadeFactory.get_registered_infrastructures.values.map {|i| i[:facade]}
+    infrastructure_facades = InfrastructureFacadeFactory.get_all_infrastructures
 
     # when, then
     assert_nothing_thrown do
