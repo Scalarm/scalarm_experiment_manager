@@ -1,8 +1,11 @@
+# TODO: translate tooltips (for .attr("title"...
 class window.InfrastructuresTree
   constructor: (@baseSmDialogUrl, genericDialogId, @list_infrastructure_path,
                 @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
 
     @loaderHTML = '<div class="row small-1 small-centered"><img src="/assets/loading.gif"/></div>'
+
+    @bindRefreshTreeButton('refresh-button')
 
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
@@ -71,6 +74,10 @@ class window.InfrastructuresTree
 
       @updateTree(@root)
     )
+
+  updateAllNodes: () ->
+    for name, fun of @fetchNodesFunctions
+      fun()
 
   smRecordsJson: (name, params_hash) ->
     {'infrastructure_name': name, 'infrastructure_params': params_hash}
@@ -160,6 +167,7 @@ class window.InfrastructuresTree
       .attr("class", "button")
       .style("fill-opacity", 1e-6)
       .on("click", (d) => @boosterDialog(d))
+      .attr("title", "Increase computational power")
 
     # ---
 
@@ -169,9 +177,16 @@ class window.InfrastructuresTree
         .attr("class", "sm-label")
         .style("fill-opacity", 1e-6)
         .attr("transform", "scale(1e-6)")
+
       g.append("svg:circle")
         .attr("r", 1e-6)
         .on("click", (d) => @smDialog(d))
+        .attr("title", (d) =>
+          (d.error and 'An error occured for this Simulation Manager') or
+          (d.sm_initialized and 'Simulation Manager is working') or
+          ('Simulation Manager waits for initialization')
+        )
+
       g.append("svg:text")
         .attr("class", "label-text")
         .text((d) => @cutText(d.name, 15))
@@ -186,6 +201,7 @@ class window.InfrastructuresTree
       .style("transform", "translate(140px,-12px)")
       .attr("class", "button")
       .on("click", (d) => @smDialog(d))
+      .attr("title", "Show information about Simulation Manager")
 
       # restart button
       g.append("svg:image")
@@ -193,6 +209,7 @@ class window.InfrastructuresTree
       .style("transform", "translate(166px,-12px)")
       .attr("class", "button")
       .on("click", (d) => @restartSm(d))
+      .attr("title", "Restart Simulation Manager")
 
       # stop button
       g.append("svg:image")
@@ -201,6 +218,7 @@ class window.InfrastructuresTree
       .style("transform", "translate(192px,-12px)")
       .attr("class", "button")
       .on("click", (d) => @stopSm(d))
+      .attr("title", (d) => d.error and 'Remove Simulation Manager entry' or 'Stop Simulation Manager')
 
     )
 
@@ -315,3 +333,9 @@ class window.InfrastructuresTree
       'children-collapsed'
     else
       ''
+
+  bindRefreshTreeButton: (button_id) ->
+    $("##{button_id}").on("click", =>
+      @updateAllNodes()
+    )
+

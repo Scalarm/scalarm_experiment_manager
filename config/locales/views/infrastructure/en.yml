@@ -106,6 +106,7 @@ en:
           ssh: "Could not communicate with host via SSH"
           not_started: "Simulation Manager time limit exceeded, but was never initialized"
       sm_record_no_view: "Sorry, details are not available"
+    refresh_button: "Refresh tree"
   infrastructures_controller:
     tree:
       clouds: "Clouds"

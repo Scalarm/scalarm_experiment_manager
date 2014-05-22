@@ -1,6 +1,18 @@
 %section.panel.radius.list
-  = content_tag :h3, t('infrastructure.tree_title'), class: 'subheader'
-  #infrastructures-tree
+  .row
+    .small-10.columns
+      = content_tag :h3, t('infrastructure.tree_title'), class: 'subheader'
+    .small-2.columns
+      %span#refresh-button{class: button_classes}
+        %i.fi-refresh
+        = raw '&nbsp;&nbsp;'
+        = t('infrastructure.refresh_button')
+
+
+
+  .row
+    .small-12.columns
+      #infrastructures-tree
 
   #dialog.reveal-modal(data-reveal="")
 
