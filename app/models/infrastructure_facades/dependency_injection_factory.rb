@@ -44,14 +44,6 @@ class DependencyInjectionFactory
     @base_facade_class.new(client_class(short_name))
   end
 
-
-  def infrastructures_hash
-    Hash[@provider_names.map do |name|
-      c_class = client_class(name)
-      [c_class.short_name.to_sym, {label: c_class.long_name, facade: @base_facade_class.new(c_class)}]
-    end]
-  end
-
   private
 
   def self.find_module_name(content)

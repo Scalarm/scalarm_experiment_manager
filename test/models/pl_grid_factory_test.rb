@@ -14,7 +14,7 @@ class PlGridFactoryTest < Test::Unit::TestCase
 
   def self.create_test_get_facade(name)
     define_method "test_get_#{name}" do
-      facade = PlGridFacadeFactory.instance.infrastructures_hash[name.to_sym][:facade]
+      facade = PlGridFacadeFactory.instance.get_facade(name)
       assert_equal name, facade.short_name
     end
   end
