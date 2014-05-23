@@ -1,0 +1,34 @@
+-#- content_for :title, t('.title')
+-#- content_for :help, raw(t('help.simulations.register'))
+
+%section.panel.radius
+  %h3.subheader= t('.header', name: @scenario.name)
+
+  .content
+    = form_tag(simulation_scenario_path(@scenario.id), multipart: true, class: 'custom', method: :put) do
+      .row
+        = render partial: 'simulations/form_row', object: 'simulation_name',
+          locals: { input_element: text_field_tag('simulation_name', @scenario.name), offset: 0 }
+        = render partial: 'simulations/form_row', object: 'simulation_description',
+          locals: { input_element: text_area_tag('simulation_description', @scenario.description), offset: 0 }
+
+      .row
+        = render partial: 'simulations/form_row', object: 'simulation_binaries',
+          locals: { input_element: file_field_tag('simulation_binaries'), offset: 0 }
+        = render partial: 'simulations/form_row', object: 'simulation_input',
+          locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
+
+      .row
+        = render partial: 'simulations/form_row', object: 'input_writer',
+          locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers, @scenario.input_writer_id), class: 'medium') }
+        = render partial: 'simulations/form_row', object: 'executor',
+          locals: { input_element: select_tag('executor_id', options_for_select(@executors, @scenario.executor_id), class: 'medium') }
+      .row
+        = render partial: 'simulations/form_row', object: 'output_reader',
+          locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers, @scenario.output_reader_id), class: 'medium') }
+        = render partial: 'simulations/form_row', object: 'progress_monitor',
+          locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors, @scenario.progress_monitor_id), class: 'medium') }
+
+      .row
+        .small-2.small-centered.columns
+          = submit_tag t('.update_btn'), class: 'button expand radius last-element'
