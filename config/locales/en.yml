@@ -114,6 +114,7 @@ en:
     deregister_button: Deregister
     go_to_registriation: Register new simulation or adapter
     empty_component: <N/A>
+    edit_button: Edit
 
     registration:
       title: Simulation registration

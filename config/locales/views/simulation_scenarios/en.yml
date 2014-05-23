@@ -1,0 +1,12 @@
+en:
+  simulation_scenarios:
+    show:
+      code_base: Download all simulation scenario files
+    edit:
+      header: "Edit simulation scenario - '%{name}'"
+      update_btn: "Update"
+    update:
+      success: "Simulation scenario '%{name}' has been updated"
+    index:
+      registered_table:
+        adapters: "Scenario adapters"
