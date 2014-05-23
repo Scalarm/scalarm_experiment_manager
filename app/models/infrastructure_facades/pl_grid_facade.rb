@@ -104,8 +104,7 @@ class PlGridFacade < InfrastructureFacade
     end
 
     credentials.save
-
-    'ok'
+    credentials
   end
 
   def remove_credentials(record_id, user_id, params=nil)

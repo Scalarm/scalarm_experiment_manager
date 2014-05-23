@@ -62,22 +62,50 @@ class InfrastructuresController < ApplicationController
     render json: { status: status, msg: response_msg }
   end
 
+  # POST params (in JSON):
+  # - infrastructure_type # TODO: change to infrastructure_name
   def add_infrastructure_credentials
-    infrastructure = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_type])
-    status = infrastructure.add_credentials(@current_user, params, session)
+    begin
+      infrastructure = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_type])
+      credentials = infrastructure.add_credentials(@current_user, params, session)
+      if credentials
+        if credentials.valid?
+          if credentials.invalid
+            credentials.invalid = false
+            credentials.save
+          end
+          render json: { status: 'added', msg: t('infrastructures_controller.credentials.success',
+                                              infrastructure_name: infrastructure.long_name) }
+        else
+          credentials.invalid = true
+          credentials.save
+          render json: { status: 'invalid-credentials', msg: t('infrastructures_controller.credentials.invalid',
+                                                 infrastructure_name: infrastructure.long_name) }
+        end
+      else
+        raise StandardError.new('No record returned by InfrastructureFacade.add_credentials method')
+      end
+    rescue Exception => exc
+      if credentials
+        credentials.invalid = true
+        credentials.save
+      end
 
-    render json: { status: status, msg: I18n.t("#{params[:infrastructure_type]}.login.#{status}") }
+      render json: { status: credentials ? 'error' : 'not-in-db', msg: t('infrastructures_controller.credentials.internal_error',
+                         infrastructure_name: infrastructure ? infrastructure.long_name : params[:infrastructure_type],
+                         error: "#{exc.class.to_s}: #{exc.to_s}") }
+    end
   end
 
-
-  # GET param: infrastructure_name
-  # GET param: record_id
-  # GET param (optional): credential_type
+  # POST params (in JSON):
+  # - infrastructure_name
+  # - record_id
+  # - credential_type (optional)
   def remove_credentials
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
-      render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
+      render json: {status: 'removed-ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
     rescue Exception => e
       Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace.join("\n")}"
       render json: {status: 'error', msg: I18n.t('infrastructures_controller.credentials_not_removed', error: e.to_s)}
@@ -172,6 +200,17 @@ class InfrastructuresController < ApplicationController
           infrastructure_params: params[:infrastructure_params]
       }
     rescue ActionView::MissingTemplate
+      render nothing: true
+    end
+  end
+
+  # GET params
+  # - infrastructure_name
+  def get_credentials_partial
+    begin
+      render inline: render_to_string(partial: "infrastructure/credentials/#{params[:infrastructure_name]}")
+    rescue ActionView::MissingTemplate => exc
+      Rails.logger.error "Get credentials partial '#{params[:infrastructure_name]}' failed: #{exc.backtrace.join("\n")}"
       render nothing: true
     end
   end

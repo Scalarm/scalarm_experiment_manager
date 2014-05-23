@@ -1,7 +1,6 @@
 en:
   infrastructure:
     credentials:
-      credentials_label: Credentials
       plgrid:
         credentials_label: Please, provide your credentials to the PL-Grid infrastructure
         credentials:

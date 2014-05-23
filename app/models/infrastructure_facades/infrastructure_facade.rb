@@ -12,7 +12,7 @@ require 'thread_pool'
 # - short_name() -> String - used as infrastructure id
 #
 # - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# - add_credentials(user, params, session) -> String ('ok') - save credentials to database
+# - add_credentials(user, params, session) -> credentials record [MongoActiveRecord] - save credentials to database
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
 #
 # Database support methods:

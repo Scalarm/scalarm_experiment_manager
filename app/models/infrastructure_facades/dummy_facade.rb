@@ -28,7 +28,7 @@ class DummyFacade < InfrastructureFacade
   end
 
   def add_credentials(user, params, session)
-    'ok'
+    nil
   end
 
   def remove_credentials(record_id, user_id, params)

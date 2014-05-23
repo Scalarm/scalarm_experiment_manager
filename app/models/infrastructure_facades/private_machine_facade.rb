@@ -60,7 +60,7 @@ class PrivateMachineFacade < InfrastructureFacade
     )
     credentials.secret_password = params[:secret_password]
     credentials.save
-    'ok'
+    credentials
   end
 
   def remove_credentials(record_id, user_id, type)

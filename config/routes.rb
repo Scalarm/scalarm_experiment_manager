@@ -94,6 +94,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :get_sm_dialog
       get :get_booster_dialog
       get :get_booster_partial
+      get :get_credentials_partial
       get :simulation_manager_records
       post :simulation_manager_command
     end

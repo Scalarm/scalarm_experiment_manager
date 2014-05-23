@@ -70,6 +70,7 @@ en:
         machine_table_label: "Manage submitted resources credentials"
         table_label: "Manage submitted private resources credentials"
 
+      invalid_credentials: "Provided credentials are incorrect or there are problems connecting with service. If you are sure that credentials are correct, please contact administrator."
     tree_title: 'Computational resources tree'
     tree:
       sm_dialog:
@@ -119,6 +120,10 @@ en:
     no_such_simulation_manager: "No such Simulation Manager"
     access_to_sm_denied: "Access to Simulation Manager denied"
     command_error: "Error on Simulation Manager command invocation: %{error}"
+    credentials:
+      success: "Credentials for %{infrastructure_name} have been successfully modified."
+      invalid: "Credentials provided for %{infrastructure_name} are invalid."
+      internal_error: "Adding credentials for '%{infrastructure_name}' failed because of internal error: %{error}"
   infrastructures:
     sm_dialog:
       error_message: "Error message"

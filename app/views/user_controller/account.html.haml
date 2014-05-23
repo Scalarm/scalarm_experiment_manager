@@ -1,7 +1,8 @@
 - content_for :title, 'Scalarm'
 - content_for :help, raw(t('help.users.summary'))
 
--tabs=[:plgrid, :pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
+-#-tabs=[:plgrid, :pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
+-tabs=[:pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
 
 %header
   .row
@@ -49,6 +50,20 @@
     %dl.accordion(data-accordion="")
       - tabs.each do |tab_id|
         %dd
-          %a(href="##{tab_id}")= t(".#{tab_id}")
+          %a(href="##{tab_id}")
+            %i.fi-alert.credentials-alert.hidden{id: "#{tab_id}-icon-alert"}
+            %i.fi-x.credentials-lack.hidden{id: "#{tab_id}-icon-lack"}
+            %i.fi-check.credentials-ok.hidden{id: "#{tab_id}-icon-ok"}
+            = raw '&nbsp;&nbsp;'
+            = t(".#{tab_id}")
           .content{id: tab_id, class: params[:active_tab] == tab_id.to_s ? 'active' : ''}
-            = render partial: "infrastructure/credentials/#{tab_id}", locals: { user: @current_user }
+            .small-12.small-centered.columns
+
+              .row.hidden{id: "#{tab_id}-alert-panel"}
+                %data-alert.alert-box.warning.radius
+                  %i.fi-alert
+                  = raw '&nbsp;&nbsp;'
+                  = t('infrastructure.credentials.invalid_credentials')
+
+
+              = render partial: "infrastructure/credentials/#{tab_id}"

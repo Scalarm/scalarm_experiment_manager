@@ -43,6 +43,15 @@ class GridCredentials < MongoActiveRecord
     end
   end
 
+  def valid?
+    begin
+      ssh_start {}
+      true
+    rescue Exception
+      false
+    end
+  end
+
   # -----------
   private
 

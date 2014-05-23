@@ -12,7 +12,12 @@ class window.PrivateMachinesManagerDialog
   bindToAddMachineForm: () ->
     @addMachineForm
     .bind('ajax:before', => @loading.show())
-    .bind('ajax:success', (data, status, xhr) => toastr.success(status.msg))
+    .bind('ajax:success', (data, status, xhr) =>
+      if status.status == 'error'
+        toastr.error(status.msg)
+      else if status.status == 'ok'
+        toastr.success(status.msg)
+    )
     .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
     .bind('ajax:complete', () =>
         @loading.hide()

@@ -12,4 +12,9 @@ class CloudImageSecrets < EncryptedMongoActiveRecord
     'cloud_image_secrets'
   end
 
+  # Image secrets are considered always valid, because to verify, real VM must be created
+  def valid?
+    true
+  end
+
 end

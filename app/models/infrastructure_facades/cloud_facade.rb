@@ -102,13 +102,13 @@ class CloudFacade < InfrastructureFacade
   end
 
   def remove_credentials(record_id, user_id, type)
-    record_class = case type
-                     when 'secrets' then CloudSecrets
-                     when 'image' then CloudImageSecrets
-                     else raise StandardError.new("Usupported credentials type: #{type}")
-                   end
-
-    record = record_class.find_by_id(record_id)
+    record = case type
+               when 'secrets'
+                 CloudSecrets.find_by_user_id(user_id)
+               when 'image'
+                 CloudImageSecrets.find_by_id(record_id)
+               else raise StandardError.new("Usupported credentials type: #{type}")
+             end
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
     record.destroy
@@ -231,8 +231,7 @@ class CloudFacade < InfrastructureFacade
     end
 
     credentials.save
-
-    'ok'
+    credentials
   end
 
   def handle_image_credentials(user, params, session)
@@ -245,8 +244,7 @@ class CloudFacade < InfrastructureFacade
     credentials.secret_image_password = params[:secret_image_password]
 
     credentials.save
-
-    'ok'
+    credentials
   end
 
 

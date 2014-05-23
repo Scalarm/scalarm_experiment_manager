@@ -43,4 +43,13 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
     }
   end
 
+  def valid?
+    begin
+      ssh_start {}
+      true
+    rescue
+      false
+    end
+  end
+
 end
