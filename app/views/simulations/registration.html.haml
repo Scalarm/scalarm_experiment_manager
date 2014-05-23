@@ -6,24 +6,28 @@
 
   .content
     = form_tag(simulations_path, multipart: true, class: 'custom') do
-      = render partial: 'form_row', object: 'simulation_name',
-        locals: { input_element: text_field_tag('simulation_name') }
-      = render partial: 'form_row', object: 'simulation_description',
-        locals: { input_element: text_area_tag('simulation_description') }
+      .row
+        = render partial: 'form_row', object: 'simulation_name',
+          locals: { input_element: text_field_tag('simulation_name'), offset: 0 }
+        = render partial: 'form_row', object: 'simulation_description',
+          locals: { input_element: text_area_tag('simulation_description'), offset: 0 }
 
-      = render partial: 'form_row', object: 'simulation_binaries',
-        locals: { input_element: file_field_tag('simulation_binaries') }
-      = render partial: 'form_row', object: 'simulation_input',
-        locals: { input_element: file_field_tag('simulation_input') }
+      .row
+        = render partial: 'form_row', object: 'simulation_binaries',
+          locals: { input_element: file_field_tag('simulation_binaries'), offset: 0 }
+        = render partial: 'form_row', object: 'simulation_input',
+          locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
 
-      = render partial: 'form_row', object: 'input_writer',
-        locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers), class: 'medium') }
-      = render partial: 'form_row', object: 'executor',
-        locals: { input_element: select_tag('executor_id', options_for_select(@executors), class: 'medium') }
-      = render partial: 'form_row', object: 'output_reader',
-        locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers), class: 'medium') }
-      = render partial: 'form_row', object: 'progress_monitor',
-        locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors), class: 'medium') }
+      .row
+        = render partial: 'form_row', object: 'input_writer',
+          locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers), class: 'medium') }
+        = render partial: 'form_row', object: 'executor',
+          locals: { input_element: select_tag('executor_id', options_for_select(@executors), class: 'medium') }
+      .row
+        = render partial: 'form_row', object: 'output_reader',
+          locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers), class: 'medium') }
+        = render partial: 'form_row', object: 'progress_monitor',
+          locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors), class: 'medium') }
 
       .row
         .small-2.small-centered.columns
