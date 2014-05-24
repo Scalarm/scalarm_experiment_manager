@@ -94,4 +94,20 @@ class CloudFacadeTest < Test::Unit::TestCase
 
   end
 
+  def test_remove_cloud_secrets
+    cloud_client = mock 'cloud_client' do
+      stubs(:vm_instance).returns(stub_everything)
+    end
+    facade = CloudFacade.new(cloud_client)
+
+    cloud_secrets = stub_everything do
+      expects(:destroy).once
+      stubs(:user_id).returns('user_id_1')
+    end
+
+    CloudSecrets.expects(:find_by_user_id).with('user_id_1').returns(cloud_secrets).once
+
+    facade.remove_credentials(nil, 'user_id_1', 'secrets')
+  end
+
 end

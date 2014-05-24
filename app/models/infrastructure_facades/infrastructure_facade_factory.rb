@@ -14,6 +14,10 @@ class InfrastructureFacadeFactory
           PlGridFacadeFactory.instance.get_facade(infrastructure_name)
         elsif CloudFacadeFactory.instance.provider_names.include? infrastructure_name
           CloudFacadeFactory.instance.get_facade(infrastructure_name)
+        # elsif infrastructure_name == 'plgrid'
+        #   # this is a hack for removing/adding credentials
+        #   # because every PL-Grid queuing system uses the same credentials, default Q-system is used
+        #   PlGridFacadeFactory.instance.get_facade('qsub')
         else
           facade_class = InfrastructureFacadeFactory.other_infrastructures[infrastructure_name]
           raise InfrastructureErrors::NoSuchInfrastructureError.new(infrastructure_name) if facade_class.nil?

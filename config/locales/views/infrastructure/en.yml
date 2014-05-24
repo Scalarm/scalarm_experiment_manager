@@ -71,6 +71,7 @@ en:
         table_label: "Manage submitted private resources credentials"
 
       invalid_credentials: "Provided credentials are incorrect or there are problems connecting with service. If you are sure that credentials are correct, please contact administrator."
+      banned_alert: "Sorry, but you can't add credentials for this infrastructure now due to several invalid credentials submissions. Please try again in few minutes."
     tree_title: 'Computational resources tree'
     tree:
       sm_dialog:
@@ -121,9 +122,11 @@ en:
     access_to_sm_denied: "Access to Simulation Manager denied"
     command_error: "Error on Simulation Manager command invocation: %{error}"
     credentials:
+      banned: "Sorry, but you can't add credentials for %{infrastructure_name} to %{time} due to several invalid credentials submissions."
       success: "Credentials for %{infrastructure_name} have been successfully modified."
       invalid: "Credentials provided for %{infrastructure_name} are invalid."
       internal_error: "Adding credentials for '%{infrastructure_name}' failed because of internal error: %{error}"
+      nil_add_credentials: "'No record returned by InfrastructureFacade.add_credentials method'"
   infrastructures:
     sm_dialog:
       error_message: "Error message"

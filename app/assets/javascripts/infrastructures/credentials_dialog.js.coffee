@@ -1,50 +1,101 @@
 class window.CredentialsDialog
-  constructor: (@baseName, defaultIcon) ->
-    @bindToForm("##{@baseName}-credentials-panel form")
-    @bindToForm("##{@baseName}-remove-panel form")
+  constructor: (@baseName, @recordId, @infrastructureName, defaultState) ->
+    @bindToSubmitForm()
+    @bindToRemoveButton()
 
-    @changeIcon(defaultIcon)
-    @showAlert(defaultIcon == 'alert')
+    hasRecord = (@recordId? and @recordId.length > 0)
+    @toggle(defaultState, null)
 
-  bindToForm: (formIds) =>
+    @showRemoveButton(hasRecord)
+    @clearForm() unless hasRecord
+
+  toggle: (state, msg) =>
+    switch state
+      when 'banned'
+        toastr.error(msg) if msg
+        @showAlert(false)
+        @showBannedAlert(true)
+        @changeIcon('alert')
+      when 'invalid'
+        toastr.error(msg) if msg
+        @showAlert(true)
+        @showRemoveButton(true)
+        @showBannedAlert(false)
+        @changeIcon('alert')
+      when 'not-in-db'
+        toastr.error(msg) if msg
+        @showAlert(false)
+        @showBannedAlert(false)
+        @showRemoveButton(false)
+        @changeIcon('lack')
+      when 'added', 'ok'
+        toastr.success(msg) if msg
+        @showAlert(false)
+        @showBannedAlert(false)
+        @showRemoveButton(true)
+        @changeIcon('ok')
+      when 'error'
+        toastr.error(msg) if msg
+        @showAlert(true)
+        @showBannedAlert(false)
+        @changeIcon('alert')
+      when 'banned'
+        toastr.error(msg)  if msg
+        @showAlert(false)
+        @showBannedAlert(true)
+        @changeIcon('alert')
+      when 'removed-ok'
+        toastr.success(msg) if msg
+        @showAlert(false)
+        @showRemoveButton(false)
+        @changeIcon('lack')
+        @clearForm()
+        @recordId = ''
+      else
+        null
+
+  bindToSubmitForm: () =>
     loading = $("##{@baseName}-busy")
-    $(formIds)
+    $("##{@baseName}-credentials-panel form")
       .bind('ajax:before', => loading.show())
       .bind('ajax:success', (data, status, xhr) =>
-        if status.status == 'invalid-credentials'
-          toastr.error(status.msg)
-          @showAlert(true)
-          $("##{@baseName}-remove-panel").show()
-          @changeIcon('alert')
-
-        else if status.status == 'not-in-db'
-          toastr.error(status.msg)
-          @showAlert(false)
-          $("##{@baseName}-remove-panel").hide()
-          @changeIcon('lack')
-
-        else if status.status == 'removed-ok'
-          toastr.success(status.msg)
-          @showAlert(false)
-          $("##{@baseName}-remove-panel").hide()
-          $("##{@loginFormId} :text, ##{@loginFormId} :password").val('')
-          @changeIcon('lack')
-
-        else if status.status == 'added'
-          toastr.success(status.msg)
-          @showAlert(false)
-          $("##{@baseName}-remove-panel").show()
-          @changeIcon('ok')
-
-        else if status.status == 'error'
-          toastr.error(status.msg)
-          @showAlert(true)
-          $("##{@baseName}-remove-panel").show()
-          @changeIcon('alert')
+        @recordId = status.record_id if status.record_id
+        @toggle(status.status, status.msg)
       )
       .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
       .bind('ajax:complete', () => loading.hide()
     )
+
+  bindToRemoveButton: () =>
+    loading = $("##{@baseName}-busy")
+    $("##{@baseName}-remove-button").on "click", () =>
+      $.ajax({
+        type: 'POST',
+        url: '/infrastructure/remove_credentials',
+        data: {
+          infrastructure_name: @infrastructureName,
+          record_id: @recordId,
+          credential_type: 'secrets'
+        },
+
+        before: =>
+          loading.show()
+
+        success: (data, status, xhr) =>
+          if data.status == 'removed-ok'
+            @toggle('removed-ok', data.msg)
+
+          else if data.status == 'error'
+            toastr.error(data.msg)
+
+          else
+            toastr.error(data.msg)
+
+        complete: =>
+          loading.hide()
+      })
+
+
 
   changeIcon: (iconName) ->
     ['alert', 'lack', 'ok'].forEach((name) =>
@@ -55,3 +106,14 @@ class window.CredentialsDialog
   showAlert: (visible) ->
     panel = $("##{@baseName}-alert-panel")
     visible and panel.show() or panel.hide()
+
+  showBannedAlert: (visible) ->
+    panel = $("##{@baseName}-banned-alert-panel")
+    visible and panel.show() or panel.hide()
+
+  showRemoveButton: (visible) ->
+    panel = $("##{@baseName}-remove-panel")
+    visible and panel.show() or panel.hide()
+
+  clearForm: () ->
+    $("##{@baseName}-credentials-panel :text, ##{@baseName}-credentials-panel :password").val('')

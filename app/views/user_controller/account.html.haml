@@ -2,7 +2,7 @@
 - content_for :help, raw(t('help.users.summary'))
 
 -#-tabs=[:plgrid, :pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
--tabs=[:pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
+-tabs=[:plgrid, :pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
 
 %header
   .row
@@ -65,5 +65,18 @@
                   = raw '&nbsp;&nbsp;'
                   = t('infrastructure.credentials.invalid_credentials')
 
+              .row.hidden{id: "#{tab_id}-banned-alert-panel"}
+                %data-alert.alert-box.warning.radius
+                  %i.fi-prohibited
+                  = raw '&nbsp;&nbsp;'
+                  = t('infrastructure.credentials.banned_alert')
 
               = render partial: "infrastructure/credentials/#{tab_id}"
+
+              .row{id: "#{tab_id}-remove-panel"}
+                .small-3.small-centered.columns.text-center
+                  %span{id: "#{tab_id}-remove-button", class: "#{button_classes} alert"}= t('infrastructure.information.remove_credentials')
+              .row
+                .small-12.columns.text-center
+                  = image_tag 'loading.gif', id: "#{tab_id}-busy", class: 'hidden'
+

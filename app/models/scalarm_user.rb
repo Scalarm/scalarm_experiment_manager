@@ -56,4 +56,29 @@ class ScalarmUser < MongoActiveRecord
     user
   end
 
+
+
+  def banned_infrastructure?(infrastructure_name)
+    if credentials_failed and credentials_failed.include?(infrastructure_name) and
+        credentials_failed[infrastructure_name].count >= 2 and (compute_ban_end(credentials_failed[infrastructure_name].last) > Time.now)
+      true
+    else
+      false
+    end
+  end
+
+  def ban_expire_time(infrastructure_name)
+    if credentials_failed and credentials_failed[infrastructure_name] and credentials_failed[infrastructure_name].count > 0
+      compute_ban_end(credentials_failed[infrastructure_name].last)
+    else
+      nil
+    end
+  end
+
+  private
+
+  def compute_ban_end(start_time)
+    start_time + 5.minutes
+  end
+
 end

@@ -65,36 +65,80 @@ class InfrastructuresController < ApplicationController
   # POST params (in JSON):
   # - infrastructure_type # TODO: change to infrastructure_name
   def add_infrastructure_credentials
+    infrastructure_name = params[:infrastructure_type]
     begin
-      infrastructure = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_type])
+      infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+
+      if @current_user.banned_infrastructure?(infrastructure_name)
+        return render json: {
+            status: 'banned',
+            msg: t('infrastructures_controller.credentials.banned',
+                   infrastructure_name: infrastructure.long_name,
+                   time: @current_user.ban_expire_time(infrastructure_name)
+            )
+        }
+      end
+
       credentials = infrastructure.add_credentials(@current_user, params, session)
       if credentials
         if credentials.valid?
-          if credentials.invalid
-            credentials.invalid = false
-            credentials.save
-          end
-          render json: { status: 'added', msg: t('infrastructures_controller.credentials.success',
-                                              infrastructure_name: infrastructure.long_name) }
+          mark_credentials_valid(credentials, infrastructure_name)
+          render json: {
+              status: 'added',
+              record_id: credentials.id.to_s,
+              msg: t('infrastructures_controller.credentials.success',
+                     infrastructure_name: infrastructure.long_name)
+          }
         else
-          credentials.invalid = true
-          credentials.save
-          render json: { status: 'invalid-credentials', msg: t('infrastructures_controller.credentials.invalid',
-                                                 infrastructure_name: infrastructure.long_name) }
+          mark_credentials_invalid(credentials, infrastructure_name)
+          render json: {
+              status: 'invalid',
+              record_id: credentials.id.to_s,
+              msg: t('infrastructures_controller.credentials.invalid',
+                     infrastructure_name: infrastructure.long_name)
+          }
         end
       else
-        raise StandardError.new('No record returned by InfrastructureFacade.add_credentials method')
+        raise StandardError.new(t('infrastructures_controller.credentials.nil_add_credentials'))
       end
     rescue Exception => exc
       if credentials
-        credentials.invalid = true
-        credentials.save
+        mark_credentials_invalid(credentials, infrastructure_name)
+        render json: {
+            status: 'error',
+            record_id: credentials.id.to_s,
+            msg: t('infrastructures_controller.credentials.internal_error',
+                   infrastructure_name: infrastructure ? infrastructure.long_name : infrastructure_name,
+                   error: "#{exc.class.to_s}: #{exc.to_s}")
+        }
+      else
+        render json: {
+            status: credentials ? 'error' : 'not-in-db',
+            msg: t('infrastructures_controller.credentials.internal_error',
+                   infrastructure_name: infrastructure ? infrastructure.long_name : infrastructure_name,
+                   error: "#{exc.class.to_s}: #{exc.to_s}")
+        }
       end
-
-      render json: { status: credentials ? 'error' : 'not-in-db', msg: t('infrastructures_controller.credentials.internal_error',
-                         infrastructure_name: infrastructure ? infrastructure.long_name : params[:infrastructure_type],
-                         error: "#{exc.class.to_s}: #{exc.to_s}") }
     end
+  end
+
+  def mark_credentials_valid(credentials, infrastructure_name)
+    credentials.invalid = false
+    if @current_user.credentials_failed and @current_user.credentials_failed.include?(infrastructure_name)
+      @current_user.credentials_failed[infrastructure_name] = []
+      @current_user.save
+    end
+    credentials.save
+  end
+
+  def mark_credentials_invalid(credentials, infrastructure_name)
+    credentials.invalid = true
+    @current_user.credentials_failed = {} unless @current_user.credentials_failed
+    @current_user.credentials_failed[infrastructure_name] = [] unless @current_user.credentials_failed.include?(infrastructure_name)
+    @current_user.credentials_failed[infrastructure_name] << Time.now
+    # TODO: trim to 2 invalid attempts?
+    @current_user.save
+    credentials.save
   end
 
   # POST params (in JSON):

@@ -132,10 +132,10 @@ class InfrastructuresControllerTest < ActionController::TestCase
     InfrastructureFacadeFactory.get_registered_infrastructure_names.each do |facade_id|
       facade = InfrastructureFacadeFactory.get_facade_for(facade_id)
       facade.class.any_instance.expects(:remove_credentials).returns(nil).once
-      get :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
+      post :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
           {user: @tmp_user_id}
 
-      assert_equal 'ok', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
+      assert_equal 'removed-ok', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
     end
   end
 
