@@ -1,12 +1,12 @@
 class window.PrivateMachinesManagerDialog
-  constructor: (@baseName, @machinesTableId, loadingImgId) ->
+  constructor: (@baseName) ->
     @reloadTable()
 
     @addMachineForm = $("##{@baseName}-submission-panel form")
 
     @loading = $("##{@baseName}-busy")
 
-    @bindToAddMachineForm()
+    @bindToAddForm()
 
   reloadTable: () ->
     $("##{@baseName}-table-partial").html(window.loaderHTML)
@@ -15,7 +15,7 @@ class window.PrivateMachinesManagerDialog
         @bindToRemoveButtons()
     )
 
-  bindToAddMachineForm: () ->
+  bindToAddForm: () ->
     @addMachineForm
     .bind('ajax:before', => @loading.show())
     .bind('ajax:success', (status, data, xhr) =>
@@ -30,9 +30,9 @@ class window.PrivateMachinesManagerDialog
     )
     .bind('ajax:failure', (xhr, data, error) => toastr.error(data.msg))
     .bind('ajax:complete', () =>
-        @loading.hide()
-        @reloadTable()
-      )
+      @loading.hide()
+      @reloadTable()
+    )
 
   bindToRemoveButtons: ->
     $("##{@baseName}-table-panel tr[id]").each( ->
@@ -52,5 +52,5 @@ class window.PrivateMachinesManagerDialog
       )
       .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
       .bind('ajax:complete', () => row_loading.hide())
-    );
+    )
 

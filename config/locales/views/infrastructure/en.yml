@@ -73,6 +73,7 @@ en:
       invalid_credentials: "Provided credentials are incorrect or there are problems connecting with service. If you are sure that credentials are correct, please contact administrator."
       banned_alert: "Sorry, but you can't add credentials for this infrastructure now due to several invalid credentials submissions. Please try again in few minutes."
       verified_tooltip: "Connection verified"
+      no_problems_tooltip: "No problems with connection encountered"
       invalid_tooltip: "Connection verification failed. Please check credentials and host availability."
     tree_title: 'Computational resources tree'
     tree:
