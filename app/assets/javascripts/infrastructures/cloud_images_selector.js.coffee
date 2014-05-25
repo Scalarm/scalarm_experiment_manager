@@ -1,4 +1,4 @@
-class window.ImagesManagerDialog #extends window.PrivateMachinesManagerDialog
+class window.CloudImagesSelector
   constructor: () ->
     @cloudSelect = $("#cloud-select select")
     if @cloudSelect.length <= 0 or (@cloudSelect.length == 1 and @cloudSelect[0].length == 0)

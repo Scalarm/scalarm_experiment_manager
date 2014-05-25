@@ -1,4 +1,4 @@
-class window.PrivateMachinesManagerDialog
+class window.TableCredentialsManager
   constructor: (@baseName) ->
     @reloadTable()
 
