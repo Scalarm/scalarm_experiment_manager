@@ -590,6 +590,16 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  def update
+    @experiment.name = params[:experiment][:name]
+    @experiment.description = params[:experiment][:description]
+
+    @experiment.save
+    flash[:notice] = t('experiments.edit.success')
+
+    redirect_to experiment_path(@experiment.id)
+  end
+
   private
 
   def load_experiment

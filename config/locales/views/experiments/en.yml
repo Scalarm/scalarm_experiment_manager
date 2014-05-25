@@ -35,3 +35,8 @@ en:
     errors:
       zero_size: The size of an experiment must be greater than 0!
       too_few_parameters: Selected DoE method requires more than 1 parameter.
+    edit:
+      header: "Edit experiment attributes"
+      tooltip: "Click to open a dialog for experiment editing"
+      submit_btn: "Update"
+      success: "The experiment has been updated"

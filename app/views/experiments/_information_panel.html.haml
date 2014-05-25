@@ -1,3 +1,7 @@
+%div.right
+  %a.button.tiny.radius(href="#" data-reveal-id="experimentEditModal" title="#{t('experiments.edit.tooltip')}")
+    %i.fi-page-edit
+
 %h3.subheader= t('.experiment_info_title')
 
 .content
@@ -41,3 +45,25 @@
         %h5.subheader= @experiment.simulation.description
 
 
+#experimentEditModal.reveal-modal(data-reveal="")
+  %h3= t('experiments.edit.header')
+  %a.close-reveal-modal &#215;
+
+  .content
+    = form_tag experiment_path(@experiment.id), method: :put, class: 'custom' do
+      .row
+        .small-3.columns
+          %h5.subheader.right= t('.experiment_name') + ':'
+        .small-6.columns
+          = text_field_tag 'experiment[name]', @experiment.name
+        .small-1.columns
+      .row
+        .small-3.columns
+          %h5.subheader.right= t('.experiment_description') + ':'
+        .small-6.columns
+          = text_area_tag 'experiment[description]', @experiment.description
+        .small-1.columns
+
+      .row
+        .small-2.small-centered.columns
+          = submit_tag t('experiments.edit.submit_btn'), class: 'button radius expanded'
