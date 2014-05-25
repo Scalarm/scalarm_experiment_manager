@@ -1,39 +1,55 @@
 class window.PrivateMachinesManagerDialog
-  constructor: (@addMachinePanelId, responseDialogId, @machinesTableId, loadingImgId) ->
-    @addMachineForm = $("##{addMachinePanelId} form")
+  constructor: (@baseName, @machinesTableId, loadingImgId) ->
+    @reloadTable()
 
-    @loading = $("##{@loadingImgId}")
-    @dialog = $("##{responseDialogId}")
+    @addMachineForm = $("##{@baseName}-submission-panel form")
+
+    @loading = $("##{@baseName}-busy")
 
     @bindToAddMachineForm()
-    @bindToRemoveButtons()
 
+  reloadTable: () ->
+    $("##{@baseName}-table-partial").html(window.loaderHTML)
+    $("##{@baseName}-table-partial").load('/infrastructure/get_credentials_table_partial?' +
+      $.param({infrastructure_name: @baseName}), =>
+        @bindToRemoveButtons()
+    )
 
   bindToAddMachineForm: () ->
     @addMachineForm
     .bind('ajax:before', => @loading.show())
-    .bind('ajax:success', (data, status, xhr) =>
-      if status.status == 'error'
-        toastr.error(status.msg)
-      else if status.status == 'ok'
-        toastr.success(status.msg)
+    .bind('ajax:success', (status, data, xhr) =>
+      switch data.status
+        when 'banned', 'error', 'invalid', 'not-in-db'
+          toastr.error(data.msg)
+        when 'ok', 'added'
+          toastr.success(data.msg)
+        else
+          toastr.error(data.msg)
+
     )
-    .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
+    .bind('ajax:failure', (xhr, data, error) => toastr.error(data.msg))
     .bind('ajax:complete', () =>
         @loading.hide()
-        window.location = "/user_controller/account?active_tab=private_machines_manager##{@addMachinePanelId}"
+        @reloadTable()
       )
 
   bindToRemoveButtons: ->
-    $("##{@machinesTableId} tr[id]").each( ->
+    $("##{@baseName}-table-panel tr[id]").each( ->
       row_id = this['id']
-      row_loading = $(".#{row_id}-busy")
+      row_loading = $("##{row_id}-busy")
       $("##{row_id} form")
       .bind('ajax:before', => row_loading.show())
-      .bind('ajax:success', (data, status, xhr) =>
-          toastr.success(status.msg)
-          $("##{row_id}").remove()
-        )
+      .bind('ajax:success', (status, data, xhr) =>
+        switch data.status
+          when 'removed-ok'
+            toastr.success(data.msg)
+            $("##{row_id}").remove()
+          when 'error'
+            toastr.error(data.msg)
+          else
+            toastr.error(data.msg)
+      )
       .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
       .bind('ajax:complete', () => row_loading.hide())
     );

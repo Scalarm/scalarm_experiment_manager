@@ -259,6 +259,17 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # GET params
+  # - infrastructure_name
+  def get_credentials_table_partial
+    begin
+      render inline: render_to_string(partial: "infrastructure/credentials/tables/#{params[:infrastructure_name]}")
+    rescue ActionView::MissingTemplate => exc
+      Rails.logger.error "Get credentials partial '#{params[:infrastructure_name]}' failed: #{exc.backtrace.join("\n")}"
+      render nothing: true
+    end
+  end
+
   # ============================ PRIVATE METHODS ============================
   private
 

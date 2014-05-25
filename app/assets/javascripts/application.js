@@ -40,7 +40,7 @@ toastr.options = {
   "hideEasing": "linear",
   "showMethod": "fadeIn",
   "hideMethod": "fadeOut"
-}
+};
 
 function string_with_delimeters() {
     var string_copy = this.split("").reverse().join("");
@@ -55,3 +55,5 @@ function string_with_delimeters() {
 }
 
 String.prototype.with_delimeters = string_with_delimeters;
+
+window.loaderHTML = '<div class="row small-1 small-centered" style="margin-bottom: 10px;"><img src="/assets/loading.gif"/></div>'

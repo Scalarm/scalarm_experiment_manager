@@ -1,8 +1,9 @@
 - content_for :title, 'Scalarm'
 - content_for :help, raw(t('help.users.summary'))
 
--#-tabs=[:plgrid, :pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
--tabs=[:plgrid, :pl_cloud, :amazon, :google, :images_manager, :private_machines_manager]
+-credentials_tabs=[:plgrid, :pl_cloud, :amazon, :google]
+-#-machines_tabs=[:images_manager, :private_machines_manager]
+-machines_tabs=[:private_machine]
 
 %header
   .row
@@ -48,7 +49,7 @@
   %h3=t('.manage_infrastructures')
   .row
     %dl.accordion(data-accordion="")
-      - tabs.each do |tab_id|
+      - credentials_tabs.each do |tab_id|
         %dd
           %a(href="##{tab_id}")
             %i.fi-alert.credentials-alert.hidden{id: "#{tab_id}-icon-alert"}
@@ -79,4 +80,33 @@
               .row
                 .small-12.columns.text-center
                   = image_tag 'loading.gif', id: "#{tab_id}-busy", class: 'hidden'
+
+      - machines_tabs.each do |tab_id|
+        %dd
+          %a(href="##{tab_id}")
+            = t(".#{tab_id}")
+          .content{id: tab_id, class: params[:active_tab] == tab_id.to_s ? 'active' : ''}
+            .small-12.small-centered.columns
+
+              .row
+                %dl.accordion(data-accordion="")
+                  %dd
+                    %a(href="##{tab_id}-submission-panel")= t('infrastructure.information.machine_submission_label')
+                    .content.active{id: "#{tab_id}-submission-panel"}
+
+                      -#Submission form partial
+                      = render partial: "infrastructure/credentials/#{tab_id}"
+
+                      .row
+                        .small-12.columns.text-center
+                          = image_tag 'loading.gif', id: "#{tab_id}-busy", class: 'hidden'
+
+                  %dd
+                    %a(href="##{tab_id}-table-panel")= t('infrastructure.information.table_label')
+                    .content{id: "#{tab_id}-table-panel"}
+
+                      -#Table partial
+                      %div{id: "#{tab_id}-table-partial"}
+
+
 
