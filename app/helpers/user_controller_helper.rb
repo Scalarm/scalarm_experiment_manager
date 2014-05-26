@@ -4,7 +4,7 @@ module UserControllerHelper
     if user.banned_infrastructure?(infrastructure_name)
       'banned'
     elsif credentials
-      if credentials.invalid?
+      if credentials.invalid
         'invalid'
       else
         'ok'
