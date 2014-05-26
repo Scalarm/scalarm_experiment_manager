@@ -8,6 +8,8 @@ require_relative 'plgrid/pl_grid_simulation_manager'
 require_relative 'infrastructure_facade'
 require_relative 'shared_ssh'
 
+require_relative 'infrastructure_errors'
+
 class PlGridFacade < InfrastructureFacade
   include SharedSSH
 
@@ -38,7 +40,11 @@ class PlGridFacade < InfrastructureFacade
     # prepare locally code of a simulation manager to upload with a configuration file
     InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
 
-    if credentials = GridCredentials.find_by_user_id(user_id)
+    credentials = GridCredentials.find_by_user_id(user_id)
+    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
+    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
+
+    if credentials
       # prepare job executable and descriptor
       scheduler.prepare_job_files(sm_uuid)
 

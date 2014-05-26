@@ -196,4 +196,26 @@ class InfrastructuresControllerTest < ActionController::TestCase
     assert_equal 'ok', JSON.parse(response.body)['status'], response.body
   end
 
+  def test_schedule_with_invalid_creds
+    require 'json'
+
+    params = {
+        'experiment_id'=> 'e1', 'infrastructure_info'=> {
+            'infrastructure_name'=> 'inf_name'
+        }, 'job_counter'=>'3'
+    }
+    facade = mock 'facade'
+    facade.expects(:start_simulation_managers)
+      .with(@tmp_user_id, 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
+      .raises(InfrastructureErrors::InvalidCredentialsError.new).once
+
+    InfrastructureFacadeFactory.expects(:get_facade_for).with('inf_name').returns(facade)
+
+    post :schedule_simulation_managers, params, {user: @tmp_user_id}
+
+    resp_hash = JSON.parse(response.body)
+
+    assert_equal 'invalid-credentials-error', resp_hash['status']
+  end
+
 end

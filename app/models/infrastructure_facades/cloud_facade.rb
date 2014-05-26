@@ -27,6 +27,8 @@ class CloudFacade < InfrastructureFacade
 
   def cloud_client_instance(user_id)
     cloud_secrets = get_cloud_secrets(user_id)
+    raise InfrastructureErrors::NoCredentialsError.new if cloud_secrets.nil?
+    raise InfrastructureErrors::InvalidCredentialsError.new if cloud_secrets.invalid
     cloud_secrets ? @client_class.new(cloud_secrets) : nil
   end
 

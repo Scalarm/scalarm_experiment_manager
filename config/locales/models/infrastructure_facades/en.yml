@@ -2,6 +2,9 @@ en:
   infrastructures_controller:
     image_removed: "Removed %{cloud_name} image credentials with id %{image_id}"
     image_not_found: "Image record not found"
+    schedule_error: "Error occured when scheduling Simulation Manager on %{name}: %{error}"
+    invalid_credentials: "Cannot schedule Simulation Managers because credentials for %{name} are marked as invalid"
+    no_credentials: "Cannot schedule Simulation Managers because credentials for %{name} are missing. Please enter valid credentials in account settings."
     credentials_removed: "Removed credentials for %{name}"
     credentials_not_removed: "Error occured on removing credentials: %{error}"
     priv_machine_creds_removed: "Removed %{name} private resource credentials"

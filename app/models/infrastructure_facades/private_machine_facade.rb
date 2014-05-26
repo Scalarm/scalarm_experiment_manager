@@ -1,5 +1,6 @@
 require_relative 'shell_commands.rb'
 require_relative 'shared_ssh'
+require_relative 'infrastructure_errors'
 
 class PrivateMachineFacade < InfrastructureFacade
   include ShellCommands
@@ -27,7 +28,10 @@ class PrivateMachineFacade < InfrastructureFacade
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
     machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
+    raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
+    raise InfrastructureErrors::InvalidCredentialsError.new if machine_creds.invalid
 
+    # TODO: checking for nil deprecated
     if machine_creds.nil?
       return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
     elsif machine_creds.user_id != user_id

@@ -43,23 +43,37 @@ class InfrastructuresController < ApplicationController
     render json: infrastructure_info
   end
 
-  # GET params:
+  # POST JSON params:
   # - experiment_id
   # - infrastructure_info - JSON Hash with keys: {
   #     infrastructure_name - short name of infrastructure
-  #     infrastructure_params - Hash with params, eg. PL-Grid scheduler type
+  #     infrastructure_params - Hash with params
   #   }
   # - job_counter
   def schedule_simulation_managers
-    # TODO: error handling (check parameters)
-    params[:infrastructure_info] = JSON.parse(params[:infrastructure_info]) if params[:infrastructure_info].kind_of? String
+    infrastructure_name = '?'
+    begin
+      params[:infrastructure_info] = JSON.parse(params[:infrastructure_info]) if params[:infrastructure_info].kind_of? String
 
-    infrastructure = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_info][:infrastructure_name])
-    status, response_msg = infrastructure.start_simulation_managers(
-        @current_user.id, params[:job_counter].to_i, params[:experiment_id], params
-    )
-
-    render json: { status: status, msg: response_msg }
+      infrastructure_name = params[:infrastructure_info][:infrastructure_name]
+      infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+      begin
+        status, response_msg = infrastructure.start_simulation_managers(
+            @current_user.id, params[:job_counter].to_i, params[:experiment_id], params
+        )
+        render json: { status: status, msg: response_msg }
+      rescue InfrastructureErrors::NoCredentialsError => no_creds
+        render json: { status: 'no-credentials-error', msg: I18n.t('infrastructures_controller.invalid_credentials',
+                                                                   name: infrastructure.long_name) }
+      rescue InfrastructureErrors::InvalidCredentialsError => inv_creds
+        render json: { status: 'invalid-credentials-error', msg: I18n.t('infrastructures_controller.invalid_credentials',
+                                                                        name: infrastructure.long_name) }
+      end
+    rescue Exception => exc
+      render json: { status: 'error', msg: I18n.t('infrastructures_controller.schedule_error',
+                        name: infrastructure ? infrastructure.long_name : infrastructure_name),
+                        error: exc.to_s }
+    end
   end
 
   # POST params (in JSON):
