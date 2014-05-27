@@ -2,7 +2,6 @@
 - infrastructure_name = InfrastructureFacadeFactory.get_registered_infrastructure_names if infrastructure_name.blank?
 - experiments_select = Experiment.get_running_experiments.map { |exp| ["#{exp.name} (#{exp.id})", exp.id] }
 - infrastructures_select_data = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures)
-- active_select_value = find_infrastructures_data_value(infrastructures_select_data, infrastructure_name)
 
 
 %h2= t('experiments.monitoring_actions.booster.header')
@@ -24,9 +23,9 @@
             .small-4.columns
           .row
             .small-4.columns
-              = label_tag :infrastructure_info, 'Infrastructure' + ':', class: 'inline right'
+              = label_tag :infrastructure_name, 'Infrastructure' + ':', class: 'inline right'
             .small-4.columns
-              = select_tag :infrastructure_info, grouped_options_for_select(infrastructures_select_data, active_select_value)
+              = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select_data, infrastructure_name)
             .small-4.columns
 
           .row

@@ -3,8 +3,6 @@ class window.InfrastructuresTree
   constructor: (@baseSmDialogUrl, genericDialogId, @list_infrastructure_path,
                 @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
 
-    @loaderHTML = '<div class="row small-1 small-centered"><img src="/assets/loading.gif"/></div>'
-
     @bindRefreshTreeButton('refresh-button')
 
     @dialog = $("##{genericDialogId}")
@@ -114,6 +112,7 @@ class window.InfrastructuresTree
       d._children = null
 
   stopSm: (d) ->
+#    TODO: are you sure dialog
     @smCommand(d, 'stop')
 
   restartSm: (d) ->
@@ -296,13 +295,13 @@ class window.InfrastructuresTree
     params = {infrastructure_name: d['infrastructure_name'], record_id: d['_id']}
     $.extend(params, {group: d['group']}) if d['group']
     @dialog.foundation('reveal', 'open')
-    @dialog.html(@loaderHTML)
+    @dialog.html(window.loaderHTML)
     @dialog.load @smDialogPath(params)
 
 
   boosterDialog: (d) ->
     @dialog.foundation('reveal', 'open')
-    @dialog.html(@loaderHTML)
+    @dialog.html(window.loaderHTML)
     @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id'])
 
   smDialogPath: (params) ->

@@ -13,34 +13,38 @@
       %span.no_button{class: button_classes}= t('no')
 
 - begin
-  - facade.yield_simulation_manager(record) do |sm|
-    %h3= t('.resource_header', resource_id: record.resource_id, facade_name: facade.long_name)
+  %h3= t('.resource_header', resource_id: record.resource_id, facade_name: facade.long_name)
 
-    .row
-      .small-2.columns.action-button#restart_simulation_manager_button
-        = link_to raw('<i class="fi-refresh"/>&nbsp;&nbsp;&nbsp;') + t('.restart'), |
-          simulation_manager_command_infrastructure_path(  |
-          command: 'restart', record_id: record.id, infrastructure_name: facade.short_name), |
-          class: button_classes, method: :post, remote: true |
+  .row
+    .small-2.columns.action-button#restart_simulation_manager_button
+      = link_to raw('<i class="fi-refresh"/>&nbsp;&nbsp;&nbsp;') + t('.restart'), |
+        simulation_manager_command_infrastructure_path(  |
+        command: 'restart', record_id: record.id, infrastructure_name: facade.short_name), |
+        class: button_classes, method: :post, remote: true |
 
-      .small-2.columns.action-button#destroy_simulation_manager_button
-        %span#destroyExperimentButton{class: "#{button_classes} alert"}
-          %i.fi-stop
-          = raw '&nbsp;&nbsp;&nbsp;'
-          = t('.stop')
-      .small-8.cloumns
+    .small-2.columns.action-button#destroy_simulation_manager_button
+      %span#destroyExperimentButton{class: "#{button_classes} alert"}
+        %i.fi-stop
+        = raw '&nbsp;&nbsp;&nbsp;'
+        = t('.stop')
+    .small-8.cloumns
 
-    %ul
-      %li
-        %strong= t('.resource_state') + ': '
-        =sm.resource_status.to_s
-
+  %ul
+    %li
+      %strong= t('.resource_state') + ': '
       - begin
-        = render partial: "infrastructures/scheduler/simulation_manager_info",
-            locals: {partial_name: partial_name, record: record}
-      - rescue Exception => e
-        - raise e if e.kind_of? ActionView::MissingTemplate
-        =t('infrastructure.information.sm_record_error', error: e.to_s)
+        - facade.yield_simulation_manager(record) do |sm|
+          = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
+        -#TODO: delete? yield should not throw an exception
+      - rescue Exception => error
+        =t('.resource_state_error', error: error.to_s)
+
+    - begin
+      = render partial: "infrastructures/scheduler/simulation_manager_info",
+          locals: {partial_name: partial_name, record: record}
+    - rescue Exception => e
+      - raise e if e.kind_of? ActionView::MissingTemplate
+      =t('infrastructure.information.sm_record_error', error: e.to_s)
 
 - rescue Exception => e
   =t('infrastructure.information.sm_record_error', error: e.to_s)

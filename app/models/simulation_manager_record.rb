@@ -12,6 +12,8 @@
 #
 # Subclasses should have methods:
 # - resource_id() -> returns short description of resource, e.g. VM id
+# - has_valid_credentials? -> returns false if corresponding credentials have invalid flag
+#   - please do not check credentials here
 
 
 module SimulationManagerRecord

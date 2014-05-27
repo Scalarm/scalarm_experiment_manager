@@ -45,4 +45,9 @@ class PrivateMachineRecord < MongoActiveRecord
     self.credentials_id
   end
 
+  def validate
+    raise InfrastructureErrors::NoCredentialsError if credentials_id.nil?
+    raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid
+  end
+
 end

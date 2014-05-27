@@ -79,6 +79,16 @@ class InfrastructureFacadeFactory
     end
   end
 
+  def self.get_group_for(infrastructure_name)
+    if PlGridFacadeFactory.instance.provider_names.include? infrastructure_name
+      'plgrid'
+    elsif CloudFacadeFactory.instance.provider_names.include? infrastructure_name
+      'cloud'
+    else
+      nil
+    end
+  end
+
   private # ---------------- ----- --- --- -- -- -- - - -
 
 

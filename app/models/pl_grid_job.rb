@@ -5,6 +5,8 @@
 # nodes - nodes count
 # ppn - cores per node count
 
+require 'infrastructure_facades/infrastructure_errors'
+
 class PlGridJob < MongoActiveRecord
   include SimulationManagerRecord
 
@@ -68,6 +70,11 @@ class PlGridJob < MongoActiveRecord
 
   def self.log_path(uuid)
     "scalarm_job_#{uuid}.log"
+  end
+
+  def validate
+    raise InfrastructureErrors::NoCredentialsError if credentials.nil?
+    raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid
   end
 
 end

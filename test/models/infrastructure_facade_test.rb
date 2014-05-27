@@ -116,6 +116,6 @@ class InfrastructureFacadeTest < Test::Unit::TestCase
         assert_equal grouped_records[manager_group].map(&:id), managers.map {|sm| sm.record.id}
       end
     end
-
   end
+
 end

@@ -4,7 +4,7 @@ require 'mocha'
 
 require 'infrastructure_facades/plgrid/grid_schedulers/glite'
 
-class GliteFacadeTest < Test::Unit::TestCase
+class GliteTest < Test::Unit::TestCase
 
   def setup
   end
@@ -28,11 +28,11 @@ https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q
 ==========================================================================
     eos
 
-    assert_equal 'https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q', GliteFacade.parse_job_id(output)
+    assert_equal 'https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q', GliteScheduler::PlGridScheduler.parse_job_id(output)
   end
 
   def test_state_waiting
-    glite = GliteFacade.new
+    glite = GliteScheduler::PlGridScheduler.new
     glite.expects(:glite_state).returns('Waiting').once
 
     assert_equal :initializing, glite.status(Object.new, Object.new)
@@ -53,7 +53,7 @@ Submitted:          Thu Apr 17 20:59:31 2014 CEST
 
     eos
 
-    assert_equal 'Scheduled', GliteFacade.parse_job_status(output)
+    assert_equal 'Scheduled', GliteScheduler::PlGridScheduler.parse_job_status(output)
 
   end
 
@@ -76,7 +76,7 @@ have been successfully retrieved and stored in the directory:
 
     eos
 
-    assert_equal '/people/plgjliput/plgjliput_0zW7VCkww40HDY3t-gcV2A', GliteFacade.parse_get_output(output)
+    assert_equal '/people/plgjliput/plgjliput_0zW7VCkww40HDY3t-gcV2A', GliteScheduler::PlGridScheduler.parse_get_output(output)
   end
 
 end

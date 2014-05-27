@@ -1,5 +1,6 @@
 require 'set'
 require 'infrastructure_facades/infrastructure_task_logger'
+require_relative 'infrastructure_errors'
 
 class SimulationManager
   attr_reader :record
@@ -7,6 +8,19 @@ class SimulationManager
   attr_reader :logger
 
   def initialize(record, infrastructure)
+    unless record.state == :error
+      begin
+        record.validate
+      rescue InfrastructureErrors::InvalidCredentialsError, InfrastructureErrors::NoCredentialsError
+        Rails.logger.warn "Record #{record.id} for infrastructure #{infrastructure.short_name} has invalid credentials"
+        record.store_error('credentials')
+      rescue Exception => error
+        Rails.logger.warn "Record #{record.id} for infrastructure #{infrastructure.short_name} did not pass "/
+                              "validation due to error: #{error.to_s}\n#{error.backtrace.join("\n")}"
+        record.store_error('validation', error.to_s)
+      end
+    end
+
     @record = record
     @infrastructure = infrastructure
     @logger = InfrastructureTaskLogger.new(infrastructure.short_name, record.resource_id)
@@ -98,14 +112,25 @@ class SimulationManager
 
   DELEGATES = %w(stop restart resource_status running? get_log install before_monitor after_monitor).to_set
 
+  ERROR_DELEGATES = {
+      resource_status: :no_connection,
+      running?: false,
+      get_log: ''
+  }
+
   def method_missing(m, *args, &block)
     if DELEGATES.include? m.to_s
-      begin
-        infrastructure.send("_simulation_manager_#{m}", record)
-      rescue Exception => e
-        logger.warn "Exception on action #{m}: #{e.to_s}\n#{e.backtrace.join("\n")}"
-        record.store_error('resource_action', "#{m}: #{e.to_s}")
-        stop
+      if record.error == 'credentials'
+        logger.warn "Simulation Manager action #{m} executed with invalid credentials - it will have no effect"
+        ERROR_DELEGATES[m]
+      else
+        begin
+          infrastructure.send("_simulation_manager_#{m}", record)
+        rescue Exception => e
+          logger.warn "Exception on action #{m}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+          record.store_error('resource_action', "#{m}: #{e.to_s}")
+          stop
+        end
       end
     else
       super(m, *args, &block)

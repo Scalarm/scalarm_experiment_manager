@@ -45,17 +45,17 @@ class InfrastructuresController < ApplicationController
 
   # POST JSON params:
   # - experiment_id
-  # - infrastructure_info - JSON Hash with keys: {
-  #     infrastructure_name - short name of infrastructure
-  #     infrastructure_params - Hash with params
-  #   }
+  # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
     infrastructure_name = '?'
-    begin
-      params[:infrastructure_info] = JSON.parse(params[:infrastructure_info]) if params[:infrastructure_info].kind_of? String
 
-      infrastructure_name = params[:infrastructure_info][:infrastructure_name]
+    unless validate_schedule_simulation_managers(params)
+      return render json: { status: 'error', error_code: 'missing-parameters', msg: I18n.t('infrastructures_controller.missing_parameters') }
+    end
+
+    begin
+      infrastructure_name = params[:infrastructure_name]
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
       begin
         status, response_msg = infrastructure.start_simulation_managers(
@@ -63,29 +63,38 @@ class InfrastructuresController < ApplicationController
         )
         render json: { status: status, msg: response_msg }
       rescue InfrastructureErrors::NoCredentialsError => no_creds
-        render json: { status: 'no-credentials-error', msg: I18n.t('infrastructures_controller.invalid_credentials',
+        render json: { status: 'error', error_code: 'no-credentials', msg: I18n.t('infrastructures_controller.invalid_credentials',
                                                                    name: infrastructure.long_name) }
       rescue InfrastructureErrors::InvalidCredentialsError => inv_creds
-        render json: { status: 'invalid-credentials-error', msg: I18n.t('infrastructures_controller.invalid_credentials',
+        render json: { status: 'error', error_code: 'invalid-credentials', msg: I18n.t('infrastructures_controller.invalid_credentials',
                                                                         name: infrastructure.long_name) }
       end
+    rescue InfrastructureErrors::NoSuchInfrastructureError => exc
+      render json: {status: 'error', error_code: 'no-such-infrastructure', msg: I18n.t('infrastructures_controller.no_such_infrastructure',
+                                                                        name: infrastructure_name) }
     rescue Exception => exc
-      render json: { status: 'error', msg: I18n.t('infrastructures_controller.schedule_error',
-                        name: infrastructure ? infrastructure.long_name : infrastructure_name),
-                        error: exc.to_s }
+      render json: { status: 'error', error_code: 'scheduling-failed', msg: I18n.t('infrastructures_controller.schedule_error',
+                        name: infrastructure ? infrastructure.long_name : infrastructure_name,
+                        error: exc.to_s) }
     end
   end
 
+  def validate_schedule_simulation_managers(params)
+    %w(experiment_id job_counter infrastructure_name).all? {|p| params.include? p}
+  end
+
   # POST params (in JSON):
-  # - infrastructure_type # TODO: change to infrastructure_name
+  # - infrastructure_name
   def add_infrastructure_credentials
-    infrastructure_name = params[:infrastructure_type]
+    infrastructure_name = params[:infrastructure_name]
+    credentials = nil
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
 
       if @current_user.banned_infrastructure?(infrastructure_name)
         return render json: {
-            status: 'banned',
+            status: 'error',
+            error_code: 'banned',
             msg: t('infrastructures_controller.credentials.banned',
                    infrastructure_name: infrastructure.long_name,
                    time: @current_user.ban_expire_time(infrastructure_name)
@@ -98,7 +107,7 @@ class InfrastructuresController < ApplicationController
         if credentials.valid?
           mark_credentials_valid(credentials, infrastructure_name)
           render json: {
-              status: 'added',
+              status: 'ok',
               record_id: credentials.id.to_s,
               msg: t('infrastructures_controller.credentials.success',
                      infrastructure_name: infrastructure.long_name)
@@ -106,7 +115,8 @@ class InfrastructuresController < ApplicationController
         else
           mark_credentials_invalid(credentials, infrastructure_name)
           render json: {
-              status: 'invalid',
+              status: 'error',
+              error_code: 'invalid',
               record_id: credentials.id.to_s,
               msg: t('infrastructures_controller.credentials.invalid',
                      infrastructure_name: infrastructure.long_name)
@@ -116,23 +126,15 @@ class InfrastructuresController < ApplicationController
         raise StandardError.new(t('infrastructures_controller.credentials.nil_add_credentials'))
       end
     rescue Exception => exc
-      if credentials
-        mark_credentials_invalid(credentials, infrastructure_name)
-        render json: {
-            status: 'error',
-            record_id: credentials.id.to_s,
-            msg: t('infrastructures_controller.credentials.internal_error',
-                   infrastructure_name: infrastructure ? infrastructure.long_name : infrastructure_name,
-                   error: "#{exc.class.to_s}: #{exc.to_s}")
-        }
-      else
-        render json: {
-            status: credentials ? 'error' : 'not-in-db',
-            msg: t('infrastructures_controller.credentials.internal_error',
-                   infrastructure_name: infrastructure ? infrastructure.long_name : infrastructure_name,
-                   error: "#{exc.class.to_s}: #{exc.to_s}")
-        }
-      end
+      mark_credentials_invalid(credentials, infrastructure_name)
+      render json: {
+          status: 'error',
+          error_code: credentials ? 'unknown' : 'not-in-db',
+          record_id: credentials ? credentials.id.to_s : '',
+          msg: t('infrastructures_controller.credentials.internal_error',
+                 infrastructure_name: infrastructure ? infrastructure.long_name : infrastructure_name,
+                 error: "#{exc.class.to_s}: #{exc.to_s}")
+      }
     end
   end
 
@@ -163,7 +165,7 @@ class InfrastructuresController < ApplicationController
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
-      render json: {status: 'removed-ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
+      render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
     rescue Exception => e
       Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace.join("\n")}"
       render json: {status: 'error', msg: I18n.t('infrastructures_controller.credentials_not_removed', error: e.to_s)}
@@ -198,14 +200,16 @@ class InfrastructuresController < ApplicationController
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else
-        render json: {status: 'error', msg: I18n.t('infrastructures_controller.wrong_command', command: params[:command])}
+        render json: {status: 'error', error_code: 'wrong-command', msg: I18n.t('infrastructures_controller.wrong_command', command: params[:command])}
       end
     rescue NoSuchSimulationManagerError => e
-      render json: { status: 'error', msg: t('infrastructures_controller.no_such_simulation_manager')}
+      render json: { status: 'error', error_code: 'no-such-simulation-manager', msg: t('infrastructures_controller.no_such_simulation_manager')}
     rescue AccessDeniedError => e
-      render json: { status: 'error', msg: t('infrastructures_controller.access_to_sm_denied')}
+      render json: { status: 'error', error_code: 'access-denied', msg: t('infrastructures_controller.access_to_sm_denied')}
+    rescue NoSuchInfrastructureError => e
+      render json: { status: 'error', error_code: 'no-such-infrastructure', msg: t('infrastructures_controller.no_such_infrastructure', name: e.to_s)}
     rescue Exception => e
-      render json: { status: 'error', msg: t('infrastructures_controller.command_error', error: e.to_s)}
+      render json: { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
     end
   end
 
@@ -215,12 +219,15 @@ class InfrastructuresController < ApplicationController
   # - record_id
   def get_sm_dialog
     begin
-      facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
+      infrastructure_name = params[:infrastructure_name]
+
+      facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+      group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
 
       render inline: render_to_string(partial: 'sm_dialog', locals: {
           facade: facade,
           record: get_sm_record(params[:record_id], facade),
-          partial_name: (params[:group] or params[:infrastructure_name])
+          partial_name: (group_name or infrastructure_name)
       })
     rescue NoSuchInfrastructureError => e
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.wrong_infrastructure', name: params[:infrastructure_name])})
@@ -235,27 +242,28 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - experiment_id (optional)
   # - infrastructure_name (optional)
-  # - group (optional) - name of meta-infrastructure (eg. 'cloud')
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
+    infrastructure_name = params[:infrastructure_name]
+    group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
+
     render inline: render_to_string(partial: 'booster_dialog', locals: {
-        infrastructure_name: params[:infrastructure_name],
-        form_name: (params[:group] or params[:infrastructure_name]),
-        experiment_id: params[:experiment_id],
-        infrastructure_params: params[:infrastructure_params]
+        infrastructure_name: infrastructure_name,
+        form_name: (group_name or infrastructure_name),
+        experiment_id: params[:experiment_id]
     })
   end
 
   # GET params:
   # - group (optional)
   # - infrastructure_name
-  # - infrastructure_params (optional)
   def get_booster_partial
-    partial_name = (params[:group] or params[:infrastructure_name])
+    infrastructure_name = params[:infrastructure_name]
+    group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
+    partial_name = (group_name or infrastructure_name)
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
-          infrastructure_name: params[:infrastructure_name],
-          infrastructure_params: params[:infrastructure_params]
+          infrastructure_name: infrastructure_name
       }
     rescue ActionView::MissingTemplate
       render nothing: true

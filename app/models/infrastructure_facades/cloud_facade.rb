@@ -42,16 +42,9 @@ class CloudFacade < InfrastructureFacade
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
-    begin
-      cloud_client = cloud_client_instance(user_id)
-    rescue
-      return 'error', I18n.t('infrastructure_facades.cloud.client_problem', cloud_name: @short_name)
-    end
-
-    return 'error', I18n.t('infrastructure_facades.cloud.provide_secrets', cloud_name: @short_name) if cloud_client.nil?
+    cloud_client = cloud_client_instance(user_id)
 
     begin
-
       exp_image = CloudImageSecrets.find_by_id(additional_params['image_secrets_id'])
       if exp_image.nil? or exp_image.image_id.nil?
         return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
@@ -66,7 +59,6 @@ class CloudFacade < InfrastructureFacade
 
       sched_instances = schedule_vm_instances(cloud_client, "#{VM_NAME_PREFIX}#{experiment_id}", exp_image,
                                                         instances_count, user_id, experiment_id, additional_params)
-
       ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
                           cloud_name: @long_name)]
     rescue Exception => e

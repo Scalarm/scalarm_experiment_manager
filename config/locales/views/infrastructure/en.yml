@@ -110,6 +110,8 @@ en:
           start_failed: "Starting Simulation Manager failed"
           ssh: "Could not communicate with host via SSH"
           not_started: "Simulation Manager time limit exceeded, but was never initialized"
+          validation: "Database record for Simulation Manager is invalid"
+          credentials: "Credentials for host infrastructure are invalid or missing"
       sm_record_no_view: "Sorry, details are not available"
       table_label: "Manage submitted credentials"
       machine_submission_label: "Add credentials"
@@ -125,6 +127,7 @@ en:
     wrong_command: "No such command for Simulation Manager: %{command}"
     no_such_simulation_manager: "No such Simulation Manager"
     access_to_sm_denied: "Access to Simulation Manager denied"
+    no_such_infrastructure: "No such infrastructure: %{name}"
     command_error: "Error on Simulation Manager command invocation: %{error}"
     credentials:
       banned: "Sorry, but you can't add credentials for %{infrastructure_name} to %{time} due to several invalid credentials submissions."
@@ -137,6 +140,15 @@ en:
       error_message: "Error message"
       resource_header: "%{resource_id} on %{facade_name}"
       resource_state: "Resource state"
+      resource_states:
+        running: "running"
+        no_connection: "cannot connect with resource"
+        initializing: "initializing"
+        deactivated: "shutting down or deactivated"
+        error: "an error occured, please check infrastructure state manually"
+        unknown: "unknown: %{state}"
+
+      resource_state_error: "error checking state: %{error}"
       state:
         error: "an error occured"
         initialized: "initialized"

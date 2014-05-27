@@ -2,11 +2,9 @@
   .row
     .small-10.columns
       = content_tag :h3, t('infrastructure.tree_title'), class: 'subheader'
-    .small-2.columns
-      %span#refresh-button{class: button_classes}
+    .small-1.columns
+      %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
         %i.fi-refresh
-        = raw '&nbsp;&nbsp;'
-        = t('infrastructure.refresh_button')
 
 
 

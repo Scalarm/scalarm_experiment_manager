@@ -1,5 +1,6 @@
 en:
   infrastructures_controller:
+    missing_parameters: "Missing request parameters "
     image_removed: "Removed %{cloud_name} image credentials with id %{image_id}"
     image_not_found: "Image record not found"
     schedule_error: "Error occured when scheduling Simulation Manager on %{name}: %{error}"
@@ -14,8 +15,6 @@ en:
     plgrid:
       current_state: "Currently %{jobs_count} jobs are scheduled or running."
     cloud:
-      provide_secrets: "You have to provide %{cloud_name} secrets first!"
-      client_problem: "Problem connecting with %{cloud_name} - please check provided cloud credentials."
       provide_image_secrets: "You have to provide image information first!"
       image_not_exists: "Image %{image_id} does not exists on %{cloud_name}. Please verify it."
       image_permission: "This image belongs to other user"
@@ -26,7 +25,6 @@ en:
       current_state_count: "You have %{count} Scalarm virtual machines scheduled"
       current_state_exception: "No information available due to exception: %{exception}"
     private_machine:
-      unknown_machine_id: "There is no requested private resource in database"
       no_permissions: "Scalarm user #{scalarm_login} has no registered credentials for machine #{name}"
       scheduled_info: "You have scheduled %{count} tasks on %{machine_name}!"
       current_state: "Currently %{tasks} tasks are scheduled or running on private resources."

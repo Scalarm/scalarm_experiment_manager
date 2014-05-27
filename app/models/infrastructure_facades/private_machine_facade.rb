@@ -23,18 +23,22 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   # Params hash:
+  # Alternative - get credentials by ID from database or use simple host matching
   # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
+  # - 'host' => hostname - matches first PM Credentials with this host name
   def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
-    machine_creds = PrivateMachineCredentials.find_by_id(params[:credentials_id])
+    machine_creds = if params[:host]
+                      PrivateMachineCredentials.find_by_query(host: params[:host], user_id: user_id)
+                    else
+                      PrivateMachineCredentials.find_by_id(params[:credentials_id])
+                    end
+
     raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if machine_creds.invalid
 
-    # TODO: checking for nil deprecated
-    if machine_creds.nil?
-      return 'error', I18n.t('infrastructure_facades.private_machine.unknown_machine_id')
-    elsif machine_creds.user_id != user_id
+    if machine_creds.user_id != user_id
       return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
@@ -43,7 +47,7 @@ class PrivateMachineFacade < InfrastructureFacade
       record = PrivateMachineRecord.new(
           user_id: user_id,
           experiment_id: experiment_id,
-          credentials_id: params[:credentials_id],
+          credentials_id: machine_creds.id,
           time_limit: params[:time_limit],
           start_at: params[:start_at],
           sm_uuid: SecureRandom.uuid

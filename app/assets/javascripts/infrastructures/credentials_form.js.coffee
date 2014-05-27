@@ -28,7 +28,11 @@ class window.CredentialsDialog
         @showBannedAlert(false)
         @showRemoveButton(false)
         @changeIcon('lack')
-      when 'added', 'ok'
+      when 'unknown'
+        toastr.error(msg) if msg
+        @showRemoveButton(true)
+        @changeIcon('alert')
+      when 'ok'
         toastr.success(msg) if msg
         @showAlert(false)
         @showBannedAlert(false)
@@ -40,7 +44,7 @@ class window.CredentialsDialog
         @showBannedAlert(false)
         @changeIcon('alert')
       when 'banned'
-        toastr.error(msg)  if msg
+        toastr.error(msg) if msg
         @showAlert(false)
         @showBannedAlert(true)
         @changeIcon('alert')
@@ -58,11 +62,11 @@ class window.CredentialsDialog
     loading = $("##{@baseName}-busy")
     $("##{@baseName}-credentials-panel form")
       .bind('ajax:before', => loading.show())
-      .bind('ajax:success', (data, status, xhr) =>
-        @recordId = status.record_id if status.record_id
-        @toggle(status.status, status.msg)
+      .bind('ajax:success', (status, data, xhr) =>
+        @recordId = data.record_id if data.record_id
+        @toggle(data.error_code or data.status, data.msg)
       )
-      .bind('ajax:failure', (xhr, status, error) => toastr.error(status.msg))
+      .bind('ajax:failure', (xhr, data, error) => toastr.error(data.msg))
       .bind('ajax:complete', () => loading.hide()
     )
 
@@ -82,7 +86,7 @@ class window.CredentialsDialog
           loading.show()
 
         success: (data, status, xhr) =>
-          if data.status == 'removed-ok'
+          if data.status == 'ok'
             @toggle('removed-ok', data.msg)
 
           else if data.status == 'error'

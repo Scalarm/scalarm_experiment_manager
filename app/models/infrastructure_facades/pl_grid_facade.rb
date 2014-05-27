@@ -136,10 +136,6 @@ class PlGridFacade < InfrastructureFacade
   #   super(user_id, experiment_id, {scheduler_type: scheduler.short_name}.merge((attributes or {})))
   # end
 
-  def default_additional_params
-    { 'time_limit' => 300 }
-  end
-
   def self.retrieve_grants(credentials)
     return [] if credentials.nil?
 

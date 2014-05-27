@@ -4,19 +4,20 @@ class window.InfrastructuresBooster
     @schedulerForm = $('#scheduler-form form')
     @bindToSubmissionForms()
 
-    @infrastructureSelect = $('#infrastructure_info')
+    @infrastructureSelect = $('#infrastructure_name')
     @infrastructureSelect.change(@onInfrastructuresSelectChange)
     @onInfrastructuresSelectChange()
 
   onInfrastructuresSelectChange: () =>
-    valueJSON = $.parseJSON(@infrastructureSelect.val())
+    selectValue = @infrastructureSelect.val()
+    params = $.param({infrastructure_name: selectValue})
 
-    fieldsURL = "/infrastructure/get_booster_partial?#{$.param(valueJSON)}"
+    fieldsURL = "/infrastructure/get_booster_partial?#{params}"
     fieldsDiv = $('#infrastructure_fields')
     fieldsDiv.html(window.loaderHTML)
     fieldsDiv.load(fieldsURL)
 
-    smURL = "/infrastructure/simulation_managers_summary?#{$.param(valueJSON)}"
+    smURL = "/infrastructure/simulation_managers_summary?#{params}"
     smDiv = $('#simulation-managers')
     smDiv.html(window.loaderHTML)
     smDiv.load(smURL)
@@ -32,10 +33,10 @@ class window.InfrastructuresBooster
         window.hide_notice()
 
         switch data.status
-          when 'error', 'invalid-credentials-error', 'no-credentials-error'
-            toastr.error(status.msg)
+          when 'error'
+            toastr.error(data.msg)
           when 'ok'
-            toastr.success(status.msg)
+            toastr.success(data.msg)
           else
-            toastr.error(status.msg)
+            toastr.error(data.msg)
       )

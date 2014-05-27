@@ -8,20 +8,10 @@ module InfrastructuresHelper
       first[:children] = [first.clone] unless first.has_key? :children
       [
           first[:name], first[:children].map do |second|
-            [second[:name], second.to_json]
+            [second[:name], second[:infrastructure_name]]
           end
       ]
     end
-  end
-
-  # TODO: not effective (deserializing JSON)
-  def find_infrastructures_data_value(select_data, infrastructure_name)
-    select_data.each do |*, infrastructures|
-      infrastructures.each do |*, value|
-        return value if JSON.parse(value)['infrastructure_name'] == infrastructure_name
-      end
-    end
-    nil
   end
 
   def image_secrets_select_data(user_id, cloud_name)

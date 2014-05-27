@@ -69,7 +69,7 @@ class InfrastructureFacade
         experiment_manager_pass: temp_password.password,
     }
 
-    if start_at != ''
+    unless start_at.blank?
       sm_config['start_at'] = Time.parse(start_at)
     end
 
@@ -132,7 +132,7 @@ class InfrastructureFacade
   end
 
   def schedule_simulation_managers(user_id, experiment_id, job_counter, additional_params=nil)
-    additional_params = additional_params || infrastructure.default_additional_params
+    additional_params = default_additional_params.merge(additional_params)
     status, response_msg = start_simulation_managers(user_id, job_counter, experiment_id, additional_params)
     render json: response_msg, status: status
   end
@@ -187,7 +187,7 @@ class InfrastructureFacade
   end
 
   def default_additional_params
-    {}
+    { 'time_limit' => 300 }
   end
 
   # TODO: use .count method? - it will need every infrastructure to implement this

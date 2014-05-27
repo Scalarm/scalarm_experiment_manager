@@ -10,6 +10,9 @@
 #
 # - public_host => public hostname of machine which redirects to ssh port
 # - public_ssh_port => port of public machine redirecting to ssh private port
+
+require 'infrastructure_facades/infrastructure_errors'
+
 class CloudVmRecord < MongoActiveRecord
   include SimulationManagerRecord
 
@@ -78,6 +81,11 @@ class CloudVmRecord < MongoActiveRecord
 
   def monitoring_group
     self.image_secrets_id
+  end
+
+  def validate
+    raise InfrastructureErrors::NoCredentialsError if image_secrets_id.nil?
+    raise InfrastructureErrors::InvalidCredentialsError if image_secrets.invalid
   end
 
 end
