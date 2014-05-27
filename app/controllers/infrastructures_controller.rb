@@ -9,7 +9,7 @@ class InfrastructuresController < ApplicationController
   end
 
   def list
-    render json: InfrastructureFacadeFactory.list_infrastructures
+    render json: InfrastructureFacadeFactory.list_infrastructures(@current_user.id)
   end
 
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name

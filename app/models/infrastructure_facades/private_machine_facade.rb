@@ -153,6 +153,10 @@ class PrivateMachineFacade < InfrastructureFacade
     end
   end
 
+  def enabled_for_user?(user_id)
+    true
+  end
+
   # -- Monitoring utils --
 
   def clean_up_resources

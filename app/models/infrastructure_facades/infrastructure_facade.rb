@@ -14,6 +14,7 @@ require 'thread_pool'
 # - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
 # - add_credentials(user, params, session) -> credentials record [MongoActiveRecord] - save credentials to database
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
+# - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
 #
 # Database support methods:
 # - get_sm_records(user_id=nil, experiment_id=nil, params={}) -> Array of SimulationManagerRecord subclass instances
@@ -170,15 +171,15 @@ class InfrastructureFacade
     end
   end
 
-  # Used mainly to create node or subtree:
-  # - if there is only one ScheduledJobContainer, creates node
-  # - otherwise creates subtree with infrastructure as root and other ScheduledJobContainers as children
-  # @return [Hash] node (or subtree) for infrastructure in infrastructure tree
-  def to_h
-    {
+  # If user_id is given, completes data with user-specific information about infrastructure
+  # @return [Hash] used mainly for listing general infrastructure information in InfrastructureController
+  def to_h(user_id=nil)
+    base = {
         name: long_name,
         infrastructure_name: short_name
     }
+
+    user_id ? base.merge(enabled: enabled_for_user?(user_id)) : base
   end
 
   # Helper for Infrastrucutres Tree

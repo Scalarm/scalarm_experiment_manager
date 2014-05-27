@@ -45,17 +45,17 @@ class InfrastructureFacadeFactory
   # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
   # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
   # are fetched recursivety with tree_node methods of every concrete facade.
-  def self.list_infrastructures
+  def self.list_infrastructures(user_id)
     [
         *(InfrastructureFacadeFactory.other_infrastructures.values.map do |facade_class|
-          facade_class.new.to_h
+          facade_class.new.to_h(user_id)
         end),
         {
             name: I18n.t('infrastructures_controller.tree.plgrid'),
             group: 'plgrid',
             children:
                 PlGridFacadeFactory.instance.provider_names.map do |name|
-                  PlGridFacadeFactory.instance.get_facade(name).to_h.merge(group: 'plgrid')
+                  PlGridFacadeFactory.instance.get_facade(name).to_h(user_id).merge(group: 'plgrid')
                 end
         },
         {
@@ -63,7 +63,7 @@ class InfrastructureFacadeFactory
             group: 'cloud',
             children:
                 CloudFacadeFactory.instance.provider_names.map do |name|
-                  CloudFacadeFactory.instance.get_facade(name).to_h.merge(group: 'cloud')
+                  CloudFacadeFactory.instance.get_facade(name).to_h(user_id).merge(group: 'cloud')
                 end
         }
     ]

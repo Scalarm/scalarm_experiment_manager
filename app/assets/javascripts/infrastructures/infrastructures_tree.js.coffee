@@ -161,12 +161,13 @@ class window.InfrastructuresTree
       .attr("title", (d) => d.name)
     # boost button
     gSmContainerNodes.append("svg:image")
-      .attr("width", 16).attr("height", 16).attr("xlink:href", '/assets/plus_icon.png')
+      .attr("width", 16).attr("height", 16).attr("xlink:href", (d) => "/assets/plus_#{if d['enabled'] then '' else 'disabled_'}icon.png")
       .style("transform", "translate(12px,0px)")
-      .attr("class", "button")
+      .attr("class", (d) => if d['enabled'] then "button" else '')
       .style("fill-opacity", 1e-6)
-      .on("click", (d) => @boosterDialog(d))
-      .attr("title", "Increase computational power")
+      .on("click", (d) => if d['enabled'] then @boosterDialog(d) else null)
+      .attr("title", (d) => if d['enabled'] then "Increase computational power" else
+        "This infrastructure is disabled for current user. Please check if credentials in user account settings are valid.")
 
     # ---
 

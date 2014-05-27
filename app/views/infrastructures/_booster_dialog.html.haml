@@ -1,7 +1,7 @@
 - # TODO: move code to helper?
 - infrastructure_name = InfrastructureFacadeFactory.get_registered_infrastructure_names if infrastructure_name.blank?
 - experiments_select = Experiment.get_running_experiments.map { |exp| ["#{exp.name} (#{exp.id})", exp.id] }
-- infrastructures_select_data = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures)
+- infrastructures_select_data = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(@current_user.id))
 
 
 %h2= t('experiments.monitoring_actions.booster.header')

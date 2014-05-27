@@ -71,16 +71,8 @@ class DummyFacade < InfrastructureFacade
     logger.info "Installing SM: #{record.resource_id}"
   end
 
-  # Overrides InfrastructureFacade method
-  def to_h
-    {
-        name: long_name,
-        children:
-          [{
-              name: "Inner dummy",
-              infrastructure_name: short_name
-          }]
-    }
+  def enabled_for_user?(user_id)
+    true
   end
 
 end

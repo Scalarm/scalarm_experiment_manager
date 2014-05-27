@@ -198,6 +198,11 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
+  def enabled_for_user?(user_id)
+    creds = CloudSecrets.find_by_query(user_id: user_id, cloud_name: @short_name)
+    creds and not creds.invalid
+  end
+
   # -- Monitoring utils --
 
   def clean_up_resources

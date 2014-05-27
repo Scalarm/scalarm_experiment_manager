@@ -198,6 +198,11 @@ class PlGridFacade < InfrastructureFacade
   def _simulation_manager_install(record)
   end
 
+  def enabled_for_user?(user_id)
+    creds = GridCredentials.find_by_query(user_id: user_id)
+    creds and not creds.invalid
+  end
+
   # -- Monitoring utils --
 
   def clean_up_resources
