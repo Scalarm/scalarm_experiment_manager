@@ -264,4 +264,19 @@ class SimulationManagerTest < Test::Unit::TestCase
     assert_raises(NoMethodError) {simulation_manager.wrong}
   end
 
+  def test_no_experiment
+    record = stub_everything 'record' do
+      stubs(:experiment).returns(nil)
+      stubs(:state)
+      expects(:destroy)
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+    infrastructure = stub_everything
+
+    sm = SimulationManager.new(record, infrastructure)
+
+    sm.monitor
+  end
+
 end

@@ -78,7 +78,15 @@ class SimulationManager
 
   def monitor
     logger.info 'checking'
-    if record.state == :error
+
+    if not record.experiment
+      logger.warn 'Removing record, because experiment does not exists'
+      begin
+        destroy_with_record
+      rescue Exception
+        record.destroy
+      end
+    elsif record.state == :error
       logger.info 'Has error flag - skipping'
     else
       before_monitor(record)
