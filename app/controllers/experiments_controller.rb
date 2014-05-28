@@ -5,7 +5,7 @@ require 'csv'
 
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share, :new]
-  before_filter :load_simulation, only: [ :create, :start_import_based_experiment, :new ]
+  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -74,49 +74,34 @@ class ExperimentsController < ApplicationController
   end
 
   def create
-    doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
-    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
-    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
+    experiment = prepare_new_experiment
 
-    # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'is_running' => true,
-                                 'replication_level' => replication_level,
-                                 'time_constraint_in_sec' => time_constraint,
-                                 'doe_info' => doe_info,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-    experiment.experiment_input = Experiment.prepare_experiment_input(
-        @simulation, JSON.parse(params['experiment_input']), experiment.doe_info)
-    experiment.labels = experiment.parameters.flatten.join(',')
-    experiment.save
-    experiment.experiment_id = experiment.id
-    begin
-      experiment.experiment_size(true)
-    rescue Exception => e
-      Rails.logger.warn("An exception occured: #{t(e.message)}")
-      flash[:error] = t(e.message)
-      experiment.size = 0
+    if request.fullpath.include?("start_import_based_experiment")
+      input_space_imported_specification(experiment)
+    else
+      input_space_manual_specification(experiment)
     end
 
-    if experiment.size == 0
-      flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
-      experiment.destroy
-    else
+    unless flash[:error]
+      experiment.labels = experiment.parameters.flatten.join(',')
       experiment.save
-      # create progress bar
-      experiment.insert_initial_bar
-      experiment.create_simulation_table
+      experiment.experiment_id = experiment.id
+      begin
+        experiment.experiment_size(true)
+      rescue Exception => e
+        Rails.logger.warn("An exception occured: #{t(e.message)}")
+        flash[:error] = t(e.message)
+        experiment.size = 0
+      end
 
-      if params.include?(:computing_power) and (not params[:computing_power].empty?)
-        computing_power = JSON.parse(params[:computing_power])
-        InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id,
-                                                          computing_power['type'],
-                                                          computing_power['resource_counter'])
+      if experiment.size == 0
+        flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
+        experiment.destroy
+      else
+        experiment.save
+        # create progress bar
+        experiment.insert_initial_bar
+        experiment.create_simulation_table
       end
     end
 
@@ -133,81 +118,7 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  def start_import_based_experiment
-    parameters_to_include = params.keys.select{ |parameter|
-      parameter.start_with?('param_') and params[parameter] == '1'
-    }.map{ |parameter| parameter.split('param_').last }
-
-    importer = ExperimentCsvImporter.new(params[:parameter_space_file].read, parameters_to_include)
-
-    are_csv_parameters_not_valid = importer.parameters.any? do |param_uid| 
-      not @simulation.input_parameters.include?(param_uid)
-    end
-
-    if are_csv_parameters_not_valid
-      flash[:error] = t('experiments.import.csv_parameters_not_valid')
-
-      respond_to do |format|
-        format.html { redirect_to simulations_path }
-        format.json { render json: { status: 'error', msg: flash[:error] } }
-      end      
-    else
-      # create the new type of experiment object
-      experiment = Experiment.new({ 'simulation_id' => @simulation.id,
-        'is_running' => true,
-        'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-        'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
-        'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
-        'start_at' => Time.now,
-        'user_id' => @current_user.id,
-        'scheduling_policy' => 'monte_carlo'
-      })
-      experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-      experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-      experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
-      experiment.labels = experiment.parameters.flatten.join(',')
-      experiment.save
-      experiment.experiment_id = experiment.id
-      begin
-        experiment.experiment_size(true)
-      rescue Exception => e
-        Rails.logger.warn("An exception occured: #{t(e.message)}")
-        flash[:error] = t(e.message)
-        experiment.size = 0
-      end
-
-      if experiment.size == 0
-        flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
-      else
-        experiment.save
-        # create progress bar
-        experiment.insert_initial_bar
-        experiment.create_simulation_table
-      end
-
-      if flash[:error]
-        respond_to do |format|
-          format.html { redirect_to experiments_path }
-          format.json { render json: { status: 'error', message: flash[:error] } }
-        end
-      else
-        respond_to do |format|
-          format.html { redirect_to experiment_path(experiment.id) }
-          format.json { render json: { status: 'ok', experiment_id: experiment.id.to_s } }
-        end
-      end
-    end
-  end
-
   def calculate_experiment_size
-    @simulation = if params['simulation_id']
-                    Simulation.find_by_id params['simulation_id']
-                  elsif params['simulation_name']
-                    Simulation.find_by_name params['simulation_name']
-                  else
-                    nil
-                  end
-
     doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
     @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
@@ -237,10 +148,16 @@ class ExperimentsController < ApplicationController
       parameter.start_with?('param_') and params[parameter] == '1'
     }.map{ |parameter| parameter.split('param_').last }
 
-    importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
-    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
+    if parameters_to_include.blank? or params[:file_content].blank?
 
-    render json: { experiment_size: importer.parameter_values.size * replication_level }
+      render json: { experiment_size: 0 }
+
+    else
+      importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
+      replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
+
+      render json: { experiment_size: importer.parameter_values.size * replication_level }
+    end
   end
 
   ### Progress monitoring API
@@ -590,6 +507,20 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  def update
+    @experiment.name = params[:experiment][:name]
+    @experiment.description = params[:experiment][:description]
+
+    @experiment.save
+    flash[:notice] = t('experiments.edit.success')
+
+    redirect_to experiment_path(@experiment.id)
+  end
+
+  def new
+    @simulation_input = JSON.parse(@simulation.input_specification)
+  end
+
   private
 
   def load_experiment
@@ -638,6 +569,60 @@ class ExperimentsController < ApplicationController
                   else
                     nil
                   end
-  end   
+  end
+
+  def input_space_manual_specification(experiment)
+    doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
+
+    experiment.doe_info = doe_info
+    experiment.experiment_input = Experiment.prepare_experiment_input(@simulation,
+                                                                      JSON.parse(params['experiment_input']),
+                                                                      experiment.doe_info)
+  end
+
+  def input_space_imported_specification(experiment)
+    are_csv_parameters_not_valid = true
+
+    unless params[:parameter_space_file].blank?
+      parameters_to_include = params.keys.select { |parameter|
+        parameter.start_with?('param_') and params[parameter] == '1'
+      }.map { |parameter| parameter.split('param_').last }
+
+      unless parameters_to_include.blank?
+
+        importer = ExperimentCsvImporter.new(params[:parameter_space_file].read, parameters_to_include)
+
+        are_csv_parameters_not_valid = importer.parameters.any? do |param_uid|
+          not @simulation.input_parameters.include?(param_uid)
+        end
+      end
+    end
+
+    if are_csv_parameters_not_valid
+      flash[:error] = t('experiments.import.csv_parameters_not_valid')
+    else
+      experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
+      experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
+    end
+  end
+
+  def prepare_new_experiment
+    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
+    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
+
+    # create the new type of experiment object
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
+                                 'is_running' => true,
+                                 'replication_level' => replication_level,
+                                 'time_constraint_in_sec' => time_constraint,
+                                 'start_at' => Time.now,
+                                 'user_id' => @current_user.id,
+                                 'scheduling_policy' => 'monte_carlo'
+                                })
+    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+
+    experiment
+  end
 
 end
