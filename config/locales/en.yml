@@ -108,7 +108,8 @@ en:
       header: Progress information
 
     import:
-      csv_parameters_not_valid: The provided CSV file is not compatible with the selected simulation
+      csv_parameters_not_valid: The provided CSV file is missing, invalid or not compatible with the selected simulation scenario.
+      csv_file_missing: You must provide a valid CSV file.
 
   simulations:
     deregister_button: Deregister
@@ -164,10 +165,6 @@ en:
 
       parameters_values_tab:
         header: Specify values for each input parameter you want to explore
-
-    import_tab:
-      header: Import parameter space from a CSV file
-
 
   plgrid:
     login:

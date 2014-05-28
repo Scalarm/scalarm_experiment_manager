@@ -7,4 +7,5 @@
         = content_tag :h4, raw(t('simulation_scenario_list.empty_list')), class: 'subheader'
     - else
       - @simulations.each do |simulation|
-        = button_to simulation.name, simulations_conduct_experiment_path(simulation_id: simulation.id), class: 'button expand radius'
+        %a.button.expand.radius.last-element(href="#{new_experiment_path(simulation_id: simulation.id)}")
+          = simulation.name

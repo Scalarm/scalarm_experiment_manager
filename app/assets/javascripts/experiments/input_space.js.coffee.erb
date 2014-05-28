@@ -1,0 +1,133 @@
+class window.InputSpace
+
+    constructor: (@experimentInput) ->
+        InputSpace.experimentInput = @experimentInput
+        document.addEventListener("parametrizationTypeChange", @parametrizationTypeChangeListener, false)
+
+        @bindParametrizationListener()
+
+        nextId = 1
+        while $("select#parametrization_type_#{nextId}").length > 0
+            @parameterValuesPartial(nextId)
+            nextId += 1
+
+
+    @getParameter: (entityGroupId, entityId, parameterId) ->
+        entityGroup = (group for group in InputSpace.experimentInput when group.id == entityGroupId)[0]
+        entity = (entity for entity in entityGroup.entities when entity.id == entityId)[0]
+        parameter = (parameter for parameter in entity.parameters when parameter.id == parameterId)[0]
+
+        entityGroup: entityGroup
+        entity: entity
+        parameter: parameter
+
+
+    updateAllInputParameterValues: () =>
+        $("div[id^='parameter_values_'] input").each (_, element) =>
+            groupId = $(element).parents("div[group_id]").attr("group_id")
+            entityId = $(element).parents("div[entity_id]").attr("entity_id")
+            parameterId = $(element).parents("div[parameter_id]").attr("parameter_id")
+
+            parameter = InputSpace.getParameter(groupId, entityId, parameterId)
+
+            parameterElementId = $(element).attr("id")
+            newValue = $(element).val()
+
+            parameterIndex = parameterElementId.substring(parameterElementId.lastIndexOf("_") + 1)
+            parameter.parameter["parametrizationType"] = $("#parametrization_type_" + parameterIndex).val()
+            @updateParameterValuesInJSON(parameter.parameter, parameterElementId, newValue)
+
+        $("input[name='experiment_input']").val(JSON.stringify(@experimentInput))
+
+
+    bindParametrizationListener: () ->
+        $("[data-slug='parametrization_types'] dd[entity-group-id]").each (groupIndex, entityGroup) =>
+            entityGroupId = $(entityGroup).attr('entity-group-id')
+
+            $(entityGroup).find("[entity-id]").each (entityIndex, entity) =>
+                entityId = $(entity).attr('entity-id')
+
+                $(entity).find("[parameter]").each (_, parameter) =>
+                    parameterInfo = JSON.parse($(parameter).attr('parameter'))
+                    parameterId = parameterInfo.id
+                    [_, ..., parameterIndex] = $(parameter).attr('id').split('_')
+
+                    $(parameter).on 'change', =>
+                        selectedType = $(parameter).val()
+                        # dispatch event to any subscribed listener
+                        changeEvent = new CustomEvent "parametrizationTypeChange",
+                            detail:
+                                parametrizationType: selectedType,
+                                entityGroupId: entityGroupId,
+                                entityId: entityId,
+                                parameterId: parameterId,
+                                parameterIndex: parameterIndex
+                            bubbles: true,
+                            cancelable: true
+
+                        document.dispatchEvent(changeEvent)
+
+
+    parametrizationTypeChangeListener: (event) =>
+        info = event.detail
+        # change DOM in the parameter values tab
+        @parameterValuesPartial(info.parameterIndex)
+        # update experiment input json document
+        @updateParametrizationTypeInJSON(info, info.parametrizationType)
+
+
+# updates experiment input model stored in global 'experimentInput' variable as JSON
+    updateParametrizationTypeInJSON: (parameterInfo, newParametrizationType) =>
+        parameter = InputSpace.getParameter(parameterInfo.entityGroupId, parameterInfo.entityId,
+                parameterInfo.parameterId)
+        parameter.parameter["parametrizationType"] = newParametrizationType
+
+# generic function for building DOM structure for input parameter
+    parameterValuesPartial: (parameterIndex) =>
+        selectElement = $("select#parametrization_type_" + parameterIndex)
+        parameter = $.parseJSON(selectElement.attr("parameter"))
+        parametrizationType = selectElement.val()
+
+        $(".parameter_#{parameterIndex} [parametrization-type]").hide()
+        $(".parameter_#{parameterIndex} [parametrization-type='#{parametrizationType}']").show()
+
+        $("#parameter_values_#{parameterIndex} input").on "change paste keyup", (event) =>
+            $input = $(event.currentTarget)
+            entityGroupId = $input.parents("div[group_id]").attr("group_id")
+            entityId = $input.parents("div[entity_id]").attr("entity_id")
+            parameterId = $input.parents("div[parameter_id]").attr("parameter_id")
+
+            parameter = InputSpace.getParameter(entityGroupId, entityId, parameterId)
+
+            @updateParameterValuesInJSON(parameter.parameter, $input.attr("id"), $input.val())
+
+
+# updates experiment input model stored in global 'experimentInput' variable as JSON
+# currently supporting types: value, gauss, uniform, range
+    updateParameterValuesInJSON: (parameter, parameterElementId, newValue) =>
+        if parameter.parametrizationType == undefined or parameter.parametrizationType == "value"
+            parameter["value"] = $("##{parameterElementId}").val()
+
+        else if parameter.parametrizationType == "gauss"
+            if parameterElementId.indexOf("mean") >= 0
+                parameter["mean"] = newValue
+
+            else if parameterElementId.indexOf("variance") >= 0
+                parameter["variance"] = newValue
+
+        else if parameter.parametrizationType == "uniform"
+            if parameterElementId.indexOf("min") >= 0
+                parameter["min"] = newValue
+
+            else if parameterElementId.indexOf("max") >= 0
+                parameter["max"] = newValue
+
+        else if parameter.parametrizationType == "range"
+            if parameterElementId.indexOf("min") >= 0
+                parameter["min"] = newValue
+
+            else if parameterElementId.indexOf("max") >= 0
+                parameter["max"] = newValue
+
+            else if parameterElementId.indexOf("step") >= 0
+                parameter["step"] = newValue

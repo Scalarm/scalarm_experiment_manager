@@ -1,0 +1,60 @@
+- if type == 'value'
+  %div(parametrization-type="value")
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_value')
+      .small-7.columns
+        - default_value = parameter.include?('value') ? parameter['value'] : parameter['min']
+        = text_field_tag "parameter_value_#{parameter['index']}", default_value
+
+- elsif type == 'range'
+  %div(parametrization-type="range" class="hidden")
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_min')
+      .small-7.columns
+        = text_field_tag "parameter_min_#{parameter['index']}", parameter['min']
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_max')
+      .small-7.columns
+        = text_field_tag "parameter_max_#{parameter['index']}", parameter['max']
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_step')
+      .small-7.columns
+        = text_field_tag "parameter_step_#{parameter['index']}", (parameter['min'] + parameter['max']) / 5.0
+
+- elsif type == 'gauss'
+  %div(parametrization-type="gauss" class="hidden")
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_mean')
+      .small-7.columns
+        = text_field_tag "parameter_mean_#{parameter['index']}", (parameter['min'] + parameter['max']) / 2.0
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_variance')
+      .small-7.columns
+        = text_field_tag "parameter_variance_#{parameter['index']}", (parameter['min'] + parameter['max']) / 2.0
+
+- elsif type == 'uniform'
+  %div(parametrization-type="uniform" class="hidden")
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_uniform_min')
+      .small-7.columns
+        = text_field_tag "parameter_min_#{parameter['index']}", parameter['min']
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_uniform_max')
+      .small-7.columns
+        = text_field_tag "parameter_max_#{parameter['index']}", parameter['max']

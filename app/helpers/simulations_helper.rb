@@ -1,9 +1,7 @@
 module SimulationsHelper
 
-  def parametrization_options(parameter, parameter_id)
-    options = self.send("options_for_#{parameter["type"]}")
-
-    select_tag "parametrization_type_#{parameter_id}", options_for_select(options), :parameter => parameter.to_json
+  def parametrization_options(parameter)
+    self.send("options_for_#{parameter["type"]}")
   end
 
   def options_for_integer

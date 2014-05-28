@@ -31,3 +31,5 @@ window.show_error = (message) ->
 
 window.hide_error = () ->
   $('.error').hide()
+
+

@@ -1,0 +1,31 @@
+.content{'data-slug' => 'doe'}
+  = form_tag '', class: 'custom' do
+    .panel.radius
+      .row
+        .large-5.columns
+          %label.right.inline
+            = t('simulations.conduct.doe.create_group_label')
+        .large-5.columns
+          = select_tag 'doe_type', select_doe_type
+        .large-2.columns
+          %span#createDoeGroupBtn.button.right.radius
+            = t('simulations.conduct.doe.create_new_group')
+
+%ul#doe-group-template.pricing-table(style="display: none;")
+  %li.title Standard
+  %li.price.row
+    .large-9.columns
+      = select_tag('parameters')
+    .large-3.columns
+      %span.button.right.radius(onclick="doe_manager.addParameterToGroup($(this).closest('ul'))")
+        = t('simulations.conduct.doe.add_parameter')
+  %li.cta-button.row
+    .large-3.columns.large-centered
+      %span.button.right.radius(onclick="doe_manager.deleteGroup($(this).closest('ul'))")
+        = t('simulations.conduct.doe.delete_group')
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
+    });

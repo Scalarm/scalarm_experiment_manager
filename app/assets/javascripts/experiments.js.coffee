@@ -286,6 +286,7 @@ class window.ExperimentBooster
         $('#amazon_info').text(resp.amazon)
     )
 
+
 class window.ExperimentLinksManager
   constructor: (@modalSelector) ->
     @content = $("#{@modalSelector} .content")

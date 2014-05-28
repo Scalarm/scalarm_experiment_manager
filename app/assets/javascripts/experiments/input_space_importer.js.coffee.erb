@@ -1,0 +1,91 @@
+
+class window.InputSpaceImporter
+    constructor: (@parameterSelectionTableUrl, @calculateSizeUrl) ->
+        @bindImportParameterSpaceListeners()
+
+
+    readParameterSpaceFile: (event) =>
+        console.log "Reading files"
+        if event.target.files.length > 0
+          file = event.target.files[0]
+
+          reader = new FileReader()
+          reader.onload = (f) ->
+            console.log f.target.result
+
+          reader.readAsText(file)
+
+
+    importClick: (event) =>
+      file = document.getElementById('parameter_space_file').files[0]
+
+      if file != undefined
+        console.log @parameterSelectionTableUrl
+
+        reader = new FileReader()
+        reader.onload = (f) =>
+          file_content = f.target.result
+          console.log 'onload'
+
+          $.ajax @parameterSelectionTableUrl,
+            method: 'POST',
+            data:
+              file_content: file_content,
+              simulation_id: $('#simulation_id').val()
+            ,
+            success: (data, status, xhr) ->
+              $("#parameter_selection").html(data.columns)
+
+        reader.readAsText(file)
+
+      else
+        $("#error-dialog .alert").html("<%= I18n.t('experiments.import.csv_file_missing') %>").show()
+        $("#error-dialog").foundation('reveal', 'open')
+
+      event.preventDefault()
+      return false
+
+
+    checkImportedSize: () =>
+      file = document.getElementById('parameter_space_file').files[0]
+
+      if file != undefined
+        reader = new FileReader()
+        reader.onload = (f) =>
+          file_content = f.target.result
+
+          data =
+            file_content: file_content
+            simulation_id: $('#simulation_id').val()
+            replication_level: $("#experiment_submit_form #replication_level").val()
+
+          $("input[id^='param_']:checked").each (index, element) -> data[$(element).attr('id')] = 1
+
+          $.ajax @calculateSizeUrl,
+            method: 'POST',
+            data: data,
+            beforeSend: () ->
+              $('#conduct-loading').show()
+            success: (data, status, xhr) ->
+              $('#conduct-loading').hide()
+              $("#experiment-size-dialog #calculated-experiment-size").html(data.experiment_size)
+              $('#experiment-size-dialog').foundation('reveal', 'open')
+            error: (msg) ->
+              toastr.error(msg)
+              $('#conduct-loading').hide()
+
+        reader.readAsText(file)
+      else
+        $("#experiment-size-dialog #calculated-experiment-size").html(0)
+        $('#experiment-size-dialog').foundation('reveal', 'open')
+
+    copyExecutionAttributes: =>
+        $("#import-form #replication_level").val($("#experiment_submit_form #replication_level").val())
+        $("#import-form #execution_time_constraint").val($("#experiment_submit_form #execution_time_constraint").val())
+        $("#import-form #experiment_name").val($("#experiment_submit_form #experiment_name").val())
+        $("#import-form #experiment_description").val($("#experiment_submit_form #experiment_description").val())
+
+
+    bindImportParameterSpaceListeners: =>
+        $("#import_submit").on "click", @importClick
+        $("body").delegate("#import-form", "submit", @copyExecutionAttributes)

@@ -1,0 +1,96 @@
+- content_for :title, t('.title')
+- content_for :help, raw(t('help.simulations.conduct'))
+
+= form_tag experiments_path, id: 'experiment_submit_form' do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'experiment_input'
+  = hidden_field_tag 'computing_power'
+  = hidden_field_tag 'doe'
+  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+
+  = render 'experiments/new/basic_information'
+
+  %section.panel.radius.simulation_input
+    .switch.round.manual_parameter_space.right
+      %input#manual-on(name="manual-switch" type="radio" checked)
+      %label(for="manual-on") On
+
+      %input#manual-off(name="manual-switch" type="radio" checked)
+      %label(for="manual-off") Off
+      %span
+
+    %h3.subheader= t('.input_header')
+
+    .content
+      %dl.tabs(data-tab="")
+        %dd.active
+          = link_to t('.input_parametrization_types'), '#parametrization'
+        %dd
+          = link_to t('.input_doe'), '#doe'
+
+      .tabs-content
+        #parametrization.content.active(style="width: 100%")
+          = render 'experiments/new/parametrization'
+        #doe.content(style="width: 100%")
+          = render 'experiments/new/design_of_experiment'
+
+%section#import.panel.radius.last-element
+  = render 'experiments/new/import_tab'
+
+.row.submit-section
+  = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
+  = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+  = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
+
+
+#experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
+  %h2.subheader= raw t('.experiment_size_dialog_body')
+  %a.close-reveal-modal &#215;
+
+#error-dialog.reveal-modal.hidden(data-reveal="")
+  %h2.subheader= t(".error_dialog_header")
+  %a.close-reveal-modal &#215;
+
+  .alert-box.alert.radius.hidden(data-alert="")
+
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      window.toggle_panels_on_title_click();
+
+      var input_space = new window.InputSpace($.parseJSON(#{raw @simulation.input_specification.to_json}));
+      var input_space_importer = new window.InputSpaceImporter("#{simulations_upload_parameter_space_path}",
+                                                               "#{calculate_imported_experiment_size_experiments_path}");
+
+      var doe_manager = new window.ExperimentDesigner(input_space);
+
+      $("#experiment_submit_form").on("submit", function() {
+        input_space.updateAllInputParameterValues()
+      });
+
+      $("#new_experiment_submit").on("click", function() {
+        if($("#manual-on").is(":checked")) {
+          $("#import-form").submit();
+        }
+        else {
+          $("#experiment_submit_form").submit();
+        }
+      });
+
+      $("#check-experiment-size").on("click", function() {
+        if($("#manual-on").is(":checked")) {
+          input_space_importer.checkImportedSize();
+        }
+        else {
+          doe_manager.checkExperimentSize();
+        }
+      });
+
+      $("#manual-on").on("click", window.InputParameterSpaceSwitcher.manualSwitchOff);
+      $("#manual-off").on("click", window.InputParameterSpaceSwitcher.manualSwitchOn);
+      $("#import-on").on("click", window.InputParameterSpaceSwitcher.importSwitchOff);
+      $("#import-off").on("click", window.InputParameterSpaceSwitcher.importSwitchOn);
+
+      $("#import-on").click();
+    });
