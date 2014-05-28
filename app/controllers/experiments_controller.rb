@@ -100,13 +100,6 @@ class ExperimentsController < ApplicationController
       # create progress bar
       experiment.insert_initial_bar
       experiment.create_simulation_table
-
-      if params.include?(:computing_power) and (not params[:computing_power].empty?)
-        computing_power = JSON.parse(params[:computing_power])
-        InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id,
-                                                          computing_power['type'],
-                                                          computing_power['resource_counter'])
-      end
     end
 
     unless flash[:error].blank?
