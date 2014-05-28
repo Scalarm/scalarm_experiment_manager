@@ -21,14 +21,12 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'simulations/upload_component'
   post 'simulations/destroy_component'
   post 'simulations' => 'simulations#create'
-  #post 'simulations/destroy_simulation'
-  post 'simulations/conduct_experiment'
 
   get 'infrastructures' => 'infrastructures#index'
 
   resources :experiments do
     collection do
-      post :start_import_based_experiment
+      post :start_import_based_experiment, to: 'experiments#create'
       post :calculate_experiment_size
       post :calculate_imported_experiment_size
       get :running_experiments
