@@ -26,11 +26,11 @@
   - else
     ='-'
 %td
-  =record.created_at.to_s
+  =record.created_at.strftime('%Y-%m-%d %H:%M:%S')
 %td
-  =record.created_at.since(record.time_limit.to_i.minutes).to_s + ' ' + "(#{record.time_limit.to_s} minutes)"
+  ="#{record.time_limit.to_s} min"
 %td
-  = link_to "#{record.experiment.name} (#{record.experiment_id})", experiment_path(record.experiment_id)
+  = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
 %td
   %ul
     -begin

@@ -30,34 +30,57 @@
     .small-8.columns
 
   .row.small-12.columns
-    %table
-      %tr
-        %th= t('.resource_state')
-        %th= t('infrastructures.sm_dialog.resource_id')
-        %th= t('infrastructures.sm_dialog.simulation_manager_state')
-        %th= t('infrastructures.sm_dialog.sm_initialized_at')
-        %th= t('infrastructures.sm_dialog.created_at')
-        %th= t('infrastructures.sm_dialog.time_limit')
-        %th= t('infrastructures.sm_dialog.experiment')
-        %th= t('infrastructures.sm_dialog.specific')
+    %ul
+      %li
+        %strong= t('.resource_state') + ': '
+        - begin
+          - facade.yield_simulation_manager(record) do |sm|
+            = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
+          -#TODO: delete? yield should not throw an exception
+        - rescue Exception => error
+          =t('.resource_state_error', error: error.to_s)
 
-        %tr
-          %td
-            - begin
-              - facade.yield_simulation_manager(record) do |sm|
-                = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
-              -#TODO: delete? yield should not throw an exception
-            - rescue Exception => error
-              =t('.resource_state_error', error: error.to_s)
+      -# infrastructure-specific info
+      -begin
+        = render partial: "infrastructures/scheduler/simulation_managers_info/#{partial_name}", locals: {record: record}
+      -rescue ActionView::MissingTemplate => exc
+        = exc.to_s
+        -# ignore if not found
 
-          - begin
-            = render partial: "infrastructures/scheduler/simulation_manager_info",
-                locals: {partial_name: partial_name, record: record}
-          - rescue Exception => e
-            %tr
-              %td(colspan="7" )
-                - raise e if e.kind_of? ActionView::MissingTemplate
-                =t('infrastructure.information.sm_record_error', error: e.to_s)
+      -# general record info
+      - record_state = case record.state
+        - when :error then t('infrastructures.sm_dialog.state.error')
+        - when :initialized then t('infrastructures.sm_dialog.state.initialized')
+        - when :before_init then t('infrastructures.sm_dialog.state.not_initialized')
+        - else t('infrastructures.sm_dialog.state.unknown')
+      %li
+        %strong= t('infrastructures.sm_dialog.simulation_manager_state') + ': '
+        =record_state
+      - if record.state == :error
+        %ul
+          %li
+            %strong= t('infrastructures.sm_dialog.error_message') + ': '
+            = t('infrastructure.information.sm_info.errors.'+record.error, default: record.error)
+            - unless record.error_log.nil?
+              %li
+                %strong= t('infrastructure.information.sm_info.error_log') + ': '
+                %br
+                = raw(record.error_log.sub("\n", '<br/>'))
+      - elsif record.state == :initialized
+        %li
+          %strong= t('infrastructures.sm_dialog.sm_initialized_at') + ':'
+          =record.sm_initialized_at.to_s
+      %li
+        %strong= t('infrastructures.sm_dialog.created_at') + ': '
+        =record.created_at.strftime('%Y-%m-%d %H:%M:%S')
+      %li
+        %strong= t('infrastructures.sm_dialog.time_limit') + ': '
+        =record.created_at.since(record.time_limit.to_i.minutes).to_s + ' ' + "(#{record.time_limit.to_s} minutes)"
+      %li
+        %strong= t('infrastructures.sm_dialog.experiment') + ': '
+        = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+
+
 
 - rescue Exception => e
   =t('infrastructure.information.sm_record_error', error: e.to_s)
