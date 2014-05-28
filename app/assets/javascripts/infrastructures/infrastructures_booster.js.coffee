@@ -1,8 +1,14 @@
 class window.InfrastructuresBooster
-  constructor: (@infrastructureName, @group, @dialogId) ->
+  constructor: (@infrastructureName, @disabledInfrastructures, @dialogId) ->
     @dialog = $("##{dialogId}")
     @schedulerForm = $('#scheduler-form form')
     @bindToSubmissionForms()
+
+    @disabledInfrastructures.forEach((name) =>
+      option = $("select option[value=#{name}]")
+      option.attr('disabled','disabled')
+      option.attr('title', 'This infrastructure is disabled for current user. Please check if credentials in user account settings are valid.')
+    )
 
     @infrastructureSelect = $('#infrastructure_name')
     @infrastructureSelect.change(@onInfrastructuresSelectChange)

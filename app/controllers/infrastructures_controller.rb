@@ -80,7 +80,8 @@ class InfrastructuresController < ApplicationController
   end
 
   def validate_schedule_simulation_managers(params)
-    %w(experiment_id job_counter infrastructure_name).all? {|p| params.include? p}
+    %w(experiment_id job_counter infrastructure_name).all? {|p| params.include? p} and
+      params[:job_counter].to_i > 0
   end
 
   # POST params (in JSON):

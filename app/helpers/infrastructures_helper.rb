@@ -5,14 +5,21 @@ module InfrastructuresHelper
 
   # Changes hash-data from InfrastrctureController.list to data for selector with groups
   def infrastructures_list_to_select_data(infrastructures_hash)
-    infrastructures_hash.map do |first|
+    disabled_keys = []
+    data = infrastructures_hash.map do |first|
       first[:children] = [first.clone] unless first.has_key? :children
       [
           first[:name], first[:children].map do |second|
-            [second[:name], second[:infrastructure_name]]
+            key = second[:infrastructure_name]
+            if second[:enabled] == false
+              disabled_keys << key
+            end
+            [second[:name], key]
           end
       ]
     end
+
+    {data: data, disabled: disabled_keys}
   end
 
   def image_secrets_select_data(user_id, cloud_name)
