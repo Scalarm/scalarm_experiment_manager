@@ -1,17 +1,23 @@
-.row
+.row.small-12.columns
   %p= "Total count of simulation managers registered for #{long_name}: #{simulation_managers.count}"
-.row
+.row.small-12.columns
   - begin
-    %ul
+    %table
+      %tr
+        %th= t('infrastructures.sm_dialog.resource_id')
+        %th= t('infrastructures.sm_dialog.simulation_manager_state')
+        %th= t('infrastructures.sm_dialog.sm_initialized_at')
+        %th= t('infrastructures.sm_dialog.created_at')
+        %th= t('infrastructures.sm_dialog.time_limit')
+        %th= t('infrastructures.sm_dialog.experiment')
+        %th= t('infrastructures.sm_dialog.experiment')
       - simulation_managers.each do |record|
-        %li
-          %strong= t('infrastructures.sm_dialog.resource_id') + ': '
-          =record.resource_id
-          %ul
-            - begin
-              = render partial: "infrastructures/scheduler/simulation_manager_info",
-                  locals: {partial_name: partial_name, record: record}
-            - rescue Exception => e
+        - begin
+          = render partial: "infrastructures/scheduler/simulation_manager_info",
+              locals: {partial_name: partial_name, record: record}
+        - rescue Exception => e
+          %tr
+            %td(colspan="7" )
               - raise e if e.kind_of? ActionView::MissingTemplate
               =t('infrastructure.information.sm_record_error', error: e.to_s)
   - rescue ActionView::MissingTemplate
