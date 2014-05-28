@@ -37,7 +37,8 @@ module QsubScheduler
           "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}",
           "#{job.nodes.blank? ? '' : "-l nodes=#{job.nodes}:ppn=#{job.ppn}"}",
           '-j oe', # mix stderr with stdout
-          '-o', job.log_path # output log
+          '-o', job.log_path, # output log
+          '-l', "walltime=#{QsubScheduler::PlGridScheduler.minutes_to_walltime(job.time_limit)}" #
       ]
       #Rails.logger.debug("QSUB cmd: #{qsub_cmd.join(' ')}")
       submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
@@ -56,6 +57,11 @@ module QsubScheduler
       end
 
       false
+    end
+
+    def self.minutes_to_walltime(minutes)
+      minutes = minutes.to_i
+      "#{minutes/60}:#{minutes%60}"
     end
 
     def pbs_state(ssh, job)
