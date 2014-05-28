@@ -5,10 +5,10 @@ module InfrastructuresHelper
 
   # Changes hash-data from InfrastrctureController.list to data for selector with groups
   def infrastructures_list_to_select_data(infrastructures_hash)
-    infrastructures_hash.each do |first|
+    infrastructures_hash.map do |first|
       first[:children] = [first.clone] unless first.has_key? :children
       [
-          first[:name], (first[:children].select {first[:enabled]}).map do |second|
+          first[:name], first[:children].map do |second|
             [second[:name], second[:infrastructure_name]]
           end
       ]
