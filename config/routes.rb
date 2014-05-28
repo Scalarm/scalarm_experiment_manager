@@ -21,7 +21,7 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'simulations/upload_component'
   post 'simulations/destroy_component'
   post 'simulations' => 'simulations#create'
-  post 'simulations/destroy_simulation'
+  #post 'simulations/destroy_simulation'
   post 'simulations/conduct_experiment'
 
   get 'infrastructures' => 'infrastructures#index'
@@ -100,6 +100,15 @@ ScalarmExperimentManager::Application.routes.draw do
       post :simulation_manager_command
     end
   end
+
+  resources 'simulation_scenarios' do
+    member do
+      get :code_base
+    end
+  end
+  #get 'simulation_scenarios/:id/edit' => 'simulation_scenarios#edit', as:
+
+
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

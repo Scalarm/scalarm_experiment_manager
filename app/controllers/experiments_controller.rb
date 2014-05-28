@@ -4,8 +4,8 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
-  before_filter :load_experiment, except: [:index, :share]
-  before_filter :load_simulation, only: [ :create, :start_import_based_experiment ]
+  before_filter :load_experiment, except: [:index, :share, :new]
+  before_filter :load_simulation, only: [ :create, :start_import_based_experiment, :new ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -46,6 +46,10 @@ class ExperimentsController < ApplicationController
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
     render partial: 'historical_experiments', locals: { show_close_button: true }
+  end
+
+  def get_booster_dialog
+    render inline: render_to_string(partial: 'booster_dialog')
   end
 
   # stops the currently running DF experiment (if any)
@@ -110,8 +114,9 @@ class ExperimentsController < ApplicationController
 
       if params.include?(:computing_power) and (not params[:computing_power].empty?)
         computing_power = JSON.parse(params[:computing_power])
-        infrastructure = InfrastructureFacadeFactory.get_facade_for(computing_power['type'])
-        infrastructure.schedule_simulation_managers(@current_user.id, experiment.id, computing_power['resource_counter'])
+        InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id,
+                                                          computing_power['type'],
+                                                          computing_power['resource_counter'])
       end
     end
 

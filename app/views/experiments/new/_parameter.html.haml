@@ -1,0 +1,31 @@
+= form_tag '', class: 'custom' do
+  %fieldset(class="parameter_#{parameter['index']} #{parameter.include?('value') ? 'hidden' : ''}")
+    %legend
+      = t('experiments.new.parameter_label', label: parameter['label'], min: parameter['min'], max: parameter['max'])
+
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.parametrization_type')
+      .small-7.columns
+        = select_tag "parametrization_type_#{parameter_id}", options_for_select(parametrization_options(parameter)),
+          parameter: parameter.to_json
+    .row
+      .small-12.columns(style="text-align: center;")
+        = t('experiments.new.attributes_label')
+
+    %div(id="parameter_values_#{parameter['index']}" group_id="#{entity_group['id']}" entity_id="#{entity['id']}"
+         parameter_id="#{parameter['id']}")
+
+      - parametrization_options(parameter).each do |_, parametrization_name|
+        = render partial: 'experiments/new/parameter_values', locals: { type: parametrization_name, parameter: parameter }
+
+  -#= content_tag :div, :class => "row #{(parameter.include?('value') ? 'hidden' : '')}" do
+    .small-5.columns
+      %label.inline.right
+        = t('simulations.conduct_experiment.parametrization_tab.parameter_header', label: parameter['label'])
+    .small-7.columns
+      = select_tag "parametrization_type_#{parameter_id}", parametrization_options(parameter),
+        parameter: parameter.to_json
+
+

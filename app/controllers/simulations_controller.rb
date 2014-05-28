@@ -271,7 +271,14 @@ class SimulationsController < ApplicationController
       end
 
     elsif params.include?(adapter_type)
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({name: params[adapter_type].original_filename,
+      adapter_name = if params["#{adapter_type}_name"].blank?
+                       params[adapter_type].original_filename
+                     else
+                       params["#{adapter_type}_name"]
+                     end
+
+      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
+                                           name: adapter_name,
                                            code: params[adapter_type].read,
                                            user_id: @current_user.id})
       adapter.save

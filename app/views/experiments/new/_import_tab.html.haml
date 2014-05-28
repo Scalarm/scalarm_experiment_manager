@@ -1,0 +1,27 @@
+= form_tag(start_import_based_experiment_experiments_path, multipart: true, class: 'custom', id: 'import-form') do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'replication_level', 1
+  = hidden_field_tag 'execution_time_constraint', 60
+  = hidden_field_tag 'experiment_name'
+  = hidden_field_tag 'experiment_description'
+
+  .switch.round.import_parameter_space.right
+    %input#import-on(name="import-switch" type="radio" checked)
+    %label(for="import-on" onclick="") On
+
+    %input#import-off(name="import-switch" type="radio" checked)
+    %label(for="import-off" onclick="") Off
+    %span
+
+  %h3.subheader= t('.header')
+
+  .content
+    .row
+      .small-5.columns
+        = label_tag :parameter_space_file, t('.import_label'), class: 'right inline'
+      .small-3.columns
+        = file_field_tag :parameter_space_file
+      .small-4.columns
+        %span#import_submit.button.radius.small= t('.submit_import')
+    .row
+      .small-12.columns#parameter_selection

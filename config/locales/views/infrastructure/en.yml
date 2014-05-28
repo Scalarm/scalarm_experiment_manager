@@ -26,9 +26,6 @@ en:
   simulations:
     registration:
       select_file: "or insert file:"
-    import_tab:
-      submit_import: "Import"
-      import_label: "Select a CSV file with the parameter space:"
     import:
       parameter_selection_table:
         parameter_id: "Parameter full id"

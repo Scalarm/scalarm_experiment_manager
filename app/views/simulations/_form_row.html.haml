@@ -1,15 +1,29 @@
-.row
-  .small-3.columns= label_tag "#{form_row}_id", t("simulations.registration.#{form_row}") + ':', class: 'inline right'
-  .small-4.columns= input_element
+- if %w(input_writer executor output_reader progress_monitor).include?(form_row)
+  .small-10.columns.small-centered
+    %fieldset
+      %legend= t("simulations.registration.#{form_row}")
 
-  - if %w(input_writer executor output_reader progress_monitor).include?(form_row)
-    .small-2.columns
-      = label_tag form_row + '_box', t('simulations.registration.select_file'), class: 'inline left'
-      = check_box_tag(form_row + '_box', '1', false, class: 'right')
-    .small-3.columns
-      = file_field_tag(form_row, disabled: 'disabled')
-  - else
-    .small-1.columns
+      .row
+        .small-5.columns
+          %label.right.inline
+            = "Select a registered name"
+        .small-7.columns
+          = input_element
+
+      .row
+        .small-5.columns
+          %label.right.inline
+            %input(type="checkbox" id="#{form_row}_box" style="display: inline;")
+              = t('simulations.registration.select_file')
+        .small-7.columns
+          = file_field_tag(form_row, disabled: 'disabled')
+
+      .row
+        .small-5.columns
+          %label.right.inline
+            = "and provide a name"
+        .small-7.columns
+          = text_field_tag "#{form_row}_name", '', disabled: 'disabled'
 
   = content_for :javascript do
     :javascript
@@ -18,10 +32,19 @@
           if($(this).is(':checked')) {
             $("##{form_row}_id").prop( "disabled", true );
             $("##{form_row}").prop( "disabled", false );
-            //$("##{form_row}").click();
+            $("##{form_row}_name").prop( "disabled", false );
           } else {
             $("##{form_row}").prop( "disabled", true );
             $("##{form_row}_id").prop( "disabled", false );
+            $("##{form_row}_name").prop( "disabled", true );
           }
         });
       });
+
+
+- else
+  .small-10.columns.small-centered.large-6.large-uncentered(class="large-offset-#{offset}")
+    %label
+      = t("simulations.registration.#{form_row}")
+      = input_element
+

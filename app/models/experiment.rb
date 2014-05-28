@@ -585,7 +585,7 @@ class Experiment < MongoActiveRecord
       raise "Step can't be zero" if step == 0.0
 
       value = parameter['min'].to_f
-      while value < parameter['max'].to_f
+      while value <= parameter['max'].to_f
         parameter_values << value.round(3)
         value += step.round(3)
       end

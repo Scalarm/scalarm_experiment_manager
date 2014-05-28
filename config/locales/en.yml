@@ -31,7 +31,7 @@ en:
     empty_list: There is no simulation registered. Go to <a href='simulations/registration'>registration form</a> and register new simulations.
   simulation_scenario_list:
     label: "Select simulation scenario to conduct a new experiment"
-    empty_list: There is no experiment defined to run. Go to <a href='simulations/registration'>registration form</a> and define new experiments.
+    empty_list: There is no simulation scenario defined.<br/>Go to <a href='simulations/registration'>registration form</a> and define new simulation scenarios.
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
     label: Running experiments
@@ -108,12 +108,14 @@ en:
       header: Progress information
 
     import:
-      csv_parameters_not_valid: The provided CSV file is not compatible with the selected simulation
+      csv_parameters_not_valid: The provided CSV file is missing, invalid or not compatible with the selected simulation scenario.
+      csv_file_missing: You must provide a valid CSV file.
 
   simulations:
     deregister_button: Deregister
     go_to_registriation: Register new simulation or adapter
     empty_component: <N/A>
+    edit_button: Edit
 
     registration:
       title: Simulation registration
@@ -163,10 +165,6 @@ en:
 
       parameters_values_tab:
         header: Specify values for each input parameter you want to explore
-
-    import_tab:
-      header: Import parameter space from a CSV file
-
 
   plgrid:
     login:
