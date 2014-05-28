@@ -174,17 +174,17 @@ class InfrastructuresController < ApplicationController
   end
 
   # GET params
-  # - name - long name of the infrastructure to be displayed in view
   # - infrastructure_name
-  # - group (optional)
   # All params will be passed to simulation_managers_info in view
   def simulation_managers_summary
+    infrasructure_name = params[:infrastructure_name]
+    facade = InfrastructureFacadeFactory.get_facade_for(infrasructure_name)
     render partial: 'infrastructures/simulation_managers_summary',
            locals: {
-               long_name: params[:name],
-               partial_name: (params[:group] or params[:infrastructure_name]),
+               long_name: facade.long_name,
+               partial_name: params[:infrastructure_name],
                infrastructure_name: params[:infrastructure_name],
-               simulation_managers: InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name]).get_sm_records
+               simulation_managers: facade.get_sm_records
            }
   end
 
