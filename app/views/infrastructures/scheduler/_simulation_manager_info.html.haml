@@ -22,7 +22,7 @@
             = raw(record.error_log.sub("\n", '<br/>'))
 %td
   - if record.state == :initialized
-    =record.sm_initialized_at.to_s
+    =record.sm_initialized_at.strftime('%Y-%m-%d %H:%M:%S')
   - else
     ='-'
 %td

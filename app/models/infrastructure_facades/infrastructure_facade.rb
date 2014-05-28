@@ -188,7 +188,7 @@ class InfrastructureFacade
   end
 
   def default_additional_params
-    { 'time_limit' => 300 }
+    { 'time_limit' => 50 }
   end
 
   # TODO: use .count method? - it will need every infrastructure to implement this
