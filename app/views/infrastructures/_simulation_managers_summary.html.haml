@@ -1,24 +1,29 @@
-.row.small-12.columns
-  %p= "Total count of simulation managers registered for #{long_name}: #{simulation_managers.count}"
-.row.small-12.columns
-  - begin
-    %table
-      %tr
-        %th= t('infrastructures.sm_dialog.resource_id')
-        %th= t('infrastructures.sm_dialog.simulation_manager_state')
-        %th= t('infrastructures.sm_dialog.sm_initialized_at')
-        %th= t('infrastructures.sm_dialog.created_at')
-        %th= t('infrastructures.sm_dialog.time_limit')
-        %th= t('infrastructures.sm_dialog.experiment')
-        %th= t('infrastructures.sm_dialog.specific')
-      - simulation_managers.each do |record|
-        %tr
-          - begin
-            = render partial: "infrastructures/scheduler/simulation_manager_info",
-                locals: {partial_name: partial_name, record: record}
-          - rescue Exception => e
-            %td(colspan="7" )
-              - raise e if e.kind_of? ActionView::MissingTemplate
-              =t('infrastructure.information.sm_record_error', error: e.to_s)
-  - rescue ActionView::MissingTemplate
-    = t('infrastructure.information.sm_record_no_view')
+.row
+  %p.small-12.columns
+    = "Total count of simulation managers registered for #{long_name}: #{simulation_managers.count}"
+
+.row
+  .small-12.columns
+    - begin
+      %table(style="width: 100%;" )
+        %thead
+          %tr
+            %th= t('infrastructures.sm_dialog.resource_id')
+            %th= t('infrastructures.sm_dialog.simulation_manager_state')
+            %th= t('infrastructures.sm_dialog.sm_initialized_at')
+            %th= t('infrastructures.sm_dialog.created_at')
+            %th= t('infrastructures.sm_dialog.time_limit')
+            %th= t('infrastructures.sm_dialog.experiment')
+            %th= t('infrastructures.sm_dialog.specific')
+        %tbody
+          - simulation_managers.each do |record|
+            %tr
+              - begin
+                = render partial: "infrastructures/scheduler/simulation_manager_info",
+                    locals: {partial_name: partial_name, record: record}
+              - rescue Exception => e
+                %td(colspan="7" )
+                  - raise e if e.kind_of? ActionView::MissingTemplate
+                  =t('infrastructure.information.sm_record_error', error: e.to_s)
+    - rescue ActionView::MissingTemplate
+      = t('infrastructure.information.sm_record_no_view')
