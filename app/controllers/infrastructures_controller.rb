@@ -179,10 +179,11 @@ class InfrastructuresController < ApplicationController
   def simulation_managers_summary
     infrasructure_name = params[:infrastructure_name]
     facade = InfrastructureFacadeFactory.get_facade_for(infrasructure_name)
+    group = InfrastructureFacadeFactory.get_group_for(infrasructure_name)
     render partial: 'infrastructures/simulation_managers_summary',
            locals: {
                long_name: facade.long_name,
-               partial_name: params[:infrastructure_name],
+               partial_name: (group or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
                simulation_managers: facade.get_sm_records
            }

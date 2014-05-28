@@ -121,7 +121,7 @@ class window.InfrastructuresTree
   smCommand: (d, command) ->
     data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': command }
     $.post(@simulation_manager_command_infrastructure_path, data,
-      (json) => @fetchNodesFunctions[d["infrastructure_name"]]() # update infrastructure leaf
+      (json) => @updateInfrastructureNode(d["infrastructure_name"]) # update infrastructure leaf
     )
 
   updateTree: (source) ->
@@ -338,4 +338,7 @@ class window.InfrastructuresTree
     $("##{button_id}").on("click", =>
       @updateAllNodes()
     )
+
+  updateInfrastructureNode: (infrastructure_name) ->
+    @fetchNodesFunctions[infrastructure_name]()
 
