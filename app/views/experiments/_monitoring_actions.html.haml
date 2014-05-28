@@ -37,6 +37,7 @@
       .small-2.columns.action-button
 
 #extension-dialog.reveal-modal(data-reveal="")
+#dialog.reveal-modal(data-reveal="")
 
 #stop_experiment_dialog.reveal-modal(data-reveal="")
   %h2= t('.stop_dialog.header')
@@ -72,5 +73,5 @@
   :javascript
     $(function() {
       new window.MonitoringActionButtons("#{extension_dialog_experiment_path(@experiment.id)}",
-                                         "#{get_booster_dialog_experiment_path(@experiment.id)}")
+                                         "#{get_booster_dialog_infrastructure_path(experiment_id: @experiment.id)}")
     });

@@ -4,8 +4,14 @@ class MonitoringProbe
   def initialize
     log('Starting')
     @config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))['monitoring']
-    @db_name = @config['db_name']
-    @db = MongoActiveRecord.get_database(@db_name)
+    # TODO refactor
+    begin
+      @db_name = @config['db_name']
+      @db = MongoActiveRecord.get_database(@db_name)
+    rescue Exception => e
+      log("Monitoring probe failed to start due to exception: #{e.to_s}")
+      @db = nil
+    end
     @interval = @config['interval'].to_i
     @metrics = @config['metrics'].split(':')
 
@@ -59,40 +65,43 @@ class MonitoringProbe
   end
 
   def send_measurements(measurements)
-    last_inserted_values = {}
+    unless @db.nil?
+      last_inserted_values = {}
 
-    measurements.each do |measurement_table|
-      table_name = "#{@host}.#{measurement_table[0]}"
-      table = @db[table_name]
+      measurements.each do |measurement_table|
+        table_name = "#{@host}.#{measurement_table[0]}"
+        table = @db[table_name]
 
-      last_value = nil
-      if not last_inserted_values.has_key?(table_name) or last_inserted_values[table_name].nil?
-        last_value = table.find_one({}, { :sort => [ [ "date", "desc" ] ]})
-      else
-        last_value = last_inserted_values[table_name]
+        last_value = nil
+        if not last_inserted_values.has_key?(table_name) or last_inserted_values[table_name].nil?
+          last_value = table.find_one({}, { :sort => [ [ "date", "desc" ] ]})
+        else
+          last_value = last_inserted_values[table_name]
+        end
+
+        doc = {"date" => measurement_table[1], "value" => measurement_table[2]}
+
+        if not last_value.nil?
+
+          last_date = last_value["date"]
+          current_date = doc["date"]
+
+          next if last_date > current_date
+        end
+
+        puts "Table: #{table_name}, Measurement of #{measurement_table[0]} : #{doc}"
+        table.insert(doc)
+        last_inserted_values[table_name] = doc
       end
-
-      doc = {"date" => measurement_table[1], "value" => measurement_table[2]}
-
-      if not last_value.nil?
-
-        last_date = last_value["date"]
-        current_date = doc["date"]
-
-        next if last_date > current_date
-      end
-
-      puts "Table: #{table_name}, Measurement of #{measurement_table[0]} : #{doc}"
-      table.insert(doc)
-      last_inserted_values[table_name] = doc
     end
-
   end
 
   def send_measurement(controller, action, processing_time)
-    table_name = "#{@host}.ExperimentManager___#{controller}___#{action}"
-    doc = { date: Time.now, value: processing_time }
-    @db[table_name].insert(doc)
+    unless @db.nil?
+      table_name = "#{@host}.ExperimentManager___#{controller}___#{action}"
+      doc = { date: Time.now, value: processing_time }
+      @db[table_name].insert(doc)
+    end
   end
 
   # monitors percantage utilization of the CPU [%]

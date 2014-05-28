@@ -3,6 +3,7 @@ en:
     navbar:
       experiments_link: Experiments summary
       simulations_link: Simulation scenarios
+      infrastructures_link: Infrastructures view
       account_link: "Logged as '%{login}'"
       logout_link: Logout
       help_button: "Toggle help"

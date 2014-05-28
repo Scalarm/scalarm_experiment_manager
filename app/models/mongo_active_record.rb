@@ -19,7 +19,7 @@ class MongoActiveRecord
 
     attributes.each do |parameter_name, parameter_value|
       #parameter_value = BSON::ObjectId(parameter_value) if parameter_name.end_with?("_id")
-      @attributes[parameter_name] = parameter_value
+      @attributes[parameter_name.to_s] = parameter_value
     end
   end
 
@@ -72,6 +72,14 @@ class MongoActiveRecord
       MongoActiveRecord - #{self.class.name} - Attributes - #{@attributes}\n
       eos
     end
+  end
+
+  def to_h
+    Hash[@attributes.map {|key, value| [key, (value.kind_of?(BSON::ObjectId) ? value.to_s : value)]}]
+  end
+
+  def to_json
+    to_h.to_json
   end
 
   #### Class Methods ####
@@ -202,7 +210,9 @@ class MongoActiveRecord
     begin
       Rails.logger.debug("MongoActiveRecord initialized with URL '#{storage_manager_url}' and DB '#{db_name}'")
 
-      @@client = MongoClient.new(storage_manager_url.split(':')[0], storage_manager_url.split(':')[1], { connect_timeout: 5.0 })
+      @@client = MongoClient.new(storage_manager_url.split(':')[0], storage_manager_url.split(':')[1], {
+          connect_timeout: 5.0, pool_size: 4, pool_timeout: 10.0
+      })
       @@db = @@client[db_name]
       @@grid = Mongo::Grid.new(@@db)
 

@@ -1,7 +1,6 @@
 en:
   infrastructure:
     credentials:
-      credentials_label: Credentials
       plgrid:
         credentials_label: Please, provide your credentials to the PL-Grid infrastructure
         credentials:
@@ -16,7 +15,7 @@ en:
           key_id: Access Key Id
           secret_key: Secret Access Key
       pl_cloud:
-        credentials_label: Please, provide your credentials to access the PL-Grid infrastructure
+        credentials_label: Please, provide your credentials to access the PL-Grid Cloud infrastructure
         credentials:
           secrets: PLGrid Cloud secrets
           login: UI login

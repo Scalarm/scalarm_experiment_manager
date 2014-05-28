@@ -17,7 +17,6 @@
 #  -- :error (state that shouldn't occur)
 
 require_relative 'vm_instance'
-require_relative 'scheduled_vm_instance'
 
 class AbstractCloudClient
 
@@ -37,11 +36,7 @@ class AbstractCloudClient
   def vm_instance(instance_id)
     VmInstance.new(instance_id.to_s, self)
   end
-
-  def scheduled_vm_instance(vm_record)
-    ScheduledVmInstance.new(vm_record, self)
-  end
-
+  
   # @return [Hash] instance_id => specific AbstractVmInstance
   def all_vm_instances
     Hash[all_vm_ids.map {|i| [i, vm_instance(i)]}]

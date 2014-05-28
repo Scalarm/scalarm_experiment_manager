@@ -24,6 +24,8 @@ ScalarmExperimentManager::Application.routes.draw do
   #post 'simulations/destroy_simulation'
   post 'simulations/conduct_experiment'
 
+  get 'infrastructures' => 'infrastructures#index'
+
   resources :experiments do
     collection do
       post :start_import_based_experiment
@@ -43,7 +45,6 @@ ScalarmExperimentManager::Application.routes.draw do
       post  :destroy
       post  :extend_input_values
       get   :intermediate_results
-      get   :get_booster_dialog
       get   :extension_dialog
       post  :change_scheduling_policy
 
@@ -83,13 +84,20 @@ ScalarmExperimentManager::Application.routes.draw do
       post :schedule_simulation_managers
       get :infrastructure_info
       post :add_infrastructure_credentials
-      post :remove_image
       post :remove_credentials
-      post :remove_private_machine_credentials      
     end
 
-    collection do 
+    collection do
+      get :list
       get :simulation_managers_info
+      get :simulation_managers_summary
+      get :get_sm_dialog
+      get :get_booster_dialog
+      get :get_booster_partial
+      get :get_credentials_partial
+      get :get_credentials_table_partial
+      get :simulation_manager_records
+      post :simulation_manager_command
     end
   end
 

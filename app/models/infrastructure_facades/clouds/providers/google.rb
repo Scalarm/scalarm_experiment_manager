@@ -1,5 +1,5 @@
 require 'infrastructure_facades/clouds/abstract_cloud_client'
-require 'infrastructure_facades/infrastructure_error'
+require 'infrastructure_facades/infrastructure_errors'
 require 'google/api_client'
 require 'google/api_client/auth/key_utils'
 require 'json'
@@ -17,7 +17,7 @@ module GoogleCloud
 
     def initialize(secrets)
       super(secrets)
-      raise Infrastructure::InvalidCredentialsError unless check_secrets(secrets)
+      raise InfrastructureErrors::InvalidCredentialsError unless check_secrets(secrets)
       @api_client = Google::APIClient.new(application_name: 'scalarm', application_version: 1)
       key = Google::APIClient::KeyUtils.load_from_pkcs12(secrets.secret_key_file, secrets.secret_key_passphrase)
       asserter = Google::APIClient::JWTAsserter.new(secrets.gservice_email,
@@ -30,7 +30,7 @@ module GoogleCloud
       'google'
     end
 
-    def self.full_name
+    def self.long_name
       'Google Compute Engine'
     end
 
@@ -105,7 +105,7 @@ module GoogleCloud
       instance_reset(id)
     end
 
-    # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
+    # @return [Hash] {:host => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
       {
           host: parse_result(get_instance_info(id))['networkInterfaces'][0]['accessConfigs'][0]['natIP'],

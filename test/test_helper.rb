@@ -13,3 +13,45 @@ class ActiveSupport::TestCase
 
   # Add more helper methods to be used by all tests here...
 end
+
+class MockCollection
+  attr_accessor :records
+
+  def initialize(records)
+    @records = records
+  end
+
+  def <<(attributes)
+    @records << attributes
+  end
+
+  def find(attributes)
+    records.select do |r|
+      attributes.all? {|key, value| r[key] == value}
+    end
+  end
+end
+
+class MockRecord
+  require 'set'
+  @@collection = MockCollection.new(Set.new)
+
+
+  attr_reader :attributes
+
+  def initialize(attributes)
+    @attributes = attributes
+  end
+
+  def save
+    @@collection << @attributes
+  end
+
+  def self.find_all_by_query(attributes)
+    @@collection.find(attributes).map {|attr| MockRecord.new(attr)}
+  end
+
+  def self.collection
+    @@collection
+  end
+end

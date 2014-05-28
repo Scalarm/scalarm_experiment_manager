@@ -21,16 +21,34 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
   end
 
   def upload_file(local_path, remote_path='.')
-    Net::SCP.start(host, login, port: port.to_i, password: secret_password,
-                   auth_methods: SSH_AUTH_METHODS) do |scp|
+    Net::SCP.start(host, login, ssh_params) do |scp|
       scp.upload! local_path, remote_path
     end
   end
 
+  def ssh_session
+    Net::SSH.start(host, login, ssh_params)
+  end
+
   def ssh_start
-    Net::SSH.start(host, login, port: port.to_i, password: secret_password,
-                   auth_methods: SSH_AUTH_METHODS, timeout: 30) do |ssh|
+    Net::SSH.start(host, login, ssh_params) do |ssh|
       yield ssh
+    end
+  end
+
+  def ssh_params
+    {
+        port: port.to_i, password: secret_password,
+        auth_methods: SSH_AUTH_METHODS, timeout: 15
+    }
+  end
+
+  def valid?
+    begin
+      ssh_start {}
+      true
+    rescue
+      false
     end
   end
 

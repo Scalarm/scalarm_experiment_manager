@@ -1,36 +1,29 @@
 # Binds Scalarm user, experiment and cloud virtual machine instance
 # providing static information about VM (set once)
 #
-# Attributes
-# -- generic --
-# cloud_name => string - name of the cloud, e.g. 'pl_cloud', 'amazon'
-# user_id => integer - the user who scheduled this job - mongoid in the future
-# experiment_id => the experiment which should be computed by this job
-# image_secrets_id => id of CloudImageSecrets
-# created_at => time - when this job were scheduled
-# time_limit => time - when this job should be stopped - in minutes
-# vm_id => string - instance id of the vm
-# sm_uuid => string - uuid of configuration files
-# sm_initialized => boolean - whether or not SM code has been sent to this machind
-# vm_init_count => integer - how many times VM was initialized/reinitialized
+# Attributes (besides of generic SimulationManagerRecord's)
+# - cloud_name => string - name of the cloud, e.g. 'pl_cloud', 'amazon'
+# - image_secrets_id => id of CloudImageSecrets
+# - vm_id => string - instance id of the vm
+# - pid => integer - PID of SimulationManager application (if executed)
+# - instance_type => string - name of instance type
 #
-# public_host => public hostname of machine which redirects to ssh port
-# public_ssh_port => port of public machine redirecting to ssh private port
+# - public_host => public hostname of machine which redirects to ssh port
+# - public_ssh_port => port of public machine redirecting to ssh private port
+
+require 'infrastructure_facades/infrastructure_errors'
+
 class CloudVmRecord < MongoActiveRecord
+  include SimulationManagerRecord
 
   SSH_AUTH_METHODS = %w(password)
 
-  # time to wait to VM initialization - after that, VM will be reinitialized [minutes object]
-  def max_init_time
-    self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
+  def resource_id
+    self.vm_id
   end
 
   def self.collection_name
     'vm_records'
-  end
-
-  def initialize(attributes)
-    super(attributes)
   end
 
   #  upload file to the VM - use only password authentication
@@ -41,6 +34,10 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def ssh_session
+    Net::SSH.start(public_host, image_secrets.image_login, ssh_params)
+  end
+
+  def ssh_start
     Net::SSH.start(public_host, image_secrets.image_login, ssh_params) do |ssh|
       yield ssh
     end
@@ -63,8 +60,32 @@ class CloudVmRecord < MongoActiveRecord
   def ssh_params
     {
         port: public_ssh_port, password: image_secrets.secret_image_password,
-        auth_methods: SSH_AUTH_METHODS, paranoid: false, user_known_hosts_file: %w(/dev/null)
+        auth_methods: SSH_AUTH_METHODS, paranoid: false, user_known_hosts_file: %w(/dev/null),
+        timeout: 30
     }
+  end
+
+  def has_ssh_address?
+    (not self.public_host.blank?) and (not self.public_ssh_port.blank?)
+  end
+
+  def update_ssh_address!(vm_instance)
+    psa = vm_instance.public_ssh_address
+    self.public_host, self.public_ssh_port = psa[:host], psa[:port]
+    self.save
+  end
+
+  def log_path
+    "/tmp/log_sm_#{sm_uuid}"
+  end
+
+  def monitoring_group
+    self.image_secrets_id
+  end
+
+  def validate
+    raise InfrastructureErrors::NoCredentialsError if image_secrets_id.nil?
+    raise InfrastructureErrors::InvalidCredentialsError if image_secrets.invalid
   end
 
 end

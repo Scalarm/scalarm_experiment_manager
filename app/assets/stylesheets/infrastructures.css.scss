@@ -1,0 +1,62 @@
+.node circle {
+    cursor: pointer;
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.node text {
+    font-size: 13px;
+}
+
+//.root-node text {
+//    text-anchor: end;
+//    transform: translate(-20px,.3em);
+//}
+
+// meta-node text
+//.sm-container text,
+.node text {
+    text-anchor: end;
+    transform: translate(-15px,-3px);
+}
+
+circle.sm-error {
+  fill: indianred;
+  stroke: firebrick;
+}
+
+circle.sm-initialized {
+  fill: lightgreen;
+  stroke: forestgreen;
+}
+
+circle.sm-startup  {
+  fill: khaki;
+  stroke: goldenrod;
+}
+
+circle.children-collapsed {
+    fill: lightsteelblue;
+}
+
+path.link {
+    fill: none;
+    stroke: #ababab;
+    stroke-width: 1.5px;
+}
+
+text.label-text {
+  text-anchor: start;
+  transform: translate(22px,-6px);
+}
+
+image.button {
+  cursor: pointer;
+}
+
+path.sm-label {
+  fill: #fff;
+  stroke-width: 1.5px;
+  stroke: slategray;
+}

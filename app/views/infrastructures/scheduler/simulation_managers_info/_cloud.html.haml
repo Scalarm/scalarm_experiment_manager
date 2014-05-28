@@ -1,0 +1,19 @@
+-image = record.image_secrets
+%li
+  %strong= t('infrastructure.information.cloud.sm_info.vm_id') + ': '
+  =record.vm_id
+%li
+  %strong= t('infrastructure.information.cloud.sm_info.image') + ': '
+  = image.label.blank? ? "#{record.image_secrets.image_id}" : "#{record.image_secrets.label} (#{record.image_secrets.image_id})"
+%li
+  %strong= t('infrastructure.information.cloud.sm_info.instance_type') + ': '
+  =record.instance_type
+%li
+  %strong= t('infrastructure.information.cloud.sm_info.login') + ': '
+  =record.image_secrets.image_login.to_s
+%li
+  %strong= t('infrastructure.information.cloud.sm_info.ssh_address') + ': '
+  =(record.public_host ? "#{record.public_host}:#{record.public_ssh_port}" : t('infrastructure.information.sm_info.no_ssh_address'))
+%li
+  %strong= t('infrastructure.information.cloud.sm_info.pid') + ': '
+  =record.pid

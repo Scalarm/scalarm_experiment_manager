@@ -160,7 +160,7 @@ CONTEXT = [
 
   # @param [String] vm_ip
   # @param [Fixnum] port also can be String which can be converted to Fixnum
-  # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
+  # @return [Hash] {:host => string cloud public ip, :port => string redirected port} or nil on error
   def redirect_port(vm_ip, port)
     # equivalent: oneport -a vm_ip -p port
     # ca_file = '/software/local/cloud/rest-api-client/1.0/etc/one38.crt'

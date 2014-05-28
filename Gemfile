@@ -1,15 +1,15 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.2'
+gem 'rails', '4.0.3'
 gem 'racc'
 
 # wrapper for R interpreter
 gem 'rinruby'
 
-gem 'mongo'
 gem 'bson'
 gem 'bson_ext'
+gem 'mongo'
 
 # Amazon EC2 connector
 gem 'aws-sdk'

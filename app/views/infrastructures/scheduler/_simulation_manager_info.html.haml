@@ -1,0 +1,41 @@
+- record_state = case record.state
+  - when :error then t('infrastructures.sm_dialog.state.error')
+  - when :initialized then t('infrastructures.sm_dialog.state.initialized')
+  - when :before_init then t('infrastructures.sm_dialog.state.not_initialized')
+  - else t('infrastructures.sm_dialog.state.unknown')
+
+%tr
+  %td= record.resource_id
+  -# infrastructure-specific info
+
+  -# general record info
+  %td
+    = record_state
+    - if record.state == :error
+      %ul
+        %li
+          %strong= t('infrastructures.sm_dialog.error_message') + ': '
+          = t('infrastructure.information.sm_info.errors.'+record.error, default: record.error)
+          - unless record.error_log.nil?
+            %li
+              %strong= t('infrastructure.information.sm_info.error_log') + ': '
+              %br
+              = raw(record.error_log.sub("\n", '<br/>'))
+  %td
+    - if record.state == :initialized
+      =record.sm_initialized_at.to_s
+    - else
+      ='TODO'
+  %td
+    =record.created_at.to_s
+  %td
+    =record.created_at.since(record.time_limit.to_i.minutes).to_s + ' ' + "(#{record.time_limit.to_s} minutes)"
+  %td
+    = link_to "#{record.experiment.name} (#{record.experiment_id})", experiment_path(record.experiment_id)
+  %td
+    %ul
+      -begin
+        = render partial: "infrastructures/scheduler/simulation_managers_info/#{partial_name}", locals: {record: record}
+      -rescue ActionView::MissingTemplate => exc
+        = exc.to_s
+        -# ignore if not found

@@ -1,5 +1,5 @@
 class window.MonitoringActionButtons
-  constructor: (@extension_dialog_url, @booster_dialog_url) ->
+  constructor: (@extension_dialog_url, @booster_dialog_url, @experiment_id) ->
     @actionLoading = $('#actions-loading')
     @dialog = $('#extension-dialog')
 
@@ -23,7 +23,7 @@ class window.MonitoringActionButtons
   boosterButtonListener: () ->
     $('#boostButton').on 'click', () =>
       @actionLoading.show()
-      @dialog.load @booster_dialog_url, () =>
+      @dialog.load @booster_dialog_url, =>
         @actionLoading.hide()
         @dialog.foundation('reveal', 'open')
 

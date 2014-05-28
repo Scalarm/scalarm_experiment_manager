@@ -1,4 +1,3 @@
-require 'csv'
 require 'test/unit'
 require 'test_helper'
 require 'mocha/test_unit'
@@ -8,24 +7,7 @@ class MongoActiveRecordTest < Test::Unit::TestCase
   def setup
   end
 
-  class MockCollection
-    attr_accessor :records
-
-    def initialize(records)
-      @records = records
-    end
-
-    def find(attributes)
-      records.select do |r|
-        attributes.all? {|key, value| r[key] == value}
-      end
-    end
-  end
-
-  class TestRecord < MongoActiveRecord
-    def self.collection
-
-    end
+  class SomeRecord < MongoActiveRecord
   end
 
   def test_find_by_id_invalid
@@ -43,25 +25,27 @@ class MongoActiveRecordTest < Test::Unit::TestCase
     end
   end
 
-  def test_mock_collection
-    # given
-    collection = MockCollection.new([{id: 1, name: 'hello'}, {id: 2, name: 'hello'}, {id: 3, name: 'world'}])
+  def test_mixed_attributes_new
+    collection = mock do
+      expects(:save).with('a'=>2, 'b'=>3)
+    end
 
-    # when
-    results_hello = collection.find({name: 'hello'})
-    results_id2 = collection.find({id: 2})
-    results_id1 = collection.find({id: 1, name: 'hello'})
-
-    # then
-    assert_equal results_hello.count, 2
-    assert results_hello.all? {|r| r[:name] == 'hello'}, results_hello.to_s
-
-    assert_equal results_id2.count, 1
-    assert_equal results_id2[0][:id], 2
-
-    assert_equal results_id1.count, 1
-    assert_equal results_id1[0], {id: 1, name: 'hello'}
+    SomeRecord.expects(:collection).returns(collection)
+    r = SomeRecord.new({a: 1, 'a'=> 2, b: 3})
+    r.save
   end
 
+  def test_mixed_attributes_modify
+    collection = mock do
+      expects(:update).with({'_id'=>1}, {'_id'=>1, 'a'=>2}, {:upsert => true})
+    end
+
+    SomeRecord.expects(:collection).returns(collection)
+    r = SomeRecord.new({'_id'=>1, a: 1})
+    r.a = 2
+    r.save
+
+    assert_equal 2, r.a
+  end
 
 end

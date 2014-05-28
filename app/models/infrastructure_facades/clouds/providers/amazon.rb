@@ -17,7 +17,7 @@ module AmazonCloud
       'amazon'
     end
 
-    def self.full_name
+    def self.long_name
       'Amazon Elastic Compute Cloud'
     end
 
@@ -62,7 +62,7 @@ module AmazonCloud
       ec2_instance(id).reboot
     end
 
-    # @return [Hash] {:ip => string cloud public ip, :port => string redirected port} or nil on error
+    # @return [Hash] {:host => string cloud public ip, :port => string redirected port} or nil on error
     def public_ssh_address(id)
       {host: ec2_instance(id).public_dns_name, port: '22'}
     end

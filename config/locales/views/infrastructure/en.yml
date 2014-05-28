@@ -44,40 +44,129 @@ en:
         no_ami: "You have to provide Amazon AMI information first!"
         could_not_create_vms: "Exception occured during creating virtual machines"
   infrastructure:
-      credentials:
-        images_manager:
-          info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."
-          login: "Login"
-          password: "Password"
-          cloud_name: "Cloud name"
-          image_id: "Image ID"
-          actions: "Actions"
-          remove: "Remove record"
-          image_submission_label: "Add image credentials"
-          image_table_label: "Manage submitted image credentials"
-        private_machines_manager:
-          host: "Host"
-          port: "Port"
-          login: "Login"
-          password: "Password"
-          actions: "Actions"
-          remove: "Remove record"
-          machine_submission_label: "Add resource credentials"
-          machine_table_label: "Manage submitted resources credentials"
+    credentials:
+      images_manager:
+        info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."
+        login: "Login"
+        password: "Password"
+        cloud_name: "Cloud name"
+        image_id: "Image ID"
+        image_label: "Image label"
+        actions: "Actions"
+        remove: "Remove record"
+        image_submission_label: "Add image credentials"
+        image_table_label: "Manage submitted image credentials"
+      private_machines_manager:
+        host: "Host"
+        port: "Port"
+        login: "Login"
+        password: "Password"
+        actions: "Actions"
+        remove: "Remove record"
+        machine_submission_label: "Add resource credentials"
+        machine_table_label: "Manage submitted resources credentials"
+        table_label: "Manage submitted private resources credentials"
 
-          table_label: "Manage submitted private resources credentials"
-      information:
-        cloud:
-          sm_info:
-            vm_id: "VM ID"
-            ssh_address: "SSH address"
-            no_ssh_address: "Not available"
-            login: "Login"
-          amazon:
-            invalid_credentials: "Cannot fetch (invalid credentials)"
-        private_machine:
-          sm_info:
-            machine_desc: "Address"
-            error: "Error occured"
-            error_log: "Error log"
-            pid: "PID"
+      invalid_credentials: "Provided credentials are incorrect or there are problems connecting with service. If you are sure that credentials are correct, please contact administrator."
+      banned_alert: "Sorry, but you can't add credentials for this infrastructure now due to several invalid credentials submissions. Please try again in few minutes."
+      verified_tooltip: "Connection verified"
+      no_problems_tooltip: "No problems with connection encountered"
+      invalid_tooltip: "Connection verification failed. Please check credentials and host availability."
+    tree_title: 'Computational resources tree'
+    tree:
+      sm_dialog:
+        header: 'Simulation Manager information'
+      error_dialog:
+        header: "An error occured"
+    information:
+      cloud:
+        sm_info:
+          vm_id: "VM ID"
+          ssh_address: "SSH address"
+          no_ssh_address: "Not available"
+          login: "Login"
+          pid: "Simulation Manager PID"
+          image: "Image"
+          instance_type: "Instance type"
+        amazon:
+          invalid_credentials: "Cannot fetch (invalid credentials)"
+      private_machine:
+        sm_info:
+          machine_desc: "Address"
+          pid: "PID"
+      sm_info:
+        error: "An error occured"
+        error_log: "Error details"
+        no_ssh_address: "not available"
+        errors:
+          install_failed: 'Simulation Manager installation failed'
+          monitoring: 'Resource monitoring cannot be completed'
+          resource_action: 'Computational resource cannot complete operation'
+          initialization_time_exceeded: "Simulation Manager initialization time exceeded"
+          terminated: "Simulation Manager terminated"
+          start_failed: "Starting Simulation Manager failed"
+          ssh: "Could not communicate with host via SSH"
+          not_started: "Simulation Manager time limit exceeded, but was never initialized"
+          validation: "Database record for Simulation Manager is invalid"
+          credentials: "Credentials for host infrastructure are invalid or missing"
+      sm_record_no_view: "Sorry, details are not available"
+      table_label: "Manage submitted credentials"
+      machine_submission_label: "Add credentials"
+    refresh_button: "Refresh tree"
+  infrastructures_controller:
+    tree:
+      clouds: "Clouds"
+      plgrid: "PL-Grid"
+    error_sm_removed: "Sorry, requested Simulation Manager has been just removed."
+    wrong_infrastructure: "Requested infrastructure does not exists: %{name}"
+    sm_exception: "Exception when getting Simulation Manager: %{error}"
+    command_executed: "Command '%{command}' successfully executed on Simulation Manager"
+    wrong_command: "No such command for Simulation Manager: %{command}"
+    no_such_simulation_manager: "No such Simulation Manager"
+    access_to_sm_denied: "Access to Simulation Manager denied"
+    no_such_infrastructure: "No such infrastructure: %{name}"
+    command_error: "Error on Simulation Manager command invocation: %{error}"
+    credentials:
+      banned: "Sorry, but you can't add credentials for %{infrastructure_name} to %{time} due to several invalid credentials submissions."
+      success: "Credentials for %{infrastructure_name} have been successfully modified."
+      invalid: "Credentials for %{infrastructure_name} has been added, but they are invalid."
+      internal_error: "Adding credentials for '%{infrastructure_name}' failed because of internal error: %{error}"
+      nil_add_credentials: "'No record returned by InfrastructureFacade.add_credentials method'"
+  infrastructures:
+    sm_dialog:
+      error_message: "Error message"
+      resource_header: "%{resource_id} on %{facade_name}"
+      resource_state: "Resource state"
+      resource_states:
+        running: "running"
+        no_connection: "cannot connect with resource"
+        initializing: "initializing"
+        deactivated: "shutting down or deactivated"
+        error: "an error occured, please check infrastructure state manually"
+        unknown: "unknown: %{state}"
+
+      resource_state_error: "error checking state: %{error}"
+      state:
+        error: "an error occured"
+        initialized: "initialized"
+        not_initialized: "waiting for initialization"
+        unknown: "unknown"
+      simulation_manager_state: "Simulation Manager application state"
+      sm_initialized_at: "Simulation Manager installed at"
+      created_at: "Created at"
+      time_limit: "Time limit"
+      experiment: "Experiment"
+      experiment: "Infrastructure specific"
+      restart: "Restart"
+      stop: "Stop / Remove"
+      destroy_dialog:
+        header: "Are you sure you want to destroy this Simulation Manager?"
+      resource_id: "Resource ID"
+  yes: "Yes"
+  no: "No"
+  plgrid:
+    job_desc:
+      nodes: "Nodes count"
+      cores_per_node: "Cores per node"
+    job_submission:
+      submit_job_failed: "Could not submit job"

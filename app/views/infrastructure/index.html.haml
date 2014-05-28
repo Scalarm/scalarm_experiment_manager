@@ -1,0 +1,23 @@
+%section.panel.radius.list
+  .row
+    .small-10.columns
+      = content_tag :h3, t('infrastructure.tree_title'), class: 'subheader'
+    .small-1.columns
+      %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
+        %i.fi-refresh
+
+  .row
+    .small-12.columns
+      #infrastructures-tree
+
+  #dialog.reveal-modal(data-reveal="")
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'dialog',
+        "#{list_infrastructure_path}", "#{simulation_manager_records_infrastructure_path}",
+        "#{simulation_manager_command_infrastructure_path}");
+    });
+
+

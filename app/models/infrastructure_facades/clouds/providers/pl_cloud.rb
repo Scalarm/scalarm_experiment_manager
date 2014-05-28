@@ -14,7 +14,7 @@ module PLCloud
       'pl_cloud'
     end
 
-    def self.full_name
+    def self.long_name
       'PLGrid Cloud'
     end
 

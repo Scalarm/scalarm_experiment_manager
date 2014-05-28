@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'mocha'
 require 'test/unit'
-require 'infrastructure_facades/clouds/cloud_factory'
+require 'infrastructure_facades/clouds/cloud_facade_factory'
 require 'net/ssh'
 
 class CloudClientsTest < Test::Unit::TestCase
@@ -26,9 +26,9 @@ class CloudClientsTest < Test::Unit::TestCase
       assert_not_nil secrets, "no secrets found for #{cloud_name} in database, please create"
 
       # client class validation
-      client_class = CloudFactory.client_class(cloud_name)
+      client_class = CloudFacadeFactory.instance.client_class(cloud_name)
       assert_not_nil client_class
-      [:short_name, :full_name].each do |method_name|
+      [:short_name, :long_name].each do |method_name|
         assert_respond_to client_class, method_name
       end
 

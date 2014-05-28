@@ -23,7 +23,15 @@ module ShellCommands
     "echo #{s}"
   end
 
+  def run_and_get_pid(command, stdout='/dev/null', stderr='&1')
+    "#{command} >#{stdout} 2>#{stderr} & echo $!"
+  end
+
   def run_in_background(command, stdout='/dev/null', stderr='&1')
-    "nohup #{command} >#{stdout} 2>#{stderr} & echo $!"
+    "nohup #{run_and_get_pid(command, stdout, stderr)}"
+  end
+
+  def run_and_get_exitcode(command, stdout='/dev/null', stderr='&1')
+    "#{command} >#{stdout} 2>#{stderr}; echo $?"
   end
 end

@@ -1,19 +1,50 @@
 require 'yaml'
 
-require 'clouds/cloud_factory'
+require_relative 'infrastructure_task_logger'
+require_relative 'infrastructure_errors'
+require_relative 'simulation_manager'
 
-# methods necessary to implement by subclasses
-# monitoring_loop() - a background job which will be executed periodically, monitors scheduled jobs/vms etc.
-#   and handle their state, e.g. restart if necessary or delete db information. For one infrastructure type, they are
-#   mutually excluded.
-# default_additional_params() - a default list of any additional parameters necessary to start Simulation Managers with the facade
-# start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
-# clean_tmp_credentials(user_id, session) - remove from the session any credentials related to this infrastructure type
-# get_running_simulation_managers(user, experiment = nil) - get a list of objects represented jobs/vms at this infrastructure
-# current_state(user) - returns a string describing summary of current infrastructure state
-# add_credentials(user, params, session) - save credentials to database or session based on request parameters
-# short_name - short name of infrastructure, e.g. 'plgrid'
+require 'thread_pool'
+
+# Methods necessary to implement by subclasses:
+#
+# - long_name() -> String - name of infrastructure which will be presented to GUI user; should be localized
+# - short_name() -> String - used as infrastructure id
+#
+# - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
+# - add_credentials(user, params, session) -> credentials record [MongoActiveRecord] - save credentials to database
+# - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
+# - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
+#
+# Database support methods:
+# - get_sm_records(user_id=nil, experiment_id=nil, params={}) -> Array of SimulationManagerRecord subclass instances
+# - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
+#
+# SimulationManager delegate methods to implement
+# - _simulation_manager_stop(record) - stop Simulation Manager execution and free used computational resources
+# - _simulation_manager_restart(record) - restart Simulation Manager and/or computational resource (used to reinitialize)
+# - _simulation_manager_resource_status(record) - return one of: [:initializing, :running, :deactivated, :error] state
+#  -- state refers only to state of computational resource (e.g. VM), not to Simulation Manager application state
+# - _simulation_manager_running?(record) - true/false - is Simulation Manager _application_ running? (e.g. check UNIX process state)
+# - _simulation_manager_get_log(record) -> String - get content of Simulation Manager application log file (stdout+stderr)
+#  -- usually cutted to over a dozen of lines)
+# - _simulation_manager_install(record) - sends to computational resource and executes Simulation Manager application
+#
+# Methods which can be overriden, but not necessarily:
+# - default_additional_params() -> Hash - default additional parameters necessary to start Simulation Managers with the facade
+# - init_resources() - initialize resources needed to perform operations on Simulation Managers
+#   -- this method will be invoked before executing yield_simulation_manager(s) block
+# - clean_up_resources() - close resources needed to perform operations on Simulation Managers
+#   -- this method will be invoked after executing yield_simulation_manager(s) block
+# - create_simulation_manager(record) - create SimulationManager instance on SMRecord base
+#   -- typically you will not override this method, but sometimes custom SimulationManager is needed
+#   -- this method should not be used directly
+# - _simulation_manager_before_monitor(record) - executed before monitoring single resource
+# - _simulation_manager_after_monitor(record) - executed after monitoring single resource
+
+
 class InfrastructureFacade
+  include InfrastructureErrors
 
   attr_reader :logger
 
@@ -22,6 +53,8 @@ class InfrastructureFacade
   end
 
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
+    Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
+
     Dir.chdir('/tmp')
     FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
     # prepare sm configuration
@@ -37,7 +70,7 @@ class InfrastructureFacade
         experiment_manager_pass: temp_password.password,
     }
 
-    if start_at != ''
+    unless start_at.blank?
       sm_config['start_at'] = Time.parse(start_at)
     end
 
@@ -47,36 +80,49 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
-  def self.get_facade_for(infrastructure_name)
-    get_registered_infrastructures[infrastructure_name.to_sym][:facade]
+  # TODO: for bakckward compatibility
+  def current_state(user_id)
+    "You have #{count_sm_records} Simulation Managers scheduled"
   end
 
-  # returns a map of all supported infrastructures
-  # infrastructure_id => facade object
-  def self.get_registered_infrastructures
-    {
-        plgrid: { label: 'PL-Grid', facade: PLGridFacade.new },
-        private_machine: { label: 'Private resources', facade: PrivateMachineFacade.new }
-    }.merge(
-        CloudFactory.infrastructures_hash
-    )
-  end
-
-  def start_monitoring
+  def monitoring_thread
     configure_polling_interval
     lock = MongoLock.new(short_name)
     while true do
       if lock.acquire
+        logger.info 'monitoring thread is working'
         begin
-          logger.info 'monitoring thread is working'
           monitoring_loop
         rescue Exception => e
-          logger.error "Monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
-          # TODO: add 'clean_expired' method to each InfrastructureFacade to remove invalid outdated records
+          logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
         lock.release
       end
       sleep(@polling_interval_sec)
+    end
+  end
+
+  def monitoring_loop
+    begin
+      yield_grouped_simulation_managers do |grouped_simulation_managers|
+        ThreadPool.use([grouped_simulation_managers.count, 4].min) do |pool|
+          grouped_simulation_managers.each do |group, simulation_managers|
+            pool.schedule do
+              begin
+                simulation_managers.each &:monitor
+              rescue Exception => e
+                logger.error "Uncaught exception on monitoring group computation thread (#{group.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
+                get_grouped_sm_records[group].select(&:should_destroy?).each do |record|
+                  logger.warn "Record #{record.id} will be destroyed"
+                  record.destroy
+                end
+              end
+            end
+          end
+        end
+      end
+    rescue Exception => e
+      logger.error "Uncaught exception in monitoring loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
     end
   end
 
@@ -86,45 +132,88 @@ class InfrastructureFacade
     logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 
-  def self.start_monitoring
-    get_registered_infrastructures.each do |infrastructure_id, infrastructure_information|
-      Rails.logger.info("Starting monitoring thread of '#{infrastructure_id}'")
-
-      Thread.new do
-        infrastructure_information[:facade].start_monitoring
-      end
-    end
-  end
-
-  def self.schedule_simulation_managers(user, experiment_id, infrastructure_type, job_counter, additional_params = nil)
-    infrastructure = InfrastructureFacade.get_facade_for(infrastructure_type)
-    additional_params = additional_params || infrastructure.default_additional_params
-
-    status, response_msg = infrastructure.start_simulation_managers(user, job_counter, experiment_id, additional_params)
-
+  def schedule_simulation_managers(user_id, experiment_id, job_counter, additional_params=nil)
+    additional_params = default_additional_params.merge(additional_params)
+    status, response_msg = start_simulation_managers(user_id, job_counter, experiment_id, additional_params)
     render json: response_msg, status: status
   end
 
-end
+  def get_grouped_sm_records(*args)
+    get_sm_records(*args).group_by &:monitoring_group
+  end
 
-class InfrastructureTaskLogger
-  def initialize(infrastructure_name, task_id=nil)
-    if task_id
-      @log_format = Proc.new do |message|
-        "[#{infrastructure_name}][#{task_id.to_s}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
-      end
-    else
-      @log_format = Proc.new do |message|
-        "[#{infrastructure_name}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
-      end
+  # Use only for creating _single_ SimulationManager based on some record
+  # For many SM use yield_simulation_managers()
+  # This method ensures that resources used by SM will be cleaned up
+  def yield_simulation_manager(record, &block)
+    begin
+      init_resources
+      yield create_simulation_manager(record)
+    ensure
+      clean_up_resources
     end
   end
 
-  def method_missing(method_name, *args, &block)
-    if %w(info debug warn error).include? method_name.to_s
-      Rails.logger.send(method_name.to_s, @log_format.call(args[0], block))
-    else
-      super(method_name, *args, &block)
+  # This method ensures that resources used by SM will be cleaned up
+  def yield_simulation_managers(*args, &block)
+    begin
+      init_resources
+      yield get_sm_records(*args).map {|r| create_simulation_manager(r)}
+    ensure
+      clean_up_resources
     end
   end
+
+  # This method ensures that resources used by SM will be cleaned up
+  def yield_grouped_simulation_managers(*args, &block)
+    yield_simulation_managers(*args) do |simulation_managers|
+      yield simulation_managers.group_by {|sm| sm.record.monitoring_group}
+    end
+  end
+
+  # If user_id is given, completes data with user-specific information about infrastructure
+  # @return [Hash] used mainly for listing general infrastructure information in InfrastructureController
+  def to_h(user_id=nil)
+    base = {
+        name: long_name,
+        infrastructure_name: short_name
+    }
+
+    user_id ? base.merge(enabled: enabled_for_user?(user_id)) : base
+  end
+
+  # Helper for Infrastrucutres Tree
+  def sm_record_hashes(user_id, experiment_id=nil, params={})
+    get_sm_records(user_id, experiment_id, params).map {|r| r.to_h }
+  end
+
+  def default_additional_params
+    { 'time_limit' => 300 }
+  end
+
+  # TODO: use .count method? - it will need every infrastructure to implement this
+  def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
+    # query = {}
+    # query.merge!({user_id: user_id}) if user_id
+    # query.merge!({experiment_id: experiment_id}) if experiment_id
+    # query.merge!(attributes) if attributes
+    # sm_record_class.collection.count(query)
+
+    get_sm_records(user_id, experiment_id, attributes).count
+  end
+
+  # -- SimulationManger delegation default implementation --
+
+  def _simulation_manager_before_monitor(record); end
+  def _simulation_manager_after_monitor(record); end
+
+  private
+
+  def create_simulation_manager(record)
+    SimulationManager.new(record, self)
+  end
+
+  def init_resources; end
+  def clean_up_resources; end
+
 end

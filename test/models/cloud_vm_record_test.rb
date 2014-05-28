@@ -3,7 +3,7 @@ require 'test/unit'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class PrivateMachineTest < Test::Unit::TestCase
+class CloudVmRecordTest < Test::Unit::TestCase
 
   def setup
   end

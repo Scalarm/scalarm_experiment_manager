@@ -74,11 +74,22 @@ class ExperimentsController < ApplicationController
   end
 
   def create
-    experiment = prepare_new_experiment
-
     doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
+    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
+    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
 
-    experiment.doe_info = doe_info
+    # create the new type of experiment object
+    experiment = Experiment.new({'simulation_id' => @simulation.id,
+                                 'is_running' => true,
+                                 'replication_level' => replication_level,
+                                 'time_constraint_in_sec' => time_constraint,
+                                 'doe_info' => doe_info,
+                                 'start_at' => Time.now,
+                                 'user_id' => @current_user.id,
+                                 'scheduling_policy' => 'monte_carlo'
+                                })
+    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
     experiment.experiment_input = Experiment.prepare_experiment_input(
         @simulation, JSON.parse(params['experiment_input']), experiment.doe_info)
     experiment.labels = experiment.parameters.flatten.join(',')
@@ -100,6 +111,13 @@ class ExperimentsController < ApplicationController
       # create progress bar
       experiment.insert_initial_bar
       experiment.create_simulation_table
+
+      if params.include?(:computing_power) and (not params[:computing_power].empty?)
+        computing_power = JSON.parse(params[:computing_power])
+        InfrastructureFacade.schedule_simulation_managers(@current_user, experiment.id,
+                                                          computing_power['type'],
+                                                          computing_power['resource_counter'])
+      end
     end
 
     unless flash[:error].blank?
@@ -116,22 +134,15 @@ class ExperimentsController < ApplicationController
   end
 
   def start_import_based_experiment
-    experiment = prepare_new_experiment
+    parameters_to_include = params.keys.select{ |parameter|
+      parameter.start_with?('param_') and params[parameter] == '1'
+    }.map{ |parameter| parameter.split('param_').last }
 
-    if params[:parameter_space_file].blank?
-      are_csv_parameters_not_valid = true
-    else
-      parameters_to_include = params.keys.select{ |parameter|
-        parameter.start_with?('param_') and params[parameter] == '1'
-      }.map{ |parameter| parameter.split('param_').last }
+    importer = ExperimentCsvImporter.new(params[:parameter_space_file].read, parameters_to_include)
 
-      importer = ExperimentCsvImporter.new(params[:parameter_space_file].read, parameters_to_include)
-
-      are_csv_parameters_not_valid = importer.parameters.any? do |param_uid|
-        not @simulation.input_parameters.include?(param_uid)
-      end
+    are_csv_parameters_not_valid = importer.parameters.any? do |param_uid| 
+      not @simulation.input_parameters.include?(param_uid)
     end
-
 
     if are_csv_parameters_not_valid
       flash[:error] = t('experiments.import.csv_parameters_not_valid')
@@ -141,7 +152,18 @@ class ExperimentsController < ApplicationController
         format.json { render json: { status: 'error', msg: flash[:error] } }
       end      
     else
-      experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
+      # create the new type of experiment object
+      experiment = Experiment.new({ 'simulation_id' => @simulation.id,
+        'is_running' => true,
+        'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+        'time_constraint_in_sec' => params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60,
+        'doe_info' => [ [ 'csv_import', importer.parameters, importer.parameter_values ] ],
+        'start_at' => Time.now,
+        'user_id' => @current_user.id,
+        'scheduling_policy' => 'monte_carlo'
+      })
+      experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
+      experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
       experiment.labels = experiment.parameters.flatten.join(',')
       experiment.save
@@ -215,16 +237,10 @@ class ExperimentsController < ApplicationController
       parameter.start_with?('param_') and params[parameter] == '1'
     }.map{ |parameter| parameter.split('param_').last }
 
-    if parameters_to_include.blank? or params[:file_content].blank?
+    importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
+    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
 
-      render json: { experiment_size: 0 }
-
-    else
-      importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
-      replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
-
-      render json: { experiment_size: importer.parameter_values.size * replication_level }
-    end
+    render json: { experiment_size: importer.parameter_values.size * replication_level }
   end
 
   ### Progress monitoring API
@@ -574,20 +590,6 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  def update
-    @experiment.name = params[:experiment][:name]
-    @experiment.description = params[:experiment][:description]
-
-    @experiment.save
-    flash[:notice] = t('experiments.edit.success')
-
-    redirect_to experiment_path(@experiment.id)
-  end
-
-  def new
-    @simulation_input = JSON.parse(@simulation.input_specification)
-  end
-
   private
 
   def load_experiment
@@ -636,33 +638,6 @@ class ExperimentsController < ApplicationController
                   else
                     nil
                   end
-  end
-
-  def input_space_manual_specification
-
-  end
-
-  def input_space_imported_specification
-
-  end
-
-  def prepare_new_experiment
-    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
-    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
-
-    # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'is_running' => true,
-                                 'replication_level' => replication_level,
-                                 'time_constraint_in_sec' => time_constraint,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-
-    experiment
-  end
+  end   
 
 end
