@@ -185,7 +185,7 @@ class InfrastructuresController < ApplicationController
                long_name: facade.long_name,
                partial_name: (group or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
-               simulation_managers: facade.get_sm_records(@current_user)
+               simulation_managers: facade.get_sm_records(@current_user.id)
            }
   end
 
