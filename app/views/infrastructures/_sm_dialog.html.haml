@@ -15,7 +15,7 @@
 - begin
   %h3= t('.resource_header', resource_id: record.resource_id, facade_name: facade.long_name)
 
-  .row
+  .row.small-12.columns
     .small-2.columns.action-button#restart_simulation_manager_button
       = link_to raw('<i class="fi-refresh"/>&nbsp;&nbsp;&nbsp;') + t('.restart'), |
         simulation_manager_command_infrastructure_path(  |
@@ -27,24 +27,37 @@
         %i.fi-stop
         = raw '&nbsp;&nbsp;&nbsp;'
         = t('.stop')
-    .small-8.cloumns
+    .small-8.columns
 
-  %ul
-    %li
-      %strong= t('.resource_state') + ': '
-      - begin
-        - facade.yield_simulation_manager(record) do |sm|
-          = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
-        -#TODO: delete? yield should not throw an exception
-      - rescue Exception => error
-        =t('.resource_state_error', error: error.to_s)
+  .row.small-12.columns
+    %table
+      %tr
+        %th= t('.resource_state')
+        %th= t('infrastructures.sm_dialog.resource_id')
+        %th= t('infrastructures.sm_dialog.simulation_manager_state')
+        %th= t('infrastructures.sm_dialog.sm_initialized_at')
+        %th= t('infrastructures.sm_dialog.created_at')
+        %th= t('infrastructures.sm_dialog.time_limit')
+        %th= t('infrastructures.sm_dialog.experiment')
+        %th= t('infrastructures.sm_dialog.specific')
 
-    - begin
-      = render partial: "infrastructures/scheduler/simulation_manager_info",
-          locals: {partial_name: partial_name, record: record}
-    - rescue Exception => e
-      - raise e if e.kind_of? ActionView::MissingTemplate
-      =t('infrastructure.information.sm_record_error', error: e.to_s)
+        %tr
+          %td
+            - begin
+              - facade.yield_simulation_manager(record) do |sm|
+                = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
+              -#TODO: delete? yield should not throw an exception
+            - rescue Exception => error
+              =t('.resource_state_error', error: error.to_s)
+
+          - begin
+            = render partial: "infrastructures/scheduler/simulation_manager_info",
+                locals: {partial_name: partial_name, record: record}
+          - rescue Exception => e
+            %tr
+              %td(colspan="7" )
+                - raise e if e.kind_of? ActionView::MissingTemplate
+                =t('infrastructure.information.sm_record_error', error: e.to_s)
 
 - rescue Exception => e
   =t('infrastructure.information.sm_record_error', error: e.to_s)

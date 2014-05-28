@@ -156,7 +156,7 @@ en:
       created_at: "Created at"
       time_limit: "Time limit"
       experiment: "Experiment"
-      experiment: "Infrastructure specific"
+      specific: "Infrastructure specific"
       restart: "Restart"
       stop: "Stop / Remove"
       destroy_dialog:
