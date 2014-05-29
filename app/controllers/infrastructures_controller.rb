@@ -127,7 +127,7 @@ class InfrastructuresController < ApplicationController
         raise StandardError.new(t('infrastructures_controller.credentials.nil_add_credentials'))
       end
     rescue Exception => exc
-      mark_credentials_invalid(credentials, infrastructure_name)
+      mark_credentials_invalid(credentials, infrastructure_name) if credentials
       render json: {
           status: 'error',
           error_code: credentials ? 'unknown' : 'not-in-db',
