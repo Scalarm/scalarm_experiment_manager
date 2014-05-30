@@ -6,17 +6,17 @@ class InfrastructuresControllerTest < ActionController::TestCase
   tests InfrastructuresController
 
   def setup
-    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
-
-    # @tmp_user_id = '1'
-
-    @tmp_user = ScalarmUser.new({login: 'test'})
-    # @tmp_user.id = @tmp_user_id
-    @tmp_user.save
-    @tmp_user_id = @tmp_user.id
-
-    # ScalarmUser.stubs(:find_by_id).with(@tmp_user_id).returns(@tmp_user)
+    # MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
+    # MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    #
+    # # @tmp_user_id = '1'
+    #
+    # @tmp_user = ScalarmUser.new({login: 'test'})
+    # # @tmp_user.id = @tmp_user_id
+    # @tmp_user.save
+    # @tmp_user_id = @tmp_user.id
+    #
+    # # ScalarmUser.stubs(:find_by_id).with(@tmp_user_id).returns(@tmp_user)
   end
 
   def teardown
@@ -181,26 +181,6 @@ class InfrastructuresControllerTest < ActionController::TestCase
     assert_equal 'ok', JSON.parse(response.body)['status'], response.body
   end
 
-  def test_schedule_simulation_managers
-    require 'json'
-
-    params = {
-        'experiment_id'=> 'e1',
-        'infrastructure_name'=> 'inf_name',
-        'job_counter'=>'3'
-    }
-    facade = stub_everything 'facade'
-    facade.expects(:start_simulation_managers)
-      .with(@tmp_user_id, 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
-      .returns(['ok', 'good']).once
-
-    InfrastructureFacadeFactory.expects(:get_facade_for).with('inf_name').returns(facade)
-
-    get :schedule_simulation_managers, params, {user: @tmp_user_id}
-
-    assert_equal 'ok', JSON.parse(response.body)['status'], response.body
-  end
-
   def test_schedule_with_invalid_creds
     require 'json'
 
@@ -235,6 +215,122 @@ class InfrastructuresControllerTest < ActionController::TestCase
     resp_hash = JSON.parse(response.body)
 
     assert_equal 'missing-parameters-error', resp_hash['status']
+  end
+
+  def test_schedule_simulation_managers
+    require 'json'
+
+    u1 = ScalarmUser.new({_id: 'u1', login: '1'})
+    ScalarmUser.stubs(:find_by_id).returns(u1)
+
+    e1 = stub_everything 'exp1' do
+      stubs(:user_id).returns('u1')
+      stubs(:shared_with).returns([])
+    end
+    Experiment.stubs(:find_by_id).with('e1').returns(e1)
+
+    params = {
+        'experiment_id'=> 'e1',
+        'infrastructure_name'=> 'inf_name',
+        'job_counter'=>'3'
+    }
+    facade = stub_everything 'facade'
+    facade.expects(:start_simulation_managers)
+    .with('u1', 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
+    .returns(['ok', 'good']).once
+
+    InfrastructureFacadeFactory.expects(:get_facade_for).with('inf_name').returns(facade)
+
+    get :schedule_simulation_managers, params, {user: 'u1'}
+
+    resp_hash = JSON.parse(response.body)
+
+    assert_equal 'ok', resp_hash['status'], response.body
+  end
+
+  def test_schedule_for_foreign_experiment
+    u1 = ScalarmUser.new({_id: 'u1', login: '1'})
+    u2 = ScalarmUser.new({_id: 'u2', login: '2'})
+
+    ScalarmUser.stubs(:find_by_id).with('u1').returns(u1)
+    ScalarmUser.stubs(:find_by_id).with('u2').returns(u2)
+
+    u1 = stub_everything 'user1'
+    u2 = stub_everything 'user2'
+
+    e1 = stub_everything 'exp1' do
+      stubs(:id).returns('e1')
+      stubs(:user_id).returns('u1')
+      stubs(:shared_with).returns([])
+    end
+
+    e2 = stub_everything 'exp2' do
+      stubs(:id).returns('e2')
+      stubs(:user_id).returns('u2')
+      stubs(:shared_with).returns([])
+    end
+
+    Experiment.stubs(:find_by_id).returns(e1)
+    Experiment.stubs(:find_by_id).returns(e2)
+
+    facade = stub_everything 'infrastructure' do
+      expects(:start_simulation_managers).never
+    end
+
+    InfrastructureFacadeFactory.stubs(:get_facade_for).with('inf_test').returns(facade)
+
+    post :schedule_simulation_managers, {
+        infrastructure_name: 'inf_test',
+        job_counter: 1,
+        experiment_id: 'e2'
+    }, {user: 'u1'}
+
+    resp_hash = JSON.parse(response.body)
+
+    assert_equal 'error', resp_hash['status'], response.body
+    assert_equal 'foreign-experiment', resp_hash['error_code']
+  end
+
+  def test_schedule_for_shared_experiment
+    u1 = ScalarmUser.new({_id: 'u1', login: '1'})
+    u2 = ScalarmUser.new({_id: 'u2', login: '2'})
+
+    ScalarmUser.stubs(:find_by_id).with('u1').returns(u1)
+    ScalarmUser.stubs(:find_by_id).with('u2').returns(u2)
+
+    u1 = stub_everything 'user1'
+    u2 = stub_everything 'user2'
+
+    e1 = stub_everything 'exp1' do
+      stubs(:id).returns('e1')
+      stubs(:user_id).returns('u1')
+      stubs(:shared_with).returns([])
+    end
+
+    e2 = stub_everything 'exp2' do
+      stubs(:id).returns('e2')
+      stubs(:user_id).returns('u2')
+      stubs(:shared_with).returns(['u1'])
+    end
+
+    Experiment.stubs(:find_by_id).returns(e1)
+    Experiment.stubs(:find_by_id).returns(e2)
+
+    facade = stub_everything 'infrastructure' do
+      expects(:start_simulation_managers).returns(['ok', 'good']).once
+    end
+
+    InfrastructureFacadeFactory.stubs(:get_facade_for).with('inf_test').returns(facade)
+
+    post :schedule_simulation_managers, {
+        infrastructure_name: 'inf_test',
+        job_counter: 1,
+        experiment_id: 'e2'
+    }, {user: 'u1'}
+
+    resp_hash = JSON.parse(response.body)
+
+    assert_equal 'ok', resp_hash['status'], response.body
   end
 
 end

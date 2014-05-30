@@ -3,6 +3,7 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructuresController < ApplicationController
   include InfrastructureErrors
+  include GenericErrors
 
   def index
     render 'infrastructure/index'
@@ -48,18 +49,26 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
+    infrastructure = nil
     infrastructure_name = '?'
 
-    unless validate_schedule_simulation_managers(params)
-      return render json: { status: 'error', error_code: 'missing-parameters', msg: I18n.t('infrastructures_controller.missing_parameters') }
-    end
-
     begin
+      unless validate_schedule_simulation_managers(params)
+        return render json: { status: 'error', error_code: 'missing-parameters', msg: I18n.t('infrastructures_controller.missing_parameters') }
+      end
+
+      experiment_id = params[:experiment_id]
+      begin
+        validate_experiment(experiment_id)
+      rescue InfrastructureErrors::AccessDeniedError => access_denied
+        return render json: {status: 'error', error_code: 'foreign-experiment', msg: I18n.t('infrastructures_controller.foreign_experiment')}
+      end
+
       infrastructure_name = params[:infrastructure_name]
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
       begin
         status, response_msg = infrastructure.start_simulation_managers(
-            @current_user.id, params[:job_counter].to_i, params[:experiment_id], params
+            @current_user.id, params[:job_counter].to_i, experiment_id, params
         )
         render json: { status: status, msg: response_msg }
       rescue InfrastructureErrors::NoCredentialsError => no_creds
@@ -72,6 +81,10 @@ class InfrastructuresController < ApplicationController
     rescue InfrastructureErrors::NoSuchInfrastructureError => exc
       render json: {status: 'error', error_code: 'no-such-infrastructure', msg: I18n.t('infrastructures_controller.no_such_infrastructure',
                                                                         name: infrastructure_name) }
+    rescue GenericErrors::ControllerError => error
+      render json: { status: 'error', error_code: error.error_code, msg: I18n.t('infrastructures_controller.schedule_error',
+                         name: infrastructure ? infrastructure.long_name : infrastructure_name,
+                         error: error.to_s) }
     rescue Exception => exc
       render json: { status: 'error', error_code: 'scheduling-failed', msg: I18n.t('infrastructures_controller.schedule_error',
                         name: infrastructure ? infrastructure.long_name : infrastructure_name,
@@ -310,6 +323,17 @@ class InfrastructuresController < ApplicationController
   def yield_simulation_manager(record_id, infrastructure_name, &block)
     facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
     facade.yield_simulation_manager(get_sm_record(record_id, facade)) {|sm| yield sm}
+  end
+
+  def validate_experiment(experiment_id)
+    experiment = Experiment.find_by_id(experiment_id)
+    if experiment
+      unless experiment.user_id == @current_user.id or experiment.shared_with.include? @current_user.id
+        raise InfrastructureErrors::AccessDeniedError
+      end
+    else
+      raise GenericErrors::ControllerError.new('no-such-experiment', experiment_id)
+    end
   end
 
   # TODO: unused, remove?
