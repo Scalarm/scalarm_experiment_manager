@@ -31,6 +31,10 @@ en:
         credentials_label: Please, provide your credentials to access private resources
 
     information:
+      experiment: "Experiment"
+      infrastructure: "Infrastructure"
+      shared_experiment: "Shared"
+
       instance_counter: Instance counter
       image_label: Image
       vm_type: Instance type

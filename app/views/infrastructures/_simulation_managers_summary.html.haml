@@ -1,3 +1,9 @@
+- state_tooltip = "#{t('infrastructures.sm_dialog.state_tooltip')}" + |
+  "<br/><i class='fi-stop sm-before_init'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.before_init')}" + |
+  "<br/><i class='fi-stop sm-initialized'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.initialized')}" + |
+  "<br/><i class='fi-stop sm-error'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.error')}" + |
+  "<br/><i class='fi-stop sm-unknown'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.unknown')}" |
+
 .row
   %p.small-12.columns
     = "Total count of simulation managers registered for #{long_name}: #{simulation_managers.count}"
@@ -9,7 +15,9 @@
         %thead
           %tr
             %th= t('infrastructures.sm_dialog.resource_id')
-            %th= t('infrastructures.sm_dialog.simulation_manager_state')
+            %th{style: 'text-align: center;'}
+              %span.has-tip{'data-tooltip' => '', title: state_tooltip}
+                %i.fi-info{style: 'color: black;'}
             %th= t('infrastructures.sm_dialog.sm_initialized_at')
             %th= t('infrastructures.sm_dialog.created_at')
             %th= t('infrastructures.sm_dialog.time_limit')
@@ -27,3 +35,8 @@
                   =t('infrastructure.information.sm_record_error', error: e.to_s)
     - rescue ActionView::MissingTemplate
       = t('infrastructure.information.sm_record_no_view')
+
+:javascript
+  $(function() {
+    $(this).foundation('tooltip');
+  });

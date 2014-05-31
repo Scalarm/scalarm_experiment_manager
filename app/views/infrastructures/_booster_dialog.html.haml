@@ -1,6 +1,4 @@
-- # TODO: move code to helper?
 - infrastructure_name = InfrastructureFacadeFactory.get_registered_infrastructure_names.first if infrastructure_name.blank?
-- experiments_select = Experiment.get_running_experiments.map { |exp| ["#{exp.name} (#{exp.id})", exp.id] }
 - infrastructures_list = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(@current_user.id))
 - infrastructures_select_data = infrastructures_list[:data]
 - disabled_infrastructures = infrastructures_list[:disabled]
@@ -12,19 +10,18 @@
 %dl.accordion(data-accordion="")
   %dd
     %a(href="#submission-panel")= t 'infrastructure.information.submission_label'
-    - #TODO:, class: "#{invalid_credentials ? 'disabled' : ''}"}
     .content{id: "submission-panel", class: 'active'}
       #scheduler-form
         = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
           .row
             .small-4.columns
-              = label_tag :experiment_id, 'Experiment' + ':', class: 'inline right'
+              = label_tag :experiment_id, t('infrastructure.information.experiment') + ':', class: 'inline right'
             .small-4.columns
-              = select_tag :experiment_id, options_for_select(experiments_select, experiment_id.to_s)
+              = select_tag :experiment_id, options_for_select(experiments_select_data(@current_user), experiment_id.to_s)
             .small-4.columns
           .row
             .small-4.columns
-              = label_tag :infrastructure_name, 'Infrastructure' + ':', class: 'inline right'
+              = label_tag :infrastructure_name, t('infrastructure.information.infrastructure') + ':', class: 'inline right'
             .small-4.columns
               = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select_data,
                 infrastructure_name)

@@ -1,15 +1,15 @@
-- record_state = case record.state
-  - when :error then t('infrastructures.sm_dialog.state.error')
-  - when :initialized then t('infrastructures.sm_dialog.state.initialized')
-  - when :before_init then t('infrastructures.sm_dialog.state.not_initialized')
-  - else t('infrastructures.sm_dialog.state.unknown')
+-#- record_state_color = case record.state
+-#  - when :error then 'firebrick'
+-#  - when :initialized then 'forestgreen'
+-#  - when :before_init then 'goldenrod'
+-#  - else 'lightsteelblue'
 
 %td= record.resource_id
 -# infrastructure-specific info
 
 -# general record info
 %td
-  = record_state
+  %i{class: "fi-stop sm-#{record.state or 'unknown'}"}
   - if record.state == :error
     %ul
       %li

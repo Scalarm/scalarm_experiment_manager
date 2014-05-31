@@ -147,10 +147,10 @@ en:
 
       resource_state_error: "error checking state: %{error}"
       state:
-        error: "an error occured"
-        initialized: "initialized"
-        not_initialized: "waiting for initialization"
-        unknown: "unknown"
+        error: "An error occured"
+        initialized: "Initialized"
+        before_init: "Waiting for initialization"
+        unknown: "Unknown"
       simulation_manager_state: "Simulation Manager application state"
       sm_initialized_at: "Simulation Manager installed at"
       created_at: "Created at"
@@ -161,7 +161,8 @@ en:
       stop: "Stop / Remove"
       destroy_dialog:
         header: "Are you sure you want to destroy this Simulation Manager?"
-      resource_id: "Resource ID"
+      resource_id: "Resource"
+      state_tooltip: "State of Simulation Manager application"
   yes: "Yes"
   no: "No"
   plgrid:
