@@ -158,9 +158,10 @@ en:
       experiment: "Experiment"
       specific: "Other"
       restart: "Restart"
-      stop: "Stop / Remove"
-      destroy_dialog:
-        header: "Are you sure you want to destroy this Simulation Manager?"
+      stop: "Stop"
+      remove: "Remove"
+    destroy_dialog:
+      header: "Are you sure you want to destroy this Simulation Manager?"
       resource_id: "Resource"
       state_tooltip: "State of Simulation Manager application"
   yes: "Yes"

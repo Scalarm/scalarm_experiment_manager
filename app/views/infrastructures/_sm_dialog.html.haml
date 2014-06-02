@@ -2,31 +2,26 @@
 
 %a.close-reveal-modal &#215;
 
-#destroy_simulation_manager_dialog.reveal-modal(data-reveal="")
-  %h2= t('.destroy_dialog.header')
-  .row
-    .small-6.columns.centered
-      = link_to t('yes'),simulation_manager_command_infrastructure_path(  |
-        command: 'stop', record_id: record.id, infrastructure_name: facade.short_name), |
-        id: 'destroy-yes', class: button_classes, method: :post, remote: true |
-    .small-6.columns.centered
-      %span.no_button{class: button_classes}= t('no')
-
 - begin
   %h3= t('.resource_header', resource_id: record.resource_id, facade_name: facade.long_name)
 
   .row.small-12.columns
-    .small-2.columns.action-button#restart_simulation_manager_button
-      = link_to raw('<i class="fi-refresh"/>&nbsp;&nbsp;&nbsp;') + t('.restart'), |
-        simulation_manager_command_infrastructure_path(  |
-        command: 'restart', record_id: record.id, infrastructure_name: facade.short_name), |
-        class: button_classes, method: :post, remote: true |
+    .small-2.columns.action-button
+      %span#restart_simulation_manager_button{class: button_classes}
+        %i.fi-refresh
+        = raw '&nbsp;&nbsp;'
+        = t('.restart')
 
-    .small-2.columns.action-button#destroy_simulation_manager_button
-      %span#destroyExperimentButton{class: "#{button_classes} alert"}
-        %i.fi-stop
-        = raw '&nbsp;&nbsp;&nbsp;'
-        = t('.stop')
+    .small-2.columns.action-button
+      %span#stop_simulation_manager_button{class: "#{button_classes} alert"}
+        - if record.state == :error
+          %i.fi-x
+          = raw '&nbsp;&nbsp;'
+          = t('.remove')
+        - else
+          %i.fi-stop
+          = raw '&nbsp;&nbsp;'
+          = t('.stop')
     .small-8.columns
 
   .row.small-12.columns
@@ -36,7 +31,6 @@
         - begin
           - facade.yield_simulation_manager(record) do |sm|
             = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
-          -#TODO: delete? yield should not throw an exception
         - rescue Exception => error
           =t('.resource_state_error', error: error.to_s)
 
@@ -51,7 +45,7 @@
       - record_state = case record.state
         - when :error then t('infrastructures.sm_dialog.state.error')
         - when :initialized then t('infrastructures.sm_dialog.state.initialized')
-        - when :before_init then t('infrastructures.sm_dialog.state.not_initialized')
+        - when :before_init then t('infrastructures.sm_dialog.state.before_init')
         - else t('infrastructures.sm_dialog.state.unknown')
       %li
         %strong= t('infrastructures.sm_dialog.simulation_manager_state') + ': '
@@ -89,5 +83,5 @@
   $(function() {
     $(document).foundation();
 
-    new window.SmDialog("#dialog");
+    new window.SmDialog("#dialog", "#{facade.short_name}", "#{record.id}");
   });

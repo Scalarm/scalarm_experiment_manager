@@ -12,6 +12,14 @@
 
   #dialog.reveal-modal(data-reveal="")
 
+  #destroy_simulation_manager_dialog.reveal-modal(data-reveal="")
+    %h2= t('infrastructures.destroy_dialog.header')
+    .row
+      .small-6.columns.centered
+        %span{id: 'destroy-yes', class: button_classes}= t('yes')
+      .small-6.columns.centered
+        %span{id: 'destroy-no', class: button_classes}= t('no')
+
 - content_for :javascript do
   :javascript
     $(function() {

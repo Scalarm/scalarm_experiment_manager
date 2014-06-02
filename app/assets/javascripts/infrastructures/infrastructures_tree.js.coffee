@@ -107,18 +107,54 @@ class window.InfrastructuresTree
       d.children = d._children
       d._children = null
 
-  stopSm: (d) ->
-#    TODO: are you sure dialog
-    @smCommand(d, 'stop')
+  nodeStopSm: (d) ->
+    @stopSm(d['infrastructure_name'], d['_id'])
 
-  restartSm: (d) ->
-    @smCommand(d, 'restart')
+  nodeRestartSm: (d) ->
+    @restartSm(d['infrastructure_name'], d['_id'])
 
-  smCommand: (d, command) ->
-    data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': command }
-    $.post(@simulation_manager_command_infrastructure_path, data,
-      (json) => @updateInfrastructureNode(d["infrastructure_name"]) # update infrastructure leaf
+  rebindDestroyDialog: (infrastructure_name, record_id) ->
+    $('#destroy-no').on 'click', =>
+      $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+
+    button = $('#destroy-yes')
+    button.off()
+    button.unbind()
+    button.on 'click', =>
+      console.log("will destroy #{record_id} on #{infrastructure_name}")
+      $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+      window.show_loading_notice()
+      data = { 'infrastructure_name': infrastructure_name, 'record_id': record_id, 'command': 'stop' }
+      $.post(@simulation_manager_command_infrastructure_path, data, (json) =>
+        @updateInfrastructureNode(infrastructure_name)
+        window.hide_notice()
+        switch json.status
+          when 'error' then toastr.error(json.msg)
+          when 'ok' then toastr.success(json.msg)
+          else toastr.error(json.msg)
+      )
+
+  stopSm: (infrastructure_name, record_id) ->
+    @rebindDestroyDialog(infrastructure_name, record_id)
+    $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
+
+  restartSm: (infrastructure_name, record_id) ->
+    data = { 'infrastructure_name': infrastructure_name, 'record_id': record_id, 'command': 'restart' }
+    window.show_loading_notice()
+    $.post(@simulation_manager_command_infrastructure_path, data, (json) =>
+      @updateInfrastructureNode(infrastructure_name)
+      window.hide_notice()
+      switch json.status
+        when 'error' then toastr.error(json.msg)
+        when 'ok' then toastr.success(json.msg)
+        else toastr.error(json.msg)
     )
+
+#  smCommand: (d, command) ->
+#    data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': command }
+#    $.post(@simulation_manager_command_infrastructure_path, data,
+#      (json) => @updateInfrastructureNode(d["infrastructure_name"]) # update infrastructure leaf
+#    )
 
   updateTree: (source) ->
     duration = (d3.event && d3.event.altKey) and 5000 or 500
@@ -204,7 +240,7 @@ class window.InfrastructuresTree
       .attr("width", 24).attr("height", 24).attr("xlink:href", '/assets/refresh_icon.png')
       .style("transform", "translate(166px,-12px)")
       .attr("class", "button")
-      .on("click", (d) => @restartSm(d))
+      .on("click", (d) => @nodeRestartSm(d))
       .attr("title", "Restart Simulation Manager")
 
       # stop button
@@ -213,7 +249,7 @@ class window.InfrastructuresTree
       .attr("xlink:href", (d) => '/assets/' + (d.error and 'remove' or 'stop') + '_icon.png')
       .style("transform", "translate(192px,-12px)")
       .attr("class", "button")
-      .on("click", (d) => @stopSm(d))
+      .on("click", (d) => @nodeStopSm(d))
       .attr("title", (d) => d.error and 'Remove Simulation Manager entry' or 'Stop Simulation Manager')
 
     )
@@ -295,11 +331,16 @@ class window.InfrastructuresTree
     @dialog.html(window.loaderHTML)
     @dialog.load @smDialogPath(params)
 
-
   boosterDialog: (d) ->
     @dialog.foundation('reveal', 'open')
     @dialog.html(window.loaderHTML)
     @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id'])
+
+  commandConfirmDialog: (infrastructure_name, record_id) ->
+    @dialog.foundation('reveal', 'open')
+    @dialog.html(window.loaderHTML)
+    @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id'])
+
 
   smDialogPath: (params) ->
     "#{@baseSmDialogUrl}?" + $.param(params)
@@ -307,6 +348,12 @@ class window.InfrastructuresTree
   boosterDialogPath: (infrastructure_name, experiment_id) ->
     # TODO: path as parameter
     "/infrastructure/get_booster_dialog?" + $.param({
+      infrastructure_name: infrastructure_name,
+      experiment_id: experiment_id
+    })
+
+  commandConfirmDialogPath: (infrastructure_name, record_id, command) ->
+    "/infrastructure/get_command_confirm_dialog?" + $.param({
       infrastructure_name: infrastructure_name,
       experiment_id: experiment_id
     })
