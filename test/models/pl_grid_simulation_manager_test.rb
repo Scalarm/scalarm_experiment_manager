@@ -64,7 +64,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
 
     simulation_manager = PlGridSimulationManager.new(mock_record, mock_infrastructure)
     simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:stop_and_destroy).never
     simulation_manager.expects(:sm_terminated?).returns(false).once
     simulation_manager.expects(:should_initialize_sm?).returns(false).once
     simulation_manager.expects(:record_sm_failed).never

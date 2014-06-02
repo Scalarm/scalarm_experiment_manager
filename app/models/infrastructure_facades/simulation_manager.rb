@@ -41,13 +41,13 @@ class SimulationManager
             message: 'Time limit exceeded - destroying Simulation Manager',
             action: lambda {
               record.store_error('not_started') if record.state == :before_init
-              destroy_with_record
+              stop_and_destroy
             }
         },
         experiment_end: {
             condition: lambda {record.experiment_end?},
             message: 'Experiment finished - destroying Simulation Manager',
-            action: lambda {destroy_with_record}
+            action: lambda {stop_and_destroy}
         },
         init_time_exceeded: {
             condition: lambda {record.init_time_exceeded?},
@@ -81,11 +81,7 @@ class SimulationManager
 
     if not record.experiment
       logger.warn 'Removing record, because experiment does not exists'
-      begin
-        destroy_with_record
-      rescue Exception
-        record.destroy
-      end
+      stop_and_destroy(false)
     elsif record.state == :error
       logger.info 'Has error flag - skipping'
     else
@@ -120,6 +116,7 @@ class SimulationManager
 
   DELEGATES = %w(stop restart resource_status running? get_log install before_monitor after_monitor).to_set
 
+  # return values of simulation manager action invoked on record with invalid credentials state
   ERROR_DELEGATES = {
       resource_status: :no_connection,
       running?: false,
@@ -137,7 +134,7 @@ class SimulationManager
         rescue Exception => e
           logger.warn "Exception on action #{m}: #{e.to_s}\n#{e.backtrace.join("\n")}"
           record.store_error('resource_action', "#{m}: #{e.to_s}")
-          stop
+          infrastructure._simulation_manager_stop rescue nil
         end
       end
     else
@@ -163,11 +160,11 @@ class SimulationManager
     stop
   end
 
-  def destroy_with_record
+  def stop_and_destroy(leave_on_error=true)
     begin
       stop
     ensure
-      record.destroy unless record.state == :error
+      record.destroy unless leave_on_error and record.state == :error
     end
   end
 

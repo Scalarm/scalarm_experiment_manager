@@ -88,7 +88,7 @@ class SimulationManagerTest < Test::Unit::TestCase
 
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
     simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:destroy_with_record).once
+    simulation_manager.expects(:stop_and_destroy).once
     simulation_manager.expects(:sm_terminated?).never
     simulation_manager.expects(:should_initialize_sm?).never
     simulation_manager.expects(:record_sm_failed).never
@@ -118,7 +118,7 @@ class SimulationManagerTest < Test::Unit::TestCase
 
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
     simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:destroy_with_record).once
+    simulation_manager.expects(:stop_and_destroy).once
     simulation_manager.expects(:sm_terminated?).never
     simulation_manager.expects(:should_initialize_sm?).never
     simulation_manager.expects(:record_sm_failed).never
@@ -151,7 +151,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
     simulation_manager.expects(:before_monitor).once
     simulation_manager.expects(:restart).once
-    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:stop_and_destroy).never
     simulation_manager.expects(:sm_terminated?).never
     simulation_manager.expects(:should_initialize_sm?).never
     simulation_manager.expects(:record_sm_failed).never
@@ -182,7 +182,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     simulation_manager.expects(:before_monitor).once
     simulation_manager.expects(:record_init_time_exceeded).never
     simulation_manager.expects(:restart).never
-    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:stop_and_destroy).never
     simulation_manager.expects(:sm_terminated?).returns(true).once
     simulation_manager.expects(:should_initialize_sm?).never
     simulation_manager.expects(:record_sm_failed).once
@@ -214,7 +214,7 @@ class SimulationManagerTest < Test::Unit::TestCase
     simulation_manager.expects(:before_monitor).once
     simulation_manager.expects(:record_init_time_exceeded).never
     simulation_manager.expects(:restart).never
-    simulation_manager.expects(:destroy_with_record).never
+    simulation_manager.expects(:stop_and_destroy).never
     simulation_manager.expects(:sm_terminated?).returns(false).once
     simulation_manager.expects(:record_sm_failed).never
     simulation_manager.expects(:should_initialize_sm?).returns(true).once
@@ -275,6 +275,24 @@ class SimulationManagerTest < Test::Unit::TestCase
     infrastructure = stub_everything
 
     sm = SimulationManager.new(record, infrastructure)
+    sm.expects(:stop)
+
+    sm.monitor
+  end
+
+  def test_no_experiment_exception
+    record = stub_everything 'record' do
+      stubs(:experiment).returns(nil)
+      stubs(:state)
+      expects(:destroy)
+    end
+
+    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
+    infrastructure = stub_everything
+    infrastructure.stubs(:_simulation_manager_stop).raises(StandardError.new('err'))
+
+    sm = SimulationManager.new(record, infrastructure)
+    sm.expects(:stop)
 
     sm.monitor
   end
