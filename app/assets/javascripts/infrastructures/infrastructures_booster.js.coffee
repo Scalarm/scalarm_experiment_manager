@@ -46,3 +46,6 @@ class window.InfrastructuresBooster
           else
             toastr.error(data.msg)
       )
+      .bind('ajax:complete', =>
+        window.infrastructuresTree and window.infrastructuresTree.updateInfrastructureNode(@infrastructureName)
+      )

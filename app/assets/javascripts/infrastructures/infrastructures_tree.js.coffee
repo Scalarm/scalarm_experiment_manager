@@ -73,10 +73,6 @@ class window.InfrastructuresTree
       @updateTree(@root)
     )
 
-  updateAllNodes: () ->
-    for name, fun of @fetchNodesFunctions
-      fun()
-
   smRecordsJson: (name, params_hash) ->
     {'infrastructure_name': name, 'infrastructure_params': params_hash}
 
@@ -336,9 +332,12 @@ class window.InfrastructuresTree
 
   bindRefreshTreeButton: (button_id) ->
     $("##{button_id}").on("click", =>
-      @updateAllNodes()
+      @updateAllInfrastrctureNodes()
     )
 
   updateInfrastructureNode: (infrastructure_name) ->
     @fetchNodesFunctions[infrastructure_name]()
 
+  updateAllInfrastrctureNodes: () ->
+    for name, fun of @fetchNodesFunctions
+      fun()
