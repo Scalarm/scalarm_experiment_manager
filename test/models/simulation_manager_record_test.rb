@@ -134,12 +134,28 @@ class SimulationManagerRecordTest < Test::Unit::TestCase
     assert (not sm_record.init_time_exceeded?)
   end
 
-  # def test_initialize
-  #   MockMongoActiveRecord.expects(:initialize).with(some_field: 'test').once
-  #   MockRecord.any_instance.expects(:created_at=).once
-  #   MockRecord.any_instance.expects(:sm_initialized_at=).once
-  #
-  #   record = MockRecord.new(some_field: 'test')
-  # end
+  def test_store_error_in_db
+    record = MockRecord.new({})
+    MockRecord.stubs(:find_by_id).with('1').returns(record)
+
+    record.stubs(:id).returns('1')
+    record.expects(:error=).with('a').once
+    record.expects(:error_log=).with('b')
+    record.expects(:save).once
+
+    record.store_error('a', 'b')
+  end
+
+  def test_store_error_not_in_db
+    MockRecord.stubs(:find_by_id).with('1').returns(nil)
+
+    record = MockRecord.new({})
+    record.stubs(:id).returns('1')
+    record.expects(:error=).with('a').once
+    record.expects(:error_log=).with('b')
+    record.expects(:save).never
+
+    record.store_error('a', 'b')
+  end
 
 end

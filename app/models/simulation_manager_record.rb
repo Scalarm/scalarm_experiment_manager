@@ -70,7 +70,7 @@ module SimulationManagerRecord
   def store_error(error, error_log=nil)
     self.error = error
     self.error_log = error_log if error_log
-    self.save
+    self.save if self.class.find_by_id(self.id)
   end
 
 end
