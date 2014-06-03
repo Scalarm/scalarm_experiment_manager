@@ -90,17 +90,6 @@ module GliteScheduler
       ssh.exec!("rm scalarm_job_#{job.sm_uuid}.jdl")
     end
 
-    def restart(ssh, job)
-      cancel(ssh, job)
-      if submit_job(ssh, job)
-        job.created_at = Time.now
-        job.save
-        true
-      else
-        false
-      end
-    end
-
     # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
     # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
     # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"

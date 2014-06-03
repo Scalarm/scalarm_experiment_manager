@@ -110,17 +110,6 @@ module QsubScheduler
       ssh.exec!("qdel #{job.job_id}")
     end
 
-    def restart(ssh, job)
-      cancel(ssh, job)
-      if submit_job(ssh, job)
-        job.created_at = Time.now
-        job.save
-        true
-      else
-        false
-      end
-    end
-
     def get_log(ssh, job)
       output = ssh.exec! "tail -25 #{job.log_path}"
       ssh.exec! "rm #{job.log_path}"
