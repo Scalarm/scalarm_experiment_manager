@@ -52,7 +52,11 @@ class SimulationManager
         init_time_exceeded: {
             condition: lambda {record.init_time_exceeded?},
             message: "Initialization time (#{record.max_init_time/60} min) exceeded - trying to restart resource",
-            action: lambda {restart}
+            action: lambda {
+              restart
+              record.sm_initialized_at = Time.now
+              record.save
+            }
         },
         sm_terminated: {
             condition: lambda {sm_terminated?},

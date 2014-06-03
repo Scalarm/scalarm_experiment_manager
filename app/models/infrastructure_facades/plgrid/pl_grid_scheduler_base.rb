@@ -45,13 +45,7 @@ ruby simulation_manager.rb
 
   def restart(ssh, job)
     cancel(ssh, job)
-    if submit_job(ssh, job)
-      job.created_at = Time.now
-      job.save
-      true
-    else
-      false
-    end
+    submit_job(ssh, job)
   end
 
 end
