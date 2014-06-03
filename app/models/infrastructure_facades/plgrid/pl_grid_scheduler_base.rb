@@ -5,6 +5,11 @@
 # - send_job_files(sm_uuid, scp)
 # - submit_job(ssh, job)
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
+# - cancel(ssh, record) - cancels job
+# - restart(ssh, record)
+# - status(ssh, record) -> job state in queue mapped to: :initializing, :running, :deactivated, :error
+# - clean_after_job(ssh, record) - cleans UI user's account from temporary files
+# - get_log(ssh, record) -> String with stdout+stderr contents for job
 
 class PlGridSchedulerBase
 

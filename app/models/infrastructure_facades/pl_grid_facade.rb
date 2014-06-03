@@ -185,7 +185,7 @@ class PlGridFacade < InfrastructureFacade
 
   def _simulation_manager_running?(record)
     ssh = shared_ssh_session(record.credentials)
-    not scheduler.is_done(ssh, record)
+    scheduler.status(ssh, record) == :running
   end
 
   def _simulation_manager_get_log(record)
