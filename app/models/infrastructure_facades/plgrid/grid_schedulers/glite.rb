@@ -54,14 +54,6 @@ module GliteScheduler
       match ? match[1] : nil
     end
 
-    def is_done(ssh, job)
-      not %w(Ready Scheduled Running).include?(glite_state(ssh, job))
-    end
-
-    def is_job_queued(ssh, job)
-      %w(Ready Scheduled).include?(glite_state(ssh, job))
-    end
-
     # --- gLite states:
     # Submitted -	The job has been submitted by the user but not yet processed by the RB
     # Waiting	- The job has been accepted by the RB but not yet matched to a CE

@@ -79,14 +79,6 @@ module QsubScheduler
       'U'
     end
 
-    def is_done(ssh, job)
-      %w(C).include?(pbs_state(ssh, job))
-    end
-
-    def is_job_queued(ssh, job)
-      %w(Q T W U).include?(pbs_state(ssh, job))
-    end
-
     # States from man qstat:
     # C -  Job is completed after having run/
     # E -  Job is exiting after having run.
