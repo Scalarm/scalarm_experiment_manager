@@ -1,6 +1,6 @@
 class InfrastructureTaskFormatter
   def call(severity, time, progname, msg)
-    "#{msg.strip}\n"
+    "#{time.strftime('%Y-%m-%d %H:%M:%S')} #{msg.strip}\n"
   end
 end
 
@@ -18,11 +18,11 @@ class InfrastructureTaskLogger
   def initialize(infrastructure_name, task_id=nil)
     if task_id
       @log_format = Proc.new do |message|
-        "[#{infrastructure_name}][#{task_id.to_s}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+        "[#{infrastructure_name}][#{task_id.to_s}] - #{message}"
       end
     else
       @log_format = Proc.new do |message|
-        "[#{infrastructure_name}] #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} - #{message}"
+        "[#{infrastructure_name}] - #{message}"
       end
     end
   end
