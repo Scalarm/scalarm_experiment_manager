@@ -46,7 +46,8 @@ class PlGridFacade < InfrastructureFacade
 
     if credentials
       # prepare job executable and descriptor
-      scheduler.prepare_job_files(sm_uuid)
+
+      scheduler.prepare_job_files(sm_uuid, additional_params)
 
       #  upload the code to the Grid user interface machine
       begin
@@ -55,6 +56,7 @@ class PlGridFacade < InfrastructureFacade
         end
 
         credentials.ssh_start do |ssh|
+          # TODO: check ruby version
           1.upto(instances_count).each do
             job = create_record(user_id, experiment_id, sm_uuid, additional_params)
 
@@ -91,6 +93,7 @@ class PlGridFacade < InfrastructureFacade
     job.grant_id = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
+    job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?
 
     job.initialize_fields
 

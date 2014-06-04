@@ -4,6 +4,9 @@
 # grant_id
 # nodes - nodes count
 # ppn - cores per node count
+# plgrid_host - host of PL-Grid, eg. zeus.cyfronet.pl
+#
+# Note that some attributes are used only by some queuing system facades
 
 require 'infrastructure_facades/infrastructure_errors'
 

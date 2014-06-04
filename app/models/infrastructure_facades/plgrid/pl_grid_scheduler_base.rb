@@ -1,7 +1,7 @@
 # Subclasses must implement:
 # - short_name() -> String
 # - long_name() -> String
-# - prepare_job_files(sm_uuid)
+# - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
 # - send_job_files(sm_uuid, scp)
 # - submit_job(ssh, job)
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy

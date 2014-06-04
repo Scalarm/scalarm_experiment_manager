@@ -23,19 +23,11 @@ module QcgScheduler
       self.class.short_name
     end
 
-    def prepare_job_files(sm_uuid)
+    def prepare_job_files(sm_uuid, params)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid))
+      IO.write("/tmp/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid, params))
     end
 
-    # TODO: add host #QCG host=zeus.cyfronet.pl
-    # - reef.man.poznan.pl
-    # - inula.man.poznan.pl
-    # - moss.man.poznan.pl
-    # - nova.wcss.wroc.pl
-    # - zeus.cyfronet.pl
-    # - galera.task.gda.pl
-    # - hydra.icm.edu.pl
     # TODO: test in UI to write stout+err to one file
     # TODO: add grant #QCG grant=plgpiontek_grant
     # TODO: add ruby module #QCG module=nwchem/6.0
@@ -43,7 +35,7 @@ module QcgScheduler
     # TODO: #QCG procs=32 - use for MPI
     # TODO: queue #QCG queue=plgrid
     # TODO: walltime #QCG walltime=P3DT12H
-    def prepare_job_descriptor(uuid)
+    def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
       <<-eos
 #QCG executable=scalarm_job_#{uuid}.sh
@@ -52,6 +44,7 @@ module QcgScheduler
 #QCG error=#{log_path}.err
 #QCG stage-in-file=scalarm_job_#{uuid}.sh
 #QCG stage-in-file=scalarm_simulation_manager_#{uuid}.zip
+#QCG host=#{params['plgrid_host'] or 'zeus.cyfronet.pl'}
       eos
     end
 
@@ -76,19 +69,6 @@ module QcgScheduler
     end
 
     # TODO: translate comments
-    # Job states (Polish, from QCG documentation):
-    # UNSUBMITTED – przetwarzanie zadania wstrzymane z powodu zależności kolejnościowych,
-    # UNCOMMITED - zadanie oczekuje na zatwierdzenie do przetwarzania,
-    # QUEUED – zadanie oczekuje w kolejce na przetwarzanie,
-    # PREPROCESSING – system przygotowuje środowisko uruchomieniowe dla zadania,
-    # PENDING – aplikacja w ramach danego zadania oczekuje na wykonanie w systemie kolejkowym,
-    # RUNNING – aplikacja użytkownika jest wykonywana w ramach zadania,
-    # STOPPED – aplikacja została zakończona, system nie rozpoczął jeszcze czynności związanych z kopiowaniem wyników i czyszczeniem środowiska wykonawczego,
-    # POSTPROCESSING – system wykonuje akcje mające na calu zakończenie zadania: kopiuje pliki/katalogi wynikowe, czyści środowisko wykonawcze, etc.,
-    # FINISHED – zadanie zostało zakończone,
-    # FAILED – błąd przetwarzania zadania,
-    # CANCELED – zadanie anulowane przez użytkownika.
-
     # Job states (Polish, from QCG documentation):
     # UNSUBMITTED – task processing suspended because of queue dependencies
     # UNCOMMITED - task is waiting for processing confirmation
@@ -185,6 +165,18 @@ module QcgScheduler
     def clean_after_job(ssh, job)
       super
       ssh.exec!("rm scalarm_job_#{job.sm_uuid}.qcg")
+    end
+
+    def self.available_hosts
+      [
+        'reef.man.poznan.pl',
+        'inula.man.poznan.pl',
+        'moss.man.poznan.pl',
+        'nova.wcss.wroc.pl',
+        'zeus.cyfronet.pl',
+        'galera.task.gda.pl',
+        'hydra.icm.edu.pl'
+      ]
     end
 
   end

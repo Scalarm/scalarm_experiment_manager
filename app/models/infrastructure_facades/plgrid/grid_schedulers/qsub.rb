@@ -19,7 +19,7 @@ module QsubScheduler
       self.class.short_name
     end
 
-    def prepare_job_files(sm_uuid)
+    def prepare_job_files(sm_uuid, params)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
     end
 
