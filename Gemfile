@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.3'
+gem 'rails', '4.1.1'
 gem 'racc'
 
 # wrapper for R interpreter
@@ -41,6 +41,7 @@ gem 'foundation-rails'
 gem 'highcharts-rails'
 gem 'jit-rails'
 gem 'foundation-icons-sass-rails'
+gem 'jquery-datatables-rails', git: 'git://github.com/rweng/jquery-datatables-rails.git'
 
 # Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
 # gem 'turbolinks'
