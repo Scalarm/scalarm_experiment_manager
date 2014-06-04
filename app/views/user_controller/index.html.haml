@@ -1,0 +1,36 @@
+%header
+  .row
+    .small-12.small-centered.columns(style="text-align: center;")
+      %h2= t('.title')
+
+%section.panel.radius.welcome-panel
+  .row.small-12.small-centered.columns
+    %h3= t('.header')
+
+    %fieldset
+      %legend= t('user_controller.index.step_1')
+      .row
+        .small-4.columns
+          = welcome_link(user_controller_account_path, 'torso', 'this is a tooltip' )
+
+    %fieldset
+      %legend= t('user_controller.index.step_2')
+
+      .row
+        .small-4.columns.button.radius.tip-left
+          %a(href="#{user_controller_account_path}")
+            %span.button.radius.tip-left(data-tooltip="" title="Tooltips are awesome, you should totally use them!")
+              %i.fi-torso
+        .small-4.columns
+          %a(href="#{user_controller_account_path}")
+            %span.button.radius.tip-left(data-tooltip="" title="Tooltips are awesome, you should totally use them!")
+              %i.fi-torso
+
+        .small-4.columns
+          %a(href="#{user_controller_account_path}")
+            %span.button.radius.tip-left(data-tooltip="" title="Tooltips are awesome, you should totally use them!")
+              %i.fi-torso
+
+
+    %fieldset
+      %legend= t('user_controller.index.step_3')

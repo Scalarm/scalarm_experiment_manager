@@ -15,6 +15,12 @@ en:
       amazon: "Amazon Elastic Compute Cloud credentials"
       images_manager: "Cloud virtual machine images management"
       private_machines_manager: "Private resources credentials"
+    index:
+      title: "Welcome to Scalarm"
+      header: "What would you like to do?"
+      step_1: "Step 1. Account configuration"
+      step_2: "Step 2. Starting computations"
+      step_3: "Step 3. Manage experiments"
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

@@ -13,3 +13,20 @@ i.credentials-lack {
 i.credentials-ok {
   color: darkgreen;
 }
+
+.welcome-panel {
+  fieldset {
+    .columns {
+      text-align: center;
+    }
+
+    i {
+      font-size: 36px;
+    }
+
+    a {
+      span {
+      }
+    }
+  }
+}
