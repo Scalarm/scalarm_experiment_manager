@@ -170,5 +170,6 @@ en:
     job_desc:
       nodes: "Nodes count"
       cores_per_node: "Cores per node"
+      host: "PL-Grid host"
     job_submission:
       submit_job_failed: "Could not submit job"

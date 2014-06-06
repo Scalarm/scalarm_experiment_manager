@@ -102,7 +102,7 @@ Purged: false
 
     eos
 
-    desc = 'failed to transfer [/mnt/lustre/scratch/people//plgjliput/J1401795580484__1245_task_1401795580924_941/stdout] -> [/mnt/auto/people/plgjliput/qcg/out/J1401795580484__1245.log]: No such file or directory /mnt/auto/people/plgjliput/qcg/out/J1401795580484__1245.log; failed to transfer [/mnt/lustre/scratch/people//plgjliput/J1401795580484__1245_task_1401795580924_941/stderr] -> [/mnt/auto/people/plgjliput/qcg/out/J1401795580484__1245.log]: No such file or directory /mnt/auto/people/plgjliput/qcg/out/J1401795580484__1245.log'
+    desc = 'Subtask from host \'zeus.cyfronet.pl\' failed'
 
     assert_equal desc, QcgScheduler::PlGridScheduler.parse_qcg_status_desc(output)
 

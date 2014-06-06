@@ -5,10 +5,11 @@ module QcgScheduler
   class PlGridScheduler < PlGridSchedulerBase
     JOBID_RE = /.*jobId\s+=\s+(.+)$/
     STATE_RE = /.*Status:\s+(\w+).*/
-    STATUS_DESC_RE = /.*StatusDescription:\s+(.*)\n/
+    STATUS_DESCRIPTION_RE = /.*StatusDescription:\s+(.*)\n/
+    STATUS_DESC_RE = /.*StatusDesc:\s+(.*)\n/
 
     def self.long_name
-      'QosCosGrid'
+      'PL-Grid QosCosGrid'
     end
 
     def self.short_name
@@ -145,8 +146,8 @@ module QcgScheduler
 
       if qcg_state(ssh, job.job_id) == 'FAILED'
         <<-eos
---- QCG Status description ---
-#{qcg_status_desc(ssh, job.job_id)}
+--- QCG info ---
+#{get_job_info(ssh, job.job_id)}
 --- STDOUT ---
 #{out_log}
 --- STDERR ---
@@ -169,13 +170,13 @@ module QcgScheduler
 
     def self.available_hosts
       [
+        'zeus.cyfronet.pl',
+        'nova.wcss.wroc.pl',
+        'galera.task.gda.pl',
         'reef.man.poznan.pl',
         'inula.man.poznan.pl',
+        'hydra.icm.edu.pl',
         'moss.man.poznan.pl',
-        'nova.wcss.wroc.pl',
-        'zeus.cyfronet.pl',
-        'galera.task.gda.pl',
-        'hydra.icm.edu.pl'
       ]
     end
 
