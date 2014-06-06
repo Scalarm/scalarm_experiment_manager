@@ -1,25 +1,33 @@
--#- record_state_color = case record.state
--#  - when :error then 'firebrick'
--#  - when :initialized then 'forestgreen'
--#  - when :before_init then 'goldenrod'
--#  - else 'lightsteelblue'
-
 %td= record.resource_id
 -# infrastructure-specific info
 
 -# general record info
 %td
-  %i{class: "fi-stop sm-#{record.state or 'unknown'}"}
-  - if record.state == :error
-    %ul
-      %li
-        %strong= t('infrastructures.sm_dialog.error_message') + ': '
-        = t('infrastructure.information.sm_info.errors.'+record.error, default: record.error)
-        - unless record.error_log.nil?
-          %li
-            %strong= t('infrastructure.information.sm_info.error_log') + ': '
-            %br
-            = raw(record.error_log.sub("\n", '<br/>'))
+  %div{class: "status-square sm-#{record.state or 'unknown'}"}
+    - if record.state == :error
+      -# TODO: show reveal modal with error log when clicked on square
+      -#%div.reveal-modal(data-reveal=""){id: "error-details-dialog-#{record.id}"}
+      -#  .close-reveal-modal= '&#215'
+      -#  %h2= t('infrastructures.error_details_dialog.header')
+      -#  %h3= t('infrastructures.sm_dialog.error_message')
+      -#  %p= t('infrastructure.information.sm_info.errors.'+record.error, default: record.error)
+      -#  - if record.error_log
+      -#    %h3= t('infrastructure.information.sm_info.error_log')
+      -#    %p= raw(record.error_log.sub("\n", '<br/>'))
+      -#
+      - error_tooltip = t('infrastructures.sm_dialog.error_message') + ': ' + |
+                    t('infrastructure.information.sm_info.errors.'+record.error, default: record.error) |
+
+      %div{id: "error-square-#{record.id}", style: 'width: 100%; height: 100%', title: error_tooltip}
+      -#- content_for :javascript do
+      -#  :javascript
+      -#    $(function() {
+      -#      $(#error-square-#{record.id}).on('click', function() {
+      -#        window.alert("hello");
+      -#        $(#error-details-dialog-#{record.id}).foundation('reveal', 'open');
+      -#      });
+      -#    });
+
 %td
   - if record.state == :initialized
     =record.sm_initialized_at.strftime('%Y-%m-%d %H:%M:%S')

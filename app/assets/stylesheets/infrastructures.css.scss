@@ -63,18 +63,44 @@ path.sm-label {
 
 // icons in SM table
 
+.tooltip-status-square {
+  width: 16;
+  height: 16;
+  float: left;
+}
+
+ul.status-tooltip {
+  font-size: 1em;
+  list-style-type: none;
+  margin-top: 8px;
+  margin-left: 0px;
+}
+
+ul.status-tooltip li {
+  margin-top: 2px;
+}
+
+.status-square {
+  width: 24;
+  height: 24;
+}
+
 .sm-error {
   color: firebrick;
+  background-color: firebrick;
 }
 
 .sm-initialized {
   color: forestgreen;
+  background-color: forestgreen;
 }
 
 .sm-before_init {
   color: goldenrod;
+  background-color: goldenrod;
 }
 
 .sm-unknown {
   color: lightsteelblue;
+  background-color: lightsteelblue;
 }

@@ -162,9 +162,13 @@ en:
       stop: "Stop"
       remove: "Remove"
     destroy_dialog:
+      yes: 'Yes'
+      no: 'No'
       header: "Are you sure you want to destroy this Simulation Manager?"
-      resource_id: "Resource"
-      state_tooltip: "State of Simulation Manager application"
+    resource_id: "Resource"
+    state_tooltip: "State of Simulation Manager application"
+    error_details_dialog:
+      header: "Error details"
   yes: "Yes"
   no: "No"
   plgrid:

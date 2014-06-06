@@ -1,8 +1,8 @@
-- state_tooltip = "#{t('infrastructures.sm_dialog.state_tooltip')}" + |
-  "<br/><i class='fi-stop sm-before_init'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.before_init')}" + |
-  "<br/><i class='fi-stop sm-initialized'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.initialized')}" + |
-  "<br/><i class='fi-stop sm-error'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.error')}" + |
-  "<br/><i class='fi-stop sm-unknown'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.unknown')}" |
+- state_tooltip = "#{t('infrastructures.state_tooltip')}" + |
+  "<ul class='status-tooltip'><li><div class='tooltip-status-square sm-before_init'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.before_init')}</li>" + |
+  "<li><div class='tooltip-status-square sm-initialized'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.initialized')}</li>" + |
+  "<li><div class='tooltip-status-square sm-error'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.error')}</li>" + |
+  "<li><div class='tooltip-status-square sm-unknown'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.unknown')}</li>" |
 
 .row
   %p.small-12.columns
@@ -14,7 +14,7 @@
       %table(style="width: 100%;" )
         %thead
           %tr
-            %th= t('infrastructures.sm_dialog.resource_id')
+            %th= t('infrastructures.resource_id')
             %th{style: 'text-align: center;'}
               %span.has-tip{'data-tooltip' => '', title: state_tooltip}
                 %i.fi-info{style: 'color: black;'}
