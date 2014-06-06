@@ -1,3 +1,6 @@
+.panel.callout.radius
+  = raw t 'infrastructure.information.no_key_note'
+
 - hosts = QcgScheduler::PlGridScheduler.available_hosts
 
 - credentials = GridCredentials.find_by_user_id(@current_user.id)
