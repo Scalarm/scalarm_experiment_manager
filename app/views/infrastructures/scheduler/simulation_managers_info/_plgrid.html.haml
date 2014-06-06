@@ -1,9 +1,16 @@
-%li
-  %strong= t('plgrid.job_desc.job_id') + ': '
-  =record.job_id
-%li
-  %strong= t('plgrid.job_desc.nodes') + ': '
-  =record.nodes
-%li
-  %strong= t('plgrid.job_desc.cores_per_node') + ': '
-  =record.ppn
+- if record.job_id
+  %li
+    %strong= t('plgrid.job_desc.job_id') + ': '
+    =record.job_id
+- if record.nodes
+  %li
+    %strong= t('plgrid.job_desc.nodes') + ': '
+    =record.nodes
+- if record.ppn
+  %li
+    %strong= t('plgrid.job_desc.cores_per_node') + ': '
+    =record.ppn
+- if record.plgrid_host
+  %li
+    %strong= t('plgrid.job_desc.host') + ': '
+    =record.plgrid_host

@@ -32,7 +32,7 @@
 %td
   = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
 %td
-  %ul
+  %ul{style: 'font-size: 1em;'}
     -begin
       = render partial: "infrastructures/scheduler/simulation_managers_info/#{partial_name}", locals: {record: record}
     -rescue ActionView::MissingTemplate => exc

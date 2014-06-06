@@ -4,6 +4,9 @@
 # grant_id
 # nodes - nodes count
 # ppn - cores per node count
+# plgrid_host - host of PL-Grid, eg. zeus.cyfronet.pl
+#
+# Note that some attributes are used only by some queuing system facades
 
 require 'infrastructure_facades/infrastructure_errors'
 
@@ -31,13 +34,15 @@ class PlGridJob < MongoActiveRecord
   end
 
   def queue
-    walltime = time_limit.to_i
+    PlGridJob.queue_for_minutes(time_limit.to_i)
+  end
 
-    if walltime < 60
+  def self.queue_for_minutes(minutes)
+    if minutes < 60
       'plgrid-testing'
-    elsif walltime > 60 and walltime < 72*60
+    elsif minutes > 60 and minutes < 72*60
       'plgrid'
-    elsif walltime > 72*60
+    elsif minutes > 72*60
       'plgrid-long'
     else
       'plgrid'

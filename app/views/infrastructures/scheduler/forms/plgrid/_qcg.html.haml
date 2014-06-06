@@ -1,0 +1,30 @@
+.panel.callout.radius
+  = raw t 'infrastructure.information.no_key_note'
+
+- hosts = QcgScheduler::PlGridScheduler.available_hosts
+
+- credentials = GridCredentials.find_by_user_id(@current_user.id)
+- grants = PlGridFacade.retrieve_grants(credentials)
+
+.row
+  .small-4.columns
+    = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :grant_id, options_for_select(grants)
+  .small-4.columns
+.row
+  .small-4.columns
+    = label_tag :plgrid_host,  t('infrastructure.information.plgrid.submission.host') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :plgrid_host, options_for_select(hosts)
+  .small-4.columns
+.row
+  .small-4.columns
+    = label_tag :nodes, t('infrastructure.information.plgrid.submission.nodes') + ':', class: 'inline right'
+  .small-1.columns
+    = text_field_tag :nodes, 1, class: 'right'
+  .small-2.columns
+    = label_tag :ppn, t('infrastructure.information.plgrid.submission.ppn') + ':', class: 'inline right'
+  .small-1.columns
+    = text_field_tag :ppn, 1, class: 'right'
+  .small-2.columns

@@ -19,7 +19,7 @@ module QsubScheduler
       self.class.short_name
     end
 
-    def prepare_job_files(sm_uuid)
+    def prepare_job_files(sm_uuid, params)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
     end
 
@@ -74,14 +74,6 @@ module QsubScheduler
       'U'
     end
 
-    def is_done(ssh, job)
-      %w(C).include?(pbs_state(ssh, job))
-    end
-
-    def is_job_queued(ssh, job)
-      %w(Q T W U).include?(pbs_state(ssh, job))
-    end
-
     # States from man qstat:
     # C -  Job is completed after having run/
     # E -  Job is exiting after having run.
@@ -111,17 +103,6 @@ module QsubScheduler
 
     def cancel(ssh, job)
       ssh.exec!("qdel #{job.job_id}")
-    end
-
-    def restart(ssh, job)
-      cancel(ssh, job)
-      if submit_job(ssh, job)
-        job.created_at = Time.now
-        job.save
-        true
-      else
-        false
-      end
     end
 
     def get_log(ssh, job)

@@ -1,10 +1,14 @@
 # Subclasses must implement:
 # - short_name() -> String
 # - long_name() -> String
-# - prepare_job_files(sm_uuid)
+# - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
 # - send_job_files(sm_uuid, scp)
 # - submit_job(ssh, job)
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
+# - cancel(ssh, record) - cancels job
+# - status(ssh, record) -> job state in queue mapped to: :initializing, :running, :deactivated, :error
+# - clean_after_job(ssh, record) - cleans UI user's account from temporary files
+# - get_log(ssh, record) -> String with stdout+stderr contents for job
 
 class PlGridSchedulerBase
 
@@ -37,6 +41,11 @@ ruby simulation_manager.rb
   #  Create a proxy certificate for the user
   def voms_proxy_init(ssh, voms)
     ssh.exec!("voms-proxy-init --voms #{voms}")
+  end
+
+  def restart(ssh, job)
+    cancel(ssh, job)
+    submit_job(ssh, job)
   end
 
 end

@@ -19,7 +19,7 @@ module GliteScheduler
       self.class.short_name
     end
 
-    def prepare_job_files(sm_uuid)
+    def prepare_job_files(sm_uuid, params)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid))
     end
@@ -52,14 +52,6 @@ module GliteScheduler
     def self.parse_job_status(state_output)
       match = state_output.match /Current Status:\s+(\S+)/
       match ? match[1] : nil
-    end
-
-    def is_done(ssh, job)
-      not %w(Ready Scheduled Running).include?(glite_state(ssh, job))
-    end
-
-    def is_job_queued(ssh, job)
-      %w(Ready Scheduled).include?(glite_state(ssh, job))
     end
 
     # --- gLite states:
@@ -96,17 +88,6 @@ module GliteScheduler
     def clean_after_job(ssh, job)
       super
       ssh.exec!("rm scalarm_job_#{job.sm_uuid}.jdl")
-    end
-
-    def restart(ssh, job)
-      cancel(ssh, job)
-      if submit_job(ssh, job)
-        job.created_at = Time.now
-        job.save
-        true
-      else
-        false
-      end
     end
 
     # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
