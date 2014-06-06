@@ -108,4 +108,22 @@ Purged: false
 
   end
 
+  def test_queue_plgrid_testing
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'time_limit' => '10')
+    assert_match /queue=plgrid-testing/, desc
+  end
+
+  def test_queue_plgrid
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'time_limit' => '80')
+    assert_match /queue=plgrid/, desc
+  end
+
+  def test_queue_plgrid_long
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'time_limit' => (73*60).to_s)
+    assert_match /queue=plgrid-long/, desc
+  end
+
 end

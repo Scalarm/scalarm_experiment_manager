@@ -29,13 +29,11 @@ module QcgScheduler
       IO.write("/tmp/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid, params))
     end
 
-    # TODO: test in UI to write stout+err to one file
-    # TODO: add grant #QCG grant=plgpiontek_grant
-    # TODO: add ruby module #QCG module=nwchem/6.0
     # TODO: cores/nodes #QCG nodes=12:12 (nodes:cores[:processes])
     # TODO: #QCG procs=32 - use for MPI
     # TODO: queue #QCG queue=plgrid
     # TODO: walltime #QCG walltime=P3DT12H
+    # TODO: add grant #QCG grant=plgpiontek_grant
     def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
       <<-eos
@@ -46,6 +44,7 @@ module QcgScheduler
 #QCG stage-in-file=scalarm_job_#{uuid}.sh
 #QCG stage-in-file=scalarm_simulation_manager_#{uuid}.zip
 #QCG host=#{params['plgrid_host'] or 'zeus.cyfronet.pl'}
+#QCG queue=#{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
       eos
     end
 
