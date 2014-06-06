@@ -29,9 +29,6 @@ module QcgScheduler
       IO.write("/tmp/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid, params))
     end
 
-    # TODO: cores/nodes #QCG nodes=12:12 (nodes:cores[:processes])
-    # TODO: #QCG procs=32 - use for MPI
-    # TODO: add grant #QCG grant=plgpiontek_grant
     def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
       <<-eos
@@ -75,19 +72,18 @@ module QcgScheduler
       jobid_match and jobid_match[1] or nil
     end
 
-    # TODO: translate comments
-    # Job states (Polish, from QCG documentation):
+    # QCG Job states
     # UNSUBMITTED – task processing suspended because of queue dependencies
     # UNCOMMITED - task is waiting for processing confirmation
     # QUEUED – task is waiting in queue for processing
     # PREPROCESSING – system is preparing environment for task
-    # PENDING – aplikacja w ramach danego zadania oczekuje na wykonanie w systemie kolejkowym,
-    # RUNNING – aplikacja użytkownika jest wykonywana w ramach zadania,
-    # STOPPED – aplikacja została zakończona, system nie rozpoczął jeszcze czynności związanych z kopiowaniem wyników i czyszczeniem środowiska wykonawczego,
-    # POSTPROCESSING – system wykonuje akcje mające na calu zakończenie zadania: kopiuje pliki/katalogi wynikowe, czyści środowisko wykonawcze, etc.,
-    # FINISHED – zadanie zostało zakończone,
-    # FAILED – błąd przetwarzania zadania,
-    # CANCELED – zadanie anulowane przez użytkownika.
+    # PENDING – application waits for execution in queuing system in terms of job,
+    # RUNNING – user's appliaction is running in terms of job,
+    # STOPPED – application execution has been completed, but queuing system does not copied results and cleaned environment
+    # POSTPROCESSING – queuing system ends job: copies result files, cleans environment, etc.
+    # FINISHED – job has been completed
+    # FAILED – error processing job
+    # CANCELED – job has been cancelled by user
 
     STATES_MAPPING = {
         'UNSUBMITTED' => :initializing,
