@@ -149,4 +149,16 @@ Purged: false
     refute_match /#QCG nodes/, desc
   end
 
+  def test_grant_id
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'grant_id' => 'plgtest2014a')
+    assert_match /#QCG grant=plgtest2014a/, desc
+  end
+
+  def test_grant_id_blank
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'grant_id' => '')
+    refute_match /#QCG grant/, desc
+  end
+
 end
