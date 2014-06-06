@@ -31,8 +31,6 @@ module QcgScheduler
 
     # TODO: cores/nodes #QCG nodes=12:12 (nodes:cores[:processes])
     # TODO: #QCG procs=32 - use for MPI
-    # TODO: queue #QCG queue=plgrid
-    # TODO: walltime #QCG walltime=P3DT12H
     # TODO: add grant #QCG grant=plgpiontek_grant
     def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
@@ -45,7 +43,14 @@ module QcgScheduler
 #QCG stage-in-file=scalarm_simulation_manager_#{uuid}.zip
 #QCG host=#{params['plgrid_host'] or 'zeus.cyfronet.pl'}
 #QCG queue=#{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
+#QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
       eos
+    end
+
+    def self.minutes_to_walltime(minutes)
+      hh, mm = minutes.divmod(60)
+      dd, hh = hh.divmod(24)
+      "P#{dd}DT#{hh}H#{mm}M"
     end
 
     def send_job_files(sm_uuid, scp)

@@ -126,4 +126,15 @@ Purged: false
     assert_match /queue=plgrid-long/, desc
   end
 
+  def test_minutes_to_walltime
+    assert_equal 'P0DT2H5M', QcgScheduler::PlGridScheduler.minutes_to_walltime(125)
+    assert_equal 'P2DT12H54M', QcgScheduler::PlGridScheduler.minutes_to_walltime(3654)
+  end
+
+  def test_walltime
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'time_limit' => 3654.to_s)
+    assert_match /walltime=P2DT12H54M/, desc
+  end
+
 end
