@@ -137,4 +137,16 @@ Purged: false
     assert_match /walltime=P2DT12H54M/, desc
   end
 
+  def test_nodes_cores
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', 'nodes' => '4', 'ppn' => '12')
+    assert_match /#QCG nodes=4:12/, desc
+  end
+
+  def test_blank_nodes_cores
+    qcg = QcgScheduler::PlGridScheduler.new
+    desc = qcg.prepare_job_descriptor('1', {})
+    refute_match /#QCG nodes/, desc
+  end
+
 end

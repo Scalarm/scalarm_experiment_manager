@@ -44,6 +44,7 @@ module QcgScheduler
 #QCG host=#{params['plgrid_host'] or 'zeus.cyfronet.pl'}
 #QCG queue=#{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
 #QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
+#{params['nodes'].blank? ? '' : "#QCG nodes=#{params['nodes']}:#{params['ppn']}" }
       eos
     end
 
