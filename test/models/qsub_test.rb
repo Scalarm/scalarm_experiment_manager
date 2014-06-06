@@ -12,8 +12,4 @@ class QsubTest < Test::Unit::TestCase
   def teardown
   end
 
-  def test_minutes_to_walltime
-    assert_equal '5:10', QsubScheduler::PlGridScheduler.minutes_to_walltime(310)
-  end
-
 end
