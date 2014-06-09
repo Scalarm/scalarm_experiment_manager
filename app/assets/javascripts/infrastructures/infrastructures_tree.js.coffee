@@ -113,18 +113,20 @@ class window.InfrastructuresTree
   nodeRestartSm: (d) ->
     @restartSm(d['infrastructure_name'], d['_id'])
 
-  rebindDestroyDialog: (infrastructure_name, record_id) ->
+  rebindCommandDialog: (infrastructure_name, record_id, command) ->
     $('#destroy-no').on 'click', =>
       $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+
+    $(".dialog-header").hide()
+    $(".dialog-header##{command}-header").show()
 
     button = $('#destroy-yes')
     button.off()
     button.unbind()
     button.on 'click', =>
-      console.log("will destroy #{record_id} on #{infrastructure_name}")
       $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
       window.show_loading_notice()
-      data = { 'infrastructure_name': infrastructure_name, 'record_id': record_id, 'command': 'stop' }
+      data = { 'infrastructure_name': infrastructure_name, 'record_id': record_id, 'command': command }
       $.post(@simulation_manager_command_infrastructure_path, data, (json) =>
         @updateInfrastructureNode(infrastructure_name)
         window.hide_notice()
@@ -135,20 +137,12 @@ class window.InfrastructuresTree
       )
 
   stopSm: (infrastructure_name, record_id) ->
-    @rebindDestroyDialog(infrastructure_name, record_id)
+    @rebindCommandDialog(infrastructure_name, record_id, 'stop')
     $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
 
   restartSm: (infrastructure_name, record_id) ->
-    data = { 'infrastructure_name': infrastructure_name, 'record_id': record_id, 'command': 'restart' }
-    window.show_loading_notice()
-    $.post(@simulation_manager_command_infrastructure_path, data, (json) =>
-      @updateInfrastructureNode(infrastructure_name)
-      window.hide_notice()
-      switch json.status
-        when 'error' then toastr.error(json.msg)
-        when 'ok' then toastr.success(json.msg)
-        else toastr.error(json.msg)
-    )
+    @rebindCommandDialog(infrastructure_name, record_id, 'restart')
+    $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
 
 #  smCommand: (d, command) ->
 #    data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': command }

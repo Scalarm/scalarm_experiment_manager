@@ -164,7 +164,8 @@ en:
     destroy_dialog:
       yes: 'Yes'
       no: 'No'
-      header: "Are you sure you want to destroy this Simulation Manager?"
+      stop_header: "Are you sure you want to destroy this Simulation Manager?"
+      restart_header: "Are you sure you want to restart this Simulation Manager?"
     resource_id: "Resource"
     state_tooltip: "State of Simulation Manager application"
     error_details_dialog:

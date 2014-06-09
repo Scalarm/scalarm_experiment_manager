@@ -13,7 +13,9 @@
   #dialog.reveal-modal(data-reveal="")
 
   #destroy_simulation_manager_dialog.reveal-modal(data-reveal="")
-    %h2= t('infrastructures.destroy_dialog.header')
+    %a.close-reveal-modal &#215;
+    %h2.dialog-header.hidden#stop-header= t('infrastructures.destroy_dialog.stop_header')
+    %h2.dialog-header.hidden#restart-header= t('infrastructures.destroy_dialog.restart_header')
     .row
       .small-6.columns.centered
         %span{id: 'destroy-yes', class: button_classes}= t('yes')
