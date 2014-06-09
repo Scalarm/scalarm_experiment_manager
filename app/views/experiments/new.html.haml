@@ -92,4 +92,6 @@
       $("#import-off").on("click", window.InputParameterSpaceSwitcher.importSwitchOn);
 
       $("#import-on").click();
+
+      $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
     });

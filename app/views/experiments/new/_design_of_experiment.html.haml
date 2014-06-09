@@ -17,15 +17,9 @@
     .large-9.columns
       = select_tag('parameters')
     .large-3.columns
-      %span.button.right.radius(onclick="doe_manager.addParameterToGroup($(this).closest('ul'))")
+      %span.button.right.radius.add-parameter-btn
         = t('simulations.conduct.doe.add_parameter')
   %li.cta-button.row
     .large-3.columns.large-centered
-      %span.button.right.radius(onclick="doe_manager.deleteGroup($(this).closest('ul'))")
+      %span.button.right.radius.delete-group-btn
         = t('simulations.conduct.doe.delete_group')
-
-- content_for :javascript do
-  :javascript
-    $(function() {
-      $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
-    });
