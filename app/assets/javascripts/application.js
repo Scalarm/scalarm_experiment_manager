@@ -18,7 +18,7 @@
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
 //= require highcharts/modules/exporting
-//= require jquery.dataTables.min
+//= require dataTables/jquery.dataTables
 //= require jit-yc
 //= require toastr
 //= require jquery.remotipart

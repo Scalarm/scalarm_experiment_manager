@@ -12,8 +12,9 @@
  *= require foundation
  *= require foundation_and_overrides
  *= require_tree .
- *= require jquery.dataTables
+ *= require dataTables/jquery.dataTables
  *= require toastr
+ *= require font-awesome
  */
 
  @import 'foundation-icons';
