@@ -15,18 +15,25 @@ i.credentials-ok {
 }
 
 .welcome-panel {
-  fieldset {
+  background-color: transparent;
+
+  .row {
+    margin-bottom: 30px;
     .columns {
       text-align: center;
-    }
 
-    i {
-      font-size: 36px;
-    }
+      .fa {
+        color: #709FD2;
+      }
 
-    a {
-      span {
+      .icon-caption {
+        font-weight: bold;
+        margin-top: 5px;
       }
     }
+  }
+
+  i {
+    font-size: 48px;
   }
 }

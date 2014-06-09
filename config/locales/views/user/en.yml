@@ -18,9 +18,11 @@ en:
     index:
       title: "Welcome to Scalarm"
       header: "What would you like to do?"
-      step_1: "Step 1. Account configuration"
-      step_2: "Step 2. Starting computations"
-      step_3: "Step 3. Manage experiments"
+      step_1: "1. Configure account"
+      step_2: "2. Register new simulation scenario"
+      step_3: "3. Start an experiment"
+      step_4: "4. Go to running experiments"
+      step_5: "5. Go to historical experiments"
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

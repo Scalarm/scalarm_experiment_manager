@@ -4,33 +4,53 @@
       %h2= t('.title')
 
 %section.panel.radius.welcome-panel
-  .row.small-12.small-centered.columns
-    %h3= t('.header')
+  .row.small-12.columns
+    %h3(style="text-align: center;")= t('.header')
 
-    %fieldset
-      %legend= t('user_controller.index.step_1')
-      .row
-        .small-4.columns
-          = welcome_link(user_controller_account_path, 'torso', 'this is a tooltip' )
+  .row
+    .small-3.columns.small-centered
+      = welcome_link(user_controller_account_path, 'user')
+      .icon-caption= t('.step_1')
 
-    %fieldset
-      %legend= t('user_controller.index.step_2')
+  .row
+    .small-3.columns.small-offset-2
+      = welcome_link(simulations_registration_path, 'upload')
+      .icon-caption= t('.step_2')
 
-      .row
-        .small-4.columns.button.radius.tip-left
-          %a(href="#{user_controller_account_path}")
-            %span.button.radius.tip-left(data-tooltip="" title="Tooltips are awesome, you should totally use them!")
-              %i.fi-torso
-        .small-4.columns
-          %a(href="#{user_controller_account_path}")
-            %span.button.radius.tip-left(data-tooltip="" title="Tooltips are awesome, you should totally use them!")
-              %i.fi-torso
+    .small-3.columns.small-offset-2
+      %a.available_experiments_link{href: '#', "data-action-url" => simulations_simulation_scenarios_path}
+        %span.button.radius.last-element.secondary
+          = icon 'flask'
 
-        .small-4.columns
-          %a(href="#{user_controller_account_path}")
-            %span.button.radius.tip-left(data-tooltip="" title="Tooltips are awesome, you should totally use them!")
-              %i.fi-torso
+      .icon-caption= t('.step_3')
+
+    .small-3.columns
+
+  .row
+    .small-3.columns.small-offset-2
+      %a.running_experiments_link{href: '#', "data-action-url" => running_experiments_experiments_path}
+        %span.button.radius.last-element.secondary
+          = icon 'file-text-o'
+
+      .icon-caption= t('.step_4')
+
+    .small-3.columns.small-offset-2
+      %a.historical_experiments_link{href: '#', "data-action-url" => historical_experiments_experiments_path}
+        %span.button.radius.last-element.secondary
+          = icon 'file-archive-o'
+
+      .icon-caption= t('.step_5')
+
+    .small-3.columns
+
+#experiment-list-modal.reveal-modal(data-reveal="")
+  %a.close-reveal-modal &#215;
+  = image_tag 'loading.gif', class: 'busy', style: 'display: none;'
+  .content(style="display:none;")
 
 
-    %fieldset
-      %legend= t('user_controller.index.step_3')
+- content_for :javascript do
+  :javascript
+    $(function() {
+      new window.ExperimentLinksManager("#experiment-list-modal");
+    });
