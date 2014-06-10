@@ -13,12 +13,13 @@
         = t('.restart')
 
     .small-2.columns.action-button
-      %span#stop_simulation_manager_button{class: "#{button_classes} alert"}
-        - if record.state == :error
+      - if [:error, :terminating].include? record.state
+        %span#destroy_record_simulation_manager_button{class: "#{button_classes} alert"}
           %i.fi-x
           = raw '&nbsp;&nbsp;'
           = t('.remove')
-        - else
+      - else
+        %span#stop_simulation_manager_button{class: "#{button_classes} alert"}
           %i.fi-stop
           = raw '&nbsp;&nbsp;'
           = t('.stop')

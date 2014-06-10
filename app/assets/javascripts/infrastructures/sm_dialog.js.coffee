@@ -9,4 +9,7 @@ class window.SmDialog
     $('#stop_simulation_manager_button').on 'click', =>
       window.infrastructuresTree.stopSm(@infrastructureName, @recordId)
 
+    $('#destroy_record_simulation_manager_button').on 'click', =>
+      window.infrastructuresTree.destroyRecordSm(@infrastructureName, @recordId)
+
     $('.disabled :input').prop('disabled', true);
