@@ -12,4 +12,8 @@ class window.SmDialog
     $('#destroy_record_simulation_manager_button').on 'click', =>
       window.infrastructuresTree.destroyRecordSm(@infrastructureName, @recordId)
 
+    $('#resource-state').load('/infrastructure/get_resource_state?' + $.param({
+        infrastructure_name: @infrastructureName, record_id: @recordId
+      }))
+
     $('.disabled :input').prop('disabled', true);

@@ -313,6 +313,22 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # GET params
+  # - infrastructure_name
+  # - record_id
+  def get_resource_state
+    begin
+      facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
+      record = get_sm_record(params[:record_id], facade)
+      facade.yield_simulation_manager(record) do |sm|
+        render text: t("infrastructures.sm_dialog.resource_states.#{sm.resource_status.to_s}",
+                         default: t('infrastructures.sm_dialog.resource_states.unknown', state: sm.resource_status.to_s))
+      end
+    rescue Exception => error
+      render text: t('infrastructures.sm_dialog.resource_state_error', error: error.to_s)
+    end
+  end
+
   # ============================ PRIVATE METHODS ============================
   private
 

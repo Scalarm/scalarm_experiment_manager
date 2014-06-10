@@ -29,11 +29,8 @@
     %ul
       %li
         %strong= t('.resource_state') + ': '
-        - begin
-          - facade.yield_simulation_manager(record) do |sm|
-            = t(".resource_states.#{sm.resource_status.to_s}", default: t('.resource_states.unknown', state: sm.resource_status.to_s))
-        - rescue Exception => error
-          =t('.resource_state_error', error: error.to_s)
+        #resource-state{style: 'display: inline;'}
+          = image_tag 'loading.gif', size: '16x16'
 
       -# infrastructure-specific info
       -begin
