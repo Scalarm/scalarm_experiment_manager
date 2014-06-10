@@ -12,6 +12,18 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
   def teardown
   end
 
+  # PL-Grid Simulation Manager should have all generic monitoring cases except:
+  # - try_to_initialize_sm
+  def test_have_all_generic_cases
+    record = stub_everything 'record'
+    infrastructure = stub_everything 'infrastructure'
+
+    plg_sm = PlGridSimulationManager.new(record, infrastructure)
+    sm = SimulationManager.new(record, infrastructure)
+
+    assert_empty sm.monitoring_order - [:try_to_initialize_sm] - plg_sm.monitoring_order
+  end
+
   def test_monitor_nothing
     mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-job')
@@ -23,6 +35,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
       expects(:sm_initialized=).never
       expects(:max_time_exceeded?).returns(false).once
       expects(:save).never
+      stubs(:experiment).returns(stub_everything)
     end
 
     mock_infrastructure = mock 'infrastructure' do
@@ -34,7 +47,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
     simulation_manager = PlGridSimulationManager.new(mock_record, mock_infrastructure)
     simulation_manager.expects(:before_monitor).once
     simulation_manager.expects(:sm_terminated?).returns(false).once
-    simulation_manager.expects(:should_initialize_sm?).returns(false).once
+    simulation_manager.expects(:should_initialize_sm?).never # PL-Grid hasn't got initialization in monitoring
     simulation_manager.expects(:record_sm_failed).never
     simulation_manager.expects(:install).never
     simulation_manager.expects(:restart).never
@@ -54,6 +67,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
       expects(:sm_initialized=).never
       expects(:max_time_exceeded?).returns(true).once
       expects(:save).never
+      stubs(:experiment).returns(stub_everything)
     end
 
     mock_infrastructure = mock 'infrastructure' do
@@ -66,7 +80,7 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
     simulation_manager.expects(:before_monitor).once
     simulation_manager.expects(:stop_and_destroy).never
     simulation_manager.expects(:sm_terminated?).returns(false).once
-    simulation_manager.expects(:should_initialize_sm?).returns(false).once
+    simulation_manager.expects(:should_initialize_sm?).never # PL-Grid hasn't got initialization in monitoring
     simulation_manager.expects(:record_sm_failed).never
     simulation_manager.expects(:install).never
     simulation_manager.expects(:restart).once

@@ -20,7 +20,7 @@ class PlGridSimulationManager < SimulationManager
   end
 
   def monitoring_order
-    @monitoring_order ||= [:time_limit, :experiment_end, :init_time_exceeded,
+    @monitoring_order ||= [:terminated_successfully, :should_terminate, :time_limit, :experiment_end, :init_time_exceeded,
                            :dectect_initialization, :sm_terminated, :plgrid_max_time_exceeded]
   end
 

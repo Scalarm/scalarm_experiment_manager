@@ -208,10 +208,16 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - infrastructure id to which simulation manager belongs to
   def simulation_manager_command
     begin
-      if %w(stop restart).include? params[:command]
-        yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-          sm.send(params[:command])
-          sm.record.destroy if params[:command] == 'stop'
+      command = params[:command]
+      if %w(stop restart destroy_record).include? command
+        if command == 'destroy_record'
+          yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
+            sm.record.destroy
+          end
+        else
+          yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
+            sm.send(params[:command])
+          end
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else

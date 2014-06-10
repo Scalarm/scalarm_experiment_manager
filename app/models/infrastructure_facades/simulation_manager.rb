@@ -31,27 +31,40 @@ class SimulationManager
   end
 
   def monitoring_order
-    @monitoring_order ||= [:time_limit, :experiment_end, :init_time_exceeded, :sm_terminated, :try_to_initialize_sm]
+    @monitoring_order ||= [:terminated_successfully, :should_terminate, :time_limit, :experiment_end,
+                           :init_time_exceeded, :sm_terminated, :try_to_initialize_sm]
   end
 
   def generate_monitoring_cases
     {
+        terminated_successfully: {
+          condition: lambda {record.state == :terminating and resource_status == :deactivated},
+          message: 'Resource has been terminated successfully - removing record',
+          action: lambda {record.destroy}
+        },
+        should_terminate: {
+          condition: lambda {record.state == :terminating},
+          message: 'Waiting for termination',
+          action: lambda {
+            stop if record.stopping_time_exceeded?
+          }
+        },
         time_limit: {
             condition: lambda {record.time_limit_exceeded?},
             message: 'Time limit exceeded - destroying Simulation Manager',
             action: lambda {
               record.store_error('not_started') if record.state == :before_init
-              stop_and_destroy
+              stop
             }
         },
         experiment_end: {
             condition: lambda {record.experiment_end?},
             message: 'Experiment finished - destroying Simulation Manager',
-            action: lambda {stop_and_destroy}
+            action: lambda {stop}
         },
         init_time_exceeded: {
             condition: lambda {record.init_time_exceeded?},
-            message: "Initialization time (#{record.max_init_time/60} min) exceeded - trying to restart resource",
+            message: 'Initialization time exceeded - trying to restart resource',
             action: lambda {
               restart
               record.sm_initialized_at = Time.now
@@ -128,13 +141,17 @@ class SimulationManager
   }
 
   def method_missing(m, *args, &block)
-    if DELEGATES.include? m.to_s
+    action_name = m.to_s
+    if DELEGATES.include? action_name
+      # if the error cause is missing or invalid credentials - prevent to perform actions (to protect from authorization errors)
       if record.error == 'credentials'
         logger.warn "Simulation Manager action #{m} executed with invalid credentials - it will have no effect"
         ERROR_DELEGATES[m]
       else
         begin
-          infrastructure.send("_simulation_manager_#{m}", record)
+          result = infrastructure.send("_simulation_manager_#{m}", record)
+          record.set_stop if action_name == 'stop'
+          result
         rescue Exception => e
           logger.warn "Exception on action #{m}: #{e.to_s}\n#{e.backtrace.join("\n")}"
           record.store_error('resource_action', "#{m}: #{e.to_s}")

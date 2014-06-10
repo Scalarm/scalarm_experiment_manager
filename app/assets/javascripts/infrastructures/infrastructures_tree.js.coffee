@@ -88,7 +88,7 @@ class window.InfrastructuresTree
       return false
 
     # function for comparing nodes: name, sm_initialized
-    node_hash_fun = (d) => [d.name, d.sm_initialized, d.error].toString()
+    node_hash_fun = (d) => [d.name, d.state].toString()
     array_a = childs_local.map(node_hash_fun).sort()
     array_b = childs_remote.map(node_hash_fun).sort()
 
@@ -112,6 +112,9 @@ class window.InfrastructuresTree
 
   nodeRestartSm: (d) ->
     @restartSm(d['infrastructure_name'], d['_id'])
+
+  nodeDestroyRecordSm: (d) ->
+    @destroyRecordSm(d['infrastructure_name'], d['_id'])
 
   rebindCommandDialog: (infrastructure_name, record_id, command) ->
     $('#destroy-no').on 'click', =>
@@ -142,6 +145,10 @@ class window.InfrastructuresTree
 
   restartSm: (infrastructure_name, record_id) ->
     @rebindCommandDialog(infrastructure_name, record_id, 'restart')
+    $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
+
+  destroyRecordSm: (infrastructure_name, record_id) ->
+    @rebindCommandDialog(infrastructure_name, record_id, 'destroy_record')
     $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
 
 #  smCommand: (d, command) ->
@@ -208,9 +215,13 @@ class window.InfrastructuresTree
         .attr("r", 1e-6)
         .on("click", (d) => @smDialog(d))
         .attr("title", (d) =>
-          (d.error and 'An error occured for this Simulation Manager') or
-          (d.sm_initialized and 'Simulation Manager is working') or
-          ('Simulation Manager waits for initialization')
+          # TODO: translation
+          switch d.state
+            when 'error' then 'An error occured for this Simulation Manager'
+            when 'sm_initialized' then 'Simulation Manager is working'
+            when 'before_init' then 'Simulation Manager waits for initialization'
+            when 'terminating' then 'Simulation Manager waits for termination'
+            else 'Unknown Simulation Manager state'
         )
 
       g.append("svg:text")
@@ -240,11 +251,16 @@ class window.InfrastructuresTree
       # stop button
       g.append("svg:image")
       .attr("width", 24).attr("height", 24)
-      .attr("xlink:href", (d) => '/assets/' + (d.error and 'remove' or 'stop') + '_icon.png')
+      .attr("xlink:href", (d) => '/assets/' + ((d.state == 'error' or d.state == 'terminating') and 'remove' or 'stop') + '_icon.png')
       .style("transform", "translate(192px,-12px)")
       .attr("class", "button")
-      .on("click", (d) => @nodeStopSm(d))
-      .attr("title", (d) => d.error and 'Remove Simulation Manager entry' or 'Stop Simulation Manager')
+      .on("click", (d) =>
+        if d.state == 'error' or d.state == 'terminating'
+          @nodeDestroyRecordSm(d)
+        else
+          @nodeStopSm(d)
+      )
+      .attr("title", (d) => (d.state == 'error' or d.state == 'terminating') and 'Remove Simulation Manager entry' or 'Stop Simulation Manager')
 
     )
 
@@ -360,12 +376,7 @@ class window.InfrastructuresTree
 
   selectCircleClass: (d) ->
     if d.type == "sm-node"
-      if d.error?
-        "sm-error"
-      else if d.sm_initialized
-        "sm-initialized"
-      else
-        "sm-startup"
+      'sm-' + d.state
     else if d._children
       'children-collapsed'
     else

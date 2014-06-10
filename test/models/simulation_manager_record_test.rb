@@ -158,4 +158,17 @@ class SimulationManagerRecordTest < Test::Unit::TestCase
     record.store_error('a', 'b')
   end
 
+  def test_initialized_state
+    record = MockRecord.new({})
+    record.stubs(:sm_initialized).returns(true)
+    assert_equal :initialized, record.state
+  end
+
+  def test_terminating_state
+    record = MockRecord.new({})
+    record.stubs(:is_terminating).returns(true)
+    record.stubs(:sm_initialized).returns(true)
+    assert_equal :terminating, record.state
+  end
+
 end

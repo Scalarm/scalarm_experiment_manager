@@ -3,10 +3,11 @@
 # - user_id => integer - the user who scheduled this job - mongoid in the future
 # - experiment_id => the experiment which should be computed by this job
 # -* created_at => time - when this job were scheduled
-# -* sm_initialized_at => time - when simulation manager of this job was initialized
+# -* sm_initialized_at => time - last time when simulation manager of this job was started or restarted
 # - time_limit => time - when this job should be stopped - in minutes
 # - sm_uuid => string - uuid of configuration files
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
+# - is_terminating => boolean - whether this SM with its resource should be terminated (stop action was invoked)
 #
 # Fields with * can be initialized with initialize_fields method after creation.
 #
@@ -23,7 +24,8 @@ module SimulationManagerRecord
   end
 
   def state
-    (self.error and :error) or (self.sm_initialized and :initialized) or :before_init
+    (self.error and :error) or (self.is_terminating and :terminating) or (self.sm_initialized and :initialized) or
+        :before_init
   end
 
   # Time to wait for resource initialization - after that, VM will be reinitialized
@@ -33,7 +35,7 @@ module SimulationManagerRecord
   end
 
   def to_h
-    super.merge({ name: self.resource_id })
+    super.merge({ name: self.resource_id, state: self.state.to_s })
   end
 
   def to_json
@@ -58,8 +60,18 @@ module SimulationManagerRecord
     (not self.sm_initialized) and (self.sm_initialized_at + self.max_init_time < Time.now)
   end
 
+  def set_stop
+    self.is_terminating = true
+    self.stopped_at = Time.now
+    self.save
+  end
+
+  def stopping_time_exceeded?
+    Time.now > self.stopped_at + 2.minutes
+  end
+
   def should_destroy?
-    (time_limit_exceeded? or time_limit_exceeded?) and record.state != :error
+    (time_limit_exceeded? or experiment_end?) and record.state != :error
   end
 
   # Should be overriden

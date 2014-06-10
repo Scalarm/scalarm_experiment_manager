@@ -142,7 +142,7 @@ en:
         running: "running"
         no_connection: "cannot connect with resource"
         initializing: "initializing"
-        deactivated: "shutting down or deactivated"
+        deactivated: "deactivated"
         error: "an error occured, please check infrastructure state manually"
         unknown: "unknown: %{state}"
 
@@ -151,6 +151,7 @@ en:
         error: "An error occured"
         initialized: "Initialized"
         before_init: "Waiting for initialization"
+        terminating: "Waiting for termination"
         unknown: "Unknown"
       simulation_manager_state: "Simulation Manager application state"
       sm_initialized_at: "Simulation Manager installed at"
@@ -164,8 +165,9 @@ en:
     destroy_dialog:
       yes: 'Yes'
       no: 'No'
-      stop_header: "Are you sure you want to destroy this Simulation Manager?"
+      stop_header: "Are you sure you want to stop this Simulation Manager and its resource?"
       restart_header: "Are you sure you want to restart this Simulation Manager?"
+      destroy_record_header: "Are you sure you want to destroy this Simulation Manager record? Note, that you should check manually if its resource will be terminated."
     resource_id: "Resource"
     state_tooltip: "State of Simulation Manager application"
     error_details_dialog:

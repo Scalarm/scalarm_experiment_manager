@@ -21,21 +21,6 @@
     transform: translate(-15px,-3px);
 }
 
-circle.sm-error {
-  fill: indianred;
-  stroke: firebrick;
-}
-
-circle.sm-initialized {
-  fill: lightgreen;
-  stroke: forestgreen;
-}
-
-circle.sm-startup  {
-  fill: khaki;
-  stroke: goldenrod;
-}
-
 circle.children-collapsed {
     fill: lightsteelblue;
 }
@@ -90,14 +75,39 @@ ul.status-tooltip li {
   background-color: firebrick;
 }
 
+circle.sm-error {
+  fill: indianred;
+  stroke: firebrick;
+}
+
 .sm-initialized {
   color: forestgreen;
   background-color: forestgreen;
 }
 
+circle.sm-initialized {
+  fill: lightgreen;
+  stroke: forestgreen;
+}
+
 .sm-before_init {
   color: goldenrod;
   background-color: goldenrod;
+}
+
+circle.sm-before_init  {
+  fill: khaki;
+  stroke: goldenrod;
+}
+
+.sm-terminating {
+  color: #444;
+  background-color: #444;
+}
+
+circle.sm-terminating  {
+  fill: #555;
+  stroke: #444;
 }
 
 .sm-unknown {
