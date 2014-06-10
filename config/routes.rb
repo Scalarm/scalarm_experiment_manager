@@ -3,7 +3,7 @@ ScalarmExperimentManager::Application.routes.draw do
   # See how all your routes lay out with "rake routes".
 
   # You can have the root of your site routed with "root"
-  root 'experiments#index'
+  root 'user_controller#index'
 
   get 'login' => 'user_controller#login'
   post 'login' => 'user_controller#login'

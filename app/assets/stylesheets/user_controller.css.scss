@@ -13,3 +13,27 @@ i.credentials-lack {
 i.credentials-ok {
   color: darkgreen;
 }
+
+.welcome-panel {
+  background-color: transparent;
+
+  .row {
+    margin-bottom: 30px;
+    .columns {
+      text-align: center;
+
+      .fa {
+        color: #709FD2;
+      }
+
+      .icon-caption {
+        font-weight: bold;
+        margin-top: 5px;
+      }
+    }
+  }
+
+  i {
+    font-size: 48px;
+  }
+}

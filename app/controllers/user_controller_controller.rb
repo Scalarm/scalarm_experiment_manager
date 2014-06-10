@@ -16,7 +16,8 @@ class UserControllerController < ApplicationController
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
-    redirect_to url_for :controller => session[:intended_controller], :action => session[:intended_action]
+    #redirect_to url_for :controller => session[:intended_controller], :action => session[:intended_action]
+    redirect_to root_path
   end
 
   def login

@@ -14,6 +14,14 @@ module UserControllerHelper
     end
   end
 
+  def welcome_link(url, icon_id)
+    content_tag :a, href: url do
+      content_tag :span, class: 'button radius last-element secondary' do
+        icon icon_id
+      end
+    end
+  end
+
   # --- OpenID helpers ---
 
   def login_openid_google_url
