@@ -31,9 +31,6 @@
       - if @experiment.is_running
         .small-3.columns.action-button
           = link_to t('.get_sm_button'), simulation_manager_experiment_path, class: button_classes
-      - if @experiment.user_id == @current_user.id
-        .small-2.columns.action-button
-          %span#sharingButton{class: button_classes}= t('.sharing_button')
       .small-2.columns.action-button
 
 #extension-dialog.reveal-modal(data-reveal="")
@@ -55,19 +52,6 @@
     .small-6.columns.centered
       %span.no_button{class: button_classes}= t('.no')
 
-#share_dialog.reveal-modal(data-reveal)
-  %h2= t('.share_dialog.header')
-  = form_tag share_experiment_path(@experiment.id), class: 'custom' do
-    = hidden_field_tag 'mode', 'share'
-    .row
-      .small-5.columns
-        %label.inline.right(for="sharing_with_login")
-          = t('.share_with_login') + ':'
-      .small-3.columns= text_field_tag('sharing_with_login')
-      .small-1.columns      
-    .row
-      .small-6.columns= submit_tag(t('.share'), class: 'button radius expand')
-      .small-6.columns= submit_tag(t('.unshare'), class: 'button radius unshare expand')
 
 - content_for :javascript do
   :javascript

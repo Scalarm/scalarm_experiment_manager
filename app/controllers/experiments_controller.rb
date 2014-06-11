@@ -474,19 +474,17 @@ class ExperimentsController < ApplicationController
   def share
     @experiment, @user = nil, nil
 
-    if params.include?('sharing_with_login') and params.include?('id') and not @current_user.nil?
-      experiment_id = BSON::ObjectId(params[:id])
-
-      @experiment = Experiment.find_by_query({ '$and' => [
-        { _id: experiment_id },
-        { user_id: @current_user.id }
-      ]})
-
-      @user = ScalarmUser.find_by_login(params[:sharing_with_login])
+    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
+      flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
-    if @experiment.nil? or @user.nil?
-      flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
+    experiment_id = BSON::ObjectId(params[:id])
+
+    if (@experiment = Experiment.find_by_query({ '$and' => [{ _id: experiment_id }, { user_id: @current_user.id } ]})).blank?
+      flash[:error] = t('experiments.not_found', { id: params[:id], user: params[:sharing_with_login] })
+    end
+
+    unless flash[:error].blank?
 
       redirect_to action: :index
     else
