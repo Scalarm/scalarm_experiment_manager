@@ -7,10 +7,14 @@ module Gsi
 
     require 'open3'
 
-    def initialize(host, user, proxy_cert_dir)
+    # TODO: add configuration for gsissh command path
+    def initialize(host, user, proxy)
       begin
+        @proxy_path = "/tmp/proxy-#{SecureRandom.uuid}"
+        File.open(@proxy_path, 'w') { |file| file.write(proxy) }
+        File.chmod(0600, @proxy_path)
         @input, @output, @thread =
-            Open3.popen2e({'X509_USER_PROXY' =>proxy_cert_dir}, 'gsissh', '-v', '-T', "#{user}@#{host}")
+            Open3.popen2e({'X509_USER_PROXY' => @proxy_path}, 'gsissh', '-v', '-T', "#{user}@#{host}")
         @leftovers = []
         init_log = ''
         begin
@@ -38,6 +42,7 @@ module Gsi
       ensure
         @input.close unless @input.closed?
         @output.close unless @output.closed?
+        FileUtils.rm @proxy_path, force: true
       end
     end
 
