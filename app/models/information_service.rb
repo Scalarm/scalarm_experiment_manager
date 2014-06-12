@@ -1,57 +1,88 @@
 require 'openssl'
 require 'net/https'
-require 'json'
 
 class InformationService
 
-  def initialize(url, username, password)
-    @service_url = url
-    @username = username
-    @password = password
+  def initialize
+    @service_url = Rails.application.secrets.information_service_url
+    @username = Rails.application.secrets.information_service_user
+    @password = Rails.application.secrets.information_service_pass
+    @development = Rails.application.secrets.include?(:information_service_development) and Rails.application.secrets.information_service_development
   end
 
   def register_service(service, host, port)
-    send_request("#{service}/register", {address: "#{host}:#{port}"})
+    code, body = send_request(service, {address: "#{host}:#{port}"})
+
+    if code == '200'
+      response = JSON.parse(body)
+      puts response.inspect
+      if response['status'] == 'ok'
+        return nil, response['msg']
+      else
+        return 'error', response['msg']
+      end
+    else
+      return 'error', code
+    end
   end
 
   def deregister_service(service, host, port)
-    send_request("#{service}/deregister", {address: "#{host}:#{port}"})
+    code, body = send_request(service, {address: "#{host}:#{port}"}, method: 'DELETE')
+
+    if code == '200'
+      response = JSON.parse(body)
+      if response['status'] == 'ok'
+        return nil, response['msg']
+      else
+        return 'error', response['msg']
+      end
+    else
+      return 'error', code
+    end
   end
 
   def get_list_of(service)
-    send_request("#{service}/list")
+    code, body = send_request(service)
+
+    if code == '200'
+      JSON.parse(body)
+    else
+      []
+    end
   end
 
-  def send_request(request, data = nil)
+  def send_request(request, data = nil, opts = {})
     @host, @port = @service_url.split(':')
-    puts "#{Time.now} --- sending #{request} request to the Information Service at '#{@host}:#{@port}'"
+    #puts "#{Time.now} --- sending #{request} request to the Information Service at '#{@host}:#{@port}'"
 
     req = if data.nil?
             Net::HTTP::Get.new('/' + request)
           else
-            Net::HTTP::Post.new('/' + request)
+            if opts.include?(:method) and opts[:method] == 'DELETE'
+              Net::HTTP::Delete.new('/' + request)
+            else
+              Net::HTTP::Post.new('/' + request)
+            end
           end
 
     req.basic_auth(@username, @password)
     req.set_form_data(data) unless data.nil?
 
-    #ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    if @development
+      ssl_options = {}
+    else
+      ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    end
 
     begin
-      http = Net::HTTP.new(@host, @port)
-      http.open_timeout = http.ssl_timeout = http.read_timeout = 5
-      http.use_ssl = true
-      http.ssl_version = :SSLv3
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      response = http.request(req) 
-      puts "#{Time.now} --- response from Information Service is #{response.body}"
-
-      return JSON.parse(response.body)
+      response = Net::HTTP.start(@host, @port, ssl_options) { |http| http.request(req) }
+      #puts "#{Time.now} --- response from Information Service is #{response.code} #{response.body}"
+      return response.code, response.body
     rescue Exception => e
       puts "Exception occurred but nothing terrible :) - #{e.message}"
     end
 
-    nil
+    return nil, nil
   end
 
 end

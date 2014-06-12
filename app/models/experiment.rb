@@ -385,8 +385,7 @@ class Experiment < MongoActiveRecord
   def destroy
     # TODO TMP due to problem with routing in PLGCloud
     config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    information_service = InformationService.new(config['information_service_url'], config['information_service_user'], config['information_service_pass'])
-
+    information_service = InformationService.new
     @storage_manager_url = information_service.get_list_of('storage').sample
 
     unless @storage_manager_url
