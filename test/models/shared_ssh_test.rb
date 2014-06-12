@@ -1,9 +1,9 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 require 'infrastructure_facades/shared_ssh'
 
-class SharedSshTest < Test::Unit::TestCase
+class SharedSshTest < MiniTest::Test
 
   class MockFacade
     include SharedSSH
@@ -11,9 +11,6 @@ class SharedSshTest < Test::Unit::TestCase
 
   def setup
     MockFacade.any_instance.stubs(:logger).returns(stub_everything)
-  end
-
-  def teardown
   end
 
   def test_shared_session

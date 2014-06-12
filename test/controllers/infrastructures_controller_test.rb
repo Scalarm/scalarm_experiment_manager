@@ -4,17 +4,18 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructuresControllerTest < ActionController::TestCase
   tests InfrastructuresController
+  # TODO: this test uses database connection
 
   def setup
-    # MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    # MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
+    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
     #
     # # @tmp_user_id = '1'
     #
-    # @tmp_user = ScalarmUser.new({login: 'test'})
+    @tmp_user = ScalarmUser.new({login: 'test'})
     # # @tmp_user.id = @tmp_user_id
-    # @tmp_user.save
-    # @tmp_user_id = @tmp_user.id
+    @tmp_user.save
+    @tmp_user_id = @tmp_user.id
     #
     # # ScalarmUser.stubs(:find_by_id).with(@tmp_user_id).returns(@tmp_user)
   end
@@ -34,7 +35,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
   def test_tree
     # Prepare sm_record_hashes for every known Facade
-    infrastrucutre_names = %w(qsub glite pl_cloud amazon google private_machine dummy)
+    infrastrucutre_names = %w(qsub glite qcg pl_cloud amazon google private_machine dummy)
     infrastrucutre_names.each do |name|
       facade_class = InfrastructureFacadeFactory.get_facade_for(name).class
       facade_class.any_instance.stubs(:sm_record_hashes).with(@tmp_user_id).returns(
@@ -135,7 +136,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
       post :remove_credentials, {infrastructure_name: facade_id, record_id: 1, type: 'secrets'},
           {user: @tmp_user_id}
 
-      assert_equal 'removed-ok', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
+      assert_equal 'ok', JSON.parse(response.body)['status'], "facade: #{facade_id}, response: #{response.body}"
     end
   end
 
@@ -189,10 +190,19 @@ class InfrastructuresControllerTest < ActionController::TestCase
         'infrastructure_name'=> 'inf_name',
         'job_counter'=>'3'
     }
-    facade = stub_everything 'facade'
-    facade.expects(:start_simulation_managers)
-      .with(@tmp_user_id, 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
-      .raises(InfrastructureErrors::InvalidCredentialsError.new).once
+    user_id = @tmp_user_id
+    experiment = stub_everything do
+      stubs(:shared_with).returns([])
+      stubs(:user_id).returns(user_id)
+    end
+    Experiment.stubs(:find_by_id).with('e1').returns(experiment)
+
+    # facade = stub_everything 'facade'
+    facade = stub_everything do
+      expects(:start_simulation_managers)
+        .with(user_id, 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
+        .raises(InfrastructureErrors::InvalidCredentialsError.new).once
+    end
 
     InfrastructureFacadeFactory.expects(:get_facade_for).with('inf_name').returns(facade)
 
@@ -200,7 +210,8 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
     resp_hash = JSON.parse(response.body)
 
-    assert_equal 'invalid-credentials-error', resp_hash['status']
+    assert_equal 'error', resp_hash['status']
+    assert_equal 'invalid-credentials', resp_hash['error_code']
   end
 
   def test_schedule_incomplete
@@ -214,7 +225,8 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
     resp_hash = JSON.parse(response.body)
 
-    assert_equal 'missing-parameters-error', resp_hash['status']
+    assert_equal 'error', resp_hash['status']
+    assert_equal 'missing-parameters', resp_hash['error_code']
   end
 
   def test_schedule_simulation_managers

@@ -1,8 +1,8 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class MockDatabaseTest < Test::Unit::TestCase
+class MockDatabaseTest < MiniTest::Test
 
   def test_mock_collection
     # given

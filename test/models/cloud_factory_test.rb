@@ -1,10 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 require 'infrastructure_facades/infrastructure_facade_factory'
 require 'infrastructure_facades/infrastructure_errors'
 
-class PlGridFactoryTest < Test::Unit::TestCase
+class PlGridFactoryTest < MiniTest::Test
 
   def setup
   end

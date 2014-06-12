@@ -1,9 +1,9 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 require 'infrastructure_facades/infrastructure_errors'
 
-class InfrastructureFacadeTest < Test::Unit::TestCase
+class InfrastructureFacadeTest < MiniTest::Test
 
   def setup
   end

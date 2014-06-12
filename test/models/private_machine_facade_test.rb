@@ -1,12 +1,9 @@
 require 'csv'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class PrivateMachineFacadeTest < Test::Unit::TestCase
-
-  def setup
-  end
+class PrivateMachineFacadeTest < MiniTest::Test
 
   def stub_record(user_id, experiment_id)
     r = Object.new

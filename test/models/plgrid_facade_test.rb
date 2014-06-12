@@ -1,9 +1,9 @@
 require 'csv'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class CloudFacadeTest < Test::Unit::TestCase
+class CloudFacadeTest < MiniTest::Test
 
   require 'infrastructure_facades/infrastructure_errors'
 
@@ -15,7 +15,7 @@ class CloudFacadeTest < Test::Unit::TestCase
     facade = CloudFacade.new(cloud_client)
     facade.stubs(:get_cloud_secrets).returns(credentials)
 
-    assert_raise InfrastructureErrors::InvalidCredentialsError do
+    assert_raises InfrastructureErrors::InvalidCredentialsError do
       facade.start_simulation_managers('u', 2, 'e')
     end
   end

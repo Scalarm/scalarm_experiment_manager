@@ -1,9 +1,9 @@
 require 'csv'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class InfrastructureFacadeSubclassesTest < Test::Unit::TestCase
+class InfrastructureFacadeSubclassesTest < MiniTest::Test
 
   def setup
   end

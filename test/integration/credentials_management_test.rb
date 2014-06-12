@@ -1,5 +1,5 @@
 require 'mocha'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 
 class CredentialsManagementTest < ActionController::TestCase

@@ -1,16 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 require 'infrastructure_facades/infrastructure_facade_factory'
 require 'infrastructure_facades/infrastructure_errors'
 
-class PlGridFactoryTest < Test::Unit::TestCase
-
-  def setup
-  end
-
-  def teardown
-  end
+class PlGridFactoryTest < MiniTest::Test
 
   def self.create_test_get_facade(name)
     define_method "test_get_#{name}" do
@@ -21,5 +15,6 @@ class PlGridFactoryTest < Test::Unit::TestCase
 
   create_test_get_facade 'qsub'
   create_test_get_facade 'glite'
+  create_test_get_facade 'qcg'
 
 end

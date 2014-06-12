@@ -1,9 +1,8 @@
 require 'mocha'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 
-class DatabaseTest < Test::Unit::TestCase
-
+class DatabaseTest < MiniTest::Test
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
     MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}

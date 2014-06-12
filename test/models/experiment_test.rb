@@ -1,9 +1,10 @@
 require 'csv'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class ExperimentTest < Test::Unit::TestCase
+class ExperimentTest < MiniTest::Test
+  # TODO: this test uses database connection
 
   def setup
     i, @parameters, @parameter_values = 0, [], []

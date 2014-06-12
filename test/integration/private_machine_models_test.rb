@@ -1,8 +1,9 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class PrivateMachineModelsTest < Test::Unit::TestCase
+class PrivateMachineModelsTest < MiniTest::Test
+  # TODO: this test uses database connection
 
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')

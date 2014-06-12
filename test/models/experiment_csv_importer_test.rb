@@ -1,8 +1,9 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class ExperimentTest < Test::Unit::TestCase
+class ExperimentTest < MiniTest::Test
+  # TODO: this test uses database connection
 
   def setup
     @simulation = Simulation.new({ 'input_specification' => "[{\"id\": \"clustering\",\"label\": \"Clustering\",\"entities\": [\n      {\n        \"id\": \"phase_1\",\n        \"label\": \"Phase 1 - kdist\",\n        \"parameters\": [\n          {\n            \"id\": \"minpts\",\n            \"label\": \"Neighbourhood counter\",\n            \"type\": \"integer\",\n            \"min\": 250,\n            \"max\": 260\n          }\n        ]\n      }\n    ] \n  }\n]" })

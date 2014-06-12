@@ -1,10 +1,10 @@
 require 'test_helper'
 require 'mocha'
-require 'test/unit'
+require 'minitest/autorun'
 require 'infrastructure_facades/clouds/cloud_facade_factory'
 require 'net/ssh'
 
-class CloudClientsTest < Test::Unit::TestCase
+class CloudClientsTest < MiniTest::Test
 
   # NOTICE: These tests should be used carefully because instatniating VM's causes costs.
   # Please check running VMs on Cloud service before and after using tests,

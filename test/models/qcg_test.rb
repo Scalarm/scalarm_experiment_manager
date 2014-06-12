@@ -1,10 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
 require 'infrastructure_facades/plgrid/grid_schedulers/qcg'
 
-class QcgTest < Test::Unit::TestCase
+class QcgTest < MiniTest::Test
 
   def setup
   end

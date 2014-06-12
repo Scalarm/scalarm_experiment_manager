@@ -1,9 +1,9 @@
 require 'csv'
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class CloudVmRecordTest < Test::Unit::TestCase
+class CloudVmRecordTest < MiniTest::Test
 
   def setup
   end

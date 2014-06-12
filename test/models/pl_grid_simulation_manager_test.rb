@@ -1,16 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
 require 'infrastructure_facades/plgrid/pl_grid_simulation_manager'
 
-class PlGridSimulationManagerTest < Test::Unit::TestCase
-
-  def setup
-  end
-
-  def teardown
-  end
+class PlGridSimulationManagerTest < MiniTest::Test
 
   # PL-Grid Simulation Manager should have all generic monitoring cases except:
   # - try_to_initialize_sm
@@ -60,7 +54,6 @@ class PlGridSimulationManagerTest < Test::Unit::TestCase
   def test_max_time_exceeded?
     mock_record = stub_everything 'record' do
       stubs(:resource_id).returns('other-job')
-      expects(:max_init_time).returns(20).once # used for logger message
       expects(:time_limit_exceeded?).returns(false).once
       expects(:experiment_end?).returns(false).once
       expects(:init_time_exceeded?).returns(false).once

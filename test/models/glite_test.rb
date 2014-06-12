@@ -1,10 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
 require 'infrastructure_facades/plgrid/grid_schedulers/glite'
 
-class GliteTest < Test::Unit::TestCase
+class GliteTest < Minitest::Test
 
   def setup
   end

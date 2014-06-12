@@ -1,16 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
 require 'infrastructure_facades/simulation_manager'
 
-class SimulationManagerRecordTest < Test::Unit::TestCase
-
-  def setup
-  end
-
-  def teardown
-  end
+class SimulationManagerRecordTest < MiniTest::Test
 
   class MockMongoActiveRecord
     def initialize(attributes)

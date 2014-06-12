@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class UserControllerControllerTest < ActionController::TestCase
+  # TODO: this test uses database connection
+
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
     MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}

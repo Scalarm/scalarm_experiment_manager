@@ -1,8 +1,9 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class LockTest < Test::Unit::TestCase
+class LockTest < MiniTest::Test
+  # TODO: this test uses database connection
 
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
@@ -91,7 +92,7 @@ class LockTest < Test::Unit::TestCase
       sleep(0.1) until lock.acquire
       # work...
       unlocked_pid = lock.release
-      assert_not_nil(unlocked_pid)
+      refute_nil(unlocked_pid)
       short_pid = unlocked_pid.match(/.*?(\d+)/)[1]
       assert_equal(Process.pid, short_pid.to_i)
       Process.kill('KILL', suspended_pid)
@@ -100,8 +101,8 @@ class LockTest < Test::Unit::TestCase
     sleep(10)
     Process.waitpid(suspended_pid, Process::WNOHANG)
     Process.waitpid(impatient_pid, Process::WNOHANG)
-    assert((not LockTest.process_running? suspended_pid))
-    assert((not LockTest.process_running? impatient_pid))
+    refute LockTest.process_running?(suspended_pid)
+    refute LockTest.process_running?(impatient_pid)
 
   end
 

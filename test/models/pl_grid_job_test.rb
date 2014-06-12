@@ -1,14 +1,8 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
-class PlGridJobTest < Test::Unit::TestCase
-
-  def setup
-  end
-
-  def teardown
-  end
+class PlGridJobTest < MiniTest::Test
 
   def test_queue_for_minutes
     assert_equal 'plgrid-testing', PlGridJob.queue_for_minutes(10)

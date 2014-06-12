@@ -1,9 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
 # Tests usage of EncryptedMongoActiveRecord with CloudSecrets
-class CloudSecretsTest < Test::Unit::TestCase
+class CloudSecretsTest < MiniTest::Test
+  # TODO: this test uses databse connection
 
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
@@ -35,7 +36,7 @@ class CloudSecretsTest < Test::Unit::TestCase
     assert_equal(saved_cs.info, 5)
     assert_equal(saved_cs.other_info, 3)
 
-    assert_no_match(/my_password/, saved_cs.to_s, "CloudSecrets secret_password is stored as plain text: #{saved_cs.to_s}")
+    refute_match(/my_password/, saved_cs.to_s, "CloudSecrets secret_password is stored as plain text: #{saved_cs.to_s}")
 
     assert_equal(saved_cs.user_id, su.id)
     assert_equal(saved_cs.other_user_id, su2.id)

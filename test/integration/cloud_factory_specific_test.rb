@@ -1,4 +1,4 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
@@ -8,7 +8,7 @@ require 'infrastructure_facades/clouds/providers/pl_cloud'
 require 'infrastructure_facades/clouds/providers/amazon'
 require 'infrastructure_facades/clouds/providers/google'
 
-class CloudFactorySpecificTest < Test::Unit::TestCase
+class CloudFactorySpecificTest < MiniTest::Test
 
   def setup
   end

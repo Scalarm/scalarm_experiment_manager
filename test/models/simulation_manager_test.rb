@@ -1,16 +1,10 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
 require 'infrastructure_facades/simulation_manager'
 
-class SimulationManagerTest < Test::Unit::TestCase
-
-  def setup
-  end
-
-  def teardown
-  end
+class SimulationManagerTest < MiniTest::Test
 
   METHOD_NAMES = [
       :name,
@@ -270,9 +264,7 @@ class SimulationManagerTest < Test::Unit::TestCase
 
     SimulationManager::DELEGATES.each do |delegate|
       assert_respond_to simulation_manager, delegate
-      assert_nothing_raised do
-        simulation_manager.send(delegate, mock_record)
-      end
+      simulation_manager.send(delegate, mock_record)
     end
 
     assert (not simulation_manager.respond_to? :wrong)

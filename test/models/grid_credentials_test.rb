@@ -1,8 +1,8 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
 
-class GridCredentialsTest < Test::Unit::TestCase
+class GridCredentialsTest < MiniTest::Test
 
   def setup
   end

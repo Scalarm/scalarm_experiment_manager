@@ -1,4 +1,4 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
@@ -7,7 +7,7 @@ require 'infrastructure_facades/plgrid/grid_schedulers/glite'
 require 'infrastructure_facades/plgrid/grid_schedulers/qsub'
 require 'infrastructure_facades/private_machine_facade'
 
-class SimulationManagersContainersSubclassesTest < Test::Unit::TestCase
+class SimulationManagersContainersSubclassesTest < MiniTest::Test
 
   def setup
   end
