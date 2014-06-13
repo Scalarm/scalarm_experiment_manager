@@ -61,11 +61,10 @@ class InfrastructureFacade
     temp_password = SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid)
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id) if temp_password.nil?
 
-    config = YAML::load_file File.join(Rails.root, 'config', 'scalarm.yml')
     sm_config = {
         experiment_id: experiment_id,
         #user_id: user_id,
-        information_service_url: config['information_service_url'],
+        information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
     }
@@ -135,6 +134,7 @@ class InfrastructureFacade
   def schedule_simulation_managers(user_id, experiment_id, job_counter, additional_params=nil)
     additional_params = default_additional_params.merge(additional_params)
     status, response_msg = start_simulation_managers(user_id, job_counter, experiment_id, additional_params)
+
     render json: response_msg, status: status
   end
 
