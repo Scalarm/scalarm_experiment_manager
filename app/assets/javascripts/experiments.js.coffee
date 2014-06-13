@@ -180,7 +180,7 @@ class window.ExperimentMonitor
     for i in [0..bar_colors.length]
       context.fillStyle = if(bar_colors[i] == 0) then "#BDBDBD" else "rgb(0, #{bar_colors[i]}, 0)"
       if(bar_colors[i] < 0)
-        context.fillStyle = "#F62217" 
+        context.fillStyle = "#F62217"
 
       if i == bar_colors.length - 1
         context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
@@ -230,23 +230,22 @@ class window.ExperimentMonitor
     setInterval("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", @update_interval*1000)
 
   update_moes: (moes_info) ->
-    $(".moe_list").each((i, select_element) ->
+    $(".moe_list").each (i, select_element) ->
       selected_option = $(select_element).find(":selected").val()
       $(select_element).html(moes_info.moes)
 
       $(select_element).find("option").filter(() ->
         return $(this).val() == selected_option
       ).attr('selected', true)
-    )
 
-    $(".moes_and_params_list").each((i, select_element) ->
+    $(".moes_and_params_list").each (i, select_element) ->
       selected_option = $(select_element).find(":selected").val()
       $(select_element).html(moes_info.moes_and_params)
 
       $(select_element).find("option").filter(() ->
         return $(this).val() == selected_option
       ).attr('selected', true)
-    )
+
 
 class window.ExperimentBooster
   constructor: (@dialog_element_id) ->

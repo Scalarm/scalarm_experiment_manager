@@ -95,3 +95,7 @@ en:
         header: Input space - import from a CSV file
         submit_import: "Import"
         import_label: "Select a CSV file with the parameter space:"
+
+    analysis:
+      no_results: "No results found in completed simulation runs"
+      no_completed_runs: "None simulation runs were completed"

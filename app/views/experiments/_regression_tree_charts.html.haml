@@ -1,4 +1,4 @@
-%section.panel.radius.list#regression_charts_form
+%section.panel.radius.list.analysis-chart#regression_charts_form
   %h3.subheader= t('charts.regression.section_header')
 
   #regression_charts_form
@@ -11,7 +11,7 @@
             = select_tag 'moe_name', '', { class: 'moe_list' }
       .row
         %ul.inline-list
-          %li= submit_tag t('charts.load_button'), class: 'button'
+          %li= submit_tag t('charts.load_button'), class: 'button radius'
           %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
 
 #regression_charts

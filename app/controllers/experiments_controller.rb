@@ -221,20 +221,30 @@ class ExperimentsController < ApplicationController
   def experiment_moes
     moes_info = {}
 
-    moes = @experiment.result_names
-    moes = moes.nil? ? ['No MoEs found', 'nil'] : moes.map { |x| [Experiment.output_parameter_label_for(x), x] }
+    result_set = @experiment.result_names
+    result_set = if result_set.blank?
+      [t('experiments.analysis.no_results')]
+    else
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x]}
+    end
 
-    done_instance = @experiment.find_simulation_docs_by({'is_done' => true}, {limit: 1, fields: %w(arguments)}).first
+    done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
+    done_run = @experiment.find_simulation_docs_by(done_run_query_condition,
+                 {limit: 1, fields: %w(arguments)}).first
 
-    moes_and_params = if done_instance.nil?
-                        ['No input parameters found', 'nil']
+    moes_and_params = if done_run.nil?
+                        [ [t('experiments.analysis.no_completed_runs'), nil] ]
                       else
-                        moes + [%w(----------- nil)] +
-                            done_instance['arguments'].split(',').map { |x| [@experiment.input_parameter_label_for(x), x] }
+                        result_set + [%w(----------- nil)] +
+                          done_run['arguments'].split(',').map{|x|
+                            [@experiment.input_parameter_label_for(x), x]}
                       end
 
-    moes_info[:moes] = moes.map { |label, id| "<option value='#{id}'>#{label}</option>" }.join()
-    moes_info[:moes_and_params] = moes_and_params.map { |label, id| "<option value='#{id}'>#{label}</option>" }.join()
+    moes_info[:moes] = result_set.map{ |label, id|
+      "<option value='#{id}'>#{label}</option>" }.join
+
+    moes_info[:moes_and_params] = moes_and_params.map{ |label, id|
+      "<option value='#{id}'>#{label}</option>" }.join
 
     render json: moes_info
   end
@@ -438,17 +448,29 @@ class ExperimentsController < ApplicationController
   end
 
   def histogram
-    @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+    if params[:moe_name].blank?
+      render inline: ""
+    else
+      @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+    end
   end
 
   def scatter_plot
-    @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
-    @chart.prepare_chart_data
+    if params[:x_axis].blank? or params[:y_axis].blank?
+      render inline: ""
+    else
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+      @chart.prepare_chart_data
+    end
   end
 
   def regression_tree
-    @chart = RegressionTreeChart.new(@experiment, params[:moe_name], Rails.configuration.r_interpreter)
-    @chart.prepare_chart_data
+    if params[:moe_name].blank?
+      render inline: ""
+    else
+      @chart = RegressionTreeChart.new(@experiment, params[:moe_name], Rails.configuration.r_interpreter)
+      @chart.prepare_chart_data
+    end
   end
 
   def parameter_values

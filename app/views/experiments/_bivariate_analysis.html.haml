@@ -1,22 +1,21 @@
-%section.panel.radius
-  #bivariate_charts_form
-    %h3.subheader= t('charts.scatter.section_header')
+%section.panel.radius.analysis-chart#bivariate_charts_form
+  %h3.subheader= t('charts.scatter.section_header')
 
-    = form_tag '', class: '' do
-      .row
-        .small-5.columns
-          = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
-        .small-7.columns
-          = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
-      .row
-        .small-5.columns
-          = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
-        .small-7.columns
-          = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
-      .row
-        %ul.inline-list
-          %li= submit_tag t('charts.load_button'), class: 'button'
-          %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
+  = form_tag '', class: '' do
+    .row
+      .small-5.columns
+        = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
+      .small-7.columns
+        = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
+    .row
+      .small-5.columns
+        = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
+      .small-7.columns
+        = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
+    .row
+      %ul.inline-list
+        %li= submit_tag t('charts.load_button'), class: 'button radius'
+        %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
 
 #bivariate_charts
 
