@@ -39,7 +39,7 @@
       .small-3.columns
         %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_by') + ':'
       .small-9.columns
-        %h5.subheader= ScalarmUser.find_by_id(@experiment.user_id).login      
+        %h5.subheader= ScalarmUser.find_by_id(@experiment.user_id).login
 
   - if @experiment.simulation.nil?
     %h4.subheader= t('simulations.conduct_experiment.empty_simulation')
@@ -97,3 +97,15 @@
         - unless share_with_users.blank?
           .small-3.columns= submit_tag(t('experiments.monitoring_actions.share'), class: 'button radius expand small')
         .small-1.columns
+
+= content_for :javascript do
+  :javascript
+    $(function() {
+      var logins = #{share_with_users.to_json};
+
+      $("#sharing_with_login").autocomplete({
+        source: logins
+      });
+
+      $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1000);
+    });
