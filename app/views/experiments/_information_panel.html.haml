@@ -1,10 +1,16 @@
 %div.right
   %a.button.tiny.radius(href="#" data-reveal-id="experimentEditModal" title="#{t('experiments.edit.tooltip')}")
     %i.fi-page-edit
+    = t("experiments.edit.link")
   - if @experiment.user_id == @current_user.id
     %a.button.tiny.radius(href="#" data-reveal-id="share-dialog" title="#{t('experiments.monitoring_actions.share_dialog.header')}")
       %i.fi-share
+      = t("experiments.sharing.link")
 
+    - if @experiment.is_running
+      %span.button.tiny.radius.alert#stopExperimentButton
+        %i.fi-stop
+        = t('experiments.monitoring_actions.stop_link')
 
 %h3.subheader= t('.experiment_info_title')
 
@@ -96,7 +102,7 @@
           -#= select_tag('sharing_with_login', options_for_select(share_with_users), class: 'custom')
         - unless share_with_users.blank?
           .small-3.columns= submit_tag(t('experiments.monitoring_actions.share'), class: 'button radius expand small')
-        .small-1.columns
+        .small-1.columns        
 
 = content_for :javascript do
   :javascript

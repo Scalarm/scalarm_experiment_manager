@@ -25,9 +25,11 @@ en:
       no_experiments: "There is no experiment running currently"
     monitoring_actions:
       get_sm_button: "Download Simulation Manager"
-
       blank_shared_with_list: "none"
+      stop_link: "Stop"
+
     sharing:
+      link: "Share"
       share: "This experiment is now shared with user '%{user}'"
       unshare: "This experiment is no longer shared with user '%{user}'"
 
@@ -37,7 +39,9 @@ en:
     errors:
       zero_size: The size of an experiment must be greater than 0!
       too_few_parameters: Selected DoE method requires more than 1 parameter.
+
     edit:
+      link: "Edit"
       header: "Edit experiment attributes"
       tooltip: "Edit this experiment"
       submit_btn: "Update"
