@@ -30,7 +30,7 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
 
   def valid?
     begin
-      ssh_start {}
+      ssh_session {}
       true
     rescue
       false

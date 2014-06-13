@@ -40,7 +40,7 @@ class GridCredentials < MongoActiveRecord
 
   def valid?
     begin
-      ssh_start {}
+      ssh_session {}
       true
     rescue Exception
       false
