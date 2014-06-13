@@ -26,23 +26,6 @@ class CloudVmRecord < MongoActiveRecord
     'vm_records'
   end
 
-  #  upload file to the VM - use only password authentication
-  def upload_file(local_path, remote_path='.')
-    Net::SCP.start(public_host, image_secrets.image_login, ssh_params) do |scp|
-      scp.upload! local_path, remote_path
-    end
-  end
-
-  def ssh_session
-    Net::SSH.start(public_host, image_secrets.image_login, ssh_params)
-  end
-
-  def ssh_start
-    Net::SSH.start(public_host, image_secrets.image_login, ssh_params) do |ssh|
-      yield ssh
-    end
-  end
-
   def image_secrets
     @image_secrets ||= CloudImageSecrets.find_by_id(image_secrets_id)
   end
@@ -86,6 +69,16 @@ class CloudVmRecord < MongoActiveRecord
   def validate
     raise InfrastructureErrors::NoCredentialsError if image_secrets_id.nil?
     raise InfrastructureErrors::InvalidCredentialsError if image_secrets.invalid
+  end
+
+  private # --------
+
+  def _get_ssh_session
+    Net::SSH.start(public_host, image_secrets.image_login, ssh_params)
+  end
+
+  def _get_scp_session
+    Net::SCP.start(public_host, image_secrets.image_login, ssh_params)
   end
 
 end

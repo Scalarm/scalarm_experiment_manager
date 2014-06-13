@@ -51,11 +51,11 @@ class PlGridFacade < InfrastructureFacade
 
       #  upload the code to the Grid user interface machine
       begin
-        credentials.scp_start do |scp|
+        credentials.scp_session do |scp|
           scheduler.send_job_files(sm_uuid, scp)
         end
 
-        credentials.ssh_start do |ssh|
+        credentials.ssh_session do |ssh|
           # TODO: check ruby version
           1.upto(instances_count).each do
             job = create_record(user_id, experiment_id, sm_uuid, additional_params)

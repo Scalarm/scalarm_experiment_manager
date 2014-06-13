@@ -18,7 +18,7 @@ class GridCredentialsTest < MiniTest::Test
     credentials.login = 'test_login'
     credentials.password = 'test_password'
 
-    credentials.ssh_start
+    credentials.ssh_session
   end
 
   def test_scp
@@ -29,6 +29,6 @@ class GridCredentialsTest < MiniTest::Test
     credentials.login = 'test_login'
     credentials.password = 'test_password'
 
-    credentials.scp_start
+    credentials.scp_session
   end
 end
