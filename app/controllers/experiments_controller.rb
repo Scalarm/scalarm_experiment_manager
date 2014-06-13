@@ -183,7 +183,6 @@ class ExperimentsController < ApplicationController
     #  @experiment.experiment_size = sims_generated
     #  @experiment.save
     #end
-    Rails.logger.debug @experiment.progress_bar_color.join(',')
 
     stats = {
         all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,

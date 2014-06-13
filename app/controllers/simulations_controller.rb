@@ -132,7 +132,11 @@ class SimulationsController < ApplicationController
       else
         @simulation['is_done'] = true
         @simulation['to_sent'] = false
-        @simulation['result'] = JSON.parse(params[:result]) unless params[:result].blank?
+        if params[:result].blank?
+          @simulation['result'] = {}
+        else
+          @simulation['result'] = JSON.parse(params[:result])
+        end
 
         if params.include?(:status) and params[:status] == 'error'
           @simulation['is_error'] = true
