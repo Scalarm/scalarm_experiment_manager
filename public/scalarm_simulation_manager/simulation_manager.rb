@@ -9,7 +9,7 @@ require_relative 'storage_manager'
 require_relative 'information_service'
 
 class IO
-  def self.write(filename, text) 
+  def self.write(filename, text)
     File.open(filename, 'a') do |file|
       file.puts(text)
     end
@@ -52,8 +52,8 @@ if not File.exist?(code_base_dir)
 
   # 4. unzip the repository
   puts %x[unzip -d #{code_base_dir} #{code_base_dir}.zip; unzip -d #{code_base_dir} #{code_base_dir}/simulation_binaries.zip]
-  
-  Dir.foreach(code_base_dir) do |filename| 
+
+  Dir.foreach(code_base_dir) do |filename|
     next if File.file?("#{code_base_dir}/#{filename}")
     File.chmod(0777, "#{code_base_dir}/#{filename}")
   end
@@ -207,7 +207,9 @@ while true
       sm_proxy.upload_binary_output(experiment_id, simulation_input['simulation_id'], output_binary_file)
     end
 
-    sm_proxy.upload_stdout(experiment_id, simulation_input['simulation_id'], File.join(simulation_dir, '_stdout.txt'))
+    unless sm_proxy.nil?
+      sm_proxy.upload_stdout(experiment_id, simulation_input['simulation_id'], File.join(simulation_dir, '_stdout.txt'))
+    end
 
     # 6f. go to the 6 point
   end

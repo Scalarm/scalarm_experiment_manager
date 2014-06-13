@@ -9,6 +9,7 @@ class ExperimentManager
     @experiment_manager_address = url
     @user = config['experiment_manager_user']
     @pass = config['experiment_manager_pass']
+    @development = config.include?('development') and config['development']
   end
 
   def get_experiment_id
@@ -66,9 +67,11 @@ class ExperimentManager
     uri = URI(path_to("#{experiment_id}/simulations/#{simulation_id}/mark_as_complete"))
 
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.ssl_version = :SSLv3
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    unless @development
+      http.use_ssl = true
+      http.ssl_version = :SSLv3
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
 
     cpu_info = {}
     cmd_out = %x[cat /proc/cpuinfo | grep name | head -1]
@@ -89,6 +92,8 @@ class ExperimentManager
       cpu_info: cpu_info.to_json
     }
     form_data['reason'] = results['reason'] if results['status'] == 'error'
+
+    puts form_data.inspect
     request.set_form_data(form_data)
 
     http.request(request).body
@@ -98,9 +103,11 @@ class ExperimentManager
     uri = URI(path_to("#{experiment_id}/simulations/#{simulation_id}/progress_info"))
 
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.ssl_version = :SSLv3
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    unless @development
+      http.use_ssl = true
+      http.ssl_version = :SSLv3
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
 
     request = Net::HTTP::Post.new(uri.request_uri)
     request.basic_auth(@user, @pass)
@@ -110,7 +117,11 @@ class ExperimentManager
   end
 
   def path_to(method)
-    "https://#{@experiment_manager_address}/experiments/#{method}"
+    if @development
+      "http://#{@experiment_manager_address}/experiments/#{method}"
+    else
+      "https://#{@experiment_manager_address}/experiments/#{method}"
+    end
   end
 
   def execute_http_get(url)
@@ -120,7 +131,11 @@ class ExperimentManager
     req = Net::HTTP::Get.new(uri.path)
     req.basic_auth(@user, @pass)
 
-    ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    if @development
+      ssl_options = {}
+    else
+      ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    end
     response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
 
     response.body

@@ -135,7 +135,13 @@ class SimulationsController < ApplicationController
         if params[:result].blank?
           @simulation['result'] = {}
         else
-          @simulation['result'] = JSON.parse(params[:result])
+          begin
+            @simulation['result'] = JSON.parse(params[:result])
+          rescue Exception => e
+            @simulation['result'] = {}
+            @simulation['is_error'] = true
+            @simulation['error_reason'] = t('simulations.error.invalid_result_format')
+          end
         end
 
         if params.include?(:status) and params[:status] == 'error'
