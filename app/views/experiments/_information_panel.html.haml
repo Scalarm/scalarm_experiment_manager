@@ -11,6 +11,11 @@
       %span.button.tiny.radius.alert#stopExperimentButton
         %i.fi-stop
         = t('experiments.monitoring_actions.stop_link')
+    - else
+      %span.button.tiny.radius.alert#destroyExperimentButton
+        %i.fi-trash
+        = t('.destroy_button')
+
 
 %h3.subheader= t('.experiment_info_title')
 
@@ -102,7 +107,7 @@
           -#= select_tag('sharing_with_login', options_for_select(share_with_users), class: 'custom')
         - unless share_with_users.blank?
           .small-3.columns= submit_tag(t('experiments.monitoring_actions.share'), class: 'button radius expand small')
-        .small-1.columns        
+        .small-1.columns
 
 = content_for :javascript do
   :javascript

@@ -7,6 +7,8 @@ en:
       experiment_name: Name
       experiment_description: Description
 
+      destroy_button: Destroy
+
     experiment_links:
       navigation_link: Experiments
       running_experiments: Running experiments
