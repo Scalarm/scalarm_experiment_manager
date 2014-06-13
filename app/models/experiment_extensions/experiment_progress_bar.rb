@@ -27,10 +27,12 @@ module ExperimentProgressBar
                         1
                       elsif update_type == 'rollback'
                         -1
+                      elsif update_type == 'error'
+                        -256
                       end
 
     begin
-      progress_bar_table.update({:bar_num => bar_index}, '$inc' => {:bar_state => increment_value})
+      progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end
@@ -44,7 +46,7 @@ module ExperimentProgressBar
     number_of_bars = if parts_per_slot > 1 then
                        x = (experiment_size / parts_per_slot).ceil
                        if x * parts_per_slot < experiment_size
-                        x + 1   
+                        x + 1
                       else
                         x
                       end
@@ -64,6 +66,8 @@ module ExperimentProgressBar
     bar_state = bar_doc['bar_state']
 
     color = bar_state == 0 ? 0 : (55 + color_step * bar_state).to_i
+    color = -1 if bar_state < 0
+
     [color, 255].min
   end
 
@@ -92,24 +96,25 @@ module ExperimentProgressBar
     first_id = [bar_index*parts_per_slot + 1, experiment_size].min
     last_id = [(bar_index+1)*parts_per_slot, experiment_size].min
     query_hash = {'id' => {'$in' => (first_id..last_id).to_a}}
-    option_hash = {:fields => %w(to_sent is_done)}
+    option_hash = {fields: %w(to_sent is_done is_error)}
 
     #Rails.logger.debug("Query hash => #{query_hash} --- Option hash => #{option_hash}")
     new_bar_state = 0
     self.find_simulation_docs_by(query_hash, option_hash).each do |instance_doc|
-      #Rails.logger.debug("Instance_doc --- #{instance_doc}")
-      if instance_doc['is_done']
+      Rails.logger.debug("Instance_doc --- #{instance_doc}")
+      if instance_doc.include?('is_error')
+        new_bar_state -= 256
+      elsif instance_doc['is_done']
         new_bar_state += 2
       elsif not instance_doc['to_sent']
         new_bar_state += 1
       end
     end
 
-    #Rails.logger.debug("Bar index - #{bar_index} --- Number of bars - #{number_of_bars} --- New bar state - #{new_bar_state}")
     begin
       #Rails.logger.debug("New bar state = #{{:bar_num => bar_index}} #{{'$set' => { :bar_state => new_bar_state }}}")
       if color_of_bar(bar_index) != new_bar_state
-        progress_bar_table.update({:bar_num => bar_index}, '$set' => {:bar_state => new_bar_state})
+        progress_bar_table.update({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
       end
     rescue Exception => e
       Rails.logger.debug("Error --- #{e}")
@@ -129,7 +134,7 @@ module ExperimentProgressBar
   end
 
   def color_of_bar(bar_index)
-    compute_bar_color(progress_bar_table.find_one({'bar_num' => bar_index}))
+    compute_bar_color(progress_bar_table.find_one({bar_num: bar_index}))
   end
 
   def create_progress_bar_table

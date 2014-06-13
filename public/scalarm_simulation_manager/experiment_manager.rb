@@ -40,21 +40,25 @@ class ExperimentManager
 
     if File.exists?(file)
       puts "[#{process}] Reading results from #{file}"
+
       results = JSON.parse(IO.read(file))
 
-      if results['status'] == 'ok'
-        puts "[#{process}] Everything went well -> uploading the following results: #{results['results']}"
-        response = if intermediate 
-          report_intermediate_result(experiment_id, simulation_id, results['results'])
-        else
-          mark_as_complete(experiment_id, simulation_id, results['results'])
-        end
-      
-        puts "[#{process}] We got the following response: #{response}"          
+      puts "[#{process}] Everything went well -> uploading the following results: #{results}"
+      response = if intermediate
+        report_intermediate_result(experiment_id, simulation_id, results)
+      else
+        mark_as_complete(experiment_id, simulation_id, results)
       end
+
+      puts "[#{process}] We got the following response: #{response}"
 
     else
       puts "[#{process}] No results available"
+
+      unless intermediate
+        results = {'status' => 'error', 'reason' => 'No output.json file found'}
+        mark_as_complete(experiment_id, simulation_id, results)
+      end
     end
   end
 
@@ -79,7 +83,13 @@ class ExperimentManager
 
     request = Net::HTTP::Post.new(uri.request_uri)
     request.basic_auth(@user, @pass)
-    request.set_form_data({'result' => results.to_json, cpu_info: cpu_info.to_json})
+    form_data = {
+      status: results['status'],
+      result: results['results'].to_json,
+      cpu_info: cpu_info.to_json
+    }
+    form_data['reason'] = results['reason'] if results['status'] == 'error'
+    request.set_form_data(form_data)
 
     http.request(request).body
   end

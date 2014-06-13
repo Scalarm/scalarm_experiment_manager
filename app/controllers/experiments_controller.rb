@@ -64,7 +64,7 @@ class ExperimentsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to action: :index }
       format.json { render json: { status: 'ok' } }
-    end  
+    end
   end
 
   def file_with_configurations
@@ -183,6 +183,7 @@ class ExperimentsController < ApplicationController
     #  @experiment.experiment_size = sims_generated
     #  @experiment.save
     #end
+    Rails.logger.debug @experiment.progress_bar_color.join(',')
 
     stats = {
         all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
@@ -201,7 +202,7 @@ class ExperimentsController < ApplicationController
         end
      end
      stats['avg_execution_time'] = (execution_time / sims_done).round(2)
-    
+
     #  predicted_finish_time = (Time.now - experiment.start_at).to_f / 3600
     #  predicted_finish_time /= (instances_done.to_f / experiment.experiment_size)
     #  predicted_finish_time_h = predicted_finish_time.floor
@@ -374,7 +375,7 @@ class ExperimentsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to action: :index }
       format.json { render json: { status: 'ok' } }
-    end  
+    end
   end
 
   # modern version of the next_configuration method;

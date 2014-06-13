@@ -179,6 +179,8 @@ class window.ExperimentMonitor
 
     for i in [0..bar_colors.length]
       context.fillStyle = if(bar_colors[i] == 0) then "#BDBDBD" else "rgb(0, #{bar_colors[i]}, 0)"
+      if(bar_colors[i] < 0)
+        context.fillStyle = "#F62217" 
 
       if i == bar_colors.length - 1
         context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
