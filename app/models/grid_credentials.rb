@@ -1,6 +1,11 @@
 require 'openssl'
 require 'base64'
 
+require 'net/ssh'
+require 'gsi/ssh'
+
+require 'infrastructure_facades/infrastructure_errors'
+
 class GridCredentials < MongoActiveRecord
   include SSHEnabledRecord
 
@@ -13,11 +18,15 @@ class GridCredentials < MongoActiveRecord
   end
 
   def password
-    decipher = GridCredentials::decipher
-    password = decipher.update(Base64.strict_decode64(self.hashed_password))
-    password << decipher.final
+    if hashed_password
+      decipher = GridCredentials::decipher
+      password = decipher.update(Base64.strict_decode64(self.hashed_password))
+      password << decipher.final
 
-    password
+      password
+    else
+      nil
+    end
   end
 
   def password=(new_password)
@@ -42,10 +51,17 @@ class GridCredentials < MongoActiveRecord
   private
 
   def _get_ssh_session
-    Net::SSH.start(host, login, password: password)
+    if proxy
+      Gsi::SSH.start(host, login, proxy)
+    elsif password
+      Net::SSH.start(host, login, password: password)
+    else
+      raise InfrastructureErrors::NoCredentialsError
+    end
   end
 
   def _get_scp_session
+    # TODO: use Gsi::SCP
     Net::SCP.start(host, login, password: password)
   end
 
