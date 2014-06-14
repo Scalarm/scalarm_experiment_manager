@@ -2,12 +2,12 @@
 # - _get_ssh_session - return ssh session object
 module SSHEnabledRecord
   def self.create_session_method(session_type)
-    define_method "#{session_type}_session" do
+    define_method "#{session_type}_session" do |&block|
       session = self.send("_get_#{session_type}_session")
 
-      if block_given?
+      if block
         begin
-          yield session
+          block.call(session)
         ensure
           session.close unless session.closed?
         end
