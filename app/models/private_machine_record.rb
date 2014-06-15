@@ -7,7 +7,7 @@ class PrivateMachineRecord < MongoActiveRecord
   include SimulationManagerRecord
 
   # delegate session methods just for convenience
-  def_delegators @credentials, :upload_file, :ssh_session, :scp_session
+  def_delegators :@credentials, :upload_file, :ssh_session, :scp_session
 
   def self.collection_name
     'private_machine_records'

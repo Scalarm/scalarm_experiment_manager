@@ -11,6 +11,11 @@
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
 
 class PlGridSchedulerBase
+  attr_reader :logger
+
+  def initialize(logger)
+    @logger = logger
+  end
 
   def prepare_session(ssh)
     # pass

@@ -3,6 +3,11 @@ require_relative '../pl_grid_scheduler_base'
 module GliteScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
+    def initialize(logger)
+      super(logger)
+      @last_ssh = nil
+    end
+
     def self.long_name
       'PL-Grid gLite'
     end
@@ -25,9 +30,12 @@ module GliteScheduler
     end
 
     def send_job_files(sm_uuid, scp)
-      scp.upload! "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", '.'
-      scp.upload! "/tmp/scalarm_job_#{sm_uuid}.sh", '.'
-      scp.upload! "/tmp/scalarm_job_#{sm_uuid}.jdl", '.'
+      paths = [
+          "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
+          "/tmp/scalarm_job_#{sm_uuid}.sh",
+          "/tmp/scalarm_job_#{sm_uuid}.jdl"
+      ]
+      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, job)
@@ -35,7 +43,7 @@ module GliteScheduler
       ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
       #  schedule the job with glite wms
       submit_job_output = ssh.exec!("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl")
-      Rails.logger.debug("Glite submission output lines: #{submit_job_output}")
+      logger.debug("Glite submission output lines: #{submit_job_output}")
 
       submit_job_output ? (job.job_id = GliteScheduler::PlGridScheduler.parse_job_id(submit_job_output)) : nil
     end
@@ -46,6 +54,7 @@ module GliteScheduler
     end
 
     def glite_state(ssh, job)
+      prepare_session(ssh)
       GliteScheduler::PlGridScheduler.parse_job_status(ssh.exec!("glite-wms-job-status #{job.job_id}"))
     end
 
@@ -78,11 +87,8 @@ module GliteScheduler
     end
 
     def cancel(ssh, job)
-      ssh.open_channel do |channel|
-        channel.send_data("glite-wms-job-cancel #{job.job_id}")
-        channel.send_data('y')
-        channel.close
-      end
+      prepare_session(ssh)
+      ssh.exec!("glite-wms-job-cancel --no-int #{job.job_id}")
     end
 
     def clean_after_job(ssh, job)
@@ -109,8 +115,20 @@ module GliteScheduler
       eos
     end
 
+    def new_session?(ssh)
+      if @last_ssh.equal? ssh
+        true
+      else
+        @last_ssh = ssh
+        false
+      end
+    end
+
     def prepare_session(ssh)
-      voms_proxy_init(ssh, 'vo.plgrid.pl')
+      if new_session?(ssh)
+        logger.debug 'initializing proxy'
+        voms_proxy_init(ssh, 'vo.plgrid.pl')
+      end
     end
 
     def get_log(ssh, job)

@@ -10,18 +10,20 @@ module SharedSSH
     @mutex = Mutex.new
   end
 
-  def shared_ssh_session(credentials)
+  def shared_ssh_session(credentials, id=nil)
     @mutex.synchronize do
-      if @ssh_sessions.include? credentials.id
-        session = @ssh_sessions[credentials.id]
+      # SSH sessions hash can have keys of only credentials_id or (credentials_id + user_defined_id)
+      session_id = (id ? "#{credentials.id.to_s}_#{id}" : credentials.id.to_s)
+      if @ssh_sessions.include? session_id
+        session = @ssh_sessions[session_id]
         if session and not session.closed?
-          logger.debug 'using existing ssh session'
+          logger.debug "using existing ssh session: #{session_id}"
           return session
         end
       end
 
-      logger.debug 'creating ssh session'
-      @ssh_sessions[credentials.id] = credentials.ssh_session
+      logger.debug "creating ssh session: #{session_id}"
+      @ssh_sessions[session_id] = credentials.ssh_session
     end
   end
 

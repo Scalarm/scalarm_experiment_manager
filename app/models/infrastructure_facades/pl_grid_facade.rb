@@ -1,7 +1,7 @@
 require 'securerandom'
 require 'fileutils'
 require 'net/ssh'
-require 'net/scp'
+require 'net/scp_ext'
 
 require_relative 'plgrid/pl_grid_simulation_manager'
 
@@ -18,16 +18,16 @@ class PlGridFacade < InfrastructureFacade
   attr_reader :short_name
 
   def initialize(scheduler_class)
+    @scheduler_class = scheduler_class
+    @long_name = scheduler_class.long_name
+    @short_name = scheduler_class.short_name
     @ui_grid_host = 'ui.grid.cyfronet.pl'
     @ssh_sessions = {}
-    @scheduler_class = scheduler_class
-    @long_name = scheduler.long_name
-    @short_name = scheduler.short_name
     super()
   end
 
   def scheduler
-    @scheduler ||= @scheduler_class.new
+    @scheduler ||= @scheduler_class.new(logger)
   end
 
   def sm_record_class
@@ -158,6 +158,11 @@ class PlGridFacade < InfrastructureFacade
     end
 
     grants
+  end
+
+  # Appends PL-Grid scheduler name to shared SSH session ID
+  def shared_ssh_session(record)
+    super(record, @short_name)
   end
 
   # -- SimulationManager delegation methods --

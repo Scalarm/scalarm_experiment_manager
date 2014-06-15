@@ -1,4 +1,4 @@
-require_relative '../pl_grid_scheduler_base'
+ require_relative '../pl_grid_scheduler_base'
 
 module QcgScheduler
 
@@ -53,16 +53,18 @@ module QcgScheduler
     end
 
     def send_job_files(sm_uuid, scp)
-      scp.upload! "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", '.'
-      scp.upload! "/tmp/scalarm_job_#{sm_uuid}.sh", '.'
-      scp.upload! "/tmp/scalarm_job_#{sm_uuid}.qcg", '.'
+      paths = ["/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
+               "/tmp/scalarm_job_#{sm_uuid}.sh",
+               "/tmp/scalarm_job_#{sm_uuid}.qcg"
+      ]
+      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, job)
       ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
       submit_job_output = ssh.exec!("qcg-sub scalarm_job_#{job.sm_uuid}.qcg")
 
-      Rails.logger.debug("QCG output lines: #{submit_job_output}")
+      logger.debug("QCG output lines: #{submit_job_output}")
 
       submit_job_output and (job.job_id = QcgScheduler::PlGridScheduler.parse_job_id(submit_job_output))
     end
@@ -136,7 +138,7 @@ module QcgScheduler
 
     def cancel(ssh, job)
       output = ssh.exec!("qcg-cancel #{job.job_id}")
-      Rails.logger.debug("QCG cancel output:\n#{output}")
+      logger.debug("QCG cancel output:\n#{output}")
       output
     end
 

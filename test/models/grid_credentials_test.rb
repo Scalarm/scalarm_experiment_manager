@@ -22,7 +22,7 @@ class GridCredentialsTest < MiniTest::Test
   end
 
   def test_scp
-    require 'net/scp'
+    require 'net/scp_ext'
     Net::SCP.expects(:start).once.with('test_host', 'test_login', {password: 'test_password'}).once
 
     credentials = GridCredentials.new('host'=>'test_host')

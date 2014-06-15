@@ -61,8 +61,13 @@ class GridCredentials < MongoActiveRecord
   end
 
   def _get_scp_session
-    # TODO: use Gsi::SCP
-    Net::SCP.start(host, login, password: password)
+    if proxy
+      Gsi::SCP.start(host, login, proxy)
+    elsif password
+      Net::SCP.start(host, login, password: password)
+    else
+      raise InfrastructureErrors::NoCredentialsError
+    end
   end
 
   def self.cipher
