@@ -156,11 +156,16 @@ class InfrastructureFacade
 
   # This method ensures that resources used by SM will be cleaned up
   def yield_simulation_managers(*args, &block)
-    begin
-      init_resources
-      yield get_sm_records(*args).map {|r| create_simulation_manager(r)}
-    ensure
-      clean_up_resources
+    sm_records = get_sm_records(*args)
+    if sm_records.empty?
+      yield []
+    else
+      begin
+        init_resources
+        yield sm_records.map {|r| create_simulation_manager(r)}
+      ensure
+        clean_up_resources
+      end
     end
   end
 
