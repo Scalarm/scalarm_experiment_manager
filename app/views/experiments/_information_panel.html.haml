@@ -1,16 +1,14 @@
 %div.right
-  %a.button.tiny.radius(href="#" data-reveal-id="experimentEditModal" title="#{t('experiments.edit.tooltip')}")
-    %i.fi-page-edit
-    = t("experiments.edit.link")
-  - if @experiment.user_id == @current_user.id
-    %a.button.tiny.radius(href="#" data-reveal-id="share-dialog" title="#{t('experiments.monitoring_actions.share_dialog.header')}")
-      %i.fi-share
-      = t("experiments.sharing.link")
+  - is_disabled = @experiment.user_id != @current_user.id
 
+  = experiment_info_button('experiments.edit', 'edit-dialog', 'fi-page-edit', is_disabled)
+  = experiment_info_button('experiments.monitoring_actions.share_dialog', 'share-dialog', 'fi-share', is_disabled)
+
+  - if @experiment.user_id == @current_user.id
     - if @experiment.is_running
       %span.button.tiny.radius.alert#stopExperimentButton
         %i.fi-stop
-        = t('experiments.monitoring_actions.stop_link')
+        = t('experiments.monitoring_actions.stop_experiment.link')
     - else
       %span.button.tiny.radius.alert#destroyExperimentButton
         %i.fi-trash
@@ -44,7 +42,7 @@
                 = hidden_field_tag 'mode', 'unshare'
                 = hidden_field_tag 'sharing_with_login', u.login
                 = u.login
-                = submit_tag(t('experiments.monitoring_actions.unshare'), class: 'button radius tiny')
+                = submit_tag raw("&#215; #{t('experiments.monitoring_actions.unshare')}"), class: 'button radius tiny'
               &nbsp;
     - else
       .small-3.columns
@@ -69,7 +67,7 @@
         %h5.subheader= @experiment.simulation.description
 
 
-#experimentEditModal.reveal-modal(data-reveal="")
+#edit-dialog.reveal-modal(data-reveal)
   %h3= t('experiments.edit.header')
   %a.close-reveal-modal &#215;
 
@@ -119,4 +117,10 @@
       });
 
       $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1000);
+
+      // disable "disabled" buttons
+      $("[disabled]").click(function(event) {
+          event.stopImmediatePropagation();
+          return(false);
+      });
     });

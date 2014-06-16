@@ -97,9 +97,10 @@ en:
       booster:
         header: Increase computational power
 
-      sharing_button: Share
       share_dialog:
-        header: Share this experiment with others
+        link: Share
+        tooltip: Share this experiment with others
+
       share_with_login: Login of a Scalarm user
       share: Share
       unshare: Unshare

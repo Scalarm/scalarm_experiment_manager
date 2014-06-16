@@ -32,4 +32,13 @@ module ExperimentsHelper
     }
   end
 
+  def experiment_info_button(text_prefix, reveal_id, icon, disabled)
+    link_to '#', title: t("#{text_prefix}.tooltip"), 'data-reveal-id' => reveal_id, disabled: disabled,
+                 class: 'button tiny radius' do
+
+      raw content_tag(:i, '', class: icon) + raw('&nbsp;') + t("#{text_prefix}.link")
+    end
+
+  end
+
 end
