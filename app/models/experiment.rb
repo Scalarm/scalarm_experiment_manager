@@ -16,8 +16,8 @@ require 'experiment_extensions/simulation_scheduler'
 #simulation_id: id of a simulation which is executed during the experiment
 #user_id: ObjectId
 #time_constraint_in_sec: integer - threshold for simulation execution
-#experiment_input: JSON structure defining parametrization of the used simulation 
-# - basically it is an extended version of a simulation input structure; extended with information about parametrization of each parameter 
+#experiment_input: JSON structure defining parametrization of the used simulation
+# - basically it is an extended version of a simulation input structure; extended with information about parametrization of each parameter
 #   -  "parametrizationType" : "value",      "in_doe" : false
 #doe_info: information about used DoE methods - an array of triples, [ doe_method_id, array_of_parameter_ids, array_of_lists_with_values_for_each_simulation ]
 #scheduling_policy: string -
@@ -367,7 +367,7 @@ class Experiment < MongoActiveRecord
 
   def create_result_csv
   	moes = self.moe_names
-  	
+
     CSV.generate do |csv|
       csv << self.parameters.flatten + moes
 
@@ -419,8 +419,11 @@ class Experiment < MongoActiveRecord
     moe_name_set = Set.new
     result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
 
-    self.find_simulation_docs_by({is_done: true}, {fields: 'result', limit: result_limit}).each do |simulation_doc|
-      moe_name_set += simulation_doc['result'].keys
+    query_opts = {fields: {_id: 0, result: 1, is_error: 1}, limit: result_limit}
+    self.find_simulation_docs_by({is_done: true}, query_opts).each do |simulation_doc|
+      unless simulation_doc.include?('is_error') and simulation_doc['is_error']
+        moe_name_set += simulation_doc['result'].keys
+      end
     end
 
     moe_name_set.empty? ? nil : moe_name_set.to_a

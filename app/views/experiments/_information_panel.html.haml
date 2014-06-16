@@ -1,9 +1,20 @@
 %div.right
   %a.button.tiny.radius(href="#" data-reveal-id="experimentEditModal" title="#{t('experiments.edit.tooltip')}")
     %i.fi-page-edit
+    = t("experiments.edit.link")
   - if @experiment.user_id == @current_user.id
     %a.button.tiny.radius(href="#" data-reveal-id="share-dialog" title="#{t('experiments.monitoring_actions.share_dialog.header')}")
       %i.fi-share
+      = t("experiments.sharing.link")
+
+    - if @experiment.is_running
+      %span.button.tiny.radius.alert#stopExperimentButton
+        %i.fi-stop
+        = t('experiments.monitoring_actions.stop_link')
+    - else
+      %span.button.tiny.radius.alert#destroyExperimentButton
+        %i.fi-trash
+        = t('.destroy_button')
 
 
 %h3.subheader= t('.experiment_info_title')
@@ -39,7 +50,7 @@
       .small-3.columns
         %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_by') + ':'
       .small-9.columns
-        %h5.subheader= ScalarmUser.find_by_id(@experiment.user_id).login      
+        %h5.subheader= ScalarmUser.find_by_id(@experiment.user_id).login
 
   - if @experiment.simulation.nil?
     %h4.subheader= t('simulations.conduct_experiment.empty_simulation')
@@ -93,7 +104,19 @@
             = t('experiments.monitoring_actions.share_with_login') + ':'
         .small-3.columns
           = text_field_tag('sharing_with_login')
-          -#= select_tag('sharing_with_login', options_for_select(share_with_users), class: 'custom')
-        - unless share_with_users.blank?
-          .small-3.columns= submit_tag(t('experiments.monitoring_actions.share'), class: 'button radius expand small')
+        .small-3.columns
+          = submit_tag t('experiments.monitoring_actions.share'), class: 'button radius expand small'
+
         .small-1.columns
+
+= content_for :javascript do
+  :javascript
+    $(function() {
+      var logins = #{share_with_users.to_json};
+
+      $("#sharing_with_login").autocomplete({
+        source: logins
+      });
+
+      $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1000);
+    });

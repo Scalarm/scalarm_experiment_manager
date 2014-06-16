@@ -14,6 +14,9 @@ en:
       binary_output_header: "Binary output:"
       stdout_header: "Simulation STDOUT:"
       size: "File size: %{size}"
+      error_section: "An error occurred during this simulation run:"
+      no_reason_label: "No error reason was reported"
+      reason: "Reported error reason: '%{reason}'"
     create:
       bad_params: "You need to provide: simulation name, a file with input description, and simulation binaries"
       bad_simulation_input: The given simulation input has to be a valid JSON document.

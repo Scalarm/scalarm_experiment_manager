@@ -132,7 +132,23 @@ class SimulationsController < ApplicationController
       else
         @simulation['is_done'] = true
         @simulation['to_sent'] = false
-        @simulation['result'] = JSON.parse(params[:result])
+        if params[:result].blank?
+          @simulation['result'] = {}
+        else
+          begin
+            @simulation['result'] = JSON.parse(params[:result])
+          rescue Exception => e
+            @simulation['result'] = {}
+            @simulation['is_error'] = true
+            @simulation['error_reason'] = t('simulations.error.invalid_result_format')
+          end
+        end
+
+        if params.include?(:status) and params[:status] == 'error'
+          @simulation['is_error'] = true
+          @simulation['error_reason'] = params[:reason] if params.include?(:reason)
+        end
+
         @simulation['done_at'] = Time.now
         # infrastructure-related info
         if params.include?('cpu_info')
@@ -143,7 +159,11 @@ class SimulationsController < ApplicationController
         # TODO adding caching capability
         #@simulation.remove_from_cache
 
-        @experiment.progress_bar_update(@simulation['id'], 'done')
+        if params.include?(:status) and params[:status] == 'error'
+          @experiment.progress_bar_update(@simulation['id'], 'error')
+        else
+          @experiment.progress_bar_update(@simulation['id'], 'done')
+        end
       end
     rescue Exception => e
       Rails.logger.error("Error in marking a simulation as complete - #{e}")
@@ -172,9 +192,8 @@ class SimulationsController < ApplicationController
   end
 
   def show
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
     information_service = InformationService.new
-    @storage_manager_url = information_service.get_list_of('storage')
+    @storage_manager_url = information_service.get_list_of('storage_managers')
     @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
 
     if @simulation.nil?
@@ -193,7 +212,7 @@ class SimulationsController < ApplicationController
 
     render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
-  
+
   def upload_parameter_space
     i = 0
     parameters = { values: [] }
@@ -249,7 +268,7 @@ class SimulationsController < ApplicationController
 
     unless @experiment.nil?
       @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
-    end 
+    end
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
@@ -316,7 +335,7 @@ class SimulationsController < ApplicationController
     unless @simulation.nil? or @storage_manager_url.blank?
       begin
         size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['id'])
-        
+
         if size_response.code == 200
           output_size = JSON.parse(size_response.body)['size']
           error = 0

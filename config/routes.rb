@@ -1,4 +1,11 @@
 ScalarmExperimentManager::Application.routes.draw do
+
+  resources :simulation_managers do
+    member do
+      get :code
+    end
+  end
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

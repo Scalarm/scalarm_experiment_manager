@@ -5,8 +5,6 @@ module ScalarmAuthentication
     Rails.logger.debug("[authentication] starting")
     @current_user = nil; @sm_user = nil; @session_auth = false
 
-    Rails.logger.debug("Password provided: #{password_provided?}")
-
     case true
       when (not session[:user].blank?)
         authenticate_with_session

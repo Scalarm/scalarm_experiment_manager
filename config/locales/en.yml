@@ -75,17 +75,19 @@ en:
 
   experiments:
     show:
-      stats_header: Simulation statistics
-      progress_bar_header: Experiment progress bar
+      stats_header: Experiment progress
+      progress_bar_header: Execution progress bar
 
 
     # buttons from the monitoring view
     monitoring_actions:
+      left_column_header: Computations-related actions
+      right_column_header: Experiment management actions
       actions_header: Actions
       stop_button: Stop experiment
-      extend_button: Extend
-      boost_button: Boost
-      scheduling_button: Set scheduling
+      extend_button: Extend input space
+      boost_button: Add computing power
+      scheduling_button: Set scheduling method
       destroy_button: Destroy
       download_results_button: Download results
       binaries_results_button: Simulations output (binaries)
