@@ -14,10 +14,9 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
     information_service = InformationService.new
 
-    @storage_manager_url = information_service.get_list_of('storage')
+    @storage_manager_url = information_service.get_list_of('storage_managers')
     @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
 
     begin
@@ -526,11 +525,15 @@ class ExperimentsController < ApplicationController
   end
 
   def update
-    @experiment.name = params[:experiment][:name]
-    @experiment.description = params[:experiment][:description]
+    if @experiment.user_id != @current_user.id
+      flash[:error] = t('experiments.edit.failure')
+    else
+      @experiment.name = params[:experiment][:name]
+      @experiment.description = params[:experiment][:description]
 
-    @experiment.save
-    flash[:notice] = t('experiments.edit.success')
+      @experiment.save
+      flash[:notice] = t('experiments.edit.success')
+    end
 
     redirect_to experiment_path(@experiment.id)
   end
