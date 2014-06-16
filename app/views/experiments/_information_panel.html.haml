@@ -92,7 +92,7 @@
 - if @experiment.user_id == @current_user.id
   #share-dialog.reveal-modal(data-reveal)
     %a.close-reveal-modal &#215;
-    %h2= t('experiments.monitoring_actions.share_dialog.header')
+    %h2= t('experiments.monitoring_actions.share_dialog.tooltip')
 
     = form_tag share_experiment_path(@experiment.id), class: 'custom' do
       = hidden_field_tag 'mode', 'share'
