@@ -216,7 +216,7 @@ class window.ExperimentMonitor
       $("#p_predicted_finish_time").show()
 
   generate_html: (parent_id) ->
-    $("#experiment_progress_bar .content").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
+    $("#experiment_progress_bar").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
 
     canvas = document.getElementById("exp_progress_bar_2")
     canvas.addEventListener('mousedown', @progress_bar_listener, false)
