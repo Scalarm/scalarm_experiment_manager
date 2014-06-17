@@ -1,16 +1,17 @@
--#- content_for :title, t('.title')
--#- content_for :help, raw(t('help.simulations.register'))
-
 %section.panel.radius
-  %h3.subheader= t('.header', name: @scenario.name)
+  = link_to '#', title: t(".share.tooltip"), 'data-reveal-id' => 'share-dialog', disabled: false, class: 'button tiny radius right' do
+    = content_tag(:i, '', class: 'fi-share')
+    = t(".share.link")
+
+  %h3.subheader= t('.header', name: @simulation_scenario.name)
 
   .content
-    = form_tag(simulation_scenario_path(@scenario.id), multipart: true, class: 'custom', method: :put) do
+    = form_tag(simulation_scenario_path(@simulation_scenario.id), multipart: true, class: 'custom', method: :put) do
       .row
         = render partial: 'simulations/form_row', object: 'simulation_name',
-          locals: { input_element: text_field_tag('simulation_name', @scenario.name), offset: 0 }
+          locals: { input_element: text_field_tag('simulation_name', @simulation_scenario.name), offset: 0 }
         = render partial: 'simulations/form_row', object: 'simulation_description',
-          locals: { input_element: text_area_tag('simulation_description', @scenario.description), offset: 0 }
+          locals: { input_element: text_area_tag('simulation_description', @simulation_scenario.description), offset: 0 }
 
       .row
         = render partial: 'simulations/form_row', object: 'simulation_binaries',
@@ -20,15 +21,80 @@
 
       .row
         = render partial: 'simulations/form_row', object: 'input_writer',
-          locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers, @scenario.input_writer_id), class: 'medium') }
+          locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers, @simulation_scenario.input_writer_id), class: 'medium') }
         = render partial: 'simulations/form_row', object: 'executor',
-          locals: { input_element: select_tag('executor_id', options_for_select(@executors, @scenario.executor_id), class: 'medium') }
+          locals: { input_element: select_tag('executor_id', options_for_select(@executors, @simulation_scenario.executor_id), class: 'medium') }
       .row
         = render partial: 'simulations/form_row', object: 'output_reader',
-          locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers, @scenario.output_reader_id), class: 'medium') }
+          locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers, @simulation_scenario.output_reader_id), class: 'medium') }
         = render partial: 'simulations/form_row', object: 'progress_monitor',
-          locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors, @scenario.progress_monitor_id), class: 'medium') }
+          locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors, @simulation_scenario.progress_monitor_id), class: 'medium') }
 
       .row
         .small-2.small-centered.columns
           = submit_tag t('.update_btn'), class: 'button expand radius last-element'
+
+- if @simulation_scenario.user_id == @current_user.id
+  #share-dialog.reveal-modal(data-reveal)
+    %a.close-reveal-modal &#215;
+    %h2= t ".share.tooltip"
+
+    = form_tag share_simulation_scenario_path(@simulation_scenario.id), class: 'custom' do
+      = hidden_field_tag 'mode', 'share'
+      .row
+        .small-4.columns
+          %label.inline.right(for="sharing_with_login")
+            = t('experiments.monitoring_actions.share_with_login') + ':'
+        .small-3.columns
+          = text_field_tag('sharing_with_login')
+        .small-3.columns
+          = submit_tag t('experiments.monitoring_actions.share'), class: 'button radius small'
+        .small-1.columns
+
+    .row
+      - if @simulation_scenario.user_id == @current_user.id
+        .small-4.columns
+          %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_with') + ':'
+        .small-8.columns
+          %h5.subheader
+            - if @simulation_scenario.shared_with.blank?
+              = t('experiments.monitoring_actions.blank_shared_with_list')
+            - else
+              - @simulation_scenario.shared_with.to_a.map{|id| ScalarmUser.find_by_id(id) }.each do |u|
+                = form_tag share_simulation_scenario_path(@simulation_scenario.id), class: 'custom', style: "display: inline;" do
+                  = hidden_field_tag 'mode', 'unshare'
+                  = hidden_field_tag 'sharing_with_login', u.login
+                  = u.login
+                  = submit_tag raw("&#215; #{t('experiments.monitoring_actions.unshare')}"), class: 'button radius tiny'
+                &nbsp;
+
+    .row
+      .small-3.columns.small-centered
+        = form_tag share_simulation_scenario_path(@simulation_scenario.id), class: 'custom' do
+          = hidden_field_tag 'sharing_with_login', @current_user.login
+
+          - if @simulation_scenario.is_public
+            = hidden_field_tag 'mode', 'unshare_with_all'
+            = submit_tag t('experiments.monitoring_actions.make_private'), class: 'button radius'
+          - else
+            = hidden_field_tag 'mode', 'share_with_all'
+            = submit_tag t('experiments.monitoring_actions.share_with_all'), class: 'button radius'
+
+
+= content_for :javascript do
+  :javascript
+    $(function() {
+      var logins = #{share_scenario_with_users.to_json};
+
+      $("#sharing_with_login").autocomplete({
+        source: logins
+      });
+
+      $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1000);
+
+      // disable "disabled" buttons
+      $("[disabled]").click(function(event) {
+          event.stopImmediatePropagation();
+          return(false);
+      });
+    });

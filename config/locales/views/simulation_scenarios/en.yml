@@ -1,10 +1,25 @@
 en:
   simulation_scenarios:
+    state:
+      public: "This is a public scenario."
+
+    not_found: "Simulation scenario with id '%{id}' not found"
+    not_owned_by: "Simulation scenario with id '%{id}' is not owned by '%{user}'"
+
     show:
       code_base: Download all simulation scenario files
     edit:
       header: "Edit simulation scenario - '%{name}'"
       update_btn: "Update"
+      share:
+        link: Share
+        tooltip: Share this simulation scenario with others
+        share: "Simulation scenario '%{name}' is now shared with user '%{user}'"
+        unshare: "Simulation scenario '%{name}' is no longer shared with user '%{user}'"
+        share_with_all: "Simulation scenario '%{name}' is now publicly available"
+        unshare_with_all: "Simulation scenario '%{name}' is now private once again"
+
+
     update:
       success: "Simulation scenario '%{name}' has been updated"
     index:

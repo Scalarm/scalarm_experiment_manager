@@ -1,26 +1,25 @@
 class SimulationScenariosController < ApplicationController
+  before_filter :load_simulation_scenario, except: [ :index, :create ]
+
   def index
 
   end
 
   def edit
-    @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-    @executors = SimulationExecutor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-    @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-
-    @scenario = Simulation.find_by_id(params[:id])
-
-    if @scenario.nil?
-      flash[:error] = t('simulation_scenarios.edit.no_scenario')
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
       redirect_to simulations_path
+    else
+      @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @executors = SimulationExecutor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
     end
   end
 
   def update
-    if (@simulation_scenario = Simulation.find_by_id(params[:id])).nil?
-      flash[:error] = t('simulation_scenarios.edit.no_scenario')
-      redirect_to simulations_path
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
       simulation_input =  params.include?(:simulation_input) ? params[:simulation_input].read : nil
       simulation_scenario_params_validation(simulation_input)
@@ -65,47 +64,90 @@ class SimulationScenariosController < ApplicationController
   end
 
   def code_base
-    simulation_scenario = Simulation.find_by_id(params[:id])
-    code_base_dir = Dir.mktmpdir('code_base')
+    if @simulation_scenario.blank?
+      render inline: t('simulation_scenarios.not_found', id: params[:id]), status: 404
+    else
+      code_base_dir = Dir.mktmpdir('code_base')
 
-    file_list = %w(input_writer executor output_reader progress_monitor)
-    file_list.each do |filename|
-      unless simulation_scenario.send(filename).nil?
-        IO.write("#{code_base_dir}/#{filename}", simulation_scenario.send(filename).code)
-      end
-    end
-    IO.binwrite("#{code_base_dir}/simulation_binaries.zip", simulation_scenario.simulation_binaries)
-    file_list << 'simulation_binaries.zip'
-
-    IO.binwrite("#{code_base_dir}/input.json", simulation_scenario.input_specification)
-    file_list << 'input.json'
-
-    zipfile_name = File.join('/tmp', "simulation_scenario_#{simulation_scenario.id}_code_base.zip")
-
-    File.delete(zipfile_name) if File.exist?(zipfile_name)
-
-    Zip::File.open(zipfile_name, Zip::File::CREATE) do |zipfile|
+      file_list = %w(input_writer executor output_reader progress_monitor)
       file_list.each do |filename|
-        if File.exist?(File.join(code_base_dir, filename))
-          zipfile.add(filename, File.join(code_base_dir, filename))
+        unless @simulation_scenario.send(filename).nil?
+          IO.write("#{code_base_dir}/#{filename}", @simulation_scenario.send(filename).code)
         end
       end
+      IO.binwrite("#{code_base_dir}/simulation_binaries.zip", @simulation_scenario.simulation_binaries)
+      file_list << 'simulation_binaries.zip'
+
+      IO.binwrite("#{code_base_dir}/input.json", @simulation_scenario.input_specification)
+      file_list << 'input.json'
+
+      zipfile_name = File.join('/tmp', "simulation_scenario_#{@simulation_scenario.id}_code_base.zip")
+
+      File.delete(zipfile_name) if File.exist?(zipfile_name)
+
+      Zip::File.open(zipfile_name, Zip::File::CREATE) do |zipfile|
+        file_list.each do |filename|
+          if File.exist?(File.join(code_base_dir, filename))
+            zipfile.add(filename, File.join(code_base_dir, filename))
+          end
+        end
+      end
+
+      FileUtils.rm_rf(code_base_dir)
+
+      send_file zipfile_name, type: 'application/zip'
     end
-
-    FileUtils.rm_rf(code_base_dir)
-
-    send_file zipfile_name, type: 'application/zip'
   end
 
   def destroy
-    sim = Simulation.find_by_id(params[:id])
-    flash[:notice] = t('simulations.destroy', name: sim.name)
-    sim.destroy
+    if @simulation_scenario.blank?
+      render inline: t('simulation_scenarios.not_found', id: params[:id]), status: 404
+    else
+      flash[:notice] = t('simulations.destroy', name: @simulation_scenario.name)
+      @simulation_scenario.destroy
+    end
 
     redirect_to simulations_path
   end
 
+  def share
+    @user = nil
 
+    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
+      flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
+    end
+
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', { id: params[:id], user: params[:sharing_with_login] })
+    end
+
+    if flash[:error].blank?
+      if ['share', 'unshare'].include?(params[:mode])
+        sharing_list = @simulation_scenario.shared_with
+        sharing_list = [ ] if sharing_list.nil?
+        if params[:mode] == 'unshare'
+          sharing_list.delete_if{|x| x == @user.id}
+        else
+          sharing_list << @user.id
+        end
+
+        @simulation_scenario.shared_with = sharing_list
+
+      elsif ['share_with_all', 'unshare_with_all'].include?(params[:mode])
+        @simulation_scenario.is_public = (params[:mode] == 'share_with_all')
+      end
+
+      @simulation_scenario.save
+
+      flash[:notice] = t("simulation_scenarios.edit.share.#{params[:mode]}", { name: @simulation_scenario.name, user: @user.login })
+    end
+
+    if @simulation_scenario.blank?
+      redirect_to simulations_path
+    else
+      redirect_to edit_simulation_scenario_path(@simulation_scenario.id)
+    end
+  end
 
   private
 
@@ -161,4 +203,17 @@ class SimulationScenariosController < ApplicationController
     end
   end
 
+  private
+
+  def load_simulation_scenario
+    users_scenarios = @current_user.get_simulation_scenarios
+
+    @simulation_scenario = if params[:id]
+                             users_scenarios.find{|scenario| scenario.id.to_s == params[:id]}
+                           elsif
+                             users_scenarios.find{|scenario| scenario.id.to_s == params[:name]}
+                           else
+                             nil
+                           end
+  end
 end

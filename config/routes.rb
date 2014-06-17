@@ -110,11 +110,9 @@ ScalarmExperimentManager::Application.routes.draw do
   resources 'simulation_scenarios' do
     member do
       get :code_base
+      post :share
     end
   end
-  #get 'simulation_scenarios/:id/edit' => 'simulation_scenarios#edit', as:
-
-
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

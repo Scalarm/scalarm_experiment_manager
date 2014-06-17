@@ -104,6 +104,8 @@ en:
       share_with_login: Login of a Scalarm user
       share: Share
       unshare: Unshare
+      share_with_all: Make it public
+      make_private: Make it private
 
     monitoring_table:
       show_completed: Show/Hide completed
