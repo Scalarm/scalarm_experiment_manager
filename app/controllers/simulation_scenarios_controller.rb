@@ -18,34 +18,33 @@ class SimulationScenariosController < ApplicationController
   end
 
   def update
-    simulation_input = params[:simulation_input].read
-
-    if (simulation_scenario = Simulation.find_by_id(params[:id])).nil?
+    if (@simulation_scenario = Simulation.find_by_id(params[:id])).nil?
       flash[:error] = t('simulation_scenarios.edit.no_scenario')
       redirect_to simulations_path
     else
+      simulation_input =  params.include?(:simulation_input) ? params[:simulation_input].read : nil
       simulation_scenario_params_validation(simulation_input)
 
       # simulation update
       if flash[:error].nil?
-        simulation_scenario.name = params[:simulation_name]
-        simulation_scenario.description = params[:simulation_description]
-        simulation_scenario.input_specification = simulation_input unless simulation_scenario.blank?
-        simulation_scenario.created_at = Time.now
+        @simulation_scenario.name = params[:simulation_name]
+        @simulation_scenario.description = params[:simulation_description]
+        @simulation_scenario.input_specification = simulation_input unless simulation_input.blank?
+        @simulation_scenario.created_at = Time.now
 
         begin
-          set_up_adapter('input_writer', simulation_scenario, false)
-          set_up_adapter('executor', simulation_scenario)
-          set_up_adapter('output_reader', simulation_scenario, false)
-          set_up_adapter('progress_monitor', simulation_scenario, false)
+          set_up_adapter('input_writer', @simulation_scenario, false)
+          set_up_adapter('executor', @simulation_scenario)
+          set_up_adapter('output_reader', @simulation_scenario, false)
+          set_up_adapter('progress_monitor', @simulation_scenario, false)
 
           unless (binaries = params[:simulation_binaries]).blank?
-            simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
+            @simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
           end
 
-          simulation_scenario.save
+          @simulation_scenario.save
 
-          flash[:notice] = t('simulation_scenarios.update.success', name: simulation_scenario.name) if flash[:error].nil?
+          flash[:notice] = t('simulation_scenarios.update.success', name: @simulation_scenario.name) if flash[:error].nil?
         rescue Exception => e
           Rails.logger.error("Exception occurred : #{e}")
         end
@@ -156,7 +155,7 @@ class SimulationScenariosController < ApplicationController
         end
 
       when (not (scenarios = Simulation.where({name: params[:simulation_name], user_id: @current_user.id})).blank?)
-        unless scenarios.size == 1 and scenarios.first.id == simulation_scenario.id
+        unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end
     end
