@@ -15,7 +15,7 @@
     = render 'monitoring_stats'
     .speedometer{id: "speedometer_#{@experiment.id}"}
 
-    %article#experiment_progress_bar(style="margin-top: 30px;" )
+    %article#experiment_progress_bar(style="padding-top: 50px;" )
       %h4.subheader= t('.progress_bar_header')
 
     = render 'monitoring_actions'
