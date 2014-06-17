@@ -1,3 +1,5 @@
+![Scalarm Logo](http://scalarm.com/images/scalarmNiebieskiemale.png)
+
 Scalarm Experiment Manager
 ==========================
 
