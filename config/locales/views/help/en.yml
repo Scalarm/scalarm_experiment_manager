@@ -15,34 +15,61 @@ en:
       "
 
       monitoring: "
-      <p>This is the main view for actions related to a single experiment. It is divided into sections related to:
+      <p>You are on a progress monitoring view of a single experiment. It is divided into sections related to:
       <ul>
-        <li>experiment information</li>
-        <li>progress monitoring</li>
-        <li>links to other simulations (the left side)</li>
-        <li>links to statistical analysis methods (the right side)</li>
+        <li>'Experiment information' - provides basic information about your experiment, also enables to edit this
+         information, share the experiment with other users or stop the experiment execution
+        </li>
+        <li>'Experiment progress' - is the main monitoring view, which provides information about simulation runs included
+         in this experiment (how many simulation runs are in the experiment, how many of them are currently executing, and
+         how many of them have been already completed); there are also more elements of this view, e.g. a progress bar
+         and action buttons, which are described below,</li>
+        <li>(the left side) links to other experiments (both running and historical) and available simulation scenarios based on which
+         you can create new experiments </li>
+        <li>(the right side) links to data exploration methods - histograms, regression trees and scatter plots</li>
       </ul>
       </p>
 
       <p>
-      The experiment progress bar indicates status of simulation runs with colors:
+      The experiment progress bar indicates the status of each simulation run included in the experiment with colors:
       <ul>
         <li>gray - the simulation run is ready to execute</li>
         <li>dark green - the simulation run is currently running</li>
         <li>light green - the simulation run has been finished</li>
+        <li>red - the simulation run has been finished but an execution error has been reported</li>
       </ul>
-      In any time you can click on any progress bar part to see more information about particular simulation run.
+      The progress bar consists of many elements representing one or more simulation runs. You can click on each of the
+      elements to get more detailed information about the selected simulation run.
       </p>
 
       <p>
-      Below the progress bar there are several action buttons which enables you to:
+      Below the progress bar there are several action buttons divided into groups related to computations and experiment
+      management. The computations-related actions are as follows:
       <ul>
-        <li>extend the parameter space - the <tt>'Extend'</tt> button,</li>
-        <li>increase computational power for the experiment - the <tt>'Booster'</tt> button,</li>
-        <li>set the order in which simulation runs are executed - the <tt>'Set scheduling'</tt> button,</li>
-        <li>download results both structural (in CSV format) and binaries - the <tt>'Download results'</tt> button,</li>
-        <li>show results of completed simulations or show intermediate results of the running simulations - the <tt>'Show progress'</tt> button,</li>
+        <li><tt>Add computing power</tt> - enables you to schedule computations onto one or many of the supported
+         computational infrastructures</li>
+
+        <li><tt>Download Simulation Manager</tt> - enables you to download a module of Scalarm called Simulation Manager
+          which is used to execute simulation runs within this experiment. You can use it to run the experiment on your
+          own resource, e.g. to debug your simulation code.</li>
+
+        <li><tt>Download Simulation Manager</tt> - enables you to download a module of Scalarm called Simulation Manager
+          which is used to execute simulation runs within this experiment. You can use it to run the experiment on your
+          own resource, e.g. to debug your simulation code.</li>
+
+        <li><tt>Show progress</tt> - shows in separated tables aggregated results of running and completed simulation
+          runs.</li>
       </ul>
+
+      The experiment management actions are as follows:
+      <ul>
+        <li><tt>Extend input space</tt> - enables you to add more values of selected input parameters.</li>
+
+        <li><tt>Set scheduling method</tt> - sets the order in which simulation runs are executed.</li>
+
+        <li><tt>Download results</tt> - downloads results either in structural form (the CSV format) or in a binary form.</li>
+      </ul>
+
       </p>
 
       <p>
