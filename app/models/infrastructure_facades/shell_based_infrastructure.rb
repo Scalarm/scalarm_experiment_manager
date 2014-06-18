@@ -1,7 +1,7 @@
 module ShellBasedInfrastructure
   # -- Simulation Manager installation --
 
-  def start_simulation_manager_cmd(record)
+  def self.start_simulation_manager_cmd(record)
     sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
     chain(
         mute('source .rvm/environments/default'),
@@ -20,10 +20,10 @@ module ShellBasedInfrastructure
 
   def send_and_launch_sm(record, ssh)
     record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
-    output = ssh.exec!(start_simulation_manager_cmd(record))
-    logger.debug "Simulation Manager PID: #{output}"
+    output = ssh.exec!(ShellBasedInfrastructure.start_simulation_manager_cmd(record))
+    logger.debug "Simulation Manager init (stripped) output: #{output}"
     pid = ShellBasedInfrastructure.output_to_pid(output)
-    pid ? record.pid : false
+    record.pid = pid if pid
   end
 
   def self.output_to_pid(output)
