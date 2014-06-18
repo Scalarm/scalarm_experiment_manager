@@ -22,6 +22,11 @@ module ShellBasedInfrastructure
     record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
     output = ssh.exec!(start_simulation_manager_cmd(record))
     logger.debug "Simulation Manager PID: #{output}"
-    (record.pid = output.to_i) > 0 ? record.pid : false
+    output.split("\n").each do |line|
+      if (record.pid = line.to_i) > 0
+        return record.pid
+      end
+    end
+    false
   end
 end
