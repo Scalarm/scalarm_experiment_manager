@@ -1,3 +1,6 @@
+require_relative 'shell_commands'
+include ShellCommands
+
 module ShellBasedInfrastructure
   # -- Simulation Manager installation --
 
