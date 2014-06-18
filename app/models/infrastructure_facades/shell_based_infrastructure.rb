@@ -22,11 +22,13 @@ module ShellBasedInfrastructure
     record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
     output = ssh.exec!(start_simulation_manager_cmd(record))
     logger.debug "Simulation Manager PID: #{output}"
-    output.split("\n").each do |line|
-      if (record.pid = line.to_i) > 0
-        return record.pid
-      end
-    end
-    false
+    pid = ShellBasedInfrastructure.output_to_pid(output)
+    pid ? record.pid : false
+  end
+
+  def self.output_to_pid(output)
+    match = output.match /.*^(\d+)\s/m
+    pid = match ? match[1].to_i : nil
+    (pid and pid > 0) ? pid : nil
   end
 end
