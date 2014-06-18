@@ -25,6 +25,6 @@ class PlGridSimulationManager < SimulationManager
   end
 
   def task_start_detected_first_time?
-    not record.sm_initialized and resource_status != :initializing
+    record.state == :before_init and resource_status != :initializing
   end
 end

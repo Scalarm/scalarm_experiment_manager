@@ -57,7 +57,7 @@ module SimulationManagerRecord
   end
 
   def init_time_exceeded?
-    (not self.sm_initialized) and (self.sm_initialized_at + self.max_init_time < Time.now)
+    self.state == :before_init and (self.sm_initialized_at + self.max_init_time < Time.now)
   end
 
   def set_stop
