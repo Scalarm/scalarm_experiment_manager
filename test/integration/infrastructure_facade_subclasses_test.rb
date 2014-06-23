@@ -11,6 +11,7 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
   FACADE_CLASSES = {
       qsub: PlGridFacade,
       glite: PlGridFacade,
+      qcg: PlGridFacade,
       private_machine: PrivateMachineFacade,
       pl_cloud: CloudFacade,
       amazon: CloudFacade,
@@ -59,10 +60,8 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
     infrastructure_facades = InfrastructureFacadeFactory.get_all_infrastructures
 
     # when, then
-    assert_nothing_thrown do
-      infrastructure_facades.each do |facade|
-        assert (FACADE_METHODS+SM_METHODS).each {|method| assert facade.respond_to?(method), "no method #{method} in #{facade}"}
-      end
+    infrastructure_facades.each do |facade|
+      assert (FACADE_METHODS+SM_METHODS).each {|method| assert facade.respond_to?(method), "no method #{method} in #{facade}"}
     end
   end
 
