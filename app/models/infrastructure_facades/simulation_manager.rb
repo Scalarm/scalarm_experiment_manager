@@ -169,7 +169,7 @@ class SimulationManager
 
   def sm_terminated?
     # checks "should_destroy" one more time to be sure that experiment did not end in the meantime
-    (record.state == :initialized) and (not running?) and (not record.should_destroy?)
+    status == :released and not record.should_destroy?
   end
 
   def should_initialize_sm?

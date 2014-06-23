@@ -139,17 +139,32 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
+    ssh = nil
     begin
       ssh = shared_ssh_session(record.credentials)
-    rescue
-      return :error
+    rescue Exception
+      return :not_available
     end
-    scheduler.status(ssh, record)
-  end
 
-  def _simulation_manager_running?(record)
-    ssh = shared_ssh_session(record.credentials)
-    scheduler.status(ssh, record) == :running
+    begin
+      job_id = record.job_id
+      if job_id
+        status = scheduler.status(ssh, record)
+        case status
+          when :initializing then :initializing
+          when :running then :running_sm
+          when :deactivated then :released
+          else
+            logger.warn "Unknown state from PL-Grid scheduler: #{status}"
+            :error
+        end
+      else
+        :available
+      end
+    rescue Exception
+      :error
+    end
+
   end
 
   def _simulation_manager_get_log(record)

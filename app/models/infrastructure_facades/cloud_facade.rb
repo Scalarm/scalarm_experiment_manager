@@ -146,36 +146,51 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
-    # TODO: record.vm_id -->
-    vm_status = cloud_client_instance(record.user_id).status(record.vm_id)
-    if vm_status == :running
-      begin
-        # VM is running, so check SSH connection
-        record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
-        if record.has_ssh_address?
-          shared_ssh_session(record)
-          :running
-        else
-          :initializing
-        end
-      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
-        # remember this error in case of unable to initialize
-        record.error_log = e.to_s
-        record.save
-        :initializing
-      rescue Exception => e
-        logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
-"#{e.class} #{e.to_s}"
-        record.store_error('ssh', e.to_s)
-        _simulation_manager_stop(record)
-        :error
+    cloud_client = nil
+    begin
+      cloud_client = cloud_client_instance(record.user_id)
+      return :not_available unless cloud_client and cloud_client.valid_credentials?
+    rescue Exception
+      return :not_available
+    end
+
+    vm_id = record.vm_id
+    if vm_id
+      vm_status = cloud_client.status(vm_id)
+      case vm_status
+        when :initializing then :initializing
+        when :running
+          begin
+            # VM is running, so check SSH connection
+            record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+            if record.has_ssh_address?
+              shared_ssh_session(record)
+              return app_running?(record) ? :running_sm : :ready
+            else
+              return :initializing
+            end
+          rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+            # remember this error in case of unable to initialize
+            record.error_log = e.to_s
+            record.save
+            return :initializing
+          rescue Exception => e
+            logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
+    "#{e.class} #{e.to_s}"
+            record.store_error('ssh', e.to_s)
+            _simulation_manager_stop(record)
+            return :error
+          end
+        when :deactivated then :released
+        else :error
       end
+
     else
-      vm_status
+      :available
     end
   end
 
-  def _simulation_manager_running?(record)
+  def app_running?(record)
     vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
     if vm.exists? and vm.status == :running
       not shared_ssh_session(record).exec!("ps #{record.pid} | tail -n +2").blank?

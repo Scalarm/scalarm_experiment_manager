@@ -131,4 +131,80 @@ class CloudFacadeTest < MiniTest::Test
     end
   end
 
+  def test_resource_status_not_avail
+    client = stub_everything 'client'
+    client_class = stub_everything 'client_class' do
+      stubs(:new).returns(client)
+    end
+    record = stub_everything
+    facade = CloudFacade.new(client_class)
+    facade.stubs(:logger).returns(stub_everything)
+    facade.stubs(:cloud_client_instance).raises(StandardError.new 'error creating client')
+
+    status = facade._simulation_manager_resource_status(record)
+
+    assert_equal :not_available, status
+  end
+
+  def test_resource_status_avail
+    client = stub_everything 'client' do
+      stubs(:valid_credentials?).returns(true)
+    end
+    client_class = stub_everything 'client_class' do
+      stubs(:new).returns(client)
+    end
+    record = stub_everything
+    facade = CloudFacade.new(client_class)
+    facade.stubs(:logger).returns(stub_everything)
+    facade.stubs(:cloud_client_instance).returns(client)
+
+    status = facade._simulation_manager_resource_status(record)
+
+    assert_equal :available, status
+  end
+
+  def test_resource_status_init1
+    vm_id = mock 'vm_id'
+    client = stub_everything 'client' do
+      stubs(:valid_credentials?).returns(true)
+      expects(:status).with(vm_id).returns(:initializing)
+    end
+    client_class = stub_everything 'client_class' do
+      stubs(:new).returns(client)
+    end
+    record = stub_everything 'record' do
+      stubs(:vm_id).returns(vm_id)
+    end
+    facade = CloudFacade.new(client_class)
+    facade.stubs(:logger).returns(stub_everything)
+    facade.stubs(:cloud_client_instance).returns(client)
+
+    status = facade._simulation_manager_resource_status(record)
+
+    assert_equal :initializing, status
+  end
+
+  def test_resource_status_init_ssh
+    vm_id = mock 'vm_id'
+    client = stub_everything 'client' do
+      stubs(:valid_credentials?).returns(true)
+      expects(:status).with(vm_id).returns(:running)
+    end
+    client_class = stub_everything 'client_class' do
+      stubs(:new).returns(client)
+    end
+    record = stub_everything 'record' do
+      stubs(:vm_id).returns(vm_id)
+      stubs(:has_ssh_address?).returns(true)
+    end
+    facade = CloudFacade.new(client_class)
+    facade.stubs(:logger).returns(stub_everything)
+    facade.stubs(:cloud_client_instance).returns(client)
+    facade.stubs(:shared_ssh_session).with(record).raises(Errno::ECONNREFUSED)
+
+    status = facade._simulation_manager_resource_status(record)
+
+    assert_equal :initializing, status
+  end
+
 end
