@@ -129,6 +129,10 @@ class PrivateMachineFacade < InfrastructureFacade
     shared_ssh_session(record.credentials).exec! "tail -25 #{record.log_path}"
   end
 
+  # Nothing to prepare
+  def _simulation_manager_prepare_resource(record)
+  end
+
   def _simulation_manager_install(record)
     logger.debug "Installing SM on host #{record.credentials.host}:#{record.credentials.ssh_port}"
 

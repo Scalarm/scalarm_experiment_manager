@@ -37,6 +37,7 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
       :_simulation_manager_resource_status,
       :_simulation_manager_running?,
       :_simulation_manager_get_log,
+      :_simulation_manager_prepare_resource,
       :_simulation_manager_install,
       :_simulation_manager_before_monitor,
       :_simulation_manager_after_monitor

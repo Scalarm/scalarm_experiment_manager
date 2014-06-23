@@ -40,12 +40,12 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord
   end
 
-  def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
-    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
+  def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
+    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
     cloud_client = cloud_client_instance(user_id)
 
     begin
-      exp_image = CloudImageSecrets.find_by_id(additional_params['image_secrets_id'])
+      exp_image = CloudImageSecrets.find_by_id(params['image_secrets_id'])
       if exp_image.nil? or exp_image.image_id.nil?
         return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
       elsif not cloud_client.image_exists? exp_image.image_id
@@ -57,8 +57,13 @@ class CloudFacade < InfrastructureFacade
         return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
       end
 
+      records = instances_count.times do
+        create_record(exp_image.id, user_id, experiment_id,params['time_limit'], params['start_at'], params['instance_type'])
+      end
+      records.each &:save
+
       sched_instances = schedule_vm_instances(cloud_client, "#{VM_NAME_PREFIX}#{experiment_id}", exp_image,
-                                                        instances_count, user_id, experiment_id, additional_params)
+                                                        instances_count, user_id, experiment_id, params)
       ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
                           cloud_name: @long_name)]
     rescue Exception => e
@@ -72,6 +77,7 @@ class CloudFacade < InfrastructureFacade
   # @return [Array<ScheduledVmInstance>]
   def schedule_vm_instances(cloud_client, base_name, image_secrets, number, user_id, experiment_id, params)
     cloud_client.instantiate_vms(base_name, image_secrets.image_id, number, params).map do |vm_id|
+      vm_record.save
 
       vm_record = CloudVmRecord.new({
                                         cloud_name: cloud_client.class.short_name,
@@ -89,6 +95,15 @@ class CloudFacade < InfrastructureFacade
 
       create_simulation_manager(vm_record)
     end
+  end
+
+  # Intantiate virtual machine and save vm_id to given record
+  def schedule_vm_instance(record)
+    cloud_client = cloud_client_instance(record.user_id)
+    vm_id = cloud_client.instantiate_vms('scalarm', record.image_secrets.image_id, 1)
+    record.vm_id = vm_id
+    record.save
+    record
   end
 
   def add_credentials(user, params, session)
@@ -131,6 +146,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
+    # TODO: record.vm_id -->
     vm_status = cloud_client_instance(record.user_id).status(record.vm_id)
     if vm_status == :running
       begin
@@ -197,6 +213,29 @@ class CloudFacade < InfrastructureFacade
 
       sleep(20)
     end
+  end
+
+  def _simulation_manager_prepare_resource(record)
+    begin
+      schedule_vm_instance(record)
+    rescue Exception => error
+      logger.error "Exception when instantiating VMs for user #{user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
+      record.store_error('install_failed', "#{error.to_s}\n#{error.backtrace.join("\n")}")
+    end
+  end
+
+  def create_record(image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type)
+    vm_record = CloudVmRecord.new({
+                                      cloud_name: short_name,
+                                      user_id: user_id,
+                                      experiment_id: experiment_id,
+                                      image_secrets_id: image_secrets_id,
+                                      time_limit: time_limit,
+                                      sm_uuid: SecureRandom.uuid,
+                                      start_at: start_at,
+                                      instance_type: instance_type
+                                  })
+    vm_record.initialize_fields
   end
 
   def enabled_for_user?(user_id)
