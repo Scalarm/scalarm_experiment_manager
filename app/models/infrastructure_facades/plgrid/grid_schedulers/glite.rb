@@ -46,7 +46,8 @@ module GliteScheduler
     end
 
     def glite_state(ssh, job)
-      GliteScheduler::PlGridScheduler.parse_job_status(ssh.exec!("glite-wms-job-status #{job.job_id}"))
+      output = ssh.exec!("glite-wms-job-status #{job.job_id}")
+      GliteScheduler::PlGridScheduler.parse_job_status(output)
     end
 
     def self.parse_job_status(state_output)

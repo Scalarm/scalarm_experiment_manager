@@ -6,6 +6,13 @@ require 'infrastructure_facades/plgrid/pl_grid_simulation_manager'
 
 class PlGridSimulationManagerTest < MiniTest::Test
 
+  def setup
+    record = stub_everything do
+      stubs(:experiment).returns(stub_everything)
+    end
+    @sm = SimulationManager.new(record, stub_everything)
+  end
+
   # PL-Grid Simulation Manager should have all generic monitoring cases except:
   # - try_to_initialize_sm
   def test_have_all_generic_cases
@@ -83,5 +90,16 @@ class PlGridSimulationManagerTest < MiniTest::Test
     simulation_manager.monitor
   end
 
+  def test_max_time_delegation
+    record = stub_everything 'record' do
+      expects(:max_time_exceeded?).once
+    end
+
+    infrastructure = stub_everything
+
+    sm = PlGridSimulationManager.new(record, infrastructure)
+
+    sm.max_time_exceeded?
+  end
 
 end

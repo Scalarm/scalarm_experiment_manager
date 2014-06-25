@@ -44,7 +44,9 @@ class PlGridFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
-    create_record(user_id, experiment_id, sm_uuid, additional_params).save
+    instances_count.times { create_record(user_id, experiment_id, sm_uuid, additional_params).save }
+
+    ['ok', I18n.t('plgrid.job_submission.ok', instances_count: instances_count)]
   end
 
   def create_record(user_id, experiment_id, sm_uuid, params)
@@ -154,6 +156,7 @@ class PlGridFacade < InfrastructureFacade
           when :initializing then :initializing
           when :running then :running_sm
           when :deactivated then :released
+          when :error then :error
           else
             logger.warn "Unknown state from PL-Grid scheduler: #{status}"
             :error
@@ -184,11 +187,11 @@ class PlGridFacade < InfrastructureFacade
 
     #  upload the code to the Grid user interface machine
     begin
-      credentials.scp_start do |scp|
+      record.credentials.scp_start do |scp|
         scheduler.send_job_files(sm_uuid, scp)
       end
 
-      credentials.ssh_start do |ssh|
+      record.credentials.ssh_start do |ssh|
         if scheduler.submit_job(ssh, record)
           record.save
         else
@@ -199,7 +202,7 @@ class PlGridFacade < InfrastructureFacade
       logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
       record.store_error('ssh')
     rescue Exception => ex
-      logger.error "Exception when starting simulation managers for user #{user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
+      logger.error "Exception when starting simulation managers for user #{record.user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
       record.store_error('install_failed', "#{ex.to_s}\n#{ex.backtrace.join("\n")}")
     end
 

@@ -120,9 +120,9 @@ class PrivateMachineFacade < InfrastructureFacade
     else
       pid = record.pid
       if pid
-        app_running? ? :running_sm : :released
+        app_running?(record) ? :running_sm : :released
       else
-        :available
+        :ready
       end
     end
   end
