@@ -10,7 +10,7 @@ class SimulationManager
   attr_reader :logger
 
   def_delegators :@record,
-                 :state, :set_state, :init_time_exceeded?, :experiment_end?,
+                 :state, :init_time_exceeded?, :experiment_end?,
                  :time_limit_exceeded?, :should_destroy?, :stopping_time_exceeded?
 
   def initialize(record, infrastructure)
@@ -45,6 +45,12 @@ class SimulationManager
 
   def all_resource_states
     SimulationManager.all_resource_states
+  end
+
+  # Delegates set_state to record and if it is ERROR, tries to stop resource if it was acqured
+  def set_state(state)
+    stop if state == :error and [:initializing, :ready, :running_sm].include? resource_state
+    record.set_state
   end
 
   def monitoring_cases
@@ -138,6 +144,7 @@ class SimulationManager
 
   def store_terminated_error
     record.store_error('terminated', get_log)
+    # NOTICE: stop will be invoked twice, because of set_state(:error) behaviour
     stop
   end
 
@@ -175,6 +182,7 @@ class SimulationManager
 
   def try_all_monitoring_cases
     cached_resource_status = resource_status
+    logger.info "State: #{state}, Resource status: #{cached_resource_status}"
     monitoring_order.each do |case_name|
       monitoring_case = monitoring_cases[case_name]
       begin
@@ -201,8 +209,6 @@ class SimulationManager
   end
 
   def monitor
-    logger.info 'Checking'
-
     if not record.experiment
       logger.warn 'Forcing removing record, because experiment does not exists'
       stop_and_destroy(false)
@@ -235,6 +241,7 @@ class SimulationManager
       else
         begin
           result = infrastructure.send("_simulation_manager_#{m}", record)
+          # NOTICE: terminating state is set twice if stop was invoked from monitoring case
           set_state(:terminating) if action_name == 'stop'
           result
         rescue Exception => e

@@ -72,15 +72,12 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_no_experiment
-    skip 'TODO'
-
     record = stub_everything 'record' do
       stubs(:experiment).returns(nil)
       stubs(:state)
       expects(:destroy)
     end
 
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
     infrastructure = stub_everything
 
     sm = SimulationManager.new(record, infrastructure)
@@ -90,15 +87,12 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_no_experiment_exception
-    skip 'TODO'
-
     record = stub_everything 'record' do
       stubs(:experiment).returns(nil)
       stubs(:state)
       expects(:destroy)
     end
 
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
     infrastructure = stub_everything
     infrastructure.stubs(:_simulation_manager_stop).raises(StandardError.new('err'))
 
@@ -108,11 +102,9 @@ class SimulationManagerTest < MiniTest::Test
     sm.monitor
   end
 
-  def test_terminating_state_after_stop
-    skip 'TODO'
-
+  def test_set_terminating_state_after_stop
     record = stub_everything 'record' do
-      expects(:set_state).with(:stop).once
+      expects(:set_state).with(:terminating).once
     end
     infrastructure = stub_everything 'infrastructure'
 
@@ -122,34 +114,30 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_monitoring_stopping
-    skip 'TODO'
-
     record = stub_everything 'record' do
-      stubs(:state).returns(:terminating)
       stubs(:stopping_time_exceeded?).returns(false)
       stubs(:experiment).returns(stub_everything)
     end
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
-    sm.stubs(:resource_status).returns(:running)
+    sm.stubs(:resource_status).returns(:running_sm)
+    sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).never
 
     sm.monitor
   end
 
   def test_monitoring_stopping_repeat
-    skip 'TODO'
-
     record = stub_everything 'record' do
-      stubs(:state).returns(:terminating)
       stubs(:stopping_time_exceeded?).returns(true, false)
       stubs(:experiment).returns(stub_everything)
     end
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
-    sm.stubs(:resource_status).returns(:running)
+    sm.stubs(:resource_status).returns(:running_sm)
+    sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).once
 
     # first monitor invoke - should get stopping_time_exceeded == true, so it should invoke stop
@@ -159,17 +147,15 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_monitoring_destroy_after_stopping
-    skip 'TODO'
-
     record = stub_everything 'record' do
-      stubs(:state).returns(:terminating)
       expects(:destroy).once
       stubs(:experiment).returns(stub_everything)
     end
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
-    sm.stubs(:resource_status).returns(:deactivated)
+    sm.stubs(:resource_status).returns(:released)
+    sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).never
 
     sm.monitor
@@ -218,6 +204,47 @@ class SimulationManagerTest < MiniTest::Test
     @sm.expects(:set_state).with(:running).once
 
     @sm.monitor
+  end
+
+  def test_initializing_detect_running_sm
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:running_sm)
+
+    @sm.expects(:set_state).with(:running).once
+
+    @sm.monitor
+  end
+
+  def test_running_time_limit_exceeded
+    @sm.stubs(:state).returns(:running)
+    @sm.stubs(:resource_status).returns(:running_sm)
+    @sm.stubs(:time_limit_exceeded?).returns(true)
+
+    @sm.expects(:stop).once
+    @sm.expects(:set_state).with(:terminating).once
+
+    @sm.monitor
+  end
+
+  def test_terminated_untimely
+    @sm.stubs(:state).returns(:running)
+
+    @sm.expects(:stop).once
+    @sm.expects(:set_state).with(:error).once
+  end
+
+  # On changing state to ERROR, stop should be invoked when resource was tried to acquire
+  def test_stop_on_set_error_state
+    SimulationManagerRecord::POSSIBLE_STATES.each do |state|
+      [:initializing, :ready, :running_sm].each do |resource_state|
+        @sm.stubs(:state).returns(state)
+        @sm.stubs(:resource_state).returns(resource_state)
+
+        @sm.expects(:stop).at_least_once
+
+        @sm.set_state(:error)
+      end
+    end
   end
 
 end
