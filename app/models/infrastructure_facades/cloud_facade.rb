@@ -164,22 +164,22 @@ class CloudFacade < InfrastructureFacade
             # VM is running, so check SSH connection
             record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
             if record.has_ssh_address?
-              shared_ssh_session(record)
-              return app_running?(record) ? :running_sm : :ready
+              ssh = shared_ssh_session(record)
+              record.pid and app_running?(ssh, record.pid) and :running_sm or :ready
             else
-              return :initializing
+              :initializing
             end
           rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
             # remember this error in case of unable to initialize
             record.error_log = e.to_s
             record.save
-            return :initializing
+            :initializing
           rescue Exception => e
             logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
     "#{e.class} #{e.to_s}"
             record.store_error('ssh', e.to_s)
             _simulation_manager_stop(record)
-            return :error
+            :error
           end
         when :deactivated then :released
         else :error
@@ -187,15 +187,6 @@ class CloudFacade < InfrastructureFacade
 
     else
       :available
-    end
-  end
-
-  def app_running?(record)
-    vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
-    if vm.exists? and vm.status == :running
-      not shared_ssh_session(record).exec!("ps #{record.pid} | tail -n +2").blank?
-    else
-      false
     end
   end
 

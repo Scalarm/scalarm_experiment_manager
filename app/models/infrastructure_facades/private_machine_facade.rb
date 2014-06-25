@@ -108,7 +108,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   def _simulation_manager_resource_status(record)
     begin
-      shared_ssh_session(record.credentials)
+      ssh = shared_ssh_session(record.credentials)
     rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
       # remember this error in case of unable to initialize
       record.error_log = e.to_s
@@ -120,15 +120,11 @@ class PrivateMachineFacade < InfrastructureFacade
     else
       pid = record.pid
       if pid
-        app_running?(record) ? :running_sm : :released
+        app_running?(ssh, pid) ? :running_sm : :released
       else
         :ready
       end
     end
-  end
-
-  def app_running?(record)
-    not shared_ssh_session(record.credentials).exec!("ps #{record.pid} | tail -n +2").blank?
   end
 
   def _simulation_manager_get_log(record)

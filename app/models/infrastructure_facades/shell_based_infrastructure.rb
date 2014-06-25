@@ -17,7 +17,7 @@ module ShellBasedInfrastructure
 
   def log_exists?(record, ssh)
     path_exists = (ssh.exec!(run_and_get_pid "ls #{record.log_path}") == 0)
-    log.warn "Log file already exists: #{record.log_path}" if path_exists
+    logger.warn "Log file already exists: #{record.log_path}" if path_exists
     path_exists
   end
 
@@ -33,5 +33,9 @@ module ShellBasedInfrastructure
     match = output.match /.*^(\d+)\s/m
     pid = match ? match[1].to_i : nil
     (pid and pid > 0) ? pid : nil
+  end
+
+  def app_running?(ssh, pid)
+    not pid.blank? and not ssh.exec!("ps #{pid} | tail -n +2").blank?
   end
 end

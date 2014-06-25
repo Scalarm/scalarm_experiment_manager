@@ -73,21 +73,23 @@ class PrivateMachineFacadeTest < MiniTest::Test
     facade = PrivateMachineFacade.new
     facade.stubs(:logger).returns(stub_everything)
     facade.stubs(:shared_ssh_session)
-    facade.stubs(:app_running?).returns(false)
+    facade.expects(:app_running?).never
 
     status = facade._simulation_manager_resource_status(record)
 
-    assert_equal :available, status
+    assert_equal :ready, status
   end
 
   def test_resource_status_running
+    pid = mock 'pid'
+    ssh = mock 'ssh'
     record = stub_everything do
-      stubs(:pid).returns('pid')
+      stubs(:pid).returns(pid)
     end
     facade = PrivateMachineFacade.new
     facade.stubs(:logger).returns(stub_everything)
-    facade.stubs(:shared_ssh_session)
-    facade.stubs(:app_running?).returns(true)
+    facade.stubs(:shared_ssh_session).returns(ssh)
+    facade.stubs(:app_running?).with(ssh, pid).returns(true)
 
     status = facade._simulation_manager_resource_status(record)
 
@@ -95,13 +97,15 @@ class PrivateMachineFacadeTest < MiniTest::Test
   end
 
   def test_resource_status_released
+    pid = mock 'pid'
+    ssh = mock 'ssh'
     record = stub_everything do
-      stubs(:pid).returns('pid')
+      stubs(:pid).returns(pid)
     end
     facade = PrivateMachineFacade.new
     facade.stubs(:logger).returns(stub_everything)
-    facade.stubs(:shared_ssh_session)
-    facade.stubs(:app_running?).returns(false)
+    facade.stubs(:shared_ssh_session).returns(ssh)
+    facade.stubs(:app_running?).with(ssh, pid).returns(false)
 
     status = facade._simulation_manager_resource_status(record)
 
