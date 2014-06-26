@@ -103,14 +103,9 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_set_terminating_state_after_stop
-    record = stub_everything 'record' do
-      expects(:set_state).with(:terminating).once
-    end
-    infrastructure = stub_everything 'infrastructure'
+    @sm.expects(:set_state).with(:terminating).once
 
-    sm = SimulationManager.new(record, infrastructure)
-
-    sm.stop
+    @sm.stop
   end
 
   def test_monitoring_stopping
@@ -228,9 +223,12 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_terminated_untimely
     @sm.stubs(:state).returns(:running)
+    @sm.stubs(:resource_status).returns(:released)
+    @sm.stubs(:should_not_be_destroyed?).returns(true)
 
-    @sm.expects(:stop).once
-    @sm.expects(:set_state).with(:error).once
+    @sm.expects(:store_terminated_error).once
+
+    @sm.monitor
   end
 
   # On changing state to ERROR, stop should be invoked when resource was tried to acquire
@@ -238,7 +236,7 @@ class SimulationManagerTest < MiniTest::Test
     SimulationManagerRecord::POSSIBLE_STATES.each do |state|
       [:initializing, :ready, :running_sm].each do |resource_state|
         @sm.stubs(:state).returns(state)
-        @sm.stubs(:resource_state).returns(resource_state)
+        @sm.stubs(:resource_status).returns(resource_state)
 
         @sm.expects(:stop).at_least_once
 
@@ -256,6 +254,13 @@ class SimulationManagerTest < MiniTest::Test
 
       @sm.monitor
     end
+  end
+
+  def test_infrastructure_stop_action
+    @sm.infrastructure.expects(:_simulation_manager_stop).once
+    @sm.expects(:set_state).with(:terminating).once
+
+    @sm.stop
   end
 
 end

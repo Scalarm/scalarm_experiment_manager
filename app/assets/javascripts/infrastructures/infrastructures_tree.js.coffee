@@ -218,9 +218,10 @@ class window.InfrastructuresTree
           # TODO: translation
           switch d.state
             when 'error' then 'An error occured for this Simulation Manager'
-            when 'initialized' then 'Simulation Manager is working'
-            when 'before_init' then 'Simulation Manager waits for initialization'
-            when 'terminating' then 'Simulation Manager waits for termination'
+            when 'created' then 'Waiting for resource availability'
+            when 'initializing' then 'Initializing resource'
+            when 'running' then 'Simulation Manager is working'
+            when 'terminating' then 'Waiting for resource termination'
             else 'Unknown Simulation Manager state'
         )
 

@@ -1,8 +1,8 @@
+- states_desc = %w(created initializing running terminating error unknown).map do |state|
+  - "<li><div class='tooltip-status-square sm-#{state}'/>&nbsp;&nbsp;#{t("infrastructures.sm_dialog.state.#{state}")}</li>"
+
 - state_tooltip = "#{t('infrastructures.state_tooltip')}" + |
-  "<ul class='status-tooltip'><li><div class='tooltip-status-square sm-before_init'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.before_init')}</li>" + |
-  "<li><div class='tooltip-status-square sm-initialized'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.initialized')}</li>" + |
-  "<li><div class='tooltip-status-square sm-error'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.error')}</li>" + |
-  "<li><div class='tooltip-status-square sm-unknown'/>&nbsp;&nbsp;#{t('infrastructures.sm_dialog.state.unknown')}</li>" |
+  "<ul class='status-tooltip'> #{states_desc.join("\n")} </ul>" |
 
 .row
   %p.small-12.columns

@@ -50,7 +50,7 @@ class SimulationManager
   # Delegates set_state to record and if it is ERROR, tries to stop resource if it was acqured
   def set_state(state)
     stop if state == :error and [:initializing, :ready, :running_sm].include? resource_status
-    record.set_state
+    record.set_state(state)
   end
 
   def monitoring_cases
@@ -92,16 +92,16 @@ class SimulationManager
             message: 'Initialization time exceeded - trying to restart resource'
         },
         install: {
-            source_states: [:initializing, :created],
+            source_states: [:initializing],
             target_state: :running,
             resource_status: [:ready],
             effect: :install,
             message: 'Simulation Manager will be installed on resource now'
         },
-        running_sm: {
+        detect_sm_started: {
             source_states: [:initializing],
             target_state: :running,
-            resource_status: [:running_sm],
+            resource_status: [:running_sm, :released],
             message: 'Detected that Simulation Manager is running'
         },
         running_time_limit_exceeded: {
@@ -117,7 +117,7 @@ class SimulationManager
             resource_status: all_resource_states - [:running_sm],
             condition: :should_not_be_destroyed?,
             effect: :store_terminated_error,
-            message: 'Simulation Manager has been terminated untimely - setting to error state'
+            message: 'Simulation Manager has been terminated untimely - setting to ERROR state'
         },
         not_started_time_limit: {
             source_states: [:created, :initializing],
@@ -246,24 +246,28 @@ class SimulationManager
   def method_missing(m, *args, &block)
     action_name = m.to_s
     if DELEGATES.include? action_name
-      # if the error cause is missing or invalid credentials - prevent to perform actions (to protect from authorization errors)
-      if record.error == 'credentials'
-        logger.warn "Simulation Manager action #{m} executed with invalid credentials - it will have no effect"
-        ERROR_DELEGATES[m]
-      else
-        begin
-          result = infrastructure.send("_simulation_manager_#{m}", record)
-          # NOTICE: terminating state is set twice if stop was invoked from monitoring case
-          set_state(:terminating) if action_name == 'stop'
-          result
-        rescue Exception => e
-          logger.warn "Exception on action #{m}: #{e.to_s}\n#{e.backtrace.join("\n")}"
-          record.store_error('resource_action', "#{m}: #{e.to_s}")
-          infrastructure._simulation_manager_stop rescue nil
-        end
+      begin
+        infrastructure_action(action_name)
+      rescue Exception => e
+        logger.warn "Exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+        record.store_error('resource_action', "#{action_name}: #{e.to_s}")
+        infrastructure_action('stop') rescue nil
       end
     else
       super(m, *args, &block)
+    end
+  end
+
+  def infrastructure_action(action_name)
+    # if the error cause is missing or invalid credentials - prevent to perform actions (to protect from authorization errors)
+    if record.error == 'credentials'
+      logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
+      ERROR_DELEGATES[action_name.to_sym]
+    else
+      result = infrastructure.send("_simulation_manager_#{action_name}", record)
+      # NOTICE: terminating state is set twice if stop was invoked from monitoring case
+      set_state(:terminating) if action_name == 'stop'
+      result
     end
   end
 

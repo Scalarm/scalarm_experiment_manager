@@ -122,7 +122,7 @@ class PrivateMachineFacade < InfrastructureFacade
       if pid
         app_running?(ssh, pid) ? :running_sm : :released
       else
-        :ready
+        :available
       end
     end
   end
@@ -133,10 +133,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # Nothing to prepare
   def _simulation_manager_prepare_resource(record)
-  end
-
-  def _simulation_manager_install(record)
-    logger.debug "Installing SM on host #{record.credentials.host}:#{record.credentials.ssh_port}"
+    logger.debug "Sending files and launching SM on host: #{record.credentials.host}:#{record.credentials.ssh_port}"
 
     InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
                                                                       record.experiment_id, record.start_at)
@@ -158,6 +155,9 @@ class PrivateMachineFacade < InfrastructureFacade
 
       sleep(20)
     end
+  end
+
+  def _simulation_manager_install(record)
   end
 
   def enabled_for_user?(user_id)

@@ -70,47 +70,56 @@ ul.status-tooltip li {
   height: 24;
 }
 
-.sm-error {
-  color: firebrick;
-  background-color: firebrick;
+.sm-created {
+  color: #d3d3d3;
+  background-color: #d3d3d3;
+}
+circle.sm-created {
+  fill: #e3e3e3;
+  stroke: #d3d3d3;
 }
 
-circle.sm-error {
-  fill: indianred;
-  stroke: firebrick;
-}
-
-.sm-initialized {
-  color: forestgreen;
-  background-color: forestgreen;
-}
-
-circle.sm-initialized {
-  fill: lightgreen;
-  stroke: forestgreen;
-}
-
-.sm-before_init {
+.sm-initializing {
   color: goldenrod;
   background-color: goldenrod;
 }
-
-circle.sm-before_init  {
-  fill: khaki;
+circle.sm-initializing {
+  fill: #eab530;
   stroke: goldenrod;
+}
+
+.sm-running {
+  color: forestgreen;
+  background-color: forestgreen;
+}
+circle.sm-running {
+  fill: #329b32;
+  stroke: forestgreen;
 }
 
 .sm-terminating {
   color: #444;
   background-color: #444;
 }
-
 circle.sm-terminating  {
   fill: #555;
   stroke: #444;
 }
 
+.sm-error {
+  color: firebrick;
+  background-color: firebrick;
+}
+circle.sm-error {
+  fill: #c23232;
+  stroke: firebrick;
+}
+
 .sm-unknown {
   color: lightsteelblue;
   background-color: lightsteelblue;
+}
+circle.sm-unknown  {
+  fill: #c0d4ee;
+  stroke: lightsteelblue;
 }
