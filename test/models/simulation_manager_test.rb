@@ -247,4 +247,15 @@ class SimulationManagerTest < MiniTest::Test
     end
   end
 
+  def test_monitoring_resource_error
+    (SimulationManagerRecord::POSSIBLE_STATES - [:error]).each do |state|
+      @sm.stubs(:state).returns(state)
+      @sm.stubs(:resource_status).returns(:error)
+
+      @sm.expects(:store_error_resource_status).once
+
+      @sm.monitor
+    end
+  end
+
 end

@@ -49,7 +49,7 @@ class SimulationManager
 
   # Delegates set_state to record and if it is ERROR, tries to stop resource if it was acqured
   def set_state(state)
-    stop if state == :error and [:initializing, :ready, :running_sm].include? resource_state
+    stop if state == :error and [:initializing, :ready, :running_sm].include? resource_status
     record.set_state
   end
 
@@ -63,6 +63,13 @@ class SimulationManager
 
   def generate_monitoring_cases
     {
+        error_resource_status: {
+            source_states: SimulationManagerRecord::POSSIBLE_STATES - [:error],
+            target_state: :error,
+            resource_status: [:error],
+            effect: :store_error_resource_status,
+            message: 'Resource has ERROR status - marking record as invalid'
+        },
         experiment_end: {
             source_states: [:created, :initializing, :running],
             target_state: :terminating,
@@ -150,6 +157,11 @@ class SimulationManager
 
   def store_not_started_error
     record.store_error('not_started')
+  end
+
+  def store_error_resource_status
+    # TODO get detailed resource status
+    record.store_error('resource_error')
   end
 
   def destroy_record

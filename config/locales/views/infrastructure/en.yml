@@ -109,6 +109,7 @@ en:
           not_started: "Simulation Manager time limit exceeded, but was never initialized"
           validation: "Database record for Simulation Manager is invalid"
           credentials: "Credentials for host infrastructure are invalid or missing"
+          resource_error: "There was a problem reading resource state, please check it manually"
       sm_record_no_view: "Sorry, details are not available"
       table_label: "Manage submitted credentials"
       machine_submission_label: "Add credentials"
