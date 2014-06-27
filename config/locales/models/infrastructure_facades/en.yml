@@ -17,7 +17,7 @@ en:
       current_state: "Currently %{jobs_count} jobs are scheduled or running."
     cloud:
       provide_image_secrets: "You have to provide image information first!"
-      image_not_exists: "Image %{image_id} does not exists on %{cloud_name}. Please verify it."
+      image_not_exists: "Requested image does not exists on specified cloud. Please verify it."
       image_permission: "This image belongs to other user"
       image_cloud_error: "This image is for other Cloud"
       scheduled_info: "You have scheduled %{count} virtual machines on %{cloud_name}!"

@@ -6,6 +6,9 @@ require 'mocha/test_unit'
 class CloudFacadeTest < MiniTest::Test
 
   def setup
+    cloud_client = stub_everything
+    @facade = CloudFacade.new(cloud_client)
+    @facade.stubs(:logger).returns(stub_everything)
   end
 
   def stub_record(user_id, experiment_id)
@@ -119,6 +122,7 @@ class CloudFacadeTest < MiniTest::Test
   require 'infrastructure_facades/infrastructure_errors'
 
   def test_schedule_invalid_credentials
+    user_id = mock 'user_id'
     credentials = stub_everything 'credentials' do
       stubs(:invalid).returns(true)
     end
@@ -127,7 +131,7 @@ class CloudFacadeTest < MiniTest::Test
     facade.stubs(:get_cloud_secrets).returns(credentials)
 
     assert_raises InfrastructureErrors::InvalidCredentialsError do
-      facade.start_simulation_managers('u', 2, 'e')
+      facade.cloud_client_instance(user_id)
     end
   end
 
@@ -284,4 +288,44 @@ class CloudFacadeTest < MiniTest::Test
 
     assert_equal :ready, status
   end
+
+  def test_start_simulation_managers
+    user_id = mock 'user_id'
+    experiment_id = mock 'experiment_id'
+    image_secrets_id = mock 'image_secrets_id'
+    time_limit = mock 'time_limit'
+    start_at = mock 'start_at'
+    instance_type = mock 'instance_type'
+    instances_count = 3
+    records = mock 'records' do
+      stubs(:count).returns(instances_count)
+    end
+
+
+    # returns nil - image_secrets not used
+    @facade.stubs(:get_and_validate_image_secrets).with(image_secrets_id, user_id)
+
+    @facade.expects(:create_and_save_records)
+      .with(instances_count, image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type)
+      .returns(records)
+
+    @facade.logger.expects(:error).never
+
+    @facade.start_simulation_managers(user_id, instances_count, experiment_id,
+                                      'image_secrets_id'=> image_secrets_id,
+                                      'time_limit'=> time_limit,
+                                      'start_at'=> start_at,
+                                      'instance_type'=> instance_type)
+  end
+
+  # TODO: test get_and_validate_image_secrets
+
+  def test_find_stored_params
+    params = @facade.find_stored_params('stored_security_group' => 'quick', 'stored_test' => 'other')
+    assert_includes params, 'security_group'
+    assert_equal 'quick', params['security_group'], params
+    assert_includes params, 'test'
+    assert_equal 'other', params['test'], params
+  end
+
 end

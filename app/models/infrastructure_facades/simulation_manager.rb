@@ -185,7 +185,9 @@ class SimulationManager
   end
 
   def change_state_for(monitoring_case)
-    set_state(monitoring_case[:target_state]) if monitoring_case[:target_state]
+    # a little hack to prevent escaping from ERROR state if it was set inside action
+    target_state = (state == :error ? :error : monitoring_case[:target_state])
+    set_state(target_state) if target_state
   end
 
   def print_message_for(monitoring_case)

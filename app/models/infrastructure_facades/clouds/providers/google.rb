@@ -47,16 +47,16 @@ module GoogleCloud
     end
 
     # Blocks until all insert requests are done. Sends requests for each VM in separate thread.
-    # @param [Hash] params additional params hash (Symbol => String): instance_type: one of self.instance_types string
+    # @param [Hash] params additional params hash (String => String): instance_type: one of self.instance_types string
     def instantiate_vms(base_name, image_id, number, params)
-      throw 'no instance type specified' unless params.include?(:instance_type)
+      throw 'no instance type specified' unless params.include?('instance_type')
       ids_array_lock = Mutex.new
       ids_array = []
       threads = (1..number).map do
         Thread.start do
           instance_name = generate_instance_name(base_name)
 
-          insert_body = instances_insert_body(instance_name, machine_type_url(params[:instance_type]),
+          insert_body = instances_insert_body(instance_name, machine_type_url(params['instance_type']),
                                        network_url, image_url(image_id))
 
           insert_result = parse_result(execute!(@compute_api.instances.insert,
