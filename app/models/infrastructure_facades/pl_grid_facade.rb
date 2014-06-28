@@ -219,6 +219,27 @@ class PlGridFacade < InfrastructureFacade
 
   # --
 
+  def simulation_manager_code(sm_record)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+
+    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+
+    Dir.chdir('/tmp')
+    FileUtils.remove_dir(code_dir, true)
+    FileUtils.mkdir(code_dir)
+    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
+
+    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record})
+
+    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+
+    Dir.chdir(Rails.root)
+
+    File.join('/', 'tmp', code_dir + ".zip")
+  end
+
   private
 
   def create_simulation_manager(record)

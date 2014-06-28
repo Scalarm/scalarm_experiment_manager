@@ -23,8 +23,11 @@ class ScalarmUser < MongoActiveRecord
     end
   end
 
+  # returns simulation scenarios owned by this user or shared with this user
   def get_simulation_scenarios
-    Simulation.find_all_by_user_id(self.id).sort { |s1, s2| s2.created_at <=> s1.created_at }
+    Simulation.where({ '$or' => [
+      { user_id: self.id }, { shared_with: { '$in' => [ self.id ] } }, { is_public: true} ] }).sort { |s1, s2|
+      s2.created_at <=> s1.created_at }
   end
 
   def password=(pass)

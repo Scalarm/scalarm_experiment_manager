@@ -25,10 +25,20 @@ module ExperimentsHelper
   end
 
   def share_with_users
-    ScalarmUser.all.select{|u| u.id != @current_user.id and
-        (not @experiment.shared_with or (not @experiment.shared_with.include?(u.id)))}.map do |u|
+    ScalarmUser.all.select{|u|
+      u.id != @current_user.id and (@experiment.shared_with.blank? or (not @experiment.shared_with.include?(u.id)))
+    }.map{ |u|
       u.login.nil? ? u.email : u.login
+    }
+  end
+
+  def experiment_info_button(text_prefix, reveal_id, icon, disabled)
+    link_to '#', title: t("#{text_prefix}.tooltip"), 'data-reveal-id' => reveal_id, disabled: disabled,
+                 class: 'button tiny radius' do
+
+      raw content_tag(:i, '', class: icon) + raw('&nbsp;') + t("#{text_prefix}.link")
     end
+
   end
 
 end

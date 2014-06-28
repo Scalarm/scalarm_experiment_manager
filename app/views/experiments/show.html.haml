@@ -8,13 +8,17 @@
   = render 'information_panel'
 
 %section.panel.radius.last-element#monitoring_section
-  = render 'monitoring_stats'
+  %h3.subheader= t('experiments.show.stats_header')
 
-  %article#experiment_progress_bar
-    %h3.subheader= t('.progress_bar_header')
-    .content
+  .content(style="padding-top: 30px; position: relative;" )
 
-  = render 'monitoring_actions'
+    = render 'monitoring_stats'
+    .speedometer{id: "speedometer_#{@experiment.id}"}
+
+    %article#experiment_progress_bar(style="padding-top: 50px;" )
+      %h4.subheader= t('.progress_bar_header')
+
+    = render 'monitoring_actions'
 
 %section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
   = render 'monitoring_table'

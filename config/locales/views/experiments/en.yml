@@ -7,6 +7,8 @@ en:
       experiment_name: Name
       experiment_description: Description
 
+      destroy_button: Destroy
+
     experiment_links:
       navigation_link: Experiments
       running_experiments: Running experiments
@@ -25,9 +27,13 @@ en:
       no_experiments: "There is no experiment running currently"
     monitoring_actions:
       get_sm_button: "Download Simulation Manager"
-
       blank_shared_with_list: "none"
+      stop_experiment:
+        link: Stop
+        tooltip: Stop this experiment. All running Simulation Managers will be stopped.
+
     sharing:
+      link: "Share"
       share: "This experiment is now shared with user '%{user}'"
       unshare: "This experiment is no longer shared with user '%{user}'"
 
@@ -37,11 +43,14 @@ en:
     errors:
       zero_size: The size of an experiment must be greater than 0!
       too_few_parameters: Selected DoE method requires more than 1 parameter.
+
     edit:
-      header: "Edit experiment attributes"
+      link: "Edit"
       tooltip: "Edit this experiment"
+      header: "Edit experiment attributes"
       submit_btn: "Update"
       success: "The experiment has been updated"
+      failure: "You cannot edit this experiment because you are not its owner"
 
     new:
       parameter_label: "Parameter '%{label}' - Value constraints: [ %{min}, %{max} ]"
@@ -89,3 +98,7 @@ en:
         header: Input space - import from a CSV file
         submit_import: "Import"
         import_label: "Select a CSV file with the parameter space:"
+
+    analysis:
+      no_results: "No results found in completed simulation runs"
+      no_completed_runs: "None simulation runs were completed"

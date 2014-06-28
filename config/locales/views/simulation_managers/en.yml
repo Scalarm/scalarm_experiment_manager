@@ -1,0 +1,4 @@
+en:
+  simulation_managers:
+    infrastructure_not_found: "Infrastructure '%{infrastructure}' is not supported"
+    not_found: "Simulation Manager record not found for id '%{id}' or it has blank 'sm_uuid' parameter"

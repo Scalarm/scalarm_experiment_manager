@@ -7,6 +7,7 @@
     = csrf_meta_tags
     %title Scalarm
     = stylesheet_link_tag 'application'
+    %link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css')
 
   %body
     = render 'layouts/navbar' unless @current_user.nil?

@@ -16,7 +16,27 @@
           %tr
             %td
               %span.has-tip{'data-tooltip' => '', 'title' => simulation.description}= simulation.name
-            %td(colspan="2" style="text-align: left;")
+
+            %td(colspan="2" style="text-align: left; font-size: 16px;")
+              - if simulation.is_public
+                %strong= t 'simulation_scenarios.state.public'
+              - elsif simulation.user_id != @current_user.id
+                %strong= t('simulations.conduct_experiment.simulation_overview_shared_by')
+                \:
+                = ScalarmUser.find_by_id(simulation.user_id).login
+              - else
+                %strong= t('simulations.conduct_experiment.simulation_overview_shared_with')
+                \:
+                - if simulation.shared_with.blank?
+                  = t('experiments.monitoring_actions.blank_shared_with_list')
+                - else
+                  - simulation.shared_with.to_a.map{|id| ScalarmUser.find_by_id(id) }.each do |u|
+                    = form_tag share_simulation_scenario_path(simulation.id), class: 'custom', style: "display: inline;" do
+                      = hidden_field_tag 'mode', 'unshare'
+                      = hidden_field_tag 'sharing_with_login', u.login
+                      = u.login
+                      = submit_tag raw("&#215; #{t('experiments.monitoring_actions.unshare')}"), class: 'button radius tiny'
+
               %ul
                 %li
                   %strong= t('simulations.registration.input_writer')
@@ -41,11 +61,13 @@
                   = link_to content_tag(:i, '', class: 'fi-download', style: font_size),
                     code_base_simulation_scenario_path(simulation.id), class: 'button tiny radius',
                     title: t('simulation_scenarios.show.code_base')
-                %li
-                  = link_to content_tag(:i, '', class: 'fi-page-edit', style: font_size),
-                    edit_simulation_scenario_path(simulation.id), class: 'button tiny radius',
-                    title: t('simulations.edit_button')
-                %li
-                  = link_to content_tag(:i, '', class: 'fi-trash', style: font_size),
-                    simulation_scenario_path(simulation.id), class: 'button tiny radius alert',
-                    title: t('simulations.deregister_button'), method: :delete
+
+                - if simulation.user_id == @current_user.id
+                  %li
+                    = link_to content_tag(:i, '', class: 'fi-page-edit', style: font_size),
+                      edit_simulation_scenario_path(simulation.id), class: 'button tiny radius',
+                      title: t('simulations.edit_button')
+                  %li
+                    = link_to content_tag(:i, '', class: 'fi-trash', style: font_size),
+                      simulation_scenario_path(simulation.id), class: 'button tiny radius alert',
+                      title: t('simulations.deregister_button'), method: :delete

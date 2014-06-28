@@ -43,10 +43,7 @@ end
 namespace :db_router do
   desc 'Start MongoDB router'
   task :start, [:debug] => [:environment] do |t, args|
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    information_service = InformationService.new(config['information_service_url'],
-                                                 config['information_service_user'],
-                                                 config['information_service_pass'])
+    information_service = InformationService.new
 
     config_services = information_service.get_list_of('db_config_services')
     puts "Config services: #{config_services.inspect}"

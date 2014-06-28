@@ -146,6 +146,7 @@ class PrivateMachineFacade < InfrastructureFacade
         error_counter += 1
         if error_counter > 10
           record.store_error('install_failed', e.to_s)
+          break
         end
       end
 

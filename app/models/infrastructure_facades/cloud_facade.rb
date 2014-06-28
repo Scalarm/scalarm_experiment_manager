@@ -191,6 +191,7 @@ class CloudFacade < InfrastructureFacade
           logger.error 'Exceeded number of SimulationManager installation attempts'
           record.store_error('install_failed', e.to_s)
           _simulation_manager_stop(record)
+          break
         end
       end
 

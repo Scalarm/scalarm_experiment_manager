@@ -31,7 +31,16 @@
           = @experiment.input_parameter_label_for(argument) + ':'
         = @simulation['values'].split(',')[index]
 
-- if @simulation['is_done']
+- if @simulation.include?('is_error') and @simulation['is_error'] == true
+  .row
+    %h4= t('.error_section')
+    %p
+      - if @simulation['error_reason'].blank?
+        = t('.no_reason_label')
+      - else
+        = t('.reason', reason: @simulation['error_reason'])
+
+- elsif @simulation['is_done']
   .row
     %h4= t('.output_section')
     %ul

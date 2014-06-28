@@ -20,7 +20,26 @@ module QsubScheduler
     end
 
     def prepare_job_files(sm_uuid, params)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
+      if params.include?(:dest_dir) and params.include?(:sm_record)
+        job = params[:sm_record]
+
+        IO.write("/tmp/#{params[:dest_dir]}/scalarm_job_#{job.sm_uuid}.sh", prepare_job_executable)
+        #  schedule the job with qsub
+        qsub_cmd = [
+            'qsub',
+            '-q', job.queue,
+            "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}",
+            "#{job.nodes.blank? ? '' : "-l nodes=#{job.nodes}:ppn=#{job.ppn}"}",
+            '-j oe', # mix stderr with stdout
+            '-o', job.log_path, # output log
+            '-l', "walltime=#{job.time_limit.to_i.minutes.to_i}" # convert minutes to seconds
+        ]
+
+        IO.write("/tmp/#{params[:dest_dir]}/cmd.txt",
+                 "chmod a+x scalarm_job_#{job.sm_uuid}.sh; echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
+      else
+        IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
+      end
     end
 
     def send_job_files(sm_uuid, scp)

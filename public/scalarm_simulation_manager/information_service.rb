@@ -7,10 +7,11 @@ class InformationService
 
   def initialize(config)
     @information_service_url = config['information_service_url']
+    @development = config.include?('development') and config['development']
   end
 
   def get_experiment_managers
-    url = path_to('experiments/list')
+    url = path_to('experiment_managers')
 
     status, body = execute_http_get(url)
 
@@ -22,7 +23,7 @@ class InformationService
   end
 
   def get_storage_managers
-    url = path_to('storage/list')
+    url = path_to('storage_managers')
 
     status, body = execute_http_get(url)
 
@@ -34,7 +35,11 @@ class InformationService
   end
 
   def path_to(method)
-    "https://#{@information_service_url}/#{method}"
+    if @development
+      "http://#{@information_service_url}/#{method}"
+    else
+      "https://#{@information_service_url}/#{method}"
+    end
   end
 
   def execute_http_get(url)
@@ -43,7 +48,12 @@ class InformationService
 
     req = Net::HTTP::Get.new(uri.path)
 
-    ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    if @development
+      ssl_options = {}
+    else
+      ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    end
+
     response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
 
     return response.code, response.body
