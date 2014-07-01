@@ -31,4 +31,13 @@ module UserControllerHelper
   def openid_callback_google_url
     url_for :action => 'openid_callback_google', :only_path => false
   end
+
+  def login_openid_plgrid_url
+    url_for :action => 'login_openid_plgrid', :only_path => false
+  end
+
+  def openid_callback_plgrid_url
+    url_for :action => 'openid_callback_plgrid', :only_path => false
+  end
+
 end

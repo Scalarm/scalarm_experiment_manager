@@ -31,7 +31,8 @@
           %a.button.radius{ href: login_openid_google_url }
             %i.fi-social-google-plus.small-link
             = t('openid.login', provider: 'Google')
-        -#.row
-        -#  .small-12.small-centered.columns(style="text-align:center;")
-        -#    %span.button
-        -#      (TODO) Login with PLGrid OpenId
+      .row
+        .small-12.small-centered.columns(style="text-align:center;")
+          %a.button.radius{ href: login_openid_plgrid_url }
+            %i.fi-key.small-link
+            = t('openid.login', provider: 'PL-Grid')

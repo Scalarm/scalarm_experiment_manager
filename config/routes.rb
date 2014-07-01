@@ -22,6 +22,9 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'login/login_openid_google' => 'user_controller#login_openid_google'
   get 'login/openid_callback_google' => 'user_controller#openid_callback_google'
 
+  get 'login/login_openid_plgrid' => 'user_controller#login_openid_plgrid'
+  get 'login/openid_callback_plgrid' => 'user_controller#openid_callback_plgrid'
+
   get 'simulations' => 'simulations#index'
   get 'simulations/index'
   get 'simulations/registration'

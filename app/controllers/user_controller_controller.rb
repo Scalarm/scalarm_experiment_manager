@@ -2,10 +2,12 @@ require 'openid'
 require 'openid/extensions/ax'
 
 require 'openid_providers/google_openid'
+require 'openid_providers/plgrid_openid'
 
 class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
+  include PlGridOpenID
 
   def successful_login
     #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
