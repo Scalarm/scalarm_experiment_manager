@@ -45,7 +45,15 @@ ruby simulation_manager.rb
 
   #  Create a proxy certificate for the user
   def voms_proxy_init(ssh, voms)
-    ssh.exec!("voms-proxy-init --voms #{voms}")
+    begin
+      result = nil
+      timeout 10 do
+        result = ssh.exec!("/opt/plgrid/keyfs/bin/creds.sh local; voms-proxy-init --voms #{voms}")
+      end
+      raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/
+    rescue Timeout::Error
+      raise StandardError.new 'Timeout executing voms-proxy-init'
+    end
   end
 
   def restart(ssh, job)

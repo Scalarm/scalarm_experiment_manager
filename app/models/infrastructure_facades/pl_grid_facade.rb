@@ -145,7 +145,7 @@ class PlGridFacade < InfrastructureFacade
     grants, grant_output = [], []
 
     begin
-      Net::SSH.start(credentials.host, credentials.login, password: credentials.password) do |ssh|
+      credentials.ssh_session do |ssh|
         grant_output = ssh.exec!('plg-show-grants').split("\n").select{|line| line.start_with?('|')}
       end
 
@@ -208,7 +208,7 @@ class PlGridFacade < InfrastructureFacade
 
   def enabled_for_user?(user_id)
     creds = GridCredentials.find_by_query(user_id: user_id)
-    !!(creds and not creds.invalid)
+    !!(creds and (creds.proxy or not creds.invalid))
   end
 
   # -- Monitoring utils --

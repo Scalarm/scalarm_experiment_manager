@@ -52,8 +52,8 @@ en:
       login: "Login with %{provider} OpenID"
       wrong_endpoint: "Got response from wrong OpenID endpoint: %{endpoint}"
       google:
-          no_openid_user: "There is no Scalarm user registered with Google OpenID E-Mail: %{email}"
-          no_email_provided: "Error authenticating with OpenID: no email attribute provided by server."
+        no_openid_user: "There is no Scalarm user registered with Google OpenID E-Mail: %{email}"
+        no_email_provided: "Error authenticating with OpenID: no email attribute provided by server."
 
   registered_executors_list:
     label: "Registered simulation executors"

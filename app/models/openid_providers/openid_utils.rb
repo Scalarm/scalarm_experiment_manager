@@ -1,8 +1,9 @@
 module OpenIDUtils
+  require 'openid'
+  require 'openid/extensions/ax'
 
-  # constants
+  # Attribute Exchange URIs
   AX_URI = {
-      # email: 'http://schema.openid.net/contact/email',
       user_teams: 'http://openid.plgrid.pl/userTeams',
       proxy: 'http://openid.plgrid.pl/certificate/proxy',
       user_cert: 'http://openid.plgrid.pl/certificate/userCert',
@@ -19,7 +20,43 @@ module OpenIDUtils
       image: 'http://axschema.org/media/image/aspect11'
   }
 
-  AX_EMAIL_URI = 'http://schema.openid.net/contact/email'
-  AX_EMAIL_ALIAS = 'email'
+
+  def self.request_ax_attributes(oidreq, attribute_aliases)
+    axreq =  OpenID::AX::FetchRequest.new
+
+    attribute_aliases.each do |attr_name|
+      attr = OpenID::AX::AttrInfo.new(OpenIDUtils::AX_URI[attr_name], attr_name.to_s, true)
+      attr.required = true
+      axreq.add(attr)
+    end
+
+    oidreq.add_extension(axreq)
+  end
+
+  # NOTICE: only attribute_aliases from OpenIDUtils::AX_URI hash are allowed
+  def self.get_ax_attributes(oidresp, attribute_aliases)
+    ax_resp = OpenID::AX::FetchResponse.from_success_response(oidresp)
+    attribute_aliases.each do |attr_name|
+      ax_resp.aliases.add_alias(OpenIDUtils::AX_URI[attr_name], attr_name.to_s)
+    end
+
+    extension_args = ax_resp.get_extension_args
+    Hash[attribute_aliases.map do |attr|
+      [attr, extension_args["value.#{attr}"]]
+    end]
+  end
+
+  def self.get_or_create_user_with(attribute, value, new_login=value)
+    ScalarmUser.send("find_by_#{attribute}", value) or create_user_with(attribute, value, new_login)
+  end
+
+  def self.create_user_with(attribute, value, login)
+    # TODO: check if login is not used?
+    user_hash = { login: login }
+    user_hash[attribute.to_sym] = value
+    user = ScalarmUser.new(user_hash)
+    user.save
+    user
+  end
 
 end

@@ -47,18 +47,35 @@ class GridCredentials < MongoActiveRecord
     end
   end
 
-  # -----------
-  private
-
   def _get_ssh_session
-    if proxy
-      Gsi::SSH.start(host, login, proxy)
-    elsif password
+    gsi_error = nil
+    begin
+      if proxy
+        return Gsi::SSH.start(host, login, proxy)
+      end
+    rescue Gsi::ProxyError => proxy_error
+      Rails.logger.debug "Proxy for PL-Grid user #{login} is not valid: #{proxy_error.class}, removing"
+      self.proxy = nil
+      self.save
+      gsi_error = proxy_error
+    rescue Gsi::ClientError => client_error
+      Rails.logger.warn "gsissh client error for PL-Grid user #{login}: #{client_error}"
+      gsi_error = client_error
+    end
+
+    if password
       Net::SSH.start(host, login, password: password)
     else
-      raise InfrastructureErrors::NoCredentialsError
+      raise (gsi_error or InfrastructureErrors::NoCredentialsError)
     end
   end
+
+  def host
+    get_attribute('host') or 'ui.cyfronet.pl'
+  end
+
+  # -----------
+  private
 
   def _get_scp_session
     if proxy

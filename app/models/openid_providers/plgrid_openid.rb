@@ -1,12 +1,14 @@
 module PlGridOpenID
   require 'openid_providers/openid_utils'
+  require 'gsi'
+
+  PLGRID_ENDPOINT_URI = 'https://openid.plgrid.pl/gateway'
+  PLGRID_OID_URI = 'https://openid.plgrid.pl/gateway'
 
   # Invoke PL-Grid OpenID login procedure.
   def login_openid_plgrid
-    plgrid_oid_url = 'https://openid.plgrid.pl/gateway'
-
     begin
-      oidreq = consumer.begin(plgrid_oid_url)
+      oidreq = consumer.begin(PLGRID_OID_URI)
     rescue OpenID::OpenIDError => e
       flash[:error] = t('openid.provider_discovery_failed', provider_url: plgrid_oid_url,
                         error: e.to_s)
@@ -15,15 +17,7 @@ module PlGridOpenID
     end
 
     # -- Attribute Exchange support --
-    axreq =  OpenID::AX::FetchRequest.new
-
-    [:proxy, :user_cert, :proxy_priv_key].each do |attr_name|
-      attr = OpenID::AX::AttrInfo.new(OpenIDUtils::AX_URI[attr_name], attr_name.to_s, true)
-      attr.required = true
-      axreq.add(attr)
-    end
-
-    oidreq.add_extension(axreq)
+    OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn])
 
     return_to = openid_callback_plgrid_url
 
@@ -57,26 +51,37 @@ module PlGridOpenID
   private
 
   def openid_callback_plgrid_success(oidresp, params)
-  # check if response is from appropriate endpoint
+    # check if response is from appropriate endpoint
     op_endpoint = params['openid.op_endpoint']
-    if oidresp.endpoint.server_url != op_endpoint and op_endpoint != plgrid_endpoint_url
+    if oidresp.endpoint.server_url != op_endpoint and op_endpoint != PLGRID_ENDPOINT_URI
       flash[:error] = t('openid.wrong_endpoint', endpoint: oidresp.endpoint.server_url)
       redirect_to login_path
     end
 
     # -- Attribute Exchange support --
-    ax_resp = OpenID::AX::FetchResponse.from_success_response(oidresp)
+    ax_attrs = OpenIDUtils::get_ax_attributes(oidresp, [:proxy, :user_cert, :proxy_priv_key, :dn])
 
-    # manually add alias to response
-    [:proxy, :user_cert, :proxy_priv_key].each do |attr_name|
-      ax_resp.aliases.add_alias(OpenIDUtils::AX_URI[attr_name], attr_name.to_s)
-    end
+    plgrid_identity = oidresp.identity_url
+    plgrid_login = PlGridOpenID::strip_identity(oidresp.identity_url)
 
-    resp_proxy = ax_resp.get_extension_args['value.proxy']
-    resp_user_cert = ax_resp.get_extension_args['value.user_cert']
-    resp_proxy_priv_key = ax_resp.get_extension_args['value.proxy_priv_key']
+    proxy_cert = Gsi::assemble_proxy_certificate(ax_attrs[:user_cert], ax_attrs[:proxy], ax_attrs[:proxy_priv_key])
 
-    render text: "Proxy:\n#{resp_proxy.to_s}\nUser cert:\n#{resp_user_cert.to_s}\nProxy priv key:\n#{resp_proxy_priv_key}" #.gsub('<br>', "\n")
+    Rails.logger.debug("User logged in with OpenID identity: #{plgrid_identity}")
+
+    scalarm_user = OpenIDUtils::get_or_create_user_with(:dn, ax_attrs[:dn], plgrid_login)
+    update_grid_credentials(scalarm_user, plgrid_login, ax_attrs[:dn], proxy_cert)
+
+    flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
+    session[:user] = scalarm_user.id
+    successful_login
+  end
+
+  def update_grid_credentials(scalarm_user, plgrid_login, dn, proxy_cert)
+    grid_credentials = (scalarm_user.grid_credentials or GridCredentials.new(user_id: scalarm_user.id))
+    grid_credentials.login = plgrid_login
+    grid_credentials.dn = dn
+    grid_credentials.proxy = proxy_cert
+    grid_credentials.save
   end
 
   def openid_callback_plgrid_failure(oidresp, params)
@@ -92,5 +97,10 @@ module PlGridOpenID
   def openid_callback_plgrid_cancel(oidresp, params)
     flash[:error] = t('openid.cancelled')
     redirect_to login_path
+  end
+
+  def self.strip_identity(identity_uri)
+    m = identity_uri.match(/https:\/\/openid\.plgrid\.pl\/(\w+)/)
+    m ? m[1] : nil
   end
 end

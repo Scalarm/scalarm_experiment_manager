@@ -1,12 +1,13 @@
 module GoogleOpenID
   require 'openid_providers/openid_utils'
 
+  GOOGLE_OID_URI = 'https://www.google.com/accounts/o8/id'
+  GOOGLE_ENDPOINT_URI = 'https://www.google.com/accounts/o8/ud'
+
   # Invoke Google OpenID login procedure.
   def login_openid_google
-    google_oid_url = 'https://www.google.com/accounts/o8/id'
-
     begin
-      oidreq = consumer.begin(google_oid_url)
+      oidreq = consumer.begin(GOOGLE_OID_URI)
     rescue OpenID::OpenIDError => e
       flash[:error] = t('openid.provider_discovery_failed', provider_url: google_oid_url,
                         error: e.to_s)
@@ -15,11 +16,7 @@ module GoogleOpenID
     end
 
     # -- Attribute Exchange support --
-    axreq =  OpenID::AX::FetchRequest.new
-    attr_email = OpenID::AX::AttrInfo.new(OpenIDUtils::AX_EMAIL_URI, OpenIDUtils::AX_EMAIL_ALIAS, true)
-    attr_email.required = true
-    axreq.add(attr_email)
-    oidreq.add_extension(axreq)
+    OpenIDUtils.request_ax_attributes(oidreq, [:email])
 
     return_to = openid_callback_google_url
     realm = login_url
@@ -33,8 +30,6 @@ module GoogleOpenID
 
   # Action for callback from Google OpenID.
   def openid_callback_google
-    google_endpoint_url = 'https://www.google.com/accounts/o8/ud'
-
     Rails.logger.debug("Google OpenID callback with parameters: #{params}")
 
     parameters = params.reject{|k,v|request.path_parameters[k]}
@@ -55,30 +50,21 @@ module GoogleOpenID
   def openid_callback_google_success(oidresp, params)
 # check if response is from appropriate endpoint
     op_endpoint = params['openid.op_endpoint']
-    if oidresp.endpoint.server_url != op_endpoint and op_endpoint != google_endpoint_url
+    if oidresp.endpoint.server_url != op_endpoint and op_endpoint != GOOGLE_ENDPOINT_URI
       flash[:error] = t('openid.wrong_endpoint', endpoint: oidresp.endpoint.server_url)
       redirect_to login_path
     end
 
     # -- Attribute Exchange support --
-    ax_resp = OpenID::AX::FetchResponse.from_success_response(oidresp)
-
-    # manually add alias to response
-    ax_resp.aliases.add_alias(OpenIDUtils::AX_EMAIL_URI, OpenIDUtils::AX_EMAIL_ALIAS)
-
-    resp_email = ax_resp.get_extension_args['value.email']
+    ax_attrs = OpenIDUtils.get_ax_attributes(oidresp, [:email])
+    resp_email = ax_attrs[:email]
 
     if resp_email
       resp_identity = params['openid.identity']
       Rails.logger.debug("User logged in with OpenID identity: #{resp_identity}")
 
-      user = ScalarmUser.find_by('email', resp_email)
-
       # create new user if there is no such
-      unless user
-        user = ScalarmUser.new({ login: resp_email, email: resp_email })
-        user.save
-      end
+      user = OpenIDUtils::get_or_create_user_with(:email, resp_email)
 
       flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
       session[:user] = user.id

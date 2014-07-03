@@ -13,7 +13,8 @@ module ScalarmAuthentication
         authenticate_with_password
 
       when certificate_provided?
-        authenticate_with_certificate
+        return redirect_to login_openid_plgrid_url
+        # authenticate_with_certificate
     end
 
     if @current_user.nil? and @sm_user.nil?

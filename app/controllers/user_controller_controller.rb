@@ -65,10 +65,7 @@ class UserControllerController < ApplicationController
 
   # Get stateless mode OpenID::Consumer instance for this controller.
   def consumer
-    if @consumer.nil?
-      @consumer = OpenID::Consumer.new(session, nil) # 'nil' for stateless mode
-    end
-    return @consumer
+    @consumer ||= OpenID::Consumer.new(session, nil) # 'nil' for stateless mode
   end
 
 end

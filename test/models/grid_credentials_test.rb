@@ -5,6 +5,7 @@ require 'mocha'
 class GridCredentialsTest < MiniTest::Test
 
   def setup
+    Rails.stubs(:logger).returns(stub_everything)
   end
 
   def teardown
@@ -48,4 +49,25 @@ class GridCredentialsTest < MiniTest::Test
 
     credentials.ssh_session
   end
+
+  def test_remove_invalid_proxy_when_no_password
+    host = mock 'host'
+    login = mock 'login'
+    proxy = mock 'proxy'
+
+    credentials = GridCredentials.new(
+        proxy: proxy,
+        login: login,
+        host: host
+    )
+
+    Gsi::SSH.expects(:start).with(host, login, proxy).once.raises(Gsi::ProxyError)
+    credentials.expects(:proxy=).with(nil).once
+    credentials.expects(:save).once
+
+    assert_raises Gsi::ProxyError do
+      credentials._get_ssh_session
+    end
+  end
+
 end

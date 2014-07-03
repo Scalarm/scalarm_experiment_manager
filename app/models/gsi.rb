@@ -1,17 +1,22 @@
 module Gsi
   class ClientError < StandardError; end
-  class ProxyExpiredError < ClientError; end
-  class MissingProxyError < ClientError; end
+  class ProxyError < ClientError; end
+  class InvalidProxyError < ProxyError; end
+  class ProxyExpiredError < ProxyError; end
   class TimeoutError < ClientError; end
 
   def self.handle_init_error(output)
     case output
       when /Could not find a valid proxy certificate file location/
-        raise MissingProxyError
+        raise InvalidProxyError
       when /The proxy credential.*expired/m
         raise ProxyExpiredError
       else
         raise ClientError.new("Unknown gsissh init error: #{output}")
     end
+  end
+
+  def self.assemble_proxy_certificate(user_cert, proxy, proxy_priv_key)
+    ([user_cert, proxy, proxy_priv_key].map {|text| text.gsub('<br>', "\n")}).join('')
   end
 end
