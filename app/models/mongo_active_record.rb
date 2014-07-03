@@ -35,13 +35,21 @@ class MongoActiveRecord
     method_name = '_id' if method_name == 'id'
 
     if setter
-      @attributes[method_name] = args.first
+      set_attribute(method_name, args.first)
     elsif @attributes.include?(method_name)
-      @attributes[method_name]
+      get_attribute(method_name)
     else
       nil
       #super(method_name, *args, &block)
     end
+  end
+
+  def set_attribute(attribute, value)
+    @attributes[attribute] = value
+  end
+
+  def get_attribute(attribute)
+    @attributes[attribute]
   end
 
   # save/update json document in db based on attributes
