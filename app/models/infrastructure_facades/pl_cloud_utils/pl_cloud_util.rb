@@ -1,10 +1,11 @@
 require 'rest-client'
 require 'json'
 require 'xmlsimple'
+require 'base64'
 
 class PLCloudUtil
-  PLCLOUD_URL = 'https://149.156.10.32:3443'
-  DNAT_URL = 'https://149.156.10.32:8401/dnat'
+  PLCLOUD_URL = 'https://cloud.plgrid.pl:3443'
+  DNAT_URL = 'https://cloud.plgrid.pl:8401/dnat'
 
   RE_ID = /ID: (\d+)/
   RE_VM_ID = /VM ID: (\d+)/
@@ -149,9 +150,13 @@ CONTEXT = [
       url = "#{PLCLOUD_URL}/exec/#{command}"
       str_args = "[\"#{args.join('", "')}\"]"
 
-      RestClient.post url, str_args,
-                      'One-User' => @secrets.login, 'One-Secret' => @secrets.secret_password,
+      resp = RestClient.post url, str_args,
+                      'One-User' => @secrets.login,
+                      'One-Secret' => (@secrets.proxy or @secrets.secret_password),
                       :content_type => :json, :accept => :json
+      JSON.parse(resp)['data']
+      # TODO: use status
+      # TODO: some proxy error checking?
     rescue
       Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
       nil
@@ -228,6 +233,13 @@ CONTEXT = [
     infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['IMAGE']
     infos = [infos] unless infos.kind_of?(Array)
     return Hash[infos.map {|i| [i['ID'], i]}]
+  end
+
+  # -- Proxy utils --
+
+  # Arguments for proxy from PL-Grid OpenID: proxy cert, user cert
+  def self.proxy_to_pl_cloud_secret(*certs)
+    (certs.map {|cert_txt| Base64.encode64(cert_txt).gsub("\n", '\n')}).join('|')
   end
 
 end

@@ -39,10 +39,9 @@ module GliteScheduler
     end
 
     def submit_job(ssh, job)
-      prepare_session(ssh)
       ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
       #  schedule the job with glite wms
-      submit_job_output = ssh.exec!("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl")
+      submit_job_output = PlGridScheduler.execute_glite_command("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl", ssh)
       logger.debug("Glite submission output lines: #{submit_job_output}")
 
       submit_job_output ? (job.job_id = GliteScheduler::PlGridScheduler.parse_job_id(submit_job_output)) : nil
@@ -54,8 +53,8 @@ module GliteScheduler
     end
 
     def glite_state(ssh, job)
-      prepare_session(ssh)
-      GliteScheduler::PlGridScheduler.parse_job_status(ssh.exec!("glite-wms-job-status #{job.job_id}"))
+      output = PlGridScheduler.execute_glite_command "glite-wms-job-status #{job.job_id}", ssh
+      GliteScheduler::PlGridScheduler.parse_job_status(output)
     end
 
     def self.parse_job_status(state_output)
@@ -87,8 +86,7 @@ module GliteScheduler
     end
 
     def cancel(ssh, job)
-      prepare_session(ssh)
-      ssh.exec!("glite-wms-job-cancel --no-int #{job.job_id}")
+      PlGridScheduler.execute_glite_command "glite-wms-job-cancel --no-int #{job.job_id}", ssh
     end
 
     def clean_after_job(ssh, job)
@@ -115,30 +113,49 @@ module GliteScheduler
       eos
     end
 
-    def new_session?(ssh)
-      if @last_ssh.equal? ssh
-        true
-      else
-        @last_ssh = ssh
-        false
-      end
-    end
+    # Not used now
+    # def new_session?(ssh)
+    #   if @last_ssh.equal? ssh
+    #     true
+    #   else
+    #     @last_ssh = ssh
+    #     false
+    #   end
+    # end
 
-    def prepare_session(ssh)
-      if new_session?(ssh)
-        logger.debug 'initializing proxy'
-        voms_proxy_init(ssh, 'vo.plgrid.pl')
-      end
-    end
+    # Not used because of stateless SSH session usage
+    # def prepare_session(ssh)
+    #   if new_session?(ssh)
+    #     logger.debug 'initializing proxy'
+    #     voms_proxy_init(ssh, 'vo.plgrid.pl')
+    #   end
+    # end
 
     def get_log(ssh, job)
-      output_dir = GliteScheduler::PlGridScheduler.parse_get_output ssh.exec!("glite-wms-job-output --dir . #{job.job_id}")
+      output = PlGridScheduler.execute_glite_command("glite-wms-job-output --dir . #{job.job_id}", ssh)
+      output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
       ssh.exec!("tail -25 #{output_dir}/#{job.log_path}")
     end
 
     def self.parse_get_output(output)
       match = output.match /retrieved and stored in the directory:\s+(\S+)/
       match ? match[1] : nil
+    end
+
+    def self.execute_glite_command(command, ssh)
+      # Before proxy init, force to use X509 default certificate and key (from UI storage)
+      # Because by default it could use KeyFS storage
+      cmd = "unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}"
+      begin
+        result = nil
+        timeout 10 do
+          result = ssh.exec! cmd
+        end
+        raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/
+        return result
+      rescue Timeout::Error
+        raise StandardError.new 'Timeout executing voms-proxy-init - probably key has passphrase'
+      end
     end
 
   end

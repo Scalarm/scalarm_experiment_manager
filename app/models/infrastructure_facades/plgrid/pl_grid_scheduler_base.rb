@@ -43,16 +43,18 @@ ruby simulation_manager.rb
     ssh.exec!("rm scalarm_job_#{job.sm_uuid}.sh")
   end
 
-  #  Create a proxy certificate for the user
+  #  Initialize VOMS-extended proxy certificate for the user
   def voms_proxy_init(ssh, voms)
     begin
       result = nil
       timeout 10 do
-        result = ssh.exec!("/opt/plgrid/keyfs/bin/creds.sh local; voms-proxy-init --voms #{voms}")
+        # Before proxy init, force to use X509 default certificate and key (from UI storage)
+        # Because by default it could use KeyFS storage
+        result = ssh.exec!("unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms #{voms}")
       end
       raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/
     rescue Timeout::Error
-      raise StandardError.new 'Timeout executing voms-proxy-init'
+      raise StandardError.new 'Timeout executing voms-proxy-init - probably key has passphrase'
     end
   end
 

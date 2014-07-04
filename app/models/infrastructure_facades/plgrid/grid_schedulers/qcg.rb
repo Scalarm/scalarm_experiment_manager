@@ -8,6 +8,8 @@ module QcgScheduler
     STATUS_DESCRIPTION_RE = /.*StatusDescription:\s+(.*)\n/
     STATUS_DESC_RE = /.*StatusDesc:\s+(.*)\n/
 
+    DEFAULT_PROXY_DURATION_H = 12
+
     def self.long_name
       'PL-Grid QosCosGrid'
     end
@@ -62,7 +64,7 @@ module QcgScheduler
 
     def submit_job(ssh, job)
       ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
-      submit_job_output = ssh.exec!("qcg-sub scalarm_job_#{job.sm_uuid}.qcg")
+      submit_job_output = ssh.exec!(PlGridScheduler.qcg_command "qcg-sub scalarm_job_#{job.sm_uuid}.qcg")
 
       logger.debug("QCG output lines: #{submit_job_output}")
 
@@ -133,11 +135,11 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!("qcg-info #{job_id}")
+      ssh.exec!(PlGridScheduler.qcg_command "qcg-info #{job_id}")
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!("qcg-cancel #{job.job_id}")
+      output = ssh.exec!(PlGridScheduler.qcg_command "qcg-cancel #{job.job_id}")
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
@@ -182,6 +184,12 @@ module QcgScheduler
         'hydra.icm.edu.pl',
         'moss.man.poznan.pl',
       ]
+    end
+
+    # Wraps QCG command with additional enviroment variables
+    # Proxy duration is in hours and it must be shorter than current proxy cert duration
+    def self.qcg_command(command, proxy_duration_h=DEFAULT_PROXY_DURATION_H)
+      "QCG_ENV_PROXY_DURATION_MIN=#{proxy_duration_h} #{command}"
     end
 
   end

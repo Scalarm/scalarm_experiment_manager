@@ -16,7 +16,7 @@ module Gsi
     end
   end
 
-  def self.assemble_proxy_certificate(user_cert, proxy, proxy_priv_key)
-    ([user_cert, proxy, proxy_priv_key].map {|text| text.gsub('<br>', "\n")}).join('')
+  def self.assemble_proxy_certificate(user_cert, proxy_cert, proxy_priv_key)
+    ([proxy_cert, proxy_priv_key, user_cert].map {|text| text.gsub('<br>', "\n")}).join('')
   end
 end

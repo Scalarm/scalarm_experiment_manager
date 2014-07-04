@@ -21,7 +21,7 @@ module Gsi
               init_log = @output.readline 'Entering interactive session.'
             end
           rescue Timeout::Error, Errno::EPIPE
-            raise TimeoutError.new("gsissh invocation timeout, output: #{err_output}")
+            raise TimeoutError.new("gsissh invocation timeout, output: #{@output.read}")
           end
           init_match = init_log.match /Entering interactive session./
           Gsi.handle_init_error(init_log) unless init_match

@@ -2,6 +2,8 @@ module PlGridOpenID
   require 'openid_providers/openid_utils'
   require 'gsi'
 
+  require 'infrastructure_facades/pl_cloud_utils/pl_cloud_util'
+
   PLGRID_ENDPOINT_URI = 'https://openid.plgrid.pl/gateway'
   PLGRID_OID_URI = 'https://openid.plgrid.pl/gateway'
 
@@ -64,24 +66,36 @@ module PlGridOpenID
     plgrid_identity = oidresp.identity_url
     plgrid_login = PlGridOpenID::strip_identity(oidresp.identity_url)
 
-    proxy_cert = Gsi::assemble_proxy_certificate(ax_attrs[:user_cert], ax_attrs[:proxy], ax_attrs[:proxy_priv_key])
-
     Rails.logger.debug("User logged in with OpenID identity: #{plgrid_identity}")
 
     scalarm_user = OpenIDUtils::get_or_create_user_with(:dn, ax_attrs[:dn], plgrid_login)
-    update_grid_credentials(scalarm_user, plgrid_login, ax_attrs[:dn], proxy_cert)
+
+    x509_proxy_cert =
+        Gsi::assemble_proxy_certificate(ax_attrs[:user_cert], ax_attrs[:proxy], ax_attrs[:proxy_priv_key])
+    update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
+
+    pl_cloud_secret = PLCloudUtil::proxy_to_pl_cloud_secret(ax_attrs[:proxy], ax_attrs[:user_cert])
+    update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
     session[:user] = scalarm_user.id
     successful_login
   end
 
-  def update_grid_credentials(scalarm_user, plgrid_login, dn, proxy_cert)
-    grid_credentials = (scalarm_user.grid_credentials or GridCredentials.new(user_id: scalarm_user.id))
+  def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)
+    grid_credentials =
+        (GridCredentials.find_by_user_id(scalarm_user_id) or GridCredentials.new(user_id: scalarm_user_id))
     grid_credentials.login = plgrid_login
-    grid_credentials.dn = dn
     grid_credentials.proxy = proxy_cert
     grid_credentials.save
+  end
+
+  def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
+    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id, cloud_name: 'pl_cloud') or
+        CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
+    pl_cloud_credentials.login = plgrid_login
+    pl_cloud_credentials.proxy = proxy_secret
+    pl_cloud_credentials.save
   end
 
   def openid_callback_plgrid_failure(oidresp, params)
