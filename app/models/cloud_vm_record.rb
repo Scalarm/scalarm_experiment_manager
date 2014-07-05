@@ -15,6 +15,7 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class CloudVmRecord < MongoActiveRecord
   include SimulationManagerRecord
+  include SSHEnabledRecord
 
   SSH_AUTH_METHODS = %w(password)
 

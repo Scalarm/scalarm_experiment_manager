@@ -208,7 +208,7 @@ class PlGridFacade < InfrastructureFacade
 
   def enabled_for_user?(user_id)
     creds = GridCredentials.find_by_query(user_id: user_id)
-    !!(creds and (creds.proxy or not creds.invalid))
+    !!(creds and (creds.secret_proxy or not creds.invalid))
   end
 
   # -- Monitoring utils --

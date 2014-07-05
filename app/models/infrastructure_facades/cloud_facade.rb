@@ -150,6 +150,7 @@ class CloudFacade < InfrastructureFacade
       rescue Exception => e
         logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
 "#{e.class} #{e.to_s}"
+        logger.debug "Exception backtrace: #{e.backtrace.join("\n")}"
         record.store_error('ssh', e.to_s)
         _simulation_manager_stop(record)
         :error

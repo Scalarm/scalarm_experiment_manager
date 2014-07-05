@@ -71,10 +71,10 @@ module PlGridOpenID
     scalarm_user = OpenIDUtils::get_or_create_user_with(:dn, ax_attrs[:dn], plgrid_login)
 
     x509_proxy_cert =
-        Gsi::assemble_proxy_certificate(ax_attrs[:user_cert], ax_attrs[:proxy], ax_attrs[:proxy_priv_key])
+        Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
     update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
 
-    pl_cloud_secret = PLCloudUtil::proxy_to_pl_cloud_secret(ax_attrs[:proxy], ax_attrs[:user_cert])
+    pl_cloud_secret = PLCloudUtil::certs_to_pl_cloud_secret_proxy(ax_attrs[:proxy], ax_attrs[:user_cert])
     update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
@@ -86,7 +86,7 @@ module PlGridOpenID
     grid_credentials =
         (GridCredentials.find_by_user_id(scalarm_user_id) or GridCredentials.new(user_id: scalarm_user_id))
     grid_credentials.login = plgrid_login
-    grid_credentials.proxy = proxy_cert
+    grid_credentials.secret_proxy = proxy_cert
     grid_credentials.save
   end
 
@@ -94,7 +94,7 @@ module PlGridOpenID
     pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id, cloud_name: 'pl_cloud') or
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
-    pl_cloud_credentials.proxy = proxy_secret
+    pl_cloud_credentials.secret_proxy = proxy_secret
     pl_cloud_credentials.save
   end
 

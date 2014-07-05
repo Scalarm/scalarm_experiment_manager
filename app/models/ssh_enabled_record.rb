@@ -9,7 +9,12 @@ module SSHEnabledRecord
         begin
           block.call(session)
         ensure
-          session.close unless session.closed?
+          # SCP has underlying "session"
+          if session.respond_to? :session
+            session.session.close unless session.session.closed?
+          else
+            session.close unless session.closed?
+          end
         end
       else
         session

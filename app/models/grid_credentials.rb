@@ -55,7 +55,7 @@ class GridCredentials < MongoActiveRecord
       end
     rescue Gsi::ProxyError => proxy_error
       Rails.logger.debug "Proxy for PL-Grid user #{login} is not valid: #{proxy_error.class}, removing"
-      self.proxy = nil
+      self.secret_proxy = nil
       self.save
       gsi_error = proxy_error
     rescue Gsi::ClientError => client_error
