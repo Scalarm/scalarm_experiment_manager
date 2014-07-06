@@ -10,6 +10,8 @@
 # - clean_after_job(ssh, record) - cleans UI user's account from temporary files
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
 
+require 'timeout'
+
 class PlGridSchedulerBase
   attr_reader :logger
 

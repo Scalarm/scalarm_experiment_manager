@@ -10,13 +10,17 @@ class SimulationManagerRecordTest < MiniTest::Test
     def initialize(attributes)
     end
 
-    def method_missing(*name, &block)
+    def method_missing(name, *args, &block)
       nil
     end
   end
 
   class MockRecord < MockMongoActiveRecord
     include SimulationManagerRecord
+  end
+
+  def setup
+    @record = MockRecord.new({})
   end
 
   def test_experiment
@@ -152,10 +156,10 @@ class SimulationManagerRecordTest < MiniTest::Test
     record.store_error('a', 'b')
   end
 
-  def test_initialized_state
+  def test_old_initialized_state
     record = MockRecord.new({})
     record.stubs(:sm_initialized).returns(true)
-    assert_equal :initialized, record.state
+    assert_equal :running, record.state
   end
 
   def test_terminating_state
@@ -163,6 +167,12 @@ class SimulationManagerRecordTest < MiniTest::Test
     record.stubs(:is_terminating).returns(true)
     record.stubs(:sm_initialized).returns(true)
     assert_equal :terminating, record.state
+  end
+
+  def test_use_old_state_data
+    @record.stubs(:sm_initialized).returns(true)
+
+    assert_equal :running, @record.state
   end
 
 end

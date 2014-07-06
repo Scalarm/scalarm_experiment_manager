@@ -108,29 +108,32 @@ class PrivateMachineFacade < InfrastructureFacade
 
   def _simulation_manager_resource_status(record)
     begin
-      shared_ssh_session(record.credentials)
-      :running
+      ssh = shared_ssh_session(record.credentials)
     rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
       # remember this error in case of unable to initialize
       record.error_log = e.to_s
       record.save
-      :initializing
+      return :not_available
     rescue Exception => e
       record.store_error('ssh', e.to_s)
       _simulation_manager_stop(record)
+    else
+      pid = record.pid
+      if pid
+        app_running?(ssh, pid) ? :running_sm : :released
+      else
+        :available
+      end
     end
-  end
-
-  def _simulation_manager_running?(record)
-    not shared_ssh_session(record.credentials).exec!("ps #{record.pid} | tail -n +2").blank?
   end
 
   def _simulation_manager_get_log(record)
     shared_ssh_session(record.credentials).exec! "tail -25 #{record.log_path}"
   end
 
-  def _simulation_manager_install(record)
-    logger.debug "Installing SM on host #{record.credentials.host}:#{record.credentials.ssh_port}"
+  # Nothing to prepare
+  def _simulation_manager_prepare_resource(record)
+    logger.debug "Sending files and launching SM on host: #{record.credentials.host}:#{record.credentials.ssh_port}"
 
     InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
                                                                       record.experiment_id, record.start_at)
@@ -152,6 +155,9 @@ class PrivateMachineFacade < InfrastructureFacade
 
       sleep(20)
     end
+  end
+
+  def _simulation_manager_install(record)
   end
 
   def enabled_for_user?(user_id)

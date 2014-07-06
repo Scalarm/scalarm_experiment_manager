@@ -44,41 +44,9 @@ class PlGridFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
-    if credentials
-      # prepare job executable and descriptor
+    instances_count.times { create_record(user_id, experiment_id, sm_uuid, additional_params).save }
 
-      scheduler.prepare_job_files(sm_uuid, additional_params)
-
-      #  upload the code to the Grid user interface machine
-      begin
-        credentials.scp_session do |scp|
-          scheduler.send_job_files(sm_uuid, scp)
-        end
-
-        credentials.ssh_session do |ssh|
-          # TODO: check ruby version
-          1.upto(instances_count).each do
-            job = create_record(user_id, experiment_id, sm_uuid, additional_params)
-
-            if scheduler.submit_job(ssh, job)
-              job.save
-            else
-              return 'error', I18n.t('plgrid.job_submission.submit_job_failed')
-            end
-          end
-        end
-      rescue Net::SSH::AuthenticationFailed => auth_exception
-        logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
-        return 'error', I18n.t('plgrid.job_submission.authentication_failed', ex: auth_exception)
-      rescue Exception => ex
-        logger.error "Exception when starting simulation managers for user #{user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
-        return 'error', I18n.t('plgrid.job_submission.error', ex: ex)
-      end
-
-      return 'ok', I18n.t('plgrid.job_submission.ok', instances_count: instances_count)
-    else
-      return 'error', I18n.t('plgrid.job_submission.no_credentials')
-    end
+    ['ok', I18n.t('plgrid.job_submission.ok', instances_count: instances_count)]
   end
 
   def create_record(user_id, experiment_id, sm_uuid, params)
@@ -134,11 +102,6 @@ class PlGridFacade < InfrastructureFacade
     PlGridJob.find_by_id(record_id)
   end
 
-  # TODO: decide about usage of count_sm_records
-  # def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
-  #   super(user_id, experiment_id, {scheduler_type: scheduler.short_name}.merge((attributes or {})))
-  # end
-
   def self.retrieve_grants(credentials)
     return [] if credentials.nil?
 
@@ -159,11 +122,12 @@ class PlGridFacade < InfrastructureFacade
 
     grants
   end
-
+  
   # Appends PL-Grid scheduler name to shared SSH session ID
-  def shared_ssh_session(record)
-    super(record, @short_name)
-  end
+  # NOTICE: not used because of stateless SSH sessions
+  #def shared_ssh_session(record)
+  #  super(record, @short_name)
+  #end
 
   # -- SimulationManager delegation methods --
 
@@ -183,22 +147,71 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
+    ssh = nil
     begin
       ssh = shared_ssh_session(record.credentials)
-    rescue
-      return :error
+    rescue Exception
+      return :not_available
     end
-    scheduler.status(ssh, record)
-  end
 
-  def _simulation_manager_running?(record)
-    ssh = shared_ssh_session(record.credentials)
-    scheduler.status(ssh, record) == :running
+    begin
+      job_id = record.job_id
+      if job_id
+        status = scheduler.status(ssh, record)
+        case status
+          when :initializing then :initializing
+          when :running then :running_sm
+          when :deactivated then :released
+          when :error then :error
+          else
+            logger.warn "Unknown state from PL-Grid scheduler: #{status}"
+            :error
+        end
+      else
+        :available
+      end
+    rescue Exception
+      :error
+    end
+
   end
 
   def _simulation_manager_get_log(record)
     ssh = shared_ssh_session(record.credentials)
     scheduler.get_log(ssh, record)
+  end
+
+  def _simulation_manager_prepare_resource(record)
+    ssh = shared_ssh_session(record.credentials)
+
+    sm_uuid = record.sm_uuid
+
+    raise InfrastructureErrors::NoCredentialsError.new if record.credentials.nil?
+    raise InfrastructureErrors::InvalidCredentialsError.new if record.credentials.invalid
+
+    scheduler.prepare_job_files(sm_uuid, record.to_h)
+
+    #  upload the code to the Grid user interface machine
+    begin
+      record.credentials.scp_start do |scp|
+        scheduler.send_job_files(sm_uuid, scp)
+      end
+
+      record.credentials.ssh_start do |ssh|
+        if scheduler.submit_job(ssh, record)
+          record.save
+        else
+          record.store_error('install_failed') # TODO: get output from .submit_job and save as error_log
+        end
+      end
+    rescue Net::SSH::AuthenticationFailed => auth_exception
+      logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
+      record.store_error('ssh')
+    rescue Exception => ex
+      logger.error "Exception when starting simulation managers for user #{record.user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
+      record.store_error('install_failed', "#{ex.to_s}\n#{ex.backtrace.join("\n")}")
+    end
+
   end
 
   # Empty implementation: SM was already sent and queued on start_simulation_managers
@@ -231,7 +244,7 @@ class PlGridFacade < InfrastructureFacade
     FileUtils.mkdir(code_dir)
     FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
 
-    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record})
+    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
 
     %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
 

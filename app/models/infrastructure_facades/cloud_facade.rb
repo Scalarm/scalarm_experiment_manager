@@ -1,6 +1,7 @@
 require_relative 'clouds/vm_instance.rb'
 require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
+require_relative 'clouds/cloud_errors'
 
 class CloudFacade < InfrastructureFacade
   include ShellCommands
@@ -40,55 +41,57 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord
   end
 
-  def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
-    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{additional_params}"
-    cloud_client = cloud_client_instance(user_id)
+  def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
+    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
     begin
-      exp_image = CloudImageSecrets.find_by_id(additional_params['image_secrets_id'])
-      if exp_image.nil? or exp_image.image_id.nil?
-        return 'error', I18n.t('infrastructure_facades.cloud.provide_image_secrets')
-      elsif not cloud_client.image_exists? exp_image.image_id
-        return 'error', I18n.t('infrastructure_facades.cloud.image_not_exists',
-                               image_id: exp_image.image_id, cloud_name: @long_name)
-      elsif exp_image.user_id != user_id
-        return 'error', I18n.t('infrastructure_facades.cloud.image_permission')
-      elsif exp_image.cloud_name != @short_name
-        return 'error', I18n.t('infrastructure_facades.cloud.image_cloud_error')
-      end
+      image_secrets_id = params['image_secrets_id']
+      get_and_validate_image_secrets(image_secrets_id, user_id)
+      records = create_and_save_records(instances_count, image_secrets_id, user_id, experiment_id,
+                              params['time_limit'], params['start_at'], params['instance_type'],
+                              find_stored_params(params))
 
-      sched_instances = schedule_vm_instances(cloud_client, "#{VM_NAME_PREFIX}#{experiment_id}", exp_image,
-                                                        instances_count, user_id, experiment_id, additional_params)
-      ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: sched_instances.size,
+      ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: records.count,
                           cloud_name: @long_name)]
+    rescue CloudErrors::ImageValidationError => ive
+      logger.error "Error validating image secrets: #{ive.to_s}"
+      ['error', I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s)]
     rescue Exception => e
-      Rails.logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
+      logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
       ['error', I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message)]
     end
 
   end
 
-  # Intantiate virtual machines and add records to database
-  # @return [Array<ScheduledVmInstance>]
-  def schedule_vm_instances(cloud_client, base_name, image_secrets, number, user_id, experiment_id, params)
-    cloud_client.instantiate_vms(base_name, image_secrets.image_id, number, params).map do |vm_id|
+  def find_stored_params(params)
+    Hash[(params.keys.select {|k| k.start_with? 'stored_' }).map do |key|
+      [key.to_s.sub(/^stored_/, ''), params[key]]
+    end]
+  end
 
-      vm_record = CloudVmRecord.new({
-                                        cloud_name: cloud_client.class.short_name,
-                                        user_id: user_id,
-                                        experiment_id: experiment_id,
-                                        image_secrets_id: image_secrets.id,
-                                        time_limit: params['time_limit'],
-                                        vm_id: vm_id.to_s,
-                                        sm_uuid: SecureRandom.uuid,
-                                        start_at: params['start_at'],
-                                        instance_type: params['instance_type']
-                                    })
-      vm_record.initialize_fields
-      vm_record.save
-
-      create_simulation_manager(vm_record)
+  def get_and_validate_image_secrets(image_secrets_id, user_id)
+    exp_image = CloudImageSecrets.find_by_id(image_secrets_id)
+    if exp_image.nil? or exp_image.image_id.nil?
+      raise CloudErrors::ImageValidationError.new 'provide_image_secrets'
+    elsif not cloud_client_instance(user_id).image_exists? exp_image.image_id
+      raise CloudErrors::ImageValidationError.new 'image_not_exists'
+    elsif exp_image.user_id != user_id
+      raise CloudErrors::ImageValidationError.new 'image_permission'
+    elsif exp_image.cloud_name != @short_name
+      raise CloudErrors::ImageValidationError.new 'image_cloud_error'
     end
+
+    exp_image
+  end
+
+  # Intantiate virtual machine and save vm_id to given record
+  def schedule_vm_instance(record)
+    cloud_client = cloud_client_instance(record.user_id)
+    vm_id = cloud_client.instantiate_vms('scalarm', record.image_secrets.image_id, 1,
+                                         record.params.merge('instance_type' => record.instance_type)).first
+    record.vm_id = vm_id
+    record.save
+    record
   end
 
   def add_credentials(user, params, session)
@@ -131,41 +134,47 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
-    vm_status = cloud_client_instance(record.user_id).status(record.vm_id)
-    if vm_status == :running
-      begin
-        # VM is running, so check SSH connection
-        record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
-        if record.has_ssh_address?
-          shared_ssh_session(record)
-          :running
-        else
-          :initializing
-        end
-      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
-        # remember this error in case of unable to initialize
-        record.error_log = e.to_s
-        record.save
-        :initializing
-      rescue Exception => e
-        logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
-"#{e.class} #{e.to_s}"
-        logger.debug "Exception backtrace: #{e.backtrace.join("\n")}"
-        record.store_error('ssh', e.to_s)
-        _simulation_manager_stop(record)
-        :error
-      end
-    else
-      vm_status
+    cloud_client = nil
+    begin
+      cloud_client = cloud_client_instance(record.user_id)
+      return :not_available unless cloud_client and cloud_client.valid_credentials?
+    rescue Exception
+      return :not_available
     end
-  end
 
-  def _simulation_manager_running?(record)
-    vm = cloud_client_instance(record.user_id).vm_instance(record.vm_id)
-    if vm.exists? and vm.status == :running
-      not shared_ssh_session(record).exec!("ps #{record.pid} | tail -n +2").blank?
+    vm_id = record.vm_id
+    if vm_id
+      vm_status = cloud_client.status(vm_id)
+      case vm_status
+        when :initializing then :initializing
+        when :running
+          begin
+            # VM is running, so check SSH connection
+            record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+            if record.has_ssh_address?
+              ssh = shared_ssh_session(record)
+              return (record.pid and app_running?(ssh, record.pid) and :running_sm or :ready)
+            else
+              return :initializing
+            end
+          rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+            # remember this error in case of unable to initialize
+            record.error_log = e.to_s
+            record.save
+            :initializing
+          rescue Exception => e
+            logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
+    "#{e.class} #{e.to_s}"
+            record.store_error('ssh', e.to_s)
+            _simulation_manager_stop(record)
+            :error
+          end
+        when :deactivated then :released
+        else :error
+      end
+
     else
-      false
+      :available
     end
   end
 
@@ -198,6 +207,39 @@ class CloudFacade < InfrastructureFacade
 
       sleep(20)
     end
+  end
+
+  def _simulation_manager_prepare_resource(record)
+    begin
+      schedule_vm_instance(record)
+    rescue Exception => error
+      logger.error "Exception when instantiating VMs for user #{record.user_id}: #{error.to_s}\n#{error.backtrace.join("\n")}"
+      record.store_error('install_failed', "#{error.to_s}\n#{error.backtrace.join("\n")}")
+    end
+  end
+
+  def create_record(image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type, params)
+    vm_record = CloudVmRecord.new({
+                                      cloud_name: short_name,
+                                      user_id: user_id,
+                                      experiment_id: experiment_id,
+                                      image_secrets_id: image_secrets_id,
+                                      time_limit: time_limit,
+                                      sm_uuid: SecureRandom.uuid,
+                                      start_at: start_at,
+                                      instance_type: instance_type,
+                                      params: params
+                                  })
+    vm_record.initialize_fields
+    vm_record
+  end
+
+  def create_and_save_records(count, image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type, params)
+    records = (1..count).map do
+      create_record(image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type, params)
+    end
+    records.each &:save
+    records
   end
 
   def enabled_for_user?(user_id)

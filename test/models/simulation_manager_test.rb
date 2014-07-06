@@ -6,15 +6,22 @@ require 'infrastructure_facades/simulation_manager'
 
 class SimulationManagerTest < MiniTest::Test
 
+  def setup
+    record = stub_everything do
+      stubs(:experiment).returns(stub_everything)
+    end
+    @sm = SimulationManager.new(record, stub_everything)
+  end
+
   METHOD_NAMES = [
       :name,
       :monitor,
       :stop,
       :restart,
-      :running?,
       :resource_status,
       :get_log,
-      :install
+      :install,
+      :prepare_resource
   ]
 
   def test_has_methods
@@ -39,213 +46,6 @@ class SimulationManagerTest < MiniTest::Test
     sm = SimulationManager.new(record, infrastructure)
 
     assert_empty sm.monitoring_cases.keys - sm.monitoring_order
-  end
-
-  def test_monitor_nothing
-    mock_record = stub_everything 'record' do
-      stubs(:resource_id).returns('other-vm')
-      expects(:time_limit_exceeded?).returns(false).once
-      expects(:destroy).never
-      expects(:experiment_end?).returns(false).once
-      expects(:init_time_exceeded?).returns(false).once
-      stubs(:max_init_time).returns(20.minutes)
-      expects(:sm_initialized=).never
-      expects(:save).never
-      stubs(:experiment).returns(stub_everything)
-    end
-
-    mock_infrastructure = mock 'infrastructure' do
-      stubs(:short_name).returns('anything')
-    end
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-    simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:sm_terminated?).returns(false).once
-    simulation_manager.expects(:should_initialize_sm?).returns(false).once
-    simulation_manager.expects(:record_sm_failed).never
-    simulation_manager.expects(:install).never
-    simulation_manager.expects(:after_monitor).once
-
-    # EXECUTION
-    simulation_manager.monitor
-  end
-
-  def test_monitor_time_limit
-    mock_record = stub_everything 'record' do
-      stubs(:resource_id).returns('other-vm')
-      stubs(:error).returns(nil)
-      stubs(:max_init_time).returns(20) # used for logger message
-      expects(:time_limit_exceeded?).returns(true).once
-      expects(:experiment_end?).never
-      expects(:init_time_exceeded?).never
-      expects(:sm_initialized=).never
-      expects(:save).never
-      stubs(:experiment).returns(stub_everything)
-    end
-
-    mock_infrastructure = mock 'infrastructure' do
-      stubs(:short_name).returns('anything')
-    end
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-    simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:stop).once
-    simulation_manager.expects(:sm_terminated?).never
-    simulation_manager.expects(:should_initialize_sm?).never
-    simulation_manager.expects(:record_sm_failed).never
-    simulation_manager.expects(:install).never
-    simulation_manager.expects(:after_monitor).once
-
-    # EXECUTION
-    simulation_manager.monitor
-  end
-
-  def test_monitor_experiment_end
-    mock_record = stub_everything 'record' do
-      stubs(:resource_id).returns('other-vm')
-      stubs(:max_init_time).returns(20) # used for logger message
-      expects(:time_limit_exceeded?).returns(false).once
-      expects(:experiment_end?).returns(true).once
-      expects(:init_time_exceeded?).never
-      expects(:sm_initialized=).never
-      expects(:save).never
-      stubs(:experiment).returns(stub_everything)
-    end
-
-    mock_infrastructure = mock 'infrastructure' do
-      stubs(:short_name).returns('anything')
-    end
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-    simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:stop).once
-    simulation_manager.expects(:sm_terminated?).never
-    simulation_manager.expects(:should_initialize_sm?).never
-    simulation_manager.expects(:record_sm_failed).never
-    simulation_manager.expects(:install).never
-    simulation_manager.expects(:after_monitor).once
-
-    # EXECUTION
-    simulation_manager.monitor
-  end
-
-  def test_monitor_init_time_exceeded
-    mock_record = stub_everything 'record' do
-      stubs(:resource_id).returns('other-vm')
-      stubs(:max_init_time).returns(20) # used for logger message
-      expects(:time_limit_exceeded?).returns(false).once
-      expects(:experiment_end?).returns(false).once
-      expects(:init_time_exceeded?).returns(true).once
-      expects(:sm_initialized_at=).once
-      expects(:save).once
-      stubs(:experiment).returns(stub_everything)
-    end
-
-    mock_infrastructure = mock 'infrastructure' do
-      stubs(:short_name).returns('anything')
-      expects(:simulation_manager_running?).never
-      expects(:simulation_manager_install).never
-    end
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-    simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:restart).once
-    simulation_manager.expects(:stop).never
-    simulation_manager.expects(:sm_terminated?).never
-    simulation_manager.expects(:should_initialize_sm?).never
-    simulation_manager.expects(:record_sm_failed).never
-    simulation_manager.expects(:install).never
-    simulation_manager.expects(:after_monitor).once
-
-    # EXECUTION
-    simulation_manager.monitor
-  end
-
-  def test_monitor_sm_terminated
-    mock_record = stub_everything 'record' do
-      stubs(:resource_id).returns('other-vm')
-      stubs(:max_init_time).returns(20) # used for logger message
-      expects(:time_limit_exceeded?).returns(false).once
-      expects(:experiment_end?).returns(false).once
-      expects(:init_time_exceeded?).returns(false).once
-      expects(:sm_initialized=).never
-      stubs(:experiment).returns(stub_everything)
-    end
-
-    mock_infrastructure = mock 'infrastructure' do
-      stubs(:short_name).returns('anything')
-    end
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-    simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:record_init_time_exceeded).never
-    simulation_manager.expects(:restart).never
-    simulation_manager.expects(:stop).never
-    simulation_manager.expects(:sm_terminated?).returns(true).once
-    simulation_manager.expects(:should_initialize_sm?).never
-    simulation_manager.expects(:record_sm_failed).once
-    simulation_manager.expects(:install).never
-    simulation_manager.expects(:after_monitor).once
-
-    # EXECUTION
-    simulation_manager.monitor
-  end
-
-  def test_monitor_try_to_initialize_sm
-    mock_record = stub_everything 'record' do
-      stubs(:resource_id).returns('other-vm')
-      stubs(:max_init_time).returns(20) # used for logger message
-      expects(:time_limit_exceeded?).returns(false).once
-      expects(:experiment_end?).returns(false).once
-      expects(:init_time_exceeded?).returns(false).once
-      expects(:sm_initialized=).with(true).once
-      expects(:save).once
-      stubs(:experiment).returns(stub_everything)
-    end
-
-    mock_infrastructure = mock 'infrastructure' do
-      stubs(:short_name).returns('anything')
-    end
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-
-    simulation_manager = SimulationManager.new(mock_record, mock_infrastructure)
-    simulation_manager.expects(:before_monitor).once
-    simulation_manager.expects(:record_init_time_exceeded).never
-    simulation_manager.expects(:restart).never
-    simulation_manager.expects(:stop).never
-    simulation_manager.expects(:sm_terminated?).returns(false).once
-    simulation_manager.expects(:record_sm_failed).never
-    simulation_manager.expects(:should_initialize_sm?).returns(true).once
-    simulation_manager.expects(:install).with(mock_record).once
-    simulation_manager.expects(:after_monitor).once
-
-    # EXECUTION
-    simulation_manager.monitor
-  end
-
-  def test_should_initialize_sm_already_init
-    record = stub_everything 'record' do
-      expects(:state).returns(:initialized).at_least_once
-    end
-
-    infrastructure = stub_everything
-
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
-    simulation_manager = SimulationManager.new(record, infrastructure)
-    simulation_manager.expects(:resource_status).never
-
-    refute simulation_manager.should_initialize_sm?
   end
 
   def test_delegation
@@ -278,7 +78,6 @@ class SimulationManagerTest < MiniTest::Test
       expects(:destroy)
     end
 
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
     infrastructure = stub_everything
 
     sm = SimulationManager.new(record, infrastructure)
@@ -294,7 +93,6 @@ class SimulationManagerTest < MiniTest::Test
       expects(:destroy)
     end
 
-    InfrastructureTaskLogger.stubs(:new).returns(stub_everything)
     infrastructure = stub_everything
     infrastructure.stubs(:_simulation_manager_stop).raises(StandardError.new('err'))
 
@@ -304,27 +102,22 @@ class SimulationManagerTest < MiniTest::Test
     sm.monitor
   end
 
-  def test_terminating_state_after_stop
-    record = stub_everything 'record' do
-      expects(:set_stop).once
-    end
-    infrastructure = stub_everything 'infrastructure'
+  def test_set_terminating_state_after_stop
+    @sm.expects(:set_state).with(:terminating).once
 
-    sm = SimulationManager.new(record, infrastructure)
-
-    sm.stop
+    @sm.stop
   end
 
   def test_monitoring_stopping
     record = stub_everything 'record' do
-      stubs(:state).returns(:terminating)
       stubs(:stopping_time_exceeded?).returns(false)
       stubs(:experiment).returns(stub_everything)
     end
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
-    sm.stubs(:resource_status).returns(:running)
+    sm.stubs(:resource_status).returns(:running_sm)
+    sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).never
 
     sm.monitor
@@ -332,14 +125,14 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_monitoring_stopping_repeat
     record = stub_everything 'record' do
-      stubs(:state).returns(:terminating)
       stubs(:stopping_time_exceeded?).returns(true, false)
       stubs(:experiment).returns(stub_everything)
     end
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
-    sm.stubs(:resource_status).returns(:running)
+    sm.stubs(:resource_status).returns(:running_sm)
+    sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).once
 
     # first monitor invoke - should get stopping_time_exceeded == true, so it should invoke stop
@@ -350,17 +143,124 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_monitoring_destroy_after_stopping
     record = stub_everything 'record' do
-      stubs(:state).returns(:terminating)
       expects(:destroy).once
       stubs(:experiment).returns(stub_everything)
     end
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
-    sm.stubs(:resource_status).returns(:deactivated)
+    sm.stubs(:resource_status).returns(:released)
+    sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).never
 
     sm.monitor
+  end
+
+  def test_state_delegator
+    state = mock 'state'
+    record = stub_everything 'record' do
+      stubs(:state).returns(state)
+    end
+    infrastructure = stub_everything
+    sm = SimulationManager.new(record, infrastructure)
+
+    sm_state = sm.state
+
+    assert_equal state, sm_state
+
+  end
+
+  def test_created_prepare_resource
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @sm.expects(:prepare_resource).once
+    @sm.expects(:set_state).with(:initializing).once
+
+    @sm.monitor
+  end
+
+  def test_initializing_init_time_exceeded
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:init_time_exceeded?).returns(true)
+
+    @sm.expects(:restart).once
+    @sm.expects(:set_state).with(:initializing).once
+
+    @sm.monitor
+  end
+
+  def test_initializing_install
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:ready)
+
+    @sm.expects(:install).once
+    @sm.expects(:set_state).with(:running).once
+
+    @sm.monitor
+  end
+
+  def test_initializing_detect_running_sm
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:running_sm)
+
+    @sm.expects(:set_state).with(:running).once
+
+    @sm.monitor
+  end
+
+  def test_running_time_limit_exceeded
+    @sm.stubs(:state).returns(:running)
+    @sm.stubs(:resource_status).returns(:running_sm)
+    @sm.stubs(:time_limit_exceeded?).returns(true)
+
+    @sm.expects(:stop).once
+    @sm.expects(:set_state).with(:terminating).once
+
+    @sm.monitor
+  end
+
+  def test_terminated_untimely
+    @sm.stubs(:state).returns(:running)
+    @sm.stubs(:resource_status).returns(:released)
+    @sm.stubs(:should_not_be_destroyed?).returns(true)
+
+    @sm.expects(:store_terminated_error).once
+
+    @sm.monitor
+  end
+
+  # On changing state to ERROR, stop should be invoked when resource was tried to acquire
+  def test_stop_on_set_error_state
+    SimulationManagerRecord::POSSIBLE_STATES.each do |state|
+      [:initializing, :ready, :running_sm].each do |resource_state|
+        @sm.stubs(:state).returns(state)
+        @sm.stubs(:resource_status).returns(resource_state)
+
+        @sm.expects(:stop).at_least_once
+
+        @sm.set_state(:error)
+      end
+    end
+  end
+
+  def test_monitoring_resource_error
+    (SimulationManagerRecord::POSSIBLE_STATES - [:error]).each do |state|
+      @sm.stubs(:state).returns(state)
+      @sm.stubs(:resource_status).returns(:error)
+
+      @sm.expects(:store_error_resource_status).once
+
+      @sm.monitor
+    end
+  end
+
+  def test_infrastructure_stop_action
+    @sm.infrastructure.expects(:_simulation_manager_stop).once
+    @sm.expects(:set_state).with(:terminating).once
+
+    @sm.stop
   end
 
 end

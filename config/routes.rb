@@ -104,7 +104,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :get_booster_partial
       get :get_credentials_partial
       get :get_credentials_table_partial
-      get :get_resource_state
+      get :get_resource_status
       get :simulation_manager_records
       post :simulation_manager_command
     end

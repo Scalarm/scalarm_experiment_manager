@@ -210,14 +210,8 @@ class InfrastructuresController < ApplicationController
     begin
       command = params[:command]
       if %w(stop restart destroy_record).include? command
-        if command == 'destroy_record'
-          yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-            sm.record.destroy
-          end
-        else
-          yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-            sm.send(params[:command])
-          end
+        yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
+          sm.send(params[:command])
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else
@@ -316,7 +310,7 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   # - record_id
-  def get_resource_state
+  def get_resource_status
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       record = get_sm_record(params[:record_id], facade)

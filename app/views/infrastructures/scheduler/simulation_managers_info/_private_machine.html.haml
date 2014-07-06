@@ -1,4 +1,7 @@
-%strong= t('infrastructure.information.private_machine.sm_info.machine_desc') + ': '
-=record.credentials.machine_desc.to_s + ', '
-%strong= t('infrastructure.information.private_machine.sm_info.pid') + ': '
-=(record.pid ? record.pid.to_s : '-') + ', '
+%li
+  %strong= t('infrastructure.information.private_machine.sm_info.machine_desc') + ': '
+  =record.credentials.machine_desc.to_sramow
+- if record.pid
+  %li
+    %strong= t('infrastructure.information.private_machine.sm_info.pid') + ': '
+    =record.pid.to_s
