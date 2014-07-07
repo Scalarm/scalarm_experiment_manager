@@ -43,4 +43,26 @@ class MongoActiveRecordTest < MiniTest::Test
     assert_equal 2, r.a
   end
 
+  def test_save_if_exists
+    id = mock 'id'
+    record = SomeRecord.new({id: id})
+    record.stubs(:id).returns(id)
+    SomeRecord.stubs(:find_by_id).with(id).returns(record)
+
+    record.expects(:save).once
+
+    record.save_if_exists
+  end
+
+  def test_save_if_exists_false
+    id = mock 'id'
+    record = SomeRecord.new({id: id})
+    record.stubs(:id).returns(id)
+    SomeRecord.stubs(:find_by_id).with(id).returns(nil)
+
+    record.expects(:save).never
+
+    record.save_if_exists
+  end
+
 end

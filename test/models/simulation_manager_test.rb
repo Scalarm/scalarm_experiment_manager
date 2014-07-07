@@ -263,4 +263,30 @@ class SimulationManagerTest < MiniTest::Test
     @sm.stop
   end
 
+  def test_sm_action_no_credentials
+    action = mock 'action'
+    @sm.stubs(:delegate_to_infrastructure).with(action).raises(InfrastructureErrors::NoCredentialsError)
+
+    @sm.record.expects(:store_no_credentials)
+    @sm.record.expects(:clear_no_credentials).never
+
+    assert_raises InfrastructureErrors::NoCredentialsError do
+      @sm.infrastructure_action(action)
+    end
+  end
+
+  def test_before_init_no_credentials
+    @sm.stubs(:before_monitor).raises(InfrastructureErrors::NoCredentialsError)
+
+    @sm.record.expects(:store_no_credentials).at_least_once
+    @sm.record.expects(:clear_no_credentials).never
+
+    @sm.monitor
+  end
+
+  def test_clear_no_credentials
+    @sm.record.expects(:clear_no_credentials)
+    @sm.monitor
+  end
+
 end

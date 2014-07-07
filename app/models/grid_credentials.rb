@@ -1,3 +1,9 @@
+# Fields:
+# - user_id
+# - login
+# - password (not needed if has secret_proxy)
+# - secret_proxy (not needed if has password)
+
 require 'openssl'
 require 'base64'
 
@@ -6,7 +12,7 @@ require 'gsi/ssh'
 
 require 'infrastructure_facades/infrastructure_errors'
 
-class GridCredentials < MongoActiveRecord
+class GridCredentials < EncryptedMongoActiveRecord
   include SSHEnabledRecord
 
   @@CIPHER_NAME = 'aes-256-cbc'
@@ -50,8 +56,8 @@ class GridCredentials < MongoActiveRecord
   def _get_ssh_session
     gsi_error = nil
     begin
-      if proxy
-        return Gsi::SSH.start(host, login, proxy)
+      if secret_proxy
+        return Gsi::SSH.start(host, login, secret_proxy)
       end
     rescue Gsi::ProxyError => proxy_error
       Rails.logger.debug "Proxy for PL-Grid user #{login} is not valid: #{proxy_error.class}, removing"
@@ -78,8 +84,8 @@ class GridCredentials < MongoActiveRecord
   private
 
   def _get_scp_session
-    if proxy
-      Gsi::SCP.start(host, login, proxy)
+    if secret_proxy
+      Gsi::SCP.start(host, login, secret_proxy)
     elsif password
       Net::SCP.start(host, login, password: password)
     else

@@ -5,6 +5,9 @@ require 'base64'
 
 require_relative 'pl_cloud_util_instance'
 require 'infrastructure_facades/infrastructure_errors'
+require 'gsi'
+
+class PLCloudError < StandardError; end
 
 class PLCloudUtil
   PLCLOUD_URL = 'https://cloud.plgrid.pl:3443'
@@ -150,20 +153,27 @@ CONTEXT = [
   # @param [Array<String>] args list of arguments for command, ie. "create", "file_content_direct", ...
   def execute(command, args)
     begin
-      url = "#{PLCLOUD_URL}/exec/#{command}"
-      str_args = "[\"#{args.join('", "')}\"]"
-
-      resp = RestClient.post url, str_args,
-                      'One-User' => @secrets.login,
-                      'One-Secret' => (@secrets.secret_proxy or @secrets.secret_password),
-                      :content_type => :json, :accept => :json
-      JSON.parse(resp)['data']
-      # TODO: use status
-      # TODO: some proxy error checking?
+      parsed_resp = JSON.parse(exec_post(command, args))
+      status, data = parsed_resp['status'], parsed_resp['data']
     rescue
       Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
       nil
     end
+
+    raise PLCloudError.new data if status != 0
+    raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
+
+    data
+  end
+
+  def exec_post(command, args)
+    url = "#{PLCLOUD_URL}/exec/#{command}"
+    str_args = "[\"#{args.join('", "')}\"]"
+
+    RestClient.post url, str_args,
+                       'One-User' => @secrets.login,
+                       'One-Secret' => (@secrets.secret_proxy or @secrets.secret_password),
+                       :content_type => :json, :accept => :json
   end
 
   # @param [String] vm_ip
@@ -183,6 +193,8 @@ CONTEXT = [
       raise InfrastructureErrors::CloudError.new "Exception during POST to port redirection service: #{$!}"
     end
 
+    raise PLCloudError.new('Redirect port: 400 Bad Request') if resp =~ /400 Bad Request/
+
     data = JSON.parse resp
 
     unless data.kind_of?(Hash)
@@ -199,6 +211,8 @@ CONTEXT = [
   def redirections_for(vm_ip)
     resp = RestClient.get "#{DNAT_URL}/#{vm_ip}",
                           content_type: :json, accept: :json
+    raise PLCloudError if resp =~ /400 Bad Request/
+
     data = JSON.parse resp
 
     Hash[data.map {|r| [r['privPort'], {host: r['pubIp'], port: r['pubPort']}]}]

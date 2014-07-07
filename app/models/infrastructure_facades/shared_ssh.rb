@@ -1,6 +1,9 @@
 # Should be mixin for InfrastructureFacades subclasses
 # needs:
 # - logger
+
+require 'gsi'
+
 module SharedSSH
   attr_reader :ssh_sessions
 
@@ -23,7 +26,14 @@ module SharedSSH
       end
 
       logger.debug "creating ssh session: #{session_id}"
-      @ssh_sessions[session_id] = credentials.ssh_session
+      begin
+        @ssh_sessions[session_id] = credentials.ssh_session
+      rescue Gsi::ProxyError => proxy_error
+        logger.info "Proxy for user #{credentials.user_id} is invalid: #{proxy_error.class} - removing proxy."
+        credentials.secret_proxy = nil
+        credentials.save
+        raise InfrastructureErrors::NoCredentialsError
+      end
     end
   end
 

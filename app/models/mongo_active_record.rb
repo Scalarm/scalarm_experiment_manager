@@ -65,6 +65,10 @@ class MongoActiveRecord
     end
   end
 
+  def save_if_exists
+    self.save if self.class.find_by_id(self.id)
+  end
+
   def destroy
     return if not @attributes.include? '_id'
 

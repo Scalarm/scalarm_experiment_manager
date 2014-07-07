@@ -2,6 +2,7 @@ require_relative 'clouds/vm_instance.rb'
 require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 require_relative 'clouds/cloud_errors'
+require 'gsi'
 
 class CloudFacade < InfrastructureFacade
   include ShellCommands
@@ -125,97 +126,132 @@ class CloudFacade < InfrastructureFacade
 
   # -- SimulationManager delegation methods --
 
+  def handle_proxy_error(secrets, &block)
+    begin
+      yield
+    rescue Gsi::ProxyError => proxy_error
+      logger.info "Proxy for user #{credentials.user_id} is invalid: #{proxy_error.class} - removing proxy."
+      secrets.secret_proxy = nil
+      secrets.save
+      raise InfrastructureErrors::NoCredentialsError
+    end
+  end
+
   def _simulation_manager_stop(record)
-    cloud_client_instance(record.user_id).terminate(record.vm_id)
+    handle_proxy_error(record.secrets) do
+      cloud_client_instance(record.user_id).terminate(record.vm_id)
+    end
   end
 
   def _simulation_manager_restart(record)
-    cloud_client_instance(record.user_id).reinitialize(record.vm_id)
+    handle_proxy_error(record.secrets) do
+      cloud_client_instance(record.user_id).reinitialize(record.vm_id)
+    end
   end
 
   def _simulation_manager_resource_status(record)
-    cloud_client = nil
-    begin
-      cloud_client = cloud_client_instance(record.user_id)
-      return :not_available unless cloud_client and cloud_client.valid_credentials?
-    rescue Exception
-      return :not_available
-    end
-
-    vm_id = record.vm_id
-    if vm_id
-      vm_status = cloud_client.status(vm_id)
-      case vm_status
-        when :initializing then :initializing
-        when :running
-          begin
-            # VM is running, so check SSH connection
-            record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
-            if record.has_ssh_address?
-              ssh = shared_ssh_session(record)
-              return (record.pid and app_running?(ssh, record.pid) and :running_sm or :ready)
-            else
-              return :initializing
-            end
-          rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
-            # remember this error in case of unable to initialize
-            record.error_log = e.to_s
-            record.save
-            :initializing
-          rescue Exception => e
-            logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
-    "#{e.class} #{e.to_s}"
-            record.store_error('ssh', e.to_s)
-            _simulation_manager_stop(record)
-            :error
-          end
-        when :deactivated then :released
-        else :error
+    handle_proxy_error(record.secrets) do
+      cloud_client = nil
+      begin
+        cloud_client = cloud_client_instance(record.user_id)
+        return :not_available unless cloud_client and cloud_client.valid_credentials?
+      rescue Exception
+        return :not_available
       end
 
-    else
-      :available
+      vm_id = record.vm_id
+      if vm_id
+        vm_status = cloud_client.status(vm_id)
+        case vm_status
+          when :initializing then :initializing
+          when :running
+            begin
+              # VM is running, so check SSH connection
+              record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+              if record.has_ssh_address?
+                ssh = shared_ssh_session(record)
+                return (record.pid and app_running?(ssh, record.pid) and :running_sm or :ready)
+              else
+                return :initializing
+              end
+            rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+              # remember this error in case of unable to initialize
+              record.error_log = e.to_s
+              record.save
+              :initializing
+            rescue InfrastructureErrors::NoCredentialsError
+              raise
+            rescue Exception => e
+              logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
+      "#{e.class} #{e.to_s}"
+              record.store_error('ssh', e.to_s)
+              _simulation_manager_stop(record)
+              :error
+            end
+          when :deactivated then :released
+          else :error
+        end
+
+      else
+        :available
+      end
     end
   end
 
   def _simulation_manager_get_log(record)
-    shared_ssh_session(record).exec! "tail -25 #{record.log_path}"
+    handle_proxy_error(record.secrets) do
+      shared_ssh_session(record).exec! "tail -25 #{record.log_path}"
+    end
   end
 
   def _simulation_manager_install(record)
-    record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
-    logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
+    handle_proxy_error(record.secrets) do
+      record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+      logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
-                                                                      record.experiment_id, record.start_at)
-    error_counter = 0
-    while true
-      begin
-        ssh = shared_ssh_session(record)
-        break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
-      rescue Exception => e
-        logger.warn "Exception #{e} occured while communication with "\
-"#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
-        error_counter += 1
-        if error_counter > 10
-          logger.error 'Exceeded number of SimulationManager installation attempts'
-          record.store_error('install_failed', e.to_s)
-          _simulation_manager_stop(record)
-          break
+      InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
+                                                                        record.experiment_id, record.start_at)
+      error_counter = 0
+      while true
+        begin
+          ssh = shared_ssh_session(record)
+          break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
+        rescue Exception => e
+          logger.warn "Exception #{e} occured while communication with "\
+  "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
+          error_counter += 1
+          if error_counter > 10
+            logger.error 'Exceeded number of SimulationManager installation attempts'
+            record.store_error('install_failed', e.to_s)
+            _simulation_manager_stop(record)
+            break
+          end
         end
-      end
 
-      sleep(20)
+        sleep(20)
+      end
     end
   end
 
   def _simulation_manager_prepare_resource(record)
     begin
-      schedule_vm_instance(record)
+      handle_proxy_error(record.secrets) do
+        schedule_vm_instance(record)
+      end
+    rescue InfrastructureErrors::NoCredentialsError
+      raise
     rescue Exception => error
       logger.error "Exception when instantiating VMs for user #{record.user_id}: #{error.to_s}\n#{error.backtrace.join("\n")}"
       record.store_error('install_failed', "#{error.to_s}\n#{error.backtrace.join("\n")}")
     end
+  end
+
+  def _simulation_manager_before_monitor(record)
+    validate_credentials_for(record)
+  end
+
+  def validate_credentials_for(record)
+    raise InfrastructureErrors::NoCredentialsError unless record.has_usable_cloud_secrets?
   end
 
   def create_record(image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type, params)

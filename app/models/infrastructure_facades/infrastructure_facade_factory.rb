@@ -79,6 +79,14 @@ class InfrastructureFacadeFactory
     end
   end
 
+  def self.start_monitoring_thread_for(insfrastructure_name)
+    facade = get_facade_for(insfrastructure_name)
+    Rails.logger.info("Starting monitoring thread of '#{insfrastructure_name}'")
+    Thread.start do
+      facade.monitoring_thread
+    end
+  end
+
   def self.get_group_for(infrastructure_name)
     if PlGridFacadeFactory.instance.provider_names.include? infrastructure_name
       'plgrid'

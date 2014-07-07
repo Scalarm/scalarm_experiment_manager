@@ -35,6 +35,10 @@ class CloudVmRecord < MongoActiveRecord
     @experiment ||= Experiment.find_by_id(experiment_id)
   end
 
+  def cloud_secrets
+    @cloud_secrets ||= CloudSecrets.find_by_query(cloud_name: cloud_name, user_id: user_id)
+  end
+
   # additional info for specific cloud should be provided by CloudClient
   def to_s
     "Id: #{vm_id}, Launched at: #{created_at}, Time limit: #{time_limit}, "
@@ -70,6 +74,25 @@ class CloudVmRecord < MongoActiveRecord
   def validate
     raise InfrastructureErrors::NoCredentialsError if image_secrets_id.nil?
     raise InfrastructureErrors::InvalidCredentialsError if image_secrets.invalid
+  end
+
+  def has_usable_cloud_secrets?
+    # TODO: this is hack - should be delegated to cloud clients,
+    # TODO: but cloud clients are considered to work only on Cloud-API level
+    if cloud_name == 'pl_cloud'
+      cloud_secrets and cloud_secrets.login and
+          (has_usable_proxy? or has_valid_password?)
+    else
+      true
+    end
+  end
+
+  def has_usable_proxy?
+    cloud_secrets.secret_proxy
+  end
+
+  def has_valid_password?
+    not cloud_secrets.invalid and cloud_secrets.password
   end
 
   private # --------

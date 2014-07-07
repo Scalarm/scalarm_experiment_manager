@@ -3,20 +3,28 @@ require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class CloudFacadeTest < MiniTest::Test
-
+class PlGridFacadeTest < MiniTest::Test
   require 'infrastructure_facades/infrastructure_errors'
 
+  def setup
+    scheduler = stub_everything
+    @facade = PlGridFacade.new(scheduler)
+  end
+
   def test_schedule_invalid_credentials
+    user_id = mock 'user_id'
+    instances_count = mock 'instances_count'
+    experiment_id = mock 'experiment_id'
     credentials = stub_everything 'credentials' do
       stubs(:invalid).returns(true)
     end
-    cloud_client = stub_everything
-    facade = CloudFacade.new(cloud_client)
-    facade.stubs(:get_cloud_secrets).returns(credentials)
+    scheduler = stub_everything 'scheduler'
+    facade = PlGridFacade.new(scheduler)
+    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    GridCredentials.stubs(:find_by_user_id).with(user_id).returns(credentials)
 
     assert_raises InfrastructureErrors::InvalidCredentialsError do
-      facade.start_simulation_managers('u', 2, 'e')
+      facade.start_simulation_managers(user_id, instances_count, experiment_id)
     end
   end
 
@@ -106,6 +114,16 @@ class CloudFacadeTest < MiniTest::Test
     status = facade._simulation_manager_resource_status(record)
 
     assert_equal :released, status
+  end
+
+  def test_validate_credentials_for
+    record = stub_everything do
+      stubs(:has_usable_credentials?).returns(false)
+    end
+
+    assert_raises InfrastructureErrors::NoCredentialsError do
+      @facade.validate_credentials_for(record)
+    end
   end
 
 end

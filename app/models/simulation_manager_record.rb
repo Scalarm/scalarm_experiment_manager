@@ -110,7 +110,21 @@ module SimulationManagerRecord
     set_attribute('state', :error)
     self.error = error
     self.error_log = error_log if error_log
-    self.save if self.class.find_by_id(self.id)
+    self.save_if_exists
+  end
+
+  def store_no_credentials
+    unless self.no_credentials
+      self.set_attribute('no_credentials', true)
+      self.save_if_exists
+    end
+  end
+
+  def clear_no_credentials
+    if self.no_credentials
+      self.set_attribute('no_credentials', nil)
+      self.save_if_exists
+    end
   end
 
 end

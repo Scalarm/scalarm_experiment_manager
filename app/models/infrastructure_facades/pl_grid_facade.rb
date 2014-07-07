@@ -132,7 +132,13 @@ class PlGridFacade < InfrastructureFacade
   # -- SimulationManager delegation methods --
 
   def _simulation_manager_before_monitor(record)
-    scheduler.prepare_session(shared_ssh_session(record.credentials))
+    validate_credentials_for(record)
+    # Not needed now
+    # scheduler.prepare_session(shared_ssh_session(record.credentials))
+  end
+
+  def validate_credentials_for(record)
+    raise InfrastructureErrors::NoCredentialsError unless record.has_usable_credentials?
   end
 
   def _simulation_manager_stop(record)
@@ -150,7 +156,12 @@ class PlGridFacade < InfrastructureFacade
     ssh = nil
     begin
       ssh = shared_ssh_session(record.credentials)
-    rescue Exception
+    rescue Gsi::ProxyError
+      raise
+    rescue Exception => e
+      # remember this error in case of unable to initialize
+      record.error_log = e.to_s
+      record.save
       return :not_available
     end
 
@@ -182,8 +193,6 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_prepare_resource(record)
-    ssh = shared_ssh_session(record.credentials)
-
     sm_uuid = record.sm_uuid
 
     raise InfrastructureErrors::NoCredentialsError.new if record.credentials.nil?
@@ -193,16 +202,16 @@ class PlGridFacade < InfrastructureFacade
 
     #  upload the code to the Grid user interface machine
     begin
-      record.credentials.scp_start do |scp|
+      record.credentials.scp_session do |scp|
         scheduler.send_job_files(sm_uuid, scp)
       end
 
-      record.credentials.ssh_start do |ssh|
-        if scheduler.submit_job(ssh, record)
-          record.save
-        else
-          record.store_error('install_failed') # TODO: get output from .submit_job and save as error_log
-        end
+      ssh = shared_ssh_session(record.credentials)
+      if scheduler.submit_job(ssh, record)
+        record.save
+      else
+        logger.warn 'Scheduling job failed!'
+        record.store_error('install_failed') # TODO: get output from .submit_job and save as error_log
       end
     rescue Net::SSH::AuthenticationFailed => auth_exception
       logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"

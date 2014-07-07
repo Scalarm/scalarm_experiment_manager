@@ -229,9 +229,15 @@ class SimulationManager
     elsif state == :error
       logger.info 'Has error flag - skipping'
     else
-      before_monitor(record)
-      try_all_monitoring_cases
-      after_monitor(record)
+      begin
+        before_monitor(record)
+        try_all_monitoring_cases
+        after_monitor(record)
+        record.clear_no_credentials
+      rescue InfrastructureErrors::NoCredentialsError => no_creds_error
+        logger.info 'Lack of credentials'
+        record.store_no_credentials
+      end
     end
   end
 
@@ -250,6 +256,8 @@ class SimulationManager
     if DELEGATES.include? action_name
       begin
         infrastructure_action(action_name)
+      rescue InfrastructureErrors::NoCredentialsError
+        raise
       rescue Exception => e
         logger.warn "Exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         record.store_error('resource_action', "#{action_name}: #{e.to_s}")
@@ -261,16 +269,26 @@ class SimulationManager
   end
 
   def infrastructure_action(action_name)
-    # if the error cause is missing or invalid credentials - prevent to perform actions (to protect from authorization errors)
-    if record.error == 'credentials'
-      logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
-      ERROR_DELEGATES[action_name.to_sym]
-    else
-      result = infrastructure.send("_simulation_manager_#{action_name}", record)
-      # NOTICE: terminating state is set twice if stop was invoked from monitoring case
-      set_state(:terminating) if action_name == 'stop'
-      result
+    begin
+      # if the error cause is missing or invalid credentials - prevent to perform actions (to protect from authorization errors)
+      if record.error == 'credentials'
+        logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
+        ERROR_DELEGATES[action_name.to_sym]
+      else
+        result = delegate_to_infrastructure(action_name)
+        # NOTICE: terminating state is set twice if stop was invoked from monitoring case
+        set_state(:terminating) if action_name == 'stop'
+        result
+      end
+    rescue InfrastructureErrors::NoCredentialsError => e
+      logger.warn "No credentials exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+      record.store_no_credentials
+      raise
     end
+  end
+
+  def delegate_to_infrastructure(action_name)
+    infrastructure.send("_simulation_manager_#{action_name}", record)
   end
 
   def respond_to_missing?(m, include_all=false)
