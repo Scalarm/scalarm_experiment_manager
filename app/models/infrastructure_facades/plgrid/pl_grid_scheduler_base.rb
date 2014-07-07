@@ -10,7 +10,14 @@
 # - clean_after_job(ssh, record) - cleans UI user's account from temporary files
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
 
+require 'timeout'
+
 class PlGridSchedulerBase
+  attr_reader :logger
+
+  def initialize(logger)
+    @logger = logger
+  end
 
   def prepare_session(ssh)
     # pass
@@ -38,9 +45,19 @@ ruby simulation_manager.rb
     ssh.exec!("rm scalarm_job_#{job.sm_uuid}.sh")
   end
 
-  #  Create a proxy certificate for the user
+  #  Initialize VOMS-extended proxy certificate for the user
   def voms_proxy_init(ssh, voms)
-    ssh.exec!("voms-proxy-init --voms #{voms}")
+    begin
+      result = nil
+      timeout 10 do
+        # Before proxy init, force to use X509 default certificate and key (from UI storage)
+        # Because by default it could use KeyFS storage
+        result = ssh.exec!("unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms #{voms}")
+      end
+      raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/
+    rescue Timeout::Error
+      raise StandardError.new 'Timeout executing voms-proxy-init - probably key has passphrase'
+    end
   end
 
   def restart(ssh, job)

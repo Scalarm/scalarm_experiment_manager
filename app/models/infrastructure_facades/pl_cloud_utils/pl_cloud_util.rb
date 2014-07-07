@@ -1,10 +1,17 @@
 require 'rest-client'
 require 'json'
 require 'xmlsimple'
+require 'base64'
+
+require_relative 'pl_cloud_util_instance'
+require 'infrastructure_facades/infrastructure_errors'
+require 'gsi'
+
+class PLCloudError < StandardError; end
 
 class PLCloudUtil
-  PLCLOUD_URL = 'https://149.156.10.32:3443'
-  DNAT_URL = 'https://149.156.10.32:8401/dnat'
+  PLCLOUD_URL = 'https://cloud.plgrid.pl:3443'
+  DNAT_URL = "#{PLCLOUD_URL}/dnat"
 
   RE_ID = /ID: (\d+)/
   RE_VM_ID = /VM ID: (\d+)/
@@ -89,7 +96,7 @@ class PLCloudUtil
     # get instance ID
     ids = resp.scan(RE_VM_ID)
     if ids.length > 0
-      if (ids.length != count)
+      if ids.length != count
         Rails.logger.warn("Requested intantiate of #{count} PLCloud machines, but #{ids.length} was created.")
       end
       ids.map {|i| i[0].to_i}
@@ -146,16 +153,27 @@ CONTEXT = [
   # @param [Array<String>] args list of arguments for command, ie. "create", "file_content_direct", ...
   def execute(command, args)
     begin
-      url = "#{PLCLOUD_URL}/exec/#{command}"
-      str_args = "[\"#{args.join('", "')}\"]"
-
-      RestClient.post url, str_args,
-                      'One-User' => @secrets.login, 'One-Secret' => @secrets.secret_password,
-                      :content_type => :json, :accept => :json
+      parsed_resp = JSON.parse(exec_post(command, args))
+      status, data = parsed_resp['status'], parsed_resp['data']
     rescue
       Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
       nil
     end
+
+    raise PLCloudError.new data if status != 0
+    raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
+
+    data
+  end
+
+  def exec_post(command, args)
+    url = "#{PLCLOUD_URL}/exec/#{command}"
+    str_args = "[\"#{args.join('", "')}\"]"
+
+    RestClient.post url, str_args,
+                       'One-User' => @secrets.login,
+                       'One-Secret' => (@secrets.secret_proxy or @secrets.secret_password),
+                       :content_type => :json, :accept => :json
   end
 
   # @param [String] vm_ip
@@ -164,41 +182,37 @@ CONTEXT = [
   def redirect_port(vm_ip, port)
     # equivalent: oneport -a vm_ip -p port
     # ca_file = '/software/local/cloud/rest-api-client/1.0/etc/one38.crt'
-
     # TODO: use CA, "ssl_ca_file = path_to_ca, verify_ssl: OpenSSL::SSL::VERIFY_PEER" to RestClient Resource
-
-    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
-
-    payload = [{'proto' => 'tcp', 'port' => port.to_i}].to_json
-
     begin
-      resp = dnat[vm_ip].post payload, content_type: 'text/json'
+      resp = RestClient.post "#{DNAT_URL}/#{vm_ip}",
+                             {'port' => port, 'proto' => 'tcp'}.to_json,
+                             'One-User' => @secrets.login,
+                             'One-Secret' => (@secrets.secret_proxy or @secrets.secret_password),
+                             :content_type => :json, :accept => :json
     rescue
-      raise "Exception during POST to port redirection service: #{$!}\nPayload: #{payload}"
+      raise InfrastructureErrors::CloudError.new "Exception during POST to port redirection service: #{$!}"
     end
+
+    raise PLCloudError.new('Redirect port: 400 Bad Request') if resp =~ /400 Bad Request/
 
     data = JSON.parse resp
 
-    unless data.kind_of?(Array) and data.size == 1
-      raise "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
+    unless data.kind_of?(Hash)
+      raise InfrastructureErrors::CloudError.new "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
     end
 
-    dh = data[0]
+    Rails.logger.debug("Successful PLCloud VM port redirection:\n #{data['pubIp']}:#{data['pubPort']} -> #{data['privIp']}:#{data['privPort']}")
 
-    unless dh.kind_of?(Hash)
-      raise "Redirection PLCloud VM port #{vm_ip}:#{port} failed. Response from server:\n#{resp}"
-    end
-
-    Rails.logger.debug("Successful PLCloud VM port redirection:\n #{dh['pubIp']}:#{dh['pubPort']} -> #{dh['privIp']}:#{dh['privPort']}")
-
-    {host: dh['pubIp'], port: dh['pubPort']}
+    {host: data['pubIp'], port: data['pubPort']}
   end
 
   # @return [Hash] {<private_port_num> => {host: <public_ip>, port: <public_port_num>}}
   # @param [String] vm_ip virtual machine's private ip
   def redirections_for(vm_ip)
-    dnat = RestClient::Resource.new(DNAT_URL, user: @secrets.login, password: @secrets.secret_password)
-    resp = dnat[vm_ip].get
+    resp = RestClient.get "#{DNAT_URL}/#{vm_ip}",
+                          content_type: :json, accept: :json
+    raise PLCloudError if resp =~ /400 Bad Request/
+
     data = JSON.parse resp
 
     Hash[data.map {|r| [r['privPort'], {host: r['pubIp'], port: r['pubPort']}]}]
@@ -228,6 +242,13 @@ CONTEXT = [
     infos = XmlSimple.xml_in(resp, 'ForceArray' => false)['IMAGE']
     infos = [infos] unless infos.kind_of?(Array)
     return Hash[infos.map {|i| [i['ID'], i]}]
+  end
+
+  # -- Proxy utils --
+
+  # Arguments for proxy from PL-Grid OpenID: proxy cert, user cert
+  def self.certs_to_pl_cloud_secret_proxy(*certs)
+    (certs.map {|cert_txt| Base64.encode64(cert_txt.gsub('<br>', "\n")).gsub("\n", '\n')}).join('|')
   end
 
 end

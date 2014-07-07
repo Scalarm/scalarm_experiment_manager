@@ -3,7 +3,11 @@
 # - pid => PID of SimulationManager process executed at remote machine
 
 class PrivateMachineRecord < MongoActiveRecord
+  extend Forwardable
   include SimulationManagerRecord
+
+  # delegate session methods just for convenience
+  def_delegators :@credentials, :upload_file, :ssh_session, :scp_session
 
   def self.collection_name
     'private_machine_records'
@@ -15,18 +19,6 @@ class PrivateMachineRecord < MongoActiveRecord
 
   def task_desc
     "#{credentials.nil? ? '[credentials missing!]' : credentials.machine_desc} (#{pid.nil? ? 'init' : pid})"
-  end
-
-  def upload_file(*args)
-    credentials.upload_file(*args)
-  end
-
-  def ssh_session(*args)
-    credentials.ssh_session(*args)
-  end
-
-  def ssh_start(*args, &block)
-    credentials.ssh_start(*args, &block)
   end
 
   def credentials

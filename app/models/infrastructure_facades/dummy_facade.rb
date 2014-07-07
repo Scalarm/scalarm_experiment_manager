@@ -67,6 +67,10 @@ class DummyFacade < InfrastructureFacade
     'Dummy log'
   end
 
+  def _simulation_manager_prepare_resource(record)
+    logger.info 'Preparing resource'
+  end
+
   def _simulation_manager_install(record)
     logger.info "Installing SM: #{record.resource_id}"
   end

@@ -40,12 +40,8 @@
         -# ignore if not found
 
       -# general record info
-      - record_state = case record.state
-        - when :error then t('infrastructures.sm_dialog.state.error')
-        - when :initialized then t('infrastructures.sm_dialog.state.initialized')
-        - when :before_init then t('infrastructures.sm_dialog.state.before_init')
-        - when :terminating then t('infrastructures.sm_dialog.state.terminating')
-        - else t('infrastructures.sm_dialog.state.unknown')
+      - record_state = t("infrastructures.sm_dialog.state.#{record.state}",
+          default: t('infrastructures.sm_dialog.state.unknown'))
       %li
         %strong= t('infrastructures.sm_dialog.simulation_manager_state') + ': '
         =record_state

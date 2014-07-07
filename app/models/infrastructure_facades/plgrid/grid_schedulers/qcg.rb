@@ -1,4 +1,4 @@
-require_relative '../pl_grid_scheduler_base'
+ require_relative '../pl_grid_scheduler_base'
 
 module QcgScheduler
 
@@ -7,6 +7,8 @@ module QcgScheduler
     STATE_RE = /.*Status:\s+(\w+).*/
     STATUS_DESCRIPTION_RE = /.*StatusDescription:\s+(.*)\n/
     STATUS_DESC_RE = /.*StatusDesc:\s+(.*)\n/
+
+    DEFAULT_PROXY_DURATION_H = 12
 
     def self.long_name
       'PL-Grid QosCosGrid'
@@ -53,16 +55,18 @@ module QcgScheduler
     end
 
     def send_job_files(sm_uuid, scp)
-      scp.upload! "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", '.'
-      scp.upload! "/tmp/scalarm_job_#{sm_uuid}.sh", '.'
-      scp.upload! "/tmp/scalarm_job_#{sm_uuid}.qcg", '.'
+      paths = ["/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
+               "/tmp/scalarm_job_#{sm_uuid}.sh",
+               "/tmp/scalarm_job_#{sm_uuid}.qcg"
+      ]
+      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, job)
       ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
-      submit_job_output = ssh.exec!("qcg-sub scalarm_job_#{job.sm_uuid}.qcg")
+      submit_job_output = ssh.exec!(PlGridScheduler.qcg_command "qcg-sub scalarm_job_#{job.sm_uuid}.qcg")
 
-      Rails.logger.debug("QCG output lines: #{submit_job_output}")
+      logger.debug("QCG output lines: #{submit_job_output}")
 
       submit_job_output and (job.job_id = QcgScheduler::PlGridScheduler.parse_job_id(submit_job_output))
     end
@@ -131,12 +135,12 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!("qcg-info #{job_id}")
+      ssh.exec!(PlGridScheduler.qcg_command "qcg-info #{job_id}")
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!("qcg-cancel #{job.job_id}")
-      Rails.logger.debug("QCG cancel output:\n#{output}")
+      output = ssh.exec!(PlGridScheduler.qcg_command "qcg-cancel #{job.job_id}")
+      logger.debug("QCG cancel output:\n#{output}")
       output
     end
 
@@ -180,6 +184,12 @@ module QcgScheduler
         'hydra.icm.edu.pl',
         'moss.man.poznan.pl',
       ]
+    end
+
+    # Wraps QCG command with additional enviroment variables
+    # Proxy duration is in hours and it must be shorter than current proxy cert duration
+    def self.qcg_command(command, proxy_duration_h=DEFAULT_PROXY_DURATION_H)
+      "QCG_ENV_PROXY_DURATION_MIN=#{proxy_duration_h} #{command}"
     end
 
   end

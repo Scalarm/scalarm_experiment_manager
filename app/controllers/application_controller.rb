@@ -6,7 +6,8 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   #protect_from_forgery with: :exception
 
-  before_filter :authenticate, :except => [:login, :login_openid_google, :openid_callback_google]
+  before_filter :authenticate, :except => [:login, :login_openid_google, :openid_callback_google,
+                                           :login_openid_plgrid, :openid_callback_plgrid]
   before_filter :start_monitoring
   after_filter :stop_monitoring
 

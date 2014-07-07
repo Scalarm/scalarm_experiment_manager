@@ -88,7 +88,7 @@ class window.InfrastructuresTree
       return false
 
     # function for comparing nodes: name, sm_initialized
-    node_hash_fun = (d) => [d.name, d.state].toString()
+    node_hash_fun = (d) => [d.name, d.state, d.no_credentials].toString()
     array_a = childs_local.map(node_hash_fun).sort()
     array_b = childs_remote.map(node_hash_fun).sort()
 
@@ -218,9 +218,10 @@ class window.InfrastructuresTree
           # TODO: translation
           switch d.state
             when 'error' then 'An error occured for this Simulation Manager'
-            when 'initialized' then 'Simulation Manager is working'
-            when 'before_init' then 'Simulation Manager waits for initialization'
-            when 'terminating' then 'Simulation Manager waits for termination'
+            when 'created' then 'Waiting for resource availability'
+            when 'initializing' then 'Initializing resource'
+            when 'running' then 'Simulation Manager is working'
+            when 'terminating' then 'Waiting for resource termination'
             else 'Unknown Simulation Manager state'
         )
 
@@ -231,6 +232,13 @@ class window.InfrastructuresTree
         .style("transform", "translate(16px,4px)")
         .attr("title", (d) => d.name)
 
+
+      # alert icon
+      g.append("svg:image")
+      .style("display", (d) => unless d.no_credentials then 'none' else 'inline')
+      .attr("width", 24).attr("height", 24).attr("xlink:href", '/assets/alert_icon.png')
+      .style("transform", "translate(-30px,-0px)")
+      .attr("title", "Credentials needed for monitoring this resource are missing")
 
       # info button
       g.append("svg:image")

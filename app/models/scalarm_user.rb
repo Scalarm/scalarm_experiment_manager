@@ -59,7 +59,9 @@ class ScalarmUser < MongoActiveRecord
     user
   end
 
-
+  def grid_credentials
+    GridCredentials.find_by_user_id(id)
+  end
 
   def banned_infrastructure?(infrastructure_name)
     if credentials_failed and credentials_failed.include?(infrastructure_name) and

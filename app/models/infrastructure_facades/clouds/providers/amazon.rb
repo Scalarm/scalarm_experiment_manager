@@ -30,10 +30,12 @@ module AmazonCloud
     end
 
     def instantiate_vms(base_name, image_id, number, params)
+      Rails.logger.info "PARAMS: #{params}"
+
       instances = @ec2.regions['us-east-1'].instances.create(:image_id => image_id,
                                   :count => number,
-                                  :instance_type => params[:instance_type],
-                                  :security_groups => [ params[:security_group] ])
+                                  :instance_type => params['instance_type'],
+                                  :security_groups => [ params['security_group'] ])
       instances = [instances] unless instances.kind_of?(Array)
       instances.map &:id
     end

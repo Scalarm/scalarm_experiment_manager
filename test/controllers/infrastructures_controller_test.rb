@@ -117,7 +117,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_simulation_manager_commands
-    commands = %w(restart stop)
+    commands = %w(restart stop destroy_record)
     commands.each do |cmd|
       mock_sm = mock 'simulation_manager' do
         expects(cmd).once
@@ -148,38 +148,6 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
       assert_equal 'error', JSON.parse(response.body)['status'], "facade: #{facade.short_name}, response: #{response.body}"
     end
-  end
-
-  # TODO
-  # Integration with PlGridFacade test
-  def test_simulation_manager_pl_grid_command
-    skip('TODO FAILS (probably mocha rescues some exception)')
-
-    require 'infrastructure_facades/pl_grid_facade'
-    uid = @tmp_user_id
-    record_mock = stub_everything 'record' do
-      stubs(:id).returns('1')
-      stubs(:user_id).returns(uid)
-      stubs(:scheduler_type).returns('glite')
-    end
-    scheduler_mock = stub_everything 'scheduler' do
-      expects(:cancel).once
-    end
-    facade = mock 'facade' do
-      expects(:shared_ssh_session).returns(stub_everything)
-      expects(:get_sm_record_by_id).with('1').returns(record_mock)
-      expects(:scheduler).returns(scheduler_mock).once
-
-      expects(:init_resources).once
-      expects(:clean_up_resources).once
-    end
-
-    InfrastructureFacadeFactory.expects(:get_facade_for).with('glite').returns(facade)
-
-    post :simulation_manager_command, {record_id: '1', infrastructure_name: 'glite', command: 'stop'},
-         {user: @tmp_user_id}
-
-    assert_equal 'ok', JSON.parse(response.body)['status'], response.body
   end
 
   def test_schedule_with_invalid_creds

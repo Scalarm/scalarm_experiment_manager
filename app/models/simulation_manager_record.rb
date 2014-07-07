@@ -18,14 +18,46 @@
 
 
 module SimulationManagerRecord
+  POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
+
   def initialize_fields
-    self.created_at = self.sm_initialized_at = Time.now
-    self.sm_initialized = false
+    set_state(:created)
   end
 
+  # Backward compatibile method - using old data from database if "state" field is not found
   def state
-    (self.error and :error) or (self.is_terminating and :terminating) or (self.sm_initialized and :initialized) or
-        :before_init
+    state_value = method_missing(:state)
+
+    state_value and state_value.to_sym or old_state
+  end
+
+  def old_state
+    (self.error and :error) or (self.is_terminating and :terminating) or (self.sm_initialized and :running) or
+        :created
+  end
+
+  def state=(state)
+    set_state(state)
+  end
+
+  def set_state(state)
+    case state
+      when :created
+        self.created_at = self.sm_initialized_at = Time.now
+      when :initializing
+        self.sm_initialized_at = Time.now
+      when :running
+        # pass
+      when :terminating
+        self.stopped_at = Time.now
+      when :error
+        self.store_error('unknown') unless self.error
+      else
+        raise StandardError.new "Unknown state to set: #{state}"
+    end
+
+    set_attribute('state', state)
+    save
   end
 
   # Time to wait for resource initialization - after that, VM will be reinitialized
@@ -35,7 +67,8 @@ module SimulationManagerRecord
   end
 
   def to_h
-    super.merge({ name: self.resource_id, state: self.state.to_s })
+    h = super.merge(name: (self.resource_id or '...'))
+    h.has_key?('state') and h or h.merge(state: self.state.to_s)
   end
 
   def to_json
@@ -57,13 +90,7 @@ module SimulationManagerRecord
   end
 
   def init_time_exceeded?
-    (not self.sm_initialized) and (self.sm_initialized_at + self.max_init_time < Time.now)
-  end
-
-  def set_stop
-    self.is_terminating = true
-    self.stopped_at = Time.now
-    self.save
+    self.state == :before_init and (self.sm_initialized_at + self.max_init_time < Time.now)
   end
 
   def stopping_time_exceeded?
@@ -80,9 +107,24 @@ module SimulationManagerRecord
   end
 
   def store_error(error, error_log=nil)
+    set_attribute('state', :error)
     self.error = error
     self.error_log = error_log if error_log
-    self.save if self.class.find_by_id(self.id)
+    self.save_if_exists
+  end
+
+  def store_no_credentials
+    unless self.no_credentials
+      self.set_attribute('no_credentials', true)
+      self.save_if_exists
+    end
+  end
+
+  def clear_no_credentials
+    if self.no_credentials
+      self.set_attribute('no_credentials', nil)
+      self.save_if_exists
+    end
   end
 
 end

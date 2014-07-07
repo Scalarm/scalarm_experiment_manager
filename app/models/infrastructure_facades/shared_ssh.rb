@@ -1,6 +1,9 @@
 # Should be mixin for InfrastructureFacades subclasses
 # needs:
 # - logger
+
+require 'gsi'
+
 module SharedSSH
   attr_reader :ssh_sessions
 
@@ -10,18 +13,27 @@ module SharedSSH
     @mutex = Mutex.new
   end
 
-  def shared_ssh_session(credentials)
+  def shared_ssh_session(credentials, id=nil)
     @mutex.synchronize do
-      if @ssh_sessions.include? credentials.id
-        session = @ssh_sessions[credentials.id]
+      # SSH sessions hash can have keys of only credentials_id or (credentials_id + user_defined_id)
+      session_id = (id ? "#{credentials.id.to_s}_#{id}" : credentials.id.to_s)
+      if @ssh_sessions.include? session_id
+        session = @ssh_sessions[session_id]
         if session and not session.closed?
-          logger.debug 'using existing ssh session'
+          logger.debug "using existing ssh session: #{session_id}"
           return session
         end
       end
 
-      logger.debug 'creating ssh session'
-      @ssh_sessions[credentials.id] = credentials.ssh_session
+      logger.debug "creating ssh session: #{session_id}"
+      begin
+        @ssh_sessions[session_id] = credentials.ssh_session
+      rescue Gsi::ProxyError => proxy_error
+        logger.info "Proxy for user #{credentials.user_id} is invalid: #{proxy_error.class} - removing proxy."
+        credentials.secret_proxy = nil
+        credentials.save
+        raise InfrastructureErrors::NoCredentialsError
+      end
     end
   end
 

@@ -82,4 +82,33 @@ class PlGridJob < MongoActiveRecord
     raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid
   end
 
+  def has_usable_credentials?
+    credentials and credentials.login and
+        (has_usable_proxy? or has_valid_password?)
+  end
+
+  def has_usable_proxy?
+    credentials.secret_proxy and valid_proxy?(credentials.secret_proxy)
+  end
+
+  def has_valid_password?
+    not credentials.invalid and credentials.password
+  end
+
+  # require 'grid-proxy'
+
+  def valid_proxy?(proxy)
+    true
+
+    # TODO
+    # begin
+    #   GP::Proxy.new(proxy).verify!(ca_cert)
+    # rescue GP::ProxyValidationError => validation_error
+    #   Rails.logger.warn("Proxy validation error for PL-Grid job #{self.id}: #{validation_error.to_s}")
+    #   false
+    # else
+    #   true
+    # end
+  end
+
 end

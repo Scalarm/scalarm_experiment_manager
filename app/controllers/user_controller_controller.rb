@@ -2,10 +2,12 @@ require 'openid'
 require 'openid/extensions/ax'
 
 require 'openid_providers/google_openid'
+require 'openid_providers/plgrid_openid'
 
 class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
+  include PlGridOpenID
 
   def successful_login
     #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
@@ -63,10 +65,7 @@ class UserControllerController < ApplicationController
 
   # Get stateless mode OpenID::Consumer instance for this controller.
   def consumer
-    if @consumer.nil?
-      @consumer = OpenID::Consumer.new(session, nil) # 'nil' for stateless mode
-    end
-    return @consumer
+    @consumer ||= OpenID::Consumer.new(session, nil) # 'nil' for stateless mode
   end
 
 end

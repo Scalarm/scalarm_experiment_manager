@@ -7,7 +7,15 @@ module UserControllerHelper
       if credentials.invalid
         'invalid'
       else
-        'ok'
+        # TODO: should be delegated somewhere...
+        case infrastructure_name
+          when 'qsub'
+            (credentials.secret_proxy and 'proxy') or (credentials.password and 'ok') or 'not-in-db'
+          when 'pl_cloud'
+            (credentials.secret_proxy and 'proxy') or (credentials.secret_password and 'ok') or 'not-in-db'
+          else
+            'ok'
+        end
       end
     else
       'not-in-db'
@@ -31,4 +39,13 @@ module UserControllerHelper
   def openid_callback_google_url
     url_for :action => 'openid_callback_google', :only_path => false
   end
+
+  def login_openid_plgrid_url
+    url_for :action => 'login_openid_plgrid', :only_path => false
+  end
+
+  def openid_callback_plgrid_url
+    url_for :action => 'openid_callback_plgrid', :only_path => false
+  end
+
 end

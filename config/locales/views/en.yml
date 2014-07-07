@@ -7,3 +7,4 @@ en:
       account_link: "Logged as '%{login}'"
       logout_link: Logout
       help_button: "Toggle help"
+      refresh_proxy: "Fetch PL-Grid proxy certificate"

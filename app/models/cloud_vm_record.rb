@@ -15,6 +15,7 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class CloudVmRecord < MongoActiveRecord
   include SimulationManagerRecord
+  include SSHEnabledRecord
 
   SSH_AUTH_METHODS = %w(password)
 
@@ -26,29 +27,16 @@ class CloudVmRecord < MongoActiveRecord
     'vm_records'
   end
 
-  #  upload file to the VM - use only password authentication
-  def upload_file(local_path, remote_path='.')
-    Net::SCP.start(public_host, image_secrets.image_login, ssh_params) do |scp|
-      scp.upload! local_path, remote_path
-    end
-  end
-
-  def ssh_session
-    Net::SSH.start(public_host, image_secrets.image_login, ssh_params)
-  end
-
-  def ssh_start
-    Net::SSH.start(public_host, image_secrets.image_login, ssh_params) do |ssh|
-      yield ssh
-    end
-  end
-
   def image_secrets
     @image_secrets ||= CloudImageSecrets.find_by_id(image_secrets_id)
   end
 
   def experiment
     @experiment ||= Experiment.find_by_id(experiment_id)
+  end
+
+  def cloud_secrets
+    @cloud_secrets ||= CloudSecrets.find_by_query(cloud_name: cloud_name, user_id: user_id)
   end
 
   # additional info for specific cloud should be provided by CloudClient
@@ -86,6 +74,35 @@ class CloudVmRecord < MongoActiveRecord
   def validate
     raise InfrastructureErrors::NoCredentialsError if image_secrets_id.nil?
     raise InfrastructureErrors::InvalidCredentialsError if image_secrets.invalid
+  end
+
+  def has_usable_cloud_secrets?
+    # TODO: this is hack - should be delegated to cloud clients,
+    # TODO: but cloud clients are considered to work only on Cloud-API level
+    if cloud_name == 'pl_cloud'
+      cloud_secrets and cloud_secrets.login and
+          (has_usable_proxy? or has_valid_password?)
+    else
+      true
+    end
+  end
+
+  def has_usable_proxy?
+    cloud_secrets.secret_proxy
+  end
+
+  def has_valid_password?
+    not cloud_secrets.invalid and cloud_secrets.secret_password
+  end
+
+  private # --------
+
+  def _get_ssh_session
+    Net::SSH.start(public_host, image_secrets.image_login, ssh_params)
+  end
+
+  def _get_scp_session
+    Net::SCP.start(public_host, image_secrets.image_login, ssh_params)
   end
 
 end
