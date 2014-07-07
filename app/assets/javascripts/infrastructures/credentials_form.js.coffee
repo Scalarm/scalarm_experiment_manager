@@ -25,6 +25,7 @@ class window.CredentialsDialog
       when 'not-in-db'
         toastr.error(msg) if msg
         @showAlert(false)
+        @showProxyInfo(false)
         @showBannedAlert(false)
         @showRemoveButton(false)
         @changeIcon('lack')
@@ -32,6 +33,13 @@ class window.CredentialsDialog
         toastr.error(msg) if msg
         @showRemoveButton(true)
         @changeIcon('alert')
+      when 'proxy'
+        toastr.success(msg) if msg
+        @showAlert(false)
+        @showProxyInfo(true)
+        @showBannedAlert(false)
+        @showRemoveButton(true)
+        @changeIcon('ok')
       when 'ok'
         toastr.success(msg) if msg
         @showAlert(false)
@@ -51,6 +59,7 @@ class window.CredentialsDialog
       when 'removed-ok'
         toastr.success(msg) if msg
         @showAlert(false)
+        @showProxyInfo(false)
         @showRemoveButton(false)
         @changeIcon('lack')
         @clearForm()
@@ -109,6 +118,10 @@ class window.CredentialsDialog
 
   showAlert: (visible) ->
     panel = $("##{@baseName}-alert-panel")
+    visible and panel.show() or panel.hide()
+
+  showProxyInfo: (visible) ->
+    panel = $("##{@baseName}-proxy-info")
     visible and panel.show() or panel.hide()
 
   showBannedAlert: (visible) ->

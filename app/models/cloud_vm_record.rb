@@ -92,7 +92,7 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def has_valid_password?
-    not cloud_secrets.invalid and cloud_secrets.password
+    not cloud_secrets.invalid and cloud_secrets.secret_password
   end
 
   private # --------
