@@ -88,7 +88,7 @@ class window.InfrastructuresTree
       return false
 
     # function for comparing nodes: name, sm_initialized
-    node_hash_fun = (d) => [d.name, d.state].toString()
+    node_hash_fun = (d) => [d.name, d.state, d.no_credentials].toString()
     array_a = childs_local.map(node_hash_fun).sort()
     array_b = childs_remote.map(node_hash_fun).sort()
 
@@ -232,6 +232,13 @@ class window.InfrastructuresTree
         .style("transform", "translate(16px,4px)")
         .attr("title", (d) => d.name)
 
+
+      # alert icon
+      g.append("svg:image")
+      .style("display", (d) => unless d.no_credentials then 'none' else 'inline')
+      .attr("width", 24).attr("height", 24).attr("xlink:href", '/assets/alert_icon.png')
+      .style("transform", "translate(-30px,-0px)")
+      .attr("title", "Credentials needed for monitoring this resource are missing")
 
       # info button
       g.append("svg:image")
