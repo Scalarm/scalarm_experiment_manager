@@ -68,7 +68,7 @@ module PlGridOpenID
 
     Rails.logger.debug("User logged in with OpenID identity: #{plgrid_identity}")
 
-    scalarm_user = OpenIDUtils::get_or_create_user_with(:dn, ax_attrs[:dn], plgrid_login)
+    scalarm_user = PlGridOpenID::get_or_create_user(ax_attrs[:dn], plgrid_login)
 
     x509_proxy_cert =
         Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
@@ -80,6 +80,12 @@ module PlGridOpenID
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
     session[:user] = scalarm_user.id
     successful_login
+  end
+
+  def self.get_or_create_user(dn, plgrid_login)
+    OpenIDUtils::get_user_with(dn: dn, login: plgrid_login) or
+        OpenIDUtils::get_user_with(dn: dn) or OpenIDUtils::get_user_with(login: plgrid_login) or
+        OpenIDUtils::create_user_with(plgrid_login, dn: dn, login: plgrid_login)
   end
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)

@@ -47,14 +47,17 @@ module OpenIDUtils
   end
 
   def self.get_or_create_user_with(attribute, value, new_login=value)
-    ScalarmUser.send("find_by_#{attribute}", value) or create_user_with(attribute, value, new_login)
+    get_user_with(attribute => value) or create_user_with(new_login, attribute => value)
   end
 
-  def self.create_user_with(attribute, value, login)
+  def self.get_user_with(query)
+    ScalarmUser.find_by_query(query)
+  end
+
+  def self.create_user_with(login, query)
     # TODO: check if login is not used?
     user_hash = { login: login }
-    user_hash[attribute.to_sym] = value
-    user = ScalarmUser.new(user_hash)
+    user = ScalarmUser.new(query.merge(user_hash))
     user.save
     user
   end
