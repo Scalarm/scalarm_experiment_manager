@@ -12,7 +12,7 @@ module PlGridOpenID
     begin
       oidreq = consumer.begin(PLGRID_OID_URI)
     rescue OpenID::OpenIDError => e
-      flash[:error] = t('openid.provider_discovery_failed', provider_url: plgrid_oid_url,
+      flash[:error] = t('openid.provider_discovery_failed', provider_url: PLGRID_OID_URI,
                         error: e.to_s)
       redirect_to login_path
       return
