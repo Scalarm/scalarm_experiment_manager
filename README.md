@@ -15,20 +15,20 @@ To run the services you need to fulfill the following requirements:
 Ruby version
 ------------
 
-Currently we use and test Scalarm against MRI 2.1.1 but the Rubinius version of Ruby should be good as well.
+Currently we use and test Scalarm against MRI 2.1.2 but the Rubinius version of Ruby should be good as well.
 
 ```
-$ sudo curl -L https://get.rvm.io | bash
+$ curl -L https://get.rvm.io | bash
 ```
 
 Agree on anything they ask :)
 
 ```
 $ source $HOME/.rvm/scripts/rvm
-$ rvm install 2.1.1
+$ rvm install 2.1.2
 ```
 
-Also agree on anything. After the last command, rubinius version of ruby will be downloaded and installed from source.
+Also agree on anything. After the last command, a valid ruby version will be downloaded and installed from sources.
 
 
 System dependencies
@@ -104,6 +104,7 @@ db_name: 'scalarm_db'
 monitoring:
   db_name: 'scalarm_monitoring'
   metrics: 'cpu:memory:storage'
+  interval: 60
 ```
 
 In the "config/puma.rb" configuration of the PUMA web server is stored:
