@@ -79,6 +79,7 @@ development:
   information_service_pass: scalarm
   # if you want to communicate through HTTP
   information_service_development: true
+  storage_manager_development: true
 
 test:
   secret_key_base: 'd132fd22bc612e157d722e980c4b0525b938f225f9f7f66ea'
@@ -87,6 +88,7 @@ test:
   information_service_pass: scalarm
   # if you want to communicate through HTTP
   information_service_development: true
+  storage_manager_development: true
 
 production:
   secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
