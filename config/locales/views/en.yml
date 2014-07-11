@@ -8,3 +8,5 @@ en:
       logout_link: Logout
       help_button: "Toggle help"
       refresh_proxy: "Fetch PL-Grid proxy certificate"
+  session:
+    expired: "Your session was terminated. Please, log in again."

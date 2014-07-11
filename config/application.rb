@@ -18,6 +18,7 @@ module ScalarmExperimentManager
     # TODO this should be taken from the information service registration
     config.manager_id = 1
     config.experiment_seeks = {}
+    config.session_threshold = 30*60 # max session time in seconds - currently it is 30 minutes
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
