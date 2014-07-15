@@ -1,6 +1,6 @@
 %li
   %strong= t('infrastructure.information.private_machine.sm_info.machine_desc') + ': '
-  =record.credentials.machine_desc.to_sramow
+  =record.credentials.machine_desc.to_s
 - if record.pid
   %li
     %strong= t('infrastructure.information.private_machine.sm_info.pid') + ': '
