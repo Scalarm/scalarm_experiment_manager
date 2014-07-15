@@ -9,7 +9,7 @@ class ExperimentManager
     @experiment_manager_address = url
     @user = config['experiment_manager_user']
     @pass = config['experiment_manager_pass']
-    @development = config.include?('development') and config['development']
+    @development = config.include?('development')
   end
 
   def get_experiment_id

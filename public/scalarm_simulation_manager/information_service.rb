@@ -7,7 +7,7 @@ class InformationService
 
   def initialize(config)
     @information_service_url = config['information_service_url']
-    @development = config.include?('development') and config['development']
+    @development = config.include?('development')
   end
 
   def get_experiment_managers

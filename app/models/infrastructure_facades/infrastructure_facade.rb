@@ -73,6 +73,12 @@ class InfrastructureFacade
       sm_config['start_at'] = Time.parse(start_at)
     end
 
+    Rails.logger.debug("Development mode set ? : #{Rails.application.secrets.include?(:information_service_development)}")
+
+    if Rails.application.secrets.include?(:information_service_development)
+      sm_config['development'] = true
+    end
+
     IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
     # zip all files
     %x[zip /tmp/scalarm_simulation_manager_#{sm_uuid}.zip scalarm_simulation_manager_#{sm_uuid}/*]
