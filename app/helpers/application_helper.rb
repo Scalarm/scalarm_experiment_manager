@@ -1,7 +1,11 @@
 module ApplicationHelper
 
   def log_bank_url(storage_manager_url, experiment)
-    "https://#{storage_manager_url}/experiments/#{experiment.id}"
+    if Rails.application.secrets.include?(:storage_manager_development)
+      "http://#{storage_manager_url}/experiments/#{experiment.id}"
+    else
+      "https://#{storage_manager_url}/experiments/#{experiment.id}"
+    end
   end
 
   def log_bank_experiment_size_url(storage_manager_url, experiment)
