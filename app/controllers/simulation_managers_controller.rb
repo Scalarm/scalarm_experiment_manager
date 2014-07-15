@@ -2,16 +2,17 @@ require 'securerandom'
 
 class SimulationManagersController < ApplicationController
 
+  before_filter :set_user_id
+  before_filter :load_infrastructure
+
   def index
-    user_id = @sm_user.blank? ? @current_user.id : @sm_user.user_id
-    infrastructure_facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure])
     result = { status: 'ok' }
 
-    if infrastructure_facade.blank?
+    if @infrastructure_facade.blank?
       result[:status] = 'error'
       result[:msg] = t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure])
     else
-      sm_records = infrastructure_facade.get_sm_records(user_id)
+      sm_records = @infrastructure_facade.get_sm_records(@user_id)
       result[:sm_records] = sm_records.map(&:to_h)
     end
 
@@ -23,18 +24,15 @@ class SimulationManagersController < ApplicationController
   end
 
   def code
-    user_id = @sm_user.blank? ? @current_user.id : @sm_user.user_id
-    infrastructure_facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure])
-
-    if infrastructure_facade.blank?
+    if @infrastructure_facade.blank?
       render inline: t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure]), status: 400
     else
-      sm_record = infrastructure_facade.get_sm_records(user_id, nil).select{|sm| sm.id.to_s == params[:id]}.first
+      sm_record = @infrastructure_facade.get_sm_records(@user_id, nil).select{|sm| sm.id.to_s == params[:id]}.first
 
       if sm_record.blank? or sm_record.sm_uuid.blank?
         render inline: t('simulation_managers.not_found', id: params[:id]), status: 400
       else
-        code_path = infrastructure_facade.simulation_manager_code(sm_record)
+        code_path = @infrastructure_facade.simulation_manager_code(sm_record)
 
         send_file code_path, type: 'application/zip'
       end
@@ -43,5 +41,33 @@ class SimulationManagersController < ApplicationController
   end
 
   def update
+    sm_record = @infrastructure_facade.get_sm_records(@user_id, nil).select{|sm| sm.id.to_s == params[:id]}.first
+
+    unless sm_record.nil?
+      JSON.parse(params[:parameters]).each do |key, value|
+        if key == 'state'
+          sm_record.set_state(value.to_sym)
+        else
+          sm_record.send("#{key}=", value)
+        end
+
+      end
+
+      sm_record.save_if_exists
+
+      render inline: 'SM updated'
+    else
+      render inline: 'SM not found', status: 404
+    end
+  end
+
+  private
+
+  def set_user_id
+    @user_id = @sm_user.blank? ? @current_user.id : @sm_user.user_id
+  end
+
+  def load_infrastructure
+    @infrastructure_facade = InfrastructureFacadeFactory.get_facade_for(params.require(:infrastructure))
   end
 end

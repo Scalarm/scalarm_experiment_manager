@@ -52,6 +52,11 @@ class PrivateMachineFacade < InfrastructureFacade
           start_at: params[:start_at],
           sm_uuid: SecureRandom.uuid
       )
+
+      if Rails.application.secrets.include?(:infrastructure_side_monitoring)
+        record.infrastructure_side_monitoring = true
+      end
+
       record.initialize_fields
       record.save
     end
@@ -99,7 +104,11 @@ class PrivateMachineFacade < InfrastructureFacade
   # -- SimulationManager delegation methods --
 
   def _simulation_manager_stop(record)
-    shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
+    if record.infrastructure_side_monitoring
+      record.cmd_to_execute = "kill -9 #{record.pid}"
+    else
+      shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
+    end
   end
 
   def _simulation_manager_restart(record)
@@ -171,5 +180,25 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   # --
+
+  def simulation_manager_code(sm_record)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+
+    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+
+    Dir.chdir('/tmp')
+    FileUtils.remove_dir(code_dir, true)
+    FileUtils.mkdir(code_dir)
+    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
+
+    #scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
+    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+
+    Dir.chdir(Rails.root)
+
+    File.join('/', 'tmp', code_dir + ".zip")
+  end
 
 end

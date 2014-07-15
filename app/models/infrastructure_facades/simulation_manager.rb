@@ -114,7 +114,7 @@ class SimulationManager
         terminated_untimely: {
             source_states: [:running],
             target_state: :error,
-            resource_status: all_resource_states - [:running_sm],
+            #resource_status: all_resource_states - [:running_sm],
             condition: :should_not_be_destroyed?,
             effect: :store_terminated_error,
             message: 'Simulation Manager has been terminated untimely - setting to ERROR state'
@@ -122,7 +122,7 @@ class SimulationManager
         not_started_time_limit: {
             source_states: [:created, :initializing],
             target_state: :error,
-            resource_status: [:not_available, :available, :initializing],
+            #resource_status: [:not_available, :available, :initializing],
             condition: :time_limit_exceeded?,
             effect: :store_not_started_error,
             message: 'Time limit exceeded, but Simulation Manager was never run - destroying Simulation Manager'
@@ -130,7 +130,7 @@ class SimulationManager
         stopping_time_exceeded: {
             source_states: [:terminating],
             target_state: :terminating,
-            resource_status: all_resource_states - [:released],
+            #resource_status: all_resource_states - [:released],
             condition: :stopping_time_exceeded?,
             effect: :stop,
             message: 'Forcing resource termination due to long time of waiting for stop'
@@ -197,8 +197,19 @@ class SimulationManager
   def try_all_monitoring_cases
     cached_resource_status = resource_status
     logger.info "State: #{state}, Resource status: #{cached_resource_status}"
+    logger.info "Simulation Manager monitored on the infrastructure side ? #{not record.infrastructure_side_monitoring.nil?}"
     monitoring_order.each do |case_name|
       monitoring_case = monitoring_cases[case_name]
+
+      logger.debug "Monitoring case: #{case_name} - involves resource status ? #{monitoring_case.include?(:resource_status)}"
+
+      if (not record.infrastructure_side_monitoring.nil?) and monitoring_case.include?(:resource_status)
+        logger.debug "We skip this one"
+        next
+      else
+        logger.debug "We proceed with this one - #{(not record.infrastructure_side_monitoring.nil?)} - #{monitoring_case.include?(:resource_status)}"
+      end
+
       begin
         if state_transition_for?(monitoring_case, cached_resource_status)
           print_message_for(monitoring_case)
