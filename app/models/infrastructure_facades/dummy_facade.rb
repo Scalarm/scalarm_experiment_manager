@@ -56,7 +56,7 @@ class DummyFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(record)
-    :running
+    :available
   end
 
   def _simulation_manager_running?(record)
