@@ -8,7 +8,7 @@ end
 
 class MongoLock
 
-  def initialize(name, max_time=30.minutes)
+  def initialize(name, max_time=10.minutes)
     @locked_pid = nil
     @locked_time = nil
     @name = name
