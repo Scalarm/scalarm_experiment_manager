@@ -142,27 +142,32 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # Nothing to prepare
   def _simulation_manager_prepare_resource(record)
-    logger.debug "Sending files and launching SM on host: #{record.credentials.host}:#{record.credentials.ssh_port}"
+    if record.infrastructure_side_monitoring
+      record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+      record.save
+    else
+      logger.debug "Sending files and launching SM on host: #{record.credentials.host}:#{record.credentials.ssh_port}"
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
-                                                                      record.experiment_id, record.start_at)
+      InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
+                                                                        record.experiment_id, record.start_at)
 
-    error_counter = 0
-    while true
-      begin
-        ssh = shared_ssh_session(record.credentials)
-        break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
-      rescue Exception => e
-        logger.warn "Exception #{e} occured while communication with "\
-"#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
-        error_counter += 1
-        if error_counter > 10
-          record.store_error('install_failed', e.to_s)
-          break
+      error_counter = 0
+      while true
+        begin
+          ssh = shared_ssh_session(record.credentials)
+          break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
+        rescue Exception => e
+          logger.warn "Exception #{e} occured while communication with "\
+  "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
+          error_counter += 1
+          if error_counter > 10
+            record.store_error('install_failed', e.to_s)
+            break
+          end
         end
-      end
 
-      sleep(20)
+        sleep(20)
+      end
     end
   end
 
