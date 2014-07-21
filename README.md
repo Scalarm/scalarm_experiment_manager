@@ -80,6 +80,10 @@ development:
   # if you want to communicate through HTTP
   information_service_development: true
   storage_manager_development: true
+  # if you want to communicate with Storage Manager using a different URL than the one stored in Information Service
+  #storage_manager_url: "localhost:20000"
+  # if you want to pass to Simulation Manager a different URL of Information Service than the one mentioned above
+  #sm_information_service_url: "localhost:37128"
 
 test:
   secret_key_base: 'd132fd22bc612e157d722e980c4b0525b938f225f9f7f66ea'

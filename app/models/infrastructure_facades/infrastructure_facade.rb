@@ -73,6 +73,10 @@ class InfrastructureFacade
       sm_config['start_at'] = Time.parse(start_at)
     end
 
+    if Rails.application.secrets.include?(:sm_information_service_url)
+      sm_config['information_service_url'] = Rails.application.secrets.sm_information_service_url
+    end
+
     Rails.logger.debug("Development mode set ? : #{Rails.application.secrets.include?(:information_service_development)}")
 
     if Rails.application.secrets.include?(:information_service_development)

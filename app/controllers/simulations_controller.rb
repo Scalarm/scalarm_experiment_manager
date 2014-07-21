@@ -193,8 +193,16 @@ class SimulationsController < ApplicationController
 
   def show
     information_service = InformationService.new
-    @storage_manager_url = information_service.get_list_of('storage_managers')
-    @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
+
+    if Rails.application.secrets.include?(:storage_manager_url)
+      @storage_manager_url = Rails.application.secrets.storage_manager_url
+    else
+      @storage_manager_url = information_service.get_list_of('storage_managers')
+      @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
+    end
+
+    @remote_storage_manager_url = information_service.get_list_of('storage_managers')
+    @remote_storage_manager_url = @remote_storage_manager_url.sample unless @remote_storage_manager_url.nil?
 
     if @simulation.nil?
       @simulation = @experiment.generate_simulation_for(params[:id].to_i)

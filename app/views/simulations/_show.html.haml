@@ -52,7 +52,7 @@
   .row
     %h4= t('.binary_output_header')
     - if @output_size_err == 0
-      = link_to 'click to download', log_bank_simulation_binaries_url(@storage_manager_url, @experiment, @simulation['id'])
+      = link_to 'click to download', log_bank_simulation_binaries_url(@remote_storage_manager_url, @experiment, @simulation['id'])
       %p
         = t('.size', { size: @output_size_label })
     - else
@@ -61,7 +61,7 @@
   .row
     %h4= t('.stdout_header')
     - if @stdout_size_err == 0
-      = link_to 'click to download', log_bank_simulation_stdout_url(@storage_manager_url, @experiment, @simulation['id'])
+      = link_to 'click to download', log_bank_simulation_stdout_url(@remote_storage_manager_url, @experiment, @simulation['id'])
       %p
         = t('.size', { size: @stdout_size_label })
     - else
