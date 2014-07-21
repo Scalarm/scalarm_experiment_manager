@@ -123,13 +123,17 @@ module QsubScheduler
     end
 
     def cancel(ssh, job)
-      ssh.exec!("qdel #{job.job_id}")
+      ssh.exec!(cancel_sm_cmd(job))
     end
 
     def get_log(ssh, job)
       output = ssh.exec! "tail -25 #{job.log_path}"
       ssh.exec! "rm #{job.log_path}"
       output
+    end
+
+    def cancel_sm_cmd(record)
+      "qdel #{record.job_id}"
     end
 
   end

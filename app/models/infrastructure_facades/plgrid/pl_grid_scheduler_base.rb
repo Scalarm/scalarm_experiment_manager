@@ -41,8 +41,7 @@ ruby simulation_manager.rb
   end
 
   def clean_after_job(ssh, job)
-    ssh.exec!("rm scalarm_simulation_manager_#{job.sm_uuid}.zip")
-    ssh.exec!("rm scalarm_job_#{job.sm_uuid}.sh")
+    ssh.exec!(clean_after_sm_cmd(job))
   end
 
   #  Initialize VOMS-extended proxy certificate for the user
@@ -63,6 +62,20 @@ ruby simulation_manager.rb
   def restart(ssh, job)
     cancel(ssh, job)
     submit_job(ssh, job)
+  end
+
+  def clean_after_sm_cmd(record)
+    [
+      "rm scalarm_simulation_manager_#{record.sm_uuid}.zip",
+      "rm scalarm_job_#{record.sm_uuid}.sh"
+    ].join(';')
+  end
+
+  def restart_sm_cmd(record)
+    [
+        cancel_sm_cmd(record),
+        clean_after_sm_cmd(record)
+    ].join(';')
   end
 
 end

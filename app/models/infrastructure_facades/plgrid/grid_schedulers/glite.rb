@@ -86,7 +86,11 @@ module GliteScheduler
     end
 
     def cancel(ssh, job)
-      PlGridScheduler.execute_glite_command "glite-wms-job-cancel --no-int #{job.job_id}", ssh
+      PlGridScheduler.execute_glite_command cancel_sm_cmd(record), ssh
+    end
+
+    def cancel_sm_cmd(record)
+      "glite-wms-job-cancel --no-int #{record.job_id}"
     end
 
     def clean_after_job(ssh, job)

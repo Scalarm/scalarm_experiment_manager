@@ -148,8 +148,12 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_restart(record)
-    ssh = shared_ssh_session(record.credentials)
-    scheduler.restart(ssh, record)
+    if record.infrastructure_side_monitoring
+      record.cmd_to_execute = scheduler.restart_sm_cmd(record)
+    else
+      ssh = shared_ssh_session(record.credentials)
+      scheduler.restart(ssh, record)
+    end
   end
 
   def _simulation_manager_resource_status(record)

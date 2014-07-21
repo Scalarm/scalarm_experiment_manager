@@ -127,20 +127,33 @@ module ExperimentExtender
     id_change_map
   end
 
+  # id_change_map contains information how simulations ids should be updated
+  # we need to iterate through existing simulations and update them
   def update_simulations(id_change_map)
     Rails.logger.debug("Size of new ids: #{id_change_map.size}")
-    id_change_map.keys.sort.reverse.each do |old_simulation_id|
-      new_simulation_id = id_change_map[old_simulation_id]
-      Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
-      # make the actual change
-      unless old_simulation_id == new_simulation_id
-        simulation = self.find_simulation_docs_by({id: old_simulation_id}, {limit: 1}).first
-        unless simulation.nil?
-          simulation['id'] = new_simulation_id
-          self.save_simulation(simulation)
-        end
-      end
+
+
+    self.find_simulation_docs_by({ }, { sort: [ ['id', :desc] ] }).each do |simulation_run|
+      new_simulation_id = id_change_map[simulation_run['id']]
+
+      Rails.logger.debug("Simulation id: #{simulation_run['id']} -> #{new_simulation_id}")
+      simulation_run['id'] = new_simulation_id
+      self.save_simulation(simulation_run)
     end
+
+
+    #id_change_map.keys.sort.reverse.each do |old_simulation_id|
+    #  new_simulation_id = id_change_map[old_simulation_id]
+    #  Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
+    #  # make the actual change
+    #  unless old_simulation_id == new_simulation_id
+    #    simulation = self.find_simulation_docs_by({id: old_simulation_id}, {limit: 1}).first
+    #    unless simulation.nil?
+    #      simulation['id'] = new_simulation_id
+    #      self.save_simulation(simulation)
+    #    end
+    #  end
+    #end
   end
 
 end
