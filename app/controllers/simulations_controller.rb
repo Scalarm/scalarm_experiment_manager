@@ -259,19 +259,12 @@ class SimulationsController < ApplicationController
     experiment_id = BSON::ObjectId(params[:experiment_id])
     Rails.logger.debug("Experiment id : #{experiment_id}")
 
-    if not @current_user.nil?
-      @experiment = Experiment.find_by_query({ '$and' => [
-        { _id: experiment_id },
-        { '$or' => [
-          { user_id: @current_user.id },
-          { shared_with: { '$in' => [ @current_user.id ] } }
-        ]}
-      ]})
-
+    @experiment = if not @current_user.nil?
+      Experiment.find_experiments_visible_to(@current_user, { _id: experiment_id }).first
     elsif not @sm_user.nil?
-      unless @sm_user.experiment_id != experiment_id.to_s
-        @experiment = Experiment.find_by_id(experiment_id)
-      end
+      user = @sm_user.scalarm_user
+
+      Experiment.find_experiments_visible_to(user, { _id: experiment_id }).first
     end
 
     unless @experiment.nil?

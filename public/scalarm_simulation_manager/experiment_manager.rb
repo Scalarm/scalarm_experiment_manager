@@ -17,7 +17,7 @@ class ExperimentManager
   end
 
   def experiment_id_path
-    path_to('get_experiment_id')
+    path_to('random_experiment')
   end
 
   def code_base(experiment_id)

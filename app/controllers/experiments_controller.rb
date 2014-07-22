@@ -4,7 +4,7 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
-  before_filter :load_experiment, except: [:index, :share, :new]
+  before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
 
   def index
@@ -546,41 +546,53 @@ class ExperimentsController < ApplicationController
     @simulation_input = JSON.parse(@simulation.input_specification)
   end
 
+  # getting id of a random running experiment
+  def random_experiment
+    @running_experiments = if not @current_user.nil?
+      @current_user.get_running_experiments
+    elsif not @sm_user.nil?
+      @sm_user.scalarm_user.get_running_experiments
+    else
+      []
+    end
+
+    if (experiment = @running_experiments.sample).nil?
+      render inline: '', status: 404
+    else
+      render inline: experiment.id.to_s
+    end
+  end
+
   private
 
   def load_experiment
-    #Rails.logger.debug("Loading experiment --- #{params.include?('id')} --- #{@current_user.nil?}")
-    if params.include?('id') and not @current_user.nil?
+    @experiment = nil
+
+    if params.include?(:id)
       experiment_id = BSON::ObjectId(params[:id])
 
-      @experiment = Experiment.find_by_query({ '$and' => [
-        { _id: experiment_id },
-        { '$or' => [
-          { user_id: @current_user.id },
-          { shared_with: { '$in' => [ @current_user.id ] } }
-        ]}
-      ]})
-
-      if @experiment.nil?
-        flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
-
-        redirect_to action: :index
-      end
-
-    elsif (not @sm_user.nil?)
-      if  @sm_user.experiment_id != params['id']
-        error_msg = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params['id'])
-        Rails.logger.error(error_msg)
-
-        render json: { status: 'error', reason: error_msg }, status: 403
-      else
-        @experiment = Experiment.find_by_query({'_id' => BSON::ObjectId(params['id'])})
+      if not @current_user.nil?
+        @experiment = Experiment.find_experiments_visible_to(@current_user, { _id: experiment_id }).first
 
         if @experiment.nil?
-          error_msg = t('experiment_not_found', experiment_id: params['id'], user: @sm_user.sm_uuid)
-          Rails.logger.error(error_msg)
+          flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
+        end
 
-          render json: { status: 'error', reason: error_msg }, status: 404
+      elsif (not @sm_user.nil?)
+        user = @sm_user.scalarm_user
+
+        @experiment = Experiment.find_experiments_visible_to(user, { _id: experiment_id }).first
+
+        if @experiment.nil?
+          flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])
+          Rails.logger.error(flash[:error])
+        end
+      end
+
+      if @experiment.nil?
+        respond_to do |format|
+          format.html { redirect_to action: :index }
+          format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
         end
       end
     end
