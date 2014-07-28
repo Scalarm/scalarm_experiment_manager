@@ -105,6 +105,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   def _simulation_manager_stop(record)
     if record.infrastructure_side_monitoring
+      record.cmd_to_execute_code = "stop"
       record.cmd_to_execute = "kill -9 #{record.pid}"
     else
       shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
@@ -143,6 +144,7 @@ class PrivateMachineFacade < InfrastructureFacade
   # Nothing to prepare
   def _simulation_manager_prepare_resource(record)
     if record.infrastructure_side_monitoring
+      record.cmd_to_execute_code = "prepare_resource"
       record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(record)
       record.save
     else
