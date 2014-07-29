@@ -53,9 +53,11 @@ class SimulationManagersController < ApplicationController
 
       end
 
-      sm_record.save_if_exists
-
-      render inline: 'SM updated'
+      if sm_record.save_if_exists
+        render inline: 'SM updated'
+      else
+        render inline: 'SM not updated', status: 404
+      end
     else
       render inline: 'SM not found', status: 404
     end
