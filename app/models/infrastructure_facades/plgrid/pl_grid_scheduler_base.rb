@@ -73,8 +73,8 @@ ruby simulation_manager.rb
 
   def restart_sm_cmd(record)
     [
-        cancel_sm_cmd(record),
-        clean_after_sm_cmd(record)
+      cancel_sm_cmd(record),
+      submit_job_cmd(record)
     ].join(';')
   end
 

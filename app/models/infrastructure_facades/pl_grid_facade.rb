@@ -65,6 +65,12 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
+    if Rails.application.secrets.include?(:infrastructure_side_monitoring)
+      job.infrastructure_side_monitoring = true
+      job.cmd_to_execute_code = "prepare_resource"
+      job.cmd_to_execute = scheduler.submit_job_cmd(job)
+    end
+
     job
   end
 
@@ -141,18 +147,24 @@ class PlGridFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError unless record.has_usable_credentials?
   end
 
-  def _simulation_manager_stop(record)
-    ssh = shared_ssh_session(record.credentials)
-    scheduler.cancel(ssh, record)
-    scheduler.clean_after_job(ssh, record)
+  def _simulation_manager_stop(sm_record)
+    if sm_record.infrastructure_side_monitoring
+      sm_record.cmd_to_execute_code = "stop"
+      sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
+                                   scheduler.clean_after_sm_cmd(sm_record) ].join(';')
+    else
+      ssh = shared_ssh_session(sm_record.credentials)
+      scheduler.cancel(ssh, sm_record)
+      scheduler.clean_after_job(ssh, sm_record)
+    end
   end
 
-  def _simulation_manager_restart(record)
-    if record.infrastructure_side_monitoring
-      record.cmd_to_execute = scheduler.restart_sm_cmd(record)
+  def _simulation_manager_restart(sm_record)
+    if sm_record.infrastructure_side_monitoring
+      sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
     else
-      ssh = shared_ssh_session(record.credentials)
-      scheduler.restart(ssh, record)
+      ssh = shared_ssh_session(sm_record.credentials)
+      scheduler.restart(ssh, sm_record)
     end
   end
 

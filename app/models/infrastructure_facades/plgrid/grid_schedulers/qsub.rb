@@ -49,20 +49,9 @@ module QsubScheduler
       scp.upload_multiple! paths, '.'
     end
 
-    def submit_job(ssh, job)
-      ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
-      #  schedule the job with qsub
-      qsub_cmd = [
-          'qsub',
-          '-q', job.queue,
-          "#{job.grant_id.blank? ? '' : "-A #{job.grant_id}"}",
-          "#{job.nodes.blank? ? '' : "-l nodes=#{job.nodes}:ppn=#{job.ppn}"}",
-          '-j oe', # mix stderr with stdout
-          '-o', job.log_path, # output log
-          '-l', "walltime=#{job.time_limit.to_i.minutes.to_i}" # convert minutes to seconds
-      ]
+    def submit_job(ssh, sm_record)
       # logger.debug("QSUB cmd: #{qsub_cmd.join(' ')}")
-      submit_job_output = ssh.exec!("echo \"sh scalarm_job_#{job.sm_uuid}.sh #{job.sm_uuid}\" | #{qsub_cmd.join(' ')}")
+      submit_job_output = ssh.exec!(submit_job_cmd(sm_record))
       logger.debug("Output lines: #{submit_job_output}")
 
       if submit_job_output != nil
@@ -71,13 +60,29 @@ module QsubScheduler
         output_lines.each do |line|
           # checking if the first element is integer -> it is the identifier we are looking for
           if line[0].to_i.to_s == line[0]
-            job.job_id = line.strip
+            sm_record.job_id = line.strip
             return true
           end
         end
       end
 
       false
+    end
+
+    def submit_job_cmd(sm_record)
+      #  schedule the job with qsub
+      qsub_cmd = [
+          'qsub',
+          '-q', sm_record.queue,
+          "#{sm_record.grant_id.blank? ? '' : "-A #{sm_record.grant_id}"}",
+          "#{sm_record.nodes.blank? ? '' : "-l nodes=#{sm_record.nodes}:ppn=#{sm_record.ppn}"}",
+          '-j oe', # mix stderr with stdout
+          '-o', sm_record.log_path, # output log
+          '-l', "walltime=#{sm_record.time_limit.to_i.minutes.to_i}" # convert minutes to seconds
+      ]
+
+      [ "chmod a+x scalarm_job_#{sm_record.sm_uuid}.sh",
+        "echo \"sh scalarm_job_#{sm_record.sm_uuid}.sh #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}" ].join(';')
     end
 
     def pbs_state(ssh, job)
