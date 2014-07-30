@@ -6,4 +6,9 @@ class ExperimentsControllerTest < ActionController::TestCase
     #post(:calculate_experiment_size)
   end
 
+  def test_get_all_for_anonymous
+
+  end
+
+
 end
