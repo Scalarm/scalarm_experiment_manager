@@ -68,7 +68,7 @@ module SimulationScheduler
 
 
     simulation = simulation_hash_to_sent
-    if (not simulation.nil?) and simulation['id'] > 0 and simulation['id'] <= experiment_size
+    if (not simulation.nil?) and simulation['index'] > 0 and simulation['index'] <= experiment_size
       simulation['to_sent'] = false
       self.save_simulation(simulation)
 
@@ -105,7 +105,7 @@ module SimulationScheduler
 
       next_simulation_id = next_simulation_id.unpack('i').first
       #Rails.logger.debug("Next simulation id is #{next_simulation_id}")
-      simulation = self.find_simulation_docs_by({ id: next_simulation_id }, { limit: 1 }).first
+      simulation = self.find_simulation_docs_by({ index: next_simulation_id }, { limit: 1 }).first
 
       next if simulation.nil? or (simulation['to_sent'] == true)
       next_simulation_id = -1
@@ -134,8 +134,8 @@ module SimulationScheduler
       # Rails.logger.debug("Index: #{index} - Current index: #{current_index} - Selected Element: #{tab[current_index]} - id_num: #{id_num}")
     end
 
-    columns = %w(id experiment_id is_done to_sent trial arguments values)
-    values = [simulation_id, self._id, false, true, trial, self.parameters.flatten.join(','), combination.join(',')]
+    columns = %w(index id experiment_id is_done to_sent trial arguments values)
+    values = [simulation_id, simulation_id, self._id, false, true, trial, self.parameters.flatten.join(','), combination.join(',')]
 
     Hash[*columns.zip(values).flatten]
   end
@@ -167,8 +167,8 @@ module SimulationScheduler
     # Rails.logger.debug("Finding unsent simulation between #{partition_start_id} and #{partition_end_id}")
 
     if partition_end_id - partition_start_id < 200 # conquer
-      query_hash = { id: { '$gt' => partition_start_id, '$lte' => partition_end_id } }
-      options_hash = { fields: { 'id' => 1, '_id' => 0 }, sort: [ [ 'id', :asc ] ] }
+      query_hash = { index: { '$gt' => partition_start_id, '$lte' => partition_end_id } }
+      options_hash = { fields: { 'index' => 1, '_id' => 0 }, sort: [ [ 'index', :asc ] ] }
 
       # getting simulation_run ids from the partition
       simulations_ids = self.find_simulation_docs_by(query_hash, options_hash)#.map{ |x| x['id'] }
@@ -177,7 +177,7 @@ module SimulationScheduler
         correct_id = partition_start_id + index + 1
         actual_id = simulations_ids[index]
 
-        if (actual_id.nil? or actual_id['id'] != correct_id) and
+        if (actual_id.nil? or actual_id['index'] != correct_id) and
            (is_simulation_ready_to_run(correct_id) == true)
 
           return correct_id
@@ -203,7 +203,7 @@ module SimulationScheduler
     next_simulation_id = 1
 
     while next_simulation_id <= experiment_size
-      if simulation_collection.find_one({ id: next_simulation_id }).nil?
+      if simulation_collection.find_one({ index: next_simulation_id }).nil?
         return create_new_simulation(next_simulation_id)
       else
         next_simulation_id += 1
@@ -217,7 +217,7 @@ module SimulationScheduler
     next_simulation_id = experiment_size
 
     while next_simulation_id > 0
-      if simulation_collection.find_one({ id: next_simulation_id }).nil?
+      if simulation_collection.find_one({ index: next_simulation_id }).nil?
         return create_new_simulation(next_simulation_id)
       else
         next_simulation_id -= 1

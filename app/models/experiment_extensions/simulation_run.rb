@@ -1,6 +1,6 @@
 #Attributes:
 #“_id”: ObjectId
-#“id”: integer
+#“index”: integer
 #“experiment_id” - ObjectId
 #“to_sent” - bool
 #“sent_at”: timestamp
@@ -25,7 +25,7 @@ module SimulationRun
 
     raise('No Experiment Instance DB available') if collection.nil?
 
-    collection.create_index([['id', Mongo::ASCENDING]])
+    collection.create_index([['index', Mongo::ASCENDING]])
     collection.create_index([['is_done', Mongo::ASCENDING]])
     collection.create_index([['to_sent', Mongo::ASCENDING]])
 
@@ -40,7 +40,7 @@ module SimulationRun
 
     cmd = BSON::OrderedHash.new
     cmd['shardcollection'] = "#{collection.db.name}.#{simulation_collection_name}"
-    cmd['key'] = {'id' => 1}
+    cmd['key'] = {'index' => 1}
     begin
       MongoActiveRecord.execute_raw_command_on('admin', cmd)
     rescue Exception => e
@@ -56,7 +56,7 @@ module SimulationRun
   #  simulations
   #end
 
-  def find_simulation_docs_by(query, options = { sort: [ ['id', :asc] ] })
+  def find_simulation_docs_by(query, options = { sort: [ ['index', :asc] ] })
     simulations = []
 
     simulation_collection.find(query, options).each{ |doc| simulations << doc }
@@ -72,12 +72,12 @@ module SimulationRun
     if simulation_doc.include?('_id')
       simulation_collection.update({'_id' => simulation_doc['_id']}, simulation_doc, {upsert: true})
     else
-      simulation_collection.update({'id' => simulation_doc['id']}, simulation_doc, {upsert: true})
+      simulation_collection.update({'index' => simulation_doc['index']}, simulation_doc, {upsert: true})
     end
   end
 
   def is_simulation_ready_to_run(simulation_id)
-    simulation_doc = simulation_collection.find_one({ id: simulation_id })
+    simulation_doc = simulation_collection.find_one({ index: simulation_id })
     simulation_doc.nil? or simulation_doc['to_sent']
   end
 

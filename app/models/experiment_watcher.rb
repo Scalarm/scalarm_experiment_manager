@@ -12,7 +12,7 @@ class ExperimentWatcher
             experiment.find_simulation_docs_by({ is_done: false, to_sent: false }).each do |simulation|
               Rails.logger.debug("#{Time.now - simulation['sent_at']} ? #{experiment.time_constraint_in_sec}")
               if Time.now - simulation['sent_at'] >= experiment.time_constraint_in_sec
-                experiment.simulation_rollback(simulation['id'])
+                experiment.simulation_rollback(simulation['index'])
               end
             end
           rescue Exception => e

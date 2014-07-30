@@ -134,10 +134,10 @@ module ExperimentExtender
 
 
     self.find_simulation_docs_by({ }, { sort: [ ['id', :desc] ] }).each do |simulation_run|
-      new_simulation_id = id_change_map[simulation_run['id']]
+      new_simulation_id = id_change_map[simulation_run['index']]
 
-      Rails.logger.debug("Simulation id: #{simulation_run['id']} -> #{new_simulation_id}")
-      simulation_run['id'] = new_simulation_id
+      Rails.logger.debug("Simulation id: #{simulation_run['index']} -> #{new_simulation_id}")
+      simulation_run['index'] = new_simulation_id
       self.save_simulation(simulation_run)
     end
 

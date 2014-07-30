@@ -55,7 +55,8 @@ class PlGridFacade < InfrastructureFacade
         experiment_id: experiment_id,
         scheduler_type: scheduler.short_name,
         sm_uuid: sm_uuid,
-        time_limit: params['time_limit'].to_i
+        time_limit: params['time_limit'].to_i,
+        infrastructure: short_name
     )
 
     job.grant_id = params['grant_id'] unless params['grant_id'].blank?

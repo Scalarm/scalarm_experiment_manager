@@ -132,6 +132,7 @@ class SimulationsController < ApplicationController
       else
         @simulation['is_done'] = true
         @simulation['to_sent'] = false
+
         if params[:result].blank?
           @simulation['result'] = {}
         else
@@ -155,14 +156,21 @@ class SimulationsController < ApplicationController
           cpu_info = JSON.parse(params[:cpu_info])
           @simulation['cpu_info'] = cpu_info
         end
+
+        unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
+          unless sm_record.infrastructure.blank?
+            @simulation['infrastructure'] = sm_record.infrastructure
+          end
+        end
+
         @experiment.save_simulation(@simulation)
         # TODO adding caching capability
         #@simulation.remove_from_cache
 
         if params.include?(:status) and params[:status] == 'error'
-          @experiment.progress_bar_update(@simulation['id'], 'error')
+          @experiment.progress_bar_update(@simulation['index'], 'error')
         else
-          @experiment.progress_bar_update(@simulation['id'], 'done')
+          @experiment.progress_bar_update(@simulation['index'], 'done')
         end
       end
     rescue Exception => e
@@ -206,6 +214,7 @@ class SimulationsController < ApplicationController
 
     if @simulation.nil?
       @simulation = @experiment.generate_simulation_for(params[:id].to_i)
+      Rails.logger.debug("Simulation: #{@simulation.inspect}")
       @experiment.save_simulation(@simulation)
     end
 
@@ -268,7 +277,7 @@ class SimulationsController < ApplicationController
     end
 
     unless @experiment.nil?
-      @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
+      @simulation = @experiment.find_simulation_docs_by({ index: params[:id].to_i }, { limit: 1 }).first
     end
   end
 
@@ -315,7 +324,7 @@ class SimulationsController < ApplicationController
 
     unless @simulation.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation['id'])
+        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation['index'])
 
         if size_response.code == 200
           output_size = JSON.parse(size_response.body)['size']
@@ -335,7 +344,7 @@ class SimulationsController < ApplicationController
 
     unless @simulation.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['id'])
+        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['index'])
 
         if size_response.code == 200
           output_size = JSON.parse(size_response.body)['size']

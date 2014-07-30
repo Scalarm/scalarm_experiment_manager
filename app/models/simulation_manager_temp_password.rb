@@ -27,4 +27,15 @@ class SimulationManagerTempPassword < MongoActiveRecord
     end
   end
 
+  def simulation_manager_record
+    InfrastructureFacadeFactory.get_all_infrastructures.each do |infrastructure|
+      sm_records = infrastructure.get_sm_records().select{|sm_record| sm_record.sm_uuid == sm_uuid}
+      unless sm_records.blank?
+        return sm_records.first
+      end
+    end
+
+    nil
+  end
+
 end

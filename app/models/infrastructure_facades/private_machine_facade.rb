@@ -50,7 +50,8 @@ class PrivateMachineFacade < InfrastructureFacade
           credentials_id: machine_creds.id,
           time_limit: params[:time_limit],
           start_at: params[:start_at],
-          sm_uuid: SecureRandom.uuid
+          sm_uuid: SecureRandom.uuid,
+          infrastructure: short_name
       )
 
       if Rails.application.secrets.include?(:infrastructure_side_monitoring)

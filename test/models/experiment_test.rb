@@ -110,7 +110,7 @@ class ExperimentTest < MiniTest::Test
     simulation_ids = []
 
     while not (simulation_run = experiment.get_next_instance).nil?
-      simulation_ids << simulation_run['id']
+      simulation_ids << simulation_run['index']
     end
 
     assert_equal 24206, simulation_ids.size
@@ -140,7 +140,7 @@ class ExperimentTest < MiniTest::Test
     8.times do
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
-          simulation_ids << simulation_run['id']
+          simulation_ids << simulation_run['index']
         end
       end
 
@@ -205,7 +205,7 @@ class ExperimentTest < MiniTest::Test
     8.times do
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
-          simulation_ids << simulation_run['id']
+          simulation_ids << simulation_run['index']
           Rails.logger.debug("#{Time.now} - #{simulation_ids.size}") if simulation_ids.size % 100 == 0
         end
       end

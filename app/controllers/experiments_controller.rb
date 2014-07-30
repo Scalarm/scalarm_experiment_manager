@@ -342,7 +342,7 @@ class ExperimentsController < ApplicationController
                               end
 
         [
-            simulation['id'],
+            simulation['index'],
             time_column,
             simulation[result_column].to_s || 'No data available',
             modified_values
@@ -403,9 +403,9 @@ class ExperimentsController < ApplicationController
       if simulation_to_send
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
-        @experiment.progress_bar_update(simulation_to_send['id'].to_i, 'sent')
+        @experiment.progress_bar_update(simulation_to_send['index'].to_i, 'sent')
 
-        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send['id'],
+        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send['index'],
                    'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send['arguments'].split(',').zip(simulation_to_send['values'].split(','))] })
       else
