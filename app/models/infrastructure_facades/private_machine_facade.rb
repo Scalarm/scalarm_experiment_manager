@@ -43,7 +43,7 @@ class PrivateMachineFacade < InfrastructureFacade
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
 
-    ppn = shared_ssh_session(machine_creds).exec! "cat /proc/cpuinfo | grep MHz | wc -l"
+    ppn = shared_ssh_session(machine_creds).exec!("cat /proc/cpuinfo | grep MHz | wc -l").strip
     ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
     instances_count.times do

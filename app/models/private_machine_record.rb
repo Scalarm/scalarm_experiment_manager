@@ -43,7 +43,7 @@ class PrivateMachineRecord < MongoActiveRecord
   end
 
   def computational_resources
-    ppn
+    "ppn=#{ppn}"
   end
 
 end
