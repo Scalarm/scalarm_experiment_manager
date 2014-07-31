@@ -161,6 +161,10 @@ class SimulationsController < ApplicationController
           unless sm_record.infrastructure.blank?
             @simulation['infrastructure'] = sm_record.infrastructure
           end
+
+          unless sm_record.computational_resources.blank?
+            @simulation['computational_resources'] = sm_record.computational_resources
+          end
         end
 
         @experiment.save_simulation(@simulation)

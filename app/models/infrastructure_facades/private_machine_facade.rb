@@ -43,6 +43,9 @@ class PrivateMachineFacade < InfrastructureFacade
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
 
+    ppn = shared_ssh_session(machine_creds).exec! "cat /proc/cpuinfo | grep MHz | wc -l"
+    ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
+
     instances_count.times do
       record = PrivateMachineRecord.new(
           user_id: user_id,
@@ -51,7 +54,8 @@ class PrivateMachineFacade < InfrastructureFacade
           time_limit: params[:time_limit],
           start_at: params[:start_at],
           sm_uuid: SecureRandom.uuid,
-          infrastructure: short_name
+          infrastructure: short_name,
+          ppn: ppn
       )
 
       if Rails.application.secrets.include?(:infrastructure_side_monitoring)
