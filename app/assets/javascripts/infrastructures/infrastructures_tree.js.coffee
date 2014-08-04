@@ -128,11 +128,11 @@ class window.InfrastructuresTree
     button.unbind()
     button.on 'click', =>
       $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
-      window.show_loading_notice()
+      window.Notices.show_loading_notice()
       data = { 'infrastructure_name': infrastructure_name, 'record_id': record_id, 'command': command }
       $.post(@simulation_manager_command_infrastructure_path, data, (json) =>
         @updateInfrastructureNode(infrastructure_name)
-        window.hide_notice()
+        window.Notices.hide_notice()
         switch json.status
           when 'error' then toastr.error(json.msg)
           when 'ok' then toastr.success(json.msg)
