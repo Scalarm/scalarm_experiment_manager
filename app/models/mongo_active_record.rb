@@ -119,6 +119,10 @@ class MongoActiveRecord
       parameter_name = method_name.to_s.split('_')[3..-1].join('_')
 
       return self.find_all_by(parameter_name, args)
+
+    elsif (not instance_methods.include?(method_name.to_sym)) and (Array.instance_methods.include?(method_name.to_sym))
+
+      return to_a.send(method_name.to_sym, *args, &block)
     end
 
     super(method_name, *args, &block)
@@ -157,13 +161,13 @@ class MongoActiveRecord
     self.where(query, opts)
   end
 
-  def self.where(query, opts = {})
-    collection = Object.const_get(name).send(:collection)
+  # def self.where(query, opts = {})
+    # collection = Object.const_get(name).send(:collection)
 
-    collection.find(query, opts).map do |attributes|
-      Object.const_get(name).new(attributes)
-    end
-  end
+    # collection.find(query, opts).map do |attributes|
+      # Object.const_get(name).new(attributes)
+    # end
+  # end
 
   def self.find_by(parameter, value)
     value = value.first if value.is_a? Enumerable
@@ -214,6 +218,37 @@ class MongoActiveRecord
     else
       @@client[db_name]
     end
+  end
+
+# chaining capabilities
+  def self.where(cond, opts = {})
+    @conditions ||= {}; @options ||= {} 
+
+    cond.each do |key, value|
+      key = key.to_sym
+      if key.to_s.ends_with?('_id')
+        value = BSON.ObjectId(value.to_s)
+      end
+      key = :_id if key == :id
+
+      @conditions[key] = value
+    end
+
+    @options.merge! opts
+
+    self
+  end
+
+  def self.to_a
+      collection = Object.const_get(name).send(:collection)
+
+      results = collection.find(@conditions || {}, @options || {}).map do |attributes|
+        Object.const_get(name).new(attributes)
+      end
+
+      @conditions = {}; @options = {}
+
+      results
   end
 
   # INITIALIZATION STUFF

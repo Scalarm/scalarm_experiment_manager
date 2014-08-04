@@ -517,19 +517,8 @@ class Experiment < MongoActiveRecord
     progress_bar_update(simulation_id, 'rollback')
   end
 
-  def self.find_experiments_visible_to(user, conditions = {})
-    visible_to_condition = { '$or' => [
-      { user_id: user.id },
-      { shared_with: { '$in' => [ user.id ] } }
-    ]}
-
-    query = if conditions.empty?
-              visible_to_condition
-            else
-              { '$and' => [ conditions, visible_to_condition ]}
-            end
-
-    where(query)
+  def self.visible_to(user)
+    where({ '$or' => [ { user_id: user.id }, { shared_with: { '$in' => [ user.id ] } } ] })
   end
 
   private

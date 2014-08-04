@@ -569,19 +569,15 @@ class ExperimentsController < ApplicationController
     @experiment = nil
 
     if params.include?(:id)
-      experiment_id = BSON::ObjectId(params[:id])
-
       if not @current_user.nil?
-        @experiment = Experiment.find_experiments_visible_to(@current_user, { _id: experiment_id }).first
+        @experiment = @current_user.experiments.where(id: params[:id]).first
 
         if @experiment.nil?
           flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
         end
 
       elsif (not @sm_user.nil?)
-        user = @sm_user.scalarm_user
-
-        @experiment = Experiment.find_experiments_visible_to(user, { _id: experiment_id }).first
+        @experiment = @sm_user.scalarm_user.experiments(id: params[:id]).first
 
         if @experiment.nil?
           flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])

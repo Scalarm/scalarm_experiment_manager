@@ -9,18 +9,20 @@ class ScalarmUser < MongoActiveRecord
     'scalarm_users'
   end
 
+  def experiments
+    Experiment.visible_to(self)
+  end
+
+  def owned_experiments
+    Experiment.where({ user_id: id })
+  end
+
   def get_running_experiments
-    Experiment.where({ '$or' => [
-      { user_id: self.id }, { shared_with: { '$in' => [ self.id ] } } ] }).select do |experiment|
-      experiment.is_running
-    end
+    experiments.where(is_running: true)
   end
 
   def get_historical_experiments
-    Experiment.where({ '$or' => [
-      { user_id: self.id }, { shared_with: { '$in' => [ self.id ] } } ] }).select do |experiment|
-      experiment.is_running == false
-    end
+    experiments.where(is_running: false)
   end
 
   # returns simulation scenarios owned by this user or shared with this user
