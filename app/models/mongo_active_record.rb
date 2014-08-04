@@ -161,14 +161,6 @@ class MongoActiveRecord
     self.where(query, opts)
   end
 
-  # def self.where(query, opts = {})
-    # collection = Object.const_get(name).send(:collection)
-
-    # collection.find(query, opts).map do |attributes|
-      # Object.const_get(name).new(attributes)
-    # end
-  # end
-
   def self.find_by(parameter, value)
     value = value.first if value.is_a? Enumerable
 
@@ -220,16 +212,17 @@ class MongoActiveRecord
     end
   end
 
-# chaining capabilities
+  # chaining capabilities
   def self.where(cond, opts = {})
     @conditions ||= {}; @options ||= {} 
 
     cond.each do |key, value|
       key = key.to_sym
-      if key.to_s.ends_with?('_id')
-        value = BSON.ObjectId(value.to_s)
-      end
       key = :_id if key == :id
+
+      if key.to_s.ends_with?('_id')
+        value = BSON::ObjectId(value.to_s)
+      end
 
       @conditions[key] = value
     end

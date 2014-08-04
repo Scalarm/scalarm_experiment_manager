@@ -273,12 +273,12 @@ class SimulationsController < ApplicationController
     Rails.logger.debug("Experiment id : #{experiment_id}")
 
     @experiment = if not @current_user.nil?
-      Experiment.find_experiments_visible_to(@current_user, { _id: experiment_id }).first
-    elsif not @sm_user.nil?
-      user = @sm_user.scalarm_user
+                    @current_user.experiments.where(id: experiment_id).first
+                  elsif not @sm_user.nil?
+                    user = @sm_user.scalarm_user
 
-      Experiment.find_experiments_visible_to(user, { _id: experiment_id }).first
-    end
+                    user.experiments.where(id: experiment_id).first
+                  end
 
     unless @experiment.nil?
       @simulation = @experiment.find_simulation_docs_by({ index: params[:id].to_i }, { limit: 1 }).first

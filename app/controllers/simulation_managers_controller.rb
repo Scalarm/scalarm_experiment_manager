@@ -5,6 +5,11 @@ class SimulationManagersController < ApplicationController
   before_filter :set_user_id
   before_filter :load_infrastructure
 
+  # Get Simulation Manager nodes in JSON
+  # GET params:
+  # - infrastructure_name: name of Infrastructure
+  # - experiment_id: (optional) experiment_id
+  # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
   def index
     result = { status: 'ok' }
 
