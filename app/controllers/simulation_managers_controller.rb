@@ -52,6 +52,8 @@ class SimulationManagersController < ApplicationController
       JSON.parse(params[:parameters]).each do |key, value|
         if key == 'state'
           sm_record.set_state(value.to_sym)
+        elsif key == 'resource_status'
+          sm_record.send("#{key}=", value.to_sym)
         else
           sm_record.send("#{key}=", value)
         end
