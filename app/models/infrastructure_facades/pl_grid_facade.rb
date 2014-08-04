@@ -290,7 +290,7 @@ class PlGridFacade < InfrastructureFacade
     FileUtils.mkdir(code_dir)
     FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
 
-    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
+    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
 
     %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
 
