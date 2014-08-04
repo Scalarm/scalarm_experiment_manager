@@ -60,7 +60,7 @@ class ExperimentsController < ApplicationController
 
     @experiment.save_and_cache
 
-    SimulationManagerTempPassword.find_all_by_experiment_id(@experiment.id.to_s).each do |tmp_pass|
+    SimulationManagerTempPassword.where(experiment_id: @experiment.id).each do |tmp_pass|
       tmp_pass.destroy
     end
 
@@ -126,11 +126,11 @@ class ExperimentsController < ApplicationController
 
     # create the new type of experiment object
     experiment = Experiment.new({ 'simulation_id' => @simulation.id,
-                                 'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-                                 'experiment_input' => @experiment_input,
-                                 'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-                                 'name' => @simulation.name,
-                                 'doe_info' => doe_info
+                                  'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+                                  'experiment_input' => @experiment_input,
+                                  'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
+                                  'name' => @simulation.name,
+                                  'doe_info' => doe_info
                                 })
 
     message = nil
@@ -312,10 +312,8 @@ class ExperimentsController < ApplicationController
 
       results = if params[:simulations] == 'running'
                   @experiment.find_simulation_docs_by({to_sent: false, is_done: false})
-                  #ExperimentInstance.find_by_query(@experiment.experiment_id, {'to_sent' => false, 'is_done' => false})
                 elsif params[:simulations] == 'completed'
                   @experiment.find_simulation_docs_by({is_done: true})
-                  #ExperimentInstance.find_by_query(@experiment.experiment_id, {'is_done' => true})
                 end
 
       result_column = if params[:simulations] == 'running'
