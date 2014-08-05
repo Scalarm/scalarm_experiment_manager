@@ -95,18 +95,22 @@ module ExperimentProgressBar
 
     first_id = [bar_index*parts_per_slot + 1, experiment_size].min
     last_id = [(bar_index+1)*parts_per_slot, experiment_size].min
-    query_hash = {'id' => {'$in' => (first_id..last_id).to_a}}
+    query_hash = {'index' => {'$in' => (first_id..last_id).to_a}}
     option_hash = {fields: %w(to_sent is_done is_error)}
 
     #Rails.logger.debug("Query hash => #{query_hash} --- Option hash => #{option_hash}")
     new_bar_state = 0
-    self.find_simulation_docs_by(query_hash, option_hash).each do |instance_doc|
+    simulation_runs.where(query_hash, option_hash).each do |sim_run|
+    # self.find_simulation_docs_by(query_hash, option_hash).each do |instance_doc|
       # Rails.logger.debug("Instance_doc --- #{instance_doc}")
-      if instance_doc.include?('is_error')
+      if sim_run.is_error
+      # if instance_doc.include?('is_error')
         new_bar_state -= 256
-      elsif instance_doc['is_done']
+      elsif sim_run.is_done
+      # elsif instance_doc['is_done']
         new_bar_state += 2
-      elsif not instance_doc['to_sent']
+      elsif not sim_run.to_sent
+      # elsif not instance_doc['to_sent']
         new_bar_state += 1
       end
     end

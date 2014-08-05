@@ -102,6 +102,7 @@ class ExperimentsController < ApplicationController
         experiment.save
         # create progress bar
         experiment.insert_initial_bar
+        Simulation
         experiment.create_simulation_table
       end
     end
@@ -164,7 +165,8 @@ class ExperimentsController < ApplicationController
   ### Progress monitoring API
 
   def completed_simulations_count
-    simulation_counter = @experiment.completed_simulations_count_for(params[:secs].to_i)
+    simulation_counter = @experiment.simulation_runs.where(is_done: true, 
+      done_at: { '$gte' => (Time.now - params[:secs].to_i) }).count
 
     render json: {count: simulation_counter}
   end
@@ -196,9 +198,10 @@ class ExperimentsController < ApplicationController
 
     # TODO - mean execution time and predicted time to finish the experiment
     if sims_done > 0 and (rand() < (sims_done.to_f / @experiment.experiment_size) or sims_done == @experiment.experiment_size)
-      execution_time = @experiment.find_simulation_docs_by({is_done: true}, {fields: %w(sent_at done_at)}).reduce(0) do |acc, simulation|
-        if simulation.include?('done_at') and simulation.include?('sent_at')
-          acc += simulation['done_at'] - simulation['sent_at']
+      # execution_time = @experiment.find_simulation_docs_by({is_done: true}, {fields: %w(sent_at done_at)}).reduce(0) do |acc, simulation|
+      execution_time = @experiment.simulation_runs.where({is_done: true}, fields: %w(sent_at done_at)).reduce(0) do |acc, simulation_run| 
+        if simulation_run.done_at and simulation_run.sent_at
+          acc += simulation_run.done_at - simulation_run.sent_at
         else
           acc
         end
@@ -232,15 +235,15 @@ class ExperimentsController < ApplicationController
     end
 
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
-    done_run = @experiment.find_simulation_docs_by(done_run_query_condition,
+    done_run = @experiment.simulation_runs.where(done_run_query_condition,
                  {limit: 1, fields: %w(arguments)}).first
 
     moes_and_params = if done_run.nil?
                         [ [t('experiments.analysis.no_completed_runs'), nil] ]
                       else
                         result_set + [%w(----------- nil)] +
-                          done_run['arguments'].split(',').map{|x|
-                            [@experiment.input_parameter_label_for(x), x]}
+                          done_run.arguments.split(',').map{|x|
+                            [ @experiment.input_parameter_label_for(x), x ]}
                       end
 
     moes_info[:moes] = result_set.map{ |label, id|
@@ -311,9 +314,9 @@ class ExperimentsController < ApplicationController
       arguments = @experiment.parameters.flatten
 
       results = if params[:simulations] == 'running'
-                  @experiment.find_simulation_docs_by({to_sent: false, is_done: false})
+                  @experiment.simulation_runs.where(to_sent: false, is_done: false)
                 elsif params[:simulations] == 'completed'
-                  @experiment.find_simulation_docs_by({is_done: true})
+                  @experiment.simulation_runs.where(is_done: true)
                 end
 
       result_column = if params[:simulations] == 'running'
@@ -322,27 +325,27 @@ class ExperimentsController < ApplicationController
                         'result'
                       end
 
-      results = results.map{ |simulation|
-        unless simulation.include?('sent_at') and simulation.include?('id') and simulation.include?('values')
+      results = results.map{ |simulation_run|
+        unless simulation_run.sent_at and simulation_run.index and simulation_run.values
           next
         end
 
-        if (params[:simulations] == 'completed') and (not simulation.include?('done_at'))
+        if (params[:simulations] == 'completed') and simulation_run.done_at.nil?
           next
         end
 
-        split_values = simulation['values'].split(',')
+        split_values = simulation_run.values.split(',')
         modified_values = @experiment.range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
         time_column = if params[:simulations] == 'running'
-                        simulation['sent_at'].strftime('%Y-%m-%d %H:%M')
+                        simulation_run.sent_at.strftime('%Y-%m-%d %H:%M')
                               elsif params[:simulations] == 'completed'
-                                "#{simulation['done_at'] - simulation['sent_at']} [s]"
+                                "#{simulation_run.done_at - simulation.sent_at} [s]"
                               end
 
         [
-            simulation['index'],
+            simulation_run.index,
             time_column,
-            simulation[result_column].to_s || 'No data available',
+            simulation_run.send(result_column.to_sym).to_s || 'No data available',
             modified_values
         ].flatten
       }
@@ -403,9 +406,9 @@ class ExperimentsController < ApplicationController
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send['index'].to_i, 'sent')
 
-        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send['index'],
+        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                    'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
-                   'input_parameters' => Hash[simulation_to_send['arguments'].split(',').zip(simulation_to_send['values'].split(','))] })
+                   'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
         simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
       end
@@ -575,7 +578,7 @@ class ExperimentsController < ApplicationController
         end
 
       elsif (not @sm_user.nil?)
-        @experiment = @sm_user.scalarm_user.experiments(id: params[:id]).first
+        @experiment = @sm_user.scalarm_user.experiments.where(id: params[:id]).first
 
         if @experiment.nil?
           flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])
@@ -594,9 +597,9 @@ class ExperimentsController < ApplicationController
 
   def load_simulation
     @simulation = if params['simulation_id']
-                    Simulation.find_by_id params['simulation_id']
+                    Simulation.where(id: params['simulation_id']).first
                   elsif params['simulation_name']
-                    Simulation.find_by_name params['simulation_name']
+                    Simulation.where(name: params['simulation_name']).first
                   else
                     nil
                   end

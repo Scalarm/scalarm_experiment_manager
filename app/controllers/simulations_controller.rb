@@ -216,10 +216,13 @@ class SimulationsController < ApplicationController
     @remote_storage_manager_url = information_service.get_list_of('storage_managers')
     @remote_storage_manager_url = @remote_storage_manager_url.sample unless @remote_storage_manager_url.nil?
 
-    if @simulation.nil?
-      @simulation = @experiment.generate_simulation_for(params[:id].to_i)
-      Rails.logger.debug("Simulation: #{@simulation.inspect}")
-      @experiment.save_simulation(@simulation)
+    simulation_run_index = params[:id].to_i
+    @simulation_run = @experiment.simulation_runs.where(index: simulation_run_index).first
+
+    if @simulation_run.nil?
+      @simulation_run = @experiment.generate_simulation_for(simulation_run_index)
+      Rails.logger.debug("simulation_run: #{@simulation_run.inspect}")
+      @simulation_run.save
     end
 
     @output_size, @output_size_label, @output_size_err = simulation_output_size

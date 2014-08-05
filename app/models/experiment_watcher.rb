@@ -6,13 +6,13 @@ class ExperimentWatcher
     Thread.new do
       while true do
         Rails.logger.debug("[experiment_watcher] #{Time.now} --- running")
-        Experiment.get_running_experiments.each do |experiment|
+        Experiment.where(is_running: true).each do |experiment|
           #Rails.logger.debug("Experiment: #{experiment}")
           begin
-            experiment.find_simulation_docs_by({ is_done: false, to_sent: false }).each do |simulation|
-              Rails.logger.debug("#{Time.now - simulation['sent_at']} ? #{experiment.time_constraint_in_sec}")
-              if Time.now - simulation['sent_at'] >= experiment.time_constraint_in_sec
-                experiment.simulation_rollback(simulation['index'])
+            experiment.simulation_runs.where(is_done: false, to_sent: false).each do |simulation_run|
+              Rails.logger.debug("#{Time.now - simulation_run.sent_at} ? #{experiment.time_constraint_in_sec}")
+              if Time.now - simulation_run.sent_at >= experiment.time_constraint_in_sec
+                experiment.simulation_rollback(simulation_run.index)
               end
             end
           rescue Exception => e
