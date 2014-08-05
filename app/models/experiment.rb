@@ -33,9 +33,13 @@ class Experiment < MongoActiveRecord
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
-  include SimulationRun
+  include SimulationRunModule
 
   ID_DELIM = '___'
+
+  def simulation_runs
+    SimulationRun.for_experiment(id)
+  end
 
   def self.collection_name
     'experiments'
@@ -45,44 +49,21 @@ class Experiment < MongoActiveRecord
     super(attributes)
   end
 
-  def self.get_running_experiments
-    experiments = []
-
-    collection.find({is_running: true}).each do |attributes|
-      experiments << Object.const_get(name).send(:new, attributes)
-    end
-
-    experiments
-  end
-
-  #def is_completed
-  #  simulations_count_with({}) == simulations_count_with({'is_done' => true})
-  #end
-  #
   def simulation
     Simulation.find_by_id self.simulation_id
   end
 
   def save_and_cache
-  #  #Rails.cache.write("data_farming_experiment_#{self._id}", self, :expires_in => 600.seconds)
     self.save
   end
 
-
   def get_statistics
-    all  = simulations_count_with({})
-    sent = simulations_count_with({'to_sent' => false, 'is_done' => false})
-    done = simulations_count_with({'is_done' => true})
-    if done > all
-      done = all
-    end
+    all  = simulation_runs.count
+    sent = simulation_runs.where(to_sent: false, is_done: false).count
+    done = simulation_runs.where(is_done: true).count
 
     return all, sent, done
   end
-
-  #def argument_names
-  #  parameters.flatten.join(',')
-  #end
 
   def range_arguments
     params_with_range = []
@@ -110,32 +91,6 @@ class Experiment < MongoActiveRecord
     result
   end
 
-  #def parametrization_of(parameter_uid)
-  #  self.experiment_input.each do |entity_group|
-  #    entity_group['entities'].each do |entity|
-  #      entity['parameters'].each do |parameter|
-  #        return parameter_uid, parameter['parametrizationType'] if parameter_uid(entity_group, entity, parameter) == parameter_uid
-  #      end
-  #    end
-  #  end
-  #
-  #  nil
-  #end
-  #
-  #def parametrization_values
-  #  parameters = []
-  #
-  #  self.experiment_input.each do |entity_group|
-  #    entity_group['entities'].each do |entity|
-  #      entity['parameters'].each do |parameter|
-  #        parameters += get_parametrization_values(entity_group, entity, parameter)
-  #      end
-  #    end
-  #  end
-  #
-  #  parameters.join('|')
-  #end
-  #
   def parameters
     parameters = []
 
@@ -427,13 +382,6 @@ class Experiment < MongoActiveRecord
     moe_name_set.empty? ? nil : moe_name_set.to_a
   end
 
-
-  def completed_simulations_count_for(secs)
-    query = { 'is_done' => true, 'done_at' => { '$gte' => (Time.now - secs)} }
-
-    simulations_count_with(query)
-  end
-
   def clear_cached_data
     self.cached_value_list = nil
     self.cached_multiple_list = nil
@@ -508,13 +456,11 @@ class Experiment < MongoActiveRecord
     values.uniq
   end
 
-  def simulation_rollback(simulation_id)
-    simulation_collection.find_and_modify({
-                                           :query => { 'id' => simulation_id },
-                                           :update => { '$set' => { 'to_sent' => true } }
-                                          })
+  def simulation_rollback(simulation_run)
+    simulation_run.to_sent = true
+    simulation_run.save    
 
-    progress_bar_update(simulation_id, 'rollback')
+    progress_bar_update(simulation_run.index, 'rollback')
   end
 
   def self.visible_to(user)

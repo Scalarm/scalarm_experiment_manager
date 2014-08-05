@@ -1,50 +1,50 @@
 %h2
-  = t '.title', id: @simulation['index']
+  = t '.title', id: @simulation_run.index
 
 %a.close-reveal-modal &#215;
 
 .row.small-button-margin
   %b= t('.status_section')
-  - if @simulation['is_done']
+  - if @simulation_run.is_done
     = t('.status.completed')
-  - elsif @simulation['to_sent']
+  - elsif @simulation_run.to_sent
     = t('.status.to_send')
   - else
     = t('.status.running')
 
-- if not @simulation['to_sent']
+- if not @simulation_run.to_sent
   .row.small-button-margin
     %b= t('.started_at')
-    = @simulation['sent_at'].localtime
+    = @simulation_run.sent_at
 
-- if @simulation['is_done']
+- if @simulation_run.is_done
   .row.small-button-margin
     %b= t('.completed_at')
-    = @simulation['done_at'].localtime
+    = @simulation_run.done_at
 
 .row
   %h4= t('.input_section')
   %ul
-    - @simulation['arguments'].split(',').each_with_index do |argument, index|
+    - @simulation_run.arguments.split(',').each_with_index do |argument, index|
       %li
         %b
           = @experiment.input_parameter_label_for(argument) + ':'
-        = @simulation['values'].split(',')[index]
+        = @simulation_run.values.split(',')[index]
 
-- if @simulation.include?('is_error') and @simulation['is_error'] == true
+- if @simulation_run.is_error == true
   .row
     %h4= t('.error_section')
     %p
-      - if @simulation['error_reason'].blank?
+      - if @simulation_run.error_reason.blank?
         = t('.no_reason_label')
       - else
-        = t('.reason', reason: @simulation['error_reason'])
+        = t('.reason', reason: @simulation_run.error_reason)
 
-- elsif @simulation['is_done']
+- elsif @simulation_run.is_done
   .row
     %h4= t('.output_section')
     %ul
-      - @simulation['result'].each do |moe_name, moe_value|
+      - @simulation_run.result.each do |moe_name, moe_value|
         %li
           %b= moe_name + ':'
           = moe_value
@@ -52,7 +52,7 @@
   .row
     %h4= t('.binary_output_header')
     - if @output_size_err == 0
-      = link_to 'click to download', log_bank_simulation_binaries_url(@remote_storage_manager_url, @experiment, @simulation['index'])
+      = link_to 'click to download', log_bank_simulation_run._binaries_url(@remote_storage_manager_url, @experiment, @simulation_run.index)
       %p
         = t('.size', { size: @output_size_label })
     - else
@@ -61,7 +61,7 @@
   .row
     %h4= t('.stdout_header')
     - if @stdout_size_err == 0
-      = link_to 'click to download', log_bank_simulation_stdout_url(@remote_storage_manager_url, @experiment, @simulation['index'])
+      = link_to 'click to download', log_bank_simulation_run._stdout_url(@remote_storage_manager_url, @experiment, @simulation_run.index)
       %p
         = t('.size', { size: @stdout_size_label })
     - else

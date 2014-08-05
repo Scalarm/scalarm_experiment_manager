@@ -58,7 +58,7 @@ class MongoActiveRecord
     collection = Object.const_get(self.class.name).send(:collection)
 
     if @attributes.include? '_id'
-      collection.update({'_id' => @attributes['_id']}, @attributes, {:upsert => true})
+      collection.update({'_id' => @attributes['_id']}, @attributes, {upsert: true})
     else
       id = collection.save(@attributes)
       @attributes['_id'] = id
@@ -129,14 +129,7 @@ class MongoActiveRecord
   end
 
   def self.all
-    collection = Object.const_get(name).send(:collection)
-    instances = []
-
-    collection.find({}).each do |attributes|
-      instances << Object.const_get(name).send(:new, attributes)
-    end
-
-    instances
+    where({}, {})
   end
 
   def self.destroy(selector)
@@ -233,15 +226,29 @@ class MongoActiveRecord
   end
 
   def self.to_a
-      collection = Object.const_get(name).send(:collection)
+    collection = Object.const_get(name).send(:collection)
 
-      results = collection.find(@conditions || {}, @options || {}).map do |attributes|
-        Object.const_get(name).new(attributes)
-      end
+    results = collection.find(@conditions || {}, @options || {}).map do |attributes|
+      Object.const_get(name).new(attributes)
+    end
 
-      @conditions = {}; @options = {}
+    @conditions = {}; @options = {}
 
-      results
+    results
+  end
+
+  def self.size
+    count
+  end
+
+  def self.count
+    collection = Object.const_get(name).send(:collection)
+
+    results = collection.count(query: @conditions || {})
+
+    @conditions = {}; @options = {}
+
+    results
   end
 
   # INITIALIZATION STUFF
