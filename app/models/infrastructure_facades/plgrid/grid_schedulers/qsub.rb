@@ -119,9 +119,13 @@ module QsubScheduler
     end
 
     def get_log(ssh, job)
-      output = ssh.exec! "tail -25 #{job.log_path}"
+      output = ssh.exec! get_log_cmd(job)
       ssh.exec! "rm #{job.log_path}"
       output
+    end
+
+    def get_log_cmd(sm_record)
+      "tail -25 #{sm_record.log_path}"
     end
 
     def cancel_sm_cmd(record)

@@ -214,13 +214,22 @@ class PlGridFacade < InfrastructureFacade
     end
   end
 
-  def _simulation_manager_get_log(record)
-    ssh = shared_ssh_session(record.credentials)
-    scheduler.get_log(ssh, record)
+  def _simulation_manager_get_log(sm_record)
+    if sm_record.infrastructure_side_monitoring
+
+      sm_record.cmd_to_execute_code = "get_log"
+      sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
+      sm_record.save
+
+    else
+
+      ssh = shared_ssh_session(sm_record.credentials)
+      scheduler.get_log(ssh, sm_record)
+
+    end
   end
 
   def _simulation_manager_prepare_resource(sm_record)
-
     if sm_record.infrastructure_side_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
