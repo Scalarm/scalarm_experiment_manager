@@ -74,6 +74,7 @@ class MongoActiveRecord
 
     collection = Object.const_get(self.class.name).send(:collection)
     collection.remove({ '_id' => @attributes['_id'] })
+    @attributes.delete('_id')
   end
 
   def to_s

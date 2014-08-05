@@ -119,7 +119,7 @@ while true
       puts "It has the following execution constraints: #{simulation_input['execution_constraints']}"
 
       simulation_dir = File.absolute_path "./#{experiment_dir}/simulation_#{simulation_input['simulation_id']}"
-      Dir.mkdir(simulation_dir)
+      Dir.mkdir(simulation_dir) unless Dir.exists?(simulation_dir)
 
       IO.write("#{simulation_dir}/input.json", simulation_input['input_parameters'].to_json)
       # 6b. run an adapter script (input writer) for input information: input.json -> some specific code

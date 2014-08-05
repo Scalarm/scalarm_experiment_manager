@@ -54,7 +54,7 @@ module SimulationScheduler
     begin
       self.send("#{self.scheduling_policy}_scheduling")
     rescue Exception => e
-      Rails.logger.debug("[simulation_scheduler] fetch_instance_from_db --- #{e}")
+      Rails.logger.debug("[simulation_scheduler] fetch_instance_from_db --- #{e} --- #{e.backtrace.inspect}")
       nil
     end
   end
@@ -105,7 +105,6 @@ module SimulationScheduler
 
       next_simulation_id = next_simulation_id.unpack('i').first
       Rails.logger.debug("Next simulation id is #{next_simulation_id}")
-      # simulation = self.find_simulation_docs_by({ index: next_simulation_id }, { limit: 1 }).first
       simulation_run = simulation_runs.where({index: next_simulation_id}, limit: 1).first
       Rails.logger.debug("Next simulation id - simulation run #{simulation_run.inspect}")
 
@@ -206,7 +205,6 @@ module SimulationScheduler
     next_simulation_id = 1
 
     while next_simulation_id <= experiment_size
-      # if simulation_collection.find_one({ index: next_simulation_id }).nil?
       if simulation_runs.where({index: next_simulation_id}, limit: 1).first.nil?
         return create_new_simulation(next_simulation_id)
       else
@@ -222,7 +220,6 @@ module SimulationScheduler
 
     while next_simulation_id > 0
       if simulation_runs.where({index: next_simulation_id}, limit: 1).first.nil?
-      # if simulation_collection.find_one({ index: next_simulation_id }).nil?
         return create_new_simulation(next_simulation_id)
       else
         next_simulation_id -= 1

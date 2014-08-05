@@ -33,7 +33,6 @@ class Experiment < MongoActiveRecord
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
-  include SimulationRunModule
 
   ID_DELIM = '___'
 
@@ -211,11 +210,11 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + [ moe_name ]
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
-        next if not simulation_doc['result'].has_key?(moe_name)
+      simulation_runs.where({ is_done: true }, { fields: %w(values result) }).each do |simulation_run|
+        next if not simulation_run.result.has_key?(moe_name)
 
-        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
-        csv << values + [ simulation_doc['result'][moe_name] ]
+        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
+        csv << values + [ simulation_run.result[moe_name] ]
       end
     end
 
@@ -224,8 +223,8 @@ class Experiment < MongoActiveRecord
   def moe_names
     moe_name_set = []
     limit = self.experiment_size > 1000 ? self.experiment_size / 2 : self.experiment_size
-    self.find_simulation_docs_by({ is_done: true }, { fields: %w(result), limit: limit }).each do |instance_doc|
-      moe_name_set += instance_doc['result'].keys.to_a
+    simulation_runs.where({ is_done: true }, { fields: %w(result), limit: limit }).each do |simulation_run|
+      moe_name_set += simulation_run.result.keys.to_a
     end
 
     moe_name_set.uniq
@@ -235,19 +234,19 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << [ x_axis, y_axis ]
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: %w(values result arguments) }).each do |simulation_doc|
-        simulation_input = Hash[simulation_doc['arguments'].split(',').zip(simulation_doc['values'].split(','))]
+      simulation_runs.where({ is_done: true }, { fields: %w(values result arguments) }).each do |simulation_run|
+        simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
-        x_axis_value = if simulation_doc['result'].include?(x_axis)
+        x_axis_value = if simulation_run.result.include?(x_axis)
                          # this is a MoE
-                         simulation_doc['result'][x_axis]
+                         simulation_run.result[x_axis]
                        else
                          # this is an input parameter
                          simulation_input[x_axis]
                        end
-        y_axis_value = if simulation_doc['result'].include?(y_axis)
+        y_axis_value = if simulation_run.result.include?(y_axis)
                          # this is a MoE
-                         simulation_doc['result'][y_axis]
+                         simulation_run.result[y_axis]
                        else
                          # this is an input parameter
                          simulation_input[y_axis]
@@ -260,7 +259,7 @@ class Experiment < MongoActiveRecord
 
   def generated_parameter_values_for(parameter_uid)
     simulation_id = 1
-    while (instance = ExperimentInstance.find_by_id(self.experiment_id, simulation_id)).nil?
+    while (instance = simulation_runs.where(index: simulation_id).nil?)
       simulation_id += 1
     end
 
@@ -273,8 +272,8 @@ class Experiment < MongoActiveRecord
     find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
     find_exp = /#{find_exp}#{param_value}/
 
-    param_values = self.find_simulation_docs_by({ 'values' => { '$not' => find_exp } }, { fields: %w(values) }).
-        map { |x| x['values'].split(',')[param_index] }.uniq + [param_value]
+    param_values = simulation_runs.where({ values: { '$not' => find_exp } }, { fields: %w(values) }).
+        map { |x| x.values.split(',')[param_index] }.uniq + [param_value]
 
     param_values.map { |x| x.to_f }.uniq.sort
   end
@@ -324,11 +323,10 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + moes
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_doc|
-        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+      simulation_runs.where({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_run|
+        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
         # getting values of results in a specific order
-        # moe_values = self.moe_names.reduce([]){ |tab, moe_name| tab + [ simulation_doc['result'][moe_name] || '' ] }
-        moe_values = moes.map{|moe_name| simulation_doc['result'][moe_name] || '' }
+        moe_values = moes.map{|moe_name| simulation_run.result[moe_name] || '' }
 
         csv << values + moe_values
       end
@@ -360,7 +358,7 @@ class Experiment < MongoActiveRecord
     end
 
     # drop simulation table
-    self.simulation_collection.drop
+    simulation_runs.collection.drop
     # drop progress bar object
     self.progress_bar_table.drop
     # self-drop
@@ -373,9 +371,9 @@ class Experiment < MongoActiveRecord
     result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
 
     query_opts = {fields: {_id: 0, result: 1, is_error: 1}, limit: result_limit}
-    self.find_simulation_docs_by({is_done: true}, query_opts).each do |simulation_doc|
-      unless simulation_doc.include?('is_error') and simulation_doc['is_error']
-        moe_name_set += simulation_doc['result'].keys
+    simulation_runs.where({is_done: true}, query_opts).each do |simulation_run|
+      unless simulation_run.is_error == true
+        moe_name_set += simulation_run.result.keys
       end
     end
 

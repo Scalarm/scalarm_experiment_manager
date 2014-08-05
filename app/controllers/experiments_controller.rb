@@ -102,8 +102,7 @@ class ExperimentsController < ApplicationController
         experiment.save
         # create progress bar
         experiment.insert_initial_bar
-        Simulation
-        experiment.create_simulation_table
+        experiment.simulation_runs.create_table_for_experiment(experiment.id)
       end
     end
 
@@ -198,8 +197,7 @@ class ExperimentsController < ApplicationController
 
     # TODO - mean execution time and predicted time to finish the experiment
     if sims_done > 0 and (rand() < (sims_done.to_f / @experiment.experiment_size) or sims_done == @experiment.experiment_size)
-      # execution_time = @experiment.find_simulation_docs_by({is_done: true}, {fields: %w(sent_at done_at)}).reduce(0) do |acc, simulation|
-      execution_time = @experiment.simulation_runs.where({is_done: true}, fields: %w(sent_at done_at)).reduce(0) do |acc, simulation_run| 
+      execution_time = @experiment.simulation_runs.where({is_done: true}, fields: %w(sent_at done_at)).reduce(0) do |acc, simulation_run|
         if simulation_run.done_at and simulation_run.sent_at
           acc += simulation_run.done_at - simulation_run.sent_at
         else
@@ -404,7 +402,7 @@ class ExperimentsController < ApplicationController
       if simulation_to_send
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
-        @experiment.progress_bar_update(simulation_to_send['index'].to_i, 'sent')
+        @experiment.progress_bar_update(simulation_to_send.index, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                    'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
