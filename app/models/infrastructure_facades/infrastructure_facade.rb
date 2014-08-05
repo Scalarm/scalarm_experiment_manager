@@ -95,19 +95,29 @@ class InfrastructureFacade
   end
 
   def monitoring_thread
+    logger.info 'before configure_polling_interval'
     configure_polling_interval
+    logger.info 'after configure_polling_interval'
     lock = MongoLock.new(short_name)
+    logger.info 'after creating new lock'
     while true do
+      logger.info 'before acquire'
       if lock.acquire
         logger.info 'monitoring thread is working'
         begin
+          logger.info 'before monitoring_loop'
           monitoring_loop
+          logger.info 'after monitoring_loop'
         rescue Exception => e
           logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
+        logger.info 'before lock.release'
         lock.release
+        logger.info 'after lock.release'
       end
+      logger.info 'before sleep ' + @pooling_interval_sec
       sleep(@polling_interval_sec)
+      logger.info 'after sleep'
     end
   end
 
