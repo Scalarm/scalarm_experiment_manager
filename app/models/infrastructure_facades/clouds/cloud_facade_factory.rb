@@ -7,7 +7,7 @@ class CloudFacadeFactory < DependencyInjectionFactory
     super(
         File.join(Rails.root, 'app/models/infrastructure_facades/clouds/providers'),
         'CloudClient',
-        CloudFacade
+        Scalarm::CloudFacade
     )
   end
 
