@@ -24,7 +24,7 @@ class CloudFactorySpecificTest < MiniTest::Test
 
   def test_load_classes
     CLIENT_CLASSES.each do |name, value|
-      assert_equal  value, CloudFacadeFactory.instance.client_class(name)
+      assert_equal  value, Scalarm::CloudFacadeFactory.instance.client_class(name)
     end
   end
 

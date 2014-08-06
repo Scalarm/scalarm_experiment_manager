@@ -26,7 +26,7 @@ class CloudClientsTest < MiniTest::Test
       assert_not_nil secrets, "no secrets found for #{cloud_name} in database, please create"
 
       # client class validation
-      client_class = CloudFacadeFactory.instance.client_class(cloud_name)
+      client_class = Scalarm::CloudFacadeFactory.instance.client_class(cloud_name)
       assert_not_nil client_class
       [:short_name, :long_name].each do |method_name|
         assert_respond_to client_class, method_name

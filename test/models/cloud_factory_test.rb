@@ -14,7 +14,7 @@ class PlGridFactoryTest < MiniTest::Test
 
   def self.create_test_get_facade(name)
     define_method "test_get_#{name}" do
-      facade = CloudFacadeFactory.instance.get_facade(name)
+      facade = Scalarm::CloudFacadeFactory.instance.get_facade(name)
       assert_equal name, facade.short_name
     end
   end
