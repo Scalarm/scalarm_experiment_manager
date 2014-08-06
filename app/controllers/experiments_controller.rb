@@ -276,7 +276,7 @@ class ExperimentsController < ApplicationController
 
   def extend_input_values
 
-    case params[:extension-mode]
+    case params['extension-mode']
 
     when 'range-based-extension'
       parameter_uid = params[:param_name]
@@ -287,24 +287,53 @@ class ExperimentsController < ApplicationController
       Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
       @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
-      if @num_of_new_simulations > 0
-        @experiment.create_progress_bar_table.drop
-        @experiment.insert_initial_bar
-
-        # 4. update progress bar
-        Thread.new do
-          Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-          @experiment.update_all_bars
-        end
-      end
-
-      File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
 
     when 'single-point-extension'
-      @num_of_new_simulations = 1
+      @num_of_new_simulations = 0
+
+      1.upto(@experiment.replication_level || 1).each do |trial|
+        # adding index of the newly created simulation run
+        new_simulation_run_index = @experiment.experiment_size + trial
+
+        if @experiment.custom_points.nil?
+          @experiment.custom_points = [ new_simulation_run_index ]
+        else
+          @experiment.custom_points << new_simulation_run_index
+        end
+
+        simulation_run_values = @experiment.parameters.flatten.map do |param_uid|
+          params["parameter_#{param_uid}"]
+        end
+
+        simulation_run = SimulationRun.new(index: new_simulation_run_index, experiment_id: @experiment.id,
+                                           is_done: false, to_sent: true, trial: trial,
+                                           arguments: @experiment.parameters.flatten.join(','),
+                                           values: simulation_run_values.join(','))
+
+        simulation_run.save
+
+        @num_of_new_simulations += 1
+      end
+
+      @experiment.clear_cached_data
+      @experiment.save
+
     else
       @num_of_new_simulations = 0
     end
+
+    if @num_of_new_simulations > 0
+      @experiment.create_progress_bar_table.drop
+      @experiment.insert_initial_bar
+
+      # 4. update progress bar
+      Thread.new do
+        Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+        @experiment.update_all_bars
+      end
+    end
+
+    File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
 
     respond_to do |format|
       format.js { render partial: 'extend_input_values' }

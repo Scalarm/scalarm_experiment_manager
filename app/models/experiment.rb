@@ -195,6 +195,8 @@ class Experiment < MongoActiveRecord
     if self.size.nil?
       self.size = self.value_list(debug).reduce(1){|acc, x| acc * x.size}
       self.size *= self.replication_level unless self.replication_level.nil?
+      self.size += self.custom_points.size unless self.custom_points.nil?
+
       self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
     end
 
