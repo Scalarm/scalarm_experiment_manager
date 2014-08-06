@@ -1,4 +1,5 @@
 require 'singleton'
+require 'cloud_facade'
 
 module Scalarm
 

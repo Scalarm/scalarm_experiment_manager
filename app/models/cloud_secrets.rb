@@ -5,6 +5,7 @@
 # other fields are user defined and should be of String class to enable encryption!
 
 require 'infrastructure_facades/infrastructure_errors'
+require 'clouds/cloud_facade_factory'
 
 class CloudSecrets < EncryptedMongoActiveRecord
 
