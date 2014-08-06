@@ -148,9 +148,12 @@ class PlGridFacade < InfrastructureFacade
 
   def _simulation_manager_stop(sm_record)
     if sm_record.infrastructure_side_monitoring
-      sm_record.cmd_to_execute_code = "stop"
-      sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
-                                   scheduler.clean_after_sm_cmd(sm_record) ].join(';')
+      if sm_record.cmd_to_execute_code.blank?
+        sm_record.cmd_to_execute_code = "stop"
+        sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
+                                     scheduler.clean_after_sm_cmd(sm_record) ].join(';')
+      end
+
     else
       ssh = shared_ssh_session(sm_record.credentials)
       scheduler.cancel(ssh, sm_record)
