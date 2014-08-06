@@ -70,7 +70,7 @@ class InfrastructureFacadeFactory
   end
 
   def self.start_all_monitoring_threads
-    get_all_infrastructures.each do |facade|
+    get_all_infrastructures.map do |facade|
       Rails.logger.info("Starting monitoring thread of '#{facade.long_name}'")
 
       Thread.start do

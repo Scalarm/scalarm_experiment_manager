@@ -5,6 +5,7 @@ require_relative 'infrastructure_errors'
 require_relative 'simulation_manager'
 
 require 'thread_pool'
+require 'mongo_lock'
 
 # Methods necessary to implement by subclasses:
 #
@@ -98,7 +99,7 @@ class InfrastructureFacade
     logger.info 'before configure_polling_interval'
     configure_polling_interval
     logger.info 'after configure_polling_interval'
-    lock = MongoLock.new(short_name)
+    lock = Scalarm::MongoLock.new(short_name)
     logger.info 'after creating new lock'
     while true do
       logger.info 'before acquire'
@@ -115,7 +116,7 @@ class InfrastructureFacade
         lock.release
         logger.info 'after lock.release'
       end
-      logger.info 'before sleep ' + @pooling_interval_sec
+      logger.info "before sleep #{@polling_interval_sec}"
       sleep(@polling_interval_sec)
       logger.info 'after sleep'
     end
