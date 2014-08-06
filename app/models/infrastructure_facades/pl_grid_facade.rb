@@ -221,6 +221,7 @@ class PlGridFacade < InfrastructureFacade
       sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
       sm_record.save
 
+      nil
     else
 
       ssh = shared_ssh_session(sm_record.credentials)
