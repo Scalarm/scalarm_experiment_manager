@@ -10,3 +10,4 @@ en:
       refresh_proxy: "Fetch PL-Grid proxy certificate"
   session:
     expired: "Your session was terminated. Please, log in again."
+  default_submit_btn: "Submit"

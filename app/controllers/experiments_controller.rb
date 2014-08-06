@@ -275,26 +275,36 @@ class ExperimentsController < ApplicationController
   end
 
   def extend_input_values
-    parameter_uid = params[:param_name]
-    @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
-    Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
-    new_parameter_values = @range_min.step(@range_max, @range_step).to_a
-    #@priority = params[:priority].to_i
-    Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
-    @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
-    if @num_of_new_simulations > 0
-      @experiment.create_progress_bar_table.drop
-      @experiment.insert_initial_bar
+    case params[:extension-mode]
 
-      # 4. update progress bar
-      Thread.new do
-        Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-        @experiment.update_all_bars
+    when 'range-based-extension'
+      parameter_uid = params[:param_name]
+      @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
+      Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
+      new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+      #@priority = params[:priority].to_i
+      Rails.logger.debug("New parameter values: #{new_parameter_values}")
+
+      @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
+      if @num_of_new_simulations > 0
+        @experiment.create_progress_bar_table.drop
+        @experiment.insert_initial_bar
+
+        # 4. update progress bar
+        Thread.new do
+          Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+          @experiment.update_all_bars
+        end
       end
-    end
 
-    File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
+      File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
+
+    when 'single-point-extension'
+      @num_of_new_simulations = 1
+    else
+      @num_of_new_simulations = 0
+    end
 
     respond_to do |format|
       format.js { render partial: 'extend_input_values' }

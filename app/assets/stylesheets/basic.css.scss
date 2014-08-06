@@ -11,6 +11,10 @@ input[type=submit].button {
   -webkit-appearance: none;
 }
 
+label {
+  line-height: 35px;
+}
+
 #wrapper {
   position: relative;
   max-width: 960px;

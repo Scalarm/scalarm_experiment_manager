@@ -33,32 +33,57 @@
             - parameter_info[:values].each do |value|
               %li= value
 
+  = hidden_field_tag "extension-mode", "range-based-extension"
+
   .row.small-12.columns
     %h3.subheader= t('experiments.extension_dialog.expand_header')
-  -#.row
-  -#  = content_tag(:div, content_tag(:label, 'Priority:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, select_tag('priority', options_for_select([['Standard', 40], ['High', 20], ['Low', 60]])), class: 'small-8 columns')
-  .row
-    .small-3.columns
-      %h4.subheader.right= t('experiments.extension_dialog.minimum') + ':'
-    .small-4.columns= text_field_tag('range_min')
-    .small-3.columns
-  .row
-    .small-3.columns
-      %h4.subheader.right= t('experiments.extension_dialog.maximum') + ':'
-    .small-4.columns= text_field_tag('range_max')
-    .small-3.columns
-  .row
-    .small-3.columns
-      %h4.subheader.right= t('experiments.extension_dialog.step') + ':'
-    .small-4.columns= text_field_tag('range_step')
-    .small-3.columns
-  .row.small-12.columns(style="text-align: center")
-    = submit_tag('Submit', class: 'button radius')
+
+    %ul#extension-mode-tabs.tabs(data-tab)
+      %li.tab-title.active
+        %a(href="#range-based-extension")
+          = "Range based extension"
+      %li.tab-title
+        %a(href="#single-point-extension")
+          = "Single point extension"
+    .tabs-content
+      #range-based-extension.content.active
+        -#.row
+        -#  = content_tag(:div, content_tag(:label, 'Priority:', class: 'inline right'), class: 'small-4 columns') + content_tag(:div, select_tag('priority', options_for_select([['Standard', 40], ['High', 20], ['Low', 60]])), class: 'small-8 columns')
+        .row
+          .small-3.columns
+            %h4.subheader.right= t('experiments.extension_dialog.minimum') + ':'
+          .small-4.columns= text_field_tag('range_min')
+          .small-3.columns
+        .row
+          .small-3.columns
+            %h4.subheader.right= t('experiments.extension_dialog.maximum') + ':'
+          .small-4.columns= text_field_tag('range_max')
+          .small-3.columns
+        .row
+          .small-3.columns
+            %h4.subheader.right= t('experiments.extension_dialog.step') + ':'
+          .small-4.columns= text_field_tag('range_step')
+          .small-3.columns
+
+      #single-point-extension.content
+        - @parameters.each do |parameter_uid, parameter_info|
+          .row
+            .large-6.columns
+              = label_tag "parameter_#{parameter_uid}", parameter_info[:label]
+            .large-3.columns
+              = text_field_tag "parameter_#{parameter_uid}"
+            .large-1.columns
+
+    .row
+      .large-12.columns.text-center
+        = submit_tag(t('default_submit_btn'), class: 'button radius')
 
 %a.close-reveal-modal &#215;
 
 :javascript
   $(function() {
+    $(document).foundation();
+
     $('#experiment-extension-form #param_name').on('change', function() {
       $('#experiment-extension-form [parameter_uid]').hide();
       $("#experiment-extension-form [parameter_uid='" + $('#experiment-extension-form #param_name').val() + "']").show();
@@ -71,4 +96,19 @@
     });
 
     $('#extension-dialog').trigger('extension-dialog-loaded');
+
+    $('#extension-mode-tabs').on('toggled', function (event, tab) {
+      var tabId = $(tab[0]).attr('id');
+
+      if(tabId == "single-point-extension") {
+        $("#single-point-extension input[type='text']").removeAttr("disabled");
+        $("#range-based-extension input[type='text']").prop("disabled", true);
+      }
+      else {
+        $("#range-based-extension input[type='text']").removeAttr("disabled");
+        $("#single-point-extension input[type='text']").prop("disabled", true);
+      }
+
+      $("#extension-mode").val(tabId);
+    });
   });
