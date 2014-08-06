@@ -20,8 +20,8 @@ class CloudVmRecordTest < MiniTest::Test
     image2.stubs(:image_id).returns('i1')
     CloudImageSecrets.stubs(:find_by_id).with(2).returns(image2)
 
-    record1 = Scalarm::CloudVmRecord.new({'image_secrets_id'=> 1})
-    record2 = Scalarm::CloudVmRecord.new({'image_secrets_id'=> 2})
+    record1 = CloudVmRecord.new({'image_secrets_id'=> 1})
+    record2 = CloudVmRecord.new({'image_secrets_id'=> 2})
 
     # when
     record1_secrets = record1.image_secrets

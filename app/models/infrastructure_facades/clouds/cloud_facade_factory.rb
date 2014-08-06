@@ -1,7 +1,4 @@
 require 'singleton'
-require 'cloud_facade'
-
-module Scalarm
 
 class CloudFacadeFactory < DependencyInjectionFactory
   include Singleton
@@ -10,7 +7,7 @@ class CloudFacadeFactory < DependencyInjectionFactory
     super(
         File.join(Rails.root, 'app/models/infrastructure_facades/clouds/providers'),
         'CloudClient',
-        Scalarm::CloudFacade
+        CloudFacade
     )
   end
 
@@ -23,7 +20,5 @@ class CloudFacadeFactory < DependencyInjectionFactory
 
     Hash[clouds_with_creds.map {|name, client| [client.long_name, name]}]
   end
-
-end
 
 end

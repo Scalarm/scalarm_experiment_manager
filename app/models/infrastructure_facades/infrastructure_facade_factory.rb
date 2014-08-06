@@ -12,8 +12,8 @@ class InfrastructureFacadeFactory
     facade =
         if PlGridFacadeFactory.instance.provider_names.include? infrastructure_name
           PlGridFacadeFactory.instance.get_facade(infrastructure_name)
-        elsif Scalarm::CloudFacadeFactory.instance.provider_names.include? infrastructure_name
-          Scalarm::CloudFacadeFactory.instance.get_facade(infrastructure_name)
+        elsif CloudFacadeFactory.instance.provider_names.include? infrastructure_name
+          CloudFacadeFactory.instance.get_facade(infrastructure_name)
         # elsif infrastructure_name == 'plgrid'
         #   # this is a hack for removing/adding credentials
         #   # because every PL-Grid queuing system uses the same credentials, default Q-system is used
@@ -32,7 +32,7 @@ class InfrastructureFacadeFactory
   def self.get_registered_infrastructure_names
     names = other_infrastructures.keys +
       PlGridFacadeFactory.instance.provider_names +
-      Scalarm::CloudFacadeFactory.instance.provider_names
+      CloudFacadeFactory.instance.provider_names
     names.map &:to_s
   end
 
@@ -62,8 +62,8 @@ class InfrastructureFacadeFactory
             name: I18n.t('infrastructures_controller.tree.clouds'),
             group: 'cloud',
             children:
-                Scalarm::CloudFacadeFactory.instance.provider_names.map do |name|
-                  Scalarm::CloudFacadeFactory.instance.get_facade(name).to_h(user_id).merge(group: 'cloud')
+                CloudFacadeFactory.instance.provider_names.map do |name|
+                  CloudFacadeFactory.instance.get_facade(name).to_h(user_id).merge(group: 'cloud')
                 end
         }
     ]
@@ -90,7 +90,7 @@ class InfrastructureFacadeFactory
   def self.get_group_for(infrastructure_name)
     if PlGridFacadeFactory.instance.provider_names.include? infrastructure_name
       'plgrid'
-    elsif Scalarm::CloudFacadeFactory.instance.provider_names.include? infrastructure_name
+    elsif CloudFacadeFactory.instance.provider_names.include? infrastructure_name
       'cloud'
     else
       nil

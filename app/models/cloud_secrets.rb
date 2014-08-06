@@ -5,7 +5,6 @@
 # other fields are user defined and should be of String class to enable encryption!
 
 require 'infrastructure_facades/infrastructure_errors'
-require 'clouds/cloud_facade_factory'
 
 class CloudSecrets < EncryptedMongoActiveRecord
 
@@ -16,7 +15,7 @@ class CloudSecrets < EncryptedMongoActiveRecord
   def valid?
     begin
       # do not rescue from all exceptions raised from factory related operations
-      client_class = Scalarm::CloudFacadeFactory.instance.client_classes[cloud_name]
+      client_class = CloudFacadeFactory.instance.client_classes[cloud_name]
       client = client_class.new(self)
       raise InfrastructureErrors::NoSuchInfrastructureError.new(cloud_name) if client_class.nil?
       begin

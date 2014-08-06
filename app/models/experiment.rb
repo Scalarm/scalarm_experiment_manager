@@ -33,7 +33,6 @@ class Experiment < MongoActiveRecord
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
-  include SimulationRunModule
 
   ID_DELIM = '___'
 
