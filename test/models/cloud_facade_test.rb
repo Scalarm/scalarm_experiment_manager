@@ -35,23 +35,23 @@ class CloudFacadeTest < MiniTest::Test
     cloud_client.stubs(:short_name).returns('c1')
     cloud_client.stubs(:long_name).returns('Cloud One')
 
-    CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user1_id})
+    Scalarm::CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user1_id})
       .returns([
         stub_record(user1_id, experiment1_id),
         stub_record(user1_id, experiment1_id),
         stub_record(user1_id, experiment2_id)
                ])
 
-    CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user2_id})
+    Scalarm::CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user2_id})
     .returns([
                  stub_record(user2_id, experiment1_id),
                  stub_record(user2_id, experiment2_id)
              ])
 
-    CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user1_id, experiment_id: nil})
+    Scalarm::CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user1_id, experiment_id: nil})
       .returns(CloudVmRecord.find_all_by_query({cloud_name: cloud_name, user_id: user1_id}))
 
-    CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user1_id, experiment_id: experiment1_id})
+    Scalarm::CloudVmRecord.stubs(:find_all_by_query).with({cloud_name: cloud_name, user_id: user1_id, experiment_id: experiment1_id})
     .returns([
                  stub_record(user1_id, experiment1_id),
                  stub_record(user1_id, experiment1_id)

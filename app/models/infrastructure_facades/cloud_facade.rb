@@ -4,6 +4,8 @@ require_relative 'infrastructure_errors'
 require_relative 'clouds/cloud_errors'
 require 'gsi'
 
+module Scalarm
+
 class CloudFacade < InfrastructureFacade
   include ShellCommands
   include SharedSSH
@@ -327,5 +329,7 @@ class CloudFacade < InfrastructureFacade
     credentials
   end
 
+
+end
 
 end
