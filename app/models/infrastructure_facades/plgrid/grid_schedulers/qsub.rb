@@ -119,17 +119,23 @@ module QsubScheduler
     end
 
     def get_log(ssh, job)
-      output = ssh.exec! get_log_cmd(job)
-      ssh.exec! "rm #{job.log_path}"
-      output
+      ssh.exec! get_log_cmd(job)
     end
 
     def get_log_cmd(sm_record)
-      "tail -25 #{sm_record.log_path}"
+      if sm_record.log_path.blank?
+        ""
+      else
+        "tail -25 #{sm_record.log_path}; rm #{sm_record.log_path}"
+      end
     end
 
-    def cancel_sm_cmd(record)
-      "qdel #{record.job_id}"
+    def cancel_sm_cmd(sm_record)
+      if sm_record.job_id.blank?
+        ""
+      else
+        "qdel #{sm_record.job_id}"
+      end
     end
 
   end

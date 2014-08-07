@@ -27,8 +27,16 @@ module QcgScheduler
     end
 
     def prepare_job_files(sm_uuid, params)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid, params))
+      execution_dir = if params.include?(:dest_dir)
+        "/tmp/#{params[:dest_dir]}"
+      else
+        "/tmp"
+      end
+
+      params = params[:sm_record] if params.include?(:sm_record)
+
+      IO.write("#{execution_dir}/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
+      IO.write("#{execution_dir}/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid, params))
     end
 
     def prepare_job_descriptor(uuid, params)
@@ -63,12 +71,16 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
-      submit_job_output = ssh.exec!(PlGridScheduler.qcg_command "qcg-sub scalarm_job_#{job.sm_uuid}.qcg")
+      submit_job_output = ssh.exec!(submit_job_cmd(job))
 
       logger.debug("QCG output lines: #{submit_job_output}")
 
       submit_job_output and (job.job_id = QcgScheduler::PlGridScheduler.parse_job_id(submit_job_output))
+    end
+
+    def submit_job_cmd(sm_record)
+      [ "chmod a+x scalarm_job_#{sm_record.sm_uuid}.sh",
+        PlGridScheduler.qcg_command "qcg-sub scalarm_job_#{sm_record.sm_uuid}.qcg" ].join(';')
     end
 
     def self.parse_job_id(submit_job_output)
@@ -135,17 +147,21 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!(PlGridScheduler.qcg_command "qcg-info #{job_id}")
+      ssh.exec!(get_job_info_cmd(job_id))
+    end
+
+    def get_job_info_cmd(job_id)
+      PlGridScheduler.qcg_command "qcg-info #{job_id}"
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!(PlGridScheduler.qcg_command cancel_sm_cmd(job))
+      output = ssh.exec!(cancel_sm_cmd(job))
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
 
-    def cancel_sm_cmd(record)
-      "qcg-cancel #{record.record}"
+    def cancel_sm_cmd(sm_record)
+      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_id}"
     end
 
     def get_log(ssh, job)
@@ -173,9 +189,18 @@ module QcgScheduler
       end
     end
 
-    def clean_after_job(ssh, job)
-      super
-      ssh.exec!("rm scalarm_job_#{job.sm_uuid}.qcg")
+    # only for the on-site monitoring
+    def get_log_cmd(sm_record)
+      [
+        #"echo '--- QCG info ---'", sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
+        "echo '--- STDOUT ---'", "tail -25 #{job.log_path}.out",
+        "echo '--- STDOUT ---'", "tail -25 #{job.log_path}.err",
+        "rm #{job.log_path}.err", "rm #{job.log_path}.out"
+      ].join(';')
+    end
+
+    def clean_after_sm_cmd(sm_record)
+      [ super, "rm scalarm_job_#{sm_record.sm_uuid}.qcg" ].join(';')
     end
 
     def self.available_hosts
