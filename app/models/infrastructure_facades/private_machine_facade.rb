@@ -58,9 +58,7 @@ class PrivateMachineFacade < InfrastructureFacade
           ppn: ppn
       )
 
-      if Rails.application.secrets.include?(:infrastructure_side_monitoring)
-        record.infrastructure_side_monitoring = true
-      end
+      record.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
 
       record.initialize_fields
       record.save

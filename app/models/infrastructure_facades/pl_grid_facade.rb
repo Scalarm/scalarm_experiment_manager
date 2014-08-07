@@ -66,9 +66,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    if Rails.application.secrets.include?(:infrastructure_side_monitoring)
-      job.infrastructure_side_monitoring = true
-    end
+    job.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
 
     job
   end

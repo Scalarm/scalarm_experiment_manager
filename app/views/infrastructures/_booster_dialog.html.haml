@@ -31,7 +31,7 @@
             .small-4.columns
               = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
             .small-4.columns
-              = text_field_tag :job_counter
+              = text_field_tag :job_counter, '1'
             .small-4.columns
 
           #infrastructure_fields
@@ -49,6 +49,14 @@
             .small-4.columns
               = text_field_tag :start_at
             .small-4.columns
+
+          .row
+            .small-4.columns
+              = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
+            .small-4.columns
+              = check_box_tag :onsite_monitoring
+            .small-4.columns
+
 
           .row#submit-button
             .small-12.columns.text-center

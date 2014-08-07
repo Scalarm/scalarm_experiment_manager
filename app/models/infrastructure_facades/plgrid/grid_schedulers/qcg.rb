@@ -80,7 +80,7 @@ module QcgScheduler
 
     def submit_job_cmd(sm_record)
       [ "chmod a+x scalarm_job_#{sm_record.sm_uuid}.sh",
-        PlGridScheduler.qcg_command "qcg-sub scalarm_job_#{sm_record.sm_uuid}.qcg" ].join(';')
+        PlGridScheduler.qcg_command("qcg-sub scalarm_job_#{sm_record.sm_uuid}.qcg") ].join(';')
     end
 
     def self.parse_job_id(submit_job_output)

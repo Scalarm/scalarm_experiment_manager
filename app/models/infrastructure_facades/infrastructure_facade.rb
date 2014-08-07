@@ -96,29 +96,20 @@ class InfrastructureFacade
   end
 
   def monitoring_thread
-    logger.info 'before configure_polling_interval'
     configure_polling_interval
-    logger.info 'after configure_polling_interval'
     lock = Scalarm::MongoLock.new(short_name)
-    logger.info 'after creating new lock'
+
     while true do
-      logger.info 'before acquire'
       if lock.acquire
         logger.info 'monitoring thread is working'
         begin
-          logger.info 'before monitoring_loop'
           monitoring_loop
-          logger.info 'after monitoring_loop'
         rescue Exception => e
           logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
-        logger.info 'before lock.release'
         lock.release
-        logger.info 'after lock.release'
       end
-      logger.info "before sleep #{@polling_interval_sec}"
       sleep(@polling_interval_sec)
-      logger.info 'after sleep'
     end
   end
 
@@ -217,14 +208,7 @@ class InfrastructureFacade
     { 'time_limit' => 50 }
   end
 
-  # TODO: use .count method? - it will need every infrastructure to implement this
   def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
-    # query = {}
-    # query.merge!({user_id: user_id}) if user_id
-    # query.merge!({experiment_id: experiment_id}) if experiment_id
-    # query.merge!(attributes) if attributes
-    # sm_record_class.collection.count(query)
-
     get_sm_records(user_id, experiment_id, attributes).count
   end
 

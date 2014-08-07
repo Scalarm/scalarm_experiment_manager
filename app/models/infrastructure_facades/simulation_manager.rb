@@ -201,14 +201,7 @@ class SimulationManager
     monitoring_order.each do |case_name|
       monitoring_case = monitoring_cases[case_name]
 
-      logger.debug "Monitoring case: #{case_name} - involves resource status ? #{monitoring_case.include?(:resource_status)}"
-
-      #if (not record.infrastructure_side_monitoring.nil?) and monitoring_case.include?(:resource_status)
-      #  logger.debug "We skip this one"
-      #  next
-      #else
-      #  logger.debug "We proceed with this one - #{(not record.infrastructure_side_monitoring.nil?)} - #{monitoring_case.include?(:resource_status)}"
-      #end
+      logger.debug "Monitoring case: #{case_name}"
 
       begin
         if state_transition_for?(monitoring_case, cached_resource_status)
