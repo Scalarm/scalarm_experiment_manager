@@ -62,14 +62,14 @@ while true
     IO.write("#{code_base_dir}.zip", em_proxy.code_base(experiment_id))
 
     # 4. unzip the repository
-    puts %x[unzip -d #{code_base_dir} #{code_base_dir}.zip; unzip -d #{code_base_dir} #{code_base_dir}/simulation_binaries.zip]
+    puts %x[unzip -d "#{code_base_dir}" "#{code_base_dir}.zip"; unzip -d "#{code_base_dir}" "#{code_base_dir}/simulation_binaries.zip"]
 
     Dir.foreach(code_base_dir) do |filename|
       next if File.file?("#{code_base_dir}/#{filename}")
       File.chmod(0777, "#{code_base_dir}/#{filename}")
     end
 
-    puts %x[chmod a+x #{code_base_dir}/*]
+    puts %x[chmod a+x "#{code_base_dir}/"*]
   end
 
   # 5. run the initialization script
@@ -127,7 +127,7 @@ while true
         puts Dir.pwd
 
         if File.exist?("#{code_base_dir}/input_writer")
-          input_writer_output = %x[#{code_base_dir}/input_writer input.json]
+          input_writer_output = %x["#{code_base_dir}/input_writer" input.json]
           puts "Input writer output: #{input_writer_output}"
           IO.write('_stdout.txt', "Input writer output: #{input_writer_output}")
         end
@@ -158,7 +158,7 @@ while true
             if File.exist?(File.join(code_base_dir, 'progress_monitor'))
 
               while true
-                progress_monitor_output = %x[#{code_base_dir}/progress_monitor]
+                progress_monitor_output = %x["#{code_base_dir}/progress_monitor"]
                 puts "[progress monitor] script output: #{progress_monitor_output}"
                 IO.write('_stdout.txt', "[progress monitor] script output: #{progress_monitor_output}")
 
@@ -179,7 +179,7 @@ while true
           writer.puts em_url
         end
 
-        executor_output = %x[#{code_base_dir}/executor]
+        executor_output = %x["#{code_base_dir}/executor"]
         puts "Executor output: #{executor_output}"
         IO.write('_stdout.txt', "Executor output: #{executor_output}")
         # 6c.2. killing progress monitor process
@@ -201,7 +201,7 @@ while true
         puts Dir.pwd
 
         if File.exist?("#{code_base_dir}/output_reader")
-          output_reader_output = %x[#{code_base_dir}/output_reader]
+          output_reader_output = %x["#{code_base_dir}/output_reader"]
           puts "Output reader output: #{output_reader_output}"
           IO.write('_stdout.txt', "Output reader output: #{output_reader_output}")
         end
