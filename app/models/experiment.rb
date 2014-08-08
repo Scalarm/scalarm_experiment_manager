@@ -499,43 +499,22 @@ class Experiment < MongoActiveRecord
     "#{entity_group_id}#{ID_DELIM}#{entity_id}#{ID_DELIM}#{parameter_id}"
   end
 
-  #def get_parametrization_values(entity_group, entity, parameter)
-  #  parametrization_values = []
-  #  parameter_uid = parameter_uid(entity_group, entity, parameter)
-  #
-  #  if parameter["parametrizationType"] == "value"
-  #    parametrization_values << "#{parameter_uid}_value=#{parameter["value"]}"
-  #  elsif parameter["parametrizationType"] == "range"
-  #    parametrization_values << "#{parameter_uid}_min=#{parameter["min"]}"
-  #    parametrization_values << "#{parameter_uid}_max=#{parameter["max"]}"
-  #    parametrization_values << "#{parameter_uid}_step=#{parameter["step"]}"
-  #  elsif parameter["parametrizationType"] == "gauss"
-  #    parametrization_values << "#{parameter_uid}_mean_value=#{parameter["mean"]}"
-  #    parametrization_values << "#{parameter_uid}_variance_value=#{parameter["variance"]}"
-  #  elsif parameter["parametrizationType"] == "uniform"
-  #    parametrization_values << "#{parameter_uid}_min_value=#{parameter["min"]}"
-  #    parametrization_values << "#{parameter_uid}_max_value=#{parameter["max"]}"
-  #  end
-  #
-  #  parametrization_values
-  #end
-  #
   def generate_parameter_values(parameter)
     parameter_uid = parameter_uid({'id' => parameter['entity_group_id']}, {'id' => parameter['entity_id']}, parameter)
 
-    self.doe_info.each do |doe_element|
-      doe_id, doe_parameters = doe_element
-      if doe_parameters.include?(parameter_uid)
+    #self.doe_info.each do |doe_element|
+    #  doe_id, doe_parameters = doe_element
+    #  if doe_parameters.include?(parameter_uid)
         #Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
-      end
-    end
+      #end
+    #end
 
     parameter_values = []
 
     case parameter['parametrizationType']
 
     when 'value'
-      parameter_values << parameter['value'].to_f
+      parameter_values << parameter['value']
 
     when 'range'
       step = parameter['step'].to_f
@@ -550,15 +529,28 @@ class Experiment < MongoActiveRecord
     when 'gauss'
       r_interpreter = Rails.configuration.r_interpreter
       r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
-      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
+      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
 
     when 'uniform'
       r_interpreter = Rails.configuration.r_interpreter
       r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
-      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
+      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
 
     when 'custom'
-      parameter_values.concat(parameter['custom_values'].map(&:to_f))
+      parameter_values.concat(parameter['custom_values'])
+
+    end
+
+    case parameter['type']
+
+    when 'integer'
+      parameter_values.map!(&:to_i)
+
+    when 'float'
+      parameter_values.map!(&:to_f)
+
+    when 'string'
+      parameter_values.map!(&:to_s)
 
     end
 

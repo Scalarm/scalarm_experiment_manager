@@ -55,6 +55,7 @@ en:
 
     new:
       parameter_label: "Parameter '%{label}' - Value constraints: [ %{min}, %{max} ]"
+      parameter_label_allowed_values: "Parameter '%{label}' - allowed values: [ %{allowed_values} ]"
       parametrization_type: "Set parametrization type:"
       attributes_label: "Specify values based on the selected parametrization type"
       attr_value: "Set value:"
