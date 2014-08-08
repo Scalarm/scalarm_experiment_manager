@@ -293,9 +293,14 @@ class Experiment < MongoActiveRecord
           parameter['with_default_value'] = parameter.include?('value')
 
           # if there is information then add it to the input
+          
           if partial_experiment_input.include?(parameter_uid)
             partial_experiment_input[parameter_uid].each do |key, value|
-              parameter[key] = value
+              if partial_experiment_input[parameter_uid]['parametrizationType'] == 'custom' and key == 'custom_values'
+                parameter[key] = value.split("\n")
+              else
+                parameter[key] = value
+              end
             end
           else
             # otherwise set default values
@@ -527,9 +532,12 @@ class Experiment < MongoActiveRecord
 
     parameter_values = []
 
-    if parameter['parametrizationType'] == 'value'
+    case parameter['parametrizationType']
+
+    when 'value'
       parameter_values << parameter['value'].to_f
-    elsif parameter['parametrizationType'] == 'range'
+
+    when 'range'
       step = parameter['step'].to_f
       raise "Step can't be zero" if step == 0.0
 
@@ -538,16 +546,20 @@ class Experiment < MongoActiveRecord
         parameter_values << value.round(3)
         value += step.round(3)
       end
-    elsif parameter['parametrizationType'] == 'gauss'
+
+    when 'gauss'
       r_interpreter = Rails.configuration.r_interpreter
-      #Rails.logger.debug("Mean: #{parameter['mean'].to_f}")
-      #Rails.logger.debug("Variance: #{parameter['variance'].to_f}")
       r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
       parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
-    elsif parameter['parametrizationType'] == 'uniform'
+
+    when 'uniform'
       r_interpreter = Rails.configuration.r_interpreter
       r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
       parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
+
+    when 'custom'
+      parameter_values.concat(parameter['custom_values'].map(&:to_f))
+
     end
 
     unless self.value_list_extension.nil?

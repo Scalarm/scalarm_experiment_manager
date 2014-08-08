@@ -4,29 +4,31 @@ module SimulationsHelper
     self.send("options_for_#{parameter["type"]}")
   end
 
-  def options_for_integer
+  def common_parametrizations
     [
-        %w(Value value),
-        ['Random - Gauss distribution', 'gauss'],
-        ['Random - Discrete Uniform distribution', 'uniform'],
-        %w(Range range)
+        [ t('experiments.parameters.parametrization.value'), 'value' ],
+        [ t('experiments.parameters.parametrization.custom'), 'custom' ]
     ]
+  end
+
+  def numeric_parametrizations
+    [
+        [ t('experiments.parameters.parametrization.range'), 'range' ],
+        [ t('experiments.parameters.parametrization.gauss'), 'gauss' ],
+        [ t('experiments.parameters.parametrization.uniform'), 'uniform' ]
+    ]
+  end
+
+  def options_for_integer
+    common_parametrizations + numeric_parametrizations
   end
 
   def options_for_float
-    [
-        %w(Value value),
-        ['Random - Gauss distribution', 'gauss'],
-        ['Random - Discrete Uniform distribution', 'uniform'],
-        %w(Range range)
-    ]
+    common_parametrizations + numeric_parametrizations
   end
 
   def options_for_string
-    [
-        ['Single value', 'value'],
-        ['Multiple value', 'multiple']
-    ]
+    common_parametrizations
   end
 
   def select_doe_type

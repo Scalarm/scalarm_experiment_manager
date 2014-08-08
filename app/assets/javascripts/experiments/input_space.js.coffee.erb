@@ -23,7 +23,7 @@ class window.InputSpace
 
 
     updateAllInputParameterValues: () =>
-        $("div[id^='parameter_values_'] input").each (_, element) =>
+        $("div[id^='parameter_values_'] input, div[id^='parameter_values_'] textarea").each (_, element) =>
             groupId = $(element).parents("div[group_id]").attr("group_id")
             entityId = $(element).parents("div[entity_id]").attr("entity_id")
             parameterId = $(element).parents("div[parameter_id]").attr("parameter_id")
@@ -91,7 +91,7 @@ class window.InputSpace
         $(".parameter_#{parameterIndex} [parametrization-type]").hide()
         $(".parameter_#{parameterIndex} [parametrization-type='#{parametrizationType}']").show()
 
-        $("#parameter_values_#{parameterIndex} input").on "change paste keyup", (event) =>
+        $("#parameter_values_#{parameterIndex} input, #parameter_values_#{parameterIndex} textarea").on "change paste keyup", (event) =>
             $input = $(event.currentTarget)
             entityGroupId = $input.parents("div[group_id]").attr("group_id")
             entityId = $input.parents("div[entity_id]").attr("entity_id")
@@ -131,3 +131,7 @@ class window.InputSpace
 
             else if parameterElementId.indexOf("step") >= 0
                 parameter["step"] = newValue
+
+        else if parameter.parametrizationType == "custom"
+            console.log "Setting custom values to #{newValue}"
+            parameter["custom_values"] = newValue

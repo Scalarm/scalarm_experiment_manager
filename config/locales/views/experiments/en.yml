@@ -58,6 +58,7 @@ en:
       parametrization_type: "Set parametrization type:"
       attributes_label: "Specify values based on the selected parametrization type"
       attr_value: "Set value:"
+      attr_values: "Set values (each value in a new line):"
       attr_min: "Set minimum:"
       attr_max: "Set maximum:"
       attr_step: "Set step:"
@@ -66,6 +67,7 @@ en:
       attr_uniform_min: "Set distribution minimum value:"
       attr_uniform_max: "Set distribution maximum value:"
       simulation_run_attrs: "Simulation run execution attributes"
+
 
       empty_simulation: Simulation for this experiment is unavailable
       simulation_overview_header: Simulation information
@@ -103,3 +105,11 @@ en:
     analysis:
       no_results: "No results found in completed simulation runs"
       no_completed_runs: "None simulation runs were completed"
+
+    parameters:
+      parametrization:
+        value: Single value
+        custom: Custom values
+        range: Range
+        gauss: Random - Gauss distribution
+        uniform: Random - Discrete Uniform distribution

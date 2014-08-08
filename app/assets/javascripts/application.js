@@ -11,7 +11,7 @@
 // about supported directives.
 //
 //= require jquery
-//= require jquery.ui.all
+//= require jquery-ui
 //= require jquery_ujs
 //= require custom.modernizr
 //= require foundation
@@ -26,30 +26,34 @@
 //= require d3
 
 
-$(function(){ $(document).foundation(); });
+$(function() {
+    $(document).foundation();
+});
 
 toastr.options = {
-  "closeButton": false,
-  "debug": false,
-  "positionClass": "toast-top-full-width",
-  "onclick": null,
-  "showDuration": "3000",
-  "hideDuration": "1000",
-  "timeOut": "5000",
-  "extendedTimeOut": "1000",
-  "showEasing": "swing",
-  "hideEasing": "linear",
-  "showMethod": "fadeIn",
-  "hideMethod": "fadeOut"
+    "closeButton": false,
+    "debug": false,
+    "positionClass": "toast-top-full-width",
+    "onclick": null,
+    "showDuration": "3000",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
 };
 
 function string_with_delimeters() {
     var string_copy = this.split("").reverse().join("");
-    var len = 3; var num_of_comas = 0;
+    var len = 3;
+    var num_of_comas = 0;
 
-    while((len + num_of_comas <= string_copy.length) && string_copy.length > 3) {
-        string_copy = string_copy.substr(0,len) + "," + string_copy.substr(len);
-        num_of_comas = 1; len += 4;
+    while ((len + num_of_comas <= string_copy.length) && string_copy.length > 3) {
+        string_copy = string_copy.substr(0, len) + "," + string_copy.substr(len);
+        num_of_comas = 1;
+        len += 4;
     }
 
     return string_copy.split("").reverse().join("");
