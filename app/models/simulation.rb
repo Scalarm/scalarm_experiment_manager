@@ -59,21 +59,6 @@ class Simulation < MongoActiveRecord
     super
   end
 
-  def prepare_code_base
-    #code_base_dir = Dir.mktmpdir('code_base')
-    ##begin
-    #  # use the directory...
-    #  open("#{code_base_dir}/input_writer", 'w') { |f| f.write(self.input_writer.code) }
-    #  open("#{code_base_dir}/executor", 'w') { |f| f.write(self.executor.code) }
-    #  open("#{code_base_dir}/output_reader", 'w') { |f| f.write(self.output_reader.code) }
-    #  open("#{code_base_dir}/simulation_binaries.zip", 'w') { |f| f.write(self.simulation_binaries) }
-    ##ensure
-    #  # remove the directory.
-    #  #FileUtils.remove_entry_secure(code_base_dir)
-    ##end
-    #code_base_dir
-  end
-
   def input_parameters
     parameters = {}
 
@@ -90,7 +75,8 @@ class Simulation < MongoActiveRecord
   end
 
   def input_parameter_label_for(uid)
-    entity_group_id, entity_id, parameter_id = uid.split(Experiment::ID_DELIM)
+    split_uid = uid.split(Experiment::ID_DELIM)
+    entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
 
     JSON.parse(self.input_specification).each do |entity_group|
       if entity_group['id'] == entity_group_id
@@ -98,7 +84,7 @@ class Simulation < MongoActiveRecord
           if entity['id'] == entity_id
             entity['parameters'].each do |parameter|
               if parameter['id'] == parameter_id
-                return "#{entity_group['label']} - #{entity['label']} - #{parameter['label']}"
+                return [ entity_group['label'], entity['label'], parameter['label'] ].compact.join(" - ")
               end
             end
           end

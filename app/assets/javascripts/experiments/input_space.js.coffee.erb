@@ -13,9 +13,22 @@ class window.InputSpace
 
 
     @getParameter: (entityGroupId, entityId, parameterId) ->
-        entityGroup = (group for group in InputSpace.experimentInput when group.id == entityGroupId)[0]
-        entity = (entity for entity in entityGroup.entities when entity.id == entityId)[0]
-        parameter = (parameter for parameter in entity.parameters when parameter.id == parameterId)[0]
+        if (parameterId == undefined || parameterId == "") && entityId != undefined && entityId != ""
+            parameterId = entityId
+            entityId = undefined
+
+        if (parameterId == undefined || parameterId == "") && entityGroupId != undefined && entityGroupId != ""
+            parameterId = entityGroupId
+            entityGroupId = undefined
+
+        entityGroup = (group for group in InputSpace.experimentInput when (group.id == entityGroupId) ||
+            ( (group.id == undefined) && (entityGroupId == "") ) )[0]
+
+        entity = (entity for entity in entityGroup.entities when (entity.id == entityId) ||
+            ( (entity.id == undefined) && (entityId == "") ) )[0]
+
+        parameter = (parameter for parameter in entity.parameters when (parameter.id == parameterId) ||
+            ( (parameter.id == undefined) && (parameterId == "") ) )[0]
 
         entityGroup: entityGroup
         entity: entity
@@ -23,7 +36,7 @@ class window.InputSpace
 
 
     updateAllInputParameterValues: () =>
-        $("div[id^='parameter_values_'] input, div[id^='parameter_values_'] textarea").each (_, element) =>
+        $("div[id^='parameter_values_'] input:visible, div[id^='parameter_values_'] textarea:visible").each (_, element) =>
             groupId = $(element).parents("div[group_id]").attr("group_id")
             entityId = $(element).parents("div[entity_id]").attr("entity_id")
             parameterId = $(element).parents("div[parameter_id]").attr("parameter_id")
@@ -91,7 +104,7 @@ class window.InputSpace
         $(".parameter_#{parameterIndex} [parametrization-type]").hide()
         $(".parameter_#{parameterIndex} [parametrization-type='#{parametrizationType}']").show()
 
-        $("#parameter_values_#{parameterIndex} input, #parameter_values_#{parameterIndex} textarea").on "change paste keyup", (event) =>
+        $("#parameter_values_#{parameterIndex} input:visible, #parameter_values_#{parameterIndex} textarea:visible").on "change paste keyup", (event) =>
             $input = $(event.currentTarget)
             entityGroupId = $input.parents("div[group_id]").attr("group_id")
             entityId = $input.parents("div[entity_id]").attr("entity_id")
@@ -105,6 +118,7 @@ class window.InputSpace
 # updates experiment input model stored in global 'experimentInput' variable as JSON
 # currently supporting types: value, gauss, uniform, range
     updateParameterValuesInJSON: (parameter, parameterElementId, newValue) =>
+
         if parameter.parametrizationType == undefined or parameter.parametrizationType == "value"
             parameter["value"] = $("##{parameterElementId}").val()
 
@@ -133,5 +147,4 @@ class window.InputSpace
                 parameter["step"] = newValue
 
         else if parameter.parametrizationType == "custom"
-            console.log "Setting custom values to #{newValue}"
             parameter["custom_values"] = newValue

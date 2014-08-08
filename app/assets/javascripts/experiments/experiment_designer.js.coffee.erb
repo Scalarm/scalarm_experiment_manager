@@ -10,10 +10,13 @@ class window.ExperimentDesigner
 
 
     parametrizationTypeChangeListener: (event) =>
-        parameterId = [event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId].join("___")
+        parameterId = [event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId].filter(
+                (n) -> n != undefined && n != ""
+        ).join("___")
 
         if event.detail.parametrizationType == "range"
-            @addRangeParameter(parameterId)
+#            @addRangeParameter(parameterId)
+            @addRangeParameter(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
 
         else
             # remove already parameter if already chosen
@@ -34,7 +37,12 @@ class window.ExperimentDesigner
         selectElement = $("##{doeGroupId} select#parameters").html('')
 
         for p in @rangeParameters
-            parameterLabel = "#{p.entityGroup['label']} - #{p.entity['label']} - #{p.parameter['label']}"
+            parameterLabel = ""
+            parameterLabel += p.entityGroup['label'] + " - " if p.entityGroup['label'] != undefined
+            parameterLabel += p.entity['label'] + " - " if p.entity['label'] != undefined
+            parameterLabel += p.parameter['label']
+
+#            {p.entityGroup['label']} - #{p.entity['label']} - #{p.parameter['label']}"
             option = $("<option value='#{p.fullId}'>#{parameterLabel}</option>")
             selectElement.append(option)
 
@@ -155,9 +163,20 @@ class window.ExperimentDesigner
 
 
     # add a parameter to the internal range parameter list
-    addRangeParameter: (fullParameterId) =>
-        id_info = fullParameterId.split('___')
-        parameter = InputSpace.getParameter(id_info[0], id_info[1], id_info[2])
+    addRangeParameter: (entityGroupId, entityId, parameterId) =>
+        if entityId == undefined && parameterId == undefined
+            fullParameterId = entityGroupId
+            id_info = entityGroupId.split('___')
+
+            parameterId = id_info[id_info.length - 1]
+            entityId = id_info[id_info.length - 2]
+            entityGroupId = id_info[id_info.length - 3]
+        else
+            fullParameterId = parameterId
+            fullParameterId = "#{entityId}___#{fullParameterId}" if entityId != undefined && entityId != ""
+            fullParameterId = "#{entityGroupId}___#{fullParameterId}" if entityGroupId != undefined && entityGroupId != ""
+
+        parameter = InputSpace.getParameter(entityGroupId, entityId, parameterId)
 
         @rangeParameters.push(
             fullId: fullParameterId

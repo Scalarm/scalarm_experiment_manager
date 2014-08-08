@@ -110,15 +110,26 @@ class Experiment < MongoActiveRecord
   end
 
   def input_parameter_label_for(uid)
-    entity_group_id, entity_id, parameter_id = uid.split(ID_DELIM)
+    split_uid = uid.split(ID_DELIM)
+    entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
+
+    if parameter_id.blank? and (not entity_id.blank?)
+      parameter_id = entity_id
+      entity_id = nil
+    end
+
+    if parameter_id.blank? and (not entity_group_id.blank?)
+      parameter_id = entity_group_id
+      entity_group_id = nil
+    end
 
     self.experiment_input.each do |entity_group|
-      if entity_group['id'] == entity_group_id
+      if entity_group['id'] == entity_group_id || (entity_group['id'].blank? and entity_group_id.blank?)
         entity_group['entities'].each do |entity|
-          if entity['id'] == entity_id
+          if entity['id'] == entity_id || (entity['id'].blank? and entity_id.blank?)
             entity['parameters'].each do |parameter|
               if parameter['id'] == parameter_id
-                return "#{entity_group['label']} - #{entity['label']} - #{parameter['label']}"
+                return [ entity_group['label'], entity['label'], parameter['label'] ].compact.join(" - ")
               end
             end
           end
@@ -137,9 +148,10 @@ class Experiment < MongoActiveRecord
 
 
   def value_list(debug = false)
+    Rails.logger.debug("Value list starting --- #{self.doe_info.inspect} --- #{self.doe_info.blank?} --- #{self.doe_info.first}")
     if self.cached_value_list.nil?
       self.doe_info = apply_doe_methods if self.doe_info.blank? or self.doe_info.first.size == 2
-      #Rails.logger.debug("Doe info: #{self.doe_info}")
+      Rails.logger.debug("Doe info: #{self.doe_info}")
 
       value_list = []
       # adding values from Design of Experiment
@@ -151,7 +163,9 @@ class Experiment < MongoActiveRecord
         entity_group['entities'].each do |entity|
           entity['parameters'].each do |parameter|
             unless parameter.include?('in_doe') and parameter['in_doe'] == true
+              Rails.logger.debug("value_list begin - #{parameter['id']}")
               value_list << generate_parameter_values(parameter.merge({'entity_group_id' => entity_group['id'], 'entity_id' => entity['id']}))
+              Rails.logger.debug("value_list end - #{parameter['id']}")
             end
           end
         end
@@ -293,7 +307,6 @@ class Experiment < MongoActiveRecord
           parameter['with_default_value'] = parameter.include?('value')
 
           # if there is information then add it to the input
-          
           if partial_experiment_input.include?(parameter_uid)
             partial_experiment_input[parameter_uid].each do |key, value|
               if partial_experiment_input[parameter_uid]['parametrizationType'] == 'custom' and key == 'custom_values'
@@ -396,14 +409,26 @@ class Experiment < MongoActiveRecord
   end
 
   def get_parameter_doc(parameter_uid)
-    entity_group_id, entity_id, parameter_id = parameter_uid.split(ID_DELIM)
+    split_uid = parameter_uid.split(ID_DELIM)
+    entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
+
+    if parameter_id.blank? and (not entity_id.blank?)
+      parameter_id = entity_id
+      entity_id = nil
+    end
+
+    if parameter_id.blank? and (not entity_group_id.blank?)
+      parameter_id = entity_group_id
+      entity_group_id = nil
+    end
+
     self.experiment_input.each do |entity_group|
 
-      if entity_group['id'] == entity_group_id
+      if entity_group['id'] == entity_group_id || (entity_group_id.blank? and entity_group['id'].blank?)
 
         entity_group['entities'].each do |entity|
 
-          if entity['id'] == entity_id
+          if entity['id'] == entity_id || (entity_id.blank? and entity['id'].blank?)
 
             entity['parameters'].each do |parameter|
 
@@ -475,10 +500,11 @@ class Experiment < MongoActiveRecord
 
   def self.nested_json_to_hash(nested_json)
     hash_counterpart = Hash.new
+
     nested_json.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          parameter_uid = "#{entity_group['id']}#{Experiment::ID_DELIM}#{entity['id']}#{Experiment::ID_DELIM}#{parameter['id']}"
+          parameter_uid = parameter_uid(entity_group, entity, parameter)
           hash_counterpart[parameter_uid] = parameter
         end
       end
@@ -492,11 +518,21 @@ class Experiment < MongoActiveRecord
   end
 
   def self.parameter_uid(entity_group, entity, parameter)
-    entity_group_id = entity_group.include?('id') ? entity_group['id'] : entity_group
-    entity_id = entity.include?('id') ? entity['id'] : entity
+    entity_group_id = if entity_group.include?('id') || entity_group.include?('entities')
+                        entity_group['id'] || nil
+                      else
+                        entity_group
+                      end
+
+    entity_id = if entity.include?('id') || entity.include?('parameters')
+                  entity['id'] || nil
+                else
+                  entity
+                end
+
     parameter_id = parameter.include?('id') ? parameter['id'] : parameter
 
-    "#{entity_group_id}#{ID_DELIM}#{entity_id}#{ID_DELIM}#{parameter_id}"
+    [ entity_group_id, entity_id, parameter_id ].compact.join(ID_DELIM)
   end
 
   def generate_parameter_values(parameter)
@@ -541,6 +577,8 @@ class Experiment < MongoActiveRecord
 
     end
 
+    Rails.logger.debug("Parameter type: #{parameter['type']} --- #{parameter_values.inspect}")
+
     case parameter['type']
 
     when 'integer'
@@ -566,6 +604,8 @@ class Experiment < MongoActiveRecord
   end
 
   def execute_doe_method(doe_method_name, parameters_for_doe)
+    Rails.logger.debug("Execute doe method: #{doe_method_name} -- #{parameters_for_doe.inspect}")
+
     case doe_method_name
       when '2k'
         values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
