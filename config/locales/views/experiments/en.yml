@@ -79,9 +79,10 @@ en:
       simulation_overview_shared_by: It is shared by
 
       input_header: Input space - manual specification
-      input_parametrization_types: Parametrization
+      input_parametrization_types: 1. Parametrization
       input_parameter_values: Parameter values
-      input_doe: Design of Experiment
+      input_doe: 2. Design of Experiment
+      params_constraints: 3. Parameter constraints
       import: Import parameter space
 
       submit_button: Start experiment
@@ -102,6 +103,17 @@ en:
         header: Input space - import from a CSV file
         submit_import: "Import"
         import_label: "Select a CSV file with the parameter space:"
+
+      doe_tab:
+        info:
+          header: This is an optional step
+          content: You can use only range-based parameters in DoE methods.
+
+      constraints_tab:
+        header: Here you can specify that values of one parameter should be less than values of other parameter
+        add_constraint_btn: Add new constraint
+
+
 
     analysis:
       no_results: "No results found in completed simulation runs"

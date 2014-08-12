@@ -36,19 +36,22 @@ class window.InputSpace
 
 
     updateAllInputParameterValues: () =>
-        $("div[id^='parameter_values_'] input:visible, div[id^='parameter_values_'] textarea:visible").each (_, element) =>
-            groupId = $(element).parents("div[group_id]").attr("group_id")
-            entityId = $(element).parents("div[entity_id]").attr("entity_id")
-            parameterId = $(element).parents("div[parameter_id]").attr("parameter_id")
+        $("fieldset[class^='parameter_']").each (_, element) =>
+            parametrization = $(element).find("select[id^='parametrization_type_']").val()
+            $parameterElement = $(element).find("div[id^='parameter_values_']")
+
+            groupId = $parameterElement.attr("group_id")
+            entityId = $parameterElement.attr("entity_id")
+            parameterId = $parameterElement.attr("parameter_id")
 
             parameter = InputSpace.getParameter(groupId, entityId, parameterId)
 
-            parameterElementId = $(element).attr("id")
-            newValue = $(element).val()
+            $(element).find("[parametrization-type='#{parametrization}']").find("input, textarea").each (_, inputElement) =>
+                parameterElementId = $(inputElement).attr("id")
+                newValue = $(inputElement).val()
 
-            parameterIndex = parameterElementId.substring(parameterElementId.lastIndexOf("_") + 1)
-            parameter.parameter["parametrizationType"] = $("#parametrization_type_" + parameterIndex).val()
-            @updateParameterValuesInJSON(parameter.parameter, parameterElementId, newValue)
+                parameter.parameter["parametrizationType"] = parametrization
+                @updateParameterValuesInJSON(parameter.parameter, parameterElementId, newValue)
 
         $("input[name='experiment_input']").val(JSON.stringify(@experimentInput))
 

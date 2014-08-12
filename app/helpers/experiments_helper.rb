@@ -41,4 +41,8 @@ module ExperimentsHelper
 
   end
 
+  def constraints_conditions
+    [">", ">="]
+  end
+
 end

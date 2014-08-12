@@ -15,7 +15,6 @@ class window.ExperimentDesigner
         ).join("___")
 
         if event.detail.parametrizationType == "range"
-#            @addRangeParameter(parameterId)
             @addRangeParameter(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
 
         else
@@ -141,10 +140,11 @@ class window.ExperimentDesigner
             type: "POST",
             url: $('#calculate-experiment-size-url').val(),
             data:
-                simulation_id: $('#simulation_id').val(),
-                experiment_input: $('#experiment_input').val(),
-                doe: $('#doe').val(),
+                simulation_id: $('#simulation_id').val()
+                experiment_input: $('#experiment_input').val()
+                doe: $('#doe').val()
                 replication_level: $('#replication_level').val()
+                parameters_constraints: $('#parameters_constraints').val()
             beforeSend: (xhr) =>
                 $('#conduct-loading').show()
             success: (msg) =>
