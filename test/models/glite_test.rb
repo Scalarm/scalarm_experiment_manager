@@ -32,7 +32,8 @@ https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q
   end
 
   def test_state_waiting
-    glite = GliteScheduler::PlGridScheduler.new
+    logger = stub_everything
+    glite = GliteScheduler::PlGridScheduler.new(logger)
     glite.expects(:glite_state).returns('Waiting').once
 
     assert_equal :initializing, glite.status(Object.new, Object.new)
@@ -77,6 +78,29 @@ have been successfully retrieved and stored in the directory:
     eos
 
     assert_equal '/people/plgjliput/plgjliput_0zW7VCkww40HDY3t-gcV2A', GliteScheduler::PlGridScheduler.parse_get_output(output)
+  end
+
+  def test_use_ce
+    host_key = 'dwarf.wcss.wroc.pl'
+    host_value = GliteScheduler::PlGridScheduler.host_addresses[host_key]
+
+    logger = stub_everything
+    glite = GliteScheduler::PlGridScheduler.new(logger)
+
+    descriptor = glite.prepare_job_descriptor('sm_uuid', {'plgrid_host'=>host_key})
+
+    assert_match /other.GlueCEUniqueID == \"#{host_value}\"/, descriptor
+  end
+
+  def test_use_default_ce
+    host_value = GliteScheduler::PlGridScheduler.host_addresses[GliteScheduler::PlGridScheduler.default_host]
+
+    logger = stub_everything
+    glite = GliteScheduler::PlGridScheduler.new(logger)
+
+    descriptor = glite.prepare_job_descriptor('sm_uuid', {})
+
+    assert_match /other.GlueCEUniqueID == \"#{host_value}\"/, descriptor
   end
 
 end

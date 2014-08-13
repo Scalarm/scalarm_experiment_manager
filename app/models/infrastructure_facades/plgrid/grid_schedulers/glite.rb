@@ -26,7 +26,7 @@ module GliteScheduler
 
     def prepare_job_files(sm_uuid, params)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid))
+      IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid, params))
     end
 
     def send_job_files(sm_uuid, scp)
@@ -98,12 +98,31 @@ module GliteScheduler
       ssh.exec!("rm scalarm_job_#{job.sm_uuid}.jdl")
     end
 
-    # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
-    # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
-    # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"
-    # task - "cream.grid.task.gda.pl:8443/cream-pbs-plgrid"
-    # pcss - "creamce.reef.man.poznan.pl:8443/cream-pbs-plgrid"
-    def prepare_job_descriptor(uuid)
+    def self.default_host
+      'grid.cyf-kr.edu.pl'
+    end
+
+    def self.host_addresses
+      {
+        'dwarf.wcss.wroc.pl' => "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid", # wcss
+        'grid.cyf-kr.edu.pl' => "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid", # cyfronet
+        'grid.icm.edu.pl' => "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid", # icm
+        'grid.task.gda.pl' => "cream.grid.task.gda.pl:8443/cream-pbs-plgrid", # task
+        'reef.man.poznan.pl' => "creamce.reef.man.poznan.pl:8443/cream-pbs-plgrid" # pcss
+      }
+    end
+
+    def self.available_hosts
+      [
+        'dwarf.wcss.wroc.pl',
+        'grid.cyf-kr.edu.pl',
+        'grid.icm.edu.pl',
+        'grid.task.gda.pl',
+        'reef.man.poznan.pl'
+      ]
+    end
+
+    def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
       <<-eos
   Executable = "scalarm_job_#{uuid}.sh";
@@ -112,7 +131,7 @@ module GliteScheduler
   StdError = "#{log_path}";
   OutputSandbox = {"#{log_path}"};
   InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
-  Requirements = (other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid");
+  Requirements = (other.GlueCEUniqueID == "#{self.class.host_addresses[(params['plgrid_host'] or self.class.default_host)]}");
   VirtualOrganisation = "vo.plgrid.pl";
       eos
     end
