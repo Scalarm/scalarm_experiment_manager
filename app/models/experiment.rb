@@ -148,10 +148,10 @@ class Experiment < MongoActiveRecord
 
 
   def value_list(debug = false)
-    Rails.logger.debug("Value list starting --- #{self.doe_info.inspect} --- #{self.doe_info.blank?} --- #{self.doe_info.first}")
+    #Rails.logger.debug("Value list starting --- #{self.doe_info.inspect} --- #{self.doe_info.blank?} --- #{self.doe_info.first}")
     if self.cached_value_list.nil?
       self.doe_info = apply_doe_methods if self.doe_info.blank? or self.doe_info.first.size == 2
-      Rails.logger.debug("Doe info: #{self.doe_info}")
+      #Rails.logger.debug("Doe info: #{self.doe_info}")
 
       value_list = []
       # adding values from Design of Experiment
@@ -163,9 +163,9 @@ class Experiment < MongoActiveRecord
         entity_group['entities'].each do |entity|
           entity['parameters'].each do |parameter|
             unless parameter.include?('in_doe') and parameter['in_doe'] == true
-              Rails.logger.debug("value_list begin - #{parameter['id']}")
+              #Rails.logger.debug("value_list begin - #{parameter['id']}")
               value_list << generate_parameter_values(parameter.merge({'entity_group_id' => entity_group['id'], 'entity_id' => entity['id']}))
-              Rails.logger.debug("value_list end - #{parameter['id']}")
+              #Rails.logger.debug("value_list end - #{parameter['id']}")
             end
           end
         end
@@ -206,20 +206,20 @@ class Experiment < MongoActiveRecord
   end
 
   def experiment_size(debug = false)
-    if size.nil?
-      size = 0
+    if self.size.nil?
+      self.size = 0
       list_of_values = value_list(debug)
       max_size = list_of_values.reduce(1){|acc, x| acc * x.size}
 
       if parameters_constraints.blank?
-        size = max_size
+        self.size = max_size
       else
         self.excluded_indexes = []
 
         1.upto(max_size).each do |i|
           simulation_run = generate_simulation_for(i)
           if simulation_run.meet_constraints?(parameters_constraints)
-            size += 1
+            self.size += 1
           else
             self.excluded_indexes << i
           end
@@ -227,7 +227,7 @@ class Experiment < MongoActiveRecord
       end
     end
 
-    size
+    self.size
   end
 
   def experiment_size=(new_size)

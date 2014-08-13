@@ -133,9 +133,6 @@ class ExperimentsController < ApplicationController
     experiment.replication_level = params[:replication_level].blank? ? 1 : params[:replication_level].to_i
     experiment.parameters_constraints = params[:parameters_constraints].blank? ? {} : JSON.parse(params[:parameters_constraints])
 
-    Rails.logger.debug("Constrains: #{experiment.parameters_constraints}")
-    Rails.logger.debug("Constrains: #{params[:parameters_constraints]}")
-
     message = nil
     begin
       experiment_size = experiment.experiment_size(true)
@@ -644,6 +641,7 @@ class ExperimentsController < ApplicationController
   def prepare_new_experiment
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
+    parameters_constraints = params[:parameters_constraints].blank? ? {} : JSON.parse(params[:parameters_constraints])
 
     # create the new type of experiment object
     experiment = Experiment.new({'simulation_id' => @simulation.id,
@@ -656,6 +654,7 @@ class ExperimentsController < ApplicationController
                                 })
     experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
     experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
+    experiment.parameters_constraints = parameters_constraints
 
     experiment
   end
