@@ -206,13 +206,28 @@ class Experiment < MongoActiveRecord
   end
 
   def experiment_size(debug = false)
-    if self.size.nil?
-      self.size = self.value_list(debug).reduce(1){|acc, x| acc * x.size}
-      self.size *= self.replication_level unless self.replication_level.nil?
-      self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
+    if size.nil?
+      size = 0
+      list_of_values = value_list(debug)
+      max_size = list_of_values.reduce(1){|acc, x| acc * x.size}
+
+      if parameters_constraints.blank?
+        size = max_size
+      else
+        self.excluded_indexes = []
+
+        1.upto(max_size).each do |i|
+          simulation_run = generate_simulation_for(i)
+          if simulation_run.meet_constraints?(parameters_constraints)
+            size += 1
+          else
+            self.excluded_indexes << i
+          end
+        end
+      end
     end
 
-    self.size
+    size
   end
 
   def experiment_size=(new_size)

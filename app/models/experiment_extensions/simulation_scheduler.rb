@@ -84,6 +84,24 @@ module SimulationScheduler
     end
   end
 
+  def calculate_indirect_index(direct_index)
+    return direct_index if self.excluded_indexes.blank?
+
+    offset = 0
+    1.upto(direct_index).each do |i|
+      offset += 1 if self.excluded_indexes.include?(i)
+    end
+
+    actual_index = 0
+
+    while offset > 0
+      offset -= 1 unless self.excluded_indexes.include?(actual_index + 1)
+      actual_index += 1
+    end
+
+    actual_index
+  end
+
   def next_simulation_id_with_seek
     Rails.logger.debug('Simulation id with seek')
     next_simulation_id = -1

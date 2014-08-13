@@ -62,6 +62,23 @@ class SimulationRun < MongoActiveRecord
     super
   end
 
+  def meet_constraints?(constraints)
+    return true if constraints.blank?
+
+    args = arguments.split(',')
+    vals = values.split(',')
+    constraints.each do |constraint|
+      source_value = vals[args.index(constraint['source_parameter'])].to_f
+      target_value = vals[args.index(constraint['target_parameter'])].to_f
+      #Rails.logger.debug("Checkig if #{source_value} #{constraint['condition']} #{target_value}")
+      unless source_value.send(constraint['condition'], target_value)
+        return false
+      end
+    end
+
+    true
+  end
+
 end
 
 #Attributes:

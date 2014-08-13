@@ -125,13 +125,16 @@ class ExperimentsController < ApplicationController
     @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
-    experiment = Experiment.new({ 'simulation_id' => @simulation.id,
-                                  'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-                                  'experiment_input' => @experiment_input,
-                                  'replication_level' => params['replication_level'].blank? ? 1 : params['replication_level'].to_i,
-                                  'name' => @simulation.name,
-                                  'doe_info' => doe_info
+    experiment = Experiment.new({ simulation_id: @simulation.id,
+                                  experiment_input: @experiment_input,
+                                  name: @simulation.name,
+                                  doe_info: doe_info
                                 })
+    experiment.replication_level = params[:replication_level].blank? ? 1 : params[:replication_level].to_i
+    experiment.parameters_constraints = params[:parameters_constraints].blank? ? {} : JSON.parse(params[:parameters_constraints])
+
+    Rails.logger.debug("Constrains: #{experiment.parameters_constraints}")
+    Rails.logger.debug("Constrains: #{params[:parameters_constraints]}")
 
     message = nil
     begin
