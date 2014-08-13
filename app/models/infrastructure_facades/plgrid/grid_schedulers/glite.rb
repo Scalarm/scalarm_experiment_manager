@@ -70,6 +70,8 @@ module GliteScheduler
     # Running	- The job is running on a WN
     # Done(Success) - The job has finished successfully
     # Cleared - The Output Sandbox has been retrieved by the user
+    # Aborted #TODO?
+    # Done(Exit Code !=0) #TODO?
 
     STATES_MAPPING = {
         'Submitted' => :initializing,
@@ -85,7 +87,7 @@ module GliteScheduler
       STATES_MAPPING[glite_state(ssh, job)] or :error
     end
 
-    def cancel(ssh, job)
+    def cancel(ssh, record)
       PlGridScheduler.execute_glite_command cancel_sm_cmd(record), ssh
     end
 
