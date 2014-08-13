@@ -32,9 +32,9 @@ $(function() {
 });
 
 toastr.options = {
-    "closeButton": false,
+    "closeButton": true,
     "debug": false,
-    "positionClass": "toast-top-full-width",
+    "positionClass": "toast-top-right",
     "onclick": null,
     "showDuration": "3000",
     "hideDuration": "1000",
