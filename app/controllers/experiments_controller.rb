@@ -511,6 +511,7 @@ class ExperimentsController < ApplicationController
 
       redirect_to action: :index
     else
+      # TODO use Experiment.share method
       sharing_list = @experiment.shared_with
       sharing_list = [ ] if sharing_list.nil?
       if params[:mode] == 'unshare'
