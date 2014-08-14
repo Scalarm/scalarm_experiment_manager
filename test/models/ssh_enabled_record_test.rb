@@ -6,7 +6,7 @@ require 'infrastructure_facades/shared_ssh'
 class SSHEnabledRecordTest < MiniTest::Test
 
   def test_yield_ssh_session
-    ssh_session = stub_everything
+    ssh_session = mock 'session'
     ssh_session.expects(:test).once
     ssh_session.stubs(:closed?).returns(false)
     ssh_session.expects(:close).once

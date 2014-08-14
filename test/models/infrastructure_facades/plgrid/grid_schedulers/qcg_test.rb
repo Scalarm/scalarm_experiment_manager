@@ -7,6 +7,8 @@ require 'infrastructure_facades/plgrid/grid_schedulers/qcg'
 class QcgTest < MiniTest::Test
 
   def setup
+    @logger = stub_everything
+    @qcg = QcgScheduler::PlGridScheduler.new(@logger)
   end
 
   def teardown
@@ -109,20 +111,17 @@ Purged: false
   end
 
   def test_queue_plgrid_testing
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'time_limit' => '10')
+    desc = @qcg.prepare_job_descriptor('1', 'time_limit' => '10')
     assert_match /queue=plgrid-testing/, desc
   end
 
   def test_queue_plgrid
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'time_limit' => '80')
+    desc = @qcg.prepare_job_descriptor('1', 'time_limit' => '80')
     assert_match /queue=plgrid/, desc
   end
 
   def test_queue_plgrid_long
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'time_limit' => (73*60).to_s)
+    desc = @qcg.prepare_job_descriptor('1', 'time_limit' => (73*60).to_s)
     assert_match /queue=plgrid-long/, desc
   end
 
@@ -132,32 +131,27 @@ Purged: false
   end
 
   def test_walltime
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'time_limit' => 3654.to_s)
+    desc = @qcg.prepare_job_descriptor('1', 'time_limit' => 3654.to_s)
     assert_match /walltime=P2DT12H54M/, desc
   end
 
   def test_nodes_cores
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'nodes' => '4', 'ppn' => '12')
+    desc = @qcg.prepare_job_descriptor('1', 'nodes' => '4', 'ppn' => '12')
     assert_match /#QCG nodes=4:12/, desc
   end
 
   def test_blank_nodes_cores
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', {})
+    desc = @qcg.prepare_job_descriptor('1', {})
     refute_match /#QCG nodes/, desc
   end
 
   def test_grant_id
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'grant_id' => 'plgtest2014a')
+    desc = @qcg.prepare_job_descriptor('1', 'grant_id' => 'plgtest2014a')
     assert_match /#QCG grant=plgtest2014a/, desc
   end
 
   def test_grant_id_blank
-    qcg = QcgScheduler::PlGridScheduler.new
-    desc = qcg.prepare_job_descriptor('1', 'grant_id' => '')
+    desc = @qcg.prepare_job_descriptor('1', 'grant_id' => '')
     refute_match /#QCG grant/, desc
   end
 

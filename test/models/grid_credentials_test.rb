@@ -8,9 +8,6 @@ class GridCredentialsTest < MiniTest::Test
     Rails.stubs(:logger).returns(stub_everything)
   end
 
-  def teardown
-  end
-
   def test_ssh
     require 'net/ssh'
     Net::SSH.expects(:start).once.with('test_host', 'test_login', {password: 'test_password'}).once
@@ -45,7 +42,7 @@ class GridCredentialsTest < MiniTest::Test
     require 'gsi/ssh'
     Gsi::SSH.expects(:start).once.with('test_host', 'test_login', 'proxy_content').once
 
-    credentials = GridCredentials.new(host: 'test_host', login: 'test_login', proxy: 'proxy_content')
+    credentials = GridCredentials.new(host: 'test_host', login: 'test_login', secret_proxy: 'proxy_content')
 
     credentials.ssh_session
   end
@@ -56,13 +53,13 @@ class GridCredentialsTest < MiniTest::Test
     proxy = mock 'proxy'
 
     credentials = GridCredentials.new(
-        proxy: proxy,
+        secret_proxy: proxy,
         login: login,
         host: host
     )
 
     Gsi::SSH.expects(:start).with(host, login, proxy).once.raises(Gsi::ProxyError)
-    credentials.expects(:proxy=).with(nil).once
+    credentials.expects(:secret_proxy=).with(nil).once
     credentials.expects(:save).once
 
     assert_raises Gsi::ProxyError do

@@ -5,9 +5,6 @@ require 'mocha/test_unit'
 
 class CloudVmRecordTest < MiniTest::Test
 
-  def setup
-  end
-
   def test_get_same_images_ids
     # given
     image1 = CloudImageSecrets.new({})

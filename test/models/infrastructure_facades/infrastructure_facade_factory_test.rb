@@ -6,12 +6,6 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructureFacadeTest < MiniTest::Test
 
-  def setup
-  end
-
-  def teardown
-  end
-
   def test_get_facade_for_fail
     assert_raises InfrastructureErrors::NoSuchInfrastructureError do
       InfrastructureFacadeFactory.get_facade_for('something_new')

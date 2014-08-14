@@ -5,12 +5,6 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class InfrastructureFacadeTest < MiniTest::Test
 
-  def setup
-  end
-
-  def teardown
-  end
-
   def test_monitoring_loop_uncaugth_integration
     rec1 = stub_everything('rec1') {
       expects(:should_destroy?).returns(false)
