@@ -112,7 +112,7 @@ class SimulationManager
             message: 'Time limit exceeded - terminating'
         },
         terminated_untimely: {
-            source_states: [:running],
+            source_states: [:running, :initializing],
             target_state: :error,
             resource_status: all_resource_states - [:running_sm],
             condition: :should_not_be_destroyed?,
@@ -120,7 +120,7 @@ class SimulationManager
             message: 'Simulation Manager has been terminated untimely - setting to ERROR state'
         },
         not_started_time_limit: {
-            source_states: [:created, :initializing],
+            source_states: [:created],
             target_state: :error,
             resource_status: [:not_available, :available, :initializing],
             condition: :time_limit_exceeded?,

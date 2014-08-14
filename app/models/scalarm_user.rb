@@ -80,6 +80,10 @@ class ScalarmUser < MongoActiveRecord
     end
   end
 
+  def self.get_anonymous_user
+    @anonymous_user ||= ScalarmUser.find_by_login(Utils::load_config['anonymous_login'])
+  end
+
   private
 
   def compute_ban_end(start_time)
