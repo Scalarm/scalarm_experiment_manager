@@ -11,14 +11,11 @@
   = render 'experiments/new/basic_information'
 
   %section.panel.radius.simulation_input
-
-    .switch.round.manual_parameter_space.right
-      %input#manual-on.hide(name="manual-switch" type="radio" checked)
-      %label(for="manual-on") Off
-
-      %input#manual-off(name="manual-switch" type="radio" checked)
-      %label(for="manual-off") On
-      %span
+    %ul.button-group.right.round
+      %li
+        %a#manual-off.tiny.button.secondary.clicked(href="#") On
+      %li
+        %a#manual-on.tiny.button.secondary(href="#") Off
 
     %h3.subheader= t('.input_header')
 
@@ -75,20 +72,20 @@
       });
 
       $("#new_experiment_submit").on("click", function() {
-        if($("#manual-on").is(":checked")) {
-          $("#import-form").submit();
+        if($("#manual-on").hasClass("checked")) {
+          $("#experiment_submit_form").submit();
         }
         else {
-          $("#experiment_submit_form").submit();
+          $("#import-form").submit();
         }
       });
 
       $("#check-experiment-size").on("click", function() {
-        if($("#manual-on").is(":checked")) {
-          input_space_importer.checkImportedSize();
+        if($("#manual-on").hasClass("checked")) {
+          doe_manager.checkExperimentSize();
         }
         else {
-          doe_manager.checkExperimentSize();
+          input_space_importer.checkImportedSize();
         }
       });
 
