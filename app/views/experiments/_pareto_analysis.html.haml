@@ -1,0 +1,70 @@
+%section.panel.radius.analysis-chart#pareto_charts_form
+  %h3= t("#{@experiment}")
+  %h3.subheader= t('charts.scatter.section_header')
+
+  = form_tag '', class: '' do
+    .row
+      %ul.inline-list
+        %li= submit_tag t('charts.load_button'), class: 'button radius'
+        %li= image_tag 'loading.gif', :id => 'busy_pareto', size: '16x16', style: 'display: none'
+
+#pareto_charts
+
+- content_for :javascript do
+  :javascript
+    console.log("pareto_chart!");
+    var pareto_loaded = false;
+
+    // 'Load chart' button handler
+    $('#pareto_charts_form input[type=submit]').bind('click', function() {
+      if(!pareto_loaded){
+        pareto_loaded = true;
+
+        $('#busy_pareto').show();
+
+        $("#pareto_charts").prepend("<div id='pareto_chart'></div>");
+        $("#pareto_chart").html("#{escape_javascript(render partial: 'pareto_chart')}")
+
+        $("#pareto_chart .pareto_chart_container").load("http://172.16.67.121:8080/pareto_chart?id=#{@experiment.id}",function() {$('#busy_pareto').hide();});
+
+        //---------------------
+
+        // $.ajax("http://172.16.67.121:8080/pareto_chart?id=#{@experiment.id}",
+        //     {
+        //         success: function(data) {
+        //             $('#busy_pareto').hide();
+        //             $("#pareto_chart .pareto_chart_container").html(data)
+        //           },
+        //         headers : {
+        //           "Access-Control-Allow-Origin" : "http://172.16.67.121:3000",//8080? albo te ustawienia w serwerze a nie tutaj?
+        //           "Access-Control-Allow-Credentials" : true
+        //         },
+        //         crossDomain: true,
+        //         xhrFields: {
+        //           withCredentials: true
+        //         }
+        //     })
+
+        //---------------------
+
+        // var invocation = new XMLHttpRequest();
+        // var url = 'http://172.16.67.121:8080/pareto_chart?id=#{@experiment.id}';
+        // if(invocation) {
+        //   invocation.open('GET', url, true);
+        //   invocation.withCredentials = true;
+        //   invocation.onreadystatechange = function(data) {
+        //       $('#busy_pareto').hide();
+        //       $("#pareto_chart .pareto_chart_container").html(data)
+        //     },
+        //   invocation.send(); 
+        // }
+
+      }
+
+      else{
+       $("#pareto_chart .pareto_chart_container").load("http://172.16.67.121:8080/pareto_chart?id=#{@experiment.id}",function() {$('#busy_pareto').hide();});
+      }
+
+      
+      return false;
+    });

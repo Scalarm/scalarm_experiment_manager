@@ -243,10 +243,20 @@ class ExperimentsController < ApplicationController
                             [@experiment.input_parameter_label_for(x), x]}
                       end
 
+    params = if done_run.nil?
+              [ [t('experiments.analysis.no_completed_runs'), nil] ]
+            else
+              done_run['arguments'].split(',').map{|x|
+                [@experiment.input_parameter_label_for(x), x]}
+            end
+
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
     moes_info[:moes_and_params] = moes_and_params.map{ |label, id|
+      "<option value='#{id}'>#{label}</option>" }.join
+
+    moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
     render json: moes_info

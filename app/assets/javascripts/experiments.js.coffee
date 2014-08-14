@@ -246,6 +246,14 @@ class window.ExperimentMonitor
         return $(this).val() == selected_option
       ).attr('selected', true)
 
+    $(".params_list").each (i, select_element) ->
+      selected_option = $(select_element).find(":selected").val()
+      $(select_element).html(moes_info.params)
+
+      $(select_element).find("option").filter(() ->
+        return $(this).val() == selected_option
+      ).attr('selected', true)
+
 
 class window.ExperimentBooster
   constructor: (@dialog_element_id) ->
@@ -308,7 +316,7 @@ class window.ExperimentLinksManager
 class window.AnalysisLinksManager
   constructor: (@modalSelector) ->
 
-    $(".histogram-analysis, .rtree-analysis, .bivariate-analysis").click (event) =>
+    $(".histogram-analysis, .rtree-analysis, .bivariate-analysis, .interaction-analysis, .pareto-analysis").click (event) =>
       className = $(event.currentTarget).attr('class').split()[0]
 
       $("#{@modalSelector} .content").hide()

@@ -2,3 +2,5 @@ config/secrets.yml
 config/scalarm.yml
 config/puma.rb
 .idea/
+tmp/
+log/

@@ -1,0 +1,20 @@
+%section.panel.radius.plot
+  %h3.subheader
+    = t('charts.pareto.header')
+    / = image_tag 'loading.gif', id: "busy_interaction_???", size: '16x16', style: 'display: none;'
+
+  .row
+    %span.button= t('charts.hide_button')
+
+  %br
+  / .interaction_chart_container{ id: "interaction_chart_container_#{@chart.x_axis}_#{@chart.y_axis}" }
+  .pareto_chart_container
+
+  :javascript
+    $(function() {
+      $('.plot .button').on('click', function() {
+        // $(this).parent().parent().remove()
+        $(this).parent().parent().parent().remove()
+        pareto_loaded = false;
+      });
+    });
