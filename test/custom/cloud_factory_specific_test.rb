@@ -10,12 +10,6 @@ require 'infrastructure_facades/clouds/providers/google'
 
 class CloudFactorySpecificTest < MiniTest::Test
 
-  def setup
-  end
-
-  def teardown
-  end
-
   CLIENT_CLASSES = {
       'pl_cloud' => PLCloud::CloudClient,
       'amazon' => AmazonCloud::CloudClient,
