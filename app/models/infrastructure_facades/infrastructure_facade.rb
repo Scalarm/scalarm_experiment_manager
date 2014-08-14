@@ -217,6 +217,10 @@ class InfrastructureFacade
     get_sm_records(user_id, experiment_id, attributes).count
   end
 
+  def create_prefix_dir
+
+  end
+
   # -- SimulationManger delegation default implementation --
 
   def _simulation_manager_before_monitor(record); end

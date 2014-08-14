@@ -25,7 +25,7 @@ module SSHEnabledRecord
   create_session_method('ssh')
   create_session_method('scp')
 
-  def upload_file(local_path, remote_path='.')
+  def upload_file(local_path, remote_path=SimulationManagerRecord.path_prefix)
     scp_session do |scp|
       scp.upload! local_path, remote_path
     end

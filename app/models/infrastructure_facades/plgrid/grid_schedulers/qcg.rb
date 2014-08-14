@@ -32,7 +32,7 @@ module QcgScheduler
     end
 
     def prepare_job_descriptor(uuid, params)
-      log_path = PlGridJob.log_path(uuid)
+      log_path = SimulationManagerRecord.log_path(uuid)
       <<-eos
 #QCG executable=scalarm_job_#{uuid}.sh
 #QCG argument=#{uuid}
@@ -54,12 +54,12 @@ module QcgScheduler
       "P#{dd}DT#{hh}H#{mm}M"
     end
 
-    def send_job_files(sm_uuid, scp)
-      paths = ["/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
-               "/tmp/scalarm_job_#{sm_uuid}.sh",
-               "/tmp/scalarm_job_#{sm_uuid}.qcg"
+    def sm_files_paths(sm_uuid)
+      [
+          "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
+          "/tmp/scalarm_job_#{sm_uuid}.sh",
+          "/tmp/scalarm_job_#{sm_uuid}.qcg"
       ]
-      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, job)

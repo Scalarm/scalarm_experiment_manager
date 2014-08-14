@@ -29,10 +29,6 @@ class PrivateMachineRecord < MongoActiveRecord
     @experiment ||= Experiment.find_by_id(experiment_id)
   end
 
-  def log_path
-    "/tmp/log_sm_#{sm_uuid}"
-  end
-
   def monitoring_group
     self.credentials_id
   end

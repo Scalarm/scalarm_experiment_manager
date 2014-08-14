@@ -63,10 +63,6 @@ class CloudVmRecord < MongoActiveRecord
     self.save
   end
 
-  def log_path
-    "/tmp/log_sm_#{sm_uuid}"
-  end
-
   def monitoring_group
     self.image_secrets_id
   end

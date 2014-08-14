@@ -1,8 +1,8 @@
 # Subclasses must implement:
 # - short_name() -> String
 # - long_name() -> String
-# - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
-# - send_job_files(sm_uuid, scp)
+# - prepare_job_files(sm_uuid, params) - write files to '/tmp' needed to send to UI
+# - sm_files_paths(sm_uuid) - array of prepared Simulation Manager files paths (e.g. [/tmp/...])
 # - submit_job(ssh, job)
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
 # - cancel(ssh, record) - cancels job
@@ -76,6 +76,10 @@ ruby simulation_manager.rb
       cancel_sm_cmd(record),
       submit_job_cmd(record)
     ].join(';')
+  end
+
+  def send_job_files(sm_uuid, scp)
+    scp.upload_multiple! sm_files_paths(sm_uuid), SimulationManagerRecord.path_prefix
   end
 
 end

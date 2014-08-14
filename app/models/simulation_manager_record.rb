@@ -127,4 +127,20 @@ module SimulationManagerRecord
     end
   end
 
+  def self.path_prefix
+    '~/scalarm_experiments'
+  end
+
+  def self.log_path(uuid)
+    "#{path_prefix}/scalarm_job_#{uuid}.log"
+  end
+
+  def path_prefix
+    SimulationManagerRecord.path_prefix
+  end
+
+  def log_path
+    SimulationManagerRecord.log_path(sm_uuid)
+  end
+
 end

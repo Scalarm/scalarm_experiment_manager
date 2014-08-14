@@ -69,14 +69,6 @@ class PlGridJob < MongoActiveRecord
     @credentials ||= GridCredentials.find_by_user_id(user_id)
   end
 
-  def log_path
-    PlGridJob.log_path(sm_uuid)
-  end
-
-  def self.log_path(uuid)
-    "scalarm_job_#{uuid}.log"
-  end
-
   def validate
     raise InfrastructureErrors::NoCredentialsError if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid

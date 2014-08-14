@@ -175,4 +175,12 @@ class SimulationManagerRecordTest < MiniTest::Test
     assert_equal :running, @record.state
   end
 
+  # NOTE: this test will stop to work if prefix or log format will be changed
+  def test_log_path
+    job = MockRecord.new({})
+    job.stubs(:sm_uuid).returns('abc')
+
+    assert_equal '~/scalarm_experiments/scalarm_job_abc.log', job.log_path
+  end
+
 end

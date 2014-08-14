@@ -29,13 +29,12 @@ module GliteScheduler
       IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid, params))
     end
 
-    def send_job_files(sm_uuid, scp)
-      paths = [
+    def sm_files_paths(sm_uuid)
+      [
           "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
           "/tmp/scalarm_job_#{sm_uuid}.sh",
           "/tmp/scalarm_job_#{sm_uuid}.jdl"
       ]
-      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, job)
@@ -125,7 +124,7 @@ module GliteScheduler
     end
 
     def prepare_job_descriptor(uuid, params)
-      log_path = PlGridJob.log_path(uuid)
+      log_path = SimulationManagerRecord.log_path(uuid)
       <<-eos
   Executable = "scalarm_job_#{uuid}.sh";
   Arguments = "#{uuid}";
