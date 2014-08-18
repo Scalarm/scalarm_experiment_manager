@@ -118,9 +118,9 @@ module GliteScheduler
       [
         'dwarf.wcss.wroc.pl',
         'grid.cyf-kr.edu.pl',
-        'grid.icm.edu.pl',
-        'grid.task.gda.pl',
-        'reef.man.poznan.pl'
+        # 'grid.icm.edu.pl', # TODO: no ruby available!
+        # 'grid.task.gda.pl', # TODO: no ruby available!
+        # 'reef.man.poznan.pl' # TODO: no ruby available!
       ]
     end
 
