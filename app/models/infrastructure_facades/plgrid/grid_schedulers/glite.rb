@@ -1,5 +1,8 @@
 require_relative '../pl_grid_scheduler_base'
 
+require 'infrastructure_facades/shell_commands'
+include ShellCommands
+
 module GliteScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
@@ -52,13 +55,16 @@ module GliteScheduler
       match ? match[1] : nil
     end
 
-    def glite_state(ssh, job)
-      output = PlGridScheduler.execute_glite_command "glite-wms-job-status #{job.job_id}", ssh
-      GliteScheduler::PlGridScheduler.parse_job_status(output)
+    def get_job_info(ssh, job_id)
+      PlGridScheduler.execute_glite_command("glite-wms-job-status #{job_id}", ssh)
+    end
+
+    def glite_state(ssh, job_id)
+      GliteScheduler::PlGridScheduler.parse_job_status(get_job_info(ssh, job_id))
     end
 
     def self.parse_job_status(state_output)
-      match = state_output.match /Current Status:\s+(\S+)/
+      match = state_output.match /Current Status:\s+(.*)$/
       match ? match[1] : nil
     end
 
@@ -70,8 +76,8 @@ module GliteScheduler
     # Running	- The job is running on a WN
     # Done(Success) - The job has finished successfully
     # Cleared - The Output Sandbox has been retrieved by the user
-    # Aborted #TODO?
-    # Done(Exit Code !=0) #TODO?
+    # Aborted
+    # Done(Exit Code !=0)
 
     STATES_MAPPING = {
         'Submitted' => :initializing,
@@ -79,12 +85,21 @@ module GliteScheduler
         'Ready' => :initializing,
         'Scheduled' => :initializing,
         'Running' => :running,
-        'Done(Success)' => :deactivated,
+        'Aborted' => :deactivated,
+        'Cancelled' => :deactivated,
+        'Done.*' => :deactivated,
         'Cleared' => :deactivated
     }
 
+    def self.map_status(status)
+      matching_states = STATES_MAPPING.select do |reg_str, _|
+        /#{reg_str}/ =~ status
+      end
+      matching_states.values.first
+    end
+
     def status(ssh, job)
-      STATES_MAPPING[glite_state(ssh, job)] or :error
+      PlGridScheduler.map_status(glite_state(ssh, job.job_id)) or :error
     end
 
     def cancel(ssh, record)
@@ -157,9 +172,20 @@ module GliteScheduler
     # end
 
     def get_log(ssh, job)
+      out_log = ssh.exec!(tail(get_glite_output_to_file(ssh, job), 25))
+
+        <<-eos
+--- gLite info ---
+#{get_job_info(ssh, job.job_id)}
+--- Simulation Manager log ---
+#{out_log}
+        eos
+    end
+
+    def get_glite_output_to_file(ssh, job)
       output = PlGridScheduler.execute_glite_command("glite-wms-job-output --dir . #{job.job_id}", ssh)
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
-      ssh.exec!("tail -25 #{output_dir}/#{job.log_path}")
+      "#{output_dir}/#{job.log_path}"
     end
 
     def self.parse_get_output(output)
@@ -173,7 +199,7 @@ module GliteScheduler
       cmd = "unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}"
       begin
         result = nil
-        timeout 10 do
+        timeout 15 do
           result = ssh.exec! cmd
         end
         raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/
