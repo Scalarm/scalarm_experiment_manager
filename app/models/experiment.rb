@@ -338,7 +338,7 @@ class Experiment < MongoActiveRecord
   ## doe_list = [ [ doe_id, [ param_1, param_2 ] ], ... ]
   def self.prepare_experiment_input(simulation, partial_experiment_input, doe_list = [])
     partial_experiment_input = self.nested_json_to_hash(partial_experiment_input)
-    experiment_input = JSON.parse simulation.input_specification
+    experiment_input = simulation.input_specification
 
     experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|

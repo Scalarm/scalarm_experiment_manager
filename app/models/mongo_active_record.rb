@@ -241,7 +241,7 @@ class MongoActiveRecord
 
   def self.parse_json_if_string(attribute)
     define_method attribute do
-      value = get_attribute(attribute)
+      value = get_attribute(attribute.to_s)
       value.kind_of?(String) and JSON.parse(value) or value
     end
   end

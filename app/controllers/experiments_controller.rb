@@ -544,7 +544,7 @@ class ExperimentsController < ApplicationController
   end
 
   def new
-    @simulation_input = JSON.parse(@simulation.input_specification)
+    @simulation_input = @simulation.input_specification
   end
 
   # getting id of a random running experiment
