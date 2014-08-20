@@ -57,11 +57,11 @@ class PlGridFacade < InfrastructureFacade
       end
 
       credentials.ssh_session do |ssh|
-        cmd = [
-            "chmod a+x monitor",
-            "nohup ./monitor &"
-        ]
-        ssh.exec!(cmd.join(';'))
+        cmd = ShellCommands.chain(
+            ShellCommands.mute("chmod a+x monitor"),
+            ShellCommands.run_in_background("./monitor")
+        )
+        Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
       end
     end
 
