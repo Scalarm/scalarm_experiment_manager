@@ -21,7 +21,7 @@ class PlGridFacade < InfrastructureFacade
     @scheduler_class = scheduler_class
     @long_name = scheduler_class.long_name
     @short_name = scheduler_class.short_name
-    @ui_grid_host = 'ui.grid.cyfronet.pl'
+    @ui_grid_host = 'zeus.cyfronet.pl'
     @ssh_sessions = {}
     super()
   end
@@ -38,13 +38,33 @@ class PlGridFacade < InfrastructureFacade
     sm_uuid = SecureRandom.uuid
 
     # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
+    unless additional_params[:onsite_monitoring] == "1"
+      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
+    end
 
     credentials = GridCredentials.find_by_user_id(user_id)
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
     instances_count.times { create_record(user_id, experiment_id, sm_uuid, additional_params).save }
+
+    if additional_params[:onsite_monitoring] == "1"
+      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id)
+
+      credentials.scp_session do |scp|
+        scp.upload! File.join('/tmp', "scalarm_monitoring_#{sm_uuid}", 'config.json'), '.'
+        scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', 'monitor'), '.'
+      end
+
+      credentials.ssh_session do |ssh|
+        cmd = [
+            "chmod a+x monitor",
+            "nohup ./monitor &"
+        ]
+        ssh.exec!(cmd.join(';'))
+      end
+    end
+
 
     ['ok', I18n.t('plgrid.job_submission.ok', instances_count: instances_count)]
   end
@@ -78,6 +98,7 @@ class PlGridFacade < InfrastructureFacade
       credentials.login = params[:username]
       credentials.password = params[:password]
       credentials.host = params[:host]
+      credentials.secret_proxy = nil
     else
       credentials = GridCredentials.new(user_id: user.id, host: params[:host], login: params[:username])
       credentials.password = params[:password]

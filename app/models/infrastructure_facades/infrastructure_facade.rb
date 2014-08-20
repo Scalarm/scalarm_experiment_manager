@@ -90,6 +90,39 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
+  def self.prepare_monitoring_package(sm_uuid, user_id)
+    Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
+
+    Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
+    # prepare sm configuration
+    temp_password = SimulationManagerTempPassword.where(user_id: user_id).first
+
+    if temp_password.nil?
+      temp_password = SimulationManagerTempPassword.new(
+          sm_uuid: sm_uuid,
+          password: SecureRandom.base64,
+          user_id: user_id
+      )
+
+      temp_password.save
+    end
+
+    sm_config = {
+        InformationServiceAddress: Rails.application.secrets.information_service_url,
+        Login: temp_password.sm_uuid,
+        Password: temp_password.password,
+        Infrastructures: [ "qsub" ]
+    }
+
+    if Rails.application.secrets.include?(:sm_information_service_url)
+      sm_config[:InformationServiceAddress] = Rails.application.secrets.sm_information_service_url
+    end
+
+    IO.write(File.join('/tmp', monitoring_package_dir(sm_uuid), 'config.json'), sm_config.to_json)
+    # zip all files
+    Dir.chdir(Rails.root)
+  end
+
   # TODO: for bakckward compatibility
   def current_state(user_id)
     "You have #{count_sm_records} Simulation Managers scheduled"
@@ -226,4 +259,7 @@ class InfrastructureFacade
   def init_resources; end
   def clean_up_resources; end
 
+  def monitoring_package_dir(sm_uuid)
+    "scalarm_monitoring_#{sm_uuid}"
+  end
 end

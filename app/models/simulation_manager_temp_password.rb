@@ -20,10 +20,16 @@ class SimulationManagerTempPassword < MongoActiveRecord
   end
 
   def scalarm_user
-    if experiment_id.nil?
-      nil
+    if self.user_id.nil?
+
+      if self.experiment_id.nil?
+        nil
+      else
+        ScalarmUser.find_by_id(Experiment.find_by_id(self.experiment_id).user_id)
+      end
+
     else
-      ScalarmUser.find_by_id(Experiment.find_by_id(experiment_id).user_id)
+      ScalarmUser.find_by_id(self.user_id)
     end
   end
 

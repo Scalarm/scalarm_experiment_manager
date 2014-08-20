@@ -50,14 +50,6 @@
               = text_field_tag :start_at
             .large-1.columns
 
-          .row
-            .large-4.columns
-              = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
-            .large-4.columns
-              = check_box_tag :onsite_monitoring
-            .large-1.columns
-
-
           .row#submit-button
             .large-12.columns.text-center
               = submit_tag t('infrastructure.information.submit'), class: 'button radius'

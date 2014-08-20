@@ -72,7 +72,7 @@
       });
 
       $("#new_experiment_submit").on("click", function() {
-        if($("#manual-on").hasClass("checked")) {
+        if($("#manual-off").hasClass("clicked")) {
           $("#experiment_submit_form").submit();
         }
         else {
@@ -81,7 +81,7 @@
       });
 
       $("#check-experiment-size").on("click", function() {
-        if($("#manual-on").hasClass("checked")) {
+        if($("#manual-off").hasClass("clicked")) {
           doe_manager.checkExperimentSize();
         }
         else {
