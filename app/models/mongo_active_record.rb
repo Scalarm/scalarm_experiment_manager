@@ -5,6 +5,8 @@ require 'json'
 class MongoActiveRecord
   include Mongo
 
+  attr_reader :attributes
+
   def self.execute_raw_command_on(db, cmd)
     @@db.connection.db(db).command(cmd)
   end
@@ -36,7 +38,7 @@ class MongoActiveRecord
 
     if setter
       set_attribute(method_name, args.first)
-    elsif @attributes.include?(method_name)
+    elsif attributes.include?(method_name)
       get_attribute(method_name)
     else
       nil
@@ -49,7 +51,7 @@ class MongoActiveRecord
   end
 
   def get_attribute(attribute)
-    @attributes[attribute]
+    attributes[attribute]
   end
 
   # save/update json document in db based on attributes
@@ -87,7 +89,10 @@ class MongoActiveRecord
   end
 
   def to_h
-    Hash[@attributes.map {|key, value| [key, (value.kind_of?(BSON::ObjectId) ? value.to_s : value)]}]
+    Hash[attributes.keys.map do |key|
+      value = self.send(key)
+      [key, (value.kind_of?(BSON::ObjectId) ? value.to_s : value)]
+    end]
   end
 
   def to_json
