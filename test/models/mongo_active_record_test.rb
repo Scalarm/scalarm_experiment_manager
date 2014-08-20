@@ -5,6 +5,7 @@ require 'mocha/test_unit'
 class MongoActiveRecordTest < MiniTest::Test
 
   class SomeRecord < MongoActiveRecord
+    parse_json_if_string :string_or_json
   end
 
   def test_find_by_id_invalid
@@ -63,6 +64,22 @@ class MongoActiveRecordTest < MiniTest::Test
     record.expects(:save).never
 
     record.save_if_exists
+  end
+
+
+
+  def test_parse_json_if_string
+    json_record = SomeRecord.new({})
+    json_record.stubs(:get_attribute).with(:string_or_json).returns({"a" => 1})
+
+    string_record = SomeRecord.new({})
+    string_record.stubs(:get_attribute).with(:string_or_json).returns('{"b":2}')
+
+    soj_json = json_record.string_or_json
+    soj_string = string_record.string_or_json
+
+    assert_equal 1, soj_json['a']
+    assert_equal 2, soj_string['b']
   end
 
 end

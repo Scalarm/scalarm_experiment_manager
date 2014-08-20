@@ -239,6 +239,13 @@ class MongoActiveRecord
 
   # UTILS
 
+  def self.parse_json_if_string(attribute)
+    define_method attribute do
+      value = get_attribute(attribute)
+      value.kind_of?(String) and JSON.parse(value) or value
+    end
+  end
+
   def self.next_sequence
     self.get_next_sequence(self.collection_name)
   end
