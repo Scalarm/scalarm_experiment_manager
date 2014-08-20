@@ -11,6 +11,8 @@ module Gsi
         raise InvalidProxyError
       when /The proxy credential.*expired/m
         raise ProxyExpiredError
+      when /Text file busy/
+        # copying file which is used by another program
       else
         raise ClientError.new("Unknown gsissh init error: #{output}")
     end
