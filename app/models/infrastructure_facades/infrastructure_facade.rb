@@ -259,7 +259,7 @@ class InfrastructureFacade
   def init_resources; end
   def clean_up_resources; end
 
-  def monitoring_package_dir(sm_uuid)
+  def self.monitoring_package_dir(sm_uuid)
     "scalarm_monitoring_#{sm_uuid}"
   end
 end
