@@ -27,10 +27,11 @@
 
   .row.small-12.columns
     %ul
-      %li
-        %strong= t('.resource_state') + ': '
-        #resource-state{style: 'display: inline;'}
-          = image_tag 'loading.gif', size: '16x16'
+      - unless record.infrastructure_side_monitoring
+        %li
+          %strong= t('.resource_state') + ': '
+          #resource-state{style: 'display: inline;'}
+            = image_tag 'loading.gif', size: '16x16'
 
       -# infrastructure-specific info
       -begin
