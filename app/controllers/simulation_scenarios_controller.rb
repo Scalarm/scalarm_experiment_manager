@@ -60,7 +60,11 @@ class SimulationScenariosController < ApplicationController
   end
 
   def show
-    render json: @simulation_scenario.to_json
+    render json: if @simulation_scenario
+          {status: 'ok', data: @simulation_scenario.to_h }
+        else
+          {status: 'error', error_code: 'not_found'}
+        end
   end
 
   def code_base
