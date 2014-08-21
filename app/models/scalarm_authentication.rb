@@ -55,7 +55,7 @@ module ScalarmAuthentication
     Rails.logger.debug("[authentication] using DN: '#{cert_dn}'")
 
     begin
-      session[:user] = ScalarmUser.authenticate_with_certificate(cert_dn).id
+      session[:user] = ScalarmUser.authenticate_with_certificate(cert_dn).id.to_s
       @current_user = ScalarmUser.find_by_id(session[:user])
     rescue Exception => e
       @current_user = nil

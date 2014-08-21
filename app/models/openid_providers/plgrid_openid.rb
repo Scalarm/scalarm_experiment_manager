@@ -78,7 +78,7 @@ module PlGridOpenID
     update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
-    session[:user] = scalarm_user.id
+    session[:user] = scalarm_user.id.to_s
     successful_login
   end
 

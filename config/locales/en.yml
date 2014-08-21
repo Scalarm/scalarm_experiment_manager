@@ -225,6 +225,12 @@ en:
       select_x: Select values for the X axis (MoE or input)
       select_y: Select values for the Y axis (MoE or input)
 
+    interaction:
+      section_header: Interaction analysis
+      header: Interaction plot
+      select_first: Select first parameter
+      select_second: Select second parameter
+
 
   security:
     sim_authorization_error: "Simulation Manager '%{sm_uuid}' is not authorized to execute experiment '%{experiment_id}'"

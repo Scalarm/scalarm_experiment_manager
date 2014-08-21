@@ -1,16 +1,15 @@
 %section.panel.radius.analysis-chart#interaction_charts_form
-  %h3= t("#{@experiment}")
-  %h3.subheader= t('charts.scatter.section_header')
+  %h3.subheader= t('charts.interaction.section_header')
 
   = form_tag '', class: '' do
     .row
       .small-5.columns
-        = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
+        = label_tag :first_param, t('charts.interaction.select_first') + ':', class: 'inline'
       .small-7.columns
         = select_tag 'x_axis', '', { class: 'params_list' }
     .row
       .small-5.columns
-        = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
+        = label_tag :second_param, t('charts.interaction.select_second') + ':', class: 'inline'
       .small-7.columns
         = select_tag 'y_axis', '', { class: 'params_list' }
     .row
@@ -23,8 +22,6 @@
 - content_for :javascript do
   :javascript
     var interaction_chart_counter = 0;
-    console.log("interaction_charts!");
-	
 
     // 'Load chart' button handler
     $('#interaction_charts_form input[type=submit]').bind('click', function() {
@@ -32,13 +29,21 @@
 
       var x_axis = $('#interaction_charts_form select[name=\'x_axis\'] option:selected').val().split("___").slice(-1)[0];
       var y_axis = $('#interaction_charts_form select[name=\'y_axis\'] option:selected').val().split("___").slice(-1)[0];
-
-      $("#interaction_charts").prepend("<div id='interaction_chart_" + interaction_chart_counter + "'></div>");
-      $("#interaction_chart_"+interaction_chart_counter).html("#{escape_javascript(render partial: 'interaction_chart')}")
-
       
-      $("#interaction_chart_"+interaction_chart_counter+" .interaction_chart_container").load("http://172.16.67.121:8080/interaction_chart?id=#{@experiment.id}&param1="+x_axis+"&param2="+y_axis+"&chart_id="+interaction_chart_counter, function() {$('#busy_interaction').hide();});
-      //.load("/charts/interaction_chart...
+      var id_of_chart_container = "interaction_chart_" + interaction_chart_counter;
+      var div_tag_with_id = "<div id='" + id_of_chart_container + "'></div>";
+      $("#interaction_charts").prepend(div_tag_with_id);
+      $("#"+id_of_chart_container).html("#{escape_javascript(render partial: 'interaction_chart')}")
+
+      var query_params = "id=#{@experiment.id}";
+      query_params += "&param1="+x_axis;
+      query_params += "&param2="+y_axis;
+      query_params += "&chart_id="+interaction_chart_counter;
+      query_params += "&func_defined="+(typeof interaction_interaction!='undefined' && typeof interaction_to_send!='undefined');
+
+      $("#"+id_of_chart_container+" .interaction_chart_container").load("/chart/interaction?"+query_params, function() {
+        $('#busy_interaction').hide();
+      });
 
       interaction_chart_counter++;
       return false;

@@ -67,7 +67,7 @@ module GoogleOpenID
       user = OpenIDUtils::get_or_create_user_with(:email, resp_email)
 
       flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
-      session[:user] = user.id
+      session[:user] = user.id.to_s
       successful_login
 
     else

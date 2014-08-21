@@ -25,7 +25,7 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id
+        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id.to_s
         #session[:grid_credentials] = GridCredentials.find_by_user_id(session[:user])
 
         successful_login
