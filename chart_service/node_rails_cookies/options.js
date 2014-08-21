@@ -1,0 +1,14 @@
+var options = {
+	secret_key_base: "d132fd22bc612e157d722e980c4b0525b938f225f9f7f66ea",
+	encrypted_cookie_salt: "encrypted cookie",
+	encrypted_signed_cookie_salt: "signed encrypted cookie",
+	iterations: 1000,
+	keylen: 64,
+	cipherName: 'aes-256-cbc'
+};
+
+var cookie = "M0o4WEczUEM1UndWZXU5aXVSemlHTUNTT002dzhwY0hUL2ZOdjh4NHpHUkdKWWN3R2RoRU1oc1R0Rkp0NFVCNTJOMzdPc3JnN0RYVW1tZkxsQzRGYVNHV2hndFVSL1BDeWwxV2RTMStBK0w1NUNob1FJUDE2d3VCR1J2c1ZGS2Rabko5cnJFcTRqeFhJcEtZMDBmVCtPVFVLQkJ3L09zNUpZVmNoNHIwd0hHSVA3b1FwWUNLZGxTZDduS2JFVlprSmx4Q1Bsek9QUXpITU11Z0IzaWpTSmVZTFMzRkpoOVExYUZWaFhCR3MzZDdMbkZFdnlKQW5ucGwwdSs4YisrV1lDRmtrVU9yRFl5ODliSWpmVWljOTM2SHA5djRWakVxY0dYT2VNZDRjTm1JdFFhNVY5aUY5R25aVDFuWE41bEVvZ2IrTkNOU1owU1ZZbDRGT2Fyc3prZjh0bFJEU2NWRjlKZFNJOHlRcExNPS0tams3eFZEL0ZmODd5RXhOQ1VwNjlJdz09--eb474ab66d97eab3f79581699b93b71e8b8322e9"
+
+
+module.exports.options = options;
+module.exports.cookie = cookie;

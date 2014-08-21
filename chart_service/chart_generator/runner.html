@@ -1,0 +1,23 @@
+<html>
+<head>
+	<title>-Chart</title>
+	<meta http-equiv="content-type" content="text/html; charset=UTF8">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.js"></script>
+	<script type="text/javascript">
+		function action() {
+			$("#content").load("http://172.16.67.121:8080/interaction_chart");
+		};
+		function actionPareto() {
+			$("#content").load("http://172.16.67.121:8080/pareto_chart");
+		}
+	</script>
+</head>
+<body>
+<div id="interaction_charts">
+	<button onclick="action()">Magia!</button>
+	<button onclick="actionPareto()">Magia Pareto!</button>
+	<div id="content"></div>
+</div>
+</body>
+</html>

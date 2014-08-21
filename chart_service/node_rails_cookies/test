@@ -1,0 +1,9 @@
+var cookieDecoder = require("./node_rails_cookies.js");
+var data = require("./options.js");
+
+run = function() {
+	var func = cookieDecoder(data.options);
+	var output = func(data.cookie);
+
+	console.log(output);
+}();

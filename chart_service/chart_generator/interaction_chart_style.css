@@ -1,0 +1,50 @@
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+}
+
+.line_chart {
+	stroke: blue;
+	stroke-width: 2;
+	stroke-dasharray: 5,5;
+}
+.line_chart.x1 {
+	stroke: red;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+.chart div {
+	font: 10px sans-serif;
+	background-color: steelblue;
+	text-align: left;
+	padding: 3px;
+	margin: 1px;
+	color: white;
+}
+
+circle {
+	stroke: #424242;
+	stroke-width: 2px;
+	fill: #F2F2F2;
+}
+
+circle:hover {
+	stroke: black;
+	stroke-width: 3px;
+	fill: white;
+}
+
+.legend rect {
+  fill:white;
+  stroke:black;
+  opacity:0.8;
+}
