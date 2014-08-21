@@ -2,6 +2,38 @@ var jsdom = require("jsdom").jsdom();
 var d3 = require("d3");
 var db_retriever = require("./data_retriever.js");
 
+
+module.exports.prepare_chart = function(type, parameters, callback, err) {
+    switch(type) {
+        case "/interaction":
+            db_retriever.getInteraction(parameters["id"], 
+                                        parameters["param1"], 
+                                        parameters["param2"], function(data) {
+                var object = {};
+                object.content = prepare_interaction_chart_content(parameters, data);
+                callback(object);
+            }, err);
+            break;
+        case "/pareto":
+            // db_retriever.getPareto(id, function(data) {
+            //     ...
+            // })
+            break;
+        default:
+            err("WRONG!");
+    }
+}
+
+function prepare_interaction_chart_content(parameters, data) {
+    var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
+    output += "\nvar data = " + JSON.stringify(data) + ";";
+    output += "\ninteraction_to_send(i, \"" + parameters["param1"] + "\", \"" + parameters["param2"] + "\", data);";
+    output += "\ninteraction_interaction(i);";
+    output += "})();</script>";
+
+    return output;
+}
+
 module.exports.prepare_interaction_chart = function(id, param1, param2, callback, err) {
     db_retriever.getInteraction(id, param1, param2, function(data) {
         callback(data);
