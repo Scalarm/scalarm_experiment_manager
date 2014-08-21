@@ -1,6 +1,6 @@
 var jsdom = require("jsdom").jsdom();
 var d3 = require("d3");
-var db_retriever = require("../mongodb-data-retriever/data_retriever.js");
+var db_retriever = require("./data_retriever.js");
 
 module.exports.prepare_interaction_chart = function(id, param1, param2, callback, err) {
     db_retriever.getInteraction(id, param1, param2, function(data) {
