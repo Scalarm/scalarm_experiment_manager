@@ -67,8 +67,8 @@ class PrivateMachineFacade < InfrastructureFacade
   def add_credentials(user, params, session)
     credentials = PrivateMachineCredentials.new(
         'user_id'=>user.id,
-        'host'=>params[:host],
-        'port'=>params[:port].to_i,
+        'host'=> params[:host],
+        'port'=> (params[:port] or 22).to_i,
         'login'=>params[:login]
     )
     credentials.secret_password = params[:secret_password]

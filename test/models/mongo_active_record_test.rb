@@ -5,6 +5,7 @@ require 'mocha/test_unit'
 class MongoActiveRecordTest < MiniTest::Test
 
   class SomeRecord < MongoActiveRecord
+    parse_json_if_string 'string_or_json'
   end
 
   def test_find_by_id_invalid
@@ -63,6 +64,36 @@ class MongoActiveRecordTest < MiniTest::Test
     record.expects(:save).never
 
     record.save_if_exists
+  end
+
+  def test_parse_json_if_string
+    json_record = SomeRecord.new({})
+    json_record.stubs(:get_attribute).with('string_or_json').returns({"a" => 1})
+
+    string_record = SomeRecord.new({})
+    string_record.stubs(:get_attribute).with('string_or_json').returns('{"b":2}')
+
+    soj_json = json_record.string_or_json
+    soj_string = string_record.string_or_json
+
+    assert_equal({"a" => 1}, soj_json)
+    assert_equal({"b" => 2}, soj_string)
+  end
+
+  def test_to_h_with_json_string
+    string_record = SomeRecord.new({})
+    string_record.stubs(:attributes).returns({'string_or_json' => '{"b":2}', 'other' => 'test'})
+    string_record.stubs(:get_attribute).with('string_or_json').returns('{"b":2}')
+    string_record.stubs(:get_attribute).with('other').returns('test')
+
+    hashed = string_record.to_h
+
+    puts hashed
+    assert_kind_of Hash, hashed
+    assert_includes hashed, 'string_or_json'
+    assert_equal({"b"=>2}, hashed['string_or_json'])
+    assert_includes hashed, 'other'
+    assert_equal('test', hashed['other'])
   end
 
 end

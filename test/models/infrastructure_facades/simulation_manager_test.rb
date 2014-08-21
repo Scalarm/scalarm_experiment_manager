@@ -231,6 +231,16 @@ class SimulationManagerTest < MiniTest::Test
     @sm.monitor
   end
 
+  def test_wait_on_initializing
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_stateus).returns(:initializing)
+    @sm.stubs(:should_not_be_destroyed?).returns(true)
+
+    @sm.expects(:store_terminated_error).never
+
+    @sm.monitor
+  end
+
   # On changing state to ERROR, stop should be invoked when resource was tried to acquire
   def test_stop_on_set_error_state
     SimulationManagerRecord::POSSIBLE_STATES.each do |state|

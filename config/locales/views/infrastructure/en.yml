@@ -115,6 +115,7 @@ en:
       table_label: "Manage submitted credentials"
       machine_submission_label: "Add credentials"
       no_key_note: "<b>Note:</b> when using this scheduler, your keys and proxy certificates stored on UI cannot be protected by password."
+      no_key_note_qcg: "<b>Note:</b> when using this scheduler, you must either use proxy certificate (fetched from PL-Grid OpenID) or your keys and proxy certificates stored on UI cannot be protected by password."
     refresh_button: "Refresh tree"
   infrastructures_controller:
     tree:
@@ -185,6 +186,6 @@ en:
     job_desc:
       nodes: "Nodes count"
       cores_per_node: "Cores per node"
-      host: "PL-Grid host"
+      host: "PL-Grid Compute Engine"
     job_submission:
       submit_job_failed: "Could not submit job"

@@ -18,6 +18,8 @@ require_relative 'simulation_elements/simulation_progress_monitor'
 
 class Simulation < MongoActiveRecord
 
+  parse_json_if_string 'input_specification'
+
   def self.collection_name
     'simulations'
   end
@@ -77,7 +79,7 @@ class Simulation < MongoActiveRecord
   def input_parameters
     parameters = {}
 
-    JSON.parse(self.input_specification).each do |group|
+    self.input_specification.each do |group|
       group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
           param_uid = Experiment.parameter_uid(group, entity, parameter)
@@ -92,7 +94,7 @@ class Simulation < MongoActiveRecord
   def input_parameter_label_for(uid)
     entity_group_id, entity_id, parameter_id = uid.split(Experiment::ID_DELIM)
 
-    JSON.parse(self.input_specification).each do |entity_group|
+    self.input_specification.each do |entity_group|
       if entity_group['id'] == entity_group_id
         entity_group['entities'].each do |entity|
           if entity['id'] == entity_id

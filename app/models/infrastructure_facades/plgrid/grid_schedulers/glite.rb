@@ -1,5 +1,8 @@
 require_relative '../pl_grid_scheduler_base'
 
+require 'infrastructure_facades/shell_commands'
+include ShellCommands
+
 module GliteScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
@@ -26,7 +29,7 @@ module GliteScheduler
 
     def prepare_job_files(sm_uuid, params)
       IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid))
+      IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid, params))
     end
 
     def send_job_files(sm_uuid, scp)
@@ -52,13 +55,16 @@ module GliteScheduler
       match ? match[1] : nil
     end
 
-    def glite_state(ssh, job)
-      output = PlGridScheduler.execute_glite_command "glite-wms-job-status #{job.job_id}", ssh
-      GliteScheduler::PlGridScheduler.parse_job_status(output)
+    def get_job_info(ssh, job_id)
+      PlGridScheduler.execute_glite_command("glite-wms-job-status #{job_id}", ssh)
+    end
+
+    def glite_state(ssh, job_id)
+      GliteScheduler::PlGridScheduler.parse_job_status(get_job_info(ssh, job_id))
     end
 
     def self.parse_job_status(state_output)
-      match = state_output.match /Current Status:\s+(\S+)/
+      match = state_output.match /Current Status:\s+(.*)$/
       match ? match[1] : nil
     end
 
@@ -70,6 +76,8 @@ module GliteScheduler
     # Running	- The job is running on a WN
     # Done(Success) - The job has finished successfully
     # Cleared - The Output Sandbox has been retrieved by the user
+    # Aborted
+    # Done(Exit Code !=0)
 
     STATES_MAPPING = {
         'Submitted' => :initializing,
@@ -77,15 +85,24 @@ module GliteScheduler
         'Ready' => :initializing,
         'Scheduled' => :initializing,
         'Running' => :running,
-        'Done(Success)' => :deactivated,
+        'Aborted' => :deactivated,
+        'Cancelled' => :deactivated,
+        'Done.*' => :deactivated,
         'Cleared' => :deactivated
     }
 
-    def status(ssh, job)
-      STATES_MAPPING[glite_state(ssh, job)] or :error
+    def self.map_status(status)
+      matching_states = STATES_MAPPING.select do |reg_str, _|
+        /#{reg_str}/ =~ status
+      end
+      matching_states.values.first
     end
 
-    def cancel(ssh, job)
+    def status(ssh, job)
+      PlGridScheduler.map_status(glite_state(ssh, job.job_id)) or :error
+    end
+
+    def cancel(ssh, record)
       PlGridScheduler.execute_glite_command cancel_sm_cmd(record), ssh
     end
 
@@ -98,12 +115,31 @@ module GliteScheduler
       ssh.exec!("rm scalarm_job_#{job.sm_uuid}.jdl")
     end
 
-    # wcss - "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid"
-    # cyfronet - "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid"
-    # icm - "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid"
-    # task - "cream.grid.task.gda.pl:8443/cream-pbs-plgrid"
-    # pcss - "creamce.reef.man.poznan.pl:8443/cream-pbs-plgrid"
-    def prepare_job_descriptor(uuid)
+    def self.default_host
+      'grid.cyf-kr.edu.pl'
+    end
+
+    def self.host_addresses
+      {
+        'dwarf.wcss.wroc.pl' => "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid", # wcss
+        'grid.cyf-kr.edu.pl' => "cream.grid.cyf-kr.edu.pl:8443/cream-pbs-plgrid", # cyfronet
+        'grid.icm.edu.pl' => "ce9.grid.icm.edu.pl:8443/cream-pbs-plgrid", # icm
+        'grid.task.gda.pl' => "cream.grid.task.gda.pl:8443/cream-pbs-plgrid", # task
+        'reef.man.poznan.pl' => "creamce.reef.man.poznan.pl:8443/cream-pbs-plgrid" # pcss
+      }
+    end
+
+    def self.available_hosts
+      [
+        'dwarf.wcss.wroc.pl',
+        'grid.cyf-kr.edu.pl',
+        # 'grid.icm.edu.pl', # TODO: no ruby available!
+        # 'grid.task.gda.pl', # TODO: no ruby available!
+        # 'reef.man.poznan.pl' # TODO: no ruby available!
+      ]
+    end
+
+    def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
       <<-eos
   Executable = "scalarm_job_#{uuid}.sh";
@@ -112,7 +148,7 @@ module GliteScheduler
   StdError = "#{log_path}";
   OutputSandbox = {"#{log_path}"};
   InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
-  Requirements = (other.GlueCEUniqueID == "dwarf.wcss.wroc.pl:8443/cream-pbs-plgrid");
+  Requirements = (other.GlueCEUniqueID == "#{self.class.host_addresses[(params['plgrid_host'] or self.class.default_host)]}");
   VirtualOrganisation = "vo.plgrid.pl";
       eos
     end
@@ -136,9 +172,20 @@ module GliteScheduler
     # end
 
     def get_log(ssh, job)
+      out_log = ssh.exec!(tail(get_glite_output_to_file(ssh, job), 25))
+
+        <<-eos
+--- gLite info ---
+#{get_job_info(ssh, job.job_id)}
+--- Simulation Manager log ---
+#{out_log}
+        eos
+    end
+
+    def get_glite_output_to_file(ssh, job)
       output = PlGridScheduler.execute_glite_command("glite-wms-job-output --dir . #{job.job_id}", ssh)
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
-      ssh.exec!("tail -25 #{output_dir}/#{job.log_path}")
+      "#{output_dir}/#{job.log_path}"
     end
 
     def self.parse_get_output(output)
@@ -152,7 +199,7 @@ module GliteScheduler
       cmd = "unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}"
       begin
         result = nil
-        timeout 10 do
+        timeout 15 do
           result = ssh.exec! cmd
         end
         raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/

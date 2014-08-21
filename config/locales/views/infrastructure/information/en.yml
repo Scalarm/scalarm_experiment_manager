@@ -61,7 +61,7 @@ en:
         submission:
           nodes: "Nodes"
           ppn: "Cores per node"
-          host: "PL-Grid host"
+          host: "PL-Grid Compute Engine"
       amazon:
         security_group: Security group
 

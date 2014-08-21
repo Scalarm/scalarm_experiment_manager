@@ -8,9 +8,6 @@ class DatabaseTest < MiniTest::Test
     MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
   end
 
-  def teardown
-  end
-
   class SomeRecord < MongoActiveRecord
     def self.collection_name
       'some_records'

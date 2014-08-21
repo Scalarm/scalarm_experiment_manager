@@ -77,7 +77,7 @@ class PrivateMachineFacadeTest < MiniTest::Test
 
     status = facade._simulation_manager_resource_status(record)
 
-    assert_equal :ready, status
+    assert_equal :available, status
   end
 
   def test_resource_status_running

@@ -4,7 +4,7 @@ require 'mocha'
 require 'infrastructure_facades/infrastructure_facade_factory'
 require 'infrastructure_facades/infrastructure_errors'
 
-class PlGridFactoryTest < MiniTest::Test
+class PlGridFacadeFactoryTest < MiniTest::Test
 
   def self.create_test_get_facade(name)
     define_method "test_get_#{name}" do

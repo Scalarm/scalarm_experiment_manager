@@ -89,8 +89,6 @@ class SimulationManagerRecordTest < MiniTest::Test
     assert (not sm_record.time_limit_exceeded?)
   end
 
-  # TODO test_init_time_exceeded
-
   def test_max_init_time_lower
     sm_record = MockRecord.new({})
     sm_record.expects(:time_limit).returns(60*72 - 5).once
@@ -107,7 +105,7 @@ class SimulationManagerRecordTest < MiniTest::Test
 
   def test_init_time_exceeded_true
     sm_record = MockRecord.new({})
-    sm_record.expects(:sm_initialized).returns(false).once
+    sm_record.expects(:state).returns(:initializing).once
     sm_record.expects(:sm_initialized_at).returns(25.minutes.ago).once
     sm_record.expects(:max_init_time).returns(20.minutes).once
 
@@ -116,7 +114,7 @@ class SimulationManagerRecordTest < MiniTest::Test
 
   def test_init_time_exceeded_false
     sm_record = MockRecord.new({})
-    sm_record.expects(:sm_initialized).returns(false).once
+    sm_record.expects(:state).returns(:initializing).once
     sm_record.expects(:sm_initialized_at).returns(15.minutes.ago).once
     sm_record.expects(:max_init_time).returns(20.minutes).once
 
@@ -125,35 +123,11 @@ class SimulationManagerRecordTest < MiniTest::Test
 
   def test_init_time_exceeded_sm_init
     sm_record = MockRecord.new({})
-    sm_record.expects(:sm_initialized).returns(true).once
+    sm_record.expects(:state).returns(:running).once
     sm_record.expects(:initialized_at).never
     sm_record.expects(:max_init_time).never
 
     assert (not sm_record.init_time_exceeded?)
-  end
-
-  def test_store_error_in_db
-    record = MockRecord.new({})
-    MockRecord.stubs(:find_by_id).with('1').returns(record)
-
-    record.stubs(:id).returns('1')
-    record.expects(:error=).with('a').once
-    record.expects(:error_log=).with('b')
-    record.expects(:save).once
-
-    record.store_error('a', 'b')
-  end
-
-  def test_store_error_not_in_db
-    MockRecord.stubs(:find_by_id).with('1').returns(nil)
-
-    record = MockRecord.new({})
-    record.stubs(:id).returns('1')
-    record.expects(:error=).with('a').once
-    record.expects(:error_log=).with('b')
-    record.expects(:save).never
-
-    record.store_error('a', 'b')
   end
 
   def test_old_initialized_state

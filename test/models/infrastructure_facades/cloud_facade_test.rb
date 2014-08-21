@@ -300,16 +300,18 @@ class CloudFacadeTest < MiniTest::Test
     records = mock 'records' do
       stubs(:count).returns(instances_count)
     end
+    logger = stub_everything 'logger'
+    @facade.stubs(:logger).returns(logger)
 
 
     # returns nil - image_secrets not used
     @facade.stubs(:get_and_validate_image_secrets).with(image_secrets_id, user_id)
 
     @facade.expects(:create_and_save_records)
-      .with(instances_count, image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type)
+      .with(instances_count, image_secrets_id, user_id, experiment_id, time_limit, start_at, instance_type, {})
       .returns(records)
 
-    @facade.logger.expects(:error).never
+    logger.expects(:error).never
 
     @facade.start_simulation_managers(user_id, instances_count, experiment_id,
                                       'image_secrets_id'=> image_secrets_id,

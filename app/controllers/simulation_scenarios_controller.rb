@@ -60,7 +60,7 @@ class SimulationScenariosController < ApplicationController
   end
 
   def show
-
+    render json: @simulation_scenario.to_json
   end
 
   def code_base

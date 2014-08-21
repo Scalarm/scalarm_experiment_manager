@@ -68,6 +68,16 @@ class Experiment < MongoActiveRecord
     self.save
   end
 
+  def save
+    share_with_anonymous
+    super
+  end
+
+  def share_with_anonymous
+    anonymous_user = ScalarmUser.get_anonymous_user
+    add_to_shared(anonymous_user.id) if anonymous_user and
+        (shared_with.nil? or not shared_with.include?(anonymous_user.id))
+  end
 
   def get_statistics
     all  = simulations_count_with({})
@@ -328,7 +338,7 @@ class Experiment < MongoActiveRecord
   ## doe_list = [ [ doe_id, [ param_1, param_2 ] ], ... ]
   def self.prepare_experiment_input(simulation, partial_experiment_input, doe_list = [])
     partial_experiment_input = self.nested_json_to_hash(partial_experiment_input)
-    experiment_input = JSON.parse simulation.input_specification
+    experiment_input = simulation.input_specification
 
     experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
@@ -532,7 +542,14 @@ class Experiment < MongoActiveRecord
     where(query)
   end
 
-  private
+  def add_to_shared(user_id)
+    sharing_list = (self.shared_with or [])
+    sharing_list << user_id
+
+    self.shared_with = sharing_list
+  end
+
+  private # --------------------------------------------
 
   def self.nested_json_to_hash(nested_json)
     hash_counterpart = Hash.new

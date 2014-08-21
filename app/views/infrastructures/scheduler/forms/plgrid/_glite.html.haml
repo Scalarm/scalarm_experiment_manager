@@ -1,2 +1,10 @@
+- hosts = GliteScheduler::PlGridScheduler.available_hosts
+
 .panel.callout.radius
   = raw t 'infrastructure.information.no_key_note'
+.row
+  .small-4.columns
+    = label_tag :plgrid_host,  t('infrastructure.information.plgrid.submission.host') + ':', class: 'inline right'
+  .small-4.columns
+    = select_tag :plgrid_host, options_for_select(hosts)
+  .small-4.columns

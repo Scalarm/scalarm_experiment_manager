@@ -116,7 +116,7 @@ class SimulationsController < ApplicationController
   # following methods are used in experiment conducting
   def conduct_experiment
     @simulation = Simulation.find_by_id(params[:simulation_id])
-    @simulation_input = JSON.parse(@simulation.input_specification)
+    @simulation_input = @simulation.input_specification
   end
 
   # a life-cycle of a single simulation

@@ -23,6 +23,10 @@ module ShellCommands
     "echo #{s}"
   end
 
+  def tail(path, num_lines)
+    "tail -#{num_lines} #{path}"
+  end
+
   def run_and_get_pid(command, stdout='/dev/null', stderr='&1')
     "#{command} >#{stdout} 2>#{stderr} & echo $!"
   end

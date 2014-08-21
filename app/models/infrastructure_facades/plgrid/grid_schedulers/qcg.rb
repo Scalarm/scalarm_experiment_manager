@@ -138,14 +138,14 @@ module QcgScheduler
       ssh.exec!(PlGridScheduler.qcg_command "qcg-info #{job_id}")
     end
 
-    def cancel(ssh, job)
-      output = ssh.exec!(PlGridScheduler.qcg_command cancel_sm_cmd(job))
+    def cancel(ssh, record)
+      output = ssh.exec!(PlGridScheduler.qcg_command cancel_sm_cmd(record))
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
 
     def cancel_sm_cmd(record)
-      "qcg-cancel #{record.record}"
+      "qcg-cancel #{record.job_id}"
     end
 
     def get_log(ssh, job)
@@ -181,11 +181,11 @@ module QcgScheduler
     def self.available_hosts
       [
         'zeus.cyfronet.pl',
-        'nova.wcss.wroc.pl',
+        # 'nova.wcss.wroc.pl',# TODO: check ruby
         'galera.task.gda.pl',
-        'reef.man.poznan.pl',
-        'inula.man.poznan.pl',
-        'hydra.icm.edu.pl',
+        # 'reef.man.poznan.pl', # TODO: no ruby available!
+        # 'inula.man.poznan.pl', # TODO: no ruby available!
+        # 'hydra.icm.edu.pl', # TODO: no ruby available!
         'moss.man.poznan.pl',
       ]
     end
