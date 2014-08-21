@@ -75,46 +75,56 @@ class ExperimentsController < ApplicationController
   end
 
   def create
-    experiment = prepare_new_experiment
+    begin
+      experiment = prepare_new_experiment
 
-    if request.fullpath.include?("start_import_based_experiment")
-      input_space_imported_specification(experiment)
-    else
-      input_space_manual_specification(experiment)
-    end
-
-    unless flash[:error]
-      experiment.labels = experiment.parameters.flatten.join(',')
-      experiment.save
-      experiment.experiment_id = experiment.id
-      begin
-        experiment.experiment_size(true)
-      rescue Exception => e
-        Rails.logger.warn("An exception occured: #{t(e.message)}")
-        flash[:error] = t(e.message)
-        experiment.size = 0
-      end
-
-      if experiment.size == 0
-        flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
-        experiment.destroy
+      if request.fullpath.include?("start_import_based_experiment")
+        input_space_imported_specification(experiment)
       else
-        experiment.save
-        # create progress bar
-        experiment.insert_initial_bar
-        experiment.create_simulation_table
+        input_space_manual_specification(experiment)
       end
-    end
 
-    unless flash[:error].blank?
+      unless flash[:error]
+        experiment.labels = experiment.parameters.flatten.join(',')
+        experiment.save
+        experiment.experiment_id = experiment.id
+        begin
+          experiment.experiment_size(true)
+        rescue Exception => e
+          Rails.logger.warn("An exception occured: #{t(e.message)}")
+          flash[:error] = t(e.message)
+          experiment.size = 0
+        end
+
+        if experiment.size == 0
+          flash[:error] = t('experiments.errors.zero_size') if flash[:error].blank?
+          experiment.destroy
+        else
+          experiment.save
+          # create progress bar
+          experiment.insert_initial_bar
+          experiment.create_simulation_table
+        end
+      end
+
+      unless flash[:error].blank?
+        respond_to do |format|
+          format.html { redirect_to experiments_path }
+          format.json { render json: {status: 'error', message: flash[:error]} }
+        end
+      else
+        respond_to do |format|
+          format.html { redirect_to experiment_path(experiment.id) }
+          format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
+        end
+      end
+    rescue Exception => e
+      Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace}"
+      flash[:error] = e.to_s
+
       respond_to do |format|
         format.html { redirect_to experiments_path }
         format.json { render json: {status: 'error', message: flash[:error]} }
-      end
-    else
-      respond_to do |format|
-        format.html { redirect_to experiment_path(experiment.id) }
-        format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
       end
     end
   end
