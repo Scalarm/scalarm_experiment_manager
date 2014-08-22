@@ -638,7 +638,7 @@ class ExperimentsController < ApplicationController
 
       unless parameters_to_include.blank?
 
-        importer = ExperimentCsvImporter.new(params[:parameter_space_file].read, parameters_to_include)
+        importer = ExperimentCsvImporter.new(Utils.read_if_file(params[:parameter_space_file]), parameters_to_include)
 
         are_csv_parameters_not_valid = importer.parameters.any? do |param_uid|
           not @simulation.input_parameters.include?(param_uid)
