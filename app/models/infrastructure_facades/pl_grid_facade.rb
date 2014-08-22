@@ -49,7 +49,7 @@ class PlGridFacade < InfrastructureFacade
     instances_count.times { create_record(user_id, experiment_id, sm_uuid, additional_params).save }
 
     if additional_params[:onsite_monitoring] == "1"
-      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id)
+      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
 
       credentials.scp_session do |scp|
         scp.upload! File.join('/tmp', "scalarm_monitoring_#{sm_uuid}", 'config.json'), '.'
