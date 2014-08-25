@@ -100,7 +100,7 @@ module ExperimentProgressBar
 
     #Rails.logger.debug("Query hash => #{query_hash} --- Option hash => #{option_hash}")
     new_bar_state = 0
-    ], option_hash).each do |sim_run|
+    simulation_runs.where(query_hash, option_hash).each do |sim_run|
       # Rails.logger.debug("Instance_doc --- #{instance_doc}")
       if sim_run.is_error
         new_bar_state -= 256
