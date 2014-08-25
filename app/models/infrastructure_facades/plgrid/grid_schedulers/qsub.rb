@@ -23,20 +23,7 @@ module QsubScheduler
       if params.include?(:dest_dir) and params.include?(:sm_record)
         job = params[:sm_record]
 
-        IO.write("/tmp/#{params[:dest_dir]}/scalarm_job_#{job.sm_uuid}.sh", prepare_job_executable)
-        #  schedule the job with qsub
-        qsub_cmd = [
-            'qsub',
-            '-q', params['queue'],
-            "#{params['grant_id'].blank? ? '' : "-A #{params['grant_id']}"}",
-            "#{params['nodes'].blank? ? '' : "-l nodes=#{params['nodes']}:ppn=#{params['ppn']}"}",
-            '-j oe', # mix stderr with stdout
-            '-o', params['log_path'], # output log
-            '-l', "walltime=#{params['time_limit'].to_i.minutes.to_i}" # convert minutes to seconds
-        ]
-
-        IO.write("/tmp/#{params[:dest_dir]}/cmd.txt",
-                 "chmod a+x scalarm_job_#{params['sm_uuid']}.sh; echo \"sh scalarm_job_#{params['sm_uuid']}.sh #{params['sm_uuid']}\" | #{qsub_cmd.join(' ')}")
+        IO.write("/tmp/#{params[:dest_dir]}/scalarm_job_#{job['sm_uuid']}.sh", prepare_job_executable)
       else
         IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
       end
@@ -132,13 +119,23 @@ module QsubScheduler
     end
 
     def get_log(ssh, job)
-      output = ssh.exec! "tail -25 #{job.log_path}"
-      ssh.exec! "rm #{job.log_path}"
-      output
+      ssh.exec! get_log_cmd(job)
     end
 
-    def cancel_sm_cmd(record)
-      "qdel #{record.job_id}"
+    def get_log_cmd(sm_record)
+      if sm_record.log_path.blank?
+        ""
+      else
+        "tail -25 #{sm_record.log_path}; rm #{sm_record.log_path}"
+      end
+    end
+
+    def cancel_sm_cmd(sm_record)
+      if sm_record.job_id.blank?
+        ""
+      else
+        "qdel #{sm_record.job_id}"
+      end
     end
 
   end

@@ -43,6 +43,7 @@ en:
       start_at: 'Start at ("hh:mm:ss" format)'
       submit: Submit
       remove_credentials: Remove credentials
+      onsite_monitoring: Enable job monitoring on the infrastructure side
 
       launched_at: 'Launched at'
       time_limit: 'Time limit'

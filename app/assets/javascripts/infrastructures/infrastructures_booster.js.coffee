@@ -33,10 +33,10 @@ class window.InfrastructuresBooster
     @schedulerForm
       .bind('ajax:before', () =>
         @dialog.foundation('reveal', 'close')
-        window.show_loading_notice()
+        window.Notices.show_loading_notice()
       )
       .bind('ajax:success', (status, data, xhr) =>
-        window.hide_notice()
+        window.Notices.hide_notice()
 
         switch data.status
           when 'error'

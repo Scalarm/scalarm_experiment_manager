@@ -1,0 +1,37 @@
+.content{'data-slug' => 'constraints'}
+  .panel.callout.radius
+    %h5= t("experiments.new.constraints_tab.header")
+
+  .row.constraint-specs
+    .small-5.columns
+      = select_tag "source-parameter"
+    .small-2.columns
+      = select_tag "condition", options_for_select(constraints_conditions)
+    .small-5.columns.end
+      = select_tag "target-parameter"
+
+  .row
+    .small-3.small-centered.columns
+      %span#addConstraint.button.radius.expand= t("experiments.new.constraints_tab.add_constraint_btn")
+
+  %hr
+  #constraints-list
+
+%script(id="constraintTemplate" type="text/x-jquery-tmpl")
+  .row
+    .small-5.columns(source-parameter-uid="${sourceParameter.uid}")
+      ${sourceParameter.label}
+    .small-1.columns(condition="${condition}")
+      ${condition}
+    .small-5.columns.end(target-parameter-uid="${targetParameter.uid}")
+      ${targetParameter.label}
+    .small-1.columns
+      %span.button.tiny.radius
+        %i.fi-x
+    %hr
+
+= content_for :javascript do
+  :javascript
+    $(function() {
+      new window.ParameterConstraintsManager();
+    });

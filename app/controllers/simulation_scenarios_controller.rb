@@ -21,7 +21,7 @@ class SimulationScenariosController < ApplicationController
     if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
-      simulation_input =  params.include?(:simulation_input) ? params[:simulation_input].read : nil
+      simulation_input =  params.include?(:simulation_input) ? JSON.parse(params[:simulation_input].read) : nil
       simulation_scenario_params_validation(simulation_input)
 
       # simulation update

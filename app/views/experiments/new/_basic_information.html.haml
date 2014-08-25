@@ -6,48 +6,43 @@
       .small-3.columns
         %label.right.inline(for="experiment_name")
           = t('experiments.information_panel.experiment_name') + ':'
-      .small-6.columns
+      .small-6.columns.end
         %h5.subheader= text_field_tag :experiment_name
-      .small-3.columns
     .row
       .small-3.columns
         %label.right.inline(for="experiment_description")
           = t('experiments.information_panel.experiment_description') + ':'
-      .small-6.columns
+      .small-6.columns.end
         %h5.subheader= text_area_tag :experiment_description
-      .small-3.columns
 
     %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
 
     .row
       .small-3.columns
         %label.right.inline= t('simulations.conduct_experiment.simulation_overview_name') + ':'
-      .small-9.columns
+      .small-9.columns.end
         %h5.subheader= @simulation.name
     .row
       .small-3.columns
         %label.right.inline= t('simulations.conduct_experiment.simulation_overview_description') + ':'
-      .small-9.columns
+      .small-9.columns.end
         %h5.subheader= @simulation.description
 
     %h4.subheader= t('experiments.new.simulation_run_attrs')
 
     .row
-      .small-3.columns
+      .small-5.columns
         = label_tag :replication_level, t('experiments.new.replication_level_label') + ':', class: 'right inline'
-      .small-6.columns
-        = text_field_tag 'replication_level', 1
-      .small-3.columns
+      .small-4.columns.end
+        = number_field_tag :replication_level, 1, min: 1, required: true, class: 'text-right'
 
     .row
-      .small-3.columns
+      .small-5.columns
         = label_tag :execution_time_constraint, t('experiments.new.time_constraint_label') + ':', class: 'right inline'
-      .small-6.columns
+      .small-4.columns.end
         .row.collapse
-          .small-9.columns
-            = text_field_tag 'execution_time_constraint', 60
-          .small-3.columns
+          .small-8.columns
+            = number_field_tag :execution_time_constraint, 55, min: 10, required: true, class: 'text-right'
+          .small-4.columns
             %span.postfix.radius
               = t('experiments.new.time_constraint_unit')
-
-      .small-3.columns

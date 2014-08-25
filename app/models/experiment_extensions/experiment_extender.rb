@@ -1,6 +1,7 @@
 module ExperimentExtender
 
   def add_parameter_values(parameter_uid, new_parameter_values)
+    previous_size = self.experiment_size
     Rails.logger.debug("Adding additional values for parameter #{parameter_uid} --- #{new_parameter_values}")
     parameter_doc = self.get_parameter_doc(parameter_uid)
 
@@ -49,7 +50,7 @@ module ExperimentExtender
     id_change_map = prepare_map_for_simulations_id_change(iteration_offset, num_of_elements_in_iteration)
     self.update_simulations(id_change_map)
 
-    num_of_new_simulations
+    self.experiment_size - previous_size
   end
 
   def update_doe_info(parameter_uid, new_parameter_values)
@@ -132,13 +133,17 @@ module ExperimentExtender
   def update_simulations(id_change_map)
     Rails.logger.debug("Size of new ids: #{id_change_map.size}")
 
+    simulation_runs.where({}, { sort: [ ['id', :desc] ] }).each do |simulation_run|
+      new_simulation_id = id_change_map[simulation_run.index]
 
-    self.find_simulation_docs_by({ }, { sort: [ ['id', :desc] ] }).each do |simulation_run|
-      new_simulation_id = id_change_map[simulation_run['id']]
+      Rails.logger.debug("Simulation id: #{simulation_run.index} -> #{new_simulation_id}")
 
-      Rails.logger.debug("Simulation id: #{simulation_run['id']} -> #{new_simulation_id}")
-      simulation_run['id'] = new_simulation_id
-      self.save_simulation(simulation_run)
+      next if simulation_run.index == new_simulation_id
+
+      simulation_run.destroy
+
+      simulation_run.index = new_simulation_id
+      simulation_run.save
     end
 
 

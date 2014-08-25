@@ -33,9 +33,13 @@ class Experiment < MongoActiveRecord
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
-  include SimulationRun
+  include SimulationRunModule
 
   ID_DELIM = '___'
+
+  def simulation_runs
+    SimulationRun.for_experiment(id)
+  end
 
   def self.collection_name
     'experiments'
@@ -45,26 +49,11 @@ class Experiment < MongoActiveRecord
     super(attributes)
   end
 
-  def self.get_running_experiments
-    experiments = []
-
-    collection.find({is_running: true}).each do |attributes|
-      experiments << Object.const_get(name).send(:new, attributes)
-    end
-
-    experiments
-  end
-
-  #def is_completed
-  #  simulations_count_with({}) == simulations_count_with({'is_done' => true})
-  #end
-  #
   def simulation
     Simulation.find_by_id self.simulation_id
   end
 
   def save_and_cache
-  #  #Rails.cache.write("data_farming_experiment_#{self._id}", self, :expires_in => 600.seconds)
     self.save
   end
 
@@ -80,19 +69,12 @@ class Experiment < MongoActiveRecord
   end
 
   def get_statistics
-    all  = simulations_count_with({})
-    sent = simulations_count_with({'to_sent' => false, 'is_done' => false})
-    done = simulations_count_with({'is_done' => true})
-    if done > all
-      done = all
-    end
+    all  = simulation_runs.count
+    sent = simulation_runs.where(to_sent: false, is_done: false).count
+    done = simulation_runs.where(is_done: true).count
 
     return all, sent, done
   end
-
-  #def argument_names
-  #  parameters.flatten.join(',')
-  #end
 
   def range_arguments
     params_with_range = []
@@ -120,32 +102,6 @@ class Experiment < MongoActiveRecord
     result
   end
 
-  #def parametrization_of(parameter_uid)
-  #  self.experiment_input.each do |entity_group|
-  #    entity_group['entities'].each do |entity|
-  #      entity['parameters'].each do |parameter|
-  #        return parameter_uid, parameter['parametrizationType'] if parameter_uid(entity_group, entity, parameter) == parameter_uid
-  #      end
-  #    end
-  #  end
-  #
-  #  nil
-  #end
-  #
-  #def parametrization_values
-  #  parameters = []
-  #
-  #  self.experiment_input.each do |entity_group|
-  #    entity_group['entities'].each do |entity|
-  #      entity['parameters'].each do |parameter|
-  #        parameters += get_parametrization_values(entity_group, entity, parameter)
-  #      end
-  #    end
-  #  end
-  #
-  #  parameters.join('|')
-  #end
-  #
   def parameters
     parameters = []
 
@@ -165,15 +121,26 @@ class Experiment < MongoActiveRecord
   end
 
   def input_parameter_label_for(uid)
-    entity_group_id, entity_id, parameter_id = uid.split(ID_DELIM)
+    split_uid = uid.split(ID_DELIM)
+    entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
+
+    if parameter_id.blank? and (not entity_id.blank?)
+      parameter_id = entity_id
+      entity_id = nil
+    end
+
+    if parameter_id.blank? and (not entity_group_id.blank?)
+      parameter_id = entity_group_id
+      entity_group_id = nil
+    end
 
     self.experiment_input.each do |entity_group|
-      if entity_group['id'] == entity_group_id
+      if entity_group['id'] == entity_group_id || (entity_group['id'].blank? and entity_group_id.blank?)
         entity_group['entities'].each do |entity|
-          if entity['id'] == entity_id
+          if entity['id'] == entity_id || (entity['id'].blank? and entity_id.blank?)
             entity['parameters'].each do |parameter|
               if parameter['id'] == parameter_id
-                return "#{entity_group['label']} - #{entity['label']} - #{parameter['label']}"
+                return [ entity_group['label'], entity['label'], parameter['label'] ].compact.join(" - ")
               end
             end
           end
@@ -192,6 +159,7 @@ class Experiment < MongoActiveRecord
 
 
   def value_list(debug = false)
+    #Rails.logger.debug("Value list starting --- #{self.doe_info.inspect} --- #{self.doe_info.blank?} --- #{self.doe_info.first}")
     if self.cached_value_list.nil?
       self.doe_info = apply_doe_methods if self.doe_info.blank? or self.doe_info.first.size == 2
       #Rails.logger.debug("Doe info: #{self.doe_info}")
@@ -206,7 +174,9 @@ class Experiment < MongoActiveRecord
         entity_group['entities'].each do |entity|
           entity['parameters'].each do |parameter|
             unless parameter.include?('in_doe') and parameter['in_doe'] == true
+              #Rails.logger.debug("value_list begin - #{parameter['id']}")
               value_list << generate_parameter_values(parameter.merge({'entity_group_id' => entity_group['id'], 'entity_id' => entity['id']}))
+              #Rails.logger.debug("value_list end - #{parameter['id']}")
             end
           end
         end
@@ -248,9 +218,24 @@ class Experiment < MongoActiveRecord
 
   def experiment_size(debug = false)
     if self.size.nil?
-      self.size = self.value_list(debug).reduce(1){|acc, x| acc * x.size}
-      self.size *= self.replication_level unless self.replication_level.nil?
-      self.save_and_cache if (not debug) and (not self.debug.nil?) and (not self.debug)
+      self.size = 0
+      list_of_values = value_list(debug)
+      max_size = list_of_values.reduce(1){|acc, x| acc * x.size}
+
+      if parameters_constraints.blank?
+        self.size = max_size
+      else
+        self.excluded_indexes = []
+
+        1.upto(max_size).each do |i|
+          simulation_run = generate_simulation_for(i)
+          if simulation_run.meet_constraints?(parameters_constraints)
+            self.size += 1
+          else
+            self.excluded_indexes << i
+          end
+        end
+      end
     end
 
     self.size
@@ -266,11 +251,11 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + [ moe_name ]
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: %w(values result) }).each do |simulation_doc|
-        next if not simulation_doc['result'].has_key?(moe_name)
+      simulation_runs.where({ is_done: true }, { fields: %w(values result) }).each do |simulation_run|
+        next if not simulation_run.result.has_key?(moe_name)
 
-        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
-        csv << values + [ simulation_doc['result'][moe_name] ]
+        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
+        csv << values + [ simulation_run.result[moe_name] ]
       end
     end
 
@@ -279,8 +264,8 @@ class Experiment < MongoActiveRecord
   def moe_names
     moe_name_set = []
     limit = self.experiment_size > 1000 ? self.experiment_size / 2 : self.experiment_size
-    self.find_simulation_docs_by({ is_done: true }, { fields: %w(result), limit: limit }).each do |instance_doc|
-      moe_name_set += instance_doc['result'].keys.to_a
+    simulation_runs.where({ is_done: true }, { fields: %w(result), limit: limit }).each do |simulation_run|
+      moe_name_set += simulation_run.result.keys.to_a
     end
 
     moe_name_set.uniq
@@ -290,19 +275,19 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << [ x_axis, y_axis ]
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: %w(values result arguments) }).each do |simulation_doc|
-        simulation_input = Hash[simulation_doc['arguments'].split(',').zip(simulation_doc['values'].split(','))]
+      simulation_runs.where({ is_done: true }, { fields: %w(values result arguments) }).each do |simulation_run|
+        simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
-        x_axis_value = if simulation_doc['result'].include?(x_axis)
+        x_axis_value = if simulation_run.result.include?(x_axis)
                          # this is a MoE
-                         simulation_doc['result'][x_axis]
+                         simulation_run.result[x_axis]
                        else
                          # this is an input parameter
                          simulation_input[x_axis]
                        end
-        y_axis_value = if simulation_doc['result'].include?(y_axis)
+        y_axis_value = if simulation_run.result.include?(y_axis)
                          # this is a MoE
-                         simulation_doc['result'][y_axis]
+                         simulation_run.result[y_axis]
                        else
                          # this is an input parameter
                          simulation_input[y_axis]
@@ -315,7 +300,7 @@ class Experiment < MongoActiveRecord
 
   def generated_parameter_values_for(parameter_uid)
     simulation_id = 1
-    while (instance = ExperimentInstance.find_by_id(self.experiment_id, simulation_id)).nil?
+    while (instance = simulation_runs.where(index: simulation_id).nil?)
       simulation_id += 1
     end
 
@@ -328,8 +313,8 @@ class Experiment < MongoActiveRecord
     find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
     find_exp = /#{find_exp}#{param_value}/
 
-    param_values = self.find_simulation_docs_by({ 'values' => { '$not' => find_exp } }, { fields: %w(values) }).
-        map { |x| x['values'].split(',')[param_index] }.uniq + [param_value]
+    param_values = simulation_runs.where({ values: { '$not' => find_exp } }, { fields: %w(values) }).
+        map { |x| x.values.split(',')[param_index] }.uniq + [param_value]
 
     param_values.map { |x| x.to_f }.uniq.sort
   end
@@ -350,7 +335,11 @@ class Experiment < MongoActiveRecord
           # if there is information then add it to the input
           if partial_experiment_input.include?(parameter_uid)
             partial_experiment_input[parameter_uid].each do |key, value|
-              parameter[key] = value
+              if partial_experiment_input[parameter_uid]['parametrizationType'] == 'custom' and key == 'custom_values'
+                parameter[key] = value.split("\n")
+              else
+                parameter[key] = value
+              end
             end
           else
             # otherwise set default values
@@ -379,11 +368,10 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + moes
 
-      self.find_simulation_docs_by({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_doc|
-        values = simulation_doc['values'].split(',').map{|x| '%.4f' % x.to_f}
+      simulation_runs.where({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_run|
+        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
         # getting values of results in a specific order
-        # moe_values = self.moe_names.reduce([]){ |tab, moe_name| tab + [ simulation_doc['result'][moe_name] || '' ] }
-        moe_values = moes.map{|moe_name| simulation_doc['result'][moe_name] || '' }
+        moe_values = moes.map{|moe_name| simulation_run.result[moe_name] || '' }
 
         csv << values + moe_values
       end
@@ -415,7 +403,7 @@ class Experiment < MongoActiveRecord
     end
 
     # drop simulation table
-    self.simulation_collection.drop
+    simulation_runs.collection.drop
     # drop progress bar object
     self.progress_bar_table.drop
     # self-drop
@@ -428,20 +416,13 @@ class Experiment < MongoActiveRecord
     result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
 
     query_opts = {fields: {_id: 0, result: 1, is_error: 1}, limit: result_limit}
-    self.find_simulation_docs_by({is_done: true}, query_opts).each do |simulation_doc|
-      unless simulation_doc.include?('is_error') and simulation_doc['is_error']
-        moe_name_set += simulation_doc['result'].keys
+    simulation_runs.where({is_done: true}, query_opts).each do |simulation_run|
+      unless simulation_run.is_error == true
+        moe_name_set += simulation_run.result.keys
       end
     end
 
     moe_name_set.empty? ? nil : moe_name_set.to_a
-  end
-
-
-  def completed_simulations_count_for(secs)
-    query = { 'is_done' => true, 'done_at' => { '$gte' => (Time.now - secs)} }
-
-    simulations_count_with(query)
   end
 
   def clear_cached_data
@@ -454,14 +435,26 @@ class Experiment < MongoActiveRecord
   end
 
   def get_parameter_doc(parameter_uid)
-    entity_group_id, entity_id, parameter_id = parameter_uid.split(ID_DELIM)
+    split_uid = parameter_uid.split(ID_DELIM)
+    entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
+
+    if parameter_id.blank? and (not entity_id.blank?)
+      parameter_id = entity_id
+      entity_id = nil
+    end
+
+    if parameter_id.blank? and (not entity_group_id.blank?)
+      parameter_id = entity_group_id
+      entity_group_id = nil
+    end
+
     self.experiment_input.each do |entity_group|
 
-      if entity_group['id'] == entity_group_id
+      if entity_group['id'] == entity_group_id || (entity_group_id.blank? and entity_group['id'].blank?)
 
         entity_group['entities'].each do |entity|
 
-          if entity['id'] == entity_id
+          if entity['id'] == entity_id || (entity_id.blank? and entity['id'].blank?)
 
             entity['parameters'].each do |parameter|
 
@@ -518,45 +511,26 @@ class Experiment < MongoActiveRecord
     values.uniq
   end
 
-  def simulation_rollback(simulation_id)
-    simulation_collection.find_and_modify({
-                                           :query => { 'id' => simulation_id },
-                                           :update => { '$set' => { 'to_sent' => true } }
-                                          })
+  def simulation_rollback(simulation_run)
+    simulation_run.to_sent = true
+    simulation_run.save    
 
-    progress_bar_update(simulation_id, 'rollback')
+    progress_bar_update(simulation_run.index, 'rollback')
   end
 
-  def self.find_experiments_visible_to(user, conditions = {})
-    visible_to_condition = { '$or' => [
-      { user_id: user.id },
-      { shared_with: { '$in' => [ user.id ] } }
-    ]}
-
-    query = if conditions.empty?
-              visible_to_condition
-            else
-              { '$and' => [ conditions, visible_to_condition ]}
-            end
-
-    where(query)
+  def self.visible_to(user)
+    where({ '$or' => [ { user_id: user.id }, { shared_with: { '$in' => [ user.id ] } } ] })
   end
 
-  def add_to_shared(user_id)
-    sharing_list = (self.shared_with or [])
-    sharing_list << user_id
-
-    self.shared_with = sharing_list
-  end
-
-  private # --------------------------------------------
+  private
 
   def self.nested_json_to_hash(nested_json)
     hash_counterpart = Hash.new
+
     nested_json.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          parameter_uid = "#{entity_group['id']}#{Experiment::ID_DELIM}#{entity['id']}#{Experiment::ID_DELIM}#{parameter['id']}"
+          parameter_uid = parameter_uid(entity_group, entity, parameter)
           hash_counterpart[parameter_uid] = parameter
         end
       end
@@ -570,49 +544,41 @@ class Experiment < MongoActiveRecord
   end
 
   def self.parameter_uid(entity_group, entity, parameter)
-    entity_group_id = entity_group.include?('id') ? entity_group['id'] : entity_group
-    entity_id = entity.include?('id') ? entity['id'] : entity
+    entity_group_id = if entity_group.include?('id') || entity_group.include?('entities')
+                        entity_group['id'] || nil
+                      else
+                        entity_group
+                      end
+
+    entity_id = if entity.include?('id') || entity.include?('parameters')
+                  entity['id'] || nil
+                else
+                  entity
+                end
+
     parameter_id = parameter.include?('id') ? parameter['id'] : parameter
 
-    "#{entity_group_id}#{ID_DELIM}#{entity_id}#{ID_DELIM}#{parameter_id}"
+    [ entity_group_id, entity_id, parameter_id ].compact.join(ID_DELIM)
   end
 
-  #def get_parametrization_values(entity_group, entity, parameter)
-  #  parametrization_values = []
-  #  parameter_uid = parameter_uid(entity_group, entity, parameter)
-  #
-  #  if parameter["parametrizationType"] == "value"
-  #    parametrization_values << "#{parameter_uid}_value=#{parameter["value"]}"
-  #  elsif parameter["parametrizationType"] == "range"
-  #    parametrization_values << "#{parameter_uid}_min=#{parameter["min"]}"
-  #    parametrization_values << "#{parameter_uid}_max=#{parameter["max"]}"
-  #    parametrization_values << "#{parameter_uid}_step=#{parameter["step"]}"
-  #  elsif parameter["parametrizationType"] == "gauss"
-  #    parametrization_values << "#{parameter_uid}_mean_value=#{parameter["mean"]}"
-  #    parametrization_values << "#{parameter_uid}_variance_value=#{parameter["variance"]}"
-  #  elsif parameter["parametrizationType"] == "uniform"
-  #    parametrization_values << "#{parameter_uid}_min_value=#{parameter["min"]}"
-  #    parametrization_values << "#{parameter_uid}_max_value=#{parameter["max"]}"
-  #  end
-  #
-  #  parametrization_values
-  #end
-  #
   def generate_parameter_values(parameter)
     parameter_uid = parameter_uid({'id' => parameter['entity_group_id']}, {'id' => parameter['entity_id']}, parameter)
 
-    self.doe_info.each do |doe_element|
-      doe_id, doe_parameters = doe_element
-      if doe_parameters.include?(parameter_uid)
+    #self.doe_info.each do |doe_element|
+    #  doe_id, doe_parameters = doe_element
+    #  if doe_parameters.include?(parameter_uid)
         #Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
-      end
-    end
+      #end
+    #end
 
     parameter_values = []
 
-    if parameter['parametrizationType'] == 'value'
-      parameter_values << parameter['value'].to_f
-    elsif parameter['parametrizationType'] == 'range'
+    case parameter['parametrizationType']
+
+    when 'value'
+      parameter_values << parameter['value']
+
+    when 'range'
       step = parameter['step'].to_f
       raise "Step can't be zero" if step == 0.0
 
@@ -621,16 +587,35 @@ class Experiment < MongoActiveRecord
         parameter_values << value.round(3)
         value += step.round(3)
       end
-    elsif parameter['parametrizationType'] == 'gauss'
+
+    when 'gauss'
       r_interpreter = Rails.configuration.r_interpreter
-      #Rails.logger.debug("Mean: #{parameter['mean'].to_f}")
-      #Rails.logger.debug("Variance: #{parameter['variance'].to_f}")
       r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
-      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
-    elsif parameter['parametrizationType'] == 'uniform'
+      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
+
+    when 'uniform'
       r_interpreter = Rails.configuration.r_interpreter
       r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
-      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f).to_f
+      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
+
+    when 'custom'
+      parameter_values.concat(parameter['custom_values'])
+
+    end
+
+    Rails.logger.debug("Parameter type: #{parameter['type']} --- #{parameter_values.inspect}")
+
+    case parameter['type']
+
+    when 'integer'
+      parameter_values.map!(&:to_i)
+
+    when 'float'
+      parameter_values.map!(&:to_f)
+
+    when 'string'
+      parameter_values.map!(&:to_s)
+
     end
 
     unless self.value_list_extension.nil?
@@ -645,6 +630,8 @@ class Experiment < MongoActiveRecord
   end
 
   def execute_doe_method(doe_method_name, parameters_for_doe)
+    Rails.logger.debug("Execute doe method: #{doe_method_name} -- #{parameters_for_doe.inspect}")
+
     case doe_method_name
       when '2k'
         values = parameters_for_doe.reduce([]) { |sum, parameter_uid|

@@ -2,18 +2,21 @@
 - grants = PlGridFacade.retrieve_grants(credentials)
 
 .row
-  .small-4.columns
+  .large-4.columns
     = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
-  .small-4.columns
+  .large-4.columns.end
     = select_tag :grant_id, options_for_select(grants)
-  .small-4.columns
 .row
-  .small-4.columns
+  .large-4.columns
     = label_tag :nodes, t('infrastructure.information.plgrid.submission.nodes') + ':', class: 'inline right'
-  .small-1.columns
+  .large-1.columns
     = text_field_tag :nodes, 1, class: 'right'
-  .small-2.columns
+  .large-2.columns
     = label_tag :ppn, t('infrastructure.information.plgrid.submission.ppn') + ':', class: 'inline right'
-  .small-1.columns
+  .large-1.columns.end
     = text_field_tag :ppn, 1, class: 'right'
-  .small-2.columns
+.row
+  .large-4.columns
+    = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
+  .large-4.columns.end
+    = check_box_tag :onsite_monitoring

@@ -264,7 +264,8 @@ class CloudFacade < InfrastructureFacade
                                       sm_uuid: SecureRandom.uuid,
                                       start_at: start_at,
                                       instance_type: instance_type,
-                                      params: params
+                                      params: params,
+                                      infrastructure: short_name
                                   })
     vm_record.initialize_fields
     vm_record

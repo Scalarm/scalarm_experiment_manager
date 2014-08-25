@@ -95,6 +95,10 @@ class CloudVmRecord < MongoActiveRecord
     not cloud_secrets.invalid and cloud_secrets.secret_password
   end
 
+  def computational_resources
+    instance_type
+  end
+
   private # --------
 
   def _get_ssh_session

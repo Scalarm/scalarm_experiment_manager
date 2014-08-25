@@ -7,58 +7,58 @@
 
 %a.close-reveal-modal &#215;
 
-%dl.accordion(data-accordion="")
+%dl.accordion(data-accordion)
   %dd
     %a(href="#submission-panel")= t 'infrastructure.information.submission_label'
-    .content{id: "submission-panel", class: 'active'}
+    .content.active#submission-panel
       #scheduler-form
         = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
           .row
-            .small-4.columns
+            .large-4.columns
               = label_tag :experiment_id, t('infrastructure.information.experiment') + ':', class: 'inline right'
-            .small-4.columns
+            .large-4.columns
               = select_tag :experiment_id, options_for_select(experiments_select_data(@current_user), experiment_id.to_s)
-            .small-4.columns
+            .large-1.columns
           .row
-            .small-4.columns
+            .large-4.columns
               = label_tag :infrastructure_name, t('infrastructure.information.infrastructure') + ':', class: 'inline right'
-            .small-4.columns
+            .large-4.columns
               = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select_data,
                 infrastructure_name)
-            .small-4.columns
+            .large-1.columns
 
           .row
-            .small-4.columns
+            .large-4.columns
               = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
-            .small-4.columns
-              = text_field_tag :job_counter
-            .small-4.columns
+            .large-4.columns
+              = number_field_tag :job_counter, 1, in: 1..100, step: 1, required: true, class: 'text-right'
+            .large-1.columns
 
           #infrastructure_fields
 
           .row
-            .small-4.columns
+            .large-4.columns
               = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
-            .small-4.columns
-              = text_field_tag :time_limit, '50'
-            .small-4.columns
+            .large-4.columns
+              = number_field_tag :time_limit, 50, min: 1, step: 1, required: true, class: 'text-right'
+            .large-1.columns
 
           .row
-            .small-4.columns
+            .large-4.columns
               = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
-            .small-4.columns
+            .large-4.columns
               = text_field_tag :start_at
-            .small-4.columns
+            .large-1.columns
 
           .row#submit-button
-            .small-12.columns.text-center
+            .large-12.columns.text-center
               = submit_tag t('infrastructure.information.submit'), class: 'button radius'
 
   %dd
     %a(href="#simulation-managers-panel")= t('infrastructure.information.scheduled_label')
-    .content{id: "simulation-managers-panel"}
+    .content#simulation-managers-panel
       .row
-        #simulation-managers.small-12.columns
+        #simulation-managers.large-12.columns
 
 
 
