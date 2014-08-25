@@ -28,6 +28,7 @@ class PrivateMachineFacade < InfrastructureFacade
   # - 'host' => hostname - matches first PM Credentials with this host name
   def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
+    sm_uuid = SecureRandom.uuid
 
     machine_creds = if params[:host]
                       PrivateMachineCredentials.find_by_query(host: params[:host], user_id: user_id)
@@ -55,7 +56,8 @@ class PrivateMachineFacade < InfrastructureFacade
           start_at: params[:start_at],
           sm_uuid: SecureRandom.uuid,
           infrastructure: short_name,
-          ppn: ppn
+          ppn: ppn,
+          host: machine_creds.host
       )
 
       record.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
@@ -63,6 +65,26 @@ class PrivateMachineFacade < InfrastructureFacade
       record.initialize_fields
       record.save
     end
+
+    if params[:onsite_monitoring] == "1"
+      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, short_name, { host: machine_creds.host })
+
+      machine_creds.scp_session do |scp|
+        scp.upload! File.join('/tmp', "scalarm_monitoring_#{sm_uuid}", 'config.json'), '.'
+        scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', 'monitor'), '.'
+      end
+
+      machine_creds.ssh_session do |ssh|
+        cmd = ShellCommands.chain(
+            ShellCommands.mute("chmod a+x monitor"),
+            ShellCommands.run_in_background("./monitor")
+        )
+
+        Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
+      end
+    end
+
+
     ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: instances_count,
                         machine_name: machine_creds.machine_desc)]
   end

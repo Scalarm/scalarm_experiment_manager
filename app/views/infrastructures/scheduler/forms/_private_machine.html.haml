@@ -1,8 +1,13 @@
 - machines = private_machine_credentials_select_data(@current_user.id)
 
 .row
-  .small-4.columns
+  .large-4.columns
     = label_tag :credentials_id, t('infrastructure.information.private_machine.machine_id') + ':', class: 'inline right'
-  .small-4.columns
+  .large-4.columns.end
     = select_tag :credentials_id, options_for_select(machines)
-  .small-4.columns
+
+.row
+  .large-4.columns
+    = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
+  .large-4.columns.end
+    = check_box_tag :onsite_monitoring
