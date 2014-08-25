@@ -12,7 +12,7 @@ module ApplicationHelper
     "#{log_bank_url(storage_manager_url, experiment)}/size"
   end
 
-  def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
+  def log_bank_simulation_run_binaries_url(storage_manager_url, experiment, simulation_id)
     "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
   end
 

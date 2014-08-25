@@ -100,17 +100,13 @@ module ExperimentProgressBar
 
     #Rails.logger.debug("Query hash => #{query_hash} --- Option hash => #{option_hash}")
     new_bar_state = 0
-    simulation_runs.where(query_hash, option_hash).each do |sim_run|
-    # self.find_simulation_docs_by(query_hash, option_hash).each do |instance_doc|
+    ], option_hash).each do |sim_run|
       # Rails.logger.debug("Instance_doc --- #{instance_doc}")
       if sim_run.is_error
-      # if instance_doc.include?('is_error')
         new_bar_state -= 256
       elsif sim_run.is_done
-      # elsif instance_doc['is_done']
         new_bar_state += 2
       elsif not sim_run.to_sent
-      # elsif not instance_doc['to_sent']
         new_bar_state += 1
       end
     end
