@@ -198,7 +198,7 @@ class InfrastructuresController < ApplicationController
                long_name: facade.long_name,
                partial_name: (group or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
-               simulation_managers: facade.get_sm_records(@current_user.id)
+               simulation_managers: facade.get_sm_records(@current_user.id).to_a
            }
   end
 
@@ -212,6 +212,12 @@ class InfrastructuresController < ApplicationController
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
           sm.send(params[:command])
+          # destroy temp password
+          if %w(stop destroy_record).include? command
+            unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(sm.record.sm_uuid)).blank?
+              temp_pass.destroy
+            end
+          end
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else

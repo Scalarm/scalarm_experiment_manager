@@ -42,4 +42,8 @@ class PrivateMachineRecord < MongoActiveRecord
     raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid
   end
 
+  def computational_resources
+    "ppn=#{ppn}"
+  end
+
 end

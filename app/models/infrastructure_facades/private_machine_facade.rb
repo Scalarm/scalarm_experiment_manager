@@ -43,6 +43,9 @@ class PrivateMachineFacade < InfrastructureFacade
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
 
+    ppn = shared_ssh_session(machine_creds).exec!("cat /proc/cpuinfo | grep MHz | wc -l").strip
+    ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
+
     instances_count.times do
       record = PrivateMachineRecord.new(
           user_id: user_id,
@@ -50,12 +53,12 @@ class PrivateMachineFacade < InfrastructureFacade
           credentials_id: machine_creds.id,
           time_limit: params[:time_limit],
           start_at: params[:start_at],
-          sm_uuid: SecureRandom.uuid
+          sm_uuid: SecureRandom.uuid,
+          infrastructure: short_name,
+          ppn: ppn
       )
 
-      if Rails.application.secrets.include?(:infrastructure_side_monitoring)
-        record.infrastructure_side_monitoring = true
-      end
+      record.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
 
       record.initialize_fields
       record.save
@@ -116,54 +119,72 @@ class PrivateMachineFacade < InfrastructureFacade
     logger.warn "#{record.task_desc} restart invoked, but it is not supported"
   end
 
-  def _simulation_manager_resource_status(record)
-    begin
-      ssh = shared_ssh_session(record.credentials)
-    rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
-      # remember this error in case of unable to initialize
-      record.error_log = e.to_s
-      record.save
-      return :not_available
-    rescue Exception => e
-      record.store_error('ssh', e.to_s)
-      _simulation_manager_stop(record)
+  def _simulation_manager_resource_status(sm_record)
+    if sm_record.infrastructure_side_monitoring
+
+      sm_record.resource_status.nil? ? :not_available : sm_record.resource_status
+
     else
-      pid = record.pid
-      if pid
-        app_running?(ssh, pid) ? :running_sm : :released
+
+      begin
+        ssh = shared_ssh_session(sm_record.credentials)
+      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+        # remember this error in case of unable to initialize
+        sm_record.error_log = e.to_s
+        sm_record.save
+        return :not_available
+      rescue Exception => e
+        sm_record.store_error('ssh', e.to_s)
+        _simulation_manager_stop(sm_record)
       else
-        :available
+        pid = sm_record.pid
+        if pid
+          app_running?(ssh, pid) ? :running_sm : :released
+        else
+          :available
+        end
       end
+
     end
   end
 
-  def _simulation_manager_get_log(record)
-    shared_ssh_session(record.credentials).exec! "tail -25 #{record.log_path}"
+  def _simulation_manager_get_log(sm_record)
+    if sm_record.infrastructure_side_monitoring
+
+      sm_record.cmd_to_execute_code = "get_log"
+      sm_record.cmd_to_execute = "tail -25 #{sm_record.log_path}"
+      sm_record.save
+
+    else
+      shared_ssh_session(sm_record.credentials).exec! "tail -25 #{sm_record.log_path}"
+    end
   end
 
   # Nothing to prepare
-  def _simulation_manager_prepare_resource(record)
-    if record.infrastructure_side_monitoring
-      record.cmd_to_execute_code = "prepare_resource"
-      record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(record)
-      record.save
-    else
-      logger.debug "Sending files and launching SM on host: #{record.credentials.host}:#{record.credentials.ssh_port}"
+  def _simulation_manager_prepare_resource(sm_record)
+    if sm_record.infrastructure_side_monitoring
 
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
-                                                                        record.experiment_id, record.start_at)
+      sm_record.cmd_to_execute_code = "prepare_resource"
+      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.save
+
+    else
+      logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
+
+      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, sm_record.user_id,
+                                                                        sm_record.experiment_id, sm_record.start_at)
 
       error_counter = 0
       while true
         begin
-          ssh = shared_ssh_session(record.credentials)
-          break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
+          ssh = shared_ssh_session(sm_record.credentials)
+          break if log_exists?(sm_record, ssh) or send_and_launch_sm(sm_record, ssh)
         rescue Exception => e
           logger.warn "Exception #{e} occured while communication with "\
-  "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
+  "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
           error_counter += 1
           if error_counter > 10
-            record.store_error('install_failed', e.to_s)
+            sm_record.store_error('install_failed', e.to_s)
             break
           end
         end

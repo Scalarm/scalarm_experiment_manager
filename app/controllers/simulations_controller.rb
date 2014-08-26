@@ -59,18 +59,18 @@ class SimulationsController < ApplicationController
   end
 
   def create
-    simulation_input = params[:simulation_input].read
+    simulation_input = Utils.parse_json_if_string(params[:simulation_input].read)
     # input validation
     case true
       when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
         flash[:error] = t('simulations.create.bad_params')
 
-      when (not Simulation.where({ name: params[:simulation_name], user_id: @current_user.id }).blank?)
+      when (not Simulation.where(name: params[:simulation_name], user_id: @current_user.id).to_a.blank?)
         flash[:error] = t('simulations.create.simulation_invalid_name')
 
     end
 
-    unless flash[:error].blank? or (begin JSON.parse(simulation_input) and true rescue false end)
+    unless flash[:error].blank? or (begin Utils.parse_json_if_string(simulation_input) and true rescue false end)
       flash[:error] = t('simulations.create.bad_simulation_input')
     end
     # simulation creation
@@ -124,45 +124,57 @@ class SimulationsController < ApplicationController
     response = { status: 'ok' }
 
     begin
-      if @simulation.nil? or @simulation['is_done']
-        msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation.nil?}"
+      if @simulation_run.nil? or @simulation_run.is_done
+        msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
 
         Rails.logger.error(msg)
         response = { status: 'error', reason: msg }
       else
-        @simulation['is_done'] = true
-        @simulation['to_sent'] = false
+        @simulation_run.is_done = true
+        @simulation_run.to_sent = false
+
         if params[:result].blank?
-          @simulation['result'] = {}
+          @simulation_run.result = {}
         else
           begin
-            @simulation['result'] = JSON.parse(params[:result])
+            @simulation_run.result = Utils.parse_json_if_string(params[:result])
           rescue Exception => e
-            @simulation['result'] = {}
-            @simulation['is_error'] = true
-            @simulation['error_reason'] = t('simulations.error.invalid_result_format')
+            @simulation_run.result = {}
+            @simulation_run.is_error = true
+            @simulation_run.error_reason = t('simulations.error.invalid_result_format')
           end
         end
 
         if params.include?(:status) and params[:status] == 'error'
-          @simulation['is_error'] = true
-          @simulation['error_reason'] = params[:reason] if params.include?(:reason)
+          @simulation_run.is_error = true
+          @simulation_run.error_reason = params[:reason] if params.include?(:reason)
         end
 
-        @simulation['done_at'] = Time.now
+        @simulation_run.done_at = Time.now
         # infrastructure-related info
         if params.include?('cpu_info')
-          cpu_info = JSON.parse(params[:cpu_info])
-          @simulation['cpu_info'] = cpu_info
+          cpu_info = Utils.parse_json_if_string(params[:cpu_info])
+          @simulation_run.cpu_info = cpu_info
         end
-        @experiment.save_simulation(@simulation)
+
+        unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
+          unless sm_record.infrastructure.blank?
+            @simulation_run.infrastructure = sm_record.infrastructure
+          end
+
+          unless sm_record.computational_resources.blank?
+            @simulation_run.computational_resources = sm_record.computational_resources
+          end
+        end
+
+        @simulation_run.save
         # TODO adding caching capability
         #@simulation.remove_from_cache
 
         if params.include?(:status) and params[:status] == 'error'
-          @experiment.progress_bar_update(@simulation['id'], 'error')
+          @experiment.progress_bar_update(@simulation_run.index, 'error')
         else
-          @experiment.progress_bar_update(@simulation['id'], 'done')
+          @experiment.progress_bar_update(@simulation_run.index, 'done')
         end
       end
     rescue Exception => e
@@ -177,11 +189,11 @@ class SimulationsController < ApplicationController
     response = { status: 'ok' }
 
     begin
-      if @simulation.nil? or @simulation['is_done']
-        logger.debug("Simulation #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation.nil?}")
+      if @simulation_run.nil? or @simulation_run.is_done
+        logger.debug("Simulation #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}")
       else
-        @simulation['tmp_result'] = JSON.parse(params[:result])
-        @experiment.save_simulation(@simulation)
+        @simulation_run.tmp_result = Utils.parse_json_if_string(params[:result])
+        @simulation_run.save
       end
     rescue Exception => e
       Rails.logger.debug("Error in the 'progress_info' function - #{e}")
@@ -204,9 +216,10 @@ class SimulationsController < ApplicationController
     @remote_storage_manager_url = information_service.get_list_of('storage_managers')
     @remote_storage_manager_url = @remote_storage_manager_url.sample unless @remote_storage_manager_url.nil?
 
-    if @simulation.nil?
-      @simulation = @experiment.generate_simulation_for(params[:id].to_i)
-      @experiment.save_simulation(@simulation)
+    if @simulation_run.nil?
+      @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)
+      Rails.logger.debug("simulation_run: #{@simulation_run.inspect}")
+      @simulation_run.save
     end
 
     @output_size, @output_size_label, @output_size_err = simulation_output_size
@@ -231,7 +244,7 @@ class SimulationsController < ApplicationController
       elsif i == 1
         row.each_with_index do |token, index|
           begin
-            if JSON.parse(token).kind_of?(Array)
+            if Utils.parse_json_if_string(token).kind_of?(Array)
               parameters[:values] << 'Multiple values'
             else
               parameters[:values] << 'Single value'
@@ -253,22 +266,22 @@ class SimulationsController < ApplicationController
   private
 
   def load_simulation
-    @experiment, @simulation = nil, nil
+    @experiment, @simulation_run = nil, nil
 
     return unless params.include?('id') and params.include?('experiment_id')
     experiment_id = BSON::ObjectId(params[:experiment_id])
     Rails.logger.debug("Experiment id : #{experiment_id}")
 
     @experiment = if not @current_user.nil?
-      Experiment.find_experiments_visible_to(@current_user, { _id: experiment_id }).first
-    elsif not @sm_user.nil?
-      user = @sm_user.scalarm_user
+                    @current_user.experiments.where(id: experiment_id).first
+                  elsif not @sm_user.nil?
+                    user = @sm_user.scalarm_user
 
-      Experiment.find_experiments_visible_to(user, { _id: experiment_id }).first
-    end
+                    user.experiments.where(id: experiment_id).first
+                  end
 
     unless @experiment.nil?
-      @simulation = @experiment.find_simulation_docs_by({ id: params[:id].to_i }, { limit: 1 }).first
+      @simulation_run = @experiment.simulation_runs.where(index: params[:id].to_i).first
     end
   end
 
@@ -313,12 +326,12 @@ class SimulationsController < ApplicationController
   def simulation_output_size
     error, output_size = 1, 0
 
-    unless @simulation.nil? or @storage_manager_url.blank?
+    unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation['id'])
+        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation_run.index)
 
         if size_response.code == 200
-          output_size = JSON.parse(size_response.body)['size']
+          output_size = Utils.parse_json_if_string(size_response.body)['size']
           error = 0
         end
       rescue Exception => ex
@@ -333,12 +346,12 @@ class SimulationsController < ApplicationController
   def simulation_stdout_size
     error, output_size = 1, 0
 
-    unless @simulation.nil? or @storage_manager_url.blank?
+    unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation['id'])
+        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation_run.index)
 
         if size_response.code == 200
-          output_size = JSON.parse(size_response.body)['size']
+          output_size = Utils.parse_json_if_string(size_response.body)['size']
           error = 0
         end
       rescue Exception => ex

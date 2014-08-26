@@ -95,6 +95,10 @@ class PlGridJob < MongoActiveRecord
     not credentials.invalid and credentials.password
   end
 
+  def computational_resources
+    "nodes=#{nodes}:ppn=#{ppn}"
+  end
+
   # require 'grid-proxy'
 
   def valid_proxy?(proxy)

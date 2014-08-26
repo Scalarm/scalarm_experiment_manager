@@ -1,7 +1,11 @@
 = form_tag '', class: 'custom' do
   %fieldset(class="parameter_#{parameter['index']} #{parameter.include?('value') ? 'hidden' : ''}")
     %legend
-      = t('experiments.new.parameter_label', label: parameter['label'], min: parameter['min'], max: parameter['max'])
+      - if parameter.include?('min') and parameter.include?('max')
+        = t('experiments.new.parameter_label', label: parameter['label'], min: parameter['min'], max: parameter['max'])
+
+      - elsif parameter.include?('allowed_values')
+        = t('experiments.new.parameter_label_allowed_values', label: parameter['label'], allowed_values: parameter['allowed_values'].join(', '))
 
     .row
       .small-5.columns

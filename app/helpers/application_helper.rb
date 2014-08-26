@@ -12,20 +12,20 @@ module ApplicationHelper
     "#{log_bank_url(storage_manager_url, experiment)}/size"
   end
 
-  def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
+  def log_bank_simulation_run_binaries_url(storage_manager_url, experiment, simulation_id)
     "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
   end
 
   def log_bank_simulation_binaries_size_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
+    "#{log_bank_simulation_run_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
   end
 
-  def log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
+  def log_bank_simulation_run_stdout_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_run_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
   end
 
-  def log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)}_size"
+  def log_bank_simulation_run_stdout_size_url(storage_manager_url, experiment, simulation_id)
+    "#{log_bank_simulation_run_stdout_url(storage_manager_url, experiment, simulation_id)}_size"
   end
 
   def button_classes

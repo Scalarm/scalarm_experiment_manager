@@ -32,7 +32,7 @@ class ExperimentTest < MiniTest::Test
       i += 1
     end
 
-    @simulation = Simulation.new({ 'input_specification' => "[\n  {\n    \"id\": \"clustering\",\n    \"label\": \"Clustering\",\n\n    \"entities\": [\n      {\n        \"id\": \"phase_1\",\n        \"label\": \"Phase 1 - kdist\",\n        \"parameters\": [\n          {\n            \"id\": \"minpts\",\n            \"label\": \"Neighbourhood counter\",\n            \"type\": \"integer\",\n            \"min\": 250,\n            \"max\": 260\n          }\n        ]\n      }\n    ] \n  }\n]" })
+    @simulation = Simulation.new({ 'input_specification' => "[\n  {\n    \"id\": \"clustering\",\n    \"label\": \"Clustering\",\n\n    \"entities\": [\n      {\n        \"id\": \"phase_1\",\n        \"label\": \"Phase 1 - kdist\",\n        \"parameters\": [\n          {\n            \"id\": \"minpts\",\n            \"label\": \"Neighbourhood counter\",\n            \"type\": \"integer\",\n            \"min\": 250,\n            \"max\": 260\n          }\n        ]\n      }\n    ] \n  }\n]".to_json })
 
     Rails.configuration.experiment_seeks = {}
 
@@ -78,7 +78,7 @@ class ExperimentTest < MiniTest::Test
 
     experiment.create_file_with_ids
 
-    experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
+    experiment.expects(:simulation_runs).at_least_once.returns(SimulationRun.for_experiment('1'))
 
     simulation_ids = []
 
@@ -103,14 +103,14 @@ class ExperimentTest < MiniTest::Test
 
     File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
 
-    experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
-    experiment.expects(:save_simulation).at_least_once
+    experiment.expects(:simulation_runs).at_least_once.returns([])
+    #experiment.expects(:save_simulation).at_least_once
     experiment.expects(:naive_partition_based_simulation_hash).returns(nil)
 
     simulation_ids = []
 
     while not (simulation_run = experiment.get_next_instance).nil?
-      simulation_ids << simulation_run['id']
+      simulation_ids << simulation_run.index
     end
 
     assert_equal 24206, simulation_ids.size
@@ -130,8 +130,8 @@ class ExperimentTest < MiniTest::Test
 
     File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
 
-    experiment.expects(:find_simulation_docs_by).at_least_once.returns([])
-    experiment.expects(:save_simulation).at_least_once
+    experiment.expects(:simulation_runs).at_least_once.returns([])
+    #experiment.expects(:save_simulation).at_least_once
     experiment.expects(:naive_partition_based_simulation_hash).at_least_once.returns(nil)
 
     simulation_ids = []
@@ -140,7 +140,7 @@ class ExperimentTest < MiniTest::Test
     8.times do
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
-          simulation_ids << simulation_run['id']
+          simulation_ids << simulation_run['index']
         end
       end
 
@@ -179,7 +179,8 @@ class ExperimentTest < MiniTest::Test
       i += 1
       puts("#{Time.now} - Size: #{i}") if i % 100 == 0
       simulation_ids << simulation_id
-      experiment.save_simulation({ 'id' => simulation_id, 'to_sent' => 'false' })
+      simulation_run = SimulationRun.new(index: simulation_id, to_sent: false)
+      simulation_run.save
       experiment.progress_bar_update(simulation_id, 'done')
     end
 
@@ -205,7 +206,7 @@ class ExperimentTest < MiniTest::Test
     8.times do
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
-          simulation_ids << simulation_run['id']
+          simulation_ids << simulation_run['index']
           Rails.logger.debug("#{Time.now} - #{simulation_ids.size}") if simulation_ids.size % 100 == 0
         end
       end

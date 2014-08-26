@@ -5,13 +5,11 @@
   = hidden_field_tag 'experiment_name'
   = hidden_field_tag 'experiment_description'
 
-  .switch.round.import_parameter_space.right
-    %input#import-on(name="import-switch" type="radio" checked)
-    %label(for="import-on" onclick="") Off
-
-    %input#import-off(name="import-switch" type="radio" checked)
-    %label(for="import-off" onclick="") On
-    %span
+  %ul.button-group.right.round
+    %li
+      %a#import-off.tiny.button.secondary.clicked(href="#") On
+    %li
+      %a#import-on.tiny.button.secondary(href="#") Off
 
   %h3.subheader= t('.header')
 

@@ -60,7 +60,7 @@ class MongoActiveRecord
     collection = Object.const_get(self.class.name).send(:collection)
 
     if @attributes.include? '_id'
-      collection.update({'_id' => @attributes['_id']}, @attributes, {:upsert => true})
+      collection.update({'_id' => @attributes['_id']}, @attributes, {upsert: true})
     else
       id = collection.save(@attributes)
       @attributes['_id'] = id
@@ -76,6 +76,7 @@ class MongoActiveRecord
 
     collection = Object.const_get(self.class.name).send(:collection)
     collection.remove({ '_id' => @attributes['_id'] })
+    @attributes.delete('_id')
   end
 
   def to_s
@@ -124,20 +125,17 @@ class MongoActiveRecord
       parameter_name = method_name.to_s.split('_')[3..-1].join('_')
 
       return self.find_all_by(parameter_name, args)
+
+    elsif (not instance_methods.include?(method_name.to_sym)) and (Array.instance_methods.include?(method_name.to_sym))
+
+      return to_a.send(method_name.to_sym, *args, &block)
     end
 
     super(method_name, *args, &block)
   end
 
   def self.all
-    collection = Object.const_get(name).send(:collection)
-    instances = []
-
-    collection.find({}).each do |attributes|
-      instances << Object.const_get(name).send(:new, attributes)
-    end
-
-    instances
+    where({}, {})
   end
 
   def self.destroy(selector)
@@ -160,14 +158,6 @@ class MongoActiveRecord
 
   def self.find_all_by_query(query, opts = {})
     self.where(query, opts)
-  end
-
-  def self.where(query, opts = {})
-    collection = Object.const_get(name).send(:collection)
-
-    collection.find(query, opts).map do |attributes|
-      Object.const_get(name).new(attributes)
-    end
   end
 
   def self.find_by(parameter, value)
@@ -221,6 +211,52 @@ class MongoActiveRecord
     end
   end
 
+  # chaining capabilities
+  def self.where(cond, opts = {})
+    @conditions ||= {}; @options ||= {} 
+
+    cond.each do |key, value|
+      key = key.to_sym
+      key = :_id if key == :id
+
+      if key.to_s.ends_with?('_id')
+        value = BSON::ObjectId(value.to_s)
+      end
+
+      @conditions[key] = value
+    end
+
+    @options.merge! opts
+
+    self
+  end
+
+  def self.to_a
+    collection = Object.const_get(name).send(:collection)
+
+    results = collection.find(@conditions || {}, @options || {}).map do |attributes|
+      Object.const_get(name).new(attributes)
+    end
+
+    @conditions = {}; @options = {}
+
+    results
+  end
+
+  def self.size
+    count
+  end
+
+  def self.count
+    collection = Object.const_get(name).send(:collection)
+
+    results = collection.count(query: @conditions || {})
+
+    @conditions = {}; @options = {}
+
+    results
+  end
+
   # INITIALIZATION STUFF
 
   def self.connection_init(storage_manager_url, db_name)
@@ -246,8 +282,7 @@ class MongoActiveRecord
 
   def self.parse_json_if_string(attribute)
     define_method attribute do
-      value = get_attribute(attribute.to_s)
-      value.kind_of?(String) and JSON.parse(value) or value
+      Utils::parse_json_if_string(get_attribute(attribute.to_s))
     end
   end
 

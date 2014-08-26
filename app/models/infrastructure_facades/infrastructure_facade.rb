@@ -5,6 +5,7 @@ require_relative 'infrastructure_errors'
 require_relative 'simulation_manager'
 
 require 'thread_pool'
+require 'mongo_lock'
 
 # Methods necessary to implement by subclasses:
 #
@@ -89,6 +90,39 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
+  def self.prepare_monitoring_package(sm_uuid, user_id)
+    Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
+
+    Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
+    # prepare sm configuration
+    temp_password = SimulationManagerTempPassword.where(user_id: user_id).first
+
+    if temp_password.nil?
+      temp_password = SimulationManagerTempPassword.new(
+          sm_uuid: sm_uuid,
+          password: SecureRandom.base64,
+          user_id: user_id
+      )
+
+      temp_password.save
+    end
+
+    sm_config = {
+        InformationServiceAddress: Rails.application.secrets.information_service_url,
+        Login: temp_password.sm_uuid,
+        Password: temp_password.password,
+        Infrastructures: [ "qsub" ]
+    }
+
+    if Rails.application.secrets.include?(:sm_information_service_url)
+      sm_config[:InformationServiceAddress] = Rails.application.secrets.sm_information_service_url
+    end
+
+    IO.write(File.join('/tmp', monitoring_package_dir(sm_uuid), 'config.json'), sm_config.to_json)
+    # zip all files
+    Dir.chdir(Rails.root)
+  end
+
   # TODO: for bakckward compatibility
   def current_state(user_id)
     "You have #{count_sm_records} Simulation Managers scheduled"
@@ -96,7 +130,8 @@ class InfrastructureFacade
 
   def monitoring_thread
     configure_polling_interval
-    lock = MongoLock.new(short_name)
+    lock = Scalarm::MongoLock.new(short_name)
+
     while true do
       if lock.acquire
         logger.info 'monitoring thread is working'
@@ -206,14 +241,7 @@ class InfrastructureFacade
     { 'time_limit' => 50 }
   end
 
-  # TODO: use .count method? - it will need every infrastructure to implement this
   def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
-    # query = {}
-    # query.merge!({user_id: user_id}) if user_id
-    # query.merge!({experiment_id: experiment_id}) if experiment_id
-    # query.merge!(attributes) if attributes
-    # sm_record_class.collection.count(query)
-
     get_sm_records(user_id, experiment_id, attributes).count
   end
 
@@ -231,4 +259,7 @@ class InfrastructureFacade
   def init_resources; end
   def clean_up_resources; end
 
+  def self.monitoring_package_dir(sm_uuid)
+    "scalarm_monitoring_#{sm_uuid}"
+  end
 end

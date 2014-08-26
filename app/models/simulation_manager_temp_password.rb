@@ -20,11 +20,28 @@ class SimulationManagerTempPassword < MongoActiveRecord
   end
 
   def scalarm_user
-    if experiment_id.nil?
-      nil
+    if self.user_id.nil?
+
+      if self.experiment_id.nil?
+        nil
+      else
+        ScalarmUser.find_by_id(Experiment.find_by_id(self.experiment_id).user_id)
+      end
+
     else
-      ScalarmUser.find_by_id(Experiment.find_by_id(experiment_id).user_id)
+      ScalarmUser.find_by_id(self.user_id)
     end
+  end
+
+  def simulation_manager_record
+    InfrastructureFacadeFactory.get_all_infrastructures.each do |infrastructure|
+      sm_records = infrastructure.get_sm_records().select{|sm_record| sm_record.sm_uuid == sm_uuid}
+      unless sm_records.blank?
+        return sm_records.first
+      end
+    end
+
+    nil
   end
 
 end

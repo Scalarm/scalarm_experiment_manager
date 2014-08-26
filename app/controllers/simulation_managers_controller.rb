@@ -5,6 +5,11 @@ class SimulationManagersController < ApplicationController
   before_filter :set_user_id
   before_filter :load_infrastructure
 
+  # Get Simulation Manager nodes in JSON
+  # GET params:
+  # - infrastructure_name: name of Infrastructure
+  # - experiment_id: (optional) experiment_id
+  # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
   def index
     result = { status: 'ok' }
 
@@ -44,9 +49,29 @@ class SimulationManagersController < ApplicationController
     sm_record = @infrastructure_facade.get_sm_records(@user_id, nil).select{|sm| sm.id.to_s == params[:id]}.first
 
     unless sm_record.nil?
-      JSON.parse(params[:parameters]).each do |key, value|
+      Utils.parse_json_if_string(params[:parameters]).each do |key, value|
         if key == 'state'
           sm_record.set_state(value.to_sym)
+        elsif key == 'resource_status'
+          prev_status = sm_record.resource_status
+          sm_record.send("#{key}=", value.to_sym)
+          # changing resource status should trigger sm monitor procedure immediately
+          unless sm_record.resource_status == prev_status
+            Thread.new do 
+              lock = Scalarm::MongoLock.new(@infrastructure_facade.short_name)
+              if lock.acquire
+                begin
+                  @infrastructure_facade.yield_simulation_manager(sm_record) do |sm|
+                    sm.monitor
+                  end
+                rescue Exception => e
+                  Rails.logger.error("An exception occured during SM monitoring - #{e} - #{e.backtrace}")
+                ensure
+                  lock.release
+                end
+              end
+            end   
+          end 
         else
           sm_record.send("#{key}=", value)
         end

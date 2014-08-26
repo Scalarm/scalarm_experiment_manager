@@ -91,9 +91,7 @@ def monitoring_probe(action)
       probe.start_monitoring
 
       ExperimentWatcher.watch_experiments
-      InfrastructureFacadeFactory.start_all_monitoring_threads
-
-      sleep(10) while true
+      InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
     }
 
     IO.write(probe_pid_path, monitoring_job_pid)

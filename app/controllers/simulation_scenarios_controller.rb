@@ -21,7 +21,7 @@ class SimulationScenariosController < ApplicationController
     if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
-      simulation_input =  params.include?(:simulation_input) ? params[:simulation_input].read : nil
+      simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(params[:simulation_input].read) : nil
       simulation_scenario_params_validation(simulation_input)
 
       # simulation update
@@ -60,7 +60,11 @@ class SimulationScenariosController < ApplicationController
   end
 
   def show
-    render json: @simulation_scenario.to_json
+    render json: if @simulation_scenario
+          {status: 'ok', data: @simulation_scenario.to_h }
+        else
+          {status: 'error', error_code: 'not_found'}
+        end
   end
 
   def code_base
@@ -191,7 +195,7 @@ class SimulationScenariosController < ApplicationController
     case true
       when (not simulation_input.blank?)
         begin
-          JSON.parse(simulation_input)
+          Utils.parse_json_if_string(simulation_input)
         rescue
           flash[:error] = t('simulations.create.bad_simulation_input')
         end

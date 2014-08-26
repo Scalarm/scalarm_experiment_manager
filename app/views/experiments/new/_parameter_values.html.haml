@@ -5,7 +5,7 @@
         %label.inline.right
           = t('experiments.new.attr_value')
       .small-7.columns
-        - default_value = parameter.include?('value') ? parameter['value'] : parameter['min']
+        - default_value = parameter['value'] || parameter['min'] || parameter['allowed_values'].first
         = text_field_tag "parameter_value_#{parameter['index']}", default_value
 
 - elsif type == 'range'
@@ -58,3 +58,13 @@
           = t('experiments.new.attr_uniform_max')
       .small-7.columns
         = text_field_tag "parameter_max_#{parameter['index']}", parameter['max']
+
+- elsif type == 'custom'
+  %div(parametrization-type="custom" class="hidden")
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.new.attr_values')
+      .small-7.columns
+        - default_value = parameter['value'] || parameter['min'] || parameter['allowed_values'].first
+        = text_area_tag "parameter_custom_values_#{parameter['index']}", default_value, rows: 3
