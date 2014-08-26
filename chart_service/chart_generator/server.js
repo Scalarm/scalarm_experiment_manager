@@ -74,6 +74,7 @@ var app = http.createServer(function(req, res) {
 
 //--------------------------------
 function authenticate(cookie, experimentID, success, error){
+	//what if there are more cookies??
 	var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
 	var output = cookieDecoder(cookieGood);
 

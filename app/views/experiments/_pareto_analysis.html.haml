@@ -16,6 +16,7 @@
 
     // 'Load chart' button handler
     $('#pareto_charts_form input[type=submit]').bind('click', function() {
+      var func_defined;
       if(!pareto_loaded){
         pareto_loaded = true;
 
@@ -24,7 +25,9 @@
         $("#pareto_charts").prepend("<div id='pareto_chart'></div>");
         $("#pareto_chart").html("#{escape_javascript(render partial: 'pareto_chart')}")
 
-        $("#pareto_chart .pareto_chart_container").load("/chart/pareto?id=#{@experiment.id}",function() {$('#busy_pareto').hide();});
+        func_defined = "&func_defined="+(typeof pareto_interaction!='undefined' && typeof pareto_to_send!='undefined');
+
+        $("#pareto_chart .pareto_chart_container").load("/chart/pareto?id=#{@experiment.id}"+func_defined,function() {$('#busy_pareto').hide();});
 
         //---------------------
 
@@ -61,7 +64,8 @@
       }
 
       else{
-       $("#pareto_chart .pareto_chart_container").load("/chart/pareto?id=#{@experiment.id}",function() {$('#busy_pareto').hide();});
+       func_defined = "&func_defined="+(typeof pareto_interaction!='undefined' && typeof pareto_to_send!='undefined');
+       $("#pareto_chart .pareto_chart_container").load("/chart/pareto?id=#{@experiment.id}"+func_defined,function() {$('#busy_pareto').hide();});
       }
 
       

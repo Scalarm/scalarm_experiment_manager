@@ -15,9 +15,11 @@ module.exports.prepare_chart = function(type, parameters, callback, err) {
             }, err);
             break;
         case "/pareto":
-            // db_retriever.getPareto(id, function(data) {
-            //     ...
-            // })
+            db_retriever.getPareto(parameters["id"], function(data) {
+                var object = {};
+                object.content = prepare_pareto_chart_content(data);
+                callback(object);
+            }, err);
             break;
         default:
             err("WRONG!");
@@ -29,107 +31,19 @@ function prepare_interaction_chart_content(parameters, data) {
     output += "\nvar data = " + JSON.stringify(data) + ";";
     output += "\ninteraction_to_send(i, \"" + parameters["param1"] + "\", \"" + parameters["param2"] + "\", data);";
     output += "\ninteraction_interaction(i);";
-    output += "})();</script>";
+    output += "\n})();</script>";
 
     return output;
 }
 
-module.exports.prepare_interaction_chart = function(id, param1, param2, callback, err) {
-    db_retriever.getInteraction(id, param1, param2, function(data) {
-        callback(data);
-    }, err)
-}
+function prepare_pareto_chart_content(data) {
+    var output = "<script>(function() {";
+    output += "\nvar data = " + JSON.stringify(data) + ";";
+    output += "\npareto_to_send(data);";
+    output += "\npareto_interaction();"
+    output += "\n})();</script>";
 
-module.exports.prepare_pareto_chart = function(id, callback) {
-    db_retriever.getPareto(id, function(data) {
-        // var data = [
-        //     {name: "param1",
-        //     value: 4},
-        //     {name: "param2",
-        //     value: 8},
-        //     {name: "param3",
-        //     value: 23},
-        //     {name: "param4",
-        //     value: 16},
-        //     {name: "param5",
-        //     value: 15},
-        //     {name: "param6",
-        //     value: 42}
-        // ];
-
-        data = data.sort(function(a,b){ return b.value-a.value})
-
-        var max = d3.max(data, function(d) {
-            return d.value;
-        });
-
-        //pre-rendering chart
-        var content = jsdom.createElement("div");
-        var svg = d3.select(content)
-                    .append("svg")
-                    .attr("width", w)
-                    .attr("height", h);
-
-        var xScale = d3.scale.linear()
-                        .domain([0, max])
-                        .range([0, 420]);
-        // var yScale = d3.scale.ordinal()
-        //                 .domain(["param1","param2","param3","param4","param5","param6"])
-        //                 .rangeBands([0,100]);
-        var xAxis = d3.svg.axis()
-                        .scale(xScale)
-                        .orient('bottom');
-        // var yAxis = d3.svg.axis()
-        //                 .scale(yScale)
-        //                 .orient("left");
-
-        var precolor = d3.scale.linear()
-            .domain([0,max])
-            .range([50, 200])
-
-        var color = function(d){
-            return Math.floor(precolor(d))
-        };
-        var barPadding = 3;
-
-
-
-        svg.selectAll("rect")
-           .data(data)
-           .enter().append("rect")
-           .attr("width", function(d) { return xScale(d.value); })
-           .attr("height", 50)
-           .attr('x', 20)
-           .attr("y", function(d,i) { return i*(50+barPadding)+20;} )
-           .attr('fill', function(d) { return 'rgb(75,75,'+color(d.value)+')';})
-           .attr('stroke','black')
-           .text(function(d) { return d.name; });
-
-        svg.selectAll("text")
-           .data(data)
-           .enter()
-           .append("text")
-           .text(function(d) { return d.name})
-           // .attr("text-anchor", "middle")
-           .attr("alignment-baseline", "middle")
-           .attr("x", function(d) { return xScale(d.value)+40})
-           .attr("y", function(d,i) {return i*(50+barPadding)+20+25})
-
-        svg.append('g')
-            .call(xAxis)
-            .attr('class','axis')
-            .attr('transform','translate('+20+','+(20+data.length*(50+barPadding))+')')
-
-        svg.append("text")
-            .attr("transform", "translate("+(20+xScale(max/2))+','+(20+data.length*(50+barPadding)+40)+')')
-            .attr("text-anchor", "middle")
-            .text("Effect");
-    
-
-        //executing callback
-        callback(content.innerHTML);
-    })
-
+    return output;
 }
 
 module.exports.authenticate = function(userID, experimentID, success, error) {
