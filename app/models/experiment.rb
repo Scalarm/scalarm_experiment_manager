@@ -68,6 +68,13 @@ class Experiment < MongoActiveRecord
         (shared_with.nil? or not shared_with.include?(anonymous_user.id))
   end
 
+  def add_to_shared(user_id)
+    sharing_list = (self.shared_with or [])
+    sharing_list << user_id
+
+    self.shared_with = sharing_list
+  end
+
   def get_statistics
     all  = simulation_runs.count
     sent = simulation_runs.where(to_sent: false, is_done: false).count
