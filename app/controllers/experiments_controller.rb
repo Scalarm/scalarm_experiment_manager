@@ -130,9 +130,9 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_experiment_size
-    doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
+    doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
-    @experiment_input = Experiment.prepare_experiment_input(@simulation, JSON.parse(params['experiment_input']), doe_info)
+    @experiment_input = Experiment.prepare_experiment_input(@simulation, Utils.parse_json_if_string(params['experiment_input']), doe_info)
 
     # create the new type of experiment object
     experiment = Experiment.new({ simulation_id: @simulation.id,
@@ -141,7 +141,7 @@ class ExperimentsController < ApplicationController
                                   doe_info: doe_info
                                 })
     experiment.replication_level = params[:replication_level].blank? ? 1 : params[:replication_level].to_i
-    experiment.parameters_constraints = params[:parameters_constraints].blank? ? {} : JSON.parse(params[:parameters_constraints])
+    experiment.parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
 
     message = nil
     begin
@@ -615,11 +615,11 @@ class ExperimentsController < ApplicationController
   end
 
   def input_space_manual_specification(experiment)
-    doe_info = params['doe'].blank? ? [] : JSON.parse(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
+    doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
 
     experiment.doe_info = doe_info
     experiment.experiment_input = Experiment.prepare_experiment_input(@simulation,
-                                                                      JSON.parse(params['experiment_input']),
+                                                                      Utils.parse_json_if_string(params['experiment_input']),
                                                                       experiment.doe_info)
   end
 
@@ -652,7 +652,7 @@ class ExperimentsController < ApplicationController
   def prepare_new_experiment
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
-    parameters_constraints = params[:parameters_constraints].blank? ? {} : JSON.parse(params[:parameters_constraints])
+    parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
 
     # create the new type of experiment object
     experiment = Experiment.new({'simulation_id' => @simulation.id,

@@ -59,7 +59,7 @@ class SimulationsController < ApplicationController
   end
 
   def create
-    simulation_input = JSON.parse(params[:simulation_input].read)
+    simulation_input = Utils.parse_json_if_string(params[:simulation_input].read)
     # input validation
     case true
       when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
@@ -70,7 +70,7 @@ class SimulationsController < ApplicationController
 
     end
 
-    unless flash[:error].blank? or (begin JSON.parse(simulation_input) and true rescue false end)
+    unless flash[:error].blank? or (begin Utils.parse_json_if_string(simulation_input) and true rescue false end)
       flash[:error] = t('simulations.create.bad_simulation_input')
     end
     # simulation creation
@@ -137,7 +137,7 @@ class SimulationsController < ApplicationController
           @simulation_run.result = {}
         else
           begin
-            @simulation_run.result = JSON.parse(params[:result])
+            @simulation_run.result = Utils.parse_json_if_string(params[:result])
           rescue Exception => e
             @simulation_run.result = {}
             @simulation_run.is_error = true
@@ -153,7 +153,7 @@ class SimulationsController < ApplicationController
         @simulation_run.done_at = Time.now
         # infrastructure-related info
         if params.include?('cpu_info')
-          cpu_info = JSON.parse(params[:cpu_info])
+          cpu_info = Utils.parse_json_if_string(params[:cpu_info])
           @simulation_run.cpu_info = cpu_info
         end
 
@@ -192,7 +192,7 @@ class SimulationsController < ApplicationController
       if @simulation_run.nil? or @simulation_run.is_done
         logger.debug("Simulation #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}")
       else
-        @simulation_run.tmp_result = JSON.parse(params[:result])
+        @simulation_run.tmp_result = Utils.parse_json_if_string(params[:result])
         @simulation_run.save
       end
     rescue Exception => e
@@ -244,7 +244,7 @@ class SimulationsController < ApplicationController
       elsif i == 1
         row.each_with_index do |token, index|
           begin
-            if JSON.parse(token).kind_of?(Array)
+            if Utils.parse_json_if_string(token).kind_of?(Array)
               parameters[:values] << 'Multiple values'
             else
               parameters[:values] << 'Single value'
@@ -331,7 +331,7 @@ class SimulationsController < ApplicationController
         size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation_run.index)
 
         if size_response.code == 200
-          output_size = JSON.parse(size_response.body)['size']
+          output_size = Utils.parse_json_if_string(size_response.body)['size']
           error = 0
         end
       rescue Exception => ex
@@ -351,7 +351,7 @@ class SimulationsController < ApplicationController
         size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation_run.index)
 
         if size_response.code == 200
-          output_size = JSON.parse(size_response.body)['size']
+          output_size = Utils.parse_json_if_string(size_response.body)['size']
           error = 0
         end
       rescue Exception => ex
