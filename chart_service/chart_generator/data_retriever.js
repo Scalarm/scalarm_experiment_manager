@@ -1,4 +1,4 @@
-var DBURL = "mongodb://localhost:27017/scalarm_db";
+var DBURL = "mongodb://172.16.67.121:27017/scalarm_db";
 var COLLECTION_NAME = "experiment_instances_";
 
 var mongo_fun = function(id, fun){
