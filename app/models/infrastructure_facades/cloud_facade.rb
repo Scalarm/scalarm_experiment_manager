@@ -127,7 +127,7 @@ class CloudFacade < InfrastructureFacade
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
 
-    CloudVmRecord.find_by_query(query)
+    CloudVmRecord.find_all_by_query(query)
   end
 
   def get_sm_record_by_id(record_id)
