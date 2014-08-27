@@ -1,3 +1,5 @@
+require 'zip'
+
 class SimulationScenariosController < ApplicationController
   before_filter :load_simulation_scenario, except: [ :index, :create ]
 
@@ -82,7 +84,7 @@ class SimulationScenariosController < ApplicationController
       IO.binwrite("#{code_base_dir}/simulation_binaries.zip", @simulation_scenario.simulation_binaries)
       file_list << 'simulation_binaries.zip'
 
-      IO.binwrite("#{code_base_dir}/input.json", @simulation_scenario.input_specification)
+      IO.binwrite("#{code_base_dir}/input.json", @simulation_scenario.input_specification.to_json)
       file_list << 'input.json'
 
       zipfile_name = File.join('/tmp', "simulation_scenario_#{@simulation_scenario.id}_code_base.zip")

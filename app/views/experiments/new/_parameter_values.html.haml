@@ -27,7 +27,10 @@
         %label.inline.right
           = t('experiments.new.attr_step')
       .small-7.columns
-        = text_field_tag "parameter_step_#{parameter['index']}", (parameter['min'] + parameter['max']) / 5.0
+        - if parameter['type'] == 'float'
+          = text_field_tag "parameter_step_#{parameter['index']}", (parameter['min'] + parameter['max']) / 5.0
+        - elsif parameter['type'] == 'integer'
+          = text_field_tag "parameter_step_#{parameter['index']}", [(parameter['min'] + parameter['max']) / 5, 1].max
 
 - elsif type == 'gauss'
   %div(parametrization-type="gauss" class="hidden")

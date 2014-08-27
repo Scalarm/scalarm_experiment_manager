@@ -586,8 +586,12 @@ class Experiment < MongoActiveRecord
       parameter_values << parameter['value']
 
     when 'range'
-      step = parameter['step'].to_f
-      raise "Step can't be zero" if step == 0.0
+      step = if parameter['type'] == 'float'
+               parameter['step'].to_f
+             elsif parameter['type'] == 'integer'
+               parameter['step'].to_i
+             end
+      raise "Step can't be zero" if step.to_f == 0.0
 
       value = parameter['min'].to_f
       while value <= parameter['max'].to_f
