@@ -5,25 +5,37 @@ module DatabaseUpdateUtils
     # SimulationRun: result, cpu_info, tmp_result
 
     Experiment.all.each do |experiment|
-      experiment.experiment_input = Utils.parse_json_if_string(experiment.experiment_input)
-      experiment.doe_info = Utils.parse_json_if_string(experiment.doe_info)
-      experiment.parameters_constraints = Utils.parse_json_if_string(experiment.parameters_constraints)
+      begin
+        experiment.experiment_input = Utils.parse_json_if_string(experiment.experiment_input)
+        experiment.doe_info = Utils.parse_json_if_string(experiment.doe_info)
+        experiment.parameters_constraints = Utils.parse_json_if_string(experiment.parameters_constraints)
 
-      experiment.save
+        experiment.save
+      rescue Exception => e
+        puts "Exception: #{e.class}, #{e.to_s} on experiement: #{experiment.id}"
+      end
     end
 
     Simulation.all.each do |simulation|
-      simulation.input_specification = Utils.parse_json_if_string(simulation.input_specification)
+      begin
+        simulation.input_specification = Utils.parse_json_if_string(simulation.input_specification)
 
-      simulation.save
+        simulation.save
+      rescue Exception => e
+        puts "Exception: #{e.class}, #{e.to_s} on simulation: #{simulation.id}"
+      end
     end
 
     SimulationRun.all.each do |simulation_run|
-      simulation_run.result = Utils.parse_json_if_string(simulation_run.result)
-      simulation_run.cpu_info = Utils.parse_json_if_string(simulation_run.cpu_info)
-      simulation_run.tmp_result = Utils.parse_json_if_string(simulation_run.tmp_result)
+      begin
+        simulation_run.result = Utils.parse_json_if_string(simulation_run.result)
+        simulation_run.cpu_info = Utils.parse_json_if_string(simulation_run.cpu_info)
+        simulation_run.tmp_result = Utils.parse_json_if_string(simulation_run.tmp_result)
 
-      simulation_run.save
+        simulation_run.save
+      rescue Exception => e
+        puts "Exception: #{e.class}, #{e.to_s} on simulation run: #{simulation.id}"
+      end
     end
 
     true
