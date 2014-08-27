@@ -21,7 +21,7 @@ class SimulationScenariosController < ApplicationController
     if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
-      simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(params[:simulation_input].read) : nil
+      simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input])) : nil
       simulation_scenario_params_validation(simulation_input)
 
       # simulation update
@@ -178,7 +178,7 @@ class SimulationScenariosController < ApplicationController
 
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
                                                                                name: adapter_name,
-                                                                               code: params[adapter_type].read,
+                                                                               code: Utils.read_if_file(params[adapter_type]),
                                                                                user_id: @current_user.id})
       adapter.save
       Rails.logger.debug(adapter)

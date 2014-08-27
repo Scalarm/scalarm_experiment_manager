@@ -24,16 +24,16 @@ class SimulationsController < ApplicationController
 
   def upload_component
     if params['component_type'] == 'input_writer'
-      input_writer = SimulationInputWriter.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       input_writer.save
     elsif params['component_type'] == 'executor'
-      executor = SimulationExecutor.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       executor.save
     elsif params['component_type'] == 'output_reader'
-      output_reader = SimulationOutputReader.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       output_reader.save
     elsif params['component_type'] == 'progress_monitor'
-      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       progress_monitor.save
     end
 
@@ -59,7 +59,7 @@ class SimulationsController < ApplicationController
   end
 
   def create
-    simulation_input = Utils.parse_json_if_string(params[:simulation_input].read)
+    simulation_input = Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input]))
     # input validation
     case true
       when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
@@ -309,7 +309,7 @@ class SimulationsController < ApplicationController
 
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
                                            name: adapter_name,
-                                           code: params[adapter_type].read,
+                                           code: Utils.read_if_file(params[adapter_type]),
                                            user_id: @current_user.id})
       adapter.save
       Rails.logger.debug(adapter)
