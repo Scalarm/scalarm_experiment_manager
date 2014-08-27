@@ -91,7 +91,7 @@ class ExperimentsController < ApplicationController
         begin
           experiment.experiment_size(true)
         rescue Exception => e
-          Rails.logger.warn("An exception occured: #{t(e.message)}")
+          Rails.logger.warn("An exception occured: #{t(e.message)}\n#{e.backtrace}")
           flash[:error] = t(e.message)
           experiment.size = 0
         end
