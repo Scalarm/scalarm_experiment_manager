@@ -135,7 +135,7 @@ class MongoActiveRecord
   end
 
   def self.all
-    where({}, {})
+    where({}, {}).to_a
   end
 
   def self.destroy(selector)
