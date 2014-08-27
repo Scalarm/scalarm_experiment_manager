@@ -157,7 +157,7 @@ class MongoActiveRecord
   end
 
   def self.find_all_by_query(query, opts = {})
-    self.where(query, opts)
+    self.where(query, opts).to_a
   end
 
   def self.find_by(parameter, value)

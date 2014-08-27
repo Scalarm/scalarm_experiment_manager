@@ -239,7 +239,7 @@ class InfrastructureFacade
   end
 
   def default_additional_params
-    { 'time_limit' => 50 }
+    { 'time_limit' => 60 }
   end
 
   def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)
