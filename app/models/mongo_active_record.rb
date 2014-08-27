@@ -157,7 +157,7 @@ class MongoActiveRecord
   end
 
   def self.find_all_by_query(query, opts = {})
-    self.where(query, opts)
+    self.where(query, opts).to_a
   end
 
   def self.find_by(parameter, value)
@@ -282,8 +282,7 @@ class MongoActiveRecord
 
   def self.parse_json_if_string(attribute)
     define_method attribute do
-      value = get_attribute(attribute.to_s)
-      value.kind_of?(String) and JSON.parse(value) or value
+      Utils::parse_json_if_string(get_attribute(attribute.to_s))
     end
   end
 
