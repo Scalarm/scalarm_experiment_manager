@@ -49,7 +49,7 @@ class SimulationManagersController < ApplicationController
     sm_record = @infrastructure_facade.get_sm_records(@user_id, nil).select{|sm| sm.id.to_s == params[:id]}.first
 
     unless sm_record.nil?
-      JSON.parse(params[:parameters]).each do |key, value|
+      Utils.parse_json_if_string(params[:parameters]).each do |key, value|
         if key == 'state'
           sm_record.set_state(value.to_sym)
         elsif key == 'resource_status'

@@ -116,7 +116,7 @@ class InfrastructuresController < ApplicationController
         }
       end
 
-      credentials = infrastructure.add_credentials(@current_user, params, session)
+      credentials = infrastructure.add_credentials(@current_user, stripped_params_values(params), session)
       if credentials
         if credentials.valid?
           mark_credentials_valid(credentials, infrastructure_name)
@@ -150,6 +150,10 @@ class InfrastructuresController < ApplicationController
                  error: "#{exc.class.to_s}: #{exc.to_s}")
       }
     end
+  end
+
+  def stripped_params_values(params)
+    Hash[params.map {|k, v| [k.to_sym, v.respond_to?(:strip) ? v.strip : v]}]
   end
 
   def mark_credentials_valid(credentials, infrastructure_name)

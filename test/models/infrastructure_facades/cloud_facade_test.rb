@@ -330,4 +330,36 @@ class CloudFacadeTest < MiniTest::Test
     assert_equal 'other', params['test'], params
   end
 
+
+  def test_find_stored_params_symbols
+    params = @facade.find_stored_params(stored_security_group: 'quick', stored_test: 'other')
+    assert_includes params, :security_group
+    assert_equal 'quick', params[:security_group], params
+    assert_includes params, :test
+    assert_equal 'other', params[:test], params
+  end
+
+  def test_handle_secrets_credentials
+    client = stub_everything 'cloud_client'
+    credentials = stub_everything 'credentials'
+    user = stub_everything 'user'
+    file_c = stub_everything 'file_c' do
+      expects(:read).returns('uc').once
+    end
+    file_d = stub_everything 'file_d' do
+      expects(:read).returns('ud').once
+    end
+
+    facade = CloudFacade.new(client)
+    facade.stubs(:get_or_create_cloud_secrets).returns(credentials)
+
+    params = {stored_a: 'sa', 'stored_b' => 'sb', upload_c: file_c, 'upload_d' => file_d}
+    credentials.expects(:a=).with('sa').once
+    credentials.expects(:b=).with('sb').once
+    credentials.expects(:c=).with('uc').once
+    credentials.expects(:d=).with('ud').once
+
+    facade.handle_secrets_credentials(user, params)
+  end
+
 end
