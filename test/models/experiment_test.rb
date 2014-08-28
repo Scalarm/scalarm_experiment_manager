@@ -61,4 +61,28 @@ class ExperimentTest < MiniTest::Test
     assert @experiment.has_simulations_to_run?
   end
 
+  def test_end_not_running
+    @experiment.stubs(:is_running).returns(false).once
+    @experiment.stubs(:experiment_size).never
+    @experiment.stubs(:get_statistics).never
+
+    assert (@experiment.end?)
+  end
+
+  def test_end_all_done
+    @experiment.stubs(:is_running).returns(true).once
+    @experiment.stubs(:experiment_size).returns(10).once
+    @experiment.stubs(:get_statistics).returns([10, 10, 10]).once
+
+    assert @experiment.end?
+  end
+
+  def test_end_not
+    @experiment.stubs(:is_running).returns(true).once
+    @experiment.stubs(:experiment_size).returns(10).once
+    @experiment.stubs(:get_statistics).returns([10, 10, 5]).once
+
+    refute (@experiment.end?)
+  end
+
 end
