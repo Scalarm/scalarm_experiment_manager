@@ -75,6 +75,16 @@ class Experiment < MongoActiveRecord
     self.shared_with = sharing_list
   end
 
+  def has_simulations_to_run?
+    all, sent, done = get_statistics
+    all > (sent+done)
+  end
+
+  def end?
+    (self.is_running == false) or
+        (self.experiment_size == self.get_statistics[2])
+  end
+
   def get_statistics
     all  = simulation_runs.count
     sent = simulation_runs.where(to_sent: false, is_done: false).count

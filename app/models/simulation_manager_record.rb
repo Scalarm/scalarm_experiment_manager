@@ -80,9 +80,7 @@ module SimulationManagerRecord
   end
 
   def experiment_end?
-    experiment.nil? or
-        (experiment.is_running == false) or
-        (experiment.experiment_size == experiment.get_statistics[2])
+    experiment.nil? or experiment.end?
   end
 
   def time_limit_exceeded?

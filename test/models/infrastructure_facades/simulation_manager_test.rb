@@ -224,7 +224,7 @@ class SimulationManagerTest < MiniTest::Test
   def test_terminated_untimely
     @sm.stubs(:state).returns(:running)
     @sm.stubs(:resource_status).returns(:released)
-    @sm.stubs(:should_not_be_destroyed?).returns(true)
+    @sm.stubs(:should_not_be_already_terminated?).returns(true)
 
     @sm.expects(:store_terminated_error).once
 
@@ -234,7 +234,7 @@ class SimulationManagerTest < MiniTest::Test
   def test_wait_on_initializing
     @sm.stubs(:state).returns(:initializing)
     @sm.stubs(:resource_stateus).returns(:initializing)
-    @sm.stubs(:should_not_be_destroyed?).returns(true)
+    @sm.stubs(:should_not_be_already_terminated?).returns(true)
 
     @sm.expects(:store_terminated_error).never
 
@@ -297,6 +297,10 @@ class SimulationManagerTest < MiniTest::Test
   def test_clear_no_credentials
     @sm.record.expects(:clear_no_credentials)
     @sm.monitor
+  end
+
+  def test_should_not_be_already_terminated?
+
   end
 
 end

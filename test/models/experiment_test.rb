@@ -4,6 +4,10 @@ require 'mocha/test_unit'
 
 class ExperimentTest < MiniTest::Test
 
+  def setup
+    @experiment = Experiment.new({})
+  end
+
   def test_add_to_shared
     experiment = Experiment.new({})
     user_id = mock 'user_id'
@@ -39,6 +43,22 @@ class ExperimentTest < MiniTest::Test
     experiment.share_with_anonymous
     experiment.stubs(:shared_with).returns([user_id])
     experiment.share_with_anonymous
+  end
+
+  def test_all_already_sent
+    @experiment.stubs(:is_running).returns(true)
+    @experiment.stubs(:experiment_size).returns(10)
+    @experiment.stubs(:get_statistics).returns([10, 2, 8])
+
+    refute @experiment.has_simulations_to_run?
+  end
+
+  def test_has_more_simulations
+    @experiment.stubs(:is_running).returns(true)
+    @experiment.stubs(:experiment_size).returns(10)
+    @experiment.stubs(:get_statistics).returns([11, 2, 8])
+
+    assert @experiment.has_simulations_to_run?
   end
 
 end
