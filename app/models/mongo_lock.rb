@@ -70,5 +70,16 @@ module Scalarm
       MongoLockRecord.collection.remove({ name: name })
     end
 
+    def self.mutex(name, probe_sec=0.1, &block)
+      lock = MongoLock.new(name)
+
+      until lock.acquire do sleep probe_sec end
+      begin
+        yield
+      ensure
+        lock.release
+      end
+    end
+
   end
 end

@@ -124,57 +124,59 @@ class SimulationsController < ApplicationController
     response = { status: 'ok' }
 
     begin
-      if @simulation_run.nil? or @simulation_run.is_done
-        msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
+      Scalarm::MongoLock.mutex("simulation_run-#{@simulation_run.id}") do
+        if @simulation_run.nil? or @simulation_run.is_done
+          msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
 
-        Rails.logger.error(msg)
-        response = { status: 'error', reason: msg }
-      else
-        @simulation_run.is_done = true
-        @simulation_run.to_sent = false
-
-        if params[:result].blank?
-          @simulation_run.result = {}
+          Rails.logger.error(msg)
+          response = { status: 'error', reason: msg }
         else
-          begin
-            @simulation_run.result = Utils.parse_json_if_string(params[:result])
-          rescue Exception => e
+          @simulation_run.is_done = true
+          @simulation_run.to_sent = false
+
+          if params[:result].blank?
             @simulation_run.result = {}
+          else
+            begin
+              @simulation_run.result = Utils.parse_json_if_string(params[:result])
+            rescue Exception => e
+              @simulation_run.result = {}
+              @simulation_run.is_error = true
+              @simulation_run.error_reason = t('simulations.error.invalid_result_format')
+            end
+          end
+
+          if params.include?(:status) and params[:status] == 'error'
             @simulation_run.is_error = true
-            @simulation_run.error_reason = t('simulations.error.invalid_result_format')
-          end
-        end
-
-        if params.include?(:status) and params[:status] == 'error'
-          @simulation_run.is_error = true
-          @simulation_run.error_reason = params[:reason] if params.include?(:reason)
-        end
-
-        @simulation_run.done_at = Time.now
-        # infrastructure-related info
-        if params.include?('cpu_info')
-          cpu_info = Utils.parse_json_if_string(params[:cpu_info])
-          @simulation_run.cpu_info = cpu_info
-        end
-
-        unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
-          unless sm_record.infrastructure.blank?
-            @simulation_run.infrastructure = sm_record.infrastructure
+            @simulation_run.error_reason = params[:reason] if params.include?(:reason)
           end
 
-          unless sm_record.computational_resources.blank?
-            @simulation_run.computational_resources = sm_record.computational_resources
+          @simulation_run.done_at = Time.now
+          # infrastructure-related info
+          if params.include?('cpu_info')
+            cpu_info = Utils.parse_json_if_string(params[:cpu_info])
+            @simulation_run.cpu_info = cpu_info
           end
-        end
 
-        @simulation_run.save
-        # TODO adding caching capability
-        #@simulation.remove_from_cache
+          unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
+            unless sm_record.infrastructure.blank?
+              @simulation_run.infrastructure = sm_record.infrastructure
+            end
 
-        if params.include?(:status) and params[:status] == 'error'
-          @experiment.progress_bar_update(@simulation_run.index, 'error')
-        else
-          @experiment.progress_bar_update(@simulation_run.index, 'done')
+            unless sm_record.computational_resources.blank?
+              @simulation_run.computational_resources = sm_record.computational_resources
+            end
+          end
+
+          @simulation_run.save
+          # TODO adding caching capability
+          #@simulation.remove_from_cache
+
+          if params.include?(:status) and params[:status] == 'error'
+            @experiment.progress_bar_update(@simulation_run.index, 'error')
+          else
+            @experiment.progress_bar_update(@simulation_run.index, 'done')
+          end
         end
       end
     rescue Exception => e
