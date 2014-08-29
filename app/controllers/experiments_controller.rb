@@ -188,9 +188,13 @@ class ExperimentsController < ApplicationController
       sims_generated = @experiment.experiment_size
     end
 
-    if sims_done + sims_sent > @experiment.experiment_size
+    if sims_done > @experiment.experiment_size
       Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.inspect}")
-      sims_done = @experiment.experiment_size - sims_sent
+      sims_done = @experiment.experiment_size
+    end
+
+    if sims_done + sims_sent > @experiment.experiment_size
+      sims_sent = @experiment_size - sims_done
     end
 
     #if sims_generated > @experiment.experiment_size
@@ -293,6 +297,7 @@ class ExperimentsController < ApplicationController
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
     @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
+    @experiment.save
     if @num_of_new_simulations > 0
       @experiment.create_progress_bar_table.drop
       @experiment.insert_initial_bar
