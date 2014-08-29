@@ -287,7 +287,7 @@ class SimulationsController < ApplicationController
     end
 
     Rails.logger.info("Experiment is nil ? #{@experiment.nil?} #{@experiment.nil? ? '' : @experiment.id}")
-    Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.id}")
+    Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.inspect}")
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
