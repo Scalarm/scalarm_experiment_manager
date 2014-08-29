@@ -30,6 +30,6 @@ if ENV['LOAD_BALANCER'] != '' or ENV['LOAD_BALANCER'] != 'true'
   puts "Port #{port}"
   OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
   Net::HTTP.post_form(URI.parse(URI.encode(load_balancer_address)),
-                      {'port'=>port, 'address'=> 'localhost'})
+                      {'address'=> "localhost:#{port}"})
 
 end
