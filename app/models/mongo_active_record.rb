@@ -7,6 +7,25 @@ class MongoActiveRecord
 
   attr_reader :attributes
 
+  @conditions = {}
+  @options = {}
+
+  def self.conditions
+    @conditions
+  end
+
+  def self.conditions=(conds)
+    @conditions = conds
+  end
+
+  def self.options
+    @options
+  end
+
+  def self.options=(opts)
+    @options = opts
+  end
+
   def self.execute_raw_command_on(db, cmd)
     @@db.connection.db(db).command(cmd)
   end
@@ -57,12 +76,10 @@ class MongoActiveRecord
   # save/update json document in db based on attributes
   # if this is new object instance - _id attribute will be added to attributes
   def save
-    collection = Object.const_get(self.class.name).send(:collection)
-
     if @attributes.include? '_id'
-      collection.update({'_id' => @attributes['_id']}, @attributes, {upsert: true})
+      self.class.collection.update({'_id' => @attributes['_id']}, @attributes, {upsert: true})
     else
-      id = collection.save(@attributes)
+      id = self.class.collection.save(@attributes)
       @attributes['_id'] = id
     end
   end
@@ -74,8 +91,7 @@ class MongoActiveRecord
   def destroy
     return if not @attributes.include? '_id'
 
-    collection = Object.const_get(self.class.name).send(:collection)
-    collection.remove({ '_id' => @attributes['_id'] })
+    self.class.collection.remove({ '_id' => @attributes['_id'] })
     @attributes.delete('_id')
   end
 
@@ -139,20 +155,17 @@ class MongoActiveRecord
   end
 
   def self.destroy(selector)
-    collection = Object.const_get(name).send(:collection)
-
-    collection.remove(selector)
+    self.collection.remove(selector)
   end
 
   def self.find_by_query(query)
-    collection = Object.const_get(name).send(:collection)
-
-    attributes = collection.find_one(query)
+    attributes = self.collection.find_one(query)
 
     if attributes.nil?
       nil
     else
-      Object.const_get(name).new(attributes)
+      #Object.const_get(name).new(attributes)
+      self.new(attributes)
     end
   end
 
@@ -172,14 +185,12 @@ class MongoActiveRecord
       end
     end
 
-    collection = Object.const_get(name).send(:collection)
-
-    attributes = collection.find_one({ parameter => value })
+    attributes = self.collection.find_one({ parameter => value })
 
     if attributes.nil?
       nil
     else
-      Object.const_get(name).new(attributes)
+      self.new(attributes)
     end
   end
 
@@ -195,10 +206,8 @@ class MongoActiveRecord
       end
     end
 
-    collection = Object.const_get(name).send(:collection)
-
-    collection.find({parameter => value}).map do |attributes|
-      Object.const_get(name).new(attributes)
+    self.collection.find({parameter => value}).map do |attributes|
+      self.new(attributes)
     end
 
   end
@@ -213,7 +222,9 @@ class MongoActiveRecord
 
   # chaining capabilities
   def self.where(cond, opts = {})
-    @conditions ||= {}; @options ||= {} 
+    mongo_class = self.deep_dup
+    mongo_class.conditions = @conditions.deep_dup || {}
+    mongo_class.options = @options.deep_dup || {}
 
     cond.each do |key, value|
       key = key.to_sym
@@ -223,19 +234,17 @@ class MongoActiveRecord
         value = BSON::ObjectId(value.to_s)
       end
 
-      @conditions[key] = value
+      mongo_class.conditions[key] = value
     end
 
-    @options.merge! opts
+    mongo_class.options.merge! opts
 
-    self
+    mongo_class
   end
 
   def self.to_a
-    collection = Object.const_get(name).send(:collection)
-
-    results = collection.find(@conditions || {}, @options || {}).map do |attributes|
-      Object.const_get(name).new(attributes)
+    results = self.collection.find(@conditions || {}, @options || {}).map do |attributes|
+      self.new(attributes)
     end
 
     @conditions = {}; @options = {}
@@ -248,9 +257,7 @@ class MongoActiveRecord
   end
 
   def self.count
-    collection = Object.const_get(name).send(:collection)
-
-    results = collection.count(query: @conditions || {})
+    results = self.collection.count(query: @conditions || {})
 
     @conditions = {}; @options = {}
 
