@@ -420,6 +420,7 @@ class ExperimentsController < ApplicationController
 
       Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
+        Rails.logger.info("Next simulation run is : #{simulation_to_send.index}")
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
