@@ -194,7 +194,7 @@ class ExperimentsController < ApplicationController
     end
 
     if sims_done + sims_sent > @experiment.experiment_size
-      sims_sent = @experiment_size - sims_done
+      sims_sent = @experiment.experiment_size - sims_done
     end
 
     #if sims_generated > @experiment.experiment_size
