@@ -288,6 +288,13 @@ class SimulationsController < ApplicationController
 
     Rails.logger.info("Experiment is nil ? #{@experiment.nil?} #{@experiment.nil? ? '' : @experiment.id}")
     Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.inspect}")
+
+    if @simulation_run.nil?
+      @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)
+      @simulation_run.to_sent = false
+      @simulation_run.sent_at = Time.now
+    end
+
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
