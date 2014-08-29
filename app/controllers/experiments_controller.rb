@@ -414,7 +414,7 @@ class ExperimentsController < ApplicationController
 
       simulation_to_send = nil
 
-      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}") do
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
         simulation_to_send = @experiment.get_next_instance
       end
 
