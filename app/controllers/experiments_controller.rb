@@ -412,7 +412,12 @@ class ExperimentsController < ApplicationController
     begin
       raise 'Experiment is not running any more' if not @experiment.is_running
 
-      simulation_to_send = @experiment.get_next_instance
+      simulation_to_send = nil
+
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}") do
+        simulation_to_send = @experiment.get_next_instance
+      end
+
       Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
         # TODO adding caching capability to the experiment object
