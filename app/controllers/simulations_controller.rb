@@ -124,7 +124,7 @@ class SimulationsController < ApplicationController
     response = { status: 'ok' }
 
     begin
-      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation_run-#{@simulation_run.index}") do
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-run-complete") do
         if @simulation_run.nil? or @simulation_run.is_done
           msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
 
@@ -285,6 +285,9 @@ class SimulationsController < ApplicationController
     unless @experiment.nil?
       @simulation_run = @experiment.simulation_runs.where(index: params[:id].to_i).first
     end
+
+    Rails.logger.info("Experiment is nil ? #{@experiment.nil?} #{@experiment.nil? ? '' : @experiment.id}")
+    Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.id}")
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
