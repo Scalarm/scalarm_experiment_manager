@@ -124,7 +124,7 @@ class SimulationsController < ApplicationController
     response = { status: 'ok' }
 
     begin
-      Scalarm::MongoLock.mutex("simulation_run-#{@simulation_run.id}") do
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation_run-#{@simulation_run.index}") do
         if @simulation_run.nil? or @simulation_run.is_done
           msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
 
