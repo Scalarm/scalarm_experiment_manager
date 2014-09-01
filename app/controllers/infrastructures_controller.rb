@@ -338,7 +338,7 @@ class InfrastructuresController < ApplicationController
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       record = get_sm_record(params[:record_id], facade)
       facade.yield_simulation_manager(record) do |sm|
-        render text: t("infrastructures.sm_dialog.resource_states.#{(sm.resource_status.to_s or 'error')}",
+        render text: t("infrastructures.sm_dialog.resource_states.#{(sm.resource_status or :error).to_s}",
                          default: t('infrastructures.sm_dialog.resource_states.unknown', state: sm.resource_status.to_s))
       end
     rescue Exception => error
