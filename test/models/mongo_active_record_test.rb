@@ -91,7 +91,6 @@ class MongoActiveRecordTest < MiniTest::Test
 
     hashed = string_record.to_h
 
-    puts hashed
     assert_kind_of Hash, hashed
     assert_includes hashed, 'string_or_json'
     assert_equal({"b"=>2}, hashed['string_or_json'])
@@ -108,6 +107,15 @@ class MongoActiveRecordTest < MiniTest::Test
     record.stubs(:joined_record_id).returns(joined_record_id)
 
     assert_equal joined_record, record.joined_record
+  end
+
+  def test_attr_join_nil
+    record = SomeRecord.new({})
+    record.stubs(:joined_record_id).returns(nil)
+
+    JoinedRecord.expects(:find_by_id).never
+
+    assert_equal nil, record.joined_record
   end
 
 end
