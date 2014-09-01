@@ -293,6 +293,12 @@ class MongoActiveRecord
     end
   end
 
+  def self.attr_join(attribute_name, attribute_class)
+    define_method attribute_name do
+      attribute_class.find_by_id(self.send("#{attribute_name}_id"))
+    end
+  end
+
   def self.next_sequence
     self.get_next_sequence(self.collection_name)
   end
