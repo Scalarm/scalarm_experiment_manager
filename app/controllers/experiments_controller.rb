@@ -296,20 +296,25 @@ class ExperimentsController < ApplicationController
     #@priority = params[:priority].to_i
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
-    @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
-    @experiment.save
-    if @num_of_new_simulations > 0
-      @experiment.create_progress_bar_table.drop
-      @experiment.insert_initial_bar
+    # locking any start and complete simulation run operations for this experiment
+    Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
+        @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
+        @experiment.save
+        if @num_of_new_simulations > 0
+          @experiment.create_progress_bar_table.drop
+          @experiment.insert_initial_bar
 
-      # 4. update progress bar
-      Thread.new do
-        Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-        @experiment.update_all_bars
+          # 4. update progress bar
+          Thread.new do
+            Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+            @experiment.update_all_bars
+          end
+        end
+
+        File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
       end
     end
-
-    File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
 
     respond_to do |format|
       format.js { render partial: 'extend_input_values' }
@@ -416,6 +421,9 @@ class ExperimentsController < ApplicationController
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
         simulation_to_send = @experiment.get_next_instance
+        unless @sm_user.nil?
+          simulation_to_send.sm_uuid = @sm_user.sm_uuid
+        end
       end
 
       Rails.logger.debug("Is simulation nil? #{simulation_to_send}")

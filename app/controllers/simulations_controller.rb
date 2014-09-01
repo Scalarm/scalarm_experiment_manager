@@ -131,6 +131,12 @@ class SimulationsController < ApplicationController
           Rails.logger.error(msg)
           response = { status: 'error', reason: msg }
         else
+          unless @sm_user.nil?
+            if @simulation_run.sm_uuid != @sm_user.sm_uuid
+              Rails.logger.warn("SimulationRun is completed be #{@sm_user.sm_uuid} but it should be #{@simulation_run.sm_uuid}")
+            end
+          end
+
           @simulation_run.is_done = true
           @simulation_run.to_sent = false
 
