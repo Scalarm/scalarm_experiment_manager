@@ -343,7 +343,7 @@ class ExperimentsController < ApplicationController
                         'result'
                       end
 
-      results = results.map{ |simulation_run|
+      results = results.map do |simulation_run|
         unless simulation_run.sent_at and simulation_run.index and simulation_run.values
           next
         end
@@ -355,10 +355,10 @@ class ExperimentsController < ApplicationController
         split_values = simulation_run.values.split(',')
         modified_values = @experiment.range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
         time_column = if params[:simulations] == 'running'
-                        simulation_run.sent_at.strftime('%Y-%m-%d %H:%M')
-                              elsif params[:simulations] == 'completed'
-                                "#{simulation_run.done_at - simulation.sent_at} [s]"
-                              end
+                        simulation_run.sent_at.nil? ? 'N/A' : simulation_run.sent_at.strftime('%Y-%m-%d %H:%M')
+                      elsif params[:simulations] == 'completed'
+                        (simulation_run.sent_at.nil? or simulation_run.done_at.nil?) ? 'N/A' : "#{simulation_run.done_at - simulation_run.sent_at} [s]"
+                      end
 
         [
             simulation_run.index,
@@ -366,7 +366,7 @@ class ExperimentsController < ApplicationController
             simulation_run.send(result_column.to_sym).to_s || 'No data available',
             modified_values
         ].flatten
-      }
+      end
 
       render json: { 'aaData' => results }.as_json
     else
