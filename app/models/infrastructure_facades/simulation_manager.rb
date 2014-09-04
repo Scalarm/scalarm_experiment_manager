@@ -201,10 +201,9 @@ class SimulationManager
     monitoring_order.each do |case_name|
       monitoring_case = monitoring_cases[case_name]
 
-      logger.debug "Monitoring case: #{case_name}"
-
       begin
         if state_transition_for?(monitoring_case, cached_resource_status)
+          logger.debug "Monitoring case: #{case_name}"
           print_message_for(monitoring_case)
           execute_effect_for(monitoring_case)
           change_state_for(monitoring_case)
