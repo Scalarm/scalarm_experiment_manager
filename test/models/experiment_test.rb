@@ -55,7 +55,7 @@ class ExperimentTest < MiniTest::Test
 
   def test_has_more_simulations
     @experiment.stubs(:is_running).returns(true)
-    @experiment.stubs(:experiment_size).returns(10)
+    @experiment.stubs(:experiment_size).returns(11)
     @experiment.stubs(:get_statistics).returns([11, 2, 8])
 
     assert @experiment.has_simulations_to_run?

@@ -80,12 +80,12 @@ class Experiment < MongoActiveRecord
 
   def has_simulations_to_run?
     all, sent, done = get_statistics
-    all > (sent+done)
+    experiment_size > (sent+done)
   end
 
   def end?
     (self.is_running == false) or
-        (self.experiment_size == self.get_statistics[2])
+        (self.experiment_size == self.count_done_simulations)
   end
 
   def get_statistics
@@ -94,6 +94,18 @@ class Experiment < MongoActiveRecord
     done = simulation_runs.where(is_done: true).count
 
     return all, sent, done
+  end
+
+  def count_all_generated_simulations
+    get_statistics[0]
+  end
+
+  def count_sent_simulations
+    get_statistics[1]
+  end
+
+  def count_done_simulations
+    get_statistics[2]
   end
 
   def range_arguments
