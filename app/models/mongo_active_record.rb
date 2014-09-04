@@ -4,6 +4,7 @@ require 'json'
 
 class MongoActiveRecord
   include Mongo
+  include MongoActiveRecordUtils
 
   attr_reader :attributes
 
@@ -290,13 +291,6 @@ class MongoActiveRecord
   def self.parse_json_if_string(attribute)
     define_method attribute do
       Utils::parse_json_if_string(get_attribute(attribute.to_s))
-    end
-  end
-
-  def self.attr_join(attribute_name, attribute_class)
-    define_method attribute_name do
-      attribute_id = self.send("#{attribute_name}_id")
-      attribute_id ? attribute_class.find_by_id(attribute_id) : nil
     end
   end
 

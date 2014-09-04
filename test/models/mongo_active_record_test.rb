@@ -9,6 +9,7 @@ class MongoActiveRecordTest < MiniTest::Test
   class SomeRecord < MongoActiveRecord
     parse_json_if_string 'string_or_json'
     attr_join 'joined_record', JoinedRecord
+    attr_join 'joined_record_not_cached', JoinedRecord, cached: false
   end
 
   def test_find_by_id_invalid
@@ -116,6 +117,32 @@ class MongoActiveRecordTest < MiniTest::Test
     JoinedRecord.expects(:find_by_id).never
 
     assert_equal nil, record.joined_record
+  end
+
+  def test_attr_join_cached
+    joined_record_id = mock 'id'
+    joined_record = mock 'record'
+
+    record = SomeRecord.new({})
+    record.stubs(:joined_record_id).returns(joined_record_id)
+
+    # try to get twice and check if find_by_id is executed (should not be)
+    JoinedRecord.expects(:find_by_id).with(joined_record_id).once.returns(joined_record)
+    assert_equal joined_record, record.joined_record
+    assert_equal joined_record, record.joined_record
+  end
+
+  def test_attr_join_not_cached
+    joined_record_id = mock 'id'
+    joined_record = mock 'record'
+
+    record = SomeRecord.new({})
+    record.stubs(:joined_record_not_cached_id).returns(joined_record_id)
+
+    # try to get twice and check if find_by_id is executed (should be)
+    JoinedRecord.expects(:find_by_id).with(joined_record_id).twice.returns(joined_record)
+    assert_equal joined_record, record.joined_record_not_cached
+    assert_equal joined_record, record.joined_record_not_cached
   end
 
 end

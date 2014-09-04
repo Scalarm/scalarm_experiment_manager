@@ -13,6 +13,8 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
 
   SSH_AUTH_METHODS = %w(password)
 
+  attr_join :user, ScalarmUser
+
   def self.collection_name
     'private_machine_credentials'
   end

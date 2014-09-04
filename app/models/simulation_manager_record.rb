@@ -18,7 +18,12 @@
 
 
 module SimulationManagerRecord
+  include MongoActiveRecordUtils
+
   POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
+
+  attr_join :user, ScalarmUser
+  attr_join :experiment, Experiment
 
   def initialize_fields
     set_state(:created)
@@ -73,10 +78,6 @@ module SimulationManagerRecord
 
   def to_json
     to_h.to_json
-  end
-
-  def experiment
-    @experiment ||= Experiment.find_by_id(self.experiment_id)
   end
 
   def experiment_end?

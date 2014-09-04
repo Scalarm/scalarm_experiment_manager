@@ -21,6 +21,8 @@ class Simulation < MongoActiveRecord
   # TODO: when all data in base will be migrated to json-only, this will be unnecessarily
   parse_json_if_string 'input_specification'
 
+  attr_join :user, ScalarmUser
+
   def self.collection_name
     'simulations'
   end

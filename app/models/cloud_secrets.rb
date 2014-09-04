@@ -8,6 +8,8 @@ require 'infrastructure_facades/infrastructure_errors'
 
 class CloudSecrets < EncryptedMongoActiveRecord
 
+  attr_join :user, ScalarmUser
+
   def self.collection_name
     'cloud_secrets'
   end

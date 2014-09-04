@@ -37,6 +37,9 @@ class Experiment < MongoActiveRecord
 
   ID_DELIM = '___'
 
+  attr_join :simulation, Simulation
+  attr_join :user, ScalarmUser
+
   def simulation_runs
     SimulationRun.for_experiment(id)
   end
