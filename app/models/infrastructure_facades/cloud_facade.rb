@@ -184,7 +184,8 @@ class CloudFacade < InfrastructureFacade
               else
                 return :initializing
               end
-            rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+            rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError,
+                Net::SSH::AuthenticationFailed => e
               # remember this error in case of unable to initialize
               record.error_log = e.to_s
               record.save

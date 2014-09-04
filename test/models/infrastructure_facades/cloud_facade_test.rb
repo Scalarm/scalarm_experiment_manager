@@ -206,6 +206,8 @@ class CloudFacadeTest < MiniTest::Test
     facade.stubs(:cloud_client_instance).returns(client)
     facade.stubs(:shared_ssh_session).with(record).raises(Errno::ECONNREFUSED)
 
+    record.expects(:error_log=).once
+
     status = facade._simulation_manager_resource_status(record)
 
     assert_equal :initializing, status
