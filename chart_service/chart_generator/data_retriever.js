@@ -164,6 +164,32 @@ function authenticate(userID, experimentID, success, error) {
 	});
 };
 
+function getParameters(experimentID, success, error) {
+	var mongo = require('mongodb');
+	var client = mongo.MongoClient;
+	client.connect(DBURL, function(err, db){
+		if (err) throw err;
+		db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
+			if (err) throw err;
+			if(array){
+				console.log(array);
+				var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
+				parameters = parameters.map(function(param){
+					return {
+								label: param["label"],
+								id:    param["id"]
+						   };
+				})
+				success(parameters);
+			}
+			else{
+				error("No such experiment")
+			}
+		})
+	})
+}
+
 module.exports.getPareto = getPareto;
 module.exports.getInteraction = getInteraction;
 module.exports.authenticate = authenticate;
+module.exports.getParameters = getParameters;

@@ -2,7 +2,25 @@
 - content_for :help, raw(t('help.experiments.monitoring'))
 
 = render 'experiment_links'
-= render 'analysis_charts'
+.analysis-content
+  %a Ładuj!
+  .analysis-panel.panel.radius
+:scss
+  div.analysis-panel {
+    background-color: white;
+    position: absolute;
+    width: 200px;
+    height: 500px;
+    top: 0px;
+    // left: 0px;
+    right: -210px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  div.analysis-panel:hover {
+    overflow-y: scroll;
+  }
+/ = render 'analysis_charts'
 
 %section.panel.radius
   = render 'information_panel'
@@ -36,4 +54,8 @@
       monitor.generate_html('experiment_stats');
       
       window.toggle_panels_on_title_click();
+
+      $(".analysis-content a").on("click", function() {
+        $(".analysis-panel").load("/chart/panel?id=#{@experiment.id}");
+      })
     });

@@ -1,0 +1,20 @@
+section.panel.radius.plot
+  h3.subheader Pareto chart
+    //= t('charts.pareto.header')
+    // = image_tag 'loading.gif', id: "busy_interaction_???", size: '16x16', style: 'display: none;'
+
+  .row
+    span.button Hide chart
+    //t('charts.hide_button')
+
+  br
+
+  .chart
+
+script.
+  $(function() {
+    $('.plot .button').on('click', function() {
+      $("#pareto_chart").empty();
+      pareto_loaded = false;
+    });
+  });

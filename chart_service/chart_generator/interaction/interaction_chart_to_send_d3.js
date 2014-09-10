@@ -1,5 +1,5 @@
 function interaction_to_send(i, param1, param2, data) {
-	var w = $("#interaction_chart_" + i + " .interaction_chart_container")[0].offsetWidth,
+	var w = $("#interaction_chart_" + i + " .chart")[0].offsetWidth,
 	    h = 500,
 	    padding = 30,
 	    CIRCLE_RADIUS = 6;
@@ -7,7 +7,7 @@ function interaction_to_send(i, param1, param2, data) {
 	var xDomain = [],
         yDomain = [],
         tmp,
-        svg = d3.select("#interaction_chart_" + i + " .interaction_chart_container")
+        svg = d3.select("#interaction_chart_" + i + " .chart")
                 .append("svg")
                 .attr("width", w)
                 .attr("height", h);

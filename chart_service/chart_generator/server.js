@@ -10,6 +10,9 @@ var decoder_configuration = require("./decoder_configuration.js");
 var cookieDecoder = require("./cookies_decoder.js")(decoder_configuration);
 var ChartService = require("./service.js");
 
+var jade = require("jade");
+var locals = require("./config.js");
+
 var d3_cdn_path = "//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.js",
 	PORT = 8080,
 	EXTERNAL_IP = "172.16.67.121",			//TODO - retrieve external IP
@@ -19,37 +22,24 @@ var app = http.createServer(function(req, res) {
 	var parsedUrl = url.parse(req.url);
 	var pathname = parsedUrl.pathname;
 	var parameters = querystring.parse(parsedUrl.query);
+	console.log("Pathname: " + pathname);
+	switch (pathname) {
+		case "/panel":
+			ChartService.getParameters(parameters["id"], function(data) {
+				locals.parameters = data;
+				res.writeHead(200);
+				res.write(jade.renderFile("panel.jade", locals));
+				res.end();
+			},
+			function(err) {
 
-	ChartService.prepare_chart(pathname, parameters, function(object) { 			//function if successfully created OBJECT
-		authenticate(req.headers.cookie, parameters["id"], function(data) {
-			console.log("OK! Successfully authorized.");
-			var tags = prepare_script_and_style_tags(pathname);
-			res.writeHead(200, {'Content-Type': 'text/plain'});
-			if(parameters["func_defined"]==='false') {
-				res.write(tags.script_tag_to_send);
-				res.write(tags.script_tag_interaction);
-				res.write(tags.style_tag);
-			}
-			res.write(object.content);
-			// res.write(tags.script_tag_d3_cdn); 	Scalarm has d3.js library
-			res.end();
-		}, function(data) {
-			console.log("FAILED! Sending info about error to Scalarm... " + data);
-			res.write("Problem with: " + data);
-			res.end();
-		});
-	}, function() {														//function when Scalarm makes request about scripts/stylesheets
-		var URL_pattern = /^\/(\w+)\/(to_send|interaction|style)$/;
-		//when URL matches
-		if(URL_pattern.test(pathname)) {
-			var groups_from_regexp = URL_pattern.exec(pathname).slice(-2);
-			var type = groups_from_regexp[0];
-			var resource = groups_from_regexp[1];
-
-			var file_path = type+"/"+type+"_chart_"+resource;
-			file_path += resource==="style" ? ".css" : ".js";
-
-			fs.readFile(file_path, function(error, data) {
+			})
+			
+			
+			break;
+		//temporary -- TODO
+		case "/loading.gif":
+			fs.readFile('./images/loading.gif', function(error, data) {
 				if(error) {
 					res.writeHead(404);
 					res.write("File " + file_path + " : not found!\n");
@@ -62,14 +52,68 @@ var app = http.createServer(function(req, res) {
 					res.end();
 				}
 			});
-		}
-		//when URL doesn't match => incorrect request
-		else {
-			res.writeHead(404);
-			res.write(pathname + " : incorrect request!");
-			res.end();
-		}
-	});
+			break;
+		default:
+			ChartService.prepare_chart(pathname, parameters, function(object) { 			//function if successfully created OBJECT
+				authenticate(req.headers.cookie, parameters["id"], function(data) {
+					console.log("OK! Successfully authorized.");
+					res.writeHead(200, {'Content-Type': 'text/plain'});
+					var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"]});
+					output += object.content;
+					res.write(output);
+					// res.write(tags.script_tag_d3_cdn); 	Scalarm has d3.js library
+					res.end();
+				}, function(data) {
+					console.log("FAILED! Sending info about error to Scalarm... " + data);
+					res.write("Problem with: " + data);
+					res.end();
+				});
+			}, function() {														//function when Scalarm makes request about scripts/stylesheets
+				var url_pattern = /^\/(\w+)\/(main|interaction|style)$/;
+				var scripts_pattern = /^\/(\w+)\/scripts$/;
+				//when URL matches
+				if(url_pattern.test(pathname)) {
+					var groups_from_regexp = url_pattern.exec(pathname).slice(-2);
+					var type = groups_from_regexp[0];
+					var resource = groups_from_regexp[1];
+
+					var file_path = type+"/"+type+"_chart_"+resource;
+					file_path += resource==="style" ? ".css" : ".js";
+
+					fs.readFile(file_path, function(error, data) {
+						if(error) {
+							res.writeHead(404);
+							res.write("File " + file_path + " : not found!\n");
+							res.write(error.toString());
+							res.end();
+						}
+						else {
+							res.writeHead(200);
+							res.write(data);
+							res.end();
+						}
+					});
+				}
+				else if(scripts_pattern.test(pathname)) {
+					var groups_from_regexp = scripts_pattern.exec(pathname).slice(-1);
+					console.log(groups_from_regexp);
+					var type = groups_from_regexp[0];
+					var tags = prepare_script_and_style_tags("/"+type);
+
+					res.writeHead(200);
+					res.write(tags.script_tag_main);
+					res.write(tags.script_tag_interaction);
+					res.write(tags.style_tag);
+					res.end();
+				}
+				//when URL doesn't match => incorrect request
+				else {
+					res.writeHead(404);
+					res.write(pathname + " : incorrect request!");
+					res.end();
+				}
+			});
+	}
 }).listen(PORT);
 
 //--------------------------------
@@ -93,9 +137,9 @@ function authenticate(cookie, experimentID, success, error){
 
 function prepare_script_and_style_tags(typeOfChart) {
 	var tags = {};
-	tags.script_tag_to_send = jsdom.createElement("script");
-	tags.script_tag_to_send.setAttribute("type", "text/javascript");
-	tags.script_tag_to_send.setAttribute("src","//" + ADDRESS + typeOfChart+"/to_send");
+	tags.script_tag_main = jsdom.createElement("script");
+	tags.script_tag_main.setAttribute("type", "text/javascript");
+	tags.script_tag_main.setAttribute("src","//" + ADDRESS + typeOfChart+"/main");
 
 	tags.script_tag_interaction = jsdom.createElement("script");
 	tags.script_tag_interaction.setAttribute("type", "text/javascript");

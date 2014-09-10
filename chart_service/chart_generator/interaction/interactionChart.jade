@@ -1,0 +1,18 @@
+section.panel.radius.plot
+  h3.subheader Interaction chart
+
+  .row
+    span.button Hide chart
+
+  br
+
+  .chart
+
+script.
+  $(function() {
+  	var div_id = "#interaction_chart_#{chart_id}";
+    $(div_id + " .button").on('click', function() {
+      $(div_id).remove();
+      pareto_loaded = false;
+    });
+  });

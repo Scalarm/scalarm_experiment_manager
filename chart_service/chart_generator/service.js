@@ -3,7 +3,7 @@ var d3 = require("d3");
 var db_retriever = require("./data_retriever.js");
 
 
-module.exports.prepare_chart = function(type, parameters, callback, err) {
+function prepare_chart(type, parameters, callback, err) {
     switch(type) {
         case "/interaction":
             db_retriever.getInteraction(parameters["id"], 
@@ -29,7 +29,7 @@ module.exports.prepare_chart = function(type, parameters, callback, err) {
 function prepare_interaction_chart_content(parameters, data) {
     var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
     output += "\nvar data = " + JSON.stringify(data) + ";";
-    output += "\ninteraction_to_send(i, \"" + parameters["param1"] + "\", \"" + parameters["param2"] + "\", data);";
+    output += "\ninteraction_main(i, \"" + parameters["param1"] + "\", \"" + parameters["param2"] + "\", data);";
     output += "\ninteraction_interaction(i);";
     output += "\n})();</script>";
 
@@ -39,14 +39,14 @@ function prepare_interaction_chart_content(parameters, data) {
 function prepare_pareto_chart_content(data) {
     var output = "<script>(function() {";
     output += "\nvar data = " + JSON.stringify(data) + ";";
-    output += "\npareto_to_send(data);";
+    output += "\npareto_main(data);";
     output += "\npareto_interaction();"
     output += "\n})();</script>";
 
     return output;
 }
 
-module.exports.authenticate = function(userID, experimentID, success, error) {
+function authenticate(userID, experimentID, success, error) {
     db_retriever.authenticate(userID, experimentID, function(data) {
         success(data);
     }, function(data) {
@@ -65,3 +65,11 @@ function convertDataToArray(data, param) {
 
     return array;
 }
+
+function getParameters(experimentID, success, error){
+    db_retriever.getParameters(experimentID, success, error);
+}
+
+module.exports.prepare_chart = prepare_chart;
+module.exports.authenticate = authenticate;
+module.exports.getParameters = getParameters;

@@ -1,0 +1,66 @@
+#interactionModal.reveal-modal(data-reveal=true)
+  section.panel.radius.analysis-chart#interaction_charts_form
+    h3.subheader Subheader (interaction)
+
+    form
+      .row
+        .small-5.columns
+          label(class='inline') Select first parameter
+        .small-7.columns
+          select#firstParam
+            each parameter in parameters
+              option(value=parameter.id)= parameter.label
+      .row
+        .small-5.columns
+          label(class='inline') Select second parameter
+        .small-7.columns
+          select#secondParam
+            each parameter in parameters
+              option(value=parameter.id)= parameter.label
+      .row
+        ul.inline-list
+          li 
+            button.button.radius Load chart
+          li
+            img(src='/chart/loading.gif', id='busy_interaction', size='16x16', style='display: none')
+
+  .charts
+    .scripts
+
+script.
+  $(function() {
+    $("#interactionModal").foundation("reveal", "close");
+
+    var experimentID = document.URL.split("/").slice(-1)[0];
+    //experimentID = experimentID.slice(0, experimentID.length-1);
+    var interaction_chart_counter = 0;
+    var scripts_loaded = false;
+
+    $("#interactionModal button").bind("click", function() {
+      $("#busy_interaction").show();
+      if(!scripts_loaded) {
+        $("#interactionModal .scripts").load("/chart/interaction/scripts");
+        scripts_loaded = true;
+      }
+
+      var interaction_chart_div = $("<div id=\"interaction_chart_"+interaction_chart_counter+"\">")[0];
+      $("#interactionModal .charts").prepend(interaction_chart_div);
+
+      var x_axis = $("#firstParam option:selected").val();
+      var y_axis = $("#secondParam option:selected").val();
+
+      var query_params = "id="+experimentID;
+          query_params += "&param1="+x_axis;
+          query_params += "&param2="+y_axis;
+          query_params += "&chart_id="+interaction_chart_counter;
+
+      $(interaction_chart_div).load("/chart/interaction?"+query_params, function(){
+        $("#busy_interaction").hide();
+        var targetOffset = $(this).offset().top;
+        $('html,body').animate({ scrollTop: targetOffset }, 1000);
+      });
+      interaction_chart_counter++;
+
+      return false;
+    })
+  })

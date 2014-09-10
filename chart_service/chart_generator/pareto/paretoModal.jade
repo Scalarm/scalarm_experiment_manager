@@ -1,0 +1,59 @@
+#paretoModal.reveal-modal(data-reveal=true)
+  section.panel.radius.analysis-chart#pareto_charts_form
+    a.close-reveal-modal x
+    h3 Experiment title
+    h3.subheader Subheader
+    //%h3= t("#{@experiment}")
+    //%h3.subheader= t('charts.scatter.section_header')
+
+    //= form_tag '', class: '' do
+    .row
+      ul.inline-list
+        li
+          button.button.radius Load chart
+          //t('charts.load_button')
+        li
+          img(src='/chart/loading.gif', id='busy_pareto', size='16x16', style='display: none')
+
+  .charts
+    .scripts
+
+script.
+  $(function(){
+    $("#paretoModal").foundation("reveal", "close");
+
+    var pareto_loaded = false;
+    var scripts_loaded = false;
+
+    var experimentID = document.URL.split("/").slice(-1)[0];
+    // 'Load chart' button handler
+    $('#pareto_charts_form button').bind('click', function() {
+      if(!scripts_loaded){
+        $("#paretoModal .scripts").load("/chart/pareto/scripts");
+        scripts_loaded = true;
+      }
+
+      if(!pareto_loaded){
+        pareto_loaded = true;
+
+        $('#busy_pareto').show();
+
+        $("#paretoModal .charts").prepend("<div id='pareto_chart'></div>");
+
+        $("#pareto_chart").load("/chart/pareto?id="+experimentID, function() { 
+          $('#busy_pareto').hide();
+          var targetOffset = $(this).offset().top;
+          $('html,body').animate({ scrollTop: targetOffset }, 1000);
+        });  
+      }
+
+      else{
+        $('#busy_pareto').show();
+        $("#pareto_chart").load("/chart/pareto?id="+experimentID,function() {
+          $('#busy_pareto').hide();
+          var targetOffset = $(this).offset().top;
+          $('html,body').animate({ scrollTop: targetOffset }, 1000);
+        });
+      }
+    })
+  })

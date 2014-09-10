@@ -1,4 +1,4 @@
-function pareto_to_send(data) {
+function pareto_main(data) {
   var w = 600,
       h = 500,
       padding = 30;
@@ -9,7 +9,7 @@ function pareto_to_send(data) {
       return d.value;
   });
 
-  var svg = d3.select("#pareto_chart")
+  var svg = d3.select("#pareto_chart .chart")
               .append("svg")
               .attr("width", w)
               .attr("height", h);
