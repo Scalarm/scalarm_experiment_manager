@@ -55,7 +55,7 @@
             = t('.download_results_button')
 
           %ul#download-dropdown.f-dropdown(data-dropdown-content)
-            %li= link_to t('.binaries_results_button'), log_bank_url(@storage_manager_url, @experiment)
+            %li= link_to t('.binaries_results_button'), log_bank_url(@public_storage_manager_url, @experiment)
             %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
 
 #extension-dialog.reveal-modal(data-reveal="")

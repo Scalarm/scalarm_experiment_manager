@@ -14,26 +14,26 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    information_service = InformationService.new
+    @public_storage_manager_url = sample_public_storage_manager
 
-    if Rails.application.secrets.include?(:storage_manager_url)
-      @storage_manager_url = Rails.application.secrets.storage_manager_url
-    else
-      @storage_manager_url = information_service.get_list_of('storage_managers')
-      @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
-    end
+    @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
 
     begin
-      if Time.now - @experiment.start_at > 30
-        Thread.new do
-          Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-          @experiment.update_all_bars
-        end
-      end
-
+      start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
       flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
       redirect_to action: :index
+    end
+  end
+
+  def sample_public_storage_manager
+    (InformationService.new.get_list_of('storage_managers') or []).sample
+  end
+
+  def start_update_bars_thread
+    Thread.start do
+      Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+      @experiment.update_all_bars
     end
   end
 
