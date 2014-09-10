@@ -38,6 +38,8 @@ module SimulationsHelper
                            ['Full factorial', 'fullFactorial'],
                            ['Fractional factorial (with Federov algorithm)', 'fractionalFactorial'],
                            ['Orthogonal Latin Hypercubes', 'latinHypercube'],
+                           ['2^k-1', '2k-1'],
+                           ['2^k-2', '2k-2'],
                        ])
   end
 
