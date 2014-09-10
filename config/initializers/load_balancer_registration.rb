@@ -20,7 +20,7 @@ if ENV['LOAD_BALANCER'] != '' or ENV['LOAD_BALANCER'] != 'true'
 
   message, _ = socket.recvfrom(20)
   #load_balancer_address = "https://#{message.strip}/register"
-  load_balancer_address = "http://#{message.strip}/register"
+  load_balancer_address = "https://#{message.strip}/experiment_managers/register"
   puts "Registration to load balancer: #{load_balancer_address}"
   port = '3000'
 
@@ -29,7 +29,18 @@ if ENV['LOAD_BALANCER'] != '' or ENV['LOAD_BALANCER'] != 'true'
   end
   puts "Port #{port}"
   OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
-  Net::HTTP.post_form(URI.parse(URI.encode(load_balancer_address)),
-                      {'address'=> "localhost:#{port}"})
+  #Net::HTTP.post_form(URI.parse(URI.encode(load_balancer_address)),
+  #                    {'address'=> "localhost:#{port}"})
+
+  uri = URI.parse(URI.encode(load_balancer_address))
+
+  req = Net::HTTP::Post.new(uri)
+  req.set_form_data('address'=> "localhost:#{port}")
+  req.basic_auth 'scalarm', 'scalarm'
+
+  res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
+    http.request(req)
+  }
+  puts res.body
 
 end
