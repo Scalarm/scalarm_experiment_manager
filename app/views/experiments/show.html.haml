@@ -58,4 +58,15 @@
       $(".analysis-content a").on("click", function() {
         $(".analysis-panel").load("/chart/panel?id=#{@experiment.id}");
       })
+
+      var ws = new WebSocket("ws://172.16.67.121:8080");
+      ws.onmessage = function(message) {
+        console.log("refreshing progress bar...");
+        console.log(message.data);
+        monitor.update();
+      };
+
+      ws.onerror = function(message) {
+        console.log(message);
+      }
     });

@@ -8,6 +8,11 @@ module ExperimentProgressBar
       MongoActiveRecord.get_collection(table_name)
   end
 
+  def progress_bar_capped_collection
+      capped_collection = "capped_collection"
+      MongoActiveRecord.get_collection(capped_collection)
+  end
+
   def parts_per_progress_bar_slot
     return 1 if self.experiment_size <= 0
 
@@ -33,6 +38,7 @@ module ExperimentProgressBar
 
     begin
       progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
+      progress_bar_capped_collection.insert({:item => "asd"})
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end
@@ -115,6 +121,7 @@ module ExperimentProgressBar
       #Rails.logger.debug("New bar state = #{{:bar_num => bar_index}} #{{'$set' => { :bar_state => new_bar_state }}}")
       if color_of_bar(bar_index) != new_bar_state
         progress_bar_table.update({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
+        progress_bar_capped_collection.insert({:item => "asd"})
       end
     rescue Exception => e
       Rails.logger.debug("Error --- #{e}")

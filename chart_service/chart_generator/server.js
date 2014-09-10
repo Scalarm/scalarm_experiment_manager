@@ -116,6 +116,50 @@ var app = http.createServer(function(req, res) {
 	}
 }).listen(PORT);
 
+var WebSocketServer = require('websocket').server;
+wsServer = new WebSocketServer({
+	httpServer: app
+})
+
+wsServer.on('request', function(request) {
+	console.log(new Date() + " Connection from origin " + request.origin + ".");
+	var connection = request.accept(null, request.origin);
+	console.log(new Date() + " Connection accepted.");
+
+	var DBURL = "mongodb://172.16.67.121:27017/scalarm_db";
+
+	var client = require("mongodb").MongoClient;
+
+	client.connect(DBURL, function(err, db) {
+		db.collection("capped_collection").find({}, {tailable: true, awaitdata: true, numberOfRetries: -1}, function(err, resultCursor) {
+			resultCursor.nextObject(processItem);
+
+
+			function processItem(err, item) {
+			 	console.log("processItem!");
+			    console.log(item);
+			    connection.send(JSON.stringify(item));
+			    resultCursor.nextObject(processItem);
+			}
+		}); 
+	});
+
+	// connection.on("message", function(message) {
+	// 	console.log("Message: ", message.utf8Data);
+	// 	var json = JSON.stringify({type: 'text', data: 8});
+	// 	connection.send(json);
+	// });
+
+	// var json = JSON.stringify({type: "all-points", data: list_of_points});
+	// connection.send(json);
+
+	// setInterval(function(){
+	// 	var point = updateRandomPoint();
+	// 	var json = JSON.stringify({type: "update", data: point});
+	// 	connection.send(json);
+	// },500)
+});
+
 //--------------------------------
 function authenticate(cookie, experimentID, success, error){
 	//what if there are more cookies??
