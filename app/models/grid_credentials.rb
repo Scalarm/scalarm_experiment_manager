@@ -19,6 +19,8 @@ class GridCredentials < EncryptedMongoActiveRecord
   @@CIPHER_KEY = "tC\x7F\x9Er\xA6\xAFU\x88\x19\x9B\x0F\xDD\x88O]6\xA0\xAD\x8B\xBF,4\x06<\xC0[\x03\xC7\x11\x90\x10"
   @@CIPHER_IV = "\xA9\x8E\xD0\x031 w0\x1Ed\xEC\xC4\xD4\xEA\x87\e"
 
+  attr_join :user, ScalarmUser
+
   def self.collection_name
     'grid_credentials'
   end

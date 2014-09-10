@@ -24,16 +24,16 @@ class SimulationsController < ApplicationController
 
   def upload_component
     if params['component_type'] == 'input_writer'
-      input_writer = SimulationInputWriter.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       input_writer.save
     elsif params['component_type'] == 'executor'
-      executor = SimulationExecutor.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       executor.save
     elsif params['component_type'] == 'output_reader'
-      output_reader = SimulationOutputReader.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       output_reader.save
     elsif params['component_type'] == 'progress_monitor'
-      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: params['component_code'].read, user_id: @current_user.id})
+      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
       progress_monitor.save
     end
 
@@ -59,7 +59,7 @@ class SimulationsController < ApplicationController
   end
 
   def create
-    simulation_input = Utils.parse_json_if_string(params[:simulation_input].read)
+    simulation_input = Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input]))
     # input validation
     case true
       when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
@@ -124,57 +124,65 @@ class SimulationsController < ApplicationController
     response = { status: 'ok' }
 
     begin
-      if @simulation_run.nil? or @simulation_run.is_done
-        msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
+        if @simulation_run.nil? or @simulation_run.is_done
+          msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
 
-        Rails.logger.error(msg)
-        response = { status: 'error', reason: msg }
-      else
-        @simulation_run.is_done = true
-        @simulation_run.to_sent = false
-
-        if params[:result].blank?
-          @simulation_run.result = {}
+          Rails.logger.error(msg)
+          response = { status: 'error', reason: msg }
         else
-          begin
-            @simulation_run.result = Utils.parse_json_if_string(params[:result])
-          rescue Exception => e
+          unless @sm_user.nil?
+            if @simulation_run.sm_uuid != @sm_user.sm_uuid
+              Rails.logger.warn("SimulationRun is completed be #{@sm_user.sm_uuid} but it should be #{@simulation_run.sm_uuid}")
+            end
+          end
+
+          @simulation_run.is_done = true
+          @simulation_run.to_sent = false
+
+          if params[:result].blank?
             @simulation_run.result = {}
+          else
+            begin
+              @simulation_run.result = Utils.parse_json_if_string(params[:result])
+            rescue Exception => e
+              @simulation_run.result = {}
+              @simulation_run.is_error = true
+              @simulation_run.error_reason = t('simulations.error.invalid_result_format')
+            end
+          end
+
+          if params.include?(:status) and params[:status] == 'error'
             @simulation_run.is_error = true
-            @simulation_run.error_reason = t('simulations.error.invalid_result_format')
-          end
-        end
-
-        if params.include?(:status) and params[:status] == 'error'
-          @simulation_run.is_error = true
-          @simulation_run.error_reason = params[:reason] if params.include?(:reason)
-        end
-
-        @simulation_run.done_at = Time.now
-        # infrastructure-related info
-        if params.include?('cpu_info')
-          cpu_info = Utils.parse_json_if_string(params[:cpu_info])
-          @simulation_run.cpu_info = cpu_info
-        end
-
-        unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
-          unless sm_record.infrastructure.blank?
-            @simulation_run.infrastructure = sm_record.infrastructure
+            @simulation_run.error_reason = params[:reason] if params.include?(:reason)
           end
 
-          unless sm_record.computational_resources.blank?
-            @simulation_run.computational_resources = sm_record.computational_resources
+          @simulation_run.done_at = Time.now
+          # infrastructure-related info
+          if params.include?('cpu_info')
+            cpu_info = Utils.parse_json_if_string(params[:cpu_info])
+            @simulation_run.cpu_info = cpu_info
           end
-        end
 
-        @simulation_run.save
-        # TODO adding caching capability
-        #@simulation.remove_from_cache
+          unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
+            unless sm_record.infrastructure.blank?
+              @simulation_run.infrastructure = sm_record.infrastructure
+            end
 
-        if params.include?(:status) and params[:status] == 'error'
-          @experiment.progress_bar_update(@simulation_run.index, 'error')
-        else
-          @experiment.progress_bar_update(@simulation_run.index, 'done')
+            unless sm_record.computational_resources.blank?
+              @simulation_run.computational_resources = sm_record.computational_resources
+            end
+          end
+
+          @simulation_run.save
+          # TODO adding caching capability
+          #@simulation.remove_from_cache
+
+          if params.include?(:status) and params[:status] == 'error'
+            @experiment.progress_bar_update(@simulation_run.index, 'error')
+          else
+            @experiment.progress_bar_update(@simulation_run.index, 'done')
+          end
         end
       end
     rescue Exception => e
@@ -283,6 +291,16 @@ class SimulationsController < ApplicationController
     unless @experiment.nil?
       @simulation_run = @experiment.simulation_runs.where(index: params[:id].to_i).first
     end
+
+    Rails.logger.info("Experiment is nil ? #{@experiment.nil?} #{@experiment.nil? ? '' : @experiment.id}")
+    Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.inspect}")
+
+    if @simulation_run.nil?
+      @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)
+      @simulation_run.to_sent = false
+      @simulation_run.sent_at = Time.now
+    end
+
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
@@ -309,7 +327,7 @@ class SimulationsController < ApplicationController
 
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
                                            name: adapter_name,
-                                           code: params[adapter_type].read,
+                                           code: Utils.read_if_file(params[adapter_type]),
                                            user_id: @current_user.id})
       adapter.save
       Rails.logger.debug(adapter)

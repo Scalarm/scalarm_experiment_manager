@@ -2,6 +2,8 @@ require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
+require 'mongo_lock'
+
 class LockTest < MiniTest::Test
   # TODO: this test uses database connection
 
@@ -31,7 +33,7 @@ class LockTest < MiniTest::Test
 
     THREAD_NUM.times do |th_i|
       threads << Thread.new do
-        lock = MongoLock.new('job')
+        lock = Scalarm::MongoLock.new('job')
         sleep(0.1) until lock.acquire
         COUNT_THREAD.times do
           sleep(rand*0.1)
@@ -53,7 +55,7 @@ class LockTest < MiniTest::Test
     pids = []
     PROC_NUM.times do |th_i|
       pids << fork do
-        lock = MongoLock.new('test_job')
+        lock = Scalarm::MongoLock.new('test_job')
         sleep(0.1) until lock.acquire
         COUNT_PROC.times do
           sleep(rand*0.1)
@@ -81,14 +83,14 @@ class LockTest < MiniTest::Test
 
   def test_lock_timeout
     suspended_pid = fork do
-      lock = MongoLock.new('timed_job')
+      lock = Scalarm::MongoLock.new('timed_job')
       lock.acquire
       sleep(10000)
       lock.release
     end
 
     impatient_pid = fork do
-      lock = MongoLock.new('timed_job', 3.seconds)
+      lock = Scalarm::MongoLock.new('timed_job', 3.seconds)
       sleep(0.1) until lock.acquire
       # work...
       unlocked_pid = lock.release
@@ -111,7 +113,7 @@ class LockTest < MiniTest::Test
     queue = Queue.new
 
     writer = Thread.new do
-      w_lock = MongoLock.new 'writer'
+      w_lock = Scalarm::MongoLock.new 'writer'
       assert(w_lock.acquire)
       count.times do
         queue << 1
@@ -122,7 +124,7 @@ class LockTest < MiniTest::Test
 
     reader = Thread.new do
       require 'timeout'
-      r_lock = MongoLock.new 'reader'
+      r_lock = Scalarm::MongoLock.new 'reader'
       assert(r_lock.acquire)
       begin
         results = []
@@ -143,10 +145,43 @@ class LockTest < MiniTest::Test
 
   end
 
-  #def test_seq
-  #  assert (1..4).map{ MongoActiveRecord.get_next_sequence('test') } == (1..4).to_a
-  #  assert (1..5).map{ LockTestEntry.next_sequence } == (1..5).to_a
-  #end
+  def test_mutex_two_threads
+    require 'timeout'
+    timeout 20 do
+
+      count = 3
+      queue = Queue.new
+
+      writer = Thread.new do
+        Scalarm::MongoLock.mutex 'writer' do
+          count.times do
+            queue << 1
+            sleep 1
+          end
+        end
+      end
+
+      reader = Thread.new do
+        require 'timeout'
+        Scalarm::MongoLock.mutex 'reader' do
+          begin
+            results = []
+            Timeout::timeout count*2 do
+              count.times do
+                results << queue.pop
+              end
+            end
+            assert_equal results.size, count
+            assert_equal (results.inject :+), count
+          rescue Timeout::Error
+            assert false, 'timeout waiting for reader'
+          end
+        end
+      end
+
+      [writer, reader].each {|t| t.join}
+    end
+  end
 
   def self.process_running?(pid)
     begin

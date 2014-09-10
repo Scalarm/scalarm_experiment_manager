@@ -115,7 +115,7 @@ class SimulationManager
             source_states: [:running],
             target_state: :error,
             resource_status: all_resource_states - [:running_sm],
-            condition: :should_not_be_destroyed?,
+            condition: :should_not_be_already_terminated?,
             effect: :store_terminated_error,
             message: 'Simulation Manager has been terminated untimely - setting to ERROR state'
         },
@@ -145,8 +145,8 @@ class SimulationManager
 
   end
 
-  def should_not_be_destroyed?
-    not should_destroy?
+  def should_not_be_already_terminated?
+    @record.experiment.has_simulations_to_run? and not should_destroy?
   end
 
   def store_terminated_error
@@ -201,10 +201,9 @@ class SimulationManager
     monitoring_order.each do |case_name|
       monitoring_case = monitoring_cases[case_name]
 
-      logger.debug "Monitoring case: #{case_name}"
-
       begin
         if state_transition_for?(monitoring_case, cached_resource_status)
+          logger.debug "Monitoring case: #{case_name}"
           print_message_for(monitoring_case)
           execute_effect_for(monitoring_case)
           change_state_for(monitoring_case)

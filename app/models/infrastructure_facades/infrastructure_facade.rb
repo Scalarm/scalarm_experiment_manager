@@ -14,6 +14,7 @@ require 'mongo_lock'
 #
 # - start_simulation_managers(user, job_counter, experiment_id, additional_params) - starting jobs/vms with Simulation Managers
 # - add_credentials(user, params, session) -> credentials record [MongoActiveRecord] - save credentials to database
+#  -- all params keys are converted to symbols and values are stripped
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
 # - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
 #
@@ -238,7 +239,7 @@ class InfrastructureFacade
   end
 
   def default_additional_params
-    { 'time_limit' => 50 }
+    { 'time_limit' => 60 }
   end
 
   def count_sm_records(user_id=nil, experiment_id=nil, attributes=nil)

@@ -37,6 +37,9 @@ class Experiment < MongoActiveRecord
 
   ID_DELIM = '___'
 
+  attr_join :simulation, Simulation
+  attr_join :user, ScalarmUser
+
   def simulation_runs
     SimulationRun.for_experiment(id)
   end
@@ -68,12 +71,41 @@ class Experiment < MongoActiveRecord
         (shared_with.nil? or not shared_with.include?(anonymous_user.id))
   end
 
+  def add_to_shared(user_id)
+    sharing_list = (self.shared_with or [])
+    sharing_list << user_id
+
+    self.shared_with = sharing_list
+  end
+
+  def has_simulations_to_run?
+    all, sent, done = get_statistics
+    experiment_size > (sent+done)
+  end
+
+  def end?
+    (self.is_running == false) or
+        (self.experiment_size == self.count_done_simulations)
+  end
+
   def get_statistics
     all  = simulation_runs.count
     sent = simulation_runs.where(to_sent: false, is_done: false).count
     done = simulation_runs.where(is_done: true).count
 
     return all, sent, done
+  end
+
+  def count_all_generated_simulations
+    get_statistics[0]
+  end
+
+  def count_sent_simulations
+    get_statistics[1]
+  end
+
+  def count_done_simulations
+    get_statistics[2]
   end
 
   def range_arguments
@@ -579,8 +611,12 @@ class Experiment < MongoActiveRecord
       parameter_values << parameter['value']
 
     when 'range'
-      step = parameter['step'].to_f
-      raise "Step can't be zero" if step == 0.0
+      step = if parameter['type'] == 'float'
+               parameter['step'].to_f
+             elsif parameter['type'] == 'integer'
+               parameter['step'].to_i
+             end
+      raise "Step can't be zero" if step.to_f == 0.0
 
       value = parameter['min'].to_f
       while value <= parameter['max'].to_f

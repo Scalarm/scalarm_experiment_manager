@@ -65,8 +65,18 @@ class CloudFacade < InfrastructureFacade
   end
 
   def find_stored_params(params)
-    Hash[(params.keys.select {|k| k.start_with? 'stored_' }).map do |key|
-      [key.to_s.sub(/^stored_/, ''), params[key]]
+    strip_keys_suffix('stored_', params)
+  end
+
+  def find_upload_params(params)
+    strip_keys_suffix('upload_', params)
+  end
+
+  def strip_keys_suffix(suffix, params)
+    Hash[(params.keys.select {|k| k.to_s.start_with? suffix }).map do |key|
+      key_type = key.class
+      truncated_key = key.to_s.sub(/^#{suffix}/, '')
+      [(key_type == Symbol ? truncated_key.to_sym : truncated_key), params[key]]
     end]
   end
 
@@ -117,7 +127,7 @@ class CloudFacade < InfrastructureFacade
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
 
-    CloudVmRecord.where(query)
+    CloudVmRecord.find_all_by_query(query)
   end
 
   def get_sm_record_by_id(record_id)
@@ -174,7 +184,8 @@ class CloudFacade < InfrastructureFacade
               else
                 return :initializing
               end
-            rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+            rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError,
+                Net::SSH::AuthenticationFailed => e
               # remember this error in case of unable to initialize
               record.error_log = e.to_s
               record.save
@@ -292,26 +303,24 @@ class CloudFacade < InfrastructureFacade
 
   # --
 
-  private
+  def handle_secrets_credentials(user, params, session=nil)
+    credentials = get_or_create_cloud_secrets(user.id)
 
-  def handle_secrets_credentials(user, params, session)
-
-    credentials = CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user.id)
-
-    if credentials.nil?
-      credentials = CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user.id})
+    find_stored_params(params).each do |key, value|
+      credentials.send("#{key}=", value)
     end
 
-    (params.keys.select {|k| k.start_with? 'stored_' }).each do |key|
-      credentials.send("#{key.to_s.sub(/^stored_/, '')}=", params[key])
-    end
-
-    (params.keys.select {|k| k.start_with? 'upload_' }).each do |key|
-      credentials.send("#{key.to_s.sub(/^upload_/, '')}=", params[key].read)
+    find_upload_params(params).each do |key, value|
+      credentials.send("#{key}=", value.read)
     end
 
     credentials.save
     credentials
+  end
+
+  def get_or_create_cloud_secrets(user_id)
+    CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id) or
+        CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user_id})
   end
 
   def handle_image_credentials(user, params, session)

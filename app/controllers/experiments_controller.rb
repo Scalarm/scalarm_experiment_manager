@@ -14,26 +14,26 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    information_service = InformationService.new
+    @public_storage_manager_url = sample_public_storage_manager
 
-    if Rails.application.secrets.include?(:storage_manager_url)
-      @storage_manager_url = Rails.application.secrets.storage_manager_url
-    else
-      @storage_manager_url = information_service.get_list_of('storage_managers')
-      @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
-    end
+    @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
 
     begin
-      if Time.now - @experiment.start_at > 30
-        Thread.new do
-          Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-          @experiment.update_all_bars
-        end
-      end
-
+      start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
       flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
       redirect_to action: :index
+    end
+  end
+
+  def sample_public_storage_manager
+    (InformationService.new.get_list_of('storage_managers') or []).sample
+  end
+
+  def start_update_bars_thread
+    Thread.start do
+      Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+      @experiment.update_all_bars
     end
   end
 
@@ -91,7 +91,7 @@ class ExperimentsController < ApplicationController
         begin
           experiment.experiment_size(true)
         rescue Exception => e
-          Rails.logger.warn("An exception occured: #{t(e.message)}")
+          Rails.logger.warn("An exception occured: #{t(e.message)}\n#{e.backtrace}")
           flash[:error] = t(e.message)
           experiment.size = 0
         end
@@ -188,9 +188,13 @@ class ExperimentsController < ApplicationController
       sims_generated = @experiment.experiment_size
     end
 
-    if sims_done + sims_sent > @experiment.experiment_size
+    if sims_done > @experiment.experiment_size
       Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.inspect}")
-      sims_done = @experiment.experiment_size - sims_sent
+      sims_done = @experiment.experiment_size
+    end
+
+    if sims_done + sims_sent > @experiment.experiment_size
+      sims_sent = @experiment.experiment_size - sims_done
     end
 
     #if sims_generated > @experiment.experiment_size
@@ -302,19 +306,25 @@ class ExperimentsController < ApplicationController
     #@priority = params[:priority].to_i
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
-    @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
-    if @num_of_new_simulations > 0
-      @experiment.create_progress_bar_table.drop
-      @experiment.insert_initial_bar
+    # locking any start and complete simulation run operations for this experiment
+    Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
+        @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
+        @experiment.save
+        if @num_of_new_simulations > 0
+          @experiment.create_progress_bar_table.drop
+          @experiment.insert_initial_bar
 
-      # 4. update progress bar
-      Thread.new do
-        Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-        @experiment.update_all_bars
+          # 4. update progress bar
+          Thread.new do
+            Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+            @experiment.update_all_bars
+          end
+        end
+
+        File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
       end
     end
-
-    File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
 
     respond_to do |format|
       format.js { render partial: 'extend_input_values' }
@@ -343,7 +353,7 @@ class ExperimentsController < ApplicationController
                         'result'
                       end
 
-      results = results.map{ |simulation_run|
+      results = results.map do |simulation_run|
         unless simulation_run.sent_at and simulation_run.index and simulation_run.values
           next
         end
@@ -355,10 +365,10 @@ class ExperimentsController < ApplicationController
         split_values = simulation_run.values.split(',')
         modified_values = @experiment.range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
         time_column = if params[:simulations] == 'running'
-                        simulation_run.sent_at.strftime('%Y-%m-%d %H:%M')
-                              elsif params[:simulations] == 'completed'
-                                "#{simulation_run.done_at - simulation.sent_at} [s]"
-                              end
+                        simulation_run.sent_at.nil? ? 'N/A' : simulation_run.sent_at.strftime('%Y-%m-%d %H:%M')
+                      elsif params[:simulations] == 'completed'
+                        (simulation_run.sent_at.nil? or simulation_run.done_at.nil?) ? 'N/A' : "#{simulation_run.done_at - simulation_run.sent_at} [s]"
+                      end
 
         [
             simulation_run.index,
@@ -366,7 +376,7 @@ class ExperimentsController < ApplicationController
             simulation_run.send(result_column.to_sym).to_s || 'No data available',
             modified_values
         ].flatten
-      }
+      end
 
       render json: { 'aaData' => results }.as_json
     else
@@ -417,9 +427,18 @@ class ExperimentsController < ApplicationController
     begin
       raise 'Experiment is not running any more' if not @experiment.is_running
 
-      simulation_to_send = @experiment.get_next_instance
+      simulation_to_send = nil
+
+      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
+        simulation_to_send = @experiment.get_next_instance
+        unless @sm_user.nil?
+          simulation_to_send.sm_uuid = @sm_user.sm_uuid
+        end
+      end
+
       Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
+        Rails.logger.info("Next simulation run is : #{simulation_to_send.index}")
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
