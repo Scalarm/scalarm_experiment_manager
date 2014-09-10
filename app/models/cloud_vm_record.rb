@@ -19,20 +19,14 @@ class CloudVmRecord < MongoActiveRecord
 
   SSH_AUTH_METHODS = %w(password)
 
+  attr_join :image_secrets, CloudImageSecrets
+
   def resource_id
     self.vm_id
   end
 
   def self.collection_name
     'vm_records'
-  end
-
-  def image_secrets
-    @image_secrets ||= CloudImageSecrets.find_by_id(image_secrets_id)
-  end
-
-  def experiment
-    @experiment ||= Experiment.find_by_id(experiment_id)
   end
 
   def cloud_secrets

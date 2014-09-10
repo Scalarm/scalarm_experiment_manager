@@ -126,3 +126,14 @@ en:
         range: Range
         gauss: Random - Gauss distribution
         uniform: Random - Discrete Uniform distribution
+
+    monitoring:
+      completed_simulations_table:
+       caption: "Complete simulation runs"
+       execution_time_header: "Execution time"
+       results_header: "Final results"
+
+      running_simulations_table:
+       caption: "Started simulation runs"
+       started_at: "Started at"
+       results_header: "Intermediate results"

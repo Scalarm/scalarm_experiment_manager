@@ -18,7 +18,12 @@
 
 
 module SimulationManagerRecord
+  include MongoActiveRecordUtils
+
   POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
+
+  attr_join :user, ScalarmUser
+  attr_join :experiment, Experiment
 
   def initialize_fields
     set_state(:created)
@@ -75,14 +80,8 @@ module SimulationManagerRecord
     to_h.to_json
   end
 
-  def experiment
-    @experiment ||= Experiment.find_by_id(self.experiment_id)
-  end
-
   def experiment_end?
-    experiment.nil? or
-        (experiment.is_running == false) or
-        (experiment.experiment_size == experiment.get_statistics[2])
+    experiment.nil? or experiment.end?
   end
 
   def time_limit_exceeded?

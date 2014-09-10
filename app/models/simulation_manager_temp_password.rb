@@ -5,6 +5,8 @@
 
 class SimulationManagerTempPassword < MongoActiveRecord
 
+  attr_join :experiment, Experiment
+
   def self.collection_name
     'simulation_manager_temp_passwords'
   end

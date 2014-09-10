@@ -1,3 +1,5 @@
+require 'zip'
+
 class SimulationScenariosController < ApplicationController
   before_filter :load_simulation_scenario, except: [ :index, :create ]
 
@@ -21,7 +23,7 @@ class SimulationScenariosController < ApplicationController
     if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
-      simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(params[:simulation_input].read) : nil
+      simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input])) : nil
       simulation_scenario_params_validation(simulation_input)
 
       # simulation update
@@ -82,7 +84,7 @@ class SimulationScenariosController < ApplicationController
       IO.binwrite("#{code_base_dir}/simulation_binaries.zip", @simulation_scenario.simulation_binaries)
       file_list << 'simulation_binaries.zip'
 
-      IO.binwrite("#{code_base_dir}/input.json", @simulation_scenario.input_specification)
+      IO.binwrite("#{code_base_dir}/input.json", @simulation_scenario.input_specification.to_json)
       file_list << 'input.json'
 
       zipfile_name = File.join('/tmp', "simulation_scenario_#{@simulation_scenario.id}_code_base.zip")
@@ -178,7 +180,7 @@ class SimulationScenariosController < ApplicationController
 
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
                                                                                name: adapter_name,
-                                                                               code: params[adapter_type].read,
+                                                                               code: Utils.read_if_file(params[adapter_type]),
                                                                                user_id: @current_user.id})
       adapter.save
       Rails.logger.debug(adapter)

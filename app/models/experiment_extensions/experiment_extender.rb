@@ -44,7 +44,7 @@ module ExperimentExtender
     # UPDATE
     # 1. old fashion experiment - DEPRECATED
     # 2. data farming experiment
-    self.save_and_cache
+    #self.save_and_cache
     # 3. simulations id renumeration apply
     Rails.logger.debug("Renumerating existing ids")
     id_change_map = prepare_map_for_simulations_id_change(iteration_offset, num_of_elements_in_iteration)

@@ -9,6 +9,8 @@ class PrivateMachineRecord < MongoActiveRecord
   # delegate session methods just for convenience
   def_delegators :@credentials, :upload_file, :ssh_session, :scp_session
 
+  attr_join :credentials, PrivateMachineCredentials
+
   def self.collection_name
     'private_machine_records'
   end
