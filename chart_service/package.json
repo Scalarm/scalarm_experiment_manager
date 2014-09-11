@@ -10,10 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookieDecoder": "git+https://bitbucket.org/mariusz89016/cookie-decoder.git",
     "haml": "^0.4.3",
     "jade": "^1.5.0",
     "jsdom": "^1.0.0-pre.1",
     "mongodb": "^1.4.8",
-    "cookieDecoder": "git+https://bitbucket.org/mariusz89016/cookie-decoder.git"
+    "websocket": "^1.0.8"
   }
 }

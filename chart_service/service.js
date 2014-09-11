@@ -1,5 +1,4 @@
 var jsdom = require("jsdom").jsdom();
-var d3 = require("d3");
 var db_retriever = require("./data_retriever.js");
 
 
