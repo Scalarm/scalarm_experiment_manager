@@ -59,7 +59,7 @@
         $(".analysis-panel").load("/chart/panel?id=#{@experiment.id}");
       })
 
-      var ws = new WebSocket("ws://172.16.67.121:8080");
+      var ws = new WebSocket("ws://172.16.67.121:8080/#{@experiment.id}");
       ws.onmessage = function(message) {
         console.log("refreshing progress bar...");
         console.log(message.data);

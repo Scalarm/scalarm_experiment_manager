@@ -120,6 +120,7 @@ wsServer = new WebSocketServer({
 })
 
 wsServer.on('request', function(request) {
+	var experimentID = request.httpRequest.url.slice(1);
 	console.log(new Date() + " Connection from origin " + request.origin + ".");
 	var connection = request.accept(null, request.origin);
 	console.log(new Date() + " Connection accepted.");
@@ -129,12 +130,11 @@ wsServer.on('request', function(request) {
 	var client = require("mongodb").MongoClient;
 
 	client.connect(DBURL, function(err, db) {
-		db.collection("capped_collection").find({}, {tailable: true, awaitdata: true, numberOfRetries: -1}, function(err, resultCursor) {
+		db.collection("capped_collection").find({date: {"$gte": new Date()/1000}, experiment_id: experimentID}, {tailable: true, awaitdata: true, numberOfRetries: -1}, function(err, resultCursor) {
 			resultCursor.nextObject(processItem);
 
 
 			function processItem(err, item) {
-			 	console.log("processItem!");
 			    console.log(item);
 			    connection.send(JSON.stringify(item));
 			    resultCursor.nextObject(processItem);
