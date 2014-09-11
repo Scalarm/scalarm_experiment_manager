@@ -7,14 +7,13 @@ var exec = require("child_process").exec;
 
 var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
-var cookieDecoder = require("./cookies_decoder.js")(decoder_configuration);
+var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartService = require("./service.js");
 
 var jade = require("jade");
 var locals = require("./config.js");
 
-var d3_cdn_path = "//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.js",
-	PORT = 8080,
+var PORT = 8080,
 	EXTERNAL_IP = "172.16.67.121",			//TODO - retrieve external IP
 	ADDRESS = EXTERNAL_IP + "/chart";		//address suffix set in /etc/nginx/conf.d/default.conf
 
@@ -61,7 +60,6 @@ var app = http.createServer(function(req, res) {
 					var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"]});
 					output += object.content;
 					res.write(output);
-					// res.write(tags.script_tag_d3_cdn); 	Scalarm has d3.js library
 					res.end();
 				}, function(data) {
 					console.log("FAILED! Sending info about error to Scalarm... " + data);
@@ -188,10 +186,6 @@ function prepare_script_and_style_tags(typeOfChart) {
 	tags.script_tag_interaction = jsdom.createElement("script");
 	tags.script_tag_interaction.setAttribute("type", "text/javascript");
 	tags.script_tag_interaction.setAttribute("src", "//" + ADDRESS + typeOfChart+"/interaction");
-
-	tags.script_tag_d3_cdn = jsdom.createElement("script");
-	tags.script_tag_d3_cdn.setAttribute("type", "text/javascript");
-	tags.script_tag_d3_cdn.setAttribute("src", d3_cdn_path);
 
 	tags.style_tag = jsdom.createElement("link");
 	tags.style_tag.setAttribute("href", "//" + ADDRESS + typeOfChart+"/style");

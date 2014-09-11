@@ -1,5 +1,5 @@
 {
-  "name": "chart_generator",
+  "name": "analysesModule",
   "version": "0.0.0",
   "description": "",
   "main": "server.js",
@@ -10,11 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "d3": "^3.4.11",
-    "ejs": "^1.0.0",
     "haml": "^0.4.3",
     "jade": "^1.5.0",
     "jsdom": "^1.0.0-pre.1",
-    "mongodb": "^1.4.8"
+    "mongodb": "^1.4.8",
+    "cookieDecoder": "git+https://bitbucket.org/mariusz89016/cookie-decoder.git"
   }
 }
