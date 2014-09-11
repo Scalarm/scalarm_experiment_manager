@@ -172,7 +172,7 @@ function getParameters(experimentID, success, error) {
 		db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
 			if (err) throw err;
 			if(array){
-				console.log(array);
+				//console.log(array);
 				var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
 				parameters = parameters.map(function(param){
 					return {
