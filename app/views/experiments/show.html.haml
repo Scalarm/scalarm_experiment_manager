@@ -59,7 +59,15 @@
         $(".analysis-panel").load("/chart/panel?id=#{@experiment.id}");
       })
 
+      window.WebSocket = window.WebSocket || window.MozWebSocket;
+
       var ws = new WebSocket("ws://172.16.67.121:8080/#{@experiment.id}");
+
+      window.onbeforeunload = function() {
+        ws.onclose = function () {}; // disable onclose handler first
+        ws.close()
+      };
+
       ws.onmessage = function(message) {
         console.log("refreshing progress bar...");
         console.log(message.data);

@@ -9,6 +9,7 @@ var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartService = require("./service.js");
+var DataRetriever = require("./data_retriever.js");
 
 var jade = require("jade");
 var locals = require("./config.js");
@@ -27,7 +28,8 @@ var app = http.createServer(function(req, res) {
 			ChartService.getParameters(parameters["id"], function(data) {
 				locals.parameters = data;
 				res.writeHead(200);
-				res.write(jade.renderFile("panel.jade", locals));
+				var panel = jade.renderFile("panel.jade", locals);
+				res.write(panel);
 				res.end();
 			},
 			function(err) {
@@ -58,6 +60,7 @@ var app = http.createServer(function(req, res) {
 					console.log("OK! Successfully authorized.");
 					res.writeHead(200, {'Content-Type': 'text/plain'});
 					var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"]});
+					// console.log(output);
 					output += object.content;
 					res.write(output);
 					res.end();
@@ -94,7 +97,7 @@ var app = http.createServer(function(req, res) {
 				}
 				else if(scripts_pattern.test(pathname)) {
 					var groups_from_regexp = scripts_pattern.exec(pathname).slice(-1);
-					console.log(groups_from_regexp);
+					// console.log(groups_from_regexp);
 					var type = groups_from_regexp[0];
 					var tags = prepare_script_and_style_tags("/"+type);
 
@@ -120,42 +123,17 @@ wsServer = new WebSocketServer({
 })
 
 wsServer.on('request', function(request) {
+	//TODO -- authentication!
 	var experimentID = request.httpRequest.url.slice(1);
 	console.log(new Date() + " Connection from origin " + request.origin + ".");
 	var connection = request.accept(null, request.origin);
 	console.log(new Date() + " Connection accepted.");
 
-	var DBURL = "mongodb://172.16.67.121:27017/scalarm_db";
+	connection.on('close', function(connection) {
+        console.log(new Date() + "Connection closed");
+    });
 
-	var client = require("mongodb").MongoClient;
-
-	client.connect(DBURL, function(err, db) {
-		db.collection("capped_collection").find({date: {"$gte": new Date()/1000}, experiment_id: experimentID}, {tailable: true, awaitdata: true, numberOfRetries: -1}, function(err, resultCursor) {
-			resultCursor.nextObject(processItem);
-
-
-			function processItem(err, item) {
-			    console.log(item);
-			    connection.send(JSON.stringify(item));
-			    resultCursor.nextObject(processItem);
-			}
-		}); 
-	});
-
-	// connection.on("message", function(message) {
-	// 	console.log("Message: ", message.utf8Data);
-	// 	var json = JSON.stringify({type: 'text', data: 8});
-	// 	connection.send(json);
-	// });
-
-	// var json = JSON.stringify({type: "all-points", data: list_of_points});
-	// connection.send(json);
-
-	// setInterval(function(){
-	// 	var point = updateRandomPoint();
-	// 	var json = JSON.stringify({type: "update", data: point});
-	// 	connection.send(json);
-	// },500)
+	DataRetriever.createStreamFor(connection, experimentID);
 });
 
 //--------------------------------
