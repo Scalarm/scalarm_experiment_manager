@@ -51,15 +51,21 @@ class PlGridFacade < InfrastructureFacade
     if additional_params[:onsite_monitoring] == "1"
       InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id)
 
+      remote_proxy_path = "~/.scalarm_proxy"
+      user_proxy = credentials.upload_proxy(remote_proxy_path)
+
       credentials.scp_session do |scp|
-        scp.upload! File.join('/tmp', "scalarm_monitoring_#{sm_uuid}", 'config.json'), '.'
+        scp.upload! File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'), '.'
+
+        # find if proxy on ui is available in file
+        # if yes - copy this file to known location
         scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', 'monitor'), '.'
       end
 
       credentials.ssh_session do |ssh|
         cmd = ShellCommands.chain(
             ShellCommands.mute("chmod a+x monitor"),
-            ShellCommands.run_in_background("./monitor")
+            ShellCommands.run_in_background("#{user_proxy ? "X509_USER_PROXY=#{remote_proxy_path}" : ''} ./monitor")
         )
         Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
       end
