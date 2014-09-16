@@ -133,7 +133,7 @@ class window.ExperimentMonitor
     @obj_id = "experiment_monitor_#{@experiment_id}"
 
     window.scalarm_objects[@obj_id] = this
-    #@schedule_update()
+    @schedule_update()
 
   update: ->
     monitor = this
@@ -246,13 +246,13 @@ class window.ExperimentMonitor
         return $(this).val() == selected_option
       ).attr('selected', true)
 
-    $(".params_list").each (i, select_element) ->
-      selected_option = $(select_element).find(":selected").val()
-      $(select_element).html(moes_info.params)
+    #$(".params_list").each (i, select_element) ->
+    #  selected_option = $(select_element).find(":selected").val()
+    #  $(select_element).html(moes_info.params)
 
-      $(select_element).find("option").filter(() ->
-        return $(this).val() == selected_option
-      ).attr('selected', true)
+    #  $(select_element).find("option").filter(() ->
+    #    return $(this).val() == selected_option
+    #  ).attr('selected', true)
 
 
 class window.ExperimentBooster
