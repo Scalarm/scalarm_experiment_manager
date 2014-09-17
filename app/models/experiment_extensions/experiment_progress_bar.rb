@@ -38,7 +38,7 @@ module ExperimentProgressBar
 
     begin
       progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
-      progress_bar_capped_collection.insert({:item => "asd"})
+      progress_bar_capped_collection.insert({experiment_id: self.experiment_id.to_s, date: Time.now.to_i})
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end
@@ -121,7 +121,7 @@ module ExperimentProgressBar
       #Rails.logger.debug("New bar state = #{{:bar_num => bar_index}} #{{'$set' => { :bar_state => new_bar_state }}}")
       if color_of_bar(bar_index) != new_bar_state
         progress_bar_table.update({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
-        progress_bar_capped_collection.insert({:item => "asd"})
+        progress_bar_capped_collection.insert({experiment_id: self.experiment_id.to_s, date: Time.now.to_i})
       end
     rescue Exception => e
       Rails.logger.debug("Error --- #{e}")
