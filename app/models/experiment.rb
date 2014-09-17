@@ -697,6 +697,51 @@ class Experiment < MongoActiveRecord
 
         values
 
+      when '2k-1'
+        if parameters_for_doe.size < 3
+          #TODO -- change i18n text message or create new
+          raise 'experiments.errors.too_few_parameters'
+        else
+          values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
+            parameter = get_parameter_doc(parameter_uid)
+            sum << [ {level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f} ]
+          }
+
+          if values.size > 1
+            values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
+          else
+            values = values.first.map { |x| [x] }
+          end
+
+          values = values.select{ |array| array[0..-2].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
+          values = values.map{ |array| array.map{ |item| item[:value] }}
+
+          values
+        end
+
+      when '2k-2'
+        if parameters_for_doe.size < 5
+          #TODO -- change i18n text message or create new
+          raise 'experiments.errors.too_few_parameters'
+        else
+          values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
+            parameter = get_parameter_doc(parameter_uid)
+            sum << [ {level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f} ]
+          }
+
+          if values.size > 1
+            values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
+          else
+            values = values.first.map { |x| [x] }
+          end
+
+          values = values.select{ |array| array[0..-4].reduce(1) { |acc, item| acc*item[:level] } == array[-2][:level] }
+          values = values.select{ |array| array[1..-3].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
+          values = values.map{ |array| array.map{ |item| item[:value] }}
+
+          values
+        end
+
       when *%w(latinHypercube fractionalFactorial nolhDesign)
         if parameters_for_doe.size < 2
           raise 'experiments.errors.too_few_parameters'
