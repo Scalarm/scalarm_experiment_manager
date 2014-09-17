@@ -26,6 +26,8 @@ script.
     var scripts_loaded = false;
 
     var experimentID = document.URL.split("/").slice(-1)[0];
+    if(experimentID[experimentID.length-1]==='#')
+      experimentID = experimentID.slice(0, experimentID.length-1);
     // 'Load chart' button handler
     $('#pareto_charts_form button').bind('click', function() {
       if(!scripts_loaded){

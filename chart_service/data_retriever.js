@@ -168,11 +168,11 @@ function getParameters(experimentID, success, error) {
 	var mongo = require('mongodb');
 	var client = mongo.MongoClient;
 	client.connect(DBURL, function(err, db){
-		if (err) throw err;
+		if (err) error(err);
 		db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
-			if (err) throw err;
-			if(array){
-				//console.log(array);
+			if (err) error(err);
+			if(array[0]){
+				console.log(array);
 				var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
 				parameters = parameters.map(function(param){
 					return {

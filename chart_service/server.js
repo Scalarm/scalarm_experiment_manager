@@ -9,6 +9,7 @@ var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartService = require("./service.js");
+var DataRetriever = require("./data_retriever.js");
 
 var jade = require("jade");
 var locals = require("./config.js");
@@ -22,16 +23,21 @@ var app = http.createServer(function(req, res) {
 	var pathname = parsedUrl.pathname;
 	var parameters = querystring.parse(parsedUrl.query);
 	console.log("Pathname: " + pathname);
+	console.log("Parameters: " + JSON.stringify(parameters));
 	switch (pathname) {
 		case "/panel":
-			ChartService.getParameters(parameters["id"], function(data) {
+			DataRetriever.getParameters(parameters["id"], function(data) {
 				locals.parameters = data;
+				locals.address = ADDRESS;
 				res.writeHead(200);
 				res.write(jade.renderFile("panel.jade", locals));
 				res.end();
 			},
 			function(err) {
-
+				res.writeHead(404);
+				res.write("Error getting parameters\n");
+				res.write(err+"\n");
+				res.end();
 			})
 			
 			
@@ -61,9 +67,10 @@ var app = http.createServer(function(req, res) {
 					output += object.content;
 					res.write(output);
 					res.end();
-				}, function(data) {
-					console.log("FAILED! Sending info about error to Scalarm... " + data);
-					res.write("Problem with: " + data);
+				}, function(err) {
+					console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+					//res.writeHead(); ??
+					res.write("Unable to authenticate");
 					res.end();
 				});
 			}, function() {														//function when Scalarm makes request about scripts/stylesheets
@@ -100,8 +107,8 @@ var app = http.createServer(function(req, res) {
 
 					res.writeHead(200);
 					res.write(tags.script_tag_main);
-					res.write(tags.script_tag_interaction);
-					res.write(tags.style_tag);
+					// res.write(tags.script_tag_interaction);
+					// res.write(tags.style_tag);
 					res.end();
 				}
 				//when URL doesn't match => incorrect request
@@ -164,12 +171,19 @@ function authenticate(cookie, experimentID, success, error){
 	var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
 	var output = cookieDecoder(cookieGood);
 
-	exec("ruby serialized_object_to_json.rb " + new Buffer(output).toString("base64"), function(errorExec, stdout, stderr) {
+	exec("ruby serialized_object_to_json.rb " + new Buffer(output).toString("base64"), function(err, stdout, stderr) {
+	    if (err !== null) {
+	    	console.log('stderr: ' + stderr);
+	    	console.log('exec error: ' + err);
+	    	error(err);
+	    	return;
+	    }
+
 		var userID = JSON.parse(stdout)["user"];
 		console.log("\tuserID: ", userID); 
 		console.log("\texperimentID: ", experimentID);
 
-		ChartService.authenticate(userID, experimentID, function(dataSuccess) {
+		DataRetriever.authenticate(userID, experimentID, function(dataSuccess) {
 			success(dataSuccess);
 		}, function(dataError) {
 			error(dataError);
@@ -183,14 +197,14 @@ function prepare_script_and_style_tags(typeOfChart) {
 	tags.script_tag_main.setAttribute("type", "text/javascript");
 	tags.script_tag_main.setAttribute("src","//" + ADDRESS + typeOfChart+"/main");
 
-	tags.script_tag_interaction = jsdom.createElement("script");
-	tags.script_tag_interaction.setAttribute("type", "text/javascript");
-	tags.script_tag_interaction.setAttribute("src", "//" + ADDRESS + typeOfChart+"/interaction");
+	// tags.script_tag_interaction = jsdom.createElement("script");
+	// tags.script_tag_interaction.setAttribute("type", "text/javascript");
+	// tags.script_tag_interaction.setAttribute("src", "//" + ADDRESS + typeOfChart+"/interaction");
 
-	tags.style_tag = jsdom.createElement("link");
-	tags.style_tag.setAttribute("href", "//" + ADDRESS + typeOfChart+"/style");
-	tags.style_tag.setAttribute("rel", "stylesheet");
-	tags.style_tag.setAttribute("type", "text/css");
+	// tags.style_tag = jsdom.createElement("link");
+	// tags.style_tag.setAttribute("href", "//" + ADDRESS + typeOfChart+"/style");
+	// tags.style_tag.setAttribute("rel", "stylesheet");
+	// tags.style_tag.setAttribute("type", "text/css");
 
 	for(var prop in tags) {
 		tags[prop] = tags[prop].outerHTML;

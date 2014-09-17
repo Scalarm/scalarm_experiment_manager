@@ -32,7 +32,8 @@ script.
     $("#interactionModal").foundation("reveal", "close");
 
     var experimentID = document.URL.split("/").slice(-1)[0];
-    //experimentID = experimentID.slice(0, experimentID.length-1);
+    if(experimentID[experimentID.length-1]==='#')
+      experimentID = experimentID.slice(0, experimentID.length-1);
     var interaction_chart_counter = 0;
     var scripts_loaded = false;
 

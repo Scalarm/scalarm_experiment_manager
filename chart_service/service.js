@@ -29,7 +29,7 @@ function prepare_interaction_chart_content(parameters, data) {
     var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
     output += "\nvar data = " + JSON.stringify(data) + ";";
     output += "\ninteraction_main(i, \"" + parameters["param1"] + "\", \"" + parameters["param2"] + "\", data);";
-    output += "\ninteraction_interaction(i);";
+    // output += "\ninteraction_interaction(i);";
     output += "\n})();</script>";
 
     return output;
@@ -39,20 +39,20 @@ function prepare_pareto_chart_content(data) {
     var output = "<script>(function() {";
     output += "\nvar data = " + JSON.stringify(data) + ";";
     output += "\npareto_main(data);";
-    output += "\npareto_interaction();"
+    // output += "\npareto_interaction();"
     output += "\n})();</script>";
 
     return output;
 }
 
-function authenticate(userID, experimentID, success, error) {
-    db_retriever.authenticate(userID, experimentID, function(data) {
-        success(data);
-    }, function(data) {
-        error(data);
-    });
+// function authenticate(userID, experimentID, success, error) {
+//     db_retriever.authenticate(userID, experimentID, function(data) {
+//         success(data);
+//     }, function(data) {
+//         error(data);
+//     });
 
-}
+// }
 
 function convertDataToArray(data, param) {
     var array = [];
@@ -65,10 +65,10 @@ function convertDataToArray(data, param) {
     return array;
 }
 
-function getParameters(experimentID, success, error){
-    db_retriever.getParameters(experimentID, success, error);
-}
+// function getParameters(experimentID, success, error){
+//     db_retriever.getParameters(experimentID, success, error);
+// }
 
 module.exports.prepare_chart = prepare_chart;
-module.exports.authenticate = authenticate;
-module.exports.getParameters = getParameters;
+// module.exports.authenticate = authenticate;
+// module.exports.getParameters = getParameters;
