@@ -91,7 +91,7 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
-  def self.prepare_monitoring_package(sm_uuid, user_id)
+  def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
     Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
 
     Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
@@ -112,7 +112,7 @@ class InfrastructureFacade
         InformationServiceAddress: Rails.application.secrets.information_service_url,
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
-        Infrastructures: [ "qsub" ]
+        Infrastructures: [ infrastructure_name ]
     }
 
     if Rails.application.secrets.include?(:sm_information_service_url)

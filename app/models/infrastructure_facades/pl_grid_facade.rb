@@ -53,7 +53,7 @@ class PlGridFacade < InfrastructureFacade
     end
 
     if additional_params[:onsite_monitoring] == "1"
-      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id)
+      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
 
       remote_proxy_path = "~/.scalarm_proxy"
       user_proxy = credentials.upload_proxy(remote_proxy_path)
