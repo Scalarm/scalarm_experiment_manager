@@ -46,7 +46,7 @@ class PlGridFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
-    records = instances_count.map do
+    records = (1..instances_count).map do
       record = create_record(user_id, experiment_id, sm_uuid, additional_params)
       record.save
       record
