@@ -9,7 +9,7 @@ class DummyFacade < InfrastructureFacade
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     require 'securerandom'
-    (1..instances_count).each do
+    (1..instances_count).map do
       record = DummyRecord.new({
         res_id: SecureRandom.hex(8),
         user_id: user_id,
@@ -19,8 +19,9 @@ class DummyFacade < InfrastructureFacade
       })
       record.initialize_fields
       record.save
+
+      record
     end
-    ['ok', "Scheduled #{instances_count} dummy simulation managers"]
   end
 
   def sm_record_class

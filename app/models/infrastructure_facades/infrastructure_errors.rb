@@ -5,4 +5,5 @@ module InfrastructureErrors
   class NoSuchInfrastructureError < StandardError; end
   class NoSuchSimulationManagerError < StandardError; end
   class AccessDeniedError < StandardError; end
+  class ScheduleError < StandardError; end
 end

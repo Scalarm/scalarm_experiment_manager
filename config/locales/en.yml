@@ -178,7 +178,6 @@ en:
     job_submission:
       authentication_failed: "An exception occured during authentication - %{ex}. Please check if the host is available and the username and password are correct."
       error: "An exception occured - %{ex}. Please check if the host is available and the username and password are correct."
-      ok: "You have scheduled %{instances_count} jobs on PL-Grid"
       no_credentials: You have to provide Grid credentials first!
     job_desc:
       job_id: "Job ID"
