@@ -46,7 +46,11 @@ class PlGridFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
-    instances_count.times { create_record(user_id, experiment_id, sm_uuid, additional_params).save }
+    records = instances_count.map do
+      record = create_record(user_id, experiment_id, sm_uuid, additional_params)
+      record.save
+      record
+    end
 
     if additional_params[:onsite_monitoring] == "1"
       InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id)
@@ -72,7 +76,7 @@ class PlGridFacade < InfrastructureFacade
     end
 
 
-    ['ok', I18n.t('plgrid.job_submission.ok', instances_count: instances_count)]
+    records
   end
 
   def create_record(user_id, experiment_id, sm_uuid, params)
