@@ -28,3 +28,8 @@
   .small-1.columns
     = text_field_tag :ppn, 1, class: 'right'
   .small-2.columns
+.row
+  .large-4.columns
+    = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
+  .large-4.columns.end
+    = check_box_tag :onsite_monitoring
