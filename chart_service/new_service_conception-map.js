@@ -1,29 +1,57 @@
 var jsdom = require("jsdom").jsdom();
 var db_retriever = require("./data_retriever.js");
 
-
-function prepare_chart(type, parameters, callback, error) {
-    switch(type) {
-        case "/interaction":
+module.exports = function(success, error){
+    map = {};
+    map["/interaction"] = function(parameters){
+        if(parameters["id"] && parameters["param1"] && parameters["param2"]){
             db_retriever.getInteraction(parameters["id"], 
                                         parameters["param1"], 
                                         parameters["param2"], function(data) {
                 var object = {};
                 object.content = prepare_interaction_chart_content(parameters, data);
-                callback(object);
+                success(object);
             }, error);
-            break;
-        case "/pareto":
+        }
+        else
+            error("Request parameters missing");
+    }
+    map["/pareto"] = function(parameters){
+        if(parameters["id"]){
             db_retriever.getPareto(parameters["id"], function(data) {
                 var object = {};
                 object.content = prepare_pareto_chart_content(data);
-                callback(object);
+                success(object);
             }, error);
-            break;
-        default:
-            error();
+        }
+        else
+            error("Request parameters missing");
     }
-}
+    return map;
+};
+
+
+    // switch(type) {
+    //     case "/interaction":
+    //         db_retriever.getInteraction(parameters["id"], 
+    //                                     parameters["param1"], 
+    //                                     parameters["param2"], function(data) {
+    //             var object = {};
+    //             object.content = prepare_interaction_chart_content(parameters, data);
+    //             callback(object);
+    //         }, error);
+    //         break;
+    //     case "/pareto":
+    //         db_retriever.getPareto(parameters["id"], function(data) {
+    //             var object = {};
+    //             object.content = prepare_pareto_chart_content(data);
+    //             callback(object);
+    //         }, error);
+    //         break;
+    //     default:
+    //         error();
+    // }
+
 
 function prepare_interaction_chart_content(parameters, data) {
     var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
@@ -69,6 +97,6 @@ function prepare_pareto_chart_content(data) {
 //     db_retriever.getParameters(experimentID, success, error);
 // }
 
-module.exports.prepare_chart = prepare_chart;
+// module.exports.prepare_chart = prepare_chart;
 // module.exports.authenticate = authenticate;
 // module.exports.getParameters = getParameters;

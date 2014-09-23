@@ -1,19 +1,16 @@
 #paretoModal.reveal-modal(data-reveal=true)
   section.panel.radius.analysis-chart#pareto_charts_form
     a.close-reveal-modal x
-    h3 Experiment title
-    h3.subheader Subheader
-    //%h3= t("#{@experiment}")
-    //%h3.subheader= t('charts.scatter.section_header')
+    h3.subheader Pareto chart
 
-    //= form_tag '', class: '' do
+    //form
     .row
       ul.inline-list
         li
           button.button.radius Load chart
           //t('charts.load_button')
         li
-          img(src='/chart/loading.gif', id='busy_pareto', size='16x16', style='display: none')
+          img(src='/chart/images/loading.gif', id='busy_pareto', size='16x16', style='display: none')
 
   .charts
     .scripts
@@ -25,9 +22,11 @@ script.
     var pareto_loaded = false;
     var scripts_loaded = false;
 
-    var experimentID = document.URL.split("/").slice(-1)[0];
-    if(experimentID[experimentID.length-1]==='#')
-      experimentID = experimentID.slice(0, experimentID.length-1);
+    var experimentID_withLink = document.URL.split("/").slice(-1)[0];
+    var experimentID = experimentID_withLink.split("#")[0];
+    if(experimentID[experimentID.length-1]=="?")
+      experimentID = experimentID.slice(0,-1);
+
     // 'Load chart' button handler
     $('#pareto_charts_form button').bind('click', function() {
       if(!scripts_loaded){

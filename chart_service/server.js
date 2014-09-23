@@ -40,88 +40,135 @@ var app = http.createServer(function(req, res) {
 				res.write(err+"\n");
 				res.end();
 			})
-			
-			
-			break;
-		//temporary -- TODO
-		case "/loading.gif":
-			fs.readFile('./images/loading.gif', function(error, data) {
-				if(error) {
-					res.writeHead(404);
-					res.write("File " + file_path + " : not found!\n");
-					res.write(error.toString());
-					res.end();
-				}
-				else {
-					res.writeHead(200);
-					res.write(data);
-					res.end();
-				}
-			});
 			break;
 		default:
-			ChartService.prepare_chart(pathname, parameters, function(object) { 			//function if successfully created OBJECT
-				authenticate(req.headers.cookie, parameters["id"], function(data) {
-					console.log("OK! Successfully authorized.");
-					res.writeHead(200, {'Content-Type': 'text/plain'});
-					var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"]});
-					// console.log(output);
-					output += object.content;
-					res.write(output);
-					res.end();
+			var share_image_pattern = /^\/images\/(.+)$/;
+			if(share_image_pattern.test(pathname)) {
+				var file = share_image_pattern.exec(pathname)[1];
+				fs.readFile('.'+pathname, function(error, data) {
+					if(error) {
+						res.writeHead(404);
+						res.write("File " + file_path + " : not found!\n");
+						res.write(error.toString());
+						res.end();
+					}
+					else {
+						res.writeHead(200);
+						res.write(data);
+						res.end();
+					}
+				});
+				return;
+
+			}
+			var url_pattern = /^\/(\w+)\/(main|interaction|style)$/;
+			var scripts_pattern = /^\/(\w+)\/scripts$/;
+			//when URL matches
+			if(url_pattern.test(pathname)) {
+				var groups_from_regexp = url_pattern.exec(pathname).slice(-2);
+				var type = groups_from_regexp[0];
+				var resource = groups_from_regexp[1];
+
+				var file_path = type+"/"+type+"_chart_"+resource;
+				file_path += resource==="style" ? ".css" : ".js";
+
+				fs.readFile(file_path, function(error, data) {
+					if(error) {
+						res.writeHead(404);
+						res.write("File " + file_path + " : not found!\n");
+						res.write(error.toString());
+						res.end();
+						return;
+					}
+					else {
+						res.writeHead(200);
+						res.write(data);
+						res.end();
+						return;
+					}
+				});
+			}
+			else if(scripts_pattern.test(pathname)) {
+				var groups_from_regexp = scripts_pattern.exec(pathname).slice(-1);
+				// console.log(groups_from_regexp);
+				var chart_type = groups_from_regexp[0];
+				var tags = prepare_script_and_style_tags("/"+chart_type);
+
+				res.writeHead(200);
+				res.write(tags.script_tag_main);
+				// res.write(tags.script_tag_interaction);
+				// res.write(tags.style_tag);
+				res.end();
+			}
+			else{
+				//ChartMap
+				var ChartMap = require("./new_service_conception-map.js")(function(object) { 			//function if successfully created OBJECT
+					authenticate(req.headers.cookie, parameters["id"], function(data) {
+						console.log("OK! Successfully authorized.");
+						res.writeHead(200, {'Content-Type': 'text/plain'});
+						//TODO - what with locals specific for chart? object.locals from service?
+						var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"], param1: parameters["param1"], param2: parameters["param2"]});
+						// console.log(output);
+						output += object.content;
+						res.write(output);
+						res.end();
+					}, function(err) {
+						console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+						//res.writeHead(..); ??
+						res.write("Unable to authenticate");
+						res.end();
+					});
 				}, function(err) {
-					console.log("FAILED! Sending info about error to Scalarm... \n" + err);
-					//res.writeHead(); ??
-					res.write("Unable to authenticate");
+					res.write(err);
 					res.end();
 				});
-			}, function() {														//function when Scalarm makes request about scripts/stylesheets
-				var url_pattern = /^\/(\w+)\/(main|interaction|style)$/;
-				var scripts_pattern = /^\/(\w+)\/scripts$/;
-				//when URL matches
-				if(url_pattern.test(pathname)) {
-					var groups_from_regexp = url_pattern.exec(pathname).slice(-2);
-					var type = groups_from_regexp[0];
-					var resource = groups_from_regexp[1];
-
-					var file_path = type+"/"+type+"_chart_"+resource;
-					file_path += resource==="style" ? ".css" : ".js";
-
-					fs.readFile(file_path, function(error, data) {
-						if(error) {
-							res.writeHead(404);
-							res.write("File " + file_path + " : not found!\n");
-							res.write(error.toString());
-							res.end();
-						}
-						else {
-							res.writeHead(200);
-							res.write(data);
-							res.end();
-						}
-					});
+				if(ChartMap[pathname]){
+					ChartMap[pathname](parameters);
 				}
-				else if(scripts_pattern.test(pathname)) {
-					var groups_from_regexp = scripts_pattern.exec(pathname).slice(-1);
-					// console.log(groups_from_regexp);
-					var type = groups_from_regexp[0];
-					var tags = prepare_script_and_style_tags("/"+type);
-
-					res.writeHead(200);
-					res.write(tags.script_tag_main);
-					// res.write(tags.script_tag_interaction);
-					// res.write(tags.style_tag);
-					res.end();
-				}
-				//when URL doesn't match => incorrect request
 				else {
+					//when URL doesn't match => incorrect request
 					res.writeHead(404);
 					res.write(pathname + " : incorrect request!");
 					res.end();
 				}
-			});
+
+				// ChartService.prepare_chart(pathname, parameters, function(object) { 			//function if successfully created OBJECT
+				// 	authenticate(req.headers.cookie, parameters["id"], function(data) {
+				// 		console.log("OK! Successfully authorized.");
+				// 		res.writeHead(200, {'Content-Type': 'text/plain'});
+				// 		var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"]});
+				// 		// console.log(output);
+				// 		output += object.content;
+				// 		res.write(output);
+				// 		res.end();
+				// 	}, function(err) {
+				// 		console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+				// 		//res.writeHead(..); ??
+				// 		res.write("Unable to authenticate");
+				// 		res.end();
+				// 	});
+				// }, function(err) {
+				// 	if(err){
+				// 		res.write(err);
+				// 		res.end();
+				// 		return;
+				// 	}
+				// 	//when URL doesn't match => incorrect request
+				// 	res.writeHead(404);
+				// 	res.write(pathname + " : incorrect request!");
+				// 	res.end();
+				// });
+			}
 	}
-}).listen(PORT);
+})
+DataRetriever.connect(function(){
+	app.listen(PORT, function(){
+		console.log(new Date() + " Listening on port " + PORT);
+	});
+}, function(){
+	console.log("Connection to database failed");
+	throw new Error("Connection to database failed");
+})
 
 var WebSocketServer = require('websocket').server;
 wsServer = new WebSocketServer({
@@ -130,16 +177,23 @@ wsServer = new WebSocketServer({
 
 wsServer.on('request', function(request) {
 	//TODO -- authentication!
-	var experimentID = request.httpRequest.url.slice(1);
 	console.log(new Date() + " Connection from origin " + request.origin + ".");
-	var connection = request.accept(null, request.origin);
-	console.log(new Date() + " Connection accepted.");
+	console.log(request.httpRequest.headers.cookie);
+	var experimentID = request.httpRequest.url.slice(1);
+	authenticate(request.httpRequest.headers.cookie, experimentID, function(data) {
+		console.log("OK! Successfully authorized.");
+		var connection = request.accept(null, request.origin);
+		console.log(new Date() + " Connection accepted.");
 
-	connection.on('close', function(connection) {
-        console.log(new Date() + "Connection closed");
-    });
+		connection.on('close', function(connection) {
+	        console.log(new Date() + " Connection closed");
+	        //TODO - close cursor?
+	    });
 
-	DataRetriever.createStreamFor(connection, experimentID);
+		DataRetriever.createStreamFor(connection, experimentID);
+	}, function(err) {
+		console.log("Authentication failed! \n" + err);
+	});
 });
 
 //--------------------------------

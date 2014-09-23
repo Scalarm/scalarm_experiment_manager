@@ -1,6 +1,7 @@
 #interactionModal.reveal-modal(data-reveal=true)
   section.panel.radius.analysis-chart#interaction_charts_form
-    h3.subheader Subheader (interaction)
+    a.close-reveal-modal x
+    h3.subheader Interaction charts
 
     form
       .row
@@ -22,7 +23,7 @@
           li 
             button.button.radius Load chart
           li
-            img(src='/chart/loading.gif', id='busy_interaction', size='16x16', style='display: none')
+            img(src='/chart/images/loading.gif', id='busy_interaction', size='16x16', style='display: none')
 
   .charts
     .scripts
@@ -31,9 +32,11 @@ script.
   $(function() {
     $("#interactionModal").foundation("reveal", "close");
 
-    var experimentID = document.URL.split("/").slice(-1)[0];
-    if(experimentID[experimentID.length-1]==='#')
-      experimentID = experimentID.slice(0, experimentID.length-1);
+    var experimentID_withLink = document.URL.split("/").slice(-1)[0];
+    var experimentID = experimentID_withLink.split("#")[0];
+    if(experimentID[experimentID.length-1]=="?")
+      experimentID = experimentID.slice(0,-1);
+    
     var interaction_chart_counter = 0;
     var scripts_loaded = false;
 
