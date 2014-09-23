@@ -43,7 +43,7 @@ script.
     $("#interactionModal button").bind("click", function() {
       $("#busy_interaction").show();
       if(!scripts_loaded) {
-        $("#interactionModal .scripts").load("/chart/interaction/scripts");
+        $("#interactionModal .scripts").load("/chart/scripts/interaction");
         scripts_loaded = true;
       }
 

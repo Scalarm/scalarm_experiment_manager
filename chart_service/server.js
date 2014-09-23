@@ -8,7 +8,7 @@ var exec = require("child_process").exec;
 var decoder_configuration = require("./decoder_configuration.js");
 	// options.secret_key_base = process.env.USER;	//we can set here secret_key_base
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
-var ChartService = require("./service.js");
+var ChartsMap = require("./service.js")();	//TODO - zienic zeby modul eksportowal mape a nie funkcje, albo przekazywac handlery
 var DataRetriever = require("./data_retriever.js");
 
 var jade = require("jade");
@@ -24,141 +24,38 @@ var app = http.createServer(function(req, res) {
 	var parameters = querystring.parse(parsedUrl.query);
 	console.log("Pathname: " + pathname);
 	console.log("Parameters: " + JSON.stringify(parameters));
-	switch (pathname) {
-		case "/panel":
-			DataRetriever.getParameters(parameters["id"], function(data) {
-				locals.parameters = data;
-				locals.address = ADDRESS;
-				res.writeHead(200);
-				var panel = jade.renderFile("panel.jade", locals);
-				res.write(panel);
+
+	//TODO - jak nie tworzyc mapy za kazdym razem? -> wystarczy zmieniac tylko map["/panel"] ALBO parameters jako dodatkowy argument map[...](..., parameters)
+	var map = prepare_map_with_requests(parameters);
+
+	var path = pathname.split("/")[1];
+	if(map[path]){
+		map[path](req, res, pathname);
+	}
+	else if(ChartsMap["/"+path]) {
+		ChartsMap["/"+path](parameters, function(object) {
+			authenticate(req.headers.cookie, parameters["id"], function(data) {
+				console.log("OK! Successfully authorized.");
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+				var output = jade.renderFile("."+pathname+pathname+"Chart.jade", parameters);
+				output += object.content;
+				res.write(output);
 				res.end();
-			},
-			function(err) {
-				res.writeHead(404);
-				res.write("Error getting parameters\n");
-				res.write(err+"\n");
+			}, function(err) {
+				console.log("FAILED! Sending info about error to Scalarm... \n" + err);
+				res.write("Unable to authenticate");
 				res.end();
-			})
-			break;
-		default:
-			var share_image_pattern = /^\/images\/(.+)$/;
-			if(share_image_pattern.test(pathname)) {
-				var file = share_image_pattern.exec(pathname)[1];
-				fs.readFile('.'+pathname, function(error, data) {
-					if(error) {
-						res.writeHead(404);
-						res.write("File " + file_path + " : not found!\n");
-						res.write(error.toString());
-						res.end();
-					}
-					else {
-						res.writeHead(200);
-						res.write(data);
-						res.end();
-					}
-				});
-				return;
-
-			}
-			var url_pattern = /^\/(\w+)\/(main|interaction|style)$/;
-			var scripts_pattern = /^\/(\w+)\/scripts$/;
-			//when URL matches
-			if(url_pattern.test(pathname)) {
-				var groups_from_regexp = url_pattern.exec(pathname).slice(-2);
-				var type = groups_from_regexp[0];
-				var resource = groups_from_regexp[1];
-
-				var file_path = type+"/"+type+"_chart_"+resource;
-				file_path += resource==="style" ? ".css" : ".js";
-
-				fs.readFile(file_path, function(error, data) {
-					if(error) {
-						res.writeHead(404);
-						res.write("File " + file_path + " : not found!\n");
-						res.write(error.toString());
-						res.end();
-						return;
-					}
-					else {
-						res.writeHead(200);
-						res.write(data);
-						res.end();
-						return;
-					}
-				});
-			}
-			else if(scripts_pattern.test(pathname)) {
-				var groups_from_regexp = scripts_pattern.exec(pathname).slice(-1);
-				// console.log(groups_from_regexp);
-				var chart_type = groups_from_regexp[0];
-				var tags = prepare_script_and_style_tags("/"+chart_type);
-
-				res.writeHead(200);
-				res.write(tags.script_tag_main);
-				// res.write(tags.script_tag_interaction);
-				// res.write(tags.style_tag);
-				res.end();
-			}
-			else{
-				//ChartMap
-				var ChartMap = require("./new_service_conception-map.js")(function(object) { 			//function if successfully created OBJECT
-					authenticate(req.headers.cookie, parameters["id"], function(data) {
-						console.log("OK! Successfully authorized.");
-						res.writeHead(200, {'Content-Type': 'text/plain'});
-						//TODO - what with locals specific for chart? object.locals from service?
-						var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"], param1: parameters["param1"], param2: parameters["param2"]});
-						// console.log(output);
-						output += object.content;
-						res.write(output);
-						res.end();
-					}, function(err) {
-						console.log("FAILED! Sending info about error to Scalarm... \n" + err);
-						//res.writeHead(..); ??
-						res.write("Unable to authenticate");
-						res.end();
-					});
-				}, function(err) {
-					res.write(err);
-					res.end();
-				});
-				if(ChartMap[pathname]){
-					ChartMap[pathname](parameters);
-				}
-				else {
-					//when URL doesn't match => incorrect request
-					res.writeHead(404);
-					res.write(pathname + " : incorrect request!");
-					res.end();
-				}
-
-				// ChartService.prepare_chart(pathname, parameters, function(object) { 			//function if successfully created OBJECT
-				// 	authenticate(req.headers.cookie, parameters["id"], function(data) {
-				// 		console.log("OK! Successfully authorized.");
-				// 		res.writeHead(200, {'Content-Type': 'text/plain'});
-				// 		var output = jade.renderFile("."+pathname+pathname+"Chart.jade", { chart_id: parameters["chart_id"]});
-				// 		// console.log(output);
-				// 		output += object.content;
-				// 		res.write(output);
-				// 		res.end();
-				// 	}, function(err) {
-				// 		console.log("FAILED! Sending info about error to Scalarm... \n" + err);
-				// 		//res.writeHead(..); ??
-				// 		res.write("Unable to authenticate");
-				// 		res.end();
-				// 	});
-				// }, function(err) {
-				// 	if(err){
-				// 		res.write(err);
-				// 		res.end();
-				// 		return;
-				// 	}
-				// 	//when URL doesn't match => incorrect request
-				// 	res.writeHead(404);
-				// 	res.write(pathname + " : incorrect request!");
-				// 	res.end();
-				// });
-			}
+			});
+		}, function(err) {
+			res.write(err);
+			res.end();
+			return;
+		});
+	}
+	else {	//when URL doesn't match => incorrect request
+		res.writeHead(404);
+		res.write(pathname + " : incorrect request!");
+		res.end();
 	}
 })
 DataRetriever.connect(function(){
@@ -226,20 +123,82 @@ function prepare_script_and_style_tags(typeOfChart) {
 	var tags = {};
 	tags.script_tag_main = jsdom.createElement("script");
 	tags.script_tag_main.setAttribute("type", "text/javascript");
-	tags.script_tag_main.setAttribute("src","//" + ADDRESS + typeOfChart+"/main");
-
-	// tags.script_tag_interaction = jsdom.createElement("script");
-	// tags.script_tag_interaction.setAttribute("type", "text/javascript");
-	// tags.script_tag_interaction.setAttribute("src", "//" + ADDRESS + typeOfChart+"/interaction");
-
-	// tags.style_tag = jsdom.createElement("link");
-	// tags.style_tag.setAttribute("href", "//" + ADDRESS + typeOfChart+"/style");
-	// tags.style_tag.setAttribute("rel", "stylesheet");
-	// tags.style_tag.setAttribute("type", "text/css");
+	tags.script_tag_main.setAttribute("src","//" + ADDRESS +"/main"+ typeOfChart);
 
 	for(var prop in tags) {
 		tags[prop] = tags[prop].outerHTML;
 	}
 
     return tags;
+}
+
+function prepare_map_with_requests(parameters) {
+	var map = {};
+	map["panel"] = function(req, res){
+		DataRetriever.getParameters(parameters["id"], function(data) {
+			locals.parameters = data;
+			locals.address = ADDRESS;
+			res.writeHead(200);
+			var panel = jade.renderFile("panel.jade", locals);
+			res.write(panel);
+			res.end();
+		},
+		function(err) {
+			res.writeHead(404);
+			res.write("Error getting parameters\n");
+			res.write(err+"\n");
+			res.end();
+		})
+	};
+
+	map["images"] = function(req, res, pathname) {
+		fs.readFile('.'+pathname, function(error, data) {
+			if(error) {
+				res.writeHead(404);
+				res.write("File " + file_path + " : not found!\n");
+				res.write(error.toString());
+				res.end();
+			}
+			else {
+				res.writeHead(200);
+				res.write(data);
+				res.end();
+			}
+		});
+	};
+
+	map["main"] = function(req, res, pathname){
+		var type = pathname.split("/")[2];
+		var resource = pathname.split("/")[1];
+
+		var file_path = type+"/"+type+"_chart_"+resource;
+		file_path += resource==="style" ? ".css" : ".js";
+
+		fs.readFile(file_path, function(error, data) {
+			if(error) {
+				res.writeHead(404);
+				res.write("File " + file_path + " : not found!\n");
+				res.write(error.toString());
+				res.end();
+				return;
+			}
+			else {
+				res.writeHead(200);
+				res.write(data);
+				res.end();
+				return;
+			}
+		});
+	};
+
+	map["scripts"] = function(req, res, pathname){
+		var chart_type = pathname.split("/")[2];
+		var tags = prepare_script_and_style_tags("/"+chart_type);
+
+		res.writeHead(200);
+		res.write(tags.script_tag_main);
+		res.end();
+	};
+
+	return map;
 }
