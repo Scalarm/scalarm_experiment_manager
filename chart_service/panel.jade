@@ -2,11 +2,17 @@
 
 input(placeholder="Search by name...", id="searchBox", type="text") 
 ul(id="searchList")
-  each method in methods
-    li(id=method.name)
-      a(href="#", data-reveal-id=method.url)= method.url
-      p= method.name
-      p= method.id
+  dl.accordion(data-accordion="")
+    dd.accordion-navigation
+      each group in groups
+        a(href="#"+group.id)= group.name
+          div(id=group.id).content
+            dl 
+              each method in group.methods
+                li(id=method.name)
+                  a(href="#", data-reveal-id=method.id)= method.name
+                    img(src=method.image)
+                    p= method.description
 
 p Lorem Ipsum jest tekstem stosowanym jako przykładowy wypełniacz w przemyśle poligraficznym. Został po raz pierwszy użyty w XV w. przez nieznanego drukarza do wypełnienia tekstem próbnej książki. Pięć wieków później zaczął być używany przemyśle elektronicznym, pozostając praktycznie niezmienionym. Spopularyzował się w latach 60. XX w. wraz z publikacją arkuszy Letrasetu, zawierających fragmenty Lorem Ipsum, a ostatnio z zawierającym różne wersje Lorem Ipsum oprogramowaniem przeznaczonym do realizacji druków na komputerach osobistych, jak Aldus PageMaker
 
@@ -18,7 +24,7 @@ include ./interaction/interactionModal.jade
 script.
   $(function(){
     var ids = [];
-    $('#searchList > li').each(function(){
+    $('#searchList li').each(function(){
       ids.push($(this).attr("id"));
     });
     console.log(ids);
@@ -27,7 +33,7 @@ script.
       source: ids,
       select: function(event, selected){
       	var id = selected.item.value;
-        $("#searchList > li#" + id + " > a ").click();
+        $("#searchList li#" + id + " > a ").click();
       }
     });
     $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1000);
@@ -35,12 +41,29 @@ script.
     $('#searchBox').keyup(function(){
       var searchVal = $(this).val().toLowerCase();
       if(searchVal == ""){
-        $('#searchList > li').show();           
+        $('#searchList li').show();           
       } else {
-        $('#searchList > li').each(function(){
+        $('#searchList li').each(function(){
           var id = $(this).attr("id").toLowerCase();
           (id.indexOf(searchVal) >= 0) ? $(this).show() : $(this).hide();
         });
+      }
+    });
+
+    
+    $("[data-reveal-id=experiment-analysis-modal]").on("click", function(){
+      console.log(this);
+    })
+
+    $(document).foundation({
+      accordion: {
+        //specify the class used for active (or open) accordion panels
+        active_class: 'active',
+        // allow multiple accordion panels to be active at the same time
+        multi_expand: true,
+        // allow accordion panels to be closed by clicking on their headers
+        // setting to false only closes accordion panels when another is opened
+        toggleable: true
       }
     });
   });
