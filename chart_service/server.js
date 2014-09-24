@@ -29,7 +29,12 @@ var app = http.createServer(function(req, res) {
 	var map = prepare_map_with_requests(parameters);
 
 	var path = pathname.split("/")[1];
-	if(map[path]){
+
+	if(path==="status"){
+		res.write("status ok");
+		res.end();
+	}
+	else if(map[path]){
 		map[path](req, res, pathname);
 	}
 	else if(ChartsMap["/"+path]) {
