@@ -59,6 +59,10 @@ class UserControllerController < ApplicationController
     redirect_to :action => 'account'
   end
 
+  def status
+    render inline: "Hello world from Scalarm Experiment Manager, it's #{Time.now} at the server!\n"
+  end
+
   # --- OpenID support ---
 
   private
