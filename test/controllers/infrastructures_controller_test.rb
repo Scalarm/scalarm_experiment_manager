@@ -117,9 +117,11 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_simulation_manager_commands
+    InfrastructuresController.any_instance.stubs(:destroy_temp_password)
+
     commands = %w(restart stop destroy_record)
     commands.each do |cmd|
-      mock_sm = mock 'simulation_manager' do
+      mock_sm = stub_everything 'simulation_manager' do
         expects(cmd).once
       end
       InfrastructuresController.any_instance.stubs(:yield_simulation_manager).with('1', 'inf').yields(mock_sm)
@@ -200,6 +202,16 @@ class InfrastructuresControllerTest < ActionController::TestCase
   def test_schedule_simulation_managers
     require 'json'
 
+    r1 = mock 'record1' do
+      stubs(:id).returns('r1')
+    end
+    r2 = mock 'record2' do
+      stubs(:id).returns('r2')
+    end
+    r3 = mock 'record2' do
+      stubs(:id).returns('r2')
+    end
+
     u1 = ScalarmUser.new({_id: 'u1', login: '1'})
     ScalarmUser.stubs(:find_by_id).returns(u1)
 
@@ -217,7 +229,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
     facade = stub_everything 'facade'
     facade.expects(:start_simulation_managers)
     .with('u1', 3, 'e1', params.merge('controller' => 'infrastructures', 'action' => 'schedule_simulation_managers'))
-    .returns(['ok', 'good']).once
+    .returns([r1, r2, r3]).once
 
     InfrastructureFacadeFactory.expects(:get_facade_for).with('inf_name').returns(facade)
 
@@ -278,6 +290,16 @@ class InfrastructuresControllerTest < ActionController::TestCase
     ScalarmUser.stubs(:find_by_id).with('u1').returns(u1)
     ScalarmUser.stubs(:find_by_id).with('u2').returns(u2)
 
+    r1 = mock 'record1' do
+      stubs(:id).returns('r1')
+    end
+    r2 = mock 'record2' do
+      stubs(:id).returns('r2')
+    end
+    r3 = mock 'record2' do
+      stubs(:id).returns('r2')
+    end
+
     u1 = stub_everything 'user1'
     u2 = stub_everything 'user2'
 
@@ -297,7 +319,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
     Experiment.stubs(:find_by_id).returns(e2)
 
     facade = stub_everything 'infrastructure' do
-      expects(:start_simulation_managers).returns(['ok', 'good']).once
+      expects(:start_simulation_managers).returns([r1, r2, r3]).once
     end
 
     InfrastructureFacadeFactory.stubs(:get_facade_for).with('inf_test').returns(facade)

@@ -12,6 +12,7 @@ en:
     priv_machine_creds_removed: "Removed %{name} private resource credentials"
     priv_machine_creds_not_removed: "There was no credentials in database to remove"
     permission_denied: "Permission denied"
+    scheduled_info: "You have scheduled %{count} Simulation Managers on %{name}!"
   infrastructure_facades:
     plgrid:
       current_state: "Currently %{jobs_count} jobs are scheduled or running."
@@ -20,12 +21,10 @@ en:
       image_not_exists: "Requested image does not exists on specified cloud. Please verify it."
       image_permission: "This image belongs to other user"
       image_cloud_error: "This image is for other Cloud"
-      scheduled_info: "You have scheduled %{count} virtual machines on %{cloud_name}!"
       scheduled_error: "Virtual machines scheduling failed, error: %{error}"
       current_state_no_creds: "No information available due to lack of credentials for %{cloud_name}"
       current_state_count: "You have %{count} Scalarm virtual machines scheduled"
       current_state_exception: "No information available due to exception: %{exception}"
     private_machine:
       no_permissions: "Scalarm user #{scalarm_login} has no registered credentials for machine #{name}"
-      scheduled_info: "You have scheduled %{count} tasks on %{machine_name}!"
       current_state: "Currently %{tasks} tasks are scheduled or running on private resources."

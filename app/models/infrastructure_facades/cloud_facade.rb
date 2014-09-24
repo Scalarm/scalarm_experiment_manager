@@ -48,20 +48,16 @@ class CloudFacade < InfrastructureFacade
     begin
       image_secrets_id = params['image_secrets_id']
       get_and_validate_image_secrets(image_secrets_id, user_id)
-      records = create_and_save_records(instances_count, image_secrets_id, user_id, experiment_id,
+      create_and_save_records(instances_count, image_secrets_id, user_id, experiment_id,
                               params['time_limit'], params['start_at'], params['instance_type'],
                               find_stored_params(params))
-
-      ['ok', I18n.t('infrastructure_facades.cloud.scheduled_info', count: records.count,
-                          cloud_name: @long_name)]
     rescue CloudErrors::ImageValidationError => ive
       logger.error "Error validating image secrets: #{ive.to_s}"
-      ['error', I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s)]
+      raise InfrastructureErrors::ScheduleError(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
     rescue Exception => e
       logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
-      ['error', I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message)]
+      raise InfrastructureErrors::ScheduleError(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
     end
-
   end
 
   def find_stored_params(params)

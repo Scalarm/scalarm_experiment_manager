@@ -46,27 +46,37 @@ class PlGridFacade < InfrastructureFacade
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
-    instances_count.times { create_record(user_id, experiment_id, sm_uuid, additional_params).save }
+    records = (1..instances_count).map do
+      record = create_record(user_id, experiment_id, sm_uuid, additional_params)
+      record.save
+      record
+    end
 
     if additional_params[:onsite_monitoring] == "1"
-      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id)
+      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
+      bin_pkg_name = 'scalarm_monitoring_linux_x86_64.zip'
+      bin_name = 'scalarm_monitoring'
+
+      remote_proxy_path = "~/.scalarm_proxy"
+      user_proxy = credentials.upload_proxy(remote_proxy_path)
 
       credentials.scp_session do |scp|
-        scp.upload! File.join('/tmp', "scalarm_monitoring_#{sm_uuid}", 'config.json'), '.'
-        scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', 'monitor'), '.'
+        scp.upload! File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'), '.'
+        scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', bin_pkg_name), '.'
       end
 
       credentials.ssh_session do |ssh|
         cmd = ShellCommands.chain(
-            ShellCommands.mute("chmod a+x monitor"),
-            ShellCommands.run_in_background("./monitor")
+            "unzip #{bin_pkg_name}",
+            "rm #{bin_pkg_name}",
+            "chmod a+x #{bin_name}",
+            "#{user_proxy ? "X509_USER_PROXY=#{remote_proxy_path}" : ''} #{ShellCommands.run_in_background("./#{bin_name}", "#{bin_name}.log")}"
         )
         Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
       end
     end
 
-
-    ['ok', I18n.t('plgrid.job_submission.ok', instances_count: instances_count)]
+    records
   end
 
   def create_record(user_id, experiment_id, sm_uuid, params)
