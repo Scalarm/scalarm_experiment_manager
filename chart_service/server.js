@@ -75,7 +75,6 @@ wsServer = new WebSocketServer({
 wsServer.on('request', function(request) {
 	//TODO -- authentication!
 	console.log(new Date() + " Connection from origin " + request.origin + ".");
-	console.log(request.httpRequest.headers.cookie);
 	var experimentID = request.httpRequest.url.slice(1);
 	authenticate(request.httpRequest.headers.cookie, experimentID, function(data) {
 		console.log("OK! Successfully authorized.");
@@ -136,7 +135,8 @@ function prepare_map_with_requests(parameters) {
 	var map = {};
 	map["panel"] = function(req, res){
 		DataRetriever.getParameters(parameters["id"], function(data) {
-			locals.parameters = data;
+			locals.parameters = data.parameters;
+			locals.output = data.result;
 			locals.address = ADDRESS;
 			res.writeHead(200);
 			var panel = jade.renderFile("panel.jade", locals);

@@ -12,7 +12,7 @@ var config = {
 			name: "Pareto",
 			id: "paretoModal",
 			image: "http://placehold.it/117x71",
-			description: "Shows significane of parameters (or interaction)"
+			description: "Shows significance of parameters (or interaction)"
 		}],
 		
 	},

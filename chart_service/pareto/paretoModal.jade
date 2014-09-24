@@ -3,14 +3,14 @@
     a.close-reveal-modal x
     h3.subheader Pareto chart
 
-    //form
-    .row
-      ul.inline-list
-        li
-          button.button.radius Load chart
-          //t('charts.load_button')
-        li
-          img(src='/chart/images/loading.gif', id='busy_pareto', size='16x16', style='display: none')
+    form
+      .row
+        ul.inline-list
+          li
+            button.button.radius Load chart
+            //t('charts.load_button')
+          li
+            img(src='/chart/images/loading.gif', id='busy_pareto', size='16x16', style='display: none')
 
   .charts
     .scripts
@@ -56,5 +56,7 @@ script.
           $('html,body').animate({ scrollTop: targetOffset }, 1000);
         });
       }
+
+      return false;
     })
   })

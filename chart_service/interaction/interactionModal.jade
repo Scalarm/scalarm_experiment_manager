@@ -18,6 +18,15 @@
           select#secondParam
             each parameter in parameters
               option(value=parameter.id)= parameter.label
+
+      .row
+        .small-5.columns
+          label(class='inline') Select output parameter
+        .small-7.columns
+          select#outputParam
+            each parameter in output
+              option(value=parameter)= parameter
+
       .row
         ul.inline-list
           li 
@@ -50,12 +59,15 @@ script.
       var interaction_chart_div = $("<div id=\"interaction_chart_"+interaction_chart_counter+"\">")[0];
       $("#interactionModal .charts").prepend(interaction_chart_div);
 
+      //TODO - if there's nothing to select -> do nothing
       var x_axis = $("#firstParam option:selected").val();
       var y_axis = $("#secondParam option:selected").val();
+      var outputParam = $("#outputParam option:selected").val();
 
       var query_params = "id="+experimentID;
           query_params += "&param1="+x_axis;
           query_params += "&param2="+y_axis;
+          query_params += "&output="+outputParam;
           query_params += "&chart_id="+interaction_chart_counter;
 
       $(interaction_chart_div).load("/chart/interaction?"+query_params, function(){

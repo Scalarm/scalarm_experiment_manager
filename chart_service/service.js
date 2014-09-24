@@ -4,10 +4,11 @@ var db_retriever = require("./data_retriever.js");
 module.exports = function() {
     var map = {};
     map["/interaction"] = function(parameters, success, error){
-        if(parameters["id"] && parameters["param1"] && parameters["param2"]){
+        if(parameters["id"] && parameters["param1"] && parameters["param2"] && parameters["output"]){
             db_retriever.getInteraction(parameters["id"], 
                                         parameters["param1"], 
-                                        parameters["param2"], function(data) {
+                                        parameters["param2"],
+                                        parameters["output"], function(data) {
                 var object = {};
                 object.content = prepare_interaction_chart_content(parameters, data);
                 success(object);

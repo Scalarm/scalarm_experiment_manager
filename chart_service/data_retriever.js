@@ -12,8 +12,9 @@ var connect = function(success, error){
 
 		var getData = function(id, convertData, error){
 			var filter = {is_done: true, is_error: {'$exists': false}};
+			var fields = {fields: {arguments: 1, values: 1, result: 1}};
 
-			db.collection(COLLECTION_NAME+id).find(filter).toArray(function(err, array){
+			db.collection(COLLECTION_NAME+id).find(filter, fields).toArray(function(err, array){
 				if(err){
 					error(err.toString());
 					return;
@@ -77,22 +78,45 @@ var connect = function(success, error){
 		};
 
 		var getParameters = function(experimentID, success, error) {
-			db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
-				if (err) error(err);
-				if(array[0]){
-					var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
-					parameters = parameters.map(function(param){
-						return {
-									label: param["label"],
-									id:    param["id"]
-							   };
+			var data = {};
+
+			var filter = {is_done: true, is_error: {'$exists': false}};
+			var fields = {fields: {result: 1}};
+
+			db.collection(COLLECTION_NAME+experimentID, function(err, collection) {
+				if(err){
+					error(err.toString());
+				}
+	        	collection.findOne(filter, function(err, item) {
+	        		data["result"] = [];
+	        		if(item){
+	        			for(var k in item.result){
+	        				if(typeof item["result"][k] == "number")
+	        					data["result"].push(k);
+	        			}
+	        		}
+		            db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
+						if (err) error(err.toString());
+						if(array[0]){
+							//TODO - get parameters from all gruops
+							var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
+							data["parameters"] = parameters.map(function(param){
+								return {
+											label: param["label"],
+											id:    param["id"]
+									   };
+							})
+							success(data);
+						}
+						else{
+							error("No such experiment")
+						}
 					})
-					success(parameters);
-				}
-				else{
-					error("No such experiment")
-				}
-			})
+		        });
+			   
+		    });
+
+			
 		};
 
 		var createStreamFor = function(connection, experimentID){
@@ -123,14 +147,12 @@ var connect = function(success, error){
 			 			value: effects[i]
 			 		});
 			 	}
-			 	console.log(data);
 			 	data.sort(function(a,b){ return b.value-a.value });
-			 	console.log(data);
 			 	success(data);
 			}, error);
 		};
 
-		var getInteraction = function(id, param1, param2, success, error){
+		var getInteraction = function(id, param1, param2, outputParam, success, error){
 		  	getData(id, function(array, args, mins, maxes){
 			  	var low_low=array.filter(function(obj) {
 			  		return getValue(obj,param1) === mins[param1]
@@ -162,17 +184,12 @@ var connect = function(success, error){
 					return;
 				}
 				else {
-
-					// console.log("low_low", low_low.result.distance);
-					// console.log("low_high", low_high.result.distance);
-					// console.log("high_low", high_low.result.distance);
-					// console.log("high_high", high_high.result.distance);
 				
 					result = [];
-					result.push(low_low.result.distance,
-								low_high.result.distance, 
-								high_low.result.distance, 
-								high_high.result.distance)
+					result.push(low_low.result[outputParam],
+								low_high.result[outputParam], 
+								high_low.result[outputParam], 
+								high_high.result[outputParam])
 					var data = {};
 					data[param1] = {
 						domain: [mins[param1], maxes[param1]]
