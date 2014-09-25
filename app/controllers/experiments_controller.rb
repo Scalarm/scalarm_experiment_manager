@@ -625,12 +625,22 @@ class ExperimentsController < ApplicationController
 
   def load_simulation
     @simulation = if params['simulation_id']
-                    Simulation.where(id: params['simulation_id']).first
+                    @current_user.simulation_scenarios.where(id: params['simulation_id']).first
                   elsif params['simulation_name']
-                    Simulation.where(name: params['simulation_name']).first
+                    @current_user.simulation_scenarios.where(name: params['simulation_name']).first
                   else
                     nil
                   end
+
+    if @simulation.nil?
+      flash[:error] = t('simulation_scenarios.not_found', { id: (params['simulation_id'] or params['simulation_name']),
+                        user: @current_user.login })
+
+      respond_to do |format|
+        format.html { redirect_to action: :index }
+        format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
+      end
+    end
   end
 
   def input_space_manual_specification(experiment)

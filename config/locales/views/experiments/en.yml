@@ -37,8 +37,8 @@ en:
       share: "This experiment is now shared with user '%{user}'"
       unshare: "This experiment is no longer shared with user '%{user}'"
 
-    not_found: "Experiment with id '%{id}' not found"
-    user_not_found: "User with login '%{user}' not found"
+    not_found: "Experiment with id '%{id}' was not found"
+    user_not_found: "User with login '%{user}' was not found"
     no_id_provided: "You must provide experiment id when calling this method!"
 
     errors:

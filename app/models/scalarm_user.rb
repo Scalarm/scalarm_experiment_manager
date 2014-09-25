@@ -13,6 +13,10 @@ class ScalarmUser < MongoActiveRecord
     Experiment.visible_to(self)
   end
 
+  def simulation_scenarios
+    Simulation.visible_to(self)
+  end
+
   def owned_experiments
     Experiment.where({ user_id: id })
   end
