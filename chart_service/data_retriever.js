@@ -52,14 +52,8 @@ var connect = function(success, error){
 					mins[args[i]] = min(array, args[i]);
 					maxes[args[i]] = max(array, args[i]);
 				}
-				// db.close();
+				
 				convertData(array,args,mins,maxes);
-
-				// console.log("min population_size",mins[0]);
-				// console.log("max population_size",maxes[0]);
-				// console.log("min iteration_count",mins[1]);
-				// console.log("max iteration_count",maxes[1]);
-
 			});
 		};
 
@@ -135,11 +129,11 @@ var connect = function(success, error){
 			})
 		};
 
-		var getPareto = function(id, success, error){
+		var getPareto = function(id, outputParam, success, error){
 			getData(id, function(array, args, mins, maxes){
 				effects = [];
-				effects.push(Math.abs(calculateAverage(array, args[0], maxes[args[0]])-calculateAverage(array, args[0], mins[args[0]])));
-				effects.push(Math.abs(calculateAverage(array, args[1], maxes[args[1]])-calculateAverage(array, args[1], mins[args[1]])));
+				effects.push(Math.abs(calculateAverage(array, args[0], maxes[args[0]], outputParam)-calculateAverage(array, args[0], mins[args[0]], outputParam)));
+				effects.push(Math.abs(calculateAverage(array, args[1], maxes[args[1]], outputParam)-calculateAverage(array, args[1], mins[args[1]], outputParam)));
 				var data = [];
 				for(i in args) {
 					data.push({
@@ -225,12 +219,12 @@ var max = function(array, name) {
     return array.reduce(function(a, b) { return a >= getValue(b,name) ? a : getValue(b,name);}, -Infinity);
 };
 
-function calculateAverage(data, parameter_name, parameter_value) {
+function calculateAverage(data, parameter_name, parameter_value, outputParam) {
 	var array_of_params=data.filter(function(obj) {
 		return getValue(obj, parameter_name) == parameter_value
 	});
 	var average = array_of_params.reduce(function(previous, current) {
-		return previous + current.result.distance;
+		return previous + current.result[outputParam];
 	}, 0) / array_of_params.length;
 	return average;
 };

@@ -5,9 +5,8 @@ block vars
 block script
   script.
     $(function() {
-    	var div_id = "#interaction_chart_#{chart_id}";
+      var div_id = "#interaction_chart_#{chart_id}";
       $(div_id + " .button").on('click', function() {
         $(div_id).remove();
-        pareto_loaded = false;
       });
     });

@@ -1,12 +1,12 @@
 extends ../templateChart
 block vars
-  - var subheader = "Pareto chart"
+  - var subheader = "Pareto chart - " + output
 
 block script
   script.
     $(function() {
-      $('.plot .button').on('click', function() {
-        $("#pareto_chart").empty();
-        pareto_loaded = false;
+      var div_id = "#pareto_chart_#{chart_id}";
+      $(div_id + " .button").on('click', function() {
+        $(div_id).remove();
       });
     });

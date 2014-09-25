@@ -8,14 +8,14 @@
         .small-5.columns
           label(class='inline') Select first parameter
         .small-7.columns
-          select#firstParam
+          select.firstParam
             each parameter in parameters
               option(value=parameter.id)= parameter.label
       .row
         .small-5.columns
           label(class='inline') Select second parameter
         .small-7.columns
-          select#secondParam
+          select.secondParam
             each parameter in parameters
               option(value=parameter.id)= parameter.label
 
@@ -23,7 +23,7 @@
         .small-5.columns
           label(class='inline') Select output parameter
         .small-7.columns
-          select#outputParam
+          select.outputParam
             each parameter in output
               option(value=parameter)= parameter
 
@@ -60,9 +60,9 @@ script.
       $("#interactionModal .charts").prepend(interaction_chart_div);
 
       //TODO - if there's nothing to select -> do nothing
-      var x_axis = $("#firstParam option:selected").val();
-      var y_axis = $("#secondParam option:selected").val();
-      var outputParam = $("#outputParam option:selected").val();
+      var x_axis = $("#interactionModal .firstParam option:selected").val();
+      var y_axis = $("#interactionModal .secondParam option:selected").val();
+      var outputParam = $("#interactionModal .outputParam option:selected").val();
 
       var query_params = "id="+experimentID;
           query_params += "&param1="+x_axis;
