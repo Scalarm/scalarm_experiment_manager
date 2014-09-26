@@ -7,7 +7,7 @@ class InformationService
     @service_url = Rails.application.secrets.information_service_url
     @username = Rails.application.secrets.information_service_user
     @password = Rails.application.secrets.information_service_pass
-    @development = Rails.application.secrets.include?(:information_service_development)
+    @development = !!Rails.application.secrets.information_service_development
   end
 
   def register_service(service, host, port)

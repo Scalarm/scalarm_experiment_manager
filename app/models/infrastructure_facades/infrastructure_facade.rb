@@ -79,9 +79,9 @@ class InfrastructureFacade
       sm_config['information_service_url'] = Rails.application.secrets.sm_information_service_url
     end
 
-    Rails.logger.debug("Development mode set ? : #{Rails.application.secrets.include?(:information_service_development)}")
+    Rails.logger.debug("Development mode set ? : #{!!Rails.application.secrets.include.information_service_development}")
 
-    if Rails.application.secrets.include?(:information_service_development)
+    if !!Rails.application.secrets.information_service_development
       sm_config['development'] = true
     end
 
