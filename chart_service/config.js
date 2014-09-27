@@ -1,4 +1,11 @@
 var config = {
+	server_ip: "172.16.67.121",
+	server_port: 8080,
+	server_prefix: "/chart",		//suffix?
+	db_url: "mongodb://172.16.67.121:27017/scalarm_db"
+}
+
+var panel_config = {
 	groups: [
 	{
 		id: "nasze_2",
@@ -31,4 +38,5 @@ var config = {
 	pretty: true
 };
 
-module.exports = config;
+module.exports.panel_config = panel_config;
+module.exports.config = config;

@@ -32,7 +32,7 @@
           li 
             button.button.radius Load chart
           li
-            img(src='/chart/images/loading.gif', id='busy_interaction', size='16x16', style='display: none')
+            img(src='#{prefix}/images/loading.gif', id='busy_interaction', size='16x16', style='display: none')
 
   .charts
     .scripts
@@ -52,7 +52,7 @@ script.
     $("#interactionModal button").bind("click", function() {
       $("#busy_interaction").show();
       if(!scripts_loaded) {
-        $("#interactionModal .scripts").load("/chart/scripts/interaction");
+        $("#interactionModal .scripts").load("#{prefix}/scripts/interaction");
         scripts_loaded = true;
       }
 
@@ -69,8 +69,7 @@ script.
           query_params += "&param2="+y_axis;
           query_params += "&output="+outputParam;
           query_params += "&chart_id="+interaction_chart_counter;
-
-      $(interaction_chart_div).load("/chart/interaction?"+query_params, function(){
+      $(interaction_chart_div).load("#{prefix}/interaction?"+query_params, function(){
         $("#busy_interaction").hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);

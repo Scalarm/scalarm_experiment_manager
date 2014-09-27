@@ -11,12 +11,15 @@ var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartsMap = require("./service.js")();	//TODO - zienic zeby modul eksportowal mape a nie funkcje, albo przekazywac handlery
 var DataRetriever = require("./data_retriever.js");
 
-var jade = require("jade");
-var locals = require("./config.js");
+var config_file = require("./config.js");
+var config = config_file.config;
 
-var PORT = 8080,
-	EXTERNAL_IP = "172.16.67.121",			//TODO - retrieve external IP
-	ADDRESS = EXTERNAL_IP + "/chart";		//address suffix set in /etc/nginx/conf.d/default.conf
+var jade = require("jade");
+var panel_locals = config_file.panel_config;
+
+var PORT = config.server_port,
+	EXTERNAL_IP = config.server_ip,			//TODO - retrieve external IP
+	ADDRESS = EXTERNAL_IP + config.server_prefix;		//address suffix set in /etc/nginx/conf.d/default.conf
 
 var app = http.createServer(function(req, res) {
 	var parsedUrl = url.parse(req.url);
@@ -135,11 +138,12 @@ function prepare_map_with_requests(parameters) {
 	var map = {};
 	map["panel"] = function(req, res){
 		DataRetriever.getParameters(parameters["id"], function(data) {
-			locals.parameters = data.parameters;
-			locals.output = data.result;
-			locals.address = ADDRESS;
+			panel_locals.parameters = data.parameters;
+			panel_locals.output = data.result;
+			panel_locals.address = ADDRESS;
+			panel_locals.prefix = config.server_prefix;
 			res.writeHead(200);
-			var panel = jade.renderFile("panel.jade", locals);
+			var panel = jade.renderFile("panel.jade", panel_locals);
 			res.write(panel);
 			res.end();
 		},

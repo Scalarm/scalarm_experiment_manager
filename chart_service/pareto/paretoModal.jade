@@ -18,7 +18,7 @@
             button.button.radius Load chart
             //t('charts.load_button')
           li
-            img(src='/chart/images/loading.gif', id='busy_pareto', size='16x16', style='display: none')
+            img(src='#{prefix}/images/loading.gif', id='busy_pareto', size='16x16', style='display: none')
 
 
   .charts
@@ -40,7 +40,7 @@ script.
     $('#pareto_charts_form button').bind('click', function() {
       $('#busy_pareto').show();
       if(!scripts_loaded){
-        $("#paretoModal .scripts").load("/chart/scripts/pareto");
+        $("#paretoModal .scripts").load("#{prefix}/scripts/pareto");
         scripts_loaded = true;
       }
 
@@ -53,7 +53,7 @@ script.
           query_params += "&output="+outputParam;
           query_params += "&chart_id="+pareto_chart_counter;
 
-      $(pareto_chart_div).load("/chart/pareto?"+query_params, function() { 
+      $(pareto_chart_div).load("#{prefix}/pareto?"+query_params, function() { 
         $('#busy_pareto').hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
