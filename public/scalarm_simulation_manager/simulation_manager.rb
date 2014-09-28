@@ -158,7 +158,7 @@ while true
             if File.exist?(File.join(code_base_dir, 'progress_monitor'))
 
               while true
-                progress_monitor_output = %x["#{code_base_dir}/progress_monitor"]
+                progress_monitor_output = %x["#{code_base_dir}/progress_monitor 2>&1"]
                 puts "[progress monitor] script output: #{progress_monitor_output}"
                 IO.write('_stdout.txt', "[progress monitor] script output: #{progress_monitor_output}")
 
@@ -179,7 +179,7 @@ while true
           writer.puts em_url
         end
 
-        executor_output = %x["#{code_base_dir}/executor"]
+        executor_output = %x["#{code_base_dir}/executor 2>&1"]
         puts "Executor output: #{executor_output}"
         IO.write('_stdout.txt', "Executor output: #{executor_output}")
         # 6c.2. killing progress monitor process
@@ -201,7 +201,7 @@ while true
         puts Dir.pwd
 
         if File.exist?("#{code_base_dir}/output_reader")
-          output_reader_output = %x["#{code_base_dir}/output_reader"]
+          output_reader_output = %x["#{code_base_dir}/output_reader 2>&1"]
           puts "Output reader output: #{output_reader_output}"
           IO.write('_stdout.txt', "Output reader output: #{output_reader_output}")
         end
