@@ -27,6 +27,10 @@ class PlGridSchedulerBase
     # pass
   end
 
+  def onsite_monitorable?
+    false
+  end
+
   def prepare_job_executable
     <<-eos
 #!/bin/bash

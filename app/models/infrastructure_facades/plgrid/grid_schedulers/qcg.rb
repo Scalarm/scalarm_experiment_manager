@@ -26,6 +26,10 @@ module QcgScheduler
       self.class.short_name
     end
 
+    def onsite_monitorable?
+      true
+    end
+
     def prepare_job_files(sm_uuid, params)
       execution_dir = if params.include?(:dest_dir)
         "/tmp/#{params[:dest_dir]}"

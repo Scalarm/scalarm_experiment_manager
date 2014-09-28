@@ -7,8 +7,10 @@ class PlGridFacadeTest < MiniTest::Test
   require 'infrastructure_facades/infrastructure_errors'
 
   def setup
-    scheduler = stub_everything
-    @facade = PlGridFacade.new(scheduler)
+    @scheduler = stub_everything 'scheduler'
+    @scheduler_class = stub_everything 'scheduler_class'
+    @facade = PlGridFacade.new(@scheduler_class)
+    @facade.stubs(:scheduler).returns(@scheduler)
   end
 
   def test_schedule_invalid_credentials
@@ -124,6 +126,44 @@ class PlGridFacadeTest < MiniTest::Test
     assert_raises InfrastructureErrors::NoCredentialsError do
       @facade.validate_credentials_for(record)
     end
+  end
+
+  def test_valid_credentials_available_true
+    user_id = stub_everything 'user_id'
+    credentials = stub_everything 'credentials' do
+      stubs(:invalid).returns(false)
+      stubs(:secret_proxy).returns(true)
+    end
+    GridCredentials.stubs(:find_by_user_id).with(user_id).returns(credentials)
+
+    assert @facade.valid_credentials_available?(user_id)
+  end
+
+  def test_enabled_with_monitoring
+    user_id = stub_everything 'user_id'
+
+    @scheduler.stubs(:onsite_monitorable?).returns(true)
+    @facade.stubs(:valid_credentials_available?).returns(false)
+
+    assert @facade.enabled_for_user?(user_id)
+  end
+
+  def test_enabled_with_credentials
+    user_id = stub_everything 'user_id'
+
+    @scheduler.stubs(:onsite_monitorable?).returns(false)
+    @facade.stubs(:valid_credentials_available?).returns(true)
+
+    assert @facade.enabled_for_user?(user_id)
+  end
+
+  def test_enabled_false
+    user_id = stub_everything 'user_id'
+
+    @scheduler.stubs(:onsite_monitorable?).returns(false)
+    @facade.stubs(:valid_credentials_available?).returns(false)
+
+    refute @facade.enabled_for_user?(user_id)
   end
 
 end

@@ -297,16 +297,19 @@ class InfrastructuresController < ApplicationController
     })
   end
 
+  # TODO: check values like enums
   # GET params:
-  # - group (optional)
   # - infrastructure_name
+  # - other_params - Hash
   def get_booster_partial
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
+    facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
     partial_name = (group_name or infrastructure_name)
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
-          infrastructure_name: infrastructure_name
+          infrastructure_name: infrastructure_name,
+          other_params: facade.other_params_for_booster(@current_user.id)
       }
     rescue ActionView::MissingTemplate
       render nothing: true

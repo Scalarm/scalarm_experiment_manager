@@ -38,11 +38,13 @@ class PlGridFacade < InfrastructureFacade
     sm_uuid = SecureRandom.uuid
 
     # prepare locally code of a simulation manager to upload with a configuration file
-    unless additional_params[:onsite_monitoring] == "1"
+    unless additional_params[:onsite_monitoring]
       InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
     end
 
-    credentials = GridCredentials.find_by_user_id(user_id)
+    # credentials =
+    #     using_temp_credentials? ? create_temp_credentials(additional_params[:login], additional_params[:password]) : get_credentials_from_db(user_id)
+
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
@@ -52,7 +54,7 @@ class PlGridFacade < InfrastructureFacade
       record
     end
 
-    if additional_params[:onsite_monitoring] == "1"
+    if additional_params[:onsite_monitoring]
       InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
       bin_pkg_name = 'scalarm_monitoring_linux_x86_64.zip'
       bin_name = 'scalarm_monitoring'
@@ -77,6 +79,18 @@ class PlGridFacade < InfrastructureFacade
     end
 
     records
+  end
+
+  def using_temp_credentials?(params)
+    params.include?(:plgrid_login)
+  end
+
+  def create_temp_credentials(params)
+    creds = GridCredentials.new({login: params})
+  end
+
+  def get_credentials_from_db(user_id)
+    GridCredentials.find_by_user_id(user_id)
   end
 
   def create_record(user_id, experiment_id, sm_uuid, params)
@@ -308,8 +322,22 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    creds = GridCredentials.find_by_query(user_id: user_id)
+    scheduler.onsite_monitorable? or valid_credentials_available?(user_id)
+  end
+
+  def valid_credentials_available?(user_id)
+    creds = GridCredentials.find_by_user_id user_id
     !!(creds and (creds.secret_proxy or not creds.invalid))
+  end
+
+  def force_onsite_monitoring?(user_id)
+    scheduler.onsite_monitorable? and not valid_credentials_available?(user_id)
+  end
+
+  def other_params_for_booster(user_id)
+    {
+        force_onsite_monitoring: force_onsite_monitoring?(user_id)
+    }
   end
 
   # -- Monitoring utils --
