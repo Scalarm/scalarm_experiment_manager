@@ -608,9 +608,21 @@ class Experiment < MongoActiveRecord
     case parameter['parametrizationType']
 
     when 'value'
+      # checking parameters for alpha-numeric characters, '_', '-' and '.'
+      if /^((\w)|(-)|(\.))+$/.match(parameter['value']).nil?
+        raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+      end
+
       parameter_values << parameter['value']
 
     when 'range'
+      # checking parameters for alpha-numeric characters, '_', '-' and '.'
+      [ parameter['type'], parameter['step'], parameter['min'], parameter['max'] ].each do |some_value|
+        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+        end
+      end
+
       step = if parameter['type'] == 'float'
                parameter['step'].to_f
              elsif parameter['type'] == 'integer'
@@ -625,11 +637,25 @@ class Experiment < MongoActiveRecord
       end
 
     when 'gauss'
+      # checking parameters for alpha-numeric characters, '_', '-' and '.'
+      [ parameter['mean'], parameter['variance'] ].each do |some_value|
+        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+        end
+      end
+
       r_interpreter = Rails.configuration.r_interpreter
       r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
       parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
 
     when 'uniform'
+      # checking parameters for alpha-numeric characters, '_', '-' and '.'
+      [ parameter['min'], parameter['max'] ].each do |some_value|
+        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+        end
+      end
+
       r_interpreter = Rails.configuration.r_interpreter
       r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
       parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
@@ -721,6 +747,12 @@ class Experiment < MongoActiveRecord
   def data_frame(parameter_list)
     data_frame_list = parameter_list.map do |parameter_uid|
       parameter = get_parameter_doc(parameter_uid)
+      # checking parameters for alpha-numeric characters, '_', '-' and '.'
+      [ parameter_uid, parameter['min'], parameter['max'], parameter['step'] ].each do |some_value|
+        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+        end
+      end
       "#{parameter_uid}=c(#{parameter['min']}, #{parameter['max']}, #{parameter['step']})"
     end
 
