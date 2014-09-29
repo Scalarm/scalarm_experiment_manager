@@ -55,7 +55,17 @@ class UserControllerController < ApplicationController
 
       flash[:error] = t('password_too_weak')
 
-    else
+    elsif (not @current_user.password_hash.nil?)
+
+      begin
+        ScalarmUser.authenticate_with_password(@current_user.login, params[:current_password])
+      rescue Exception => e
+        flash[:error] = t('password_wrong')
+      end
+
+    end
+
+    if flash[:error].blank?
       @current_user.password = params[:password]
       @current_user.save
 
