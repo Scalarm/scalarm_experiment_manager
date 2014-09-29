@@ -74,10 +74,6 @@ class ExperimentsController < ApplicationController
     send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
   end
 
-  def configurations
-    render json: @experiment.create_result_csv
-  end
-
   def create
     begin
       experiment = prepare_new_experiment
