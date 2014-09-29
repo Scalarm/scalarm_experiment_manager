@@ -27,8 +27,23 @@ var panel_config = {
 		id: "pozostale",
 		name: "Pozostałe",
 		methods: [{
-			name: "Bivariate analysis",
+			name: "Histograms",
 			id: "experiment-analysis-modal",
+			em_class: "histogram-analysis",
+			image: "http://placehold.it/117x71",
+			description: "TODO"
+
+		},{
+			name: "Regression trees",
+			id: "experiment-analysis-modal",
+			em_class: "rtree-analysis",
+			image: "http://placehold.it/117x71",
+			description: "TODO"
+
+		},{
+			name: "Scatter plots",
+			id: "experiment-analysis-modal",
+			em_class: "bivariate-analysis",
 			image: "http://placehold.it/117x71",
 			description: "Bivariate analysis - scatter plot"
 

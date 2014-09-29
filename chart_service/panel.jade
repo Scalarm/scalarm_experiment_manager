@@ -10,9 +10,14 @@ ul(id="searchList")
             dl 
               each method in group.methods
                 li(id=method.name)
-                  a(href="#", data-reveal-id=method.id)= method.name
-                    img(src=method.image)
-                    p= method.description
+                  unless method.em_class
+                    a(href="#", data-reveal-id=method.id)= method.name
+                      img(src=method.image)
+                      p= method.description
+                  else
+                    a(href="#", em-class=method.em_class, data-reveal-id=method.id)= method.name
+                      img(src=method.image)
+                      p= method.description
 
 p Lorem Ipsum jest tekstem stosowanym jako przykładowy wypełniacz w przemyśle poligraficznym. Został po raz pierwszy użyty w XV w. przez nieznanego drukarza do wypełnienia tekstem próbnej książki. Pięć wieków później zaczął być używany przemyśle elektronicznym, pozostając praktycznie niezmienionym. Spopularyzował się w latach 60. XX w. wraz z publikacją arkuszy Letrasetu, zawierających fragmenty Lorem Ipsum, a ostatnio z zawierającym różne wersje Lorem Ipsum oprogramowaniem przeznaczonym do realizacji druków na komputerach osobistych, jak Aldus PageMaker
 
@@ -27,7 +32,6 @@ script.
     $('#searchList li').each(function(){
       ids.push($(this).attr("id"));
     });
-    console.log(ids);
 
     $('#searchBox').autocomplete({
       source: ids,
@@ -51,8 +55,12 @@ script.
     });
 
     
-    $("[data-reveal-id=experiment-analysis-modal]").on("click", function(){
-      console.log(this);
+    $("#searchList [data-reveal-id=experiment-analysis-modal]").on("click", function(){
+      var modalIdName = $(event.currentTarget).attr('data-reveal-id');
+      var className = $(event.currentTarget).attr('em-class');
+
+      $("#" + modalIdName + " .content").hide();
+      $("#" + modalIdName + " ." + className + "-content").show();
     })
 
     $(document).foundation({
