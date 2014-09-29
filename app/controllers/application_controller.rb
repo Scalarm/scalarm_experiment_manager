@@ -38,7 +38,16 @@ class ApplicationController < ActionController::Base
   end
 
   def validate_params(mode, *param_names)
-    regexp = /^(\w|(-))+$/
+    regexp = case mode
+               when :default
+                 /^(\w|(-))+$/
+
+               when :openid_id
+                 /^(\w|(-)|(\.)|(:)|(\/)|(=))+$/
+
+               else
+                 /^$/
+             end
 
     param_names.each do |param_name|
       if params.include?(param_name) and regexp.match(params[param_name]).nil?

@@ -30,6 +30,7 @@ module GoogleOpenID
 
   # Action for callback from Google OpenID.
   def openid_callback_google
+    validate_params(:openid_id, "openid.claimed_id", "openid.identity")
     Rails.logger.debug("Google OpenID callback with parameters: #{params}")
 
     parameters = params.reject{|k,v|request.path_parameters[k]}

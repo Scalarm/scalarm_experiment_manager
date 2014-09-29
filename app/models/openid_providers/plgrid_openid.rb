@@ -35,6 +35,8 @@ module PlGridOpenID
 
   # Action for callback from PL-Grid OpenID.
   def openid_callback_plgrid
+    validate_params(:openid_id, "openid.claimed_id", "openid.identity")
+
     Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")
 
     parameters = params.reject{|k,v|request.path_parameters[k]}
