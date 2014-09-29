@@ -79,6 +79,8 @@ class ExperimentsController < ApplicationController
   end
 
   def create
+    validate_params(:default, :replication_level, :execution_time_constraint)
+
     begin
       experiment = prepare_new_experiment
 
@@ -293,6 +295,8 @@ class ExperimentsController < ApplicationController
   end
 
   def extend_input_values
+    validate_params(:default, :param_name, :range_min, :range_max, :range_step)
+
     parameter_uid = params[:param_name]
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
@@ -332,6 +336,8 @@ class ExperimentsController < ApplicationController
   end
 
   def intermediate_results
+    validate_params(:default, :simulations)
+
     unless @experiment.parameters.blank?
       arguments = @experiment.parameters.flatten
 
@@ -379,6 +385,8 @@ class ExperimentsController < ApplicationController
   end
 
   def change_scheduling_policy
+    validate_params(:default, :scheduling_policy)
+
     new_scheduling_policy = params[:scheduling_policy]
 
     @experiment.scheduling_policy = new_scheduling_policy
@@ -483,6 +491,8 @@ class ExperimentsController < ApplicationController
   end
 
   def histogram
+    validate_params(:default, :moe_name)
+
     if params[:moe_name].blank?
       render inline: ""
     else
@@ -491,6 +501,8 @@ class ExperimentsController < ApplicationController
   end
 
   def scatter_plot
+    validate_params(:default, :x_axis, :y_axis)
+
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
@@ -500,6 +512,8 @@ class ExperimentsController < ApplicationController
   end
 
   def regression_tree
+    validate_params(:default, :moe_name)
+
     if params[:moe_name].blank?
       render inline: ""
     else
@@ -509,6 +523,8 @@ class ExperimentsController < ApplicationController
   end
 
   def parameter_values
+    validate_params(:default, :param_name)
+
     @parameter_uid = params[:param_name]
 
     @parameter_uid, @parametrization_type = @experiment.parametrization_of(@parameter_uid)
@@ -527,6 +543,8 @@ class ExperimentsController < ApplicationController
   end
 
   def share
+    validate_params(:default, :mode, :id)
+
     @experiment, @user = nil, nil
 
     if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
@@ -599,6 +617,8 @@ class ExperimentsController < ApplicationController
   private
 
   def load_experiment
+    validate_params(:default, :id)
+
     @experiment = nil
 
     if params.include?(:id)
@@ -628,6 +648,8 @@ class ExperimentsController < ApplicationController
   end
 
   def load_simulation
+    validate_params(:default, :simulation_id, :simulation_name)
+
     @simulation = if params['simulation_id']
                     @current_user.simulation_scenarios.where(id: params['simulation_id']).first
                   elsif params['simulation_name']

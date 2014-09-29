@@ -287,6 +287,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name (optional)
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
+    validate_params(:default, :infrastructure_name, :experiment_id)
+
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
 
@@ -301,6 +303,8 @@ class InfrastructuresController < ApplicationController
   # - group (optional)
   # - infrastructure_name
   def get_booster_partial
+    validate_params(:default, :infrastructure_name)
+
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
     partial_name = (group_name or infrastructure_name)
@@ -316,6 +320,8 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_partial
+    validate_params(:default, :infrastructure_name)
+
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/#{params[:infrastructure_name]}")
     rescue ActionView::MissingTemplate => exc
@@ -327,6 +333,8 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_table_partial
+    validate_params(:default, :infrastructure_name)
+
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/tables/#{params[:infrastructure_name]}")
     rescue ActionView::MissingTemplate => exc
@@ -339,6 +347,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - record_id
   def get_resource_status
+    validate_params(:default, :infrastructure_name, :record_id)
+
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       record = get_sm_record(params[:record_id], facade)

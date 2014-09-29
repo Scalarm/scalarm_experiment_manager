@@ -36,4 +36,15 @@ class ApplicationController < ActionController::Base
     #Rails.logger.info("[monitoring][#{controller_name}][#{action_name}]#{processing_time}")
     @@probe.send_measurement(controller_name, action_name, processing_time)
   end
+
+  def validate_params(mode, *param_names)
+    regexp = /^(\w|(-))+$/
+
+    param_names.each do |param_name|
+      if params.include?(param_name) and regexp.match(params[param_name]).nil?
+        raise SecurityError.new("Insecure parameter given - #{param_name}")
+      end
+    end
+  end
+
 end
