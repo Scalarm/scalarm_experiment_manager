@@ -48,7 +48,13 @@ class UserControllerController < ApplicationController
 
   def change_password
     if params[:password] != params[:password_repeat]
+
       flash[:error] = t('password_repeat_error')
+
+    elsif params[:password].length < 6 or (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
+
+      flash[:error] = t('password_too_weak')
+
     else
       @current_user.password = params[:password]
       @current_user.save

@@ -41,6 +41,7 @@ en:
   logout_success: "You have log out successfully"
   password_changed: "You have changed your password."
   password_repeat_error: "'Password' and 'Repeat password' must be equal!"
+  password_too_weak: "Password should have at least 6 characters and must include at least one lowercase letter, one uppercase letter, and one digit!"
 
   openid:
       provider_discovery_failed: "OpenID discovery failed for %{provider_url}: %{error}"
