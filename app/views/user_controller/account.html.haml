@@ -29,19 +29,19 @@
         .small-5.columns
           %label.right.inline(for='current_password')= t('.current_password')
         .small-4.columns.end
-          = password_field_tag 'current_password', '', class: 'inline'
+          = password_field_tag 'current_password', '', class: 'inline', autocomplete: :off
 
       .row
         .small-5.columns
           %label.right.inline(for='password')= t('.password')
         .small-4.columns.end
-          = password_field_tag 'password', '', class: 'inline'
+          = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
       .row
         .small-5.columns
           %label.right.inline(for='password_repeat')= t('.repeat_password')
         .small-4.columns.end
-          = password_field_tag 'password_repeat', '', class: 'inline'
+          = password_field_tag 'password_repeat', '', class: 'inline', autocomplete: :off
 
       .row
         .small-6.small-centered.columns(style="text-align:center;")
