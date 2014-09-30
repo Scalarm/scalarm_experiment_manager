@@ -10,6 +10,8 @@ class ApplicationController < ActionController::Base
                                            :login_openid_plgrid, :openid_callback_plgrid]
   before_filter :start_monitoring
   after_filter :stop_monitoring
+  # due to security reasons
+  before_filter :set_cache_buster
 
   @@probe = MonitoringProbe.new
 
@@ -54,6 +56,14 @@ class ApplicationController < ActionController::Base
         raise SecurityError.new("Insecure parameter given - #{param_name}")
       end
     end
+  end
+
+
+  # due to security reasons
+  def set_cache_buster
+    response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "Fri, 01 Jan 1990 00:00:00 GMT"
   end
 
 end
