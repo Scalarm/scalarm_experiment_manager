@@ -63,6 +63,9 @@ class PlGridFacade < InfrastructureFacade
       credentials.scp_session do |scp|
         scp.upload! File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'), '.'
         scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', bin_pkg_name), '.'
+        if Rails.application.secrets.certificate_path
+          scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
+        end
       end
 
       credentials.ssh_session do |ssh|
