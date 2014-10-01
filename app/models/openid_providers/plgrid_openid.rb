@@ -122,7 +122,7 @@ module PlGridOpenID
   end
 
   def self.strip_identity(identity_uri)
-    m = identity_uri.match(/https:\/\/openid\.plgrid\.pl\/(\w+)/)
+    m = identity_uri.match(/^https:\/\/openid\.plgrid\.pl\/(\w+)$/)
     m ? m[1] : nil
   end
 end
