@@ -40,6 +40,7 @@ unless Rails.application.secrets.disable_load_balancer_registration
       puts "Load balancer message: #{res.body}"
     rescue StandardError, Timeout::Error => e
       puts "Registration to load balancer failed: #{e.message}"
+      raise
     end
   end
 
