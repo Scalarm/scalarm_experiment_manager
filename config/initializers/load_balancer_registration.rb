@@ -29,7 +29,7 @@ unless Rails.application.secrets.include?(:disable_load_balancer_registration)
   if message != 'error'
     port = '3000'
     if Rails.application.secrets.include?(:port)
-      port = :port
+      port = Rails.application.secrets[:port]
     end
 
     load_balancer_address = "https://#{message.strip}/experiment_managers/register"
