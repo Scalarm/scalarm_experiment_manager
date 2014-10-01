@@ -3,7 +3,7 @@ require 'socket'
 require 'ipaddr'
 require 'openssl'
 
-unless Rails.application.secrets.include?(:disable_load_balancer_registration)
+unless Rails.application.secrets.disable_load_balancer_registration
   MULTICAST_ADDR, PORT  = Rails.application.secrets[:multicast_address].split(':')
   BIND_ADDR = '0.0.0.0'
   message = 'error'
@@ -27,10 +27,7 @@ unless Rails.application.secrets.include?(:disable_load_balancer_registration)
   end
 
   if message != 'error'
-    port = '3000'
-    if Rails.application.secrets.include?(:port)
-      port = Rails.application.secrets[:port]
-    end
+    port = (Rails.application.secrets[:port] or '3000')
 
     load_balancer_address = "https://#{message.strip}/experiment_managers/register"
     uri = URI.parse(URI.encode(load_balancer_address))
