@@ -18,6 +18,11 @@ class UserControllerController < ApplicationController
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
+    @user_session = UserSession.find_by_session_id(session[:user])
+    @user_session = UserSession.new(session_id: session[:user]) if @user_session.nil?
+    @user_session.last_update = Time.now
+    @user_session.save
+
     #redirect_to url_for :controller => session[:intended_controller], :action => session[:intended_action]
     redirect_to root_path
   end
@@ -59,6 +64,8 @@ class UserControllerController < ApplicationController
 
   def logout
     reset_session
+    @user_session.destroy unless @user_session.blank?
+
     flash[:notice] = t('logout_success')
 
     redirect_to login_path

@@ -21,6 +21,8 @@ class ApplicationController < ActionController::Base
     Rails.logger.debug('[authentication] failed -> redirect')
 
     reset_session
+    @user_session.destroy unless @user_session.nil?
+
     flash[:error] = t('login.required')
     session[:intended_action] = action_name
     session[:intended_controller] = controller_name
