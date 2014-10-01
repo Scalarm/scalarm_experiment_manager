@@ -80,6 +80,7 @@ class ExperimentsController < ApplicationController
 
   def create
     validate_params(:default, :replication_level, :execution_time_constraint)
+    validate_params(:json, :experiment_input, :parameters_constraints, :doe)
 
     begin
       experiment = prepare_new_experiment
@@ -136,6 +137,9 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_experiment_size
+    validate_params(:default, :replication_level, :execution_time_constraint)
+    validate_params(:json, :experiment_input, :parameters_constraints, :doe)
+
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
     @experiment_input = Experiment.prepare_experiment_input(@simulation, Utils.parse_json_if_string(params['experiment_input']), doe_info)
@@ -161,6 +165,8 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_imported_experiment_size
+    validate_params(:default, :replication_level, :execution_time_constraint)
+
     parameters_to_include = params.keys.select{ |parameter|
       parameter.start_with?('param_') and params[parameter] == '1'
     }.map{ |parameter| parameter.split('param_').last }
@@ -670,6 +676,8 @@ class ExperimentsController < ApplicationController
   end
 
   def input_space_manual_specification(experiment)
+    validate_params(:json, :doe, :experiment_input)
+
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
 
     experiment.doe_info = doe_info
@@ -705,6 +713,9 @@ class ExperimentsController < ApplicationController
   end
 
   def prepare_new_experiment
+    validate_params(:default, :replication_level, :execution_time_constraint)
+    validate_params(:json, :parameters_constraints)
+
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
     parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])

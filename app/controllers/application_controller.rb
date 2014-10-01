@@ -47,6 +47,9 @@ class ApplicationController < ActionController::Base
                when :openid_id
                  /^(\w|(-)|(\.)|(:)|(\/)|(=))+$/
 
+               when :json
+                 /^(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))+$/
+
                else
                  /^$/
              end
