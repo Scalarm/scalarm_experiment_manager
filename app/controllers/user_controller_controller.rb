@@ -25,14 +25,32 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
+        requested_user = ScalarmUser.find_by_login(params[:username])
+        raise t('user_controller.login.user_not_found') if requested_user.nil?
+
+        if requested_user.banned_infrastructure?('scalarm')
+          raise t('user_controller.login.login_banned', time: requested_user.ban_expire_time('scalarm'))
+        end
+
         session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id
-        #session[:grid_credentials] = GridCredentials.find_by_user_id(session[:user])
+
+        if requested_user.credentials_failed and requested_user.credentials_failed.include?('scalarm')
+          requested_user.credentials_failed['scalarm'] = []
+          requested_user.save
+        end
 
         successful_login
       rescue Exception => e
         Rails.logger.debug("Exception on login: #{e}\n#{e.backtrace.join("\n")}")
         reset_session
         flash[:error] = e.to_s
+
+        unless requested_user.nil?
+          requested_user.credentials_failed = {} unless requested_user.credentials_failed
+          requested_user.credentials_failed['scalarm'] = [] unless requested_user.credentials_failed.include?('scalarm')
+          requested_user.credentials_failed['scalarm'] << Time.now
+          requested_user.save
+        end
 
         redirect_to login_path
       end
