@@ -13,6 +13,10 @@ class ScalarmUser < MongoActiveRecord
     Experiment.visible_to(self)
   end
 
+  def simulation_scenarios
+    Simulation.visible_to(self)
+  end
+
   def owned_experiments
     Experiment.where({ user_id: id })
   end
@@ -45,7 +49,7 @@ class ScalarmUser < MongoActiveRecord
     user = ScalarmUser.find_by_login(login)
 
     if user.nil? || user.password_salt.nil? || user.password_hash.nil?  || Digest::SHA256.hexdigest(password + user.password_salt) != user.password_hash
-      raise 'Bad login or password'
+      raise I18n.t('user_controller.login.bad_login_or_pass')
     end
 
     user

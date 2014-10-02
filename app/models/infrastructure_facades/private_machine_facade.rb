@@ -46,7 +46,7 @@ class PrivateMachineFacade < InfrastructureFacade
     ppn = shared_ssh_session(machine_creds).exec!("cat /proc/cpuinfo | grep MHz | wc -l").strip
     ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
-    instances_count.times do
+    (1..instances_count).map do
       record = PrivateMachineRecord.new(
           user_id: user_id,
           experiment_id: experiment_id,
@@ -62,9 +62,9 @@ class PrivateMachineFacade < InfrastructureFacade
 
       record.initialize_fields
       record.save
+
+      record
     end
-    ['ok', I18n.t('infrastructure_facades.private_machine.scheduled_info', count: instances_count,
-                        machine_name: machine_creds.machine_desc)]
   end
 
   def add_credentials(user, params, session)

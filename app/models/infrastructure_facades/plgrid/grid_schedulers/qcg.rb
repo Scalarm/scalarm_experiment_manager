@@ -192,10 +192,10 @@ module QcgScheduler
     # only for the on-site monitoring
     def get_log_cmd(sm_record)
       [
-        #"echo '--- QCG info ---'", sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
-        "echo '--- STDOUT ---'", "tail -25 #{job.log_path}.out",
-        "echo '--- STDOUT ---'", "tail -25 #{job.log_path}.err",
-        "rm #{job.log_path}.err", "rm #{job.log_path}.out"
+        "echo '--- QCG info ---'", sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
+        "echo '--- STDOUT ---'", "tail -25 #{sm_record.log_path}.out",
+        "echo '--- STDOUT ---'", "tail -25 #{sm_record.log_path}.err",
+        "rm #{sm_record.log_path}.err", "rm #{sm_record.log_path}.out"
       ].join(';')
     end
 

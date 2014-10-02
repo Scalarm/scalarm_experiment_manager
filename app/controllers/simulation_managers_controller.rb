@@ -28,6 +28,37 @@ class SimulationManagersController < ApplicationController
     end
   end
 
+  # TODO refactor - reuse envelope, handle exceptions
+
+  # GET enveloped hash of single simulation manager
+  def show
+    result = { status: 'ok' }
+
+    if @infrastructure_facade.blank?
+      result[:status] = 'error'
+      result[:msg] = t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure])
+    else
+      record = @infrastructure_facade.get_sm_record_by_id(params[:id])
+      # TODO: infrastructure independent
+      # record = nil
+      # InfrastructureFacadeFactory.get_all_infrastructures.each do |infrastructure|
+      #   record = infrastructure.get_sm_records(params[:id], @user_id)
+      #   break if record
+      # end
+      if record and record.user_id == @user_id
+        result[:record] = record.to_h
+      else
+        result[:status] = 'error'
+      end
+    end
+
+    if result[:status] == 'ok'
+      render json: result
+    else
+      render json: result, status: 400
+    end
+  end
+
   def code
     if @infrastructure_facade.blank?
       render inline: t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure]), status: 400

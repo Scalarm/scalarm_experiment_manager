@@ -41,6 +41,9 @@ en:
   logout_success: "You have log out successfully"
   password_changed: "You have changed your password."
   password_repeat_error: "'Password' and 'Repeat password' must be equal!"
+  password_too_weak: "Password should have at least 6 characters and must include at least one lowercase letter, one uppercase letter, and one digit!"
+  password_wrong: "You didn't provide your current password!"
+
 
   openid:
       provider_discovery_failed: "OpenID discovery failed for %{provider_url}: %{error}"
@@ -178,7 +181,6 @@ en:
     job_submission:
       authentication_failed: "An exception occured during authentication - %{ex}. Please check if the host is available and the username and password are correct."
       error: "An exception occured - %{ex}. Please check if the host is available and the username and password are correct."
-      ok: "You have scheduled %{instances_count} jobs on PL-Grid"
       no_credentials: You have to provide Grid credentials first!
     job_desc:
       job_id: "Job ID"

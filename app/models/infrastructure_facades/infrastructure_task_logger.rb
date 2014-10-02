@@ -6,7 +6,7 @@ end
 
 class InfrastructureTaskLogger
   @@mutex = Mutex.new
-  @@infrastructures_logger = Logger.new("#{Rails.root}/log/infrastructures.log")
+  @@infrastructures_logger = Logger.new("#{Rails.root}/log/infrastructures.log", 5, 1024*1024*100)
   @@infrastructures_logger.formatter = InfrastructureTaskFormatter.new
 
   def self.logger

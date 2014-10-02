@@ -23,6 +23,11 @@ en:
       step_3: "3. Start an experiment"
       step_4: "4. Go to running experiments"
       step_5: "5. Go to historical experiments"
+    login:
+      user_not_found: The provided username is invalid
+      login_banned: "You need to wait till %{time} to try to login again."
+
+      bad_login_or_pass: "Bad login or password"
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"
