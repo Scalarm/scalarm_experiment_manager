@@ -60,4 +60,18 @@ class PlGridOpenIDTest < MiniTest::Test
     refute_nil PlGridOpenID::get_or_create_user(dn, plglogin)
   end
 
+  def test_plgoid_dn_to_browser_dn
+    plg_dn = 'CN=plgjliput,CN=Jakub Liput,O=AGH,O=Uzytkownik,O=PL-Grid,C=PL'
+    browser_dn = '/C=PL/O=PL-Grid/O=Uzytkownik/O=AGH/CN=Jakub Liput/CN=plgjliput'
+
+    assert_equal browser_dn, PlGridOpenID.plgoid_dn_to_browser_dn(plg_dn)
+  end
+
+  def test_browser_dn_to_plgoid_dn
+    plg_dn = 'CN=plgjliput,CN=Jakub Liput,O=AGH,O=Uzytkownik,O=PL-Grid,C=PL'
+    browser_dn = '/C=PL/O=PL-Grid/O=Uzytkownik/O=AGH/CN=Jakub Liput/CN=plgjliput'
+
+    assert_equal plg_dn, PlGridOpenID.browser_dn_to_plgoid_dn(browser_dn)
+  end
+
 end
