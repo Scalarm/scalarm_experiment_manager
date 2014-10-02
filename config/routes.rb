@@ -17,6 +17,7 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'logout' => 'user_controller#logout'
   get 'user_controller/account'
   post 'user_controller/change_password'
+  get 'status' => 'user_controller#status'
 
   # OpenID
   get 'login/login_openid_google' => 'user_controller#login_openid_google'
