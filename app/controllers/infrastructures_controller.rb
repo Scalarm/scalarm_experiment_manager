@@ -49,6 +49,7 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
+    validate_params(:default, :queue, :infrastructure_name, :job_counter)
     infrastructure = nil
     infrastructure_name = '?'
 

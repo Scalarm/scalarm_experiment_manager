@@ -96,6 +96,7 @@ class PlGridFacade < InfrastructureFacade
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
     job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?
+    job.queue_name = params['queue'] unless params['queue'].blank?
 
     job.initialize_fields
 

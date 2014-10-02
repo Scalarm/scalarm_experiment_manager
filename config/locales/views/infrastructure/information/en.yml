@@ -44,6 +44,7 @@ en:
       submit: Submit
       remove_credentials: Remove credentials
       onsite_monitoring: Enable job monitoring on the infrastructure side
+      queue: Queue name (only if you really know what you are doing)
 
       launched_at: 'Launched at'
       time_limit: 'Time limit'
