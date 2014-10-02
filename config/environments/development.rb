@@ -18,6 +18,7 @@ ScalarmExperimentManager::Application.configure do
 
   # Print deprecation notices to the Rails logger.
   #config.active_support.deprecation = :log
+  config.logger = Logger.new(Rails.root.join("log", Rails.env + ".log"), 5, 1024*1024*100)
 
   # Raise an error on page load if there are pending migrations
   #config.active_record.migration_error = :page_load
