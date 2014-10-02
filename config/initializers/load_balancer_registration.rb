@@ -35,9 +35,19 @@ unless Rails.application.secrets.disable_load_balancer_registration
     load_balancer_address = "#{scheme}://#{message.strip}/register"
 
     begin
-      res = Net::HTTP.post_form(URI.parse(URI.encode(load_balancer_address)),
-                                {'address'=> "localhost:#{port}", 'name'=>'ExperimentManager'})
-      puts "Load balancer message: #{res.body}"
+      uri = URI(URI.encode(load_balancer_address))
+
+      req = Net::HTTP::Post.new(uri)
+      req.set_form_data(address: "localhost:#{port}", name: 'ExperimentManager')
+
+      if scheme == 'https'
+        ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+      else
+        ssl_options = {}
+      end
+      response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
+
+      puts "Load balancer message: #{response.body}"
     rescue StandardError, Timeout::Error => e
       puts "Registration to load balancer failed: #{e.message}"
       raise
