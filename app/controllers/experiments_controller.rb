@@ -74,10 +74,6 @@ class ExperimentsController < ApplicationController
     send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
   end
 
-  def configurations
-    render json: @experiment.create_result_csv
-  end
-
   def create
     validate_params(:default, :replication_level, :execution_time_constraint)
     validate_params(:json, :experiment_input, :parameters_constraints, :doe)

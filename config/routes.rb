@@ -17,6 +17,7 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'logout' => 'user_controller#logout'
   get 'user_controller/account'
   post 'user_controller/change_password'
+  get 'status' => 'user_controller#status'
 
   # OpenID
   get 'login/login_openid_google' => 'user_controller#login_openid_google'
@@ -49,7 +50,6 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :next_simulation
       get   :parameter_values
       get   :file_with_configurations
-      get   :configurations
 
       post  :stop
       post  :destroy
