@@ -725,8 +725,7 @@ class Experiment < MongoActiveRecord
 
       when '2k-1'
         if parameters_for_doe.size < 3
-          #TODO -- change i18n text message or create new
-          raise 'experiments.errors.too_few_parameters'
+          raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 2))
         else
           values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
             parameter = get_parameter_doc(parameter_uid)
@@ -747,8 +746,7 @@ class Experiment < MongoActiveRecord
 
       when '2k-2'
         if parameters_for_doe.size < 5
-          #TODO -- change i18n text message or create new
-          raise 'experiments.errors.too_few_parameters'
+          raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 4))
         else
           values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
             parameter = get_parameter_doc(parameter_uid)
@@ -770,7 +768,7 @@ class Experiment < MongoActiveRecord
 
       when *%w(latinHypercube fractionalFactorial nolhDesign)
         if parameters_for_doe.size < 2
-          raise 'experiments.errors.too_few_parameters'
+          raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 1))
         else
           design_file_path = File.join(Rails.root, 'public', 'designs.R')
           Rails.logger.info("""arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}')

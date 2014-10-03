@@ -43,7 +43,9 @@ en:
 
     errors:
       zero_size: The size of an experiment must be greater than 0!
-      too_few_parameters: Selected DoE method requires more than 1 parameter.
+      too_few_parameters: 
+         one: Selected DoE method requires more than 1 parameter.
+         other: "Selected DoE method requires more than %{count} parameters."
 
     edit:
       link: "Edit"
