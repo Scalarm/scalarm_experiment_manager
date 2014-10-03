@@ -29,5 +29,4 @@ class ScatterPlotChart
       end
     end
   end
-
 end

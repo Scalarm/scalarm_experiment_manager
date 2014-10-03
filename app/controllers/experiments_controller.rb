@@ -509,7 +509,19 @@ class ExperimentsController < ApplicationController
       render inline: ""
     else
       @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+      Rails.logger.debug("#{@chart.x_axis},#{@chart.y_axis}")
       @chart.prepare_chart_data
+    end
+  end
+
+  def scatter_plot_series
+    if params[:x_axis].blank? or params[:y_axis].blank?
+      render inline: ""
+    else
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+      Rails.logger.debug("#{@chart.x_axis},#{@chart.y_axis}")
+      @chart.prepare_chart_data
+      render json: @chart.chart_data
     end
   end
 

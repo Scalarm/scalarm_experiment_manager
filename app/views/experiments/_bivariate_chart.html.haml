@@ -8,14 +8,42 @@
     -#= button_to_function "Refresh" ,
     -#  "refresh_bivariate_chart('#{@chart.experiment.id}', '#{@chart.x_axis}', '#{@chart.y_axis}', '#{experiments_refresh_bivariate_analysis_chart_path}')",
     -#  :class => "nice_button"
-    %span.button= t('charts.hide_button')
+    %span.button.hide= t('charts.hide_button')
+    = form_tag '', class: '' do
+      .small-5.columns
+        = label_tag :new_series, "New series: ", class: 'inline'
+      .small-5.columns
+        = select_tag 'new_series', '', { class: 'moes_and_params_list' }
+      .small-2.columns
+        %ul.inline-list
+          %li= submit_tag "Add series", class: 'button radius'
 
   %br
   .bivariate_chart_container{ id: "bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}" }
 
   :javascript
     $(function() {
-      $('.plot .button').on('click', function() {
+      $('.plot .button.hide').on('click', function() {
         $(this).parent().parent().remove()
       });
+      $("#new_series").html($("#x_axis").html());
+
+      var y_axis = $('#new_series option:selected').val();
+      console.log(y_axis)
+
+      $("#bivariate_charts input[type=submit]").bind("click", function() {
+        $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
+                {"x_axis": "#{@chart.x_axis}", "y_axis": y_axis},
+                function(data) {
+                  console.log(data);
+                  var series = []
+                  for (key in data) {
+                    for(ind in data[key])
+                      series.push([parseInt(key), parseInt(data[key][ind])])
+                  }
+                  console.log(series);
+                  $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({data: series});
+        });
+        return false;
+      })
     });
