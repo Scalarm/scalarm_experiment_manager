@@ -56,7 +56,9 @@ class ScalarmUser < MongoActiveRecord
   end
 
   def self.authenticate_with_certificate(dn)
-    user = ScalarmUser.find_by_dn(dn)
+    # backward-compatibile: there are some dn's formatted by PL-Grid OpenID in database - try to convert
+    user = (ScalarmUser.find_by_dn(dn) or
+        ScalarmUser.find_by_dn(PlGridOpenID.browser_dn_to_plgoid_dn(dn)))
 
     if user.nil?
       raise "Authentication failed: user with DN = #{dn} not found"

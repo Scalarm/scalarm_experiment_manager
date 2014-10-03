@@ -52,6 +52,14 @@ module PlGridOpenID
 
   end
 
+  def self.plgoid_dn_to_browser_dn(dn)
+    '/' + dn.split(',').reverse.join('/')
+  end
+
+  def self.browser_dn_to_plgoid_dn(dn)
+    dn.split('/').slice(1..-1).reverse.join(',')
+  end
+
   private
 
   def openid_callback_plgrid_success(oidresp, params)
