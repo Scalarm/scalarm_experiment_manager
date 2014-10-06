@@ -3,7 +3,10 @@ require 'socket'
 require 'ipaddr'
 require 'openssl'
 
-unless Rails.application.secrets.disable_load_balancer_registration
+unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
+  unless Rails.application.secrets.include? :multicast_address
+    raise StandardError.new("multicast_address is missing in secrets configuration")
+  end
   MULTICAST_ADDR, PORT  = Rails.application.secrets[:multicast_address].split(':')
   BIND_ADDR = '0.0.0.0'
   message = 'error'
