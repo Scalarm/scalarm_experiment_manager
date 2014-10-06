@@ -3,9 +3,12 @@ class window.ParameterConstraintsManager
     @rangeParameters = []
     document.addEventListener("parametrizationTypeChange", @parametrizationTypeChangeListener, false)
 
+    $("#addConstraint").hide()
+
     $("#addConstraint").on "click", () =>
       sourceParameter = $(".constraint-specs #source-parameter :selected")
       targetParameter = $(".constraint-specs #target-parameter :selected")
+    
 
       $("#constraints-list").append($("#constraintTemplate").tmpl([
         sourceParameter:
@@ -43,7 +46,9 @@ class window.ParameterConstraintsManager
     if (event.detail.parametrizationType == "range" || event.detail.parametrizationType == "custom") &&
     (parameter.parameter.type == "integer" || parameter.parameter.type == "float")
 
-      @addRangeParameter(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
+      $("#addConstraint").show()    
+      if !@isParameterInRangeParameters(parameterId)
+        @addRangeParameter(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
 
     else
 #    remove already parameter if already chosen
@@ -52,6 +57,8 @@ class window.ParameterConstraintsManager
 #          $(bulletItem).find("a.button").click()
   #    remove the parameter from the parameter list
         @removeRangeParameter(parameterId)
+        if @rangeParameters.length is 0
+          $("#addConstraint").hide()
 
     @updateSelectElements()
 
@@ -100,3 +107,10 @@ class window.ParameterConstraintsManager
 #      option = $("option").val(p.fullId).text(parameterLabel)
       sourceParametersElement.append(option.clone())
       targetParametersElement.append(option.clone())
+
+
+  isParameterInRangeParameters: (parameterId) =>
+    for parameter in @rangeParameters
+      if parameter.fullId == parameterId
+        return true
+    return false
