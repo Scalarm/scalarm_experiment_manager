@@ -297,7 +297,7 @@ class ExperimentsController < ApplicationController
   end
 
   def extend_input_values
-    validate_params(:default, :param_name, :range_min, :range_max, :range_step)
+    validate_params(:default, :param_name )#, :range_min, :range_max, :range_step)
 
     parameter_uid = params[:param_name]
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
