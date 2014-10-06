@@ -281,13 +281,14 @@ class Experiment < MongoActiveRecord
   def create_result_csv_for(moe_name)
 
     CSV.generate do |csv|
-      csv << self.parameters.flatten + [ moe_name ]
+      csv << self.parameters.flatten + [moe_name]
 
-      simulation_runs.where({ is_done: true, is_error: {'$exists' => false} }, { fields: %w(values result) }).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result)}).each do |simulation_run|
         next if not simulation_run.result.has_key?(moe_name)
 
-        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
-        csv << values + [ simulation_run.result[moe_name] ]
+        values = simulation_run.values.split(',').map { |x| '%g' % x.to_f }
+        #Rails.logger.debug("Values: #{values.inspect}")
+        csv << values + [simulation_run.result[moe_name]]
       end
     end
 
@@ -401,7 +402,7 @@ class Experiment < MongoActiveRecord
       csv << self.parameters.flatten + moes
 
       simulation_runs.where({ is_done: true, is_error: {'$exists' => false} }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_run|
-        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
+        values = simulation_run.values.split(',').map{|x| '%g' % x.to_f}
         # getting values of results in a specific order
         moe_values = moes.map{|moe_name| simulation_run.result[moe_name] || '' }
 
