@@ -11,9 +11,9 @@
     %span.button.hide= t('charts.hide_button')
     = form_tag '', class: '' do
       .small-5.columns
-        = label_tag :new_series, "New series: ", class: 'inline'
+        = label_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", "New series: ", class: 'inline'
       .small-5.columns
-        = select_tag 'new_series', '', { class: 'moes_and_params_list' }
+        = select_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", '', { class: 'moes_and_params_list' }
       .small-2.columns
         %ul.inline-list
           %li= submit_tag "Add series", class: 'button radius'
@@ -26,12 +26,11 @@
       $('.plot .button.hide').on('click', function() {
         $(this).parent().parent().remove()
       });
-      $("#new_series").html($("#x_axis").html());
-
-      var y_axis = $('#new_series option:selected').val();
-      console.log(y_axis)
+      $("#new_series_#{@chart.x_axis}_#{@chart.y_axis}").html($("#x_axis").html());
 
       $("#bivariate_charts input[type=submit]").bind("click", function() {
+        var y_axis = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').val();
+        console.log(y_axis)
         $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
                 {"x_axis": "#{@chart.x_axis}", "y_axis": y_axis},
                 function(data) {
