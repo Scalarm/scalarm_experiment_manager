@@ -153,8 +153,8 @@ class ExperimentsController < ApplicationController
     begin
       experiment_size = experiment.experiment_size(true)
     rescue Exception => e
-      experiment_size = 0; message = t(e.message)
-      Rails.logger.warn("An exception occured: #{t(e.message)}")
+      experiment_size = 0; message = e.to_s
+      Rails.logger.warn("An exception occured: #{message}")
     end
 
     render json: { experiment_size: experiment_size, error: message }
