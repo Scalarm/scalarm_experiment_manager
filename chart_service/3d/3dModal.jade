@@ -1,0 +1,81 @@
+#threeDModal.reveal-modal(data-reveal=true)
+  section.panel.radius.analysis-chart#threeD_charts_form
+    a.close-reveal-modal &#215
+    h3.subheader 3D scatter plot charts
+
+    //form
+      .row
+        .small-5.columns
+          label(class='inline') Select first parameter
+        .small-7.columns
+          select.firstParam
+            each parameter in parameters
+              option(value=parameter.id)= parameter.label
+      .row
+        .small-5.columns
+          label(class='inline') Select second parameter
+        .small-7.columns
+          select.secondParam
+            each parameter in parameters
+              option(value=parameter.id)= parameter.label
+
+      .row
+        .small-5.columns
+          label(class='inline') Select output parameter
+        .small-7.columns
+          select.outputParam
+            each parameter in output
+              option(value=parameter)= parameter
+
+      .row
+        ul.inline-list
+          li 
+            button.button.radius Load chart
+          li
+            img(src='#{prefix}/images/loading.gif', id='busy_interaction', size='16x16', style='display: none')
+
+  .charts
+    .scripts
+
+//script.
+  $(function() {
+    $("#interactionModal").foundation("reveal", "close");
+
+    var experimentID_withLink = document.URL.split("/").slice(-1)[0];
+    var experimentID = experimentID_withLink.split("#")[0];
+    if(experimentID[experimentID.length-1]=="?")
+      experimentID = experimentID.slice(0,-1);
+    
+    var interaction_chart_counter = 0;
+    var scripts_loaded = false;
+
+    $("#interactionModal button").bind("click", function() {
+      $("#busy_interaction").show();
+      if(!scripts_loaded) {
+        $("#interactionModal .scripts").load("#{prefix}/scripts/interaction");
+        scripts_loaded = true;
+      }
+
+      var interaction_chart_div = $("<div id=\"interaction_chart_"+interaction_chart_counter+"\">")[0];
+      $("#interactionModal .charts").prepend(interaction_chart_div);
+
+      //TODO - if there's nothing to select -> do nothing
+      var x_axis = $("#interactionModal .firstParam option:selected").val();
+      var y_axis = $("#interactionModal .secondParam option:selected").val();
+      var outputParam = $("#interactionModal .outputParam option:selected").val();
+
+      var query_params = "id="+experimentID;
+          query_params += "&param1="+x_axis;
+          query_params += "&param2="+y_axis;
+          query_params += "&output="+outputParam;
+          query_params += "&chart_id="+interaction_chart_counter;
+      $(interaction_chart_div).load("#{prefix}/interaction?"+query_params, function(){
+        $("#busy_interaction").hide();
+        var targetOffset = $(this).offset().top;
+        $('html,body').animate({ scrollTop: targetOffset }, 1000);
+      });
+      interaction_chart_counter++;
+
+      return false;
+    })
+  })
