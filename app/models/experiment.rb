@@ -286,7 +286,7 @@ class Experiment < MongoActiveRecord
       simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result)}).each do |simulation_run|
         next if not simulation_run.result.has_key?(moe_name)
 
-        values = simulation_run.values.split(',').map { |x| '%g' % x.to_f }
+        values = simulation_run.values.split(',')
         #Rails.logger.debug("Values: #{values.inspect}")
         csv << values + [simulation_run.result[moe_name]]
       end
@@ -306,9 +306,9 @@ class Experiment < MongoActiveRecord
 
   def create_scatter_plot_csv_for(x_axis, y_axis)
     CSV.generate do |csv|
-      csv << [ x_axis, y_axis ]
+      csv << [x_axis, y_axis]
 
-      simulation_runs.where({ is_done: true, is_error: {'$exists' => false} }, { fields: %w(values result arguments) }).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result arguments)}).each do |simulation_run|
         simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
         x_axis_value = if simulation_run.result.include?(x_axis)
@@ -326,7 +326,7 @@ class Experiment < MongoActiveRecord
                          simulation_input[y_axis]
                        end
 
-        csv << [ x_axis_value, y_axis_value ]
+        csv << [x_axis_value, y_axis_value]
       end
     end
   end
@@ -396,15 +396,15 @@ class Experiment < MongoActiveRecord
   end
 
   def create_result_csv
-  	moes = self.moe_names
+    moes = self.moe_names
 
     CSV.generate do |csv|
       csv << self.parameters.flatten + moes
 
-      simulation_runs.where({ is_done: true, is_error: {'$exists' => false} }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_run|
-        values = simulation_run.values.split(',').map{|x| '%g' % x.to_f}
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: {_id: 0, values: 1, result: 1}}).each do |simulation_run|
+        values = simulation_run.values.split(',')
         # getting values of results in a specific order
-        moe_values = moes.map{|moe_name| simulation_run.result[moe_name] || '' }
+        moe_values = moes.map { |moe_name| simulation_run.result[moe_name] || '' }
 
         csv << values + moe_values
       end
