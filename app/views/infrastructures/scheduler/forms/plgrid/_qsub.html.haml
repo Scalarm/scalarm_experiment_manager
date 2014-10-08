@@ -36,3 +36,8 @@
   .small-4.columns.end
     - checked = !!other_params[:force_onsite_monitoring]
     = check_box_tag :onsite_monitoring, '', checked, disabled: checked
+.row
+  .large-4.columns
+    = label_tag :queue, t('infrastructure.information.queue') + ':', class: 'inline right'
+  .large-4.columns.end
+    = text_field_tag :queue

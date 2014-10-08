@@ -3,7 +3,7 @@ module ScalarmAuthentication
   # the main authentication function + session management
   def authenticate
     Rails.logger.debug("[authentication] starting")
-    @current_user = nil; @sm_user = nil; @session_auth = false
+    @current_user = nil; @sm_user = nil; @session_auth = false; @user_session = nil
 
     case true
       when (not session[:user].blank?)
@@ -34,14 +34,26 @@ module ScalarmAuthentication
         session[:last_request] = Time.now.to_i
         flash[:notice] = t('login_success') unless @session_auth
       end
+
+      @user_session = UserSession.find_by_session_id(session[:user])
+      @user_session = UserSession.new(session_id: session[:user]) if @user_session.nil?
+      @user_session.last_update = Time.now
+      @user_session.save
     end
   end
 
   def authenticate_with_session
     Rails.logger.debug("[authentication] using session: #{session[:user]}")
 
-    @current_user = ScalarmUser.find_by_id(session[:user])
-    @session_auth = true unless @current_user.blank?
+    @user_session = UserSession.find_by_session_id(session[:user])
+
+    if (not @user_session.nil?) and @user_session.valid?
+      Rails.logger.debug("[authentication] scalarm user session exists and its valid")
+      @current_user = ScalarmUser.find_by_id(session[:user])
+      @session_auth = true unless @current_user.blank?
+    else
+      Rails.logger.debug("[authentication] scalarm user session doesnt exist and its invalid")
+    end
   end
 
   def certificate_provided?

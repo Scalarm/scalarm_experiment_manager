@@ -35,6 +35,8 @@ module SimulationsHelper
     options_for_select([
                            ['Near Orthogonal Latin Hypercubes', 'nolhDesign'],
                            ['2^k', '2k'],
+                           ['2^(k-1)', '2k-1'],
+                           ['2^(k-2)', '2k-2'],
                            ['Full factorial', 'fullFactorial'],
                            ['Fractional factorial (with Federov algorithm)', 'fractionalFactorial'],
                            ['Orthogonal Latin Hypercubes', 'latinHypercube'],

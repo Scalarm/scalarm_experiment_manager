@@ -1,3 +1,5 @@
+require 'securerandom'
+
 module UserControllerHelper
 
   def credentials_state(credentials, user, infrastructure_name)
@@ -45,7 +47,9 @@ module UserControllerHelper
   end
 
   def openid_callback_plgrid_url
-    url_for :action => 'openid_callback_plgrid', :only_path => false
+    url_for action: 'openid_callback_plgrid', only_path: false, params: {
+        temp_pass: SecureRandom.hex(4)
+    }
   end
 
 end

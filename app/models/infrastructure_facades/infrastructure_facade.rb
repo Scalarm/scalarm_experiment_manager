@@ -112,8 +112,12 @@ class InfrastructureFacade
         InformationServiceAddress: Rails.application.secrets.information_service_url,
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
-        Infrastructures: [ infrastructure_name ]
+        Infrastructures: [ infrastructure_name ],
     }
+
+    if Rails.application.secrets.include? :certificate_path
+      sm_config[:ScalarmCertificatePath] = '~/.scalarm_certificate'
+    end
 
     if Rails.application.secrets.include?(:sm_information_service_url)
       sm_config[:InformationServiceAddress] = Rails.application.secrets.sm_information_service_url

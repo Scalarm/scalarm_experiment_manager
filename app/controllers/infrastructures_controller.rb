@@ -49,6 +49,7 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
+    validate_params(:default, :infrastructure_name, :job_counter) #:queue
     infrastructure = nil
     infrastructure_name = '?'
 
@@ -287,6 +288,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name (optional)
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
+    validate_params(:default, :infrastructure_name, :experiment_id)
+
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
 
@@ -302,6 +305,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - other_params - Hash
   def get_booster_partial
+    validate_params(:default, :infrastructure_name)
+
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
     facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
@@ -319,6 +324,8 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_partial
+    validate_params(:default, :infrastructure_name)
+
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/#{params[:infrastructure_name]}")
     rescue ActionView::MissingTemplate => exc
@@ -330,6 +337,8 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_table_partial
+    validate_params(:default, :infrastructure_name)
+
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/tables/#{params[:infrastructure_name]}")
     rescue ActionView::MissingTemplate => exc
@@ -342,6 +351,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - record_id
   def get_resource_status
+    validate_params(:default, :infrastructure_name, :record_id)
+
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       record = get_sm_record(params[:record_id], facade)

@@ -17,6 +17,10 @@ class PlGridJob < MongoActiveRecord
     'grid_jobs'
   end
 
+  def self.ids_auto_convert
+    false
+  end
+
   def resource_id
     self.job_id
   end
@@ -34,7 +38,11 @@ class PlGridJob < MongoActiveRecord
   end
 
   def queue
-    PlGridJob.queue_for_minutes(time_limit.to_i)
+    if self.queue_name.blank?
+      PlGridJob.queue_for_minutes(time_limit.to_i)
+    else
+      self.queue_name
+    end
   end
 
   def self.queue_for_minutes(minutes)
