@@ -13,4 +13,9 @@ class UserSession < MongoActiveRecord
     end
   end
 
+  def self.ids_auto_convert
+    false
+  end
+
+
 end
