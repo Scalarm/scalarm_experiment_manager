@@ -9,6 +9,7 @@ module OpenIDUtils
       user_cert: 'http://openid.plgrid.pl/certificate/userCert',
       proxy_priv_key: 'http://openid.plgrid.pl/certificate/proxyPrivKey',
       dn: 'http://openid.plgrid.pl/certificate/dn1',
+      post_response: 'http://openid.plgrid.pl/POSTresponse',
       email: 'http://axschema.org/contact/email',
       name: 'http://axschema.org/namePerson',
       nickname: 'http://axschema.org/namePerson/friendly',

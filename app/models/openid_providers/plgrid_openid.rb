@@ -19,7 +19,7 @@ module PlGridOpenID
     end
 
     # -- Attribute Exchange support --
-    OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn])
+    OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn, :POSTresponse])
 
     return_to = openid_callback_plgrid_url
 
