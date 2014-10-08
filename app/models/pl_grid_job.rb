@@ -17,6 +17,10 @@ class PlGridJob < MongoActiveRecord
     'grid_jobs'
   end
 
+  def self.ids_auto_convert
+    false
+  end
+
   def resource_id
     self.job_id
   end
