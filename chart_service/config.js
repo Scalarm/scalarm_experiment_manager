@@ -20,6 +20,11 @@ var panel_config = {
 			id: "paretoModal",
 			image: "http://placehold.it/117x71",
 			description: "Shows significance of parameters (or interaction)"
+		},{
+			name: "3d scatter plot",
+			id: "threeDModal",
+			image: "http://placehold.it/117x71",
+			description: "TODO"
 		}],
 		
 	},

@@ -3,7 +3,8 @@
     a.close-reveal-modal &#215
     h3.subheader 3D scatter plot charts
 
-    //form
+    //TODO - three parameters to choose from both input and output
+    form
       .row
         .small-5.columns
           label(class='inline') Select first parameter
@@ -32,49 +33,50 @@
           li 
             button.button.radius Load chart
           li
-            img(src='#{prefix}/images/loading.gif', id='busy_interaction', size='16x16', style='display: none')
+            img(src='#{prefix}/images/loading.gif', id='busy_3d', size='16x16', style='display: none')
 
   .charts
     .scripts
 
-//script.
+script.
   $(function() {
-    $("#interactionModal").foundation("reveal", "close");
+    $("#threeDModal").foundation("reveal", "close");
 
     var experimentID_withLink = document.URL.split("/").slice(-1)[0];
     var experimentID = experimentID_withLink.split("#")[0];
     if(experimentID[experimentID.length-1]=="?")
       experimentID = experimentID.slice(0,-1);
-    
-    var interaction_chart_counter = 0;
+
+    var three_d_chart_counter = 0;
     var scripts_loaded = false;
 
-    $("#interactionModal button").bind("click", function() {
-      $("#busy_interaction").show();
+    $("#threeDModal button").bind("click", function() {
+      $("#busy_3d").show();
       if(!scripts_loaded) {
-        $("#interactionModal .scripts").load("#{prefix}/scripts/interaction");
+        $("#threeDModal .scripts").load("#{prefix}/scripts/3d");
         scripts_loaded = true;
       }
 
-      var interaction_chart_div = $("<div id=\"interaction_chart_"+interaction_chart_counter+"\">")[0];
-      $("#interactionModal .charts").prepend(interaction_chart_div);
+      var three_d_chart_div = $("<div id=\"three_d_chart_"+three_d_chart_counter+"\">")[0];
+      $("#threeDModal .charts").prepend(three_d_chart_div);
 
       //TODO - if there's nothing to select -> do nothing
-      var x_axis = $("#interactionModal .firstParam option:selected").val();
-      var y_axis = $("#interactionModal .secondParam option:selected").val();
-      var outputParam = $("#interactionModal .outputParam option:selected").val();
+      //var x_axis = $("#interactionModal .firstParam option:selected").val();
+      //var y_axis = $("#interactionModal .secondParam option:selected").val();
+      //var outputParam = $("#interactionModal .outputParam option:selected").val();
 
-      var query_params = "id="+experimentID;
-          query_params += "&param1="+x_axis;
-          query_params += "&param2="+y_axis;
-          query_params += "&output="+outputParam;
-          query_params += "&chart_id="+interaction_chart_counter;
-      $(interaction_chart_div).load("#{prefix}/interaction?"+query_params, function(){
-        $("#busy_interaction").hide();
+      var query_params = ""
+      //var query_params = "id="+experimentID;
+      //    query_params += "&param1="+x_axis;
+      //    query_params += "&param2="+y_axis;
+      //    query_params += "&output="+outputParam;
+      //    query_params += "&chart_id="+interaction_chart_counter;
+      $(three_d_chart_div).load("#{prefix}/3d?"+query_params, function(){
+        $("#busy_3d").hide();
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
       });
-      interaction_chart_counter++;
+      three_d_chart_counter++;
 
       return false;
     })

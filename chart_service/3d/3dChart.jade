@@ -1,0 +1,12 @@
+extends ../templateChart
+block vars
+  - var subheader = "3d scatter plot chart - "// + output + " - " + param1 + " vs. " + param2;
+  
+block script
+  script.
+    $(function() {
+      var div_id = "#threeD_chart_#{chart_id}";
+      $(div_id + " .button").on('click', function() {
+        $(div_id).remove();
+      });
+    });
