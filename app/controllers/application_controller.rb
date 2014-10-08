@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   include ScalarmAuthentication
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :exception, except: [ :mark_as_complete, :intermediate_results ]
+  #protect_from_forgery with: :exception, except: [ :mark_as_complete, :intermediate_results ]
 
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
