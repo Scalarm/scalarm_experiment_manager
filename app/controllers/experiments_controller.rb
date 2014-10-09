@@ -76,7 +76,7 @@ class ExperimentsController < ApplicationController
 
   def create
     validate_params(:default, :replication_level, :execution_time_constraint)
-    validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
+    #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
       experiment = prepare_new_experiment
@@ -134,7 +134,7 @@ class ExperimentsController < ApplicationController
 
   def calculate_experiment_size
     validate_params(:default, :replication_level, :execution_time_constraint)
-    validate_params(:json, :parameters_constraints, :doe) # TODO :experiment_input
+    #validate_params(:json, :parameters_constraints, :doe) # TODO :experiment_input
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
@@ -672,7 +672,7 @@ class ExperimentsController < ApplicationController
   end
 
   def input_space_manual_specification(experiment)
-    validate_params(:json, :doe) # TODO , :experiment_input
+    #validate_params(:json, :doe) # TODO , :experiment_input
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
 
@@ -710,7 +710,7 @@ class ExperimentsController < ApplicationController
 
   def prepare_new_experiment
     validate_params(:default, :replication_level, :execution_time_constraint)
-    validate_params(:json, :parameters_constraints)
+    #validate_params(:json, :parameters_constraints)
 
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
