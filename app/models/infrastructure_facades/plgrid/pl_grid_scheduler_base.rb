@@ -30,13 +30,13 @@ class PlGridSchedulerBase
   def prepare_job_executable
     <<-eos
 #!/bin/bash
-module add plgrid/tools/ruby/2.0.0-p0
 
 if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
 
 unzip scalarm_simulation_manager_$1.zip
 cd scalarm_simulation_manager_$1
-ruby simulation_manager.rb
+chmod a+x scalarm_simulation_manager
+./scalarm_simulation_manager
     eos
   end
 
