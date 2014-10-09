@@ -435,7 +435,7 @@ class ExperimentsController < ApplicationController
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
         simulation_to_send = @experiment.get_next_instance
-        unless @sm_user.nil?
+        unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
         end
       end

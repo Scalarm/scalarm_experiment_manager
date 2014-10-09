@@ -3,6 +3,7 @@
 
   %p
     = form_tag(change_scheduling_policy_experiment_path, :onSubmit => "$('#scheduling-busy').show()", remote: true, class: 'custom') do
+      = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
       = hidden_field_tag :experiment_id, @experiment.id
       %div
         Current scheduling policy of the experiment:
