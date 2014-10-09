@@ -389,7 +389,7 @@ func main() {
 		// 4b. run an adapter script (input writer) for input information: input.json -> some specific code
 		if _, err := os.Stat(path.Join(codeBaseDir, "input_writer")); err == nil {
 			fmt.Println("Before input writer ...")
-			inputWriterCmd := exec.Command("sh", "-c", path.Join(codeBaseDir, "input_writer >>_stdout.txt 2>&1"))
+			inputWriterCmd := exec.Command("sh", "-c", path.Join(codeBaseDir, "input_writer input.json >>_stdout.txt 2>&1"))
 			inputWriterCmd.Dir = simulationDirPath
 			if err = inputWriterCmd.Run(); err != nil {
 				panic(err)
