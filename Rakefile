@@ -85,7 +85,10 @@ def monitoring_probe(action)
   if action == 'start'
     Process.daemon(true)
     monitoring_job_pid = fork {
-      require 'monitoring_probe'
+      # requiring all class from the model
+      Dir[File.join(Rails.root, 'app', 'models', "**/*.rb")].each do |f|
+        require f
+      end
 
       probe = MonitoringProbe.new
       probe.start_monitoring
