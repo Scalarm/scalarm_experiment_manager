@@ -398,7 +398,7 @@ func main() {
 		}
 
 		// 4c.1. progress monitoring scheduling if available - TODO
-		messages := make(chan string)
+		messages := make(chan string, 10)
 		go IntermediateMonitoring(messages, codeBaseDir, experimentManagers, simulation_index, config, simulationDirPath)
 
 		// 4c. run an executor of this simulation
