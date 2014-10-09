@@ -14,7 +14,7 @@
     .small-4.columns
       = label_tag :plgrid_password, t('infrastructure.information.pl_grid_password') + ':', class: 'inline right'
     .small-4.columns.end
-      = password_field :plgrid_password, '', class: 'right'
+      = password_field_tag :plgrid_password, '', class: 'right', autocomplete: :off
 
 .row
   .small-4.columns
@@ -35,6 +35,8 @@
     = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
   .small-4.columns.end
     - checked = !!other_params[:force_onsite_monitoring]
+    - if checked
+      = hidden_field_tag :onsite_monitoring, true
     = check_box_tag :onsite_monitoring, '', checked, disabled: checked
 .row
   .large-4.columns

@@ -82,16 +82,22 @@ class GridCredentials < EncryptedMongoActiveRecord
     get_attribute('host') or 'ui.cyfronet.pl'
   end
 
-  def upload_proxy(remote_path='~/.scalarm_proxy')
-    if secret_proxy
-      ssh_session do |ssh|
-        # TODO: checking if proxy file exists?
-        ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
-      end
-      true
-    else
-      false
+  def clone_proxy(remote_path='~/.scalarm_proxy')
+    ssh_session do |ssh|
+      # TODO: checking if proxy file exists?
+      ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
     end
+  end
+
+  def generate_proxy(key_passphrase)
+    output = ''
+    ssh_session do |ssh|
+      Timeout::timeout 30 do
+        output = ssh.exec! "echo #{key_passphrase} | voms-proxy-init --voms vo.plgrid.pl"
+      end
+    end
+    Rails.logger.debug("voms-proxy-init for #{login} output: #{output}")
+    output
   end
 
   # -----------

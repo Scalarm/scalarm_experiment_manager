@@ -42,10 +42,10 @@ class PlGridFacade < InfrastructureFacade
       InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
     end
 
-    # credentials =
-    #     using_temp_credentials? ? create_temp_credentials(additional_params[:login], additional_params[:password]) : get_credentials_from_db(user_id)
+    credentials =
+        using_temp_credentials?(additional_params) ? create_temp_credentials(additional_params) : get_credentials_from_db(user_id)
 
-    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
+    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil? or credentials.password.blank?
     raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
 
     records = (1..instances_count).map do
@@ -54,34 +54,56 @@ class PlGridFacade < InfrastructureFacade
       record
     end
 
-    if additional_params[:onsite_monitoring]
-      InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
-      bin_pkg_name = 'scalarm_monitoring_linux_x86_64.zip'
-      bin_name = 'scalarm_monitoring'
+    send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
 
-      remote_proxy_path = "~/.scalarm_proxy"
-      user_proxy = credentials.upload_proxy(remote_proxy_path)
+    records
+  end
 
-      credentials.scp_session do |scp|
-        scp.upload! File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'), '.'
-        scp.upload! File.join(Rails.root, 'public', 'scalarm_monitoring', bin_pkg_name), '.'
-        if Rails.application.secrets.certificate_path
-          scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
-        end
+  def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
+    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
+    bin_base_name = 'scalarm_monitoring_linux_x86_64'
+
+    remote_proxy_path = '~/.scalarm_proxy'
+    key_passphrase = params[:key_passphrase]
+    credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
+    credentials.clone_proxy(remote_proxy_path)
+
+    credentials.ssh_session do |ssh|
+      ssh.exec! 'rm -f config.json' # TODO: change name!
+      ssh.exec! "rm -f #{bin_base_name}.xz"
+      ssh.exec! "rm -f #{bin_base_name}"
+    end
+
+    credentials.scp_session do |scp|
+      scp.upload_multiple! [
+                               File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'),
+                               File.join(Rails.root, 'public', 'scalarm_monitoring', "#{bin_base_name}.xz")
+                           ], '.'
+    end
+
+    credentials.ssh_session do |ssh|
+      ssh.exec! "mv #{bin_base_name} #{}"
+    end
+
+    if Rails.application.secrets.certificate_path
+      credentials.ssh_session do |ssh|
+        ssh.exec! 'rm -f ~/.scalarm_certificate'
       end
 
-      credentials.ssh_session do |ssh|
-        cmd = ShellCommands.chain(
-            "unzip #{bin_pkg_name}",
-            "rm #{bin_pkg_name}",
-            "chmod a+x #{bin_name}",
-            "#{user_proxy ? "X509_USER_PROXY=#{remote_proxy_path}" : ''} #{ShellCommands.run_in_background("./#{bin_name}", "#{bin_name}.log")}"
-        )
-        Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
+      credentials.scp_session do |scp|
+        scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
       end
     end
 
-    records
+    credentials.ssh_session do |ssh|
+      cmd = ShellCommands.chain(
+          "unxz -f #{bin_base_name}.xz",
+          "chmod a+x #{bin_base_name}",
+          "X509_USER_PROXY=#{remote_proxy_path} #{ShellCommands.
+              run_in_background("./#{bin_base_name}", "#{bin_base_name}-`date +%H-%M_%d-%m-%y`.log")}"
+      )
+      Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
+    end
   end
 
   def using_temp_credentials?(params)
@@ -89,7 +111,9 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def create_temp_credentials(params)
-    creds = GridCredentials.new({login: params})
+    creds = GridCredentials.new({login: params[:plgrid_login]})
+    creds.password = params[:plgrid_password]
+    creds
   end
 
   def get_credentials_from_db(user_id)
