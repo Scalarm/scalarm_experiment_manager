@@ -53,26 +53,24 @@ script.
     $("#threeDModal button").bind("click", function() {
       $("#busy_3d").show();
       if(!scripts_loaded) {
-        $("#threeDModal .scripts").load("#{prefix}/scripts/3d");
+      $("#threeDModal .scripts").load("#{prefix}/scripts/3d");
         scripts_loaded = true;
       }
-
+	  
       var three_d_chart_div = $("<div id=\"three_d_chart_"+three_d_chart_counter+"\">")[0];
       $("#threeDModal .charts").prepend(three_d_chart_div);
-
       //TODO - if there's nothing to select -> do nothing
       //var x_axis = $("#interactionModal .firstParam option:selected").val();
       //var y_axis = $("#interactionModal .secondParam option:selected").val();
       //var outputParam = $("#interactionModal .outputParam option:selected").val();
-
-      var query_params = ""
-      //var query_params = "id="+experimentID;
+      var query_params = "id="+experimentID;
       //    query_params += "&param1="+x_axis;
       //    query_params += "&param2="+y_axis;
       //    query_params += "&output="+outputParam;
-      //    query_params += "&chart_id="+interaction_chart_counter;
+      query_params += "&chart_id="+three_d_chart_counter;
       $(three_d_chart_div).load("#{prefix}/3d?"+query_params, function(){
         $("#busy_3d").hide();
+		
         var targetOffset = $(this).offset().top;
         $('html,body').animate({ scrollTop: targetOffset }, 1000);
       });
