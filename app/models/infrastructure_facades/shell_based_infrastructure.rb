@@ -13,7 +13,7 @@ module ShellBasedInfrastructure
           mute("unzip #{sm_dir_name}.zip"),
           mute(cd(sm_dir_name)),
           mute('chmod a+x scalarm_simulation_manager'),
-          run_in_background('./simulation_manager', record.log_path, '&1')
+          run_in_background('./scalarm_simulation_manager', record.log_path, '&1')
       )
     elsif Rails.configuration.simulation_manager_version == :ruby
       chain(
