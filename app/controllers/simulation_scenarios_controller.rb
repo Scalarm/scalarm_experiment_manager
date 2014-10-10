@@ -20,6 +20,8 @@ class SimulationScenariosController < ApplicationController
   end
 
   def update
+    # TODO if necessary - validate simulation_input and simulation_binaries somehow
+
     if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
@@ -62,11 +64,13 @@ class SimulationScenariosController < ApplicationController
   end
 
   def show
-    render json: if @simulation_scenario
+    render json: (
+        if @simulation_scenario
           {status: 'ok', data: @simulation_scenario.to_h }
         else
           {status: 'error', error_code: 'not_found'}
         end
+    )
   end
 
   def code_base
@@ -117,6 +121,9 @@ class SimulationScenariosController < ApplicationController
   end
 
   def share
+    validate_params(:default, :mode)
+    # TODO validate sharing with login params - it should denote scalarm user login
+
     @user = nil
 
     if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
@@ -158,6 +165,8 @@ class SimulationScenariosController < ApplicationController
   private
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
+    validate_params(:default, adapter_type, "#{adapter_type}_id", "#{adapter_type}_name")
+
     if params.include?(adapter_type + '_id')
       adapter_id = params[adapter_type + '_id']
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
@@ -212,6 +221,8 @@ class SimulationScenariosController < ApplicationController
   private
 
   def load_simulation_scenario
+    validate_params(:default, :id, :name)
+
     users_scenarios = @current_user.get_simulation_scenarios
 
     @simulation_scenario = if params[:id]

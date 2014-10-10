@@ -20,3 +20,8 @@
     = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
   .large-4.columns.end
     = check_box_tag :onsite_monitoring
+.row
+  .large-4.columns
+    = label_tag :queue, t('infrastructure.information.queue') + ':', class: 'inline right'
+  .large-4.columns.end
+    = text_field_tag :queue

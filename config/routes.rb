@@ -17,13 +17,14 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'logout' => 'user_controller#logout'
   get 'user_controller/account'
   post 'user_controller/change_password'
+  get 'status' => 'user_controller#status'
 
   # OpenID
   get 'login/login_openid_google' => 'user_controller#login_openid_google'
   get 'login/openid_callback_google' => 'user_controller#openid_callback_google'
 
   get 'login/login_openid_plgrid' => 'user_controller#login_openid_plgrid'
-  get 'login/openid_callback_plgrid' => 'user_controller#openid_callback_plgrid'
+  post 'login/openid_callback_plgrid' => 'user_controller#openid_callback_plgrid'
 
   get 'simulations' => 'simulations#index'
   get 'simulations/index'
