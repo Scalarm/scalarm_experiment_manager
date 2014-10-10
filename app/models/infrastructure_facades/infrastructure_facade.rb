@@ -58,8 +58,14 @@ class InfrastructureFacade
     Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
 
     Dir.chdir('/tmp')
-    FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'), "scalarm_simulation_manager_#{sm_uuid}")
-    #FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+    # using simulation manager implementation based on application config
+    if Rails.configuration.simulation_manager_version == :go
+      # TODO checking somehow the destination server architecture
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'), "scalarm_simulation_manager_#{sm_uuid}")
+    elsif Rails.configuration.simulation_manager_version == :ruby
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+    end
+
     # prepare sm configuration
     temp_password = SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid)
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id) if temp_password.nil?
