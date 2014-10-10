@@ -214,7 +214,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def validate_credentials_for(record)
-    raise InfrastructureErrors::NoCredentialsError unless record.has_usable_credentials?
+    raise InfrastructureErrors::NoCredentialsError unless record.infrastructure_side_monitoring or record.has_usable_credentials?
   end
 
   def _simulation_manager_stop(sm_record)

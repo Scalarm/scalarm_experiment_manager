@@ -8,6 +8,7 @@
 # - sm_uuid => string - uuid of configuration files
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
 # - is_terminating => boolean - whether this SM with its resource should be terminated (stop action was invoked)
+# - infrastructure_side_monitoring => boolean - whether this record should be supported by onsite-monitoring
 #
 # Fields with * can be initialized with initialize_fields method after creation.
 #

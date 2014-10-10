@@ -16,7 +16,7 @@ class SimulationManager
   def initialize(record, infrastructure)
     unless record.state == :error
       begin
-        record.validate
+        record.validate unless record.infrastructure_side_monitoring
       rescue InfrastructureErrors::InvalidCredentialsError, InfrastructureErrors::NoCredentialsError
         Rails.logger.warn "Record #{record.id} for infrastructure #{infrastructure.short_name} has invalid credentials"
         record.store_error('credentials')
