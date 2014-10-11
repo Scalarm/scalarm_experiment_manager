@@ -22,8 +22,8 @@ class window.ExperimentDesigner
             $("[id^='doe-group-'] li.bullet-item").each (index, bulletItem) =>
                 if $(bulletItem).is("[param_id]") and ($(bulletItem).attr('param_id') == parameterId)
                     $(bulletItem).find("a.button").click()
-                # remove the parameter from the parameter list
-                @removeRangeParameter(parameterId)
+            # remove the parameter from the parameter list
+            @removeRangeParameter(parameterId)
 
         @updateSelectElements()
 
