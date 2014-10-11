@@ -11,11 +11,10 @@ var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartsMap = require("./service.js")();	//TODO - zienic zeby modul eksportowal mape a nie funkcje, albo przekazywac handlery
 var DataRetriever = require("./data_retriever.js");
 
-var config_file = require("./config.js");
-var config = config_file.config;
+var config = require("./config.js");
+var panel_locals = require("./panel_locals.js");
 
 var jade = require("jade");
-var panel_locals = config_file.panel_config;
 
 var PORT = config.server_port,
 	EXTERNAL_IP = config.server_ip,			//TODO - retrieve external IP
@@ -159,7 +158,7 @@ function prepare_map_with_requests(parameters) {
 		fs.readFile('.'+pathname, function(error, data) {
 			if(error) {
 				res.writeHead(404);
-				res.write("File " + file_path + " : not found!\n");
+				res.write("File " + pathname + " : not found!\n");
 				res.write(error.toString());
 				res.end();
 			}
