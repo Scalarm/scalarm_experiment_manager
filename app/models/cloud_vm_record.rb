@@ -25,6 +25,10 @@ class CloudVmRecord < MongoActiveRecord
     self.vm_id
   end
 
+  def self.ids_auto_convert
+    false
+  end
+
   def self.collection_name
     'vm_records'
   end

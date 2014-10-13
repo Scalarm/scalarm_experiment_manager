@@ -59,11 +59,11 @@
     - else
       = t('.output_not_available')
 
-  .row
-    %h4= t('.stdout_header')
-    - if @stdout_size_err == 0
-      = link_to 'click to download', log_bank_simulation_run_stdout_url(@remote_storage_manager_url, @experiment, @simulation_run.index)
-      %p
-        = t('.size', { size: @stdout_size_label })
-    - else
-      = t('.output_not_available')
+.row
+  %h4= t('.stdout_header')
+  - if @stdout_size_err == 0
+    = link_to 'click to download', log_bank_simulation_run_stdout_url(@remote_storage_manager_url, @experiment, @simulation_run.index)
+    %p
+      = t('.size', { size: @stdout_size_label })
+  - else
+    = t('.output_not_available')

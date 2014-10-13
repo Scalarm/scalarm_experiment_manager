@@ -58,7 +58,14 @@ class InfrastructureFacade
     Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
 
     Dir.chdir('/tmp')
-    FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+    # using simulation manager implementation based on application config
+    if Rails.configuration.simulation_manager_version == :go
+      # TODO checking somehow the destination server architecture
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'), "scalarm_simulation_manager_#{sm_uuid}")
+    elsif Rails.configuration.simulation_manager_version == :ruby
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+    end
+
     # prepare sm configuration
     temp_password = SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid)
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id) if temp_password.nil?
@@ -79,9 +86,9 @@ class InfrastructureFacade
       sm_config['information_service_url'] = Rails.application.secrets.sm_information_service_url
     end
 
-    Rails.logger.debug("Development mode set ? : #{Rails.application.secrets.include?(:information_service_development)}")
+    Rails.logger.debug("Development mode set ? : #{!!Rails.application.secrets.information_service_development}")
 
-    if Rails.application.secrets.include?(:information_service_development)
+    if !!Rails.application.secrets.information_service_development
       sm_config['development'] = true
     end
 
@@ -112,8 +119,12 @@ class InfrastructureFacade
         InformationServiceAddress: Rails.application.secrets.information_service_url,
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
-        Infrastructures: [ infrastructure_name ]
+        Infrastructures: [ infrastructure_name ],
     }
+
+    if Rails.application.secrets.include? :certificate_path
+      sm_config[:ScalarmCertificatePath] = '~/.scalarm_certificate'
+    end
 
     if Rails.application.secrets.include?(:sm_information_service_url)
       sm_config[:InformationServiceAddress] = Rails.application.secrets.sm_information_service_url

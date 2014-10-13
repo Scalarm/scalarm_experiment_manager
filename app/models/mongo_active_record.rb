@@ -11,6 +11,10 @@ class MongoActiveRecord
   @conditions = {}
   @options = {}
 
+  def self.ids_auto_convert
+    true
+  end
+
   def self.conditions
     @conditions
   end
@@ -231,7 +235,7 @@ class MongoActiveRecord
       key = key.to_sym
       key = :_id if key == :id
 
-      if key.to_s.ends_with?('_id')
+      if key.to_s.ends_with?('_id') and self.ids_auto_convert
         value = BSON::ObjectId(value.to_s)
       end
 

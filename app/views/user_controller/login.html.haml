@@ -19,7 +19,7 @@
           .small-5.columns
             %label.right.inline(for='password')= t('user_controller.account.password')
           .small-7.columns
-            = password_field_tag 'password', '', class: 'inline'
+            = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
         .row
           .small-12.small-centered.columns(style="text-align: center;")

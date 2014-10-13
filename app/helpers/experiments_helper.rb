@@ -8,7 +8,7 @@ module ExperimentsHelper
   end
 
   def json_rt_node(node, tree)
-    formatted_mean = "%.2f" % node["mean"]
+    formatted_mean = "%g" % node["mean"]
     node_question_text = node["question"] ? node["question"] : ""
     "{
       id: '#{node["id"]}',

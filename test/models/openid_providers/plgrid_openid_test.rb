@@ -55,9 +55,23 @@ class PlGridOpenIDTest < MiniTest::Test
     OpenIDUtils.stubs(:get_user_with).with(dn: dn).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(login: plglogin).returns(nil)
 
-    OpenIDUtils.expects(:create_user_with).with(plglogin, login: plglogin, dn: dn).returns(user)
+    OpenIDUtils.expects(:create_user_with).with(plglogin, nil, login: plglogin, dn: dn).returns(user)
 
     refute_nil PlGridOpenID::get_or_create_user(dn, plglogin)
+  end
+
+  def test_plgoid_dn_to_browser_dn
+    plg_dn = 'CN=plgjliput,CN=Jakub Liput,O=AGH,O=Uzytkownik,O=PL-Grid,C=PL'
+    browser_dn = '/C=PL/O=PL-Grid/O=Uzytkownik/O=AGH/CN=Jakub Liput/CN=plgjliput'
+
+    assert_equal browser_dn, PlGridOpenID.plgoid_dn_to_browser_dn(plg_dn)
+  end
+
+  def test_browser_dn_to_plgoid_dn
+    plg_dn = 'CN=plgjliput,CN=Jakub Liput,O=AGH,O=Uzytkownik,O=PL-Grid,C=PL'
+    browser_dn = '/C=PL/O=PL-Grid/O=Uzytkownik/O=AGH/CN=Jakub Liput/CN=plgjliput'
+
+    assert_equal plg_dn, PlGridOpenID.browser_dn_to_plgoid_dn(browser_dn)
   end
 
 end

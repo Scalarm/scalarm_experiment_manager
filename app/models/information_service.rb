@@ -7,10 +7,11 @@ class InformationService
     @service_url = Rails.application.secrets.information_service_url
     @username = Rails.application.secrets.information_service_user
     @password = Rails.application.secrets.information_service_pass
-    @development = Rails.application.secrets.include?(:information_service_development)
+    @development = !!Rails.application.secrets.information_service_development
   end
 
   def register_service(service, host, port)
+    slog('IS', "Registering #{service} at address '#{host}:#{port}'")
     code, body = send_request(service, {address: "#{host}:#{port}"})
 
     if code == '200'
@@ -53,15 +54,18 @@ class InformationService
 
   def send_request(request, data = nil, opts = {})
     @host, @port = @service_url.split(':')
-    #puts "#{Time.now} --- sending #{request} request to the Information Service at '#{@host}:#{@port}'"
+    @port, @prefix = @port.split('/')
+    @prefix = @prefix.nil? ? '/' : "/#{@prefix}/"
+
+    slog('IS', "sending #{request} request to the Information Service at '#{@host}:#{@port}'")
 
     req = if data.nil?
-            Net::HTTP::Get.new('/' + request)
+            Net::HTTP::Get.new(@prefix + request)
           else
             if opts.include?(:method) and opts[:method] == 'DELETE'
-              Net::HTTP::Delete.new('/' + request)
+              Net::HTTP::Delete.new(@prefix + request)
             else
-              Net::HTTP::Post.new('/' + request)
+              Net::HTTP::Post.new(@prefix + request)
             end
           end
 
@@ -79,7 +83,10 @@ class InformationService
       #puts "#{Time.now} --- response from Information Service is #{response.code} #{response.body}"
       return response.code, response.body
     rescue Exception => e
-      puts "Exception occurred but nothing terrible :) - #{e.message}"
+      slog('IS', "Exception occurred but nothing terrible :)")
+      slog('IS', "================== BACKTRACE ==================")
+      slog('IS', e.backtrace.join("\n\t"))
+      slog('IS', "================== ========= ==================")
     end
 
     return nil, nil

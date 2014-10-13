@@ -16,6 +16,10 @@ class IO
   end
 end
 
+def exec_in_sh(command)
+  %x[sh -c '#{command}' 2>&1]
+end
+
 
 # 1. load config file and create proxies
 config = JSON.parse(IO.read('config.json'))
@@ -127,7 +131,7 @@ while true
         puts Dir.pwd
 
         if File.exist?("#{code_base_dir}/input_writer")
-          input_writer_output = %x["#{code_base_dir}/input_writer" input.json]
+          input_writer_output = exec_in_sh "#{code_base_dir}/input_writer input.json"
           puts "Input writer output: #{input_writer_output}"
           IO.write('_stdout.txt', "Input writer output: #{input_writer_output}")
         end
@@ -158,7 +162,7 @@ while true
             if File.exist?(File.join(code_base_dir, 'progress_monitor'))
 
               while true
-                progress_monitor_output = %x["#{code_base_dir}/progress_monitor"]
+                progress_monitor_output = exec_in_sh "#{code_base_dir}/progress_monitor"
                 puts "[progress monitor] script output: #{progress_monitor_output}"
                 IO.write('_stdout.txt', "[progress monitor] script output: #{progress_monitor_output}")
 
@@ -179,7 +183,7 @@ while true
           writer.puts em_url
         end
 
-        executor_output = %x["#{code_base_dir}/executor"]
+        executor_output = exec_in_sh "#{code_base_dir}/executor"
         puts "Executor output: #{executor_output}"
         IO.write('_stdout.txt', "Executor output: #{executor_output}")
         # 6c.2. killing progress monitor process
@@ -201,7 +205,7 @@ while true
         puts Dir.pwd
 
         if File.exist?("#{code_base_dir}/output_reader")
-          output_reader_output = %x["#{code_base_dir}/output_reader"]
+          output_reader_output = exec_in_sh "#{code_base_dir}/output_reader"
           puts "Output reader output: #{output_reader_output}"
           IO.write('_stdout.txt', "Output reader output: #{output_reader_output}")
         end

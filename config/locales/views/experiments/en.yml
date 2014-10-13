@@ -37,13 +37,15 @@ en:
       share: "This experiment is now shared with user '%{user}'"
       unshare: "This experiment is no longer shared with user '%{user}'"
 
-    not_found: "Experiment with id '%{id}' not found"
-    user_not_found: "User with login '%{user}' not found"
+    not_found: "Experiment with id '%{id}' was not found"
+    user_not_found: "User with login '%{user}' was not found"
     no_id_provided: "You must provide experiment id when calling this method!"
 
     errors:
       zero_size: The size of an experiment must be greater than 0!
-      too_few_parameters: Selected DoE method requires more than 1 parameter.
+      too_few_parameters: 
+         one: Selected DoE method requires more than 1 parameter.
+         other: "Selected DoE method requires more than %{count} parameters."
 
     edit:
       link: "Edit"
