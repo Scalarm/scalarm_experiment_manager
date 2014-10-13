@@ -18,7 +18,7 @@ var jade = require("jade");
 var panel_locals = config_file.panel_config;
 
 var PORT = config.server_port,
-	EXTERNAL_IP = config.server_ip,			//TODO - retrieve external IP
+	EXTERNAL_IP = config.server_ip + ":3001",			//TODO - retrieve external IP
 	ADDRESS = EXTERNAL_IP + config.server_prefix;		//address suffix set in /etc/nginx/conf.d/default.conf
 
 var app = http.createServer(function(req, res) {
@@ -40,7 +40,7 @@ var app = http.createServer(function(req, res) {
 			authenticate(req.headers.cookie, parameters["id"], function(data) {
 				console.log("OK! Successfully authorized.");
 				res.writeHead(200, {'Content-Type': 'text/plain'});
-				var output = jade.renderFile("."+pathname+pathname+"Chart.jade", parameters);
+				var output = jade.renderFile("./"+path+"/"+path+"Chart.jade", parameters);
 				output += object.content;
 				res.write(output);
 				res.end();
@@ -96,8 +96,9 @@ wsServer.on('request', function(request) {
 });
 
 //--------------------------------
-function authenticate(cookie, experimentID, success, error){
+function authenticate(cookies, experimentID, success, error){
 	//what if there are more cookies??
+    var cookie = cookies.split("; ").filter(function(text) { return text.indexOf("_scalarm_session")==0; })[0];
 	var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
 	var output = cookieDecoder(cookieGood);
 

@@ -1,4 +1,4 @@
-var DBURL = "mongodb://172.16.67.121:27017/scalarm_db";
+var DBURL = "mongodb://172.16.67.30:27017/scalarm_db";
 var COLLECTION_NAME = "experiment_instances_";
 var mongo = require('mongodb');
 var client = mongo.MongoClient;
