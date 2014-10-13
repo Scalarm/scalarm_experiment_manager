@@ -48,7 +48,14 @@
 
       window.WebSocket = window.WebSocket || window.MozWebSocket;
 
-      var ws = new WebSocket("ws://172.16.67.121:8080/#{@experiment.id}");
+      try {
+        //TODO - insert appropriate address
+        var ws = new WebSocket("ws://localhost:8080/#{@experiment.id}");
+      }
+      catch (e) {
+        console.log("Unable to establish WebSocket connection.");
+        var ws = {};
+      }
 
       window.onbeforeunload = function() {
         ws.onclose = function () {}; // disable onclose handler first

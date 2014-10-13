@@ -95,10 +95,14 @@ wsServer.on('request', function(request) {
 });
 
 //--------------------------------
-function authenticate(cookie, experimentID, success, error){
-	//what if there are more cookies??
-	var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
-	var output = cookieDecoder(cookieGood);
+function authenticate(cookies, experimentID, success, error){
+    if(cookies) {
+        error("Cookies not sent");
+        return;
+    }
+    var cookie = cookies.split("; ").filter(function(text) { return text.indexOf("_scalarm_session")==0; })[0];
+    var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
+    var output = cookieDecoder(cookieGood);
 
 	exec("ruby serialized_object_to_json.rb " + new Buffer(output).toString("base64"), function(err, stdout, stderr) {
 	    if (err !== null) {
