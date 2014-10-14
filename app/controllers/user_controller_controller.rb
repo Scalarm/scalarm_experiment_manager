@@ -18,7 +18,7 @@ class UserControllerController < ApplicationController
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
-    @user_session = UserSession.find_by_session_id(session[:user])
+    @user_session = UserSession.find_by_session_id(session[:user].to_s)
     @user_session = UserSession.new(session_id: session[:user]) if @user_session.nil?
     @user_session.last_update = Time.now
     @user_session.save
@@ -30,7 +30,7 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        requested_user = ScalarmUser.find_by_login(params[:username])
+        requested_user = ScalarmUser.find_by_login(params[:username].to_s)
         raise t('user_controller.login.user_not_found') if requested_user.nil?
 
         if requested_user.banned_infrastructure?('scalarm')

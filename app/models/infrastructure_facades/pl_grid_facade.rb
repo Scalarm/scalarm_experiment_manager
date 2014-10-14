@@ -137,7 +137,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def get_sm_record_by_id(record_id)
-    PlGridJob.find_by_id(record_id)
+    PlGridJob.find_by_id(record_id.to_s)
   end
 
   def self.retrieve_grants(credentials)
@@ -312,7 +312,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    creds = GridCredentials.find_by_query(user_id: user_id)
+    creds = GridCredentials.find_by_query(user_id: user_id.to_s)
     !!(creds and (creds.secret_proxy or not creds.invalid))
   end
 

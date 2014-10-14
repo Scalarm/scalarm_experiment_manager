@@ -30,9 +30,9 @@ class PrivateMachineFacade < InfrastructureFacade
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
     machine_creds = if params[:host]
-                      PrivateMachineCredentials.find_by_query(host: params[:host], user_id: user_id)
+                      PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
                     else
-                      PrivateMachineCredentials.find_by_id(params[:credentials_id])
+                      PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
                     end
 
     raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
@@ -80,7 +80,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def remove_credentials(record_id, user_id, type)
-    record = PrivateMachineCredentials.find_by_id(record_id)
+    record = PrivateMachineCredentials.find_by_id(record_id.to_s)
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
     record.destroy
@@ -101,7 +101,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def get_sm_record_by_id(record_id)
-    PrivateMachineRecord.find_by_id(record_id)
+    PrivateMachineRecord.find_by_id(record_id.to_s)
   end
 
   # -- SimulationManager delegation methods --

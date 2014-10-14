@@ -101,7 +101,7 @@ class Simulation < MongoActiveRecord
   end
 
   def self.visible_to(user)
-    where({ '$or' => [ { user_id: user.id }, { shared_with: { '$in' => [ user.id ] } } ] })
+    where({'$or' => [{user_id: user.id}, {shared_with: {'$in' => [user.id]}}]})
   end
 
 end

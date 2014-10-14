@@ -77,7 +77,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def get_and_validate_image_secrets(image_secrets_id, user_id)
-    exp_image = CloudImageSecrets.find_by_id(image_secrets_id)
+    exp_image = CloudImageSecrets.find_by_id(image_secrets_id.to_s)
     if exp_image.nil? or exp_image.image_id.nil?
       raise CloudErrors::ImageValidationError.new 'provide_image_secrets'
     elsif not cloud_client_instance(user_id).image_exists? exp_image.image_id
@@ -112,7 +112,7 @@ class CloudFacade < InfrastructureFacade
                      else raise StandardError.new("Usupported credentials type: #{type}")
                    end
 
-    record = record_class.find_by_id(record_id)
+    record = record_class.find_by_id(record_id.to_s)
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
     record.destroy

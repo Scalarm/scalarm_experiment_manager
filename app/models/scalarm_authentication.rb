@@ -35,8 +35,8 @@ module ScalarmAuthentication
         flash[:notice] = t('login_success') unless @session_auth
       end
 
-      @user_session = UserSession.find_by_session_id(session[:user])
-      @user_session = UserSession.new(session_id: session[:user]) if @user_session.nil?
+      @user_session = UserSession.find_by_session_id(session[:user].to_s)
+      @user_session = UserSession.new(session_id: session[:user].to_s) if @user_session.nil?
       @user_session.last_update = Time.now
       @user_session.save
     end
@@ -45,11 +45,11 @@ module ScalarmAuthentication
   def authenticate_with_session
     Rails.logger.debug("[authentication] using session: #{session[:user]}")
 
-    @user_session = UserSession.find_by_session_id(session[:user])
+    @user_session = UserSession.find_by_session_id(session[:user].to_s)
 
     if (not @user_session.nil?) and @user_session.valid?
       Rails.logger.debug("[authentication] scalarm user session exists and its valid")
-      @current_user = ScalarmUser.find_by_id(session[:user])
+      @current_user = ScalarmUser.find_by_id(session[:user].to_s)
       @session_auth = true unless @current_user.blank?
     else
       Rails.logger.debug("[authentication] scalarm user session doesnt exist and its invalid")
@@ -68,7 +68,7 @@ module ScalarmAuthentication
 
     begin
       session[:user] = ScalarmUser.authenticate_with_certificate(cert_dn).id
-      @current_user = ScalarmUser.find_by_id(session[:user])
+      @current_user = ScalarmUser.find_by_id(session[:user].to_s)
     rescue Exception => e
       @current_user = nil
       flash[:error] = e.to_s
@@ -81,7 +81,7 @@ module ScalarmAuthentication
 
   def authenticate_with_password
     authenticate_or_request_with_http_basic do |login, password|
-      temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(login)
+      temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(login.to_s)
 
       unless temp_pass.nil?
         Rails.logger.debug("[authentication] SM using uuid: '#{login}'")

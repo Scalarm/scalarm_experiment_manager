@@ -104,14 +104,14 @@ module PlGridOpenID
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)
     grid_credentials =
-        (GridCredentials.find_by_user_id(scalarm_user_id) or GridCredentials.new(user_id: scalarm_user_id))
+        (GridCredentials.find_by_user_id(scalarm_user_id.to_s) or GridCredentials.new(user_id: scalarm_user_id.to_s))
     grid_credentials.login = plgrid_login
     grid_credentials.secret_proxy = proxy_cert
     grid_credentials.save
   end
 
   def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
-    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id, cloud_name: 'pl_cloud') or
+    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud') or
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
     pl_cloud_credentials.secret_proxy = proxy_secret

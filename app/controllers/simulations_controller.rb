@@ -44,13 +44,13 @@ class SimulationsController < ApplicationController
 
   def destroy_component
     if params['component_type'] == 'input_writer'
-      SimulationInputWriter.find_by_id(params['component_id']).destroy
+      SimulationInputWriter.find_by_id(params['component_id'].to_s).destroy
     elsif params['component_type'] == 'executor'
-      SimulationExecutor.find_by_id(params['component_id']).destroy
+      SimulationExecutor.find_by_id(params['component_id'].to_s).destroy
     elsif params['component_type'] == 'output_reader'
-      SimulationOutputReader.find_by_id(params['component_id']).destroy
+      SimulationOutputReader.find_by_id(params['component_id'].to_s).destroy
     elsif params['component_type'] == 'progress_monitor'
-      SimulationProgressMonitor.find_by_id(params['component_id']).destroy
+      SimulationProgressMonitor.find_by_id(params['component_id'].to_s).destroy
     end
 
     flash[:notice] = t('simulations.adapter_destroyed')
@@ -111,7 +111,7 @@ class SimulationsController < ApplicationController
   end
 
   def destroy_simulation
-    sim = Simulation.find_by_id(params['component_id'])
+    sim = Simulation.find_by_id(params['component_id'].to_s)
     flash[:notice] = t('simulations.destroy', name: sim.name)
     sim.destroy
 
@@ -120,7 +120,7 @@ class SimulationsController < ApplicationController
 
   # following methods are used in experiment conducting
   def conduct_experiment
-    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation = Simulation.find_by_id(params[:simulation_id].to_s)
     @simulation_input = @simulation.input_specification
   end
 
@@ -270,7 +270,7 @@ class SimulationsController < ApplicationController
       i += 1
     end
 
-    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation = Simulation.find_by_id(params[:simulation_id].to_s)
     @simulation_parameters = @simulation.input_parameters
 
     render json: { status: 'ok', columns: render_to_string(partial: 'simulations/import/parameter_selection_table', object: parameters) }
@@ -310,7 +310,7 @@ class SimulationsController < ApplicationController
   def set_up_adapter(adapter_type, simulation, mandatory = true)
 
     if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id']
+      adapter_id = params[adapter_type + '_id'].to_s
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
 
       if not adapter.nil? and adapter.user_id == @current_user.id
