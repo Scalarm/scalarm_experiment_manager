@@ -15,7 +15,19 @@ class ApplicationController < ActionController::Base
 
   @@probe = MonitoringProbe.new
 
+  rescue_from SecurityError do |exception| generic_exception_handler(exception) end
+  rescue_from BSON::InvalidObjectId do |exception| generic_exception_handler(exception) end
+
   protected
+
+  def generic_exception_handler(exception)
+    flash[:error] = exception.message
+
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: {status: 'error', reason: flash[:error]}, status: 412 }
+    end
+  end
 
   def authentication_failed
     Rails.logger.debug('[authentication] failed -> redirect')
@@ -58,7 +70,7 @@ class ApplicationController < ActionController::Base
 
     param_names.each do |param_name|
       if params.include?(param_name) and regexp.match(params[param_name]).nil?
-        raise SecurityError.new("Insecure parameter given - #{param_name}")
+        raise SecurityError.new(t('errors.insecure_parameter', param_name: param_name))
       end
     end
   end

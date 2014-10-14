@@ -13,4 +13,5 @@ en:
 
 # system wide error messages
   errors:
-    invalid_objectid: You sent an invalid ObjectId - %{message}.
+    invalid_objectid: "You sent an invalid ObjectId - %{message}"
+    insecure_parameter: "Insecure parameter given - %{param_name}"

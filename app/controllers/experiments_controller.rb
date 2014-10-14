@@ -647,13 +647,6 @@ class ExperimentsController < ApplicationController
         end
       end
     end
-
-  rescue BSON::InvalidObjectId => e
-    flash[:error] = t('errors.invalid_objectid', message: e.message)
-    respond_to do |format|
-      format.html { redirect_to action: :index }
-      format.json { render json: {status: 'error', reason: flash[:error]}, status: 412 }
-    end
   end
 
   def load_simulation
@@ -675,13 +668,6 @@ class ExperimentsController < ApplicationController
         format.html { redirect_to action: :index }
         format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
       end
-    end
-
-  rescue BSON::InvalidObjectId => e
-    flash[:error] = t('errors.invalid_objectid', message: e.message)
-    respond_to do |format|
-      format.html { redirect_to action: :index }
-      format.json { render json: {status: 'error', reason: flash[:error]}, status: 412 }
     end
   end
 
