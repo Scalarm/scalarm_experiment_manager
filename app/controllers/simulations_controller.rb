@@ -306,6 +306,12 @@ class SimulationsController < ApplicationController
       @simulation_run.sent_at = Time.now
     end
 
+  rescue BSON::InvalidObjectId => e
+    flash[:error] = t('errors.invalid_objectid', message: e.message)
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: {status: 'error', reason: flash[:error]}, status: 412 }
+    end
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
