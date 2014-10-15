@@ -45,18 +45,21 @@ class PlGridFacade < InfrastructureFacade
     credentials =
         using_temp_credentials?(additional_params) ? create_temp_credentials(additional_params) : get_credentials_from_db(user_id)
 
-    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil? or credentials.password.blank?
-    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid
+    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
+    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid or credentials.password.blank?
 
-    records = (1..instances_count).map do
-      record = create_record(user_id, experiment_id, sm_uuid, additional_params)
-      record.save
-      record
-    end
-
+    records = create_records(instances_count, user_id, experiment_id, sm_uuid, additional_params)
     send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
 
     records
+  end
+
+  def create_records(count, *args)
+    (1..count).map do
+      record = create_record(*args)
+      record.save
+      record
+    end
   end
 
   def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
@@ -208,13 +211,13 @@ class PlGridFacade < InfrastructureFacade
   # -- SimulationManager delegation methods --
 
   def _simulation_manager_before_monitor(record)
-    validate_credentials_for(record)
+    record.validate
     # Not needed now
     # scheduler.prepare_session(shared_ssh_session(record.credentials))
   end
 
   def validate_credentials_for(record)
-    raise InfrastructureErrors::NoCredentialsError unless record.infrastructure_side_monitoring or record.has_usable_credentials?
+    record.validate_credentials
   end
 
   def _simulation_manager_stop(sm_record)
@@ -242,49 +245,41 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    ssh = nil
 
-      sm_record.resource_status.nil? ? :not_available : sm_record.resource_status
+    begin
+      ssh = shared_ssh_session(sm_record.credentials)
+    rescue Gsi::ProxyError
+      raise
+    rescue Exception => e
+      # remember this error in case of unable to initialize
+      sm_record.error_log = e.to_s
+      sm_record.save
+      return :not_available
+    end
 
-    else
-
-      ssh = nil
-
-      begin
-        ssh = shared_ssh_session(sm_record.credentials)
-      rescue Gsi::ProxyError
-        raise
-      rescue Exception => e
-        # remember this error in case of unable to initialize
-        sm_record.error_log = e.to_s
-        sm_record.save
-        return :not_available
-      end
-
-      begin
-        job_id = sm_record.job_id
-        if job_id
-          status = scheduler.status(ssh, sm_record)
-          case status
-            when :initializing then
-              :initializing
-            when :running then
-              :running_sm
-            when :deactivated then
-              :released
-            when :error then
-              :error
-            else
-              logger.warn "Unknown state from PL-Grid scheduler: #{status}"
-              :error
-          end
-        else
-          :available
+    begin
+      job_id = sm_record.job_id
+      if job_id
+        status = scheduler.status(ssh, sm_record)
+        case status
+          when :initializing then
+            :initializing
+          when :running then
+            :running_sm
+          when :deactivated then
+            :released
+          when :error then
+            :error
+          else
+            logger.warn "Unknown state from PL-Grid scheduler: #{status}"
+            :error
         end
-      rescue Exception
-        :error
+      else
+        :available
       end
-
+    rescue Exception
+      :error
     end
   end
 
@@ -315,8 +310,7 @@ class PlGridFacade < InfrastructureFacade
 
       sm_uuid = sm_record.sm_uuid
 
-      raise InfrastructureErrors::NoCredentialsError.new if sm_record.credentials.nil?
-      raise InfrastructureErrors::InvalidCredentialsError.new if sm_record.credentials.invalid
+      record.validate
 
       scheduler.prepare_job_files(sm_uuid, sm_record.to_h)
 

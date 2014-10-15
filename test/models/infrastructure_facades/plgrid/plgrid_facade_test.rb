@@ -19,6 +19,7 @@ class PlGridFacadeTest < MiniTest::Test
     experiment_id = mock 'experiment_id'
     credentials = stub_everything 'credentials' do
       stubs(:invalid).returns(true)
+      stubs(:password).returns('password')
     end
     scheduler = stub_everything 'scheduler'
     facade = PlGridFacade.new(scheduler)
@@ -119,11 +120,11 @@ class PlGridFacadeTest < MiniTest::Test
   end
 
   def test_validate_credentials_for
-    record = stub_everything do
-      stubs(:has_usable_credentials?).returns(false)
+    record = stub_everything 'record' do
+      stubs(:validate_credentials).raises(InfrastructureErrors::InvalidCredentialsError)
     end
 
-    assert_raises InfrastructureErrors::NoCredentialsError do
+    assert_raises InfrastructureErrors::InvalidCredentialsError do
       @facade.validate_credentials_for(record)
     end
   end
@@ -164,6 +165,31 @@ class PlGridFacadeTest < MiniTest::Test
     @facade.stubs(:valid_credentials_available?).returns(false)
 
     refute @facade.enabled_for_user?(user_id)
+  end
+
+  def test_start_simulation_managers
+    user_id = mock 'user_id'
+    instances_count = mock 'instances_count'
+    experiment_id = mock 'experiment_id'
+    login = mock('plgrid_login')
+    password = mock('password')
+    additional_params = {
+        onsite_monitoring: true,
+        plgrid_login: login,
+        password: password
+    }
+    temp_credentials = stub_everything 'temp_credentials' do
+      stubs(:login).returns(login)
+      stubs(:password).returns(password)
+    end
+
+    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    @facade.stubs(:using_temp_credentials?).with(additional_params).returns(true)
+    @facade.stubs(:create_temp_credentials).with(additional_params).returns(temp_credentials)
+    @facade.stubs(:create_records)
+    @facade.stubs(:send_and_launch_onsite_monitoring)
+
+    @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
   end
 
 end
