@@ -1,4 +1,4 @@
-var http = require("http");
+var https = require("https");
 var url = require("url");
 var jsdom = require("jsdom").jsdom();
 var fs = require("fs");
@@ -17,10 +17,14 @@ var panel_locals = require("./panel_locals.js");
 var jade = require("jade");
 
 var PORT = config.server_port,
-	EXTERNAL_IP = config.server_ip,			//TODO - retrieve external IP
+	EXTERNAL_IP = config.server_ip + ":3001",			//TODO - retrieve external IP & port should be set in config
 	ADDRESS = EXTERNAL_IP + config.server_prefix;		//address suffix set in /etc/nginx/conf.d/default.conf
 
-var app = http.createServer(function(req, res) {
+var app = https.createServer({
+        key: fs.readFileSync(config.ssl_key),
+        cert: fs.readFileSync(config.ssl_cert),
+        passphrase: config.passphrase //process.env.PASSPHRASE
+    }, function(req, res) {
 	var parsedUrl = url.parse(req.url);
 	var pathname = parsedUrl.pathname;
 	var parameters = querystring.parse(parsedUrl.query);
@@ -78,7 +82,9 @@ wsServer.on('request', function(request) {
 	//TODO -- authentication!
 	console.log(new Date() + " Connection from origin " + request.origin + ".");
 	var experimentID = request.httpRequest.url.slice(1);
-	authenticate(request.httpRequest.headers.cookie, experimentID, function(data) {
+    var cookieObject = request.cookies.filter(function(item) { return item.name.indexOf("_scalarm_session")>=0;})[0];
+    var cookie = cookieObject.name + "=" + cookieObject.value;
+	authenticate(cookie, experimentID, function(data) {
 		console.log("OK! Successfully authorized.");
 		var connection = request.accept(null, request.origin);
 		console.log(new Date() + " Connection accepted.");
@@ -96,7 +102,7 @@ wsServer.on('request', function(request) {
 
 //--------------------------------
 function authenticate(cookies, experimentID, success, error){
-    if(cookies) {
+    if(!cookies) {
         error("Cookies not sent");
         return;
     }
