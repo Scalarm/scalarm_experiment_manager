@@ -89,14 +89,15 @@ class GridCredentials < EncryptedMongoActiveRecord
     end
   end
 
+  # TODO: NOTE: without voms extension!
   def generate_proxy(key_passphrase)
     output = ''
     ssh_session do |ssh|
       Timeout::timeout 30 do
-        output = ssh.exec! "echo #{key_passphrase} | voms-proxy-init --voms vo.plgrid.pl"
+        output = ssh.exec! "echo #{key_passphrase} | grid-proxy-init -rfc -hours 24"
       end
     end
-    Rails.logger.debug("voms-proxy-init for #{login} output: #{output}")
+    Rails.logger.debug("grid-proxy-init for #{login} output: #{output}")
     output
   end
 
