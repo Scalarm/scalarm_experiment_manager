@@ -109,7 +109,8 @@ class InfrastructureFacade
     end
 
     sm_config = {
-        InformationServiceAddress: Rails.application.secrets.information_service_url,
+        InformationServiceAddress: (Rails.application.secrets.sm_information_service_url or
+            Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
         Infrastructures: [ infrastructure_name ],
