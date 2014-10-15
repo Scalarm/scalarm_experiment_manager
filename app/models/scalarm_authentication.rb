@@ -44,8 +44,9 @@ module ScalarmAuthentication
 
   def authenticate_with_session
     Rails.logger.debug("[authentication] using session: #{session[:user]}")
+    session_id = BSON::ObjectId(session[:user].to_s)
 
-    @user_session = UserSession.find_by_session_id(session[:user].to_s)
+    @user_session = UserSession.find_by_session_id(session_id)
 
     if (not @user_session.nil?) and @user_session.valid?
       Rails.logger.debug("[authentication] scalarm user session exists and its valid")

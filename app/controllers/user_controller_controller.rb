@@ -11,15 +11,17 @@ class UserControllerController < ApplicationController
 
   def successful_login
     #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
-      session[:intended_controller] = :experiments
-      session[:intended_action] = :index
+    session[:intended_controller] = :experiments
+    session[:intended_action] = :index
     #end
 
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
-    @user_session = UserSession.find_by_session_id(session[:user].to_s)
-    @user_session = UserSession.new(session_id: session[:user]) if @user_session.nil?
+    session_id = BSON::ObjectId(session[:user].to_s)
+
+    @user_session = UserSession.find_by_session_id(session_id)
+    @user_session = UserSession.new(session_id: session_id) if @user_session.nil?
     @user_session.last_update = Time.now
     @user_session.save
 
