@@ -281,13 +281,14 @@ class Experiment < MongoActiveRecord
   def create_result_csv_for(moe_name)
 
     CSV.generate do |csv|
-      csv << self.parameters.flatten + [ moe_name ]
+      csv << self.parameters.flatten + [moe_name]
 
-      simulation_runs.where({ is_done: true }, { fields: %w(values result) }).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result)}).each do |simulation_run|
         next if not simulation_run.result.has_key?(moe_name)
 
-        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
-        csv << values + [ simulation_run.result[moe_name] ]
+        values = simulation_run.values.split(',')
+        #Rails.logger.debug("Values: #{values.inspect}")
+        csv << values + [simulation_run.result[moe_name]]
       end
     end
 
@@ -305,9 +306,9 @@ class Experiment < MongoActiveRecord
 
   def create_scatter_plot_csv_for(x_axis, y_axis)
     CSV.generate do |csv|
-      csv << [ x_axis, y_axis ]
+      csv << [x_axis, y_axis]
 
-      simulation_runs.where({ is_done: true }, { fields: %w(values result arguments) }).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result arguments)}).each do |simulation_run|
         simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
         x_axis_value = if simulation_run.result.include?(x_axis)
@@ -325,7 +326,7 @@ class Experiment < MongoActiveRecord
                          simulation_input[y_axis]
                        end
 
-        csv << [ x_axis_value, y_axis_value ]
+        csv << [x_axis_value, y_axis_value]
       end
     end
   end
@@ -395,15 +396,15 @@ class Experiment < MongoActiveRecord
   end
 
   def create_result_csv
-  	moes = self.moe_names
+    moes = self.moe_names
 
     CSV.generate do |csv|
       csv << self.parameters.flatten + moes
 
-      simulation_runs.where({ is_done: true }, { fields: { _id: 0, values: 1, result: 1 } }).each do |simulation_run|
-        values = simulation_run.values.split(',').map{|x| '%.4f' % x.to_f}
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: {_id: 0, values: 1, result: 1}}).each do |simulation_run|
+        values = simulation_run.values.split(',')
         # getting values of results in a specific order
-        moe_values = moes.map{|moe_name| simulation_run.result[moe_name] || '' }
+        moe_values = moes.map { |moe_name| simulation_run.result[moe_name] || '' }
 
         csv << values + moe_values
       end
@@ -723,9 +724,52 @@ class Experiment < MongoActiveRecord
 
         values
 
+      when '2k-1'
+        if parameters_for_doe.size < 3
+          raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 2))
+        else
+          values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
+            parameter = get_parameter_doc(parameter_uid)
+            sum << [ {level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f} ]
+          }
+
+          if values.size > 1
+            values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
+          else
+            values = values.first.map { |x| [x] }
+          end
+
+          values = values.select{ |array| array[0..-2].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
+          values = values.map{ |array| array.map{ |item| item[:value] }}
+
+          values
+        end
+
+      when '2k-2'
+        if parameters_for_doe.size < 5
+          raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 4))
+        else
+          values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
+            parameter = get_parameter_doc(parameter_uid)
+            sum << [ {level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f} ]
+          }
+
+          if values.size > 1
+            values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
+          else
+            values = values.first.map { |x| [x] }
+          end
+
+          values = values.select{ |array| array[0..-4].reduce(1) { |acc, item| acc*item[:level] } == array[-2][:level] }
+          values = values.select{ |array| array[1..-3].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
+          values = values.map{ |array| array.map{ |item| item[:value] }}
+
+          values
+        end
+
       when *%w(latinHypercube fractionalFactorial nolhDesign)
         if parameters_for_doe.size < 2
-          raise 'experiments.errors.too_few_parameters'
+          raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 1))
         else
           design_file_path = File.join(Rails.root, 'public', 'designs.R')
           Rails.logger.info("""arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}')

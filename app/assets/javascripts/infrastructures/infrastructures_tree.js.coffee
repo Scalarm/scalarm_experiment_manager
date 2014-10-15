@@ -352,22 +352,21 @@ class window.InfrastructuresTree
   boosterDialog: (d) ->
     @dialog.foundation('reveal', 'open')
     @dialog.html(window.loaderHTML)
-    @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id'])
+    @dialog.load @boosterDialogPath(d['infrastructure_name'])
 
   commandConfirmDialog: (infrastructure_name, record_id) ->
     @dialog.foundation('reveal', 'open')
     @dialog.html(window.loaderHTML)
-    @dialog.load @boosterDialogPath(d['infrastructure_name'], d['experiment_id'])
+    @dialog.load @boosterDialogPath(d['infrastructure_name'])
 
 
   smDialogPath: (params) ->
     "#{@baseSmDialogUrl}?" + $.param(params)
 
-  boosterDialogPath: (infrastructure_name, experiment_id) ->
+  boosterDialogPath: (infrastructure_name) ->
     # TODO: path as parameter
     "/infrastructure/get_booster_dialog?" + $.param({
-      infrastructure_name: infrastructure_name,
-      experiment_id: experiment_id
+      infrastructure_name: infrastructure_name
     })
 
   commandConfirmDialogPath: (infrastructure_name, record_id, command) ->

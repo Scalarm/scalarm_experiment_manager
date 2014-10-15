@@ -1,9 +1,13 @@
 require 'securerandom'
+require 'infrastructure_facades/infrastructure_errors'
 
 class SimulationManagersController < ApplicationController
 
   before_filter :set_user_id
   before_filter :load_infrastructure
+
+  rescue_from InfrastructureErrors::NoSuchInfrastructureError, with: :handle_no_such_infrastructure_error
+  rescue_from Exception, with: :handle_exception
 
   # Get Simulation Manager nodes in JSON
   # GET params:
@@ -11,22 +15,22 @@ class SimulationManagersController < ApplicationController
   # - experiment_id: (optional) experiment_id
   # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
   def index
-    result = { status: 'ok' }
+    sm_records = (if @infrastructure_facade.blank?
+                    get_all_sm_records(params[:experiment_id], params[:infrastructure_params])
+                  else
+                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id], params[:infrastructure_params])
+                  end)
 
-    if @infrastructure_facade.blank?
-      result[:status] = 'error'
-      result[:msg] = t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure])
-    else
-      sm_records = @infrastructure_facade.get_sm_records(@user_id)
-      result[:sm_records] = sm_records.map(&:to_h)
-    end
-
-    if result[:status] == 'ok'
-      render json: result
-    else
-      render json: result, status: 400
-    end
+    render json: {
+        sm_records: sm_records.map(&:to_h),
+        status: 'ok'
+    }
   end
+
+  def get_all_sm_records(experiment_id=nil, params=nil)
+    InfrastructureFacadeFactory.get_all_sm_records(@user_id, experiment_id, params)
+  end
+
 
   # TODO refactor - reuse envelope, handle exceptions
 
@@ -119,13 +123,30 @@ class SimulationManagersController < ApplicationController
     end
   end
 
-  private
+  # -- filters --
 
   def set_user_id
     @user_id = @sm_user.blank? ? @current_user.id : @sm_user.user_id
   end
 
   def load_infrastructure
-    @infrastructure_facade = InfrastructureFacadeFactory.get_facade_for(params.require(:infrastructure))
+    @infrastructure_facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure]) if params.include? :infrastructure
   end
+
+  # -- error handling --
+
+  def handle_no_such_infrastructure_error
+    render json: {
+        status: 'error',
+        msg: t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure])
+    }, status: 400
+  end
+
+  def handle_exception(exception)
+    render json: {
+        status: 'error',
+        msg: "#{exception.class.to_s}: #{exception.to_s} in line #{exception.backtrace[0].split(':')[-2]}"
+    }, status: 500
+  end
+
 end
