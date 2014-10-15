@@ -11,6 +11,15 @@ class ExperimentsController < ApplicationController
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
     @simulations = @current_user.get_simulation_scenarios
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {
+          status: 'ok',
+          running: @running_experiments.collect { |e| e.id.to_s },
+          historical: @historical_experiments.collect { |e| e.id.to_s }
+      }}
+    end
   end
 
   def show
@@ -22,7 +31,15 @@ class ExperimentsController < ApplicationController
       start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
       flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
-      redirect_to action: :index
+      respond_to do |format|
+        format.html { redirect_to action: :index }
+        format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
+      end
+    end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok', data: @experiment.to_h } }
     end
   end
 

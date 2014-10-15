@@ -120,31 +120,23 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(sm_record)
-    if sm_record.infrastructure_side_monitoring
-
-      sm_record.resource_status.nil? ? :not_available : sm_record.resource_status
-
+    begin
+      ssh = shared_ssh_session(sm_record.credentials)
+    rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+      # remember this error in case of unable to initialize
+      sm_record.error_log = e.to_s
+      sm_record.save
+      return :not_available
+    rescue Exception => e
+      sm_record.store_error('ssh', e.to_s)
+      _simulation_manager_stop(sm_record)
     else
-
-      begin
-        ssh = shared_ssh_session(sm_record.credentials)
-      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
-        # remember this error in case of unable to initialize
-        sm_record.error_log = e.to_s
-        sm_record.save
-        return :not_available
-      rescue Exception => e
-        sm_record.store_error('ssh', e.to_s)
-        _simulation_manager_stop(sm_record)
+      pid = sm_record.pid
+      if pid
+        app_running?(ssh, pid) ? :running_sm : :released
       else
-        pid = sm_record.pid
-        if pid
-          app_running?(ssh, pid) ? :running_sm : :released
-        else
-          :available
-        end
+        :available
       end
-
     end
   end
 

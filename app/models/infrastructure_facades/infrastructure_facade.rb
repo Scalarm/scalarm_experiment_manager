@@ -116,7 +116,8 @@ class InfrastructureFacade
     end
 
     sm_config = {
-        InformationServiceAddress: Rails.application.secrets.information_service_url,
+        InformationServiceAddress: (Rails.application.secrets.sm_information_service_url or
+            Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
         Infrastructures: [ infrastructure_name ],
@@ -257,12 +258,14 @@ class InfrastructureFacade
     get_sm_records(user_id, experiment_id, attributes).count
   end
 
+  def other_params_for_booster(user_id)
+    {}
+  end
+
   # -- SimulationManger delegation default implementation --
 
   def _simulation_manager_before_monitor(record); end
   def _simulation_manager_after_monitor(record); end
-
-  private
 
   def create_simulation_manager(record)
     SimulationManager.new(record, self)
@@ -274,4 +277,7 @@ class InfrastructureFacade
   def self.monitoring_package_dir(sm_uuid)
     "scalarm_monitoring_#{sm_uuid}"
   end
+
+
+  private :create_simulation_manager, :init_resources, :clean_up_resources
 end

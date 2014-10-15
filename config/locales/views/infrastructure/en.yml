@@ -116,6 +116,10 @@ en:
       machine_submission_label: "Add credentials"
       no_key_note: "<b>Note:</b> when using this scheduler, your keys and proxy certificates stored on UI cannot be protected by password."
       no_key_note_qcg: "<b>Note:</b> when using this scheduler, you must either use proxy certificate (fetched from PL-Grid OpenID) or your keys and proxy certificates stored on UI cannot be protected by password."
+      qcg:
+          credentials_needed: "No PL-Grid credentials were configured. We need them to generate proxy certificate and submit jobs on your behalf. Provided credentials will not be stored in Scalarm."
+      qsub:
+        credentials_needed: "No PL-Grid credentials were configured. We need them to submit jobs on your behalf. Provided credentials will not be stored in Scalarm."
     refresh_button: "Refresh tree"
   infrastructures_controller:
     tree:

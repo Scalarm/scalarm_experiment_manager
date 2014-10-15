@@ -74,4 +74,8 @@ class PlGridOpenIDTest < MiniTest::Test
     assert_equal plg_dn, PlGridOpenID.browser_dn_to_plgoid_dn(browser_dn)
   end
 
+  def test_strip_identity
+    assert_equal 'plguser', PlGridOpenID.strip_identity('https://openid.plgrid.pl/plguser')
+  end
+
 end
