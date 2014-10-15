@@ -55,7 +55,7 @@ class PlGridOpenIDTest < MiniTest::Test
     OpenIDUtils.stubs(:get_user_with).with(dn: dn).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(login: plglogin).returns(nil)
 
-    OpenIDUtils.expects(:create_user_with).with(plglogin, login: plglogin, dn: dn).returns(user)
+    OpenIDUtils.expects(:create_user_with).with(plglogin, nil, login: plglogin, dn: dn).returns(user)
 
     refute_nil PlGridOpenID::get_or_create_user(dn, plglogin)
   end

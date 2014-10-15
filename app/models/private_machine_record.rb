@@ -15,6 +15,10 @@ class PrivateMachineRecord < MongoActiveRecord
     'private_machine_records'
   end
 
+  def self.ids_auto_convert
+    false
+  end
+
   def resource_id
     task_desc
   end
