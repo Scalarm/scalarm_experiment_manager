@@ -22,7 +22,7 @@ $(document).ready(function() {
   	},
   	credits: { enabled: false },
   	series: [{
-        name: 'Data',
+        name: '<%= @chart.x_axis_label.split(" - ")[-1]%>',
         color: 'rgba(223, 83, 83, .5)',
         data: [
             <% @chart.chart_data.each do |x_value, y_values|
