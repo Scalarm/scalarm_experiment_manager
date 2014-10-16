@@ -144,11 +144,11 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.infrastructure_side_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = "tail -25 #{sm_record.log_path}"
+      sm_record.cmd_to_execute = "tail -80 #{sm_record.log_path}"
       sm_record.save
 
     else
-      shared_ssh_session(sm_record.credentials).exec! "tail -25 #{sm_record.log_path}"
+      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.log_path}"
     end
   end
 

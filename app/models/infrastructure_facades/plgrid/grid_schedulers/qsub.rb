@@ -130,7 +130,7 @@ module QsubScheduler
       if sm_record.log_path.blank?
         ""
       else
-        "tail -25 #{sm_record.log_path}; rm #{sm_record.log_path}"
+        "tail -80 #{sm_record.log_path}; rm #{sm_record.log_path}"
       end
     end
 
