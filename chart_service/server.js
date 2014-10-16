@@ -140,6 +140,7 @@ function prepare_map_with_requests(parameters) {
 		DataRetriever.getParameters(parameters["id"], function(data) {
 			panel_locals.parameters = data.parameters;
 			panel_locals.output = data.result;
+            panel_locals.parameters_and_output = data.parameters.concat(data.result);
 			panel_locals.address = ADDRESS;
 			panel_locals.prefix = config.server_prefix;
 			res.writeHead(200);

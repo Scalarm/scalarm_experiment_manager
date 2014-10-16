@@ -28,7 +28,7 @@ module.exports = {
                 name: "Histograms",
                 id: "experiment-analysis-modal",
                 em_class: "histogram-analysis",
-                image: "http://placehold.it/117x71",
+                image: "https://placehold.it/117x71",
                 description: "TODO"
 
             },{
@@ -42,7 +42,7 @@ module.exports = {
                 name: "Scatter plots",
                 id: "experiment-analysis-modal",
                 em_class: "bivariate-analysis",
-                image: "https ://placehold.it/117x71",
+                image: "https://placehold.it/117x71",
                 description: "Bivariate analysis - scatter plot"
 
             }]

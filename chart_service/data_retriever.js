@@ -85,8 +85,12 @@ var connect = function(success, error){
 	        		data["result"] = [];
 	        		if(item){
 	        			for(var k in item.result){
-	        				if(typeof item["result"][k] == "number")
-	        					data["result"].push(k);
+	        				if(typeof item["result"][k] == "number") {
+                                data["result"].push({
+                                    label: (k[0].toUpperCase() + k.slice(1)).split("_").join(" "),
+                                    id: k
+                                });
+                            }
 	        			}
 	        		}
 		            db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
@@ -198,8 +202,48 @@ var connect = function(success, error){
 			}, error);
 		};
 
+        var get3d = function(id, param1, param2, param3, success, error){
+            getData(id, function(array, args, mins, maxes){
+                var data = Array.apply(null, new Array(array.length)).map(Number.prototype.valueOf,0)
+                if (args.indexOf(param1) != -1) {
+                    for (var i in data) {
+                        data[i] = [array[i].arguments[param1]];
+                    }
+                }
+                else{
+                    for (var i in data) {
+                        data[i] = [array[i].result[param1]];
+                        console.log(array[i].result[param1])
+                    }
+                }
+                if (args.indexOf(param2) != -1) {
+                    for (var i in data) {
+                        data[i].push(array[i].arguments[param2]);
+                    }
+                }
+                else{
+                    for (var i in data) {
+                        data[i].push(array[i].result[param2]);
+                    }
+                }
+                if (args.indexOf(param3) != -1) {
+                    for (var i in data) {
+                        data[i].push(array[i].arguments[param3]);
+                    }
+                }
+                else{
+                    for (var i in data) {
+                        data[i].push(array[i].result[param3]);
+                    }
+                }
+                console.log(param1, param2, param3)
+                success(data);
+            }, error);
+        }
+
 		module.exports.getPareto = getPareto;
 		module.exports.getInteraction = getInteraction;
+        module.exports.get3d = get3d;
 		module.exports.authenticate = authenticate;
 		module.exports.getParameters = getParameters;
 		module.exports.createStreamFor = createStreamFor;

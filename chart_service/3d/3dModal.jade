@@ -3,30 +3,29 @@
     a.close-reveal-modal &#215
     h3.subheader 3D scatter plot charts
 
-    //TODO - three parameters to choose from both input and output
     form
       .row
         .small-5.columns
           label(class='inline') Select first parameter
         .small-7.columns
           select.firstParam
-            each parameter in parameters
+            each parameter in parameters_and_output
               option(value=parameter.id)= parameter.label
       .row
         .small-5.columns
           label(class='inline') Select second parameter
         .small-7.columns
           select.secondParam
-            each parameter in parameters
+            each parameter in parameters_and_output
               option(value=parameter.id)= parameter.label
 
       .row
         .small-5.columns
-          label(class='inline') Select output parameter
+          label(class='inline') Select third parameter
         .small-7.columns
-          select.outputParam
-            each parameter in output
-              option(value=parameter)= parameter
+          select.thirdParam
+            each parameter in parameters_and_output
+              option(value=parameter.id)= parameter.label
 
       .row
         ul.inline-list
@@ -60,13 +59,13 @@ script.
       var three_d_chart_div = $("<div id=\"three_d_chart_"+three_d_chart_counter+"\">")[0];
       $("#threeDModal .charts").prepend(three_d_chart_div);
       //TODO - if there's nothing to select -> do nothing
-      //var x_axis = $("#interactionModal .firstParam option:selected").val();
-      //var y_axis = $("#interactionModal .secondParam option:selected").val();
-      //var outputParam = $("#interactionModal .outputParam option:selected").val();
+      var x_axis = $("#threeDModal .firstParam option:selected").val();
+      var y_axis = $("#threeDModal .secondParam option:selected").val();
+      var z_axis = $("#threeDModal .thirdParam option:selected").val();
       var query_params = "id="+experimentID;
-      //    query_params += "&param1="+x_axis;
-      //    query_params += "&param2="+y_axis;
-      //    query_params += "&output="+outputParam;
+          query_params += "&param1="+x_axis;
+          query_params += "&param2="+y_axis;
+          query_params += "&param3="+z_axis;
       query_params += "&chart_id="+three_d_chart_counter;
       $(three_d_chart_div).load("#{prefix}/3d?"+query_params, function(){
         $("#busy_3d").hide();

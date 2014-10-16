@@ -1,6 +1,23 @@
-function threeD_main(i, data) {
-    // Give the points a 3D feel by adding a radial gradient
+function threeD_main(i, param1, param2, param3, data) {
+    console.log(data);
+    var min_z = data.reduce(function(a, b) { return a <= b[2] ? a : b[2];}, Infinity);
+    var max_z = data.reduce(function(a, b) { return a >= b[2] ? a : b[2];}, -Infinity);
 
+    //nice feature but causes "udefined is not a function" on loading more than one chart
+    // Give the points a 3D feel by adding a radial gradient
+    // Highcharts.getOptions().colors = $.map(Highcharts.getOptions().colors, function (color) {
+    //     return {
+    //         radialGradient: {
+    //             cx: 0.4,
+    //             cy: 0.3,
+    //             r: 0.5
+    //         },
+    //         stops: [
+    //             [0, color],
+    //             [1, Highcharts.Color(color).brighten(-0.2).get('rgb')]
+    //         ]
+    //     };
+    // });
 
     // Set up the chart
 	var chart = new Highcharts.Chart({
@@ -11,9 +28,8 @@ function threeD_main(i, data) {
             options3d: {
                 enabled: true,
                 alpha: 10,
-                beta: 30,
+                beta: 20,
                 depth: 250,
-                viewDistance: 5,
 
                 frame: {
                     bottom: { size: 1, color: 'rgba(0,0,0,0.02)' },
@@ -23,39 +39,38 @@ function threeD_main(i, data) {
             }
         },
         title: {
-            text: 'Draggable box'
+            text: '3d scatter plot'
         },
         subtitle: {
-            text: 'Click and drag the plot area to rotate in space'
-        },
-        plotOptions: {
-            scatter: {
-                width: 10,
-                height: 10,
-                depth: 10
-            }
+            text: param1 + " - " + param2 + " - " + param3
         },
         yAxis: {
-            min: 0,
-            max: 10,
-            title: null
+            title: {
+                text: param2
+            }
         },
         xAxis: {
-            min: 0,
-            max: 10,
-            gridLineWidth: 1
+            title: {
+                text: param1
+            }
         },
         zAxis: {
-            min: 0,
-            max: 10
+            min: min_z,
+            max: max_z,
+            title: {
+                text: param3
+            }
+        },
+        credits: {
+            enabled: false
         },
         legend: {
             enabled: false
         },
         series: [{
-            name: 'Reading',
+            name: 'Data',
             colorByPoint: true,
-            data: [[1,2,3],[1,2,4]]
+            data: data
         }]
     });
 
