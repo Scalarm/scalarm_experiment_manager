@@ -78,7 +78,7 @@ class InfrastructuresController < ApplicationController
                        msg: I18n.t('infrastructures_controller.schedule_error', name: infrastructure.long_name,
                                    error: schedule_error.to_s) }
       rescue InfrastructureErrors::NoCredentialsError => no_creds
-        render json: { status: 'error', error_code: 'no-credentials', msg: I18n.t('infrastructures_controller.invalid_credentials',
+        render json: { status: 'error', error_code: 'no-credentials', msg: I18n.t('infrastructures_controller.no_credentials',
                                                                    name: infrastructure.long_name) }
       rescue InfrastructureErrors::InvalidCredentialsError => inv_creds
         render json: { status: 'error', error_code: 'invalid-credentials', msg: I18n.t('infrastructures_controller.invalid_credentials',
