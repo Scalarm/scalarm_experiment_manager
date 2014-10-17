@@ -160,6 +160,48 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # GET params (in JSON):
+  # - infrastructure - name of infrastructure
+  # - query_params - Hash of additional filtering options
+  def get_infrastructure_credentials
+    validate_params(:default, :infrastructure_name)
+    query_params = JSON.parse((params[:query_params] or {}))
+    raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
+    raise SecurityError.new('All additional params should be strings') unless query_params.all? do |k, v|
+      k.kind_of?(String) and v.kind_of?(String)
+    end
+    raise SecurityError.new('Using user_id in query is forbidden') if query_params.include?('user_id')
+    raise SecurityError.new('Using secrets_* in query is forbidden') if query_params.any? {|k, v| k =~ /secret_.*/}
+
+    infrastructure_name = params[:infrastructure]
+    begin
+      infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+      records = infrastructure.get_credentials(@current_user.id, query_params)
+
+      # modify records to contain only non-secret fields
+      hashes = records.collect do |r|
+        r.to_h.select { |k, v| !(k =~ /secret_.*/) }
+      end
+
+      render json: {
+        status: 'ok',
+        data: hashes
+      }
+
+    rescue NoSuchInfrastructureError => exc
+      render json: {
+          status: 'error',
+          msg: "No such infrastructure: #{infrastructure_name}"
+      }
+    rescue Exception => exc
+      render json: {
+          status: 'error',
+          msg: "Internal error: #{exc.to_s}"
+      }
+    end
+
+  end
+
   def stripped_params_values(params)
     Hash[params.map {|k, v| [k.to_sym, v.respond_to?(:strip) ? v.strip : v]}]
   end

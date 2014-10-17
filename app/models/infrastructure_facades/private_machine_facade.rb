@@ -79,6 +79,11 @@ class PrivateMachineFacade < InfrastructureFacade
     credentials
   end
 
+  # params - hash of additional query conditions, e.g. {host: 'localhost'}
+  def get_credentials(user_id, params)
+    PrivateMachineCredentials.where({user_id: user_id}.merge(params))
+  end
+
   def remove_credentials(record_id, user_id, type)
     record = PrivateMachineCredentials.find_by_id(record_id)
     raise InfrastructureErrors::NoCredentialsError if record.nil?

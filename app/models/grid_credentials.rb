@@ -46,6 +46,11 @@ class GridCredentials < EncryptedMongoActiveRecord
     self.hashed_password = encrypted_password
   end
 
+  # Exclude also hashed password field
+  def to_h
+    super.select {|k, v| k != 'hashed_password'}
+  end
+
   def valid?
     begin
       ssh_session {}
