@@ -165,7 +165,7 @@ class InfrastructuresController < ApplicationController
   # - query_params - Hash of additional filtering options
   def get_infrastructure_credentials
     validate_params(:default, :infrastructure_name)
-    query_params = JSON.parse((params[:query_params] or {}))
+    query_params = (params.include?(:query_params) ? JSON.parse(params[:query_params]) : {})
     raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
     raise SecurityError.new('All additional params should be strings') unless query_params.all? do |k, v|
       k.kind_of?(String) and v.kind_of?(String)
