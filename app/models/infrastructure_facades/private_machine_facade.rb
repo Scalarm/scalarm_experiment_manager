@@ -79,6 +79,11 @@ class PrivateMachineFacade < InfrastructureFacade
     credentials
   end
 
+  # params - hash of additional query conditions, e.g. {host: 'localhost'}
+  def get_credentials(user_id, params)
+    PrivateMachineCredentials.where({user_id: user_id}.merge(params))
+  end
+
   def remove_credentials(record_id, user_id, type)
     record = PrivateMachineCredentials.find_by_id(record_id.to_s)
     raise InfrastructureErrors::NoCredentialsError if record.nil?
@@ -120,31 +125,23 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(sm_record)
-    if sm_record.infrastructure_side_monitoring
-
-      sm_record.resource_status.nil? ? :not_available : sm_record.resource_status
-
+    begin
+      ssh = shared_ssh_session(sm_record.credentials)
+    rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
+      # remember this error in case of unable to initialize
+      sm_record.error_log = e.to_s
+      sm_record.save
+      return :not_available
+    rescue Exception => e
+      sm_record.store_error('ssh', e.to_s)
+      _simulation_manager_stop(sm_record)
     else
-
-      begin
-        ssh = shared_ssh_session(sm_record.credentials)
-      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => e
-        # remember this error in case of unable to initialize
-        sm_record.error_log = e.to_s
-        sm_record.save
-        return :not_available
-      rescue Exception => e
-        sm_record.store_error('ssh', e.to_s)
-        _simulation_manager_stop(sm_record)
+      pid = sm_record.pid
+      if pid
+        app_running?(ssh, pid) ? :running_sm : :released
       else
-        pid = sm_record.pid
-        if pid
-          app_running?(ssh, pid) ? :running_sm : :released
-        else
-          :available
-        end
+        :available
       end
-
     end
   end
 
@@ -152,11 +149,11 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.infrastructure_side_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = "tail -25 #{sm_record.log_path}"
+      sm_record.cmd_to_execute = "tail -80 #{sm_record.log_path}"
       sm_record.save
 
     else
-      shared_ssh_session(sm_record.credentials).exec! "tail -25 #{sm_record.log_path}"
+      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.log_path}"
     end
   end
 

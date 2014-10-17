@@ -13,6 +13,8 @@ class ApplicationController < ActionController::Base
   # due to security reasons
   before_filter :set_cache_buster
 
+  rescue_from SecurityError, with: :handle_security_error
+
   @@probe = MonitoringProbe.new
 
   rescue_from SecurityError do |exception| generic_exception_handler(exception) end
@@ -82,6 +84,15 @@ class ApplicationController < ActionController::Base
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "Fri, 01 Jan 1990 00:00:00 GMT"
     response.headers["Server"] = "Scalarm custom server"
+  end
+
+  # -- error handling --
+
+  def handle_security_error(e)
+    respond_to do |format|
+      format.html { raise e }
+      format.json { render json: {status: 'error', message: "Security error: #{e}" }, status: 403 }
+    end
   end
 
 end

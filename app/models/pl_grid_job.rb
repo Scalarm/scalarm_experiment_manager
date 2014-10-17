@@ -86,8 +86,14 @@ class PlGridJob < MongoActiveRecord
   end
 
   def validate
-    raise InfrastructureErrors::NoCredentialsError if credentials.nil?
-    raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid
+    validate_credentials
+  end
+
+  def validate_credentials
+    unless infrastructure_side_monitoring
+      raise InfrastructureErrors::NoCredentialsError if credentials.nil?
+      raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid or not has_usable_credentials?
+    end
   end
 
   def has_usable_credentials?

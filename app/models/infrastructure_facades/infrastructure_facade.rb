@@ -16,6 +16,7 @@ require 'mongo_lock'
 # - add_credentials(user, params, session) -> credentials record [MongoActiveRecord] - save credentials to database
 #  -- all params keys are converted to symbols and values are stripped
 # - remove_credentials(record_id, user_id, params) - remove credentials for this infrastructure (e.g. user credentials)
+# - get_credentials(user_id, params) - show collection of credentials records for this infrastructure
 # - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
 #
 # Database support methods:
@@ -116,7 +117,8 @@ class InfrastructureFacade
     end
 
     sm_config = {
-        InformationServiceAddress: Rails.application.secrets.information_service_url,
+        InformationServiceAddress: (Rails.application.secrets.sm_information_service_url or
+            Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
         Infrastructures: [ infrastructure_name ],
@@ -257,12 +259,18 @@ class InfrastructureFacade
     get_sm_records(user_id, experiment_id, attributes).count
   end
 
+  def other_params_for_booster(user_id)
+    {}
+  end
+
+  def get_credentials(*args)
+    raise NotImplementedError
+  end
+
   # -- SimulationManger delegation default implementation --
 
   def _simulation_manager_before_monitor(record); end
   def _simulation_manager_after_monitor(record); end
-
-  private
 
   def create_simulation_manager(record)
     SimulationManager.new(record, self)
@@ -274,4 +282,7 @@ class InfrastructureFacade
   def self.monitoring_package_dir(sm_uuid)
     "scalarm_monitoring_#{sm_uuid}"
   end
+
+
+  private :create_simulation_manager, :init_resources, :clean_up_resources
 end

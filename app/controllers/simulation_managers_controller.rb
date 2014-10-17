@@ -100,7 +100,7 @@ class SimulationManagersController < ApplicationController
                     sm.monitor
                   end
                 rescue Exception => e
-                  Rails.logger.error("An exception occured during SM monitoring - #{e} - #{e.backtrace}")
+                  Rails.logger.error("An exception occured during SM monitoring - #{e} - #{e.backtrace.join("\n")}")
                 ensure
                   lock.release
                 end
