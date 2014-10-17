@@ -46,7 +46,7 @@
                                                                                                             },
                                                                                                             //lineColor: color
                                                                                                          }, true);
-                  $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({color: color, name: x_axis_label.split(" - ").slice(-1)[0], xAxis: x_axis, data: series});
+                  $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: x_axis_label.split(" - ").slice(-1)[0], xAxis: x_axis, data: series});
         });
         return false;
       })
