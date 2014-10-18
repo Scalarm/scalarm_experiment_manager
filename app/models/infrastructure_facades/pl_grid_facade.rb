@@ -310,7 +310,7 @@ class PlGridFacade < InfrastructureFacade
 
       sm_uuid = sm_record.sm_uuid
 
-      record.validate
+      sm_record.validate
 
       scheduler.prepare_job_files(sm_uuid, sm_record.to_h)
 
