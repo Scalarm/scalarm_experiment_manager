@@ -46,7 +46,7 @@ class PlGridFacade < InfrastructureFacade
         using_temp_credentials?(additional_params) ? create_temp_credentials(additional_params) : get_credentials_from_db(user_id)
 
     raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
-    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid or credentials.password.blank?
+    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid or (credentials.password.blank? and credentials.secret_proxy.blank?)
 
     records = create_records(instances_count, user_id, experiment_id, sm_uuid, additional_params)
     send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
