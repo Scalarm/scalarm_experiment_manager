@@ -210,11 +210,11 @@ module QcgScheduler
     def self.available_hosts
       [
         'zeus.cyfronet.pl',
-        # 'nova.wcss.wroc.pl',# TODO: check ruby
+        'nova.wcss.wroc.pl',
         'galera.task.gda.pl',
-        # 'reef.man.poznan.pl', # TODO: no ruby available!
-        # 'inula.man.poznan.pl', # TODO: no ruby available!
-        # 'hydra.icm.edu.pl', # TODO: no ruby available!
+        'reef.man.poznan.pl',
+        'inula.man.poznan.pl',
+        'hydra.icm.edu.pl',
         'moss.man.poznan.pl'
       ]
     end
