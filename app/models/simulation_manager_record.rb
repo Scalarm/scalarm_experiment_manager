@@ -111,6 +111,8 @@ module SimulationManagerRecord
     self.error = error
     self.error_log = error_log if error_log
     self.save_if_exists
+
+    user.destroy_unused_credentials
   end
 
   def store_no_credentials

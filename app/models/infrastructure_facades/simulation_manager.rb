@@ -165,7 +165,13 @@ class SimulationManager
   end
 
   def destroy_record
+    user = ScalarmUser.where(user_id: record.user_id).first
+
     record.destroy
+
+    unless user.nil?
+      user.destroy_unused_credentials
+    end
   end
 
   # A human-readable Simulation Manager resource name, e.g. id of VM

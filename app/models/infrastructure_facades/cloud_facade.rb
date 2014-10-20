@@ -332,5 +332,28 @@ class CloudFacade < InfrastructureFacade
     credentials
   end
 
+  def destroy_unused_credentials(authentication_mode, user)
+  	if authentication_mode == :x509_proxy
+  		if UserSession.where(session_id: user.id).size > 0
+  			return
+  		end
+
+  		monitored_jobs = CloudVmRecord.where(user_id: user.id, cloud_name: 'pl_cloud', state: {'$ne' => :error})
+  		if monitored_jobs.size > 0
+  			return
+  		end
+
+  		cs = CloudSecrets.where(user_id: user.id, cloud_name: 'pl_cloud').first
+      unless cs.nil?
+        cs._delete_attribute(:secret_proxy)
+
+        if cs.secret_password.nil?
+          cs.destroy
+        else
+          cs.save
+        end
+  		end
+  	end
+  end
 
 end

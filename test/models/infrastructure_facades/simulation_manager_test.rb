@@ -143,15 +143,17 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_monitoring_destroy_after_stopping
     record = stub_everything 'record' do
-      expects(:destroy).once
       stubs(:experiment).returns(stub_everything)
     end
+
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
     sm.stubs(:resource_status).returns(:released)
     sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).never
+
+    sm.expects(:destroy_record).once
 
     sm.monitor
   end

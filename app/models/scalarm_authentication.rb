@@ -35,10 +35,7 @@ module ScalarmAuthentication
         flash[:notice] = t('login_success') unless @session_auth
       end
 
-      @user_session = UserSession.find_by_session_id(session[:user].to_s)
-      @user_session = UserSession.new(session_id: session[:user].to_s) if @user_session.nil?
-      @user_session.last_update = Time.now
-      @user_session.save
+      @user_session = UserSession.create_and_update_session(session[:user].to_s)
     end
   end
 

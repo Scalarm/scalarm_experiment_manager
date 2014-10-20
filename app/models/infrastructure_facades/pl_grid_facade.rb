@@ -391,6 +391,31 @@ class PlGridFacade < InfrastructureFacade
     File.join('/', 'tmp', code_dir + ".zip")
   end
 
+  def destroy_unused_credentials(authentication_mode, user)
+  	if authentication_mode == :x509_proxy
+  		if UserSession.where(session_id: user.id).size > 0
+  			return
+  		end
+
+  		monitored_jobs = PlGridJob.where(user_id: user.id, scheduler_type: {'$in' => ['qsub', 'qcg']},
+  										 state: {'$ne' => :error}, infrastructure_side_monitoring: {'$ne' => true})
+  		if monitored_jobs.size > 0
+  			return
+  		end
+
+  		gc = GridCredentials.where(user_id: user.id).first
+      unless gc.nil?
+  			gc._delete_attribute(:secret_proxy)
+
+        if gc.password.nil?
+          gc.destroy
+        else
+          gc.save
+        end
+  		end
+  	end
+  end
+
   private
 
   def create_simulation_manager(record)

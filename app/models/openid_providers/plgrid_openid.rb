@@ -103,8 +103,9 @@ module PlGridOpenID
   end
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)
+    user_id = BSON::ObjectId(scalarm_user_id.to_s)
     grid_credentials =
-        (GridCredentials.find_by_user_id(scalarm_user_id.to_s) or GridCredentials.new(user_id: scalarm_user_id.to_s))
+        (GridCredentials.find_by_user_id(user_id) or GridCredentials.new(user_id: user_id))
     grid_credentials.login = plgrid_login
     grid_credentials.secret_proxy = proxy_cert
     grid_credentials.save

@@ -44,6 +44,8 @@ require 'mongo_lock'
 #   -- this method should not be used directly
 # - _simulation_manager_before_monitor(record) - executed before monitoring single resource
 # - _simulation_manager_after_monitor(record) - executed after monitoring single resource
+# - destroy_unused_credentials(authentication_mode, user) - destroy infrastructure credentials which are not used anymore
+
 
 
 class InfrastructureFacade
@@ -283,6 +285,7 @@ class InfrastructureFacade
     "scalarm_monitoring_#{sm_uuid}"
   end
 
+  def destroy_unused_credentials(authentication_mode, user); end
 
   private :create_simulation_manager, :init_resources, :clean_up_resources
 end
