@@ -515,7 +515,7 @@ class ExperimentsController < ApplicationController
   end
 
   def scatter_plot_series
-    if params[:x_axis].blank? or params[:y_axis].blank?
+    if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
       @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
