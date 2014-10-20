@@ -17,7 +17,7 @@ input[type=submit].button {
 
 #wrapper {
   position: relative;
-  max-width: 960px;
+  max-width: 1260px;
   background: url(image_path('bg03.jpg')) repeat;
   margin-top: 50px;
   margin-right: auto;
@@ -67,7 +67,7 @@ footer {
   clear: both;
   margin: 10px 10px 0 10px;
   background: url(image_path('bg03.jpg')) repeat;
-  max-width: 960px;
+  max-width: 1260px;
   margin-right: auto;
   margin-left: auto;
   padding: 5px;
@@ -75,6 +75,10 @@ footer {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+}
+
+.row {
+  max-width: 1260px;
 }
 
 i {
@@ -337,23 +341,23 @@ select {
     border: medium solid;
 }
 
-div.histogram-analysis {
-    position: absolute;
-    top: 0px;
-    right: -110px;
-}
-
-div.rtree-analysis {
-    position: absolute;
-    top: 170px;
-    right: -110px;
-}
-
-div.bivariate-analysis {
-    position: absolute;
-    top: 340px;
-    right: -110px;
-}
+//div.histogram-analysis {
+//    position: absolute;
+//    top: 0px;
+//    right: -110px;
+//}
+//
+//div.rtree-analysis {
+//    position: absolute;
+//    top: 170px;
+//    right: -110px;
+//}
+//
+//div.bivariate-analysis {
+//    position: absolute;
+//    top: 340px;
+//    right: -110px;
+//}
 
 /* Experiment links */
 

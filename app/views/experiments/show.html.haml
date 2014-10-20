@@ -1,29 +1,33 @@
 - content_for :title, 'Scalarm - monitoring'
 - content_for :help, raw(t('help.experiments.monitoring'))
 
-= render 'experiment_links'
-= render 'analysis_charts'
+-#= render 'experiment_links'
+-#= render 'analysis_charts'
 
-%section.panel.radius
-  = render 'information_panel'
+.row(data-equalizer="")
+  %section.panel.small-3.columns(data-equalizer-watch="")
+    Lorem Ipsum jest tekstem stosowanym jako przykładowy wypełniacz w przemyśle poligraficznym. Został po raz pierwszy użyty w XV w. przez nieznanego drukarza do wypełnienia tekstem próbnej książki. Pięć wieków później zaczął być używany przemyśle elektronicznym, pozostając praktycznie niezmienionym. Spopularyzował się w latach 60. XX w. wraz z publikacją arkuszy Letrasetu, zawierających fragmenty Lorem Ipsum, a ostatnio z zawierającym różne wersje Lorem Ipsum oprogramowaniem przeznaczonym do realizacji druków na komputerach osobistych, jak Aldus PageMaker
+  %section.small-9.columns(data-equalizer-watch="")
+    %section.row.panel.radius
+      = render 'information_panel'
 
-%section.panel.radius.last-element#monitoring_section
-  %h3.subheader= t('experiments.show.stats_header')
+    %section.row.panel.radius.last-element#monitoring_section
+      %h3.subheader= t('experiments.show.stats_header')
 
-  .content(style="padding-top: 30px; position: relative;" )
+      .content(style="padding-top: 30px; position: relative;" )
 
-    = render 'monitoring_stats'
-    .speedometer{id: "speedometer_#{@experiment.id}"}
+        = render 'monitoring_stats'
+        .speedometer{id: "speedometer_#{@experiment.id}"}
 
-    %article#experiment_progress_bar(style="padding-top: 50px;" )
-      %h4.subheader= t('.progress_bar_header')
+        %article#experiment_progress_bar(style="padding-top: 50px;" )
+          %h4.subheader= t('.progress_bar_header')
 
-    = render 'monitoring_actions'
+        = render 'monitoring_actions'
 
-%section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
-  = render 'monitoring_table'
+    %section.row.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
+      = render 'monitoring_table'
 
-= render 'scheduling_policy_dialog'
+    = render 'scheduling_policy_dialog'
 
 - content_for :javascript do
   :javascript
