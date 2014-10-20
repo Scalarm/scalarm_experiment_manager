@@ -11,7 +11,7 @@ class ApplicationController < ActionController::Base
   before_filter :start_monitoring
   after_filter :stop_monitoring
   # due to security reasons
-  before_filter :set_cache_buster
+  after_filter :set_cache_buster
 
   rescue_from SecurityError, with: :handle_security_error
 
@@ -82,8 +82,16 @@ class ApplicationController < ActionController::Base
   def set_cache_buster
     response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
     response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "Fri, 01 Jan 1990 00:00:00 GMT"
     response.headers["Server"] = "Scalarm custom server"
+
+    cookies.each do |key, value|
+      response.delete_cookie(key)
+      if value.kind_of?(Hash)
+        response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
+      else
+        response.set_cookie(key, {value: value, expires: 6.hour.from_now})
+      end
+    end
   end
 
   # -- error handling --
