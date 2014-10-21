@@ -17,7 +17,7 @@ var panel_locals = require("./panel_locals.js");
 var jade = require("jade");
 
 var PORT = config.server_port,
-	EXTERNAL_IP = config.server_ip,			//TODO - retrieve external IP
+	EXTERNAL_IP = config.server_ip + ":3001",			//TODO - retrieve external IP
 	ADDRESS = EXTERNAL_IP + config.server_prefix;		//address suffix set in /etc/nginx/conf.d/default.conf
 
 var app = http.createServer(function(req, res) {
@@ -96,7 +96,7 @@ wsServer.on('request', function(request) {
 
 //--------------------------------
 function authenticate(cookies, experimentID, success, error){
-    if(cookies) {
+    if(!cookies) {
         error("Cookies not sent");
         return;
     }
