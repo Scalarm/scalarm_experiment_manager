@@ -1,3 +1,7 @@
+# each authentication method must set:
+# - session[:user] to user id as string,
+# - @current_user or @sm_user to scalarm user or simulation manager temp pass respectively
+# - @session_auth to true if this is session-based authentication
 module ScalarmAuthentication
 
   # the main authentication function + session management
@@ -50,7 +54,7 @@ module ScalarmAuthentication
     Rails.logger.debug("[authentication] using DN: '#{cert_dn}'")
 
     begin
-      session[:user] = ScalarmUser.authenticate_with_certificate(cert_dn).id
+      session[:user] = ScalarmUser.authenticate_with_certificate(cert_dn).id.to_s
       @current_user = ScalarmUser.find_by_id(session[:user].to_s)
     rescue Exception => e
       @current_user = nil
@@ -74,6 +78,7 @@ module ScalarmAuthentication
         Rails.logger.debug("[authentication] using login: '#{login}'")
 
         @current_user = ScalarmUser.authenticate_with_password(login, password)
+        session[:user] = @current_user.id.to_s unless @current_user.nil?
       end
 
     end
