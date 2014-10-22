@@ -33,10 +33,32 @@ input[type=submit].button {
 
 #panel {
   margin-top: 50px;
+  &.affix {
+    position: fixed;
+    top: 0px;
+    width: 315px;
+  }
 }
 
+.affix {
+  position: fixed;
+  top: 50px;
+}
+
+#panel .panel {
+  overflow: hidden;
+  &:hover {
+    overflow-y: scroll;
+  }
+}
 .panel {
   margin: 5px !important;
+  padding: 30 40 0px;
+}
+
+.analyses-panel img {
+  width: 117px;
+
 }
 header {
   padding: 5px;
@@ -74,7 +96,7 @@ footer {
   clear: both;
   margin: 10px 10px 0 10px;
   background: url(image_path('bg03.jpg')) repeat;
-  max-width: 1260px;
+  max-width: 960px;
   margin-right: auto;
   margin-left: auto;
   padding: 5px;

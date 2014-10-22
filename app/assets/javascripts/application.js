@@ -26,6 +26,7 @@
 //= require toastr
 //= require jquery.remotipart
 //= require d3
+//= require bootstrap/bootstrap
 
 
 $(function() {

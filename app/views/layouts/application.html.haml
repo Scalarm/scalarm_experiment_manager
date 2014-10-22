@@ -12,7 +12,7 @@
     = render 'layouts/navbar' unless @current_user.nil?
 
     .row
-      #panel.small-3.columns
+      #panel.small-3.columns(data-spy="affix" data-offset-top="50" data-offset-bottom="1000")
         = yield :panel
       - content_for?(:panel) ? container='div#wrapper.small-9.columns' : container="div#wrapper"
       - haml_tag container do
@@ -42,5 +42,38 @@
         if(#{not flash[:error].nil?}) {
           toastr['error']("#{flash[:error]}");
         }
+        $('#panel').affix();
+        var factorHeight = 0.7;
+        $("#panel .panel").height(window.innerHeight*factorHeight);
+        window.onresize = function() {
+          $("#panel .panel").height(window.innerHeight*factorHeight);
+        };
+
+
+
+        $.fn.dontScrollParent = function()
+        {
+            this.bind('mousewheel DOMMouseScroll',function(e)
+            {
+                var delta = e.originalEvent.wheelDelta || -e.originalEvent.detail;
+
+                if (delta > 0 && $(this).scrollTop() <= 0) {
+                  console.log("delta>0");
+                  return false;
+                }
+                console.log("-----------");
+                console.log($(this).scrollTop());
+                console.log(this.scrollHeight - $(this).height());
+                if (delta < 0 && $(this).scrollTop() >= this.scrollHeight - $(this).height()-25) {
+                  console.log("delta<0");
+                  return false;
+                }
+
+                return true;
+            });
+        }
+        $('#panel .panel').dontScrollParent();
+
+
       });
     = yield :javascript
