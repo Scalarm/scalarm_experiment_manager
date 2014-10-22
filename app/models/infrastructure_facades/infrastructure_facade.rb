@@ -64,9 +64,11 @@ class InfrastructureFacade
     # using simulation manager implementation based on application config
     if Rails.configuration.simulation_manager_version == :go
       # TODO checking somehow the destination server architecture
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'), "scalarm_simulation_manager_#{sm_uuid}")
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'),
+                     "scalarm_simulation_manager_#{sm_uuid}")
     elsif Rails.configuration.simulation_manager_version == :ruby
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'),
+                     "scalarm_simulation_manager_#{sm_uuid}")
     end
 
     # prepare sm configuration
@@ -75,7 +77,6 @@ class InfrastructureFacade
 
     sm_config = {
         experiment_id: experiment_id,
-        #user_id: user_id,
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
