@@ -672,7 +672,7 @@ class ExperimentsController < ApplicationController
     validate_params(:default, :simulation_id, :simulation_name)
 
     @simulation = if params['simulation_id']
-                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'])).first
+                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
                   elsif params['simulation_name']
                     @current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
                   else
