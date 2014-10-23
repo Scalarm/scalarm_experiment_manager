@@ -91,7 +91,7 @@ class ApplicationController < ActionController::Base
     #  else
     #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
     #  end
-    end
+    #end
   end
 
   # -- error handling --
