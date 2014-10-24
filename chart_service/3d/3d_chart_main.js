@@ -1,7 +1,23 @@
 function threeD_main(i, param1, param2, param3, data) {
-    console.log(data);
     var min_z = data.reduce(function(a, b) { return a <= b[2] ? a : b[2];}, Infinity);
     var max_z = data.reduce(function(a, b) { return a >= b[2] ? a : b[2];}, -Infinity);
+
+    function scale(z, min, max){
+        return max-Math.round((z-min_z)/(max_z-min_z)*(max-min));
+    }
+
+    var tab = data.map(function(obj){
+        var color = 'rgb(' + scale(obj[2], 109, 255) + ', ' + scale(obj[2], 66, 157) + ', ' + scale(obj[2], 30, 71) + ')';
+        return {x: obj[0], y: obj[1], z: obj[2],
+            color: color,
+            marker: {
+                states: {
+                    hover: {
+                        fillColor: color
+                    }
+                }
+        }}});
+    console.log(tab);
 
     //nice feature but causes "udefined is not a function" on loading more than one chart
     // Give the points a 3D feel by adding a radial gradient
@@ -68,10 +84,13 @@ function threeD_main(i, param1, param2, param3, data) {
             enabled: false
         },
         series: [{
-            name: 'Data',
-            colorByPoint: true,
-            data: data
-        }]
+            data: tab
+        }],
+        tooltip: {
+            formatter: function(){
+                return param1 + ": " + this.x + "<br/>" + param2 + ": " + this.y + "<br>" + param3 + ": " + this.key;
+            }
+        }
     });
 
 
