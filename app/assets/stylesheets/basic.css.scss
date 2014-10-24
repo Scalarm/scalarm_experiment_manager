@@ -53,7 +53,7 @@ input[type=submit].button {
 }
 .panel {
   margin: 5px !important;
-  padding: 30 40 0px;
+  padding: 30 40 40px;
 }
 
 .analyses-panel img {
@@ -94,9 +94,9 @@ header {
 footer {
   padding: 0 20px;
   clear: both;
-  margin: 10px 10px 0 10px;
+  margin: 10px 10px 10px 10px;
   background: url(image_path('bg03.jpg')) repeat;
-  max-width: 960px;
+//  max-width: 960px;
   margin-right: auto;
   margin-left: auto;
   padding: 5px;

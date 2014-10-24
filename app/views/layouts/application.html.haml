@@ -12,25 +12,25 @@
     = render 'layouts/navbar' unless @current_user.nil?
 
     .row
-      #panel.small-3.columns(data-spy="affix" data-offset-top="50" data-offset-bottom="1000")
+      #panel.small-3.columns
         = yield :panel
-      - content_for?(:panel) ? container='div#wrapper.small-9.columns' : container="div#wrapper"
+      - content_for?(:panel) ? container='div.small-9.columns' : container="div"
       - haml_tag container do
-        .notice.alert-box.radius.success(style="display: none;")
-        .panel.radius.callout.help(style="display: none;")
-          = content_for?(:help) ? yield(:help) : t('help.no_help')
-        = yield
-
-    %footer
-      .row
-        .small-7.columns
-          = raw t('copyright')
-        .small-3.columns(style="padding-top: 7px;")
-          = link_to image_tag('scalarm-blue-small.png'), 
-            'http://www.scalarm.com'
-        .small-2.columns
-          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 
-            'http://www.cyfronet.pl'
+        #wrapper
+          .notice.alert-box.radius.success(style="display: none;")
+          .panel.radius.callout.help(style="display: none;")
+            = content_for?(:help) ? yield(:help) : t('help.no_help')
+          = yield
+        %footer
+          .row
+            .small-7.columns
+              = raw t('copyright')
+            .small-3.columns(style="padding-top: 7px;")
+              = link_to image_tag('scalarm-blue-small.png'),
+                'http://www.scalarm.com'
+            .small-2.columns
+              = link_to image_tag('cyfronet_logo.png', size: "92x64"),
+                'http://www.cyfronet.pl'
 
 
     = javascript_include_tag 'application'
@@ -42,8 +42,8 @@
         if(#{not flash[:error].nil?}) {
           toastr['error']("#{flash[:error]}");
         }
-        $('#panel').affix();
-        var factorHeight = 0.7;
+        //$('#panel').affix();
+        var factorHeight = 0.85;
         $("#panel .panel").height(window.innerHeight*factorHeight);
         window.onresize = function() {
           $("#panel .panel").height(window.innerHeight*factorHeight);
