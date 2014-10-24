@@ -2,6 +2,8 @@ var DBURL = require("./config.js").db_url;
 var COLLECTION_NAME = "experiment_instances_";
 var mongo = require('mongodb');
 var client = mongo.MongoClient;
+var crypto = require('crypto');
+
 var connect = function(success, error){
 	client.connect(DBURL, function(err, db){
 		if (err){
@@ -57,7 +59,9 @@ var connect = function(success, error){
 			});
 		};
 
-		var authenticate = function(userID, experimentID, success, error) {
+		var checkIfExperimentVisibleToUser = function(userID, experimentID, success, error) {
+            console.log("\tuserID: ", userID);
+            console.log("\texperimentID: ", experimentID);
 			db.collection("experiments").find({$or : [
 				{"_id": mongo.ObjectID(experimentID), "user_id": mongo.ObjectID(userID)}, 
 				{"_id": mongo.ObjectID(experimentID), "shared_with" : {$in:[mongo.ObjectID(userID)]}}
@@ -71,6 +75,36 @@ var connect = function(success, error){
 			});
 		};
 
+        var checkUserAndPassword = function(username, password, success, error){
+            db.collection('scalarm_users', function(err, collection){
+                if(err){
+                    error(err.toString());
+                    return;
+                }
+                else{
+                    collection.findOne({login: username}, function(err, item){
+                        if(err){
+                            error(err.toString());
+                            return;
+                        }
+                        else if(item) {
+                            var salt = item.password_salt;
+                            var hash = crypto.createHash('sha256').update(password+salt).digest('hex');
+                            if(hash===item.password_hash){
+                                success(item._id.toString());
+                            }
+                            else{
+                                error("Wrong password\n");
+                            }
+                        }
+                        else{
+                            error("No such user\n");
+                        }
+                    })
+                }
+            })
+        }
+
 		var getParameters = function(experimentID, success, error) {
 			var data = {};
 
@@ -80,6 +114,7 @@ var connect = function(success, error){
 			db.collection(COLLECTION_NAME+experimentID, function(err, collection) {
 				if(err){
 					error(err.toString());
+                    return;
 				}
 	        	collection.findOne(filter, function(err, item) {
 	        		data["result"] = [];
@@ -192,7 +227,7 @@ var connect = function(success, error){
 						domain: [mins[param2], maxes[param2]]
 					};
 					data.effects = result;
-					console.log(data);
+					//console.log(data);
 					success(data);
 				}
 			}, error);
@@ -200,9 +235,10 @@ var connect = function(success, error){
 
 		module.exports.getPareto = getPareto;
 		module.exports.getInteraction = getInteraction;
-		module.exports.authenticate = authenticate;
+		module.exports.checkIfExperimentVisibleToUser = checkIfExperimentVisibleToUser;
 		module.exports.getParameters = getParameters;
 		module.exports.createStreamFor = createStreamFor;
+        module.exports.checkUserAndPassword = checkUserAndPassword;
 	});
 }
 
