@@ -41,14 +41,11 @@ input[type=submit].button {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
 }
 
 #panel .panel {
   overflow: hidden;
   height: 100%;
-  -webkit-box-sizing: border-box;
   &:hover {
     overflow-y: scroll;
   }
@@ -459,7 +456,7 @@ div.historical_experiments_link {
 }
 
 article#experiment_stats {
-  position: relative;  
+  position: relative;
   font-size: 15px;
 
   .content {
@@ -636,11 +633,8 @@ textarea {
 @media screen and (max-width: 1260px) {
   #panel {
     width: calc(3*(100%/12));
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
     & .panel {
       background-color: red;
-//      -webkit-box-sizing: border-box;
     };
     & .action-button span {
       display: none;
