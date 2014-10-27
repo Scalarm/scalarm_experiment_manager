@@ -35,16 +35,20 @@ input[type=submit].button {
   background: url(image_path('bg03.jpg')) repeat;
   position: fixed;
   margin-top: 50px;
-  padding: 10px;
+  padding: 10px 10px 20px;
   width: (1260/12)*3px;
   /* curved border radius */
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
 }
 
 #panel .panel {
   overflow: hidden;
+  height: 100%;
+  -webkit-box-sizing: border-box;
   &:hover {
     overflow-y: scroll;
   }
@@ -627,4 +631,23 @@ table.simulations {
 textarea {
   max-height: 500px;
   max-width: 500px;
+}
+
+@media screen and (max-width: 1260px) {
+  #panel {
+    width: calc(3*(100%/12));
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    & .panel {
+      background-color: red;
+//      -webkit-box-sizing: border-box;
+    };
+    & .action-button span {
+      display: none;
+    }
+  }
+
+  div.action-button .row {
+    text-align: center;
+  }
 }
