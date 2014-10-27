@@ -80,18 +80,18 @@ class ApplicationController < ActionController::Base
 
   # due to security reasons
   def set_cache_buster
-    response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Server"] = "Scalarm custom server"
-
-    cookies.each do |key, value|
-      response.delete_cookie(key)
-      if value.kind_of?(Hash)
-        response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
-      else
-        response.set_cookie(key, {value: value, expires: 6.hour.from_now})
-      end
-    end
+    #response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
+    #response.headers["Pragma"] = "no-cache"
+    #response.headers["Server"] = "Scalarm custom server"
+    #
+    #cookies.each do |key, value|
+    #  response.delete_cookie(key)
+    #  if value.kind_of?(Hash)
+    #    response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
+    #  else
+    #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
+    #  end
+    #end
   end
 
   # -- error handling --

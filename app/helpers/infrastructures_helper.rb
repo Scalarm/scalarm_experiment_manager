@@ -33,7 +33,7 @@ module InfrastructuresHelper
   end
 
   def private_machine_credentials_select_data(user_id)
-    PrivateMachineCredentials.find_all_by_user_id(user_id.to_s).map{|mach| [mach.machine_desc, mach.id]}
+    PrivateMachineCredentials.find_all_by_user_id(user_id).map{|mach| [mach.machine_desc, mach.id]}
   end
 
   def infrastructure_long_name(infrastructure_name)
