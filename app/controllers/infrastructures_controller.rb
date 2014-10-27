@@ -53,6 +53,11 @@ class InfrastructuresController < ApplicationController
     infrastructure = nil
     infrastructure_name = '?'
 
+    # TODO
+    if !params[:time_limit] or params[:time_limit].to_i <= 0
+      params['time_limit'] = params[:time_limit] = 60
+    end
+
     begin
       unless validate_schedule_simulation_managers(params)
         return render json: { status: 'error', error_code: 'missing-parameters', msg: I18n.t('infrastructures_controller.missing_parameters') }

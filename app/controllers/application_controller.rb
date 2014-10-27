@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   include ScalarmAuthentication
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid]
+  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid, :login]
 
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
@@ -80,18 +80,18 @@ class ApplicationController < ActionController::Base
 
   # due to security reasons
   def set_cache_buster
-    response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Server"] = "Scalarm custom server"
-
-    cookies.each do |key, value|
-      response.delete_cookie(key)
-      if value.kind_of?(Hash)
-        response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
-      else
-        response.set_cookie(key, {value: value, expires: 6.hour.from_now})
-      end
-    end
+    #response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
+    #response.headers["Pragma"] = "no-cache"
+    #response.headers["Server"] = "Scalarm custom server"
+    #
+    #cookies.each do |key, value|
+    #  response.delete_cookie(key)
+    #  if value.kind_of?(Hash)
+    #    response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
+    #  else
+    #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
+    #  end
+    #end
   end
 
   # -- error handling --

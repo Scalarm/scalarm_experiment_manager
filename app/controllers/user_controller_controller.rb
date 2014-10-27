@@ -34,7 +34,7 @@ class UserControllerController < ApplicationController
           raise t('user_controller.login.login_banned', time: requested_user.ban_expire_time('scalarm'))
         end
 
-        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id
+        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id.to_s
 
         if requested_user.credentials_failed and requested_user.credentials_failed.include?('scalarm')
           requested_user.credentials_failed['scalarm'] = []
