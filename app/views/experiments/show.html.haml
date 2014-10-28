@@ -84,7 +84,11 @@
 
       window.toggle_panels_on_title_click();
 
-      $("#panel .panel").load("/chart/panel?id=#{@experiment.id}");
+      $("#panel .panel").load("/chart/panel?id=#{@experiment.id}", function(response, status, xhr) {
+        if(status==="error") {
+          console.log("No available Chart Service. Using on-site content.");
+        }
+      });
       $(document).foundation();
 
       window.WebSocket = window.WebSocket || window.MozWebSocket;

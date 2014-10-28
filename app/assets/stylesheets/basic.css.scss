@@ -46,9 +46,27 @@ input[type=submit].button {
 #panel .panel {
   overflow: hidden;
   height: 100%;
+  & dl {
+    list-style-type: none;
+  }
   &:hover {
     overflow-y: scroll;
   }
+  & dd {
+    text-align: center;
+    & a {
+      padding: 6px;
+//      text-align: center;
+    }
+    & div {
+//      text-align: center;
+    }
+  }
+
+}
+
+#searchList {
+  margin: 0px;
 }
 .panel {
   margin: 5px !important;
