@@ -215,6 +215,27 @@ class window.ExperimentMonitor
       $("#predicted_finish_time").html(statistics.predicted_finish_time)
       $("#p_predicted_finish_time").show()
 
+  update_bar: (bar_info) =>
+    bar_info = JSON.parse(bar_info)
+    console.log(bar_info)
+    canvas = document.getElementById("exp_progress_bar_2")
+    context = canvas.getContext("2d")
+    part_width = canvas.width / bar_info.length
+
+    i = bar_info.bar_num
+
+    context.fillStyle = if(bar_info.color == 0) then "#BDBDBD" else "rgb(0, #{bar_info.color}, 0)"
+    if(bar_info.color < 0)
+      context.fillStyle = "#F62217"
+
+    if i == bar_info.length - 1
+      context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
+      @bar_cells.push([part_width * i, part_width * i + part_width])
+    else
+      context.fillRect(part_width * i, 10, part_width*0.95, canvas.height - 10)
+      @bar_cells.push([part_width * i, part_width * i + part_width*0.95])
+#  TODO: remove updating progress bar every 30 sec?
+
   generate_html: (parent_id) ->
     $("#experiment_progress_bar").append($('<canvas>').attr('id', 'exp_progress_bar_2'))
 

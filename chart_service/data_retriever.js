@@ -119,7 +119,8 @@ var connect = function(success, error){
 
 			stream.on('data', function(item) {
 				console.log(item);
-				connection.send(JSON.stringify(item));
+                console.log(item.bar_info);
+				connection.send(JSON.stringify(item.bar_info));
 			});
 			stream.on('error', function(error) {
 				console.log("Error retrieving data from capped collection: " + error);

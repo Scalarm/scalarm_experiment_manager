@@ -51,24 +51,23 @@
       try {
         //TODO - insert appropriate address
         var ws = new WebSocket("ws://localhost:8080/#{@experiment.id}");
+        window.onbeforeunload = function() {
+          //Connection closed on Download simulation manager!!
+          ws.onclose = function () {}; // disable onclose handler first
+          ws.close()
+        };
+
+        ws.onmessage = function(message) {
+          console.log("refreshing progress bar...");
+          console.log(message.data);
+          monitor.update_bar(message.data);
+        };
+
+        ws.onerror = function(message) {
+          console.log(message);
+        }
       }
       catch (e) {
         console.log("Unable to establish WebSocket connection.");
-        var ws = {};
-      }
-
-      window.onbeforeunload = function() {
-        ws.onclose = function () {}; // disable onclose handler first
-        ws.close()
-      };
-
-      ws.onmessage = function(message) {
-        console.log("refreshing progress bar...");
-        console.log(message.data);
-        monitor.update();
-      };
-
-      ws.onerror = function(message) {
-        console.log(message);
       }
     });
