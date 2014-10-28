@@ -72,33 +72,39 @@ an application. We used this approach in our Scalarm platform. Experiment Manage
 Information Service in this file:
 
 ```
-development:
-  secret_key_base: 'd132fd22bc612e157d722e980c4b0525b938f225f9f7f66ea'
+default: &DEFAULT
   information_service_url: "localhost:11300"
-  information_service_user: scalarm
-  information_service_pass: scalarm
-  # if you want to communicate through HTTP
+  secret_key_base: "<you need to change this - with $rake secret>"
+  information_service_user: "<set to custom name describing your Scalarm instance>"
+  information_service_pass: "<generate strong password instead of this>"
+  # if you want to communicate through HTTP with Scalarm Information Service
   information_service_development: true
+  # if you want to communicate through HTTP with Scalarm Storage Manager
   storage_manager_development: true
+  # if you installed and want to use scalarm custom load balancer set to false
+  disable_load_balancer_registration: true
+  # if you use load balancer you need to specify multicast address (to receive load balancer address)
+  #multicast_address: "224.1.2.3:8000"
+  # if you use load balancer on http you need to specify this
+  #load_balancer_development: true
+  # if you want to run and register service in load balancer on other port than default
+  #port: "3000"
   # if you want to communicate with Storage Manager using a different URL than the one stored in Information Service
   #storage_manager_url: "localhost:20000"
   # if you want to pass to Simulation Manager a different URL of Information Service than the one mentioned above
   #sm_information_service_url: "localhost:37128"
 
+development:
+  <<: *DEFAULT
+
 test:
-  secret_key_base: 'd132fd22bc612e157d722e980c4b0525b938f225f9f7f66ea'
-  information_service_url: "localhost:11300"
-  information_service_user: scalarm
-  information_service_pass: scalarm
-  # if you want to communicate through HTTP
-  information_service_development: true
-  storage_manager_development: true
+  <<: *DEFAULT
 
 production:
   secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
-  information_service_url: <%= ENV["INFORMATION_SERVICE_URL"] %>
-  information_service_user: <%= ENV["INFORMATION_SERVICE_LOGIN"] %>
-  information_service_pass: <%= ENV["INFORMATION_SERVICE_PASSWORD"] %>
+  information_service_url: "<%= ENV["INFORMATION_SERVICE_URL"] %>"
+  information_service_user: "<%= ENV["INFORMATION_SERVICE_LOGIN"] %>"
+  information_service_pass: "<%= ENV["INFORMATION_SERVICE_PASSWORD"] %>"
 ```
 
 In this "config/scalarm.yml" file we have various information Scalarm configuration - typically there is no need to change them:

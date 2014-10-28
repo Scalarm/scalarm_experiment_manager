@@ -11,6 +11,15 @@ class ExperimentsController < ApplicationController
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
     @simulations = @current_user.get_simulation_scenarios
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {
+          status: 'ok',
+          running: @running_experiments.collect { |e| e.id.to_s },
+          historical: @historical_experiments.collect { |e| e.id.to_s }
+      }}
+    end
   end
 
   def show
@@ -22,7 +31,15 @@ class ExperimentsController < ApplicationController
       start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
       flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
-      redirect_to action: :index
+      respond_to do |format|
+        format.html { redirect_to action: :index }
+        format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
+      end
+    end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok', data: @experiment.to_h } }
     end
   end
 
@@ -559,7 +576,7 @@ class ExperimentsController < ApplicationController
 
     @experiment, @user = nil, nil
 
-    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
+    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login].to_s)).blank?
       flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
@@ -634,15 +651,17 @@ class ExperimentsController < ApplicationController
     @experiment = nil
 
     if params.include?(:id)
+      experiment_id = BSON::ObjectId(params[:id].to_s)
+
       if not @current_user.nil?
-        @experiment = @current_user.experiments.where(id: params[:id]).first
+        @experiment = @current_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
+          flash[:error] = t('experiments.not_found', { id: experiment_id, user: @current_user.login })
         end
 
       elsif (not @sm_user.nil?)
-        @experiment = @sm_user.scalarm_user.experiments.where(id: params[:id]).first
+        @experiment = @sm_user.scalarm_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
           flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])
@@ -663,9 +682,9 @@ class ExperimentsController < ApplicationController
     validate_params(:default, :simulation_id, :simulation_name)
 
     @simulation = if params['simulation_id']
-                    @current_user.simulation_scenarios.where(id: params['simulation_id']).first
+                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
                   elsif params['simulation_name']
-                    @current_user.simulation_scenarios.where(name: params['simulation_name']).first
+                    @current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
                   else
                     nil
                   end

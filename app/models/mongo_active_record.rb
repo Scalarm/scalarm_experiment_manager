@@ -78,6 +78,10 @@ class MongoActiveRecord
     attributes[attribute]
   end
 
+  def _delete_attribute(attribute)
+    @attributes.delete(attribute)
+  end
+
   # save/update json document in db based on attributes
   # if this is new object instance - _id attribute will be added to attributes
   def save
@@ -235,8 +239,10 @@ class MongoActiveRecord
       key = key.to_sym
       key = :_id if key == :id
 
-      if key.to_s.ends_with?('_id') and self.ids_auto_convert
+      if key == :_id
         value = BSON::ObjectId(value.to_s)
+      elsif key.to_s.ends_with?('_id') and self.ids_auto_convert
+        value = Utils::to_bson_if_string(value)
       end
 
       mongo_class.conditions[key] = value

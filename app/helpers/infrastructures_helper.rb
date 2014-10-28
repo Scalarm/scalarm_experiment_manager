@@ -23,7 +23,7 @@ module InfrastructuresHelper
   end
 
   def image_secrets_select_data(user_id, cloud_name)
-    CloudImageSecrets.find_all_by_query(user_id: user_id, cloud_name: cloud_name).map do |i|
+    CloudImageSecrets.find_all_by_query(user_id: user_id, cloud_name: cloud_name.to_s).map do |i|
       ["#{i.image_id} #{i.label ? i.label : ''} (#{i.image_login})", i.id]
     end
   end

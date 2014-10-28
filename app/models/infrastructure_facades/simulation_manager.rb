@@ -165,7 +165,13 @@ class SimulationManager
   end
 
   def destroy_record
+    user = ScalarmUser.where(user_id: record.user_id).first
+
     record.destroy
+
+    unless user.nil?
+      user.destroy_unused_credentials
+    end
   end
 
   # A human-readable Simulation Manager resource name, e.g. id of VM
@@ -278,7 +284,7 @@ class SimulationManager
         logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
         ERROR_DELEGATES[action_name.to_sym]
       else
-        result = delegate_to_infrastructure(action_name)
+        result = (general_action(action_name) or delegate_to_infrastructure(action_name))
         # NOTICE: terminating state is set twice if stop was invoked from monitoring case
         set_state(:terminating) if action_name == 'stop'
         result
@@ -287,6 +293,16 @@ class SimulationManager
       logger.warn "No credentials exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
       record.store_no_credentials
       raise
+    end
+  end
+
+  # NOTE: all actions invoked here must be != false/nil
+  def general_action(action_name)
+    if action_name == 'resource_status' and record.infrastructure_side_monitoring
+      stat = record.resource_status
+      stat.nil? ? :not_available : stat
+    else
+      nil
     end
   end
 
