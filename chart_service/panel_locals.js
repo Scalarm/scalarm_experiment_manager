@@ -6,12 +6,12 @@ module.exports = {
             methods: [{
                 name: "Interaction",
                 id: "interactionModal",
-                image: "http://placehold.it/117x71",
+                image: "/chart/images/material_design/ic_3d_rotation_black_48dp.png",
                 description: "Shows interaction between 2 input parameters"
             },{
                 name: "Pareto",
                 id: "paretoModal",
-                image: "http://placehold.it/117x71",
+                image: "/chart/images/material_design/ic_account_balance_black_48dp.png",
                 description: "Shows significance of parameters (or interaction)"
             }],
 
@@ -23,21 +23,21 @@ module.exports = {
                 name: "Histograms",
                 id: "experiment-analysis-modal",
                 em_class: "histogram-analysis",
-                image: "http://placehold.it/117x71",
+                image: "/chart/images/material_design/ic_account_balance_wallet_black_48dp.png",
                 description: "TODO"
 
             },{
                 name: "Regression trees",
                 id: "experiment-analysis-modal",
                 em_class: "rtree-analysis",
-                image: "http://placehold.it/117x71",
+                image: "/chart/images/material_design/ic_assignment_black_48dp.png",
                 description: "TODO"
 
             },{
                 name: "Scatter plots",
                 id: "experiment-analysis-modal",
                 em_class: "bivariate-analysis",
-                image: "http://placehold.it/117x71",
+                image: "/chart/images/material_design/ic_3d_rotation_black_48dp.png",
                 description: "Bivariate analysis - scatter plot"
 
             }]

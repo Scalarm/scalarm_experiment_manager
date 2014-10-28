@@ -2,7 +2,7 @@
 - content_for :help, raw(t('help.experiments.monitoring'))
 
 -#= render 'experiment_links'
--#= render 'analysis_charts'
+= render 'analysis_charts'
 
 -#.row(data-equalizer="")
 = content_for :panel do
@@ -81,7 +81,7 @@
 
       var monitor = new window.ExperimentMonitor('#{@experiment.id}');
       monitor.generate_html('experiment_stats');
-      
+
       window.toggle_panels_on_title_click();
 
       $("#panel .panel").load("/chart/panel?id=#{@experiment.id}");
