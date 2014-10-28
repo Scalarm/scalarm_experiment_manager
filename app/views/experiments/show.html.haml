@@ -85,8 +85,7 @@
       window.toggle_panels_on_title_click();
 
       $("#panel .panel").load("/chart/panel?id=#{@experiment.id}");
-        $(document).foundation();
-      })
+      $(document).foundation();
 
       window.WebSocket = window.WebSocket || window.MozWebSocket;
 
