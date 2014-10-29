@@ -131,10 +131,10 @@ func IntermediateMonitoring(messages chan string, codeBaseDir string, experiment
 			progressMonitorCmd.Dir = simulationDirPath
 
 			if err = progressMonitorCmd.Run(); err != nil {
-				fmt.Println("[SiM][progress_info] An error occurred during 'progress monitor' execution.")	
-				fmt.Println("[SiM][progress_info] Please check if 'progress monitor' executes correctly on the selected infrastructure.")
-				fmt.Printf("[SiM][progress_info] %v\n", err)
-				break
+				fmt.Println("[SiM] An error occurred during 'progress_monitor' execution.")
+				fmt.Println("[SiM] Please check if 'progress_monitor' executes correctly on the selected infrastructure.")
+				fmt.Printf("[Fatal error] occured during '%v' execution \n", strings.Join(progressMonitorCmd.Args, " "))
+				os.Exit(1)
 			}
 
 			intermediateResults := new(SimulationRunResults)
@@ -188,7 +188,7 @@ func IntermediateMonitoring(messages chan string, codeBaseDir string, experiment
 		}
 	} else {
 		fmt.Printf("[SiM][progress_info] There is no progress monitor script\n")
-		<- messages
+		<-messages
 	}
 }
 
@@ -257,7 +257,8 @@ func main() {
 	}
 
 	if len(experimentManagers) == 0 {
-		panic("[SiM] There is no Experiment Manager registered in Information Service. Please contact Scalarm administrators.")
+		fmt.Println("[Fatal error] There is no Experiment Manager registered in Information Service. Please contact Scalarm administrators.")
+		os.Exit(1)
 	}
 
 	// getting storage manager address
@@ -273,7 +274,8 @@ func main() {
 	}
 
 	if len(storageManagers) == 0 {
-		panic("[SiM] There is no Storage Manager registered in Information Service. Please contact Scalarm administrators.")
+		fmt.Println("[Fatal error] There is no Storage Manager registered in Information Service. Please contact Scalarm administrators.")
+		os.Exit(1)
 	}
 
 	// creating directory for experiment data
@@ -308,12 +310,14 @@ func main() {
 		unzipCmd := fmt.Sprintf("unzip -d \"%s\" \"%s/code_base.zip\"; unzip -d \"%s\" \"%s/simulation_binaries.zip\"", codeBaseDir, codeBaseDir, codeBaseDir, codeBaseDir)
 		if err = exec.Command("sh", "-c", unzipCmd).Run(); err != nil {
 			fmt.Println("[SiM] An error occurred while unzipping 'code_base.zip'.")
-			panic(err)
+			fmt.Printf("[Fatal error] occured during '%v' execution \n", unzipCmd)
+			os.Exit(2)
 		}
 
 		if err = exec.Command("sh", "-c", fmt.Sprintf("chmod a+x \"%s\"/*", codeBaseDir)).Run(); err != nil {
 			fmt.Println("[SiM] An error occurred during executing 'chmod' command. Please check if you have required permissions.")
-			panic(err)
+			fmt.Printf("[Fatal error] occured during '%v' execution \n", fmt.Sprintf("chmod a+x \"%s\"/*", codeBaseDir))
+			os.Exit(2)
 		}
 	}
 
@@ -356,7 +360,8 @@ func main() {
 		}
 
 		if nextSimulationFailed {
-			panic(err)
+			fmt.Println("[SiM] Couldn't get simulation to run -> finishing work.")
+			os.Exit(0)
 		}
 
 		simulation_index := simulation_run["simulation_id"].(float64)
@@ -396,9 +401,10 @@ func main() {
 			inputWriterCmd := exec.Command("sh", "-c", path.Join(codeBaseDir, "input_writer input.json >>_stdout.txt 2>&1"))
 			inputWriterCmd.Dir = simulationDirPath
 			if err = inputWriterCmd.Run(); err != nil {
-				fmt.Println("[SiM] An error occurred during 'input writer' execution.")	
-				fmt.Println("[SiM] Please check if 'input writer' executes correctly on the selected infrastructure.")
-				panic(err.Error())
+				fmt.Println("[SiM] An error occurred during 'input_writer' execution.")
+				fmt.Println("[SiM] Please check if 'input_writer' executes correctly on the selected infrastructure.")
+				fmt.Printf("[Fatal error] occured during '%v' execution \n", strings.Join(inputWriterCmd.Args, " "))
+				os.Exit(1)
 			}
 			fmt.Println("[SiM] After input writer ...")
 		}
@@ -412,9 +418,10 @@ func main() {
 		executorCmd := exec.Command("sh", "-c", path.Join(codeBaseDir, "executor >>_stdout.txt 2>&1"))
 		executorCmd.Dir = simulationDirPath
 		if err = executorCmd.Run(); err != nil {
-			fmt.Println("[SiM] An error occurred during 'executor' execution.")	
+			fmt.Println("[SiM] An error occurred during 'executor' execution.")
 			fmt.Println("[SiM] Please check if 'executor' executes correctly on the selected infrastructure.")
-			panic(err.Error())
+			fmt.Printf("[Fatal error] occured during '%v' execution \n", strings.Join(executorCmd.Args, " "))
+			os.Exit(1)
 		}
 		fmt.Println("[SiM] After executor ...")
 
@@ -427,9 +434,10 @@ func main() {
 			outputReaderCmd := exec.Command("sh", "-c", path.Join(codeBaseDir, "output_reader >>_stdout.txt 2>&1"))
 			outputReaderCmd.Dir = simulationDirPath
 			if err = outputReaderCmd.Run(); err != nil {
-				fmt.Println("[SiM] An error occurred during 'output reader' execution.")	
-				fmt.Println("[SiM] Please check if 'output reader' executes correctly on the selected infrastructure.")
-				panic(err.Error())
+				fmt.Println("[SiM] An error occurred during 'output_reader' execution.")
+				fmt.Println("[SiM] Please check if 'output_reader' executes correctly on the selected infrastructure.")
+				fmt.Printf("[Fatal error] occured during '%v' execution \n", strings.Join(outputReaderCmd.Args, " "))
+				os.Exit(1)
 			}
 			fmt.Println("[SiM] After output reader ...")
 		}
