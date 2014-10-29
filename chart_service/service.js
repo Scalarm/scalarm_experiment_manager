@@ -28,6 +28,17 @@ module.exports = function() {
         else
             error("Request parameters missing");
     }
+	map["/3d"] = function(parameters, success, error){
+		if(parameters["id"] && parameters["chart_id"] && parameters["param1"] && parameters["param2"] && parameters["param3"]) {
+            db_retriever.get3d(parameters["id"], parameters["param1"], parameters["param2"], parameters["param3"], function (data) {
+                var object = {};
+                object.content = prepare_3d_chart_content(parameters, data);
+                success(object);
+            }, error);
+        }
+		else
+            error("Request parameters missing");
+	}
     return map;
 }
 
@@ -44,6 +55,15 @@ function prepare_pareto_chart_content(parameters, data) {
     var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
     output += "\nvar data = " + JSON.stringify(data) + ";";
     output += "\npareto_main(i, data);";
+    output += "\n})();</script>";
+
+    return output;
+}
+
+function prepare_3d_chart_content(parameters, data) {
+    var output = "<script>(function() { \nvar i=" + parameters["chart_id"] + ";";
+    output += "\nvar data = " + JSON.stringify(data) + ";";
+    output += "\nthreeD_main(i, \"" + parameters["param1"] + "\", \"" + parameters["param2"] + "\", \"" + parameters["param3"] + "\", data);";
     output += "\n})();</script>";
 
     return output;

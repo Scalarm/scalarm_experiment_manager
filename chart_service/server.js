@@ -42,7 +42,7 @@ var app = http.createServer(function(req, res) {
             res.write(err.toString());
             res.end();
         });
-        map[path](req, res, pathname);
+        //map[path](req, res, pathname);
 	}
 	else if(ChartsMap["/"+path]) {
 		ChartsMap["/"+path](parameters, function(object) {
@@ -50,8 +50,8 @@ var app = http.createServer(function(req, res) {
                 DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
                     console.log("OK! Successfully authorized.");
                     res.writeHead(200, {'Content-Type': 'text/plain'});
-                    var output = jade.renderFile("." + pathname + pathname + "Chart.jade", parameters);
-                    output += object.content;
+                    var output = jade.renderFile("./"+path+"/"+path+"Chart.jade", parameters);
+					output += object.content;
                     res.write(output);
                     res.end();
                 }, function(err){
@@ -179,6 +179,7 @@ function prepare_map_with_requests(parameters) {
 		DataRetriever.getParameters(parameters["id"], function(data) {
 			panel_locals.parameters = data.parameters;
 			panel_locals.output = data.result;
+            panel_locals.parameters_and_output = data.parameters.concat(data.result);
 			panel_locals.address = ADDRESS;
 			panel_locals.prefix = config.server_prefix;
 			res.writeHead(200);

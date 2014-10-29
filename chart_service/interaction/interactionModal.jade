@@ -25,7 +25,7 @@
         .small-7.columns
           select.outputParam
             each parameter in output
-              option(value=parameter)= parameter
+              option(value=parameter.id)= parameter.label
 
       .row
         ul.inline-list
