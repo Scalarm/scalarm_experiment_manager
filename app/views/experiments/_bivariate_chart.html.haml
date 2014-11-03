@@ -10,6 +10,9 @@
     -#  :class => "nice_button"
     %span.button.hide= t('charts.hide_button')
     = form_tag '', class: '' do
+      .row
+        .small-offset-4.small-5.columns
+          = select_tag 'choose_axis',options_for_select([["Axis X", 'x'], ["Axis Y", 'y']])
       .small-3.columns
         = label_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", "Add new x series: ", class: 'inline'
       .small-7.columns
@@ -23,31 +26,59 @@
 
   :javascript
     $(function() {
+      var setAxis = "x";
+      $("#choose_axis").change(function() {
+        setAxis = $(this).find(":selected").val();
+      });
       $('.plot .button.hide').on('click', function() {
         $(this).parent().parent().remove()
       });
       $("#new_series_#{@chart.x_axis}_#{@chart.y_axis}").html($("#x_axis").html());
 
       $("#bivariate_charts input[type=submit]").bind("click", function() {
-        var x_axis_label = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').html();
-        var x_axis = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').val();
-        $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
-                {"x_axis": x_axis, "y_axis": "#{@chart.y_axis}"},
-                function(data) {
-                  var series = []
-                  for (key in data) {
-                    for(ind in data[key])
-                      series.push([parseInt(key), parseInt(data[key][ind])])
-                  }
-                  $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addAxis({
-                                                                                                            id: x_axis,
-                                                                                                            title: {
-                                                                                                              text: x_axis_label
-                                                                                                            },
-                                                                                                            //lineColor: color
-                                                                                                         }, true);
-                  $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: x_axis_label.split(" - ").slice(-1)[0], xAxis: x_axis, data: series});
-        });
+        var axis_label = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').html();
+        var axis = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').val();
+        $("#choose_axis").prop("disabled", true);
+
+        if(setAxis==="x") {
+          $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
+                  {"x_axis": axis, "y_axis": "#{@chart.y_axis}"},
+                  function(data) {
+                    var series = []
+                    for (key in data) {
+                      for(ind in data[key])
+                        series.push([parseInt(key), parseInt(data[key][ind])])
+                    }
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addAxis({
+                                                                                                              id: axis,
+                                                                                                              title: {
+                                                                                                                text: axis_label
+                                                                                                              },
+                                                                                                              //lineColor: color
+                                                                                                           }, true);
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], xAxis: axis, data: series});
+          });
+        }
+        else if(setAxis==="y") {
+          $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
+                  {"x_axis": "#{@chart.x_axis}", "y_axis": axis},
+                  function(data) {
+                    var series = []
+                    for (key in data) {
+                      for(ind in data[key])
+                        series.push([parseInt(key), parseInt(data[key][ind])])
+                    }
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addAxis({
+                                                                                                              id: axis,
+                                                                                                              title: {
+                                                                                                                text: axis_label
+                                                                                                              },
+                                                                                                              //lineColor: color
+                                                                                                           }, false); //Boolean isX
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], yAxis: axis, data: series});
+          });
+        }
+
         return false;
       })
     });
