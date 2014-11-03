@@ -11,17 +11,14 @@ class UserControllerController < ApplicationController
 
   def successful_login
     #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
-      session[:intended_controller] = :experiments
-      session[:intended_action] = :index
+    session[:intended_controller] = :experiments
+    session[:intended_action] = :index
     #end
 
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
-    @user_session = UserSession.find_by_session_id(session[:user])
-    @user_session = UserSession.new(session_id: session[:user]) if @user_session.nil?
-    @user_session.last_update = Time.now
-    @user_session.save
+    @user_session = UserSession.create_and_update_session(session[:user].to_s)
 
     #redirect_to url_for :controller => session[:intended_controller], :action => session[:intended_action]
     redirect_to root_path
@@ -30,14 +27,14 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        requested_user = ScalarmUser.find_by_login(params[:username])
+        requested_user = ScalarmUser.find_by_login(params[:username].to_s)
         raise t('user_controller.login.user_not_found') if requested_user.nil?
 
         if requested_user.banned_infrastructure?('scalarm')
           raise t('user_controller.login.login_banned', time: requested_user.ban_expire_time('scalarm'))
         end
 
-        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id
+        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id.to_s
 
         if requested_user.credentials_failed and requested_user.credentials_failed.include?('scalarm')
           requested_user.credentials_failed['scalarm'] = []
@@ -65,6 +62,7 @@ class UserControllerController < ApplicationController
   def logout
     reset_session
     @user_session.destroy unless @user_session.blank?
+    @current_user.destroy_unused_credentials unless @current_user.nil?
 
     flash[:notice] = t('logout_success')
 

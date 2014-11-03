@@ -19,6 +19,10 @@ module QsubScheduler
       self.class.short_name
     end
 
+    def onsite_monitorable?
+      true
+    end
+
     def prepare_job_files(sm_uuid, params)
       if params.include?(:dest_dir) and params.include?(:sm_record)
         job = params[:sm_record]
@@ -126,7 +130,7 @@ module QsubScheduler
       if sm_record.log_path.blank?
         ""
       else
-        "tail -25 #{sm_record.log_path}; rm #{sm_record.log_path}"
+        "tail -80 #{sm_record.log_path}; rm #{sm_record.log_path}"
       end
     end
 
