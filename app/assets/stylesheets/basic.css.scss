@@ -67,6 +67,9 @@ input[type=submit].button {
 
 #searchList {
   margin: 0px;
+  & div li {
+    padding-top: 10px;
+  }
 }
 .panel {
   margin: 5px !important;
