@@ -7,7 +7,7 @@ function threeD_main(i, param1, param2, param3, data) {
     }
 
     var tab = data.map(function(obj){
-        var color = 'rgb(' + scale(obj[2], 109, 255) + ', ' + scale(obj[2], 66, 157) + ', ' + scale(obj[2], 30, 71) + ')';
+        var color = 'rgb(' + scale(obj[2], 0, 20) + ', ' + scale(obj[2], 0, 130) + ', ' + scale(obj[2], 0, 255) + ')';
         return {x: obj[0], y: obj[1], z: obj[2],
             color: color,
             marker: {
