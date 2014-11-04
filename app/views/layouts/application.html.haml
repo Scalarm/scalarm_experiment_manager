@@ -12,8 +12,9 @@
     = render 'layouts/navbar' unless @current_user.nil?
 
     .row
-      #panel.small-3.columns
-        = yield :panel
+      - if content_for?(:panel)
+        #panel.small-3.columns
+          = yield :panel
       - content_for?(:panel) ? container='div.small-9.columns' : container="div"
       - haml_tag container do
         #wrapper
