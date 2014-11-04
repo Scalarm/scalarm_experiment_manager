@@ -42,6 +42,17 @@
         if(#{not flash[:error].nil?}) {
           toastr['error']("#{flash[:error]}");
         }
+
+        var pagePosition, scrollHandler = function() {
+          $(window).scrollTop(pagePosition);
+        };
+        $("#panel .panel").hover(function() {
+          pagePosition = parseInt($(document).scrollTop());
+          $(window).scroll(scrollHandler);
+        }, function() {
+          $(window).off("scroll", scrollHandler);
+        });
+
         var footer = $("footer").outerHeight(),
             wrapper = $("#wrapper").outerHeight(),
             max_height = footer + wrapper,
