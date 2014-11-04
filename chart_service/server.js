@@ -91,6 +91,7 @@ wsServer.on('request', function(request) {
 		DataRetriever.createStreamFor(connection, experimentID);
 	}, function(err) {
 		console.log("Authentication failed! \n" + err);
+        request.reject();
 	});
 });
 

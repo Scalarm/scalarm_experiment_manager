@@ -220,7 +220,7 @@ class window.ExperimentMonitor
     console.log(bar_info)
     canvas = document.getElementById("exp_progress_bar_2")
     context = canvas.getContext("2d")
-    part_width = canvas.width / bar_info.length
+    part_width = canvas.width / bar_info.tab_len
 
     i = bar_info.bar_num
 

@@ -8,11 +8,6 @@ module ExperimentProgressBar
       MongoActiveRecord.get_collection(table_name)
   end
 
-  def progress_bar_capped_collection
-      capped_collection = "capped_collection"
-      MongoActiveRecord.get_collection(capped_collection)
-  end
-
   def parts_per_progress_bar_slot
     return 1 if self.experiment_size <= 0
 
@@ -40,9 +35,15 @@ module ExperimentProgressBar
       progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
 
       bar = progress_bar_table.find_one({bar_num: bar_index})
-      length = progress_bar_table.count()
+      table_length = progress_bar_table.count()
       color = compute_bar_color(bar)
-      progress_bar_capped_collection.insert({experiment_id: self.experiment_id.to_s, date: Time.now.to_i, bar_info: {bar_num: bar["bar_num"], length: length, color: color}})
+      capped_doc = CappedCollectionMongoActiveRecord.new(:experiment_id => self.experiment_id.to_s,
+                                                         :date => Time.now.to_i,
+                                                         :bar_info => {
+                                                             :bar_num => bar["bar_num"],
+                                                             :tab_len => table_length,
+                                                             :color => color})
+      capped_doc.save
 
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
