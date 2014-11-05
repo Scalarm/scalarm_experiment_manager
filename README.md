@@ -105,6 +105,8 @@ production:
   information_service_url: "<%= ENV["INFORMATION_SERVICE_URL"] %>"
   information_service_user: "<%= ENV["INFORMATION_SERVICE_LOGIN"] %>"
   information_service_pass: "<%= ENV["INFORMATION_SERVICE_PASSWORD"] %>"
+  # if you installed and want to use scalarm custom load balancer set to false
+  disable_load_balancer_registration: true
 ```
 
 In this "config/scalarm.yml" file we have various information Scalarm configuration - typically there is no need to change them:
