@@ -31,25 +31,22 @@ var app = http.createServer(function(req, res) {
 	var map = prepare_map_with_requests(parameters);
 
 	var path = pathname.split("/")[1];
-	if(map[path]){
-        authenticate(req.headers, function(userID) {
+	if(map[path]) {
+        authenticate(req.headers, function (userID) {
             //console.log("Authentication passed");
             //console.log(userID);
             map[path](req, res, pathname);
-        }, function(err){
+        }, function (err) {
             console.log("Authentication failed: " + err);
             res.writeHead(401);
             res.write(err.toString());
             res.end();
         });
         //map[path](req, res, pathname);
-
-	if(path==="status"){
+    }
+    else if(path==="status"){
 		res.write("status ok");
 		res.end();
-	}
-	else if(map[path]){
-		map[path](req, res, pathname);
 	}
 	else if(ChartsMap["/"+path]) {
 		ChartsMap["/"+path](parameters, function(object) {
