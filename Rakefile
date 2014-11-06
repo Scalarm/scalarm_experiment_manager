@@ -149,8 +149,8 @@ end
 
 def get_mongodb(version='2.6.5')
   os, arch = os_version
-  mongo_name = 'mongodb-#{os}-#{arch}-#{version}'
-  download_file_https('fastdl.mongodb.org', "/linux/mongodb-#{os}-#{arch}-#{version}.tgz", "#{mongo_name}.tgz")
+  mongo_name = "mongodb-#{os}-#{arch}-#{version}"
+  download_file_https('fastdl.mongodb.org', "/#{os}/mongodb-#{os}-#{arch}-#{version}.tgz", "#{mongo_name}.tgz")
   mongo_name
 end
 
