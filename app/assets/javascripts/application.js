@@ -19,6 +19,7 @@
 //= require_tree .
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
+//= require highcharts/highcharts-3d
 //= require highcharts/modules/exporting
 //= require dataTables/jquery.dataTables
 //= require jit-yc

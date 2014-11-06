@@ -11,8 +11,8 @@ class UserControllerController < ApplicationController
 
   def successful_login
     #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
-    session[:intended_controller] = :experiments
-    session[:intended_action] = :index
+      session[:intended_controller] = :experiments
+      session[:intended_action] = :index
     #end
 
     flash[:notice] = t('login_success')
@@ -62,7 +62,6 @@ class UserControllerController < ApplicationController
   def logout
     reset_session
     @user_session.destroy unless @user_session.blank?
-    @current_user.destroy_unused_credentials unless @current_user.nil?
 
     flash[:notice] = t('logout_success')
 

@@ -11,12 +11,14 @@ var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartsMap = require("./service.js")();	//TODO - zienic zeby modul eksportowal mape a nie funkcje, albo przekazywac handlery
 var DataRetriever = require("./data_retriever.js");
 
-var jade = require("jade");
-var locals = require("./config.js");
+var config = require("./config.js");
+var panel_locals = require("./panel_locals.js");
 
-var PORT = 8080,
-	EXTERNAL_IP = "172.16.67.121",			//TODO - retrieve external IP
-	ADDRESS = EXTERNAL_IP + "/chart";		//address suffix set in /etc/nginx/conf.d/default.conf
+var jade = require("jade");
+
+var PORT = config.server_port,
+	EXTERNAL_IP = config.server_ip + ":3001",			//TODO - retrieve external IP
+	ADDRESS = EXTERNAL_IP + config.server_prefix;		//address suffix set in /etc/nginx/conf.d/default.conf
 
 var app = http.createServer(function(req, res) {
 	var parsedUrl = url.parse(req.url);
@@ -29,6 +31,18 @@ var app = http.createServer(function(req, res) {
 	var map = prepare_map_with_requests(parameters);
 
 	var path = pathname.split("/")[1];
+	if(map[path]){
+        authenticate(req.headers, function(userID) {
+            //console.log("Authentication passed");
+            //console.log(userID);
+            map[path](req, res, pathname);
+        }, function(err){
+            console.log("Authentication failed: " + err);
+            res.writeHead(401);
+            res.write(err.toString());
+            res.end();
+        });
+        //map[path](req, res, pathname);
 
 	if(path==="status"){
 		res.write("status ok");
@@ -39,13 +53,19 @@ var app = http.createServer(function(req, res) {
 	}
 	else if(ChartsMap["/"+path]) {
 		ChartsMap["/"+path](parameters, function(object) {
-			authenticate(req.headers.cookie, parameters["id"], function(data) {
-				console.log("OK! Successfully authorized.");
-				res.writeHead(200, {'Content-Type': 'text/plain'});
-				var output = jade.renderFile("."+pathname+pathname+"Chart.jade", parameters);
-				output += object.content;
-				res.write(output);
-				res.end();
+			authenticate(req.headers, function(userID) {
+                DataRetriever.checkIfExperimentVisibleToUser(userID, parameters["id"], function() {
+                    console.log("OK! Successfully authorized.");
+                    res.writeHead(200, {'Content-Type': 'text/plain'});
+                    var output = jade.renderFile("./"+path+"/"+path+"Chart.jade", parameters);
+					output += object.content;
+                    res.write(output);
+                    res.end();
+                }, function(err){
+                    console.log("Error checking experiment's affiliation");
+                    res.write("Error checking experiment's affiliation");
+                    res.end();
+                })
 			}, function(err) {
 				console.log("FAILED! Sending info about error to Scalarm... \n" + err);
 				res.write("Unable to authenticate");
@@ -81,46 +101,70 @@ wsServer.on('request', function(request) {
 	//TODO -- authentication!
 	console.log(new Date() + " Connection from origin " + request.origin + ".");
 	var experimentID = request.httpRequest.url.slice(1);
-	authenticate(request.httpRequest.headers.cookie, experimentID, function(data) {
+	authenticate(request.httpRequest.headers, function(userID) {
 		console.log("OK! Successfully authorized.");
-		var connection = request.accept(null, request.origin);
-		console.log(new Date() + " Connection accepted.");
+        DataRetriever.checkIfExperimentVisibleToUser(userID, experimentID, function(){
+            var connection = request.accept(null, request.origin);
+            console.log(new Date() + " Connection accepted.");
 
-		connection.on('close', function(connection) {
-	        console.log(new Date() + " Connection closed");
-	        //TODO - close cursor?
-	    });
+            connection.on('close', function(connection) {
+                console.log(new Date() + " Connection closed");
+                //TODO - close cursor?
+            });
 
-		DataRetriever.createStreamFor(connection, experimentID);
+            DataRetriever.createStreamFor(connection, experimentID);
+        }, function(){
+            console.log("Error checking experiment's affiliation");
+            res.write("Error checking experiment's affiliation");
+            res.end();
+        });
 	}, function(err) {
 		console.log("Authentication failed! \n" + err);
 	});
 });
 
 //--------------------------------
-function authenticate(cookie, experimentID, success, error){
-	//what if there are more cookies??
-	var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
-	var output = cookieDecoder(cookieGood);
+function authenticate(headers, success, error){
+    cookies = headers.cookie;
+    if(!cookies) {
+        //console.log("Cookies not sent");
 
-	exec("ruby serialized_object_to_json.rb " + new Buffer(output).toString("base64"), function(err, stdout, stderr) {
-	    if (err !== null) {
-	    	console.log('stderr: ' + stderr);
-	    	console.log('exec error: ' + err);
-	    	error(err);
-	    	return;
-	    }
+        var header=headers['authorization']||'';            // get the header
+        if(!header){
+            console.log("No authentication credentials")
+            error("No authentication credentials");
+        }
+        var token=header.split(/\s+/).pop()||'',            // and the encoded auth token
+            auth=new Buffer(token, 'base64').toString(),    // convert from base64
+            parts=auth.split(/:/),                          // split on colon
+            username=parts[0],
+            password=parts[1];
 
-		var userID = JSON.parse(stdout)["user"];
-		console.log("\tuserID: ", userID); 
-		console.log("\texperimentID: ", experimentID);
+        var crypto = require('crypto');
+        DataRetriever.checkUserAndPassword(username, password, success, error);
+    }
+    else {
+        var cookie = cookies.split("; ").filter(function (text) {
+            return text.indexOf("_scalarm_session") == 0;
+        })[0];
+        var cookieGood = cookie.substr(17, cookie.length); //MAGIC NUMBER! :D (just for remove _scalarm_session= from the beginning)
+        var output = cookieDecoder(cookieGood);
 
-		DataRetriever.authenticate(userID, experimentID, function(dataSuccess) {
-			success(dataSuccess);
-		}, function(dataError) {
-			error(dataError);
-		});
-	});
+        exec("ruby serialized_object_to_json.rb " + new Buffer(output).toString("base64"), function(err, stdout, stderr) {
+            if (err !== null) {
+                console.log('stderr: ' + stderr);
+                console.log('exec error: ' + err);
+                error(err);
+                return;
+            }
+
+            var userID = JSON.parse(stdout)["user"];
+            //console.log("\tuserID: ", userID);
+            //console.log("\texperimentID: ", experimentID);
+
+            success(userID);
+        });
+    }
 }
 
 function prepare_script_and_style_tags(typeOfChart) {
@@ -140,11 +184,13 @@ function prepare_map_with_requests(parameters) {
 	var map = {};
 	map["panel"] = function(req, res){
 		DataRetriever.getParameters(parameters["id"], function(data) {
-			locals.parameters = data.parameters;
-			locals.output = data.result;
-			locals.address = ADDRESS;
+			panel_locals.parameters = data.parameters;
+			panel_locals.output = data.result;
+            panel_locals.parameters_and_output = data.parameters.concat(data.result);
+			panel_locals.address = ADDRESS;
+			panel_locals.prefix = config.server_prefix;
 			res.writeHead(200);
-			var panel = jade.renderFile("panel.jade", locals);
+			var panel = jade.renderFile("panel.jade", panel_locals);
 			res.write(panel);
 			res.end();
 		},
@@ -160,7 +206,7 @@ function prepare_map_with_requests(parameters) {
 		fs.readFile('.'+pathname, function(error, data) {
 			if(error) {
 				res.writeHead(404);
-				res.write("File " + file_path + " : not found!\n");
+				res.write("File " + pathname + " : not found!\n");
 				res.write(error.toString());
 				res.end();
 			}

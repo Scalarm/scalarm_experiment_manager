@@ -1,7 +1,9 @@
-var DBURL = "mongodb://172.16.67.121:27017/scalarm_db";
+var DBURL = require("./config.js").db_url;
 var COLLECTION_NAME = "experiment_instances_";
 var mongo = require('mongodb');
 var client = mongo.MongoClient;
+var crypto = require('crypto');
+
 var connect = function(success, error){
 	client.connect(DBURL, function(err, db){
 		if (err){
@@ -52,18 +54,14 @@ var connect = function(success, error){
 					mins[args[i]] = min(array, args[i]);
 					maxes[args[i]] = max(array, args[i]);
 				}
-				// db.close();
+				
 				convertData(array,args,mins,maxes);
-
-				// console.log("min population_size",mins[0]);
-				// console.log("max population_size",maxes[0]);
-				// console.log("min iteration_count",mins[1]);
-				// console.log("max iteration_count",maxes[1]);
-
 			});
 		};
 
-		var authenticate = function(userID, experimentID, success, error) {
+		var checkIfExperimentVisibleToUser = function(userID, experimentID, success, error) {
+            console.log("\tuserID: ", userID);
+            console.log("\texperimentID: ", experimentID);
 			db.collection("experiments").find({$or : [
 				{"_id": mongo.ObjectID(experimentID), "user_id": mongo.ObjectID(userID)}, 
 				{"_id": mongo.ObjectID(experimentID), "shared_with" : {$in:[mongo.ObjectID(userID)]}}
@@ -77,6 +75,36 @@ var connect = function(success, error){
 			});
 		};
 
+        var checkUserAndPassword = function(username, password, success, error){
+            db.collection('scalarm_users', function(err, collection){
+                if(err){
+                    error(err.toString());
+                    return;
+                }
+                else{
+                    collection.findOne({login: username}, function(err, item){
+                        if(err){
+                            error(err.toString());
+                            return;
+                        }
+                        else if(item) {
+                            var salt = item.password_salt;
+                            var hash = crypto.createHash('sha256').update(password+salt).digest('hex');
+                            if(hash===item.password_hash){
+                                success(item._id.toString());
+                            }
+                            else{
+                                error("Wrong password\n");
+                            }
+                        }
+                        else{
+                            error("No such user\n");
+                        }
+                    })
+                }
+            })
+        }
+
 		var getParameters = function(experimentID, success, error) {
 			var data = {};
 
@@ -86,13 +114,18 @@ var connect = function(success, error){
 			db.collection(COLLECTION_NAME+experimentID, function(err, collection) {
 				if(err){
 					error(err.toString());
+                    return;
 				}
 	        	collection.findOne(filter, function(err, item) {
 	        		data["result"] = [];
 	        		if(item){
 	        			for(var k in item.result){
-	        				if(typeof item["result"][k] == "number")
-	        					data["result"].push(k);
+	        				if(typeof item["result"][k] == "number") {
+                                data["result"].push({
+                                    label: (k[0].toUpperCase() + k.slice(1)).split("_").join(" "),
+                                    id: k
+                                });
+                            }
 	        			}
 	        		}
 		            db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
@@ -135,11 +168,11 @@ var connect = function(success, error){
 			})
 		};
 
-		var getPareto = function(id, success, error){
+		var getPareto = function(id, outputParam, success, error){
 			getData(id, function(array, args, mins, maxes){
 				effects = [];
-				effects.push(Math.abs(calculateAverage(array, args[0], maxes[args[0]])-calculateAverage(array, args[0], mins[args[0]])));
-				effects.push(Math.abs(calculateAverage(array, args[1], maxes[args[1]])-calculateAverage(array, args[1], mins[args[1]])));
+				effects.push(Math.abs(calculateAverage(array, args[0], maxes[args[0]], outputParam)-calculateAverage(array, args[0], mins[args[0]], outputParam)));
+				effects.push(Math.abs(calculateAverage(array, args[1], maxes[args[1]], outputParam)-calculateAverage(array, args[1], mins[args[1]], outputParam)));
 				var data = [];
 				for(i in args) {
 					data.push({
@@ -198,17 +231,58 @@ var connect = function(success, error){
 						domain: [mins[param2], maxes[param2]]
 					};
 					data.effects = result;
-					console.log(data);
+					//console.log(data);
 					success(data);
 				}
 			}, error);
 		};
 
+        var get3d = function(id, param1, param2, param3, success, error){
+            getData(id, function(array, args, mins, maxes){
+                var data = Array.apply(null, new Array(array.length)).map(Number.prototype.valueOf,0)
+                if (args.indexOf(param1) != -1) {
+                    for (var i in data) {
+                        data[i] = [array[i].arguments[param1]];
+                    }
+                }
+                else{
+                    for (var i in data) {
+                        data[i] = [array[i].result[param1]];
+                        console.log(array[i].result[param1])
+                    }
+                }
+                if (args.indexOf(param2) != -1) {
+                    for (var i in data) {
+                        data[i].push(array[i].arguments[param2]);
+                    }
+                }
+                else{
+                    for (var i in data) {
+                        data[i].push(array[i].result[param2]);
+                    }
+                }
+                if (args.indexOf(param3) != -1) {
+                    for (var i in data) {
+                        data[i].push(array[i].arguments[param3]);
+                    }
+                }
+                else{
+                    for (var i in data) {
+                        data[i].push(array[i].result[param3]);
+                    }
+                }
+                console.log(param1, param2, param3)
+                success(data);
+            }, error);
+        }
+
 		module.exports.getPareto = getPareto;
 		module.exports.getInteraction = getInteraction;
-		module.exports.authenticate = authenticate;
+        module.exports.get3d = get3d;
+		module.exports.checkIfExperimentVisibleToUser = checkIfExperimentVisibleToUser;
 		module.exports.getParameters = getParameters;
 		module.exports.createStreamFor = createStreamFor;
+        module.exports.checkUserAndPassword = checkUserAndPassword;
 	});
 }
 
@@ -225,12 +299,12 @@ var max = function(array, name) {
     return array.reduce(function(a, b) { return a >= getValue(b,name) ? a : getValue(b,name);}, -Infinity);
 };
 
-function calculateAverage(data, parameter_name, parameter_value) {
+function calculateAverage(data, parameter_name, parameter_value, outputParam) {
 	var array_of_params=data.filter(function(obj) {
 		return getValue(obj, parameter_name) == parameter_value
 	});
 	var average = array_of_params.reduce(function(previous, current) {
-		return previous + current.result.distance;
+		return previous + current.result[outputParam];
 	}, 0) / array_of_params.length;
 	return average;
 };

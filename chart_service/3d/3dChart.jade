@@ -1,0 +1,12 @@
+extends ../templateChart
+block vars
+  - var subheader = "3D scatter plot chart - xAxis: " + param1 + ", yAxis: " + param2 + ", zAxis: " + param3;
+  
+block script
+  script.
+    $(function() {
+      var div_id = "#three_d_chart_#{chart_id}";
+      $(div_id + " .button").on('click', function() {
+        $(div_id).remove();
+      });
+    });
