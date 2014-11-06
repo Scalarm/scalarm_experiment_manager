@@ -1,22 +1,45 @@
 - credentials = GridCredentials.find_by_user_id(@current_user.id)
 - grants = PlGridFacade.retrieve_grants(credentials)
 
+- if other_params[:force_onsite_monitoring]
+  .panel.callout.radius
+    = raw t 'infrastructure.information.qsub.credentials_needed'
+
+  .row
+    .small-4.columns
+      = label_tag :plgrid_login, t('infrastructure.information.pl_grid_login') + ':', class: 'inline right'
+    .small-4.columns.end
+      = text_field_tag :plgrid_login, '', class: 'right'
+  .row
+    .small-4.columns
+      = label_tag :plgrid_password, t('infrastructure.information.pl_grid_password') + ':', class: 'inline right'
+    .small-4.columns.end
+      = password_field_tag :plgrid_password, '', class: 'right', autocomplete: :off
+
 .row
-  .large-4.columns
+  .small-4.columns
     = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
-  .large-4.columns.end
+  .small-4.columns.end
     = select_tag :grant_id, options_for_select(grants)
 .row
-  .large-4.columns
+  .small-4.columns
     = label_tag :nodes, t('infrastructure.information.plgrid.submission.nodes') + ':', class: 'inline right'
-  .large-1.columns
+  .small-1.columns
     = text_field_tag :nodes, 1, class: 'right'
-  .large-2.columns
+  .small-2.columns
     = label_tag :ppn, t('infrastructure.information.plgrid.submission.ppn') + ':', class: 'inline right'
-  .large-1.columns.end
+  .small-1.columns.end
     = text_field_tag :ppn, 1, class: 'right'
 .row
-  .large-4.columns
+  .small-4.columns
     = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
+  .small-4.columns.end
+    - checked = !!other_params[:force_onsite_monitoring]
+    - if checked
+      = hidden_field_tag :onsite_monitoring, true
+    = check_box_tag :onsite_monitoring, '', checked, disabled: checked
+.row
+  .large-4.columns
+    = label_tag :queue, t('infrastructure.information.queue') + ':', class: 'inline right'
   .large-4.columns.end
-    = check_box_tag :onsite_monitoring
+    = text_field_tag :queue

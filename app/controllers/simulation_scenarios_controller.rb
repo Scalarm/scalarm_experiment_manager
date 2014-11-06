@@ -20,6 +20,8 @@ class SimulationScenariosController < ApplicationController
   end
 
   def update
+    # TODO if necessary - validate simulation_input and simulation_binaries somehow
+
     if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
@@ -62,11 +64,13 @@ class SimulationScenariosController < ApplicationController
   end
 
   def show
-    render json: if @simulation_scenario
+    render json: (
+        if @simulation_scenario
           {status: 'ok', data: @simulation_scenario.to_h }
         else
           {status: 'error', error_code: 'not_found'}
         end
+    )
   end
 
   def code_base
@@ -117,9 +121,12 @@ class SimulationScenariosController < ApplicationController
   end
 
   def share
+    validate_params(:default, :mode)
+    # TODO validate sharing with login params - it should denote scalarm user login
+
     @user = nil
 
-    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
+    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login].to_s)).blank?
       flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
@@ -158,8 +165,10 @@ class SimulationScenariosController < ApplicationController
   private
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
+    validate_params(:default, adapter_type, "#{adapter_type}_id", "#{adapter_type}_name")
+
     if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id']
+      adapter_id = params[adapter_type + '_id'].to_s
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
 
       if not adapter.nil? and adapter.user_id == @current_user.id
@@ -202,7 +211,7 @@ class SimulationScenariosController < ApplicationController
           flash[:error] = t('simulations.create.bad_simulation_input')
         end
 
-      when (not (scenarios = Simulation.where({name: params[:simulation_name], user_id: @current_user.id})).blank?)
+      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: @current_user.id})).blank?)
         unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end
@@ -212,6 +221,8 @@ class SimulationScenariosController < ApplicationController
   private
 
   def load_simulation_scenario
+    validate_params(:default, :id, :name)
+
     users_scenarios = @current_user.get_simulation_scenarios
 
     @simulation_scenario = if params[:id]

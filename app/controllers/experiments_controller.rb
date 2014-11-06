@@ -11,6 +11,15 @@ class ExperimentsController < ApplicationController
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
     @simulations = @current_user.get_simulation_scenarios
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {
+          status: 'ok',
+          running: @running_experiments.collect { |e| e.id.to_s },
+          historical: @historical_experiments.collect { |e| e.id.to_s }
+      }}
+    end
   end
 
   def show
@@ -22,7 +31,15 @@ class ExperimentsController < ApplicationController
       start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
       flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
-      redirect_to action: :index
+      respond_to do |format|
+        format.html { redirect_to action: :index }
+        format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
+      end
+    end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok', data: @experiment.to_h } }
     end
   end
 
@@ -75,6 +92,9 @@ class ExperimentsController < ApplicationController
   end
 
   def create
+    validate_params(:default, :replication_level, :execution_time_constraint)
+    #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
+
     begin
       experiment = prepare_new_experiment
 
@@ -130,6 +150,9 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_experiment_size
+    validate_params(:default, :replication_level, :execution_time_constraint)
+    #validate_params(:json, :parameters_constraints, :doe) # TODO :experiment_input
+
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
     @experiment_input = Experiment.prepare_experiment_input(@simulation, Utils.parse_json_if_string(params['experiment_input']), doe_info)
@@ -147,14 +170,16 @@ class ExperimentsController < ApplicationController
     begin
       experiment_size = experiment.experiment_size(true)
     rescue Exception => e
-      experiment_size = 0; message = t(e.message)
-      Rails.logger.warn("An exception occured: #{t(e.message)}")
+      experiment_size = 0; message = e.to_s
+      Rails.logger.warn("An exception occured: #{message}")
     end
 
     render json: { experiment_size: experiment_size, error: message }
   end
 
   def calculate_imported_experiment_size
+    validate_params(:default, :replication_level, :execution_time_constraint)
+
     parameters_to_include = params.keys.select{ |parameter|
       parameter.start_with?('param_') and params[parameter] == '1'
     }.map{ |parameter| parameter.split('param_').last }
@@ -299,6 +324,8 @@ class ExperimentsController < ApplicationController
   end
 
   def extend_input_values
+    validate_params(:default, :param_name )#, :range_min, :range_max, :range_step)
+
     parameter_uid = params[:param_name]
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
@@ -338,6 +365,8 @@ class ExperimentsController < ApplicationController
   end
 
   def intermediate_results
+    validate_params(:default, :simulations)
+
     unless @experiment.parameters.blank?
       arguments = @experiment.parameters.flatten
 
@@ -385,6 +414,8 @@ class ExperimentsController < ApplicationController
   end
 
   def change_scheduling_policy
+    validate_params(:default, :scheduling_policy)
+
     new_scheduling_policy = params[:scheduling_policy]
 
     @experiment.scheduling_policy = new_scheduling_policy
@@ -431,7 +462,7 @@ class ExperimentsController < ApplicationController
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
         simulation_to_send = @experiment.get_next_instance
-        unless @sm_user.nil?
+        unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
         end
       end
@@ -489,6 +520,8 @@ class ExperimentsController < ApplicationController
   end
 
   def histogram
+    validate_params(:default, :moe_name)
+
     if params[:moe_name].blank?
       render inline: ""
     else
@@ -497,6 +530,8 @@ class ExperimentsController < ApplicationController
   end
 
   def scatter_plot
+    validate_params(:default, :x_axis, :y_axis)
+
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
@@ -506,6 +541,8 @@ class ExperimentsController < ApplicationController
   end
 
   def regression_tree
+    validate_params(:default, :moe_name)
+
     if params[:moe_name].blank?
       render inline: ""
     else
@@ -515,6 +552,8 @@ class ExperimentsController < ApplicationController
   end
 
   def parameter_values
+    validate_params(:default, :param_name)
+
     @parameter_uid = params[:param_name]
 
     @parameter_uid, @parametrization_type = @experiment.parametrization_of(@parameter_uid)
@@ -533,9 +572,11 @@ class ExperimentsController < ApplicationController
   end
 
   def share
+    validate_params(:default, :mode, :id)
+
     @experiment, @user = nil, nil
 
-    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
+    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login].to_s)).blank?
       flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
@@ -605,18 +646,22 @@ class ExperimentsController < ApplicationController
   private
 
   def load_experiment
+    validate_params(:default, :id)
+
     @experiment = nil
 
     if params.include?(:id)
+      experiment_id = BSON::ObjectId(params[:id].to_s)
+
       if not @current_user.nil?
-        @experiment = @current_user.experiments.where(id: params[:id]).first
+        @experiment = @current_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('experiments.not_found', { id: params[:id], user: @current_user.login })
+          flash[:error] = t('experiments.not_found', { id: experiment_id, user: @current_user.login })
         end
 
       elsif (not @sm_user.nil?)
-        @experiment = @sm_user.scalarm_user.experiments.where(id: params[:id]).first
+        @experiment = @sm_user.scalarm_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
           flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])
@@ -634,16 +679,30 @@ class ExperimentsController < ApplicationController
   end
 
   def load_simulation
+    validate_params(:default, :simulation_id, :simulation_name)
+
     @simulation = if params['simulation_id']
-                    Simulation.where(id: params['simulation_id']).first
+                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
                   elsif params['simulation_name']
-                    Simulation.where(name: params['simulation_name']).first
+                    @current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
                   else
                     nil
                   end
+
+    if @simulation.nil?
+      flash[:error] = t('simulation_scenarios.not_found', { id: (params['simulation_id'] or params['simulation_name']),
+                        user: @current_user.login })
+
+      respond_to do |format|
+        format.html { redirect_to action: :index }
+        format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
+      end
+    end
   end
 
   def input_space_manual_specification(experiment)
+    #validate_params(:json, :doe) # TODO , :experiment_input
+
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
 
     experiment.doe_info = doe_info
@@ -679,6 +738,9 @@ class ExperimentsController < ApplicationController
   end
 
   def prepare_new_experiment
+    validate_params(:default, :replication_level, :execution_time_constraint)
+    #validate_params(:json, :parameters_constraints)
+
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
     parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])

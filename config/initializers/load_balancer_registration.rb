@@ -3,43 +3,58 @@ require 'socket'
 require 'ipaddr'
 require 'openssl'
 
-if ENV['LOAD_BALANCER'] != '' or ENV['LOAD_BALANCER'] != 'true'
-  ENV['LOAD_BALANCER'] = 'true'
-
-  MULTICAST_ADDR = '224.1.2.3'
-  PORT = 8000
-  BIND_ADDR = '0.0.0.0'
-
-  socket = UDPSocket.new
-  membership = IPAddr.new(MULTICAST_ADDR).hton + IPAddr.new(BIND_ADDR).hton
-
-  socket.setsockopt(:IPPROTO_IP, :IP_ADD_MEMBERSHIP, membership)
-  #socket.setsockopt(:SOL_SOCKET, :SO_REUSEPORT, 1)
-
-  socket.bind(BIND_ADDR, PORT)
-
-  message, _ = socket.recvfrom(20)
-  #load_balancer_address = "https://#{message.strip}/register"
-  load_balancer_address = "https://#{message.strip}/experiment_managers/register"
-  puts "Registration to load balancer: #{load_balancer_address}"
-  port = '3000'
-
-  if defined? ENV['PORT'] and ENV['PORT'] != nil and ENV['PORT'] != ''
-    port = "#{ENV['PORT']}"
+unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
+  unless Rails.application.secrets.include? :multicast_address
+    raise StandardError.new("multicast_address is missing in secrets configuration")
   end
-  puts "Port #{port}"
-  #Net::HTTP.post_form(URI.parse(URI.encode(load_balancer_address)),
-  #                    {'address'=> "localhost:#{port}"})
+  MULTICAST_ADDR, PORT  = Rails.application.secrets[:multicast_address].split(':')
+  BIND_ADDR = '0.0.0.0'
+  message = 'error'
+  begin
+    socket = UDPSocket.new
+    membership = IPAddr.new(MULTICAST_ADDR).hton + IPAddr.new(BIND_ADDR).hton
 
-  uri = URI.parse(URI.encode(load_balancer_address))
+    socket.setsockopt(:IPPROTO_IP, :IP_ADD_MEMBERSHIP, membership)
+    socket.setsockopt(:SOL_SOCKET, :SO_REUSEPORT, 1)
 
-  req = Net::HTTP::Post.new(uri)
-  req.set_form_data('address'=> "localhost:#{port}")
-  req.basic_auth 'scalarm', 'scalarm'
+    socket.bind(BIND_ADDR, PORT)
+    begin
+      timeout(30) do
+        message, _ = socket.recvfrom(20)
+      end
+    rescue Timeout::Error => e
+      puts "Unable to receive load balancer address: #{e.message}"
+    end
+  rescue SocketError => e
+    puts "Unable to establish multicast connection: #{e.message}"
+  end
 
-  res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => uri.scheme == 'https') {|http|
-    http.request(req)
-  }
-  puts res.body
+  if message != 'error'
+    port = (Rails.application.secrets[:port] or '3000')
+    scheme = 'https'
+    if Rails.application.secrets.load_balancer_development
+      scheme = 'http'
+    end
+    load_balancer_address = "#{scheme}://#{message.strip}/register"
+
+    begin
+      uri = URI(URI.encode(load_balancer_address))
+
+      req = Net::HTTP::Post.new(uri)
+      req.set_form_data(address: "localhost:#{port}", name: 'ExperimentManager')
+
+      if scheme == 'https'
+        ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+      else
+        ssl_options = {}
+      end
+      response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
+
+      puts "Load balancer message: #{response.body}"
+    rescue StandardError, Timeout::Error => e
+      puts "Registration to load balancer failed: #{e.message}"
+      raise
+    end
+  end
 
 end

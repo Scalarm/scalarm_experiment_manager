@@ -155,4 +155,8 @@ Purged: false
     refute_match /#QCG grant/, desc
   end
 
+  def test_onsite_monitorable
+    assert @qcg.onsite_monitorable?
+  end
+
 end

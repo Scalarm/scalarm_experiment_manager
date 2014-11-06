@@ -25,12 +25,16 @@ class CloudVmRecord < MongoActiveRecord
     self.vm_id
   end
 
+  def self.ids_auto_convert
+    false
+  end
+
   def self.collection_name
     'vm_records'
   end
 
   def cloud_secrets
-    @cloud_secrets ||= CloudSecrets.find_by_query(cloud_name: cloud_name, user_id: user_id)
+    @cloud_secrets ||= CloudSecrets.find_by_query(cloud_name: cloud_name.to_s, user_id: user_id.to_s)
   end
 
   # additional info for specific cloud should be provided by CloudClient

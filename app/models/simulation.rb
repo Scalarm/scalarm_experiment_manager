@@ -100,5 +100,8 @@ class Simulation < MongoActiveRecord
     nil
   end
 
+  def self.visible_to(user)
+    where({'$or' => [{user_id: user.id}, {shared_with: {'$in' => [user.id]}}, {is_public: true}]})
+  end
 
 end

@@ -77,7 +77,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def get_and_validate_image_secrets(image_secrets_id, user_id)
-    exp_image = CloudImageSecrets.find_by_id(image_secrets_id)
+    exp_image = CloudImageSecrets.find_by_id(image_secrets_id.to_s)
     if exp_image.nil? or exp_image.image_id.nil?
       raise CloudErrors::ImageValidationError.new 'provide_image_secrets'
     elsif not cloud_client_instance(user_id).image_exists? exp_image.image_id
@@ -112,7 +112,7 @@ class CloudFacade < InfrastructureFacade
                      else raise StandardError.new("Usupported credentials type: #{type}")
                    end
 
-    record = record_class.find_by_id(record_id)
+    record = record_class.find_by_id(record_id.to_s)
     raise InfrastructureErrors::NoCredentialsError if record.nil?
     raise InfrastructureErrors::AccessDeniedError if record.user_id != user_id
     record.destroy
@@ -207,7 +207,7 @@ class CloudFacade < InfrastructureFacade
 
   def _simulation_manager_get_log(record)
     handle_proxy_error(record.secrets) do
-      shared_ssh_session(record).exec! "tail -25 #{record.log_path}"
+      shared_ssh_session(record).exec! "tail -80 #{record.log_path}"
     end
   end
 
@@ -332,5 +332,28 @@ class CloudFacade < InfrastructureFacade
     credentials
   end
 
+  def destroy_unused_credentials(authentication_mode, user)
+  	if authentication_mode == :x509_proxy
+  		if UserSession.where(session_id: user.id).size > 0
+  			return
+  		end
+
+  		monitored_jobs = CloudVmRecord.where(user_id: user.id, cloud_name: 'pl_cloud', state: {'$ne' => :error})
+  		if monitored_jobs.size > 0
+  			return
+  		end
+
+  		cs = CloudSecrets.where(user_id: user.id, cloud_name: 'pl_cloud').first
+      unless cs.nil?
+        cs._delete_attribute(:secret_proxy)
+
+        if cs.secret_password.nil?
+          cs.destroy
+        else
+          cs.save
+        end
+  		end
+  	end
+  end
 
 end

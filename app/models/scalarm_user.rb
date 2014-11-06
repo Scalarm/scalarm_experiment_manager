@@ -13,8 +13,12 @@ class ScalarmUser < MongoActiveRecord
     Experiment.visible_to(self)
   end
 
+  def simulation_scenarios
+    Simulation.visible_to(self)
+  end
+
   def owned_experiments
-    Experiment.where({ user_id: id })
+    Experiment.where(user_id: id)
   end
 
   def get_running_experiments
@@ -27,8 +31,8 @@ class ScalarmUser < MongoActiveRecord
 
   # returns simulation scenarios owned by this user or shared with this user
   def get_simulation_scenarios
-    Simulation.where({ '$or' => [
-      { user_id: self.id }, { shared_with: { '$in' => [ self.id ] } }, { is_public: true} ] }).sort { |s1, s2|
+    Simulation.where({'$or' => [
+        {user_id: self.id}, {shared_with: {'$in' => [self.id]}}, {is_public: true}]}).sort { |s1, s2|
       s2.created_at <=> s1.created_at }
   end
 
@@ -42,17 +46,19 @@ class ScalarmUser < MongoActiveRecord
   end
 
   def self.authenticate_with_password(login, password)
-    user = ScalarmUser.find_by_login(login)
+    user = ScalarmUser.find_by_login(login.to_s)
 
     if user.nil? || user.password_salt.nil? || user.password_hash.nil?  || Digest::SHA256.hexdigest(password + user.password_salt) != user.password_hash
-      raise 'Bad login or password'
+      raise I18n.t('user_controller.login.bad_login_or_pass')
     end
 
     user
   end
 
   def self.authenticate_with_certificate(dn)
-    user = ScalarmUser.find_by_dn(dn)
+    # backward-compatibile: there are some dn's formatted by PL-Grid OpenID in database - try to convert
+    user = (ScalarmUser.find_by_dn(dn.to_s) or
+        ScalarmUser.find_by_dn(PlGridOpenID.browser_dn_to_plgoid_dn(dn)))
 
     if user.nil?
       raise "Authentication failed: user with DN = #{dn} not found"
@@ -62,7 +68,7 @@ class ScalarmUser < MongoActiveRecord
   end
 
   def grid_credentials
-    GridCredentials.find_by_user_id(id)
+    GridCredentials.find_by_user_id(id.to_s)
   end
 
   def banned_infrastructure?(infrastructure_name)
@@ -83,7 +89,13 @@ class ScalarmUser < MongoActiveRecord
   end
 
   def self.get_anonymous_user
-    @anonymous_user ||= ScalarmUser.find_by_login(Utils::load_config['anonymous_login'])
+    @anonymous_user ||= ScalarmUser.find_by_login(Utils::load_config['anonymous_login'].to_s)
+  end
+
+  def destroy_unused_credentials
+    InfrastructureFacadeFactory.get_all_infrastructures.each do |infrastructure_facade|
+      infrastructure_facade.destroy_unused_credentials(:x509_proxy, self)
+    end
   end
 
   private

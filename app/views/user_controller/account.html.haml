@@ -16,30 +16,32 @@
       .row
         .small-5.columns
           %label.right.inline= t('.login')
-        .small-5.columns(style="line-height: 31px; vertical-align: middle;font-size: larger;" )
+        .small-5.columns.end(style="line-height: 31px; vertical-align: middle;font-size: larger;" )
           %span.inline= @current_user.login
-        .small-1.columns
+
+      -#.row
+      -#  .small-5.columns
+      -#    %label.right.inline= t('.certificate')
+      -#  .small-4.columns.end(style="line-height: 31px; vertical-align: middle;font-size: larger;" )
+      -#    %span.inline= @current_user.dn || t('.empty_dn')
 
       .row
         .small-5.columns
-          %label.right.inline= t('.certificate')
-        .small-4.columns(style="line-height: 31px; vertical-align: middle;font-size: larger;" )
-          %span.inline= @current_user.dn || t('.empty_dn')
-        .small-1.columns
+          %label.right.inline(for='current_password')= t('.current_password')
+        .small-4.columns.end
+          = password_field_tag 'current_password', '', class: 'inline', autocomplete: :off
 
       .row
         .small-5.columns
           %label.right.inline(for='password')= t('.password')
-        .small-4.columns
-          = password_field_tag 'password', '', class: 'inline'
-        .small-1.columns
+        .small-4.columns.end
+          = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
       .row
         .small-5.columns
           %label.right.inline(for='password_repeat')= t('.repeat_password')
-        .small-4.columns
-          = password_field_tag 'password_repeat', '', class: 'inline'
-        .small-1.columns
+        .small-4.columns.end
+          = password_field_tag 'password_repeat', '', class: 'inline', autocomplete: :off
 
       .row
         .small-6.small-centered.columns(style="text-align:center;")

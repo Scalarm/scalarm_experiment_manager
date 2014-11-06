@@ -49,8 +49,14 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
+    validate_params(:default, :infrastructure_name, :job_counter) #:queue
     infrastructure = nil
     infrastructure_name = '?'
+
+    # TODO
+    if !params[:time_limit] or params[:time_limit].to_i <= 0
+      params['time_limit'] = params[:time_limit] = 60
+    end
 
     begin
       unless validate_schedule_simulation_managers(params)
@@ -77,7 +83,7 @@ class InfrastructuresController < ApplicationController
                        msg: I18n.t('infrastructures_controller.schedule_error', name: infrastructure.long_name,
                                    error: schedule_error.to_s) }
       rescue InfrastructureErrors::NoCredentialsError => no_creds
-        render json: { status: 'error', error_code: 'no-credentials', msg: I18n.t('infrastructures_controller.invalid_credentials',
+        render json: { status: 'error', error_code: 'no-credentials', msg: I18n.t('infrastructures_controller.no_credentials',
                                                                    name: infrastructure.long_name) }
       rescue InfrastructureErrors::InvalidCredentialsError => inv_creds
         render json: { status: 'error', error_code: 'invalid-credentials', msg: I18n.t('infrastructures_controller.invalid_credentials',
@@ -90,10 +96,12 @@ class InfrastructuresController < ApplicationController
       render json: { status: 'error', error_code: error.error_code, msg: I18n.t('infrastructures_controller.schedule_error',
                          name: infrastructure ? infrastructure.long_name : infrastructure_name,
                          error: error.to_s) }
+      Rails.logger.error "#{exc.class.to_s} #{exc.to_s}\n#{exc.backtrace.join("\n")}"
     rescue Exception => exc
       render json: { status: 'error', error_code: 'scheduling-failed', msg: I18n.t('infrastructures_controller.schedule_error',
                         name: infrastructure ? infrastructure.long_name : infrastructure_name,
                         error: exc.to_s) }
+      Rails.logger.error "#{exc.class.to_s} #{exc.to_s}\n#{exc.backtrace.join("\n")}"
     end
   end
 
@@ -155,6 +163,48 @@ class InfrastructuresController < ApplicationController
                  error: "#{exc.class.to_s}: #{exc.to_s}")
       }
     end
+  end
+
+  # GET params (in JSON):
+  # - infrastructure - name of infrastructure
+  # - query_params - Hash of additional filtering options
+  def get_infrastructure_credentials
+    validate_params(:default, :infrastructure_name)
+    query_params = (params.include?(:query_params) ? JSON.parse(params[:query_params]) : {})
+    raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
+    raise SecurityError.new('All additional params should be strings') unless query_params.all? do |k, v|
+      k.kind_of?(String) and v.kind_of?(String)
+    end
+    raise SecurityError.new('Using user_id in query is forbidden') if query_params.include?('user_id')
+    raise SecurityError.new('Using secrets_* in query is forbidden') if query_params.any? {|k, v| k =~ /secret_.*/}
+
+    infrastructure_name = params[:infrastructure]
+    begin
+      infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+      records = infrastructure.get_credentials(@current_user.id, query_params)
+
+      # modify records to contain only non-secret fields
+      hashes = records.collect do |r|
+        r.to_h.select { |k, v| !(k =~ /secret_.*/) }
+      end
+
+      render json: {
+        status: 'ok',
+        data: hashes
+      }
+
+    rescue NoSuchInfrastructureError => exc
+      render json: {
+          status: 'error',
+          msg: "No such infrastructure: #{infrastructure_name}"
+      }
+    rescue Exception => exc
+      render json: {
+          status: 'error',
+          msg: "Internal error: #{exc.to_s}"
+      }
+    end
+
   end
 
   def stripped_params_values(params)
@@ -287,6 +337,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name (optional)
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
+    validate_params(:default, :infrastructure_name, :experiment_id)
+
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
 
@@ -297,16 +349,21 @@ class InfrastructuresController < ApplicationController
     })
   end
 
+  # TODO: check values like enums
   # GET params:
-  # - group (optional)
   # - infrastructure_name
+  # - other_params - Hash
   def get_booster_partial
+    validate_params(:default, :infrastructure_name)
+
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
+    facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
     partial_name = (group_name or infrastructure_name)
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
-          infrastructure_name: infrastructure_name
+          infrastructure_name: infrastructure_name,
+          other_params: facade.other_params_for_booster(@current_user.id)
       }
     rescue ActionView::MissingTemplate
       render nothing: true
@@ -316,6 +373,8 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_partial
+    validate_params(:default, :infrastructure_name)
+
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/#{params[:infrastructure_name]}")
     rescue ActionView::MissingTemplate => exc
@@ -327,6 +386,8 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_table_partial
+    validate_params(:default, :infrastructure_name)
+
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/tables/#{params[:infrastructure_name]}")
     rescue ActionView::MissingTemplate => exc
@@ -339,6 +400,8 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - record_id
   def get_resource_status
+    validate_params(:default, :infrastructure_name, :record_id)
+
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       record = get_sm_record(params[:record_id], facade)

@@ -25,3 +25,5 @@ en:
     index:
       registered_table:
         adapters: "Scenario adapters"
+
+    not_found: "Simulation scenario with id '%{id}' was not found"

@@ -42,6 +42,10 @@ class InfrastructureFacadeFactory
     end
   end
 
+  def self.get_all_sm_records(*args)
+    (get_all_infrastructures.collect { |facade| facade.get_sm_records(*args) }).flatten
+  end
+
   # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
   # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
   # are fetched recursivety with tree_node methods of every concrete facade.
