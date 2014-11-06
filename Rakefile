@@ -7,7 +7,7 @@ ScalarmExperimentManager::Application.load_tasks
 
 namespace :service do
   desc 'Start the service'
-  task :start, [:debug] => [:environment] do |t, args|
+  task :start, [:debug] => [:environment, :setup] do |t, args|
     puts 'puma -C config/puma.rb'
     %x[puma -C config/puma.rb]
 
@@ -36,6 +36,25 @@ namespace :service do
 
       non_digested = File.join(source)
       FileUtils.cp(file, non_digested)
+    end
+  end
+
+  desc 'Downloading and installing dependencies'
+  task :setup do
+    puts 'Setup started'
+    install_mongodb unless check_mongodb
+    puts 'Setup finished'
+  end
+
+  # TODO it's a stub - it should contain checking for system dependencies like gsissh
+  desc 'Check dependencies'
+  task :validate do
+    begin
+      _validate
+      puts "OK"
+    rescue Exception => e
+      puts "Error on validation, please read documentation and run service:setup"
+      raise
     end
   end
 
@@ -127,3 +146,72 @@ def create_anonymous_user
     end
   end
 end
+
+def get_mongodb(version='2.6.5')
+  os, arch = os_version
+  mongo_name = 'mongodb-#{os}-#{arch}-#{version}'
+  download_file_https('fastdl.mongodb.org', "/linux/mongodb-#{os}-#{arch}-#{version}.tgz", "#{mongo_name}.tgz")
+  mongo_name
+end
+
+def install_mongodb
+  puts 'Downloading MongoDB...'
+  base_name = get_mongodb
+  puts 'Unpacking MongoDB and copying files...'
+  `tar -zxvf #{base_name}.tgz`
+  raise "Cannot unpack #{base_name}.tgz archive" unless $?.to_i == 0
+  `cp #{base_name}/bin/mongos bin/mongos`
+  raise "Cannot copy #{base_name}/bin/mongos file" unless $?.to_i == 0
+  `rm -r #{base_name} #{base_name}.tgz`
+  puts 'Installed MongoDB mongos in Scalarm directory'
+end
+
+def os_version
+  require 'rbconfig'
+  os_arch = RbConfig::CONFIG['arch']
+  os = case os_arch
+    when /darwin/
+      'osx'
+    when /cygwin|mswin|mingw|bccwin|wince|emx/
+      'win32'
+    else
+      'linux'
+  end
+  arch = case os_arch
+    when /x86_64/
+      'x86_64'
+    when /i686/
+      'i686'
+  end
+  [os, arch]
+end
+
+def download_file_https(domain, path, name)
+  require 'net/https'
+  address = "https://#{domain}/#{path}"
+  puts "Fetching #{address}..."
+  Net::HTTP.start(domain) do |http|
+      resp = http.get(path)
+      open(name, "wb") do |file|
+          file.write(resp.body)
+      end
+  end
+  puts "Downloaded #{address} -> #{name}"
+  name
+end
+
+def _validate
+  print 'Checking bin/mongos... '
+  raise "No /bin/mongos file found" unless check_mongodb
+  puts 'OK'
+end
+
+def check_mongodb
+  `ls bin/mongos`
+  $?.to_i == 0
+end
+
+def valid?
+  _validate and true rescue false
+end
+
