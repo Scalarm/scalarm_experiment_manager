@@ -123,148 +123,148 @@ alive do
 
     working do
       while true
-    # 6a. get information about next simulation to calculate and store it in input.json file
-      simulation_input = {}
+        # 6a. get information about next simulation to calculate and store it in input.json file
+        simulation_input = {}
 
-      5.times do
-        simulation_input = em_proxy.next_simulation(experiment_id)
-        puts "Text format of simulation_input: #{simulation_input}"
+        5.times do
+          simulation_input = em_proxy.next_simulation(experiment_id)
+          puts "Text format of simulation_input: #{simulation_input}"
 
-        begin
-          simulation_input = JSON.parse(simulation_input)
-          break
-        rescue Exception => e
-          puts "Exception occured: #{e}"
-        end
-      end
-
-
-      if simulation_input.nil? or (not simulation_input.include?('status'))
-        puts "Could not retrieve proper simulation input"
-
-        return
-      elsif simulation_input['status'] == 'all_sent'
-        puts 'There is no more simulations to run in this experiment'
-
-        break if all_sent_threshold <= 0
-        all_sent_threshold -= 1
-
-      elsif simulation_input['status'] == 'error'
-        puts "An error occurred while getting next simulation: #{simulation_input['reason']}"
-
-        break if error_threshold <= 0
-        error_threshold -= 1
-
-      elsif simulation_input['status'] == 'ok'
-        puts "Our next simulation has an id: #{simulation_input['simulation_id']}"
-        puts "It has the following execution constraints: #{simulation_input['execution_constraints']}"
-
-        simulation_dir = File.absolute_path "./#{experiment_dir}/simulation_#{simulation_input['simulation_id']}"
-        Dir.mkdir(simulation_dir) unless Dir.exists?(simulation_dir)
-
-        IO.write("#{simulation_dir}/input.json", simulation_input['input_parameters'].to_json)
-        # 6b. run an adapter script (input writer) for input information: input.json -> some specific code
-        Dir.chdir(simulation_dir) do |path|
-          puts Dir.pwd
-
-          if File.exist?("#{code_base_dir}/input_writer")
-            input_writer_output = exec_in_sh "#{code_base_dir}/input_writer input.json"
-            puts "Input writer output: #{input_writer_output}"
-            IO.write('_stdout.txt', "Input writer output: #{input_writer_output}")
+          begin
+            simulation_input = JSON.parse(simulation_input)
+            break
+          rescue Exception => e
+            puts "Exception occured: #{e}"
           end
         end
 
-        # 6c. run an executor of this simulation
-        Dir.chdir(simulation_dir) do |path|
-          puts Dir.pwd
 
-          # 6c.1. progress monitoring scheduling if available
-          progress_monitor_pid = nil
-          if File.exist?(File.join(code_base_dir, 'progress_monitor'))
-            reader, writer = IO.pipe()
+        if simulation_input.nil? or (not simulation_input.include?('status'))
+          puts "Could not retrieve proper simulation input"
 
-            progress_monitor_pid = Process.fork do
-              require 'json'
-              writer.close
+          return
+        elsif simulation_input['status'] == 'all_sent'
+          puts 'There is no more simulations to run in this experiment'
 
-              sm_root_dir = File.join('.', '..', '..')
+          break if all_sent_threshold <= 0
+          all_sent_threshold -= 1
 
-              puts "[progress_monitor] #{Dir.pwd}"
-              experiment_id = reader.gets.chop
-              simulation_id = reader.gets.chop
-              em_url = reader.gets.chop
-              em_proxy = ExperimentManager.new(em_url, config)
-              code_base_dir = File.absolute_path(File.join(sm_root_dir, "experiment_#{experiment_id}", 'code_base'))
+        elsif simulation_input['status'] == 'error'
+          puts "An error occurred while getting next simulation: #{simulation_input['reason']}"
 
-              if File.exist?(File.join(code_base_dir, 'progress_monitor'))
+          break if error_threshold <= 0
+          error_threshold -= 1
 
-                while true
-                  progress_monitor_output = exec_in_sh "#{code_base_dir}/progress_monitor"
-                  puts "[progress monitor] script output: #{progress_monitor_output}"
-                  IO.write('_stdout.txt', "[progress monitor] script output: #{progress_monitor_output}")
+        elsif simulation_input['status'] == 'ok'
+          puts "Our next simulation has an id: #{simulation_input['simulation_id']}"
+          puts "It has the following execution constraints: #{simulation_input['execution_constraints']}"
 
-                  em_proxy.send_results_from('intermediate_result.json', true, experiment_id, simulation_id)
+          simulation_dir = File.absolute_path "./#{experiment_dir}/simulation_#{simulation_input['simulation_id']}"
+          Dir.mkdir(simulation_dir) unless Dir.exists?(simulation_dir)
 
-                  sleep 30
+          IO.write("#{simulation_dir}/input.json", simulation_input['input_parameters'].to_json)
+          # 6b. run an adapter script (input writer) for input information: input.json -> some specific code
+          Dir.chdir(simulation_dir) do |path|
+            puts Dir.pwd
+
+            if File.exist?("#{code_base_dir}/input_writer")
+              input_writer_output = exec_in_sh "#{code_base_dir}/input_writer input.json"
+              puts "Input writer output: #{input_writer_output}"
+              IO.write('_stdout.txt', "Input writer output: #{input_writer_output}")
+            end
+          end
+
+          # 6c. run an executor of this simulation
+          Dir.chdir(simulation_dir) do |path|
+            puts Dir.pwd
+
+            # 6c.1. progress monitoring scheduling if available
+            progress_monitor_pid = nil
+            if File.exist?(File.join(code_base_dir, 'progress_monitor'))
+              reader, writer = IO.pipe()
+
+              progress_monitor_pid = Process.fork do
+                require 'json'
+                writer.close
+
+                sm_root_dir = File.join('.', '..', '..')
+
+                puts "[progress_monitor] #{Dir.pwd}"
+                experiment_id = reader.gets.chop
+                simulation_id = reader.gets.chop
+                em_url = reader.gets.chop
+                em_proxy = ExperimentManager.new(em_url, config)
+                code_base_dir = File.absolute_path(File.join(sm_root_dir, "experiment_#{experiment_id}", 'code_base'))
+
+                if File.exist?(File.join(code_base_dir, 'progress_monitor'))
+
+                  while true
+                    progress_monitor_output = exec_in_sh "#{code_base_dir}/progress_monitor"
+                    puts "[progress monitor] script output: #{progress_monitor_output}"
+                    IO.write('_stdout.txt', "[progress monitor] script output: #{progress_monitor_output}")
+
+                    em_proxy.send_results_from('intermediate_result.json', true, experiment_id, simulation_id)
+
+                    sleep 30
+                  end
+
+                else
+                  puts '[progress_monitor] There is no progress monitor script'
                 end
 
-              else
-                puts '[progress_monitor] There is no progress monitor script'
               end
 
+              reader.close
+              writer.puts experiment_id
+              writer.puts simulation_input['simulation_id']
+              writer.puts em_url
             end
 
-            reader.close
-            writer.puts experiment_id
-            writer.puts simulation_input['simulation_id']
-            writer.puts em_url
-          end
-
-          executor_output = exec_in_sh "#{code_base_dir}/executor"
-          puts "Executor output: #{executor_output}"
-          IO.write('_stdout.txt', "Executor output: #{executor_output}")
-          # 6c.2. killing progress monitor process
-          unless progress_monitor_pid.nil?
-            puts "Killing the '#{progress_monitor_pid}' process"
-            Process.kill('TERM', progress_monitor_pid)
-            begin
-              Timeout::timeout(15) do
-                Process.wait(progress_monitor_pid)
+            executor_output = exec_in_sh "#{code_base_dir}/executor"
+            puts "Executor output: #{executor_output}"
+            IO.write('_stdout.txt', "Executor output: #{executor_output}")
+            # 6c.2. killing progress monitor process
+            unless progress_monitor_pid.nil?
+              puts "Killing the '#{progress_monitor_pid}' process"
+              Process.kill('TERM', progress_monitor_pid)
+              begin
+                Timeout::timeout(15) do
+                  Process.wait(progress_monitor_pid)
+                end
+              rescue Timeout::Error
+                puts "Waiting for child #{progress_monitor_pid} timeout"
               end
-            rescue Timeout::Error
-              puts "Waiting for child #{progress_monitor_pid} timeout"
             end
           end
-        end
 
-        # 6d. run an adapter script (output reader) to transform specific output format to scalarm model (output.json)
-        Dir.chdir(simulation_dir) do |path|
-          puts Dir.pwd
+          # 6d. run an adapter script (output reader) to transform specific output format to scalarm model (output.json)
+          Dir.chdir(simulation_dir) do |path|
+            puts Dir.pwd
 
-          if File.exist?("#{code_base_dir}/output_reader")
-            output_reader_output = exec_in_sh "#{code_base_dir}/output_reader"
-            puts "Output reader output: #{output_reader_output}"
-            IO.write('_stdout.txt', "Output reader output: #{output_reader_output}")
+            if File.exist?("#{code_base_dir}/output_reader")
+              output_reader_output = exec_in_sh "#{code_base_dir}/output_reader"
+              puts "Output reader output: #{output_reader_output}"
+              IO.write('_stdout.txt', "Output reader output: #{output_reader_output}")
+            end
           end
+
+          # 6e. upload output json to experiment manager and set the run simulation as done
+          em_proxy.send_results_from("#{simulation_dir}/output.json", false, experiment_id, simulation_input['simulation_id'])
+          # upload binary_output if provided
+          output_binary_file = "#{simulation_dir}/output.tar.gz"
+          if File.exist?(output_binary_file) and not sm_proxy.nil?
+            puts 'Uploading binary output'
+            sm_proxy.upload_binary_output(experiment_id, simulation_input['simulation_id'], output_binary_file)
+          end
+
+          unless sm_proxy.nil?
+            sm_proxy.upload_stdout(experiment_id, simulation_input['simulation_id'], File.join(simulation_dir, '_stdout.txt'))
+          end
+
+          # 6f. go to the 6 point
         end
 
-        # 6e. upload output json to experiment manager and set the run simulation as done
-        em_proxy.send_results_from("#{simulation_dir}/output.json", false, experiment_id, simulation_input['simulation_id'])
-        # upload binary_output if provided
-        output_binary_file = "#{simulation_dir}/output.tar.gz"
-        if File.exist?(output_binary_file) and not sm_proxy.nil?
-          puts 'Uploading binary output'
-          sm_proxy.upload_binary_output(experiment_id, simulation_input['simulation_id'], output_binary_file)
-        end
-
-        unless sm_proxy.nil?
-          sm_proxy.upload_stdout(experiment_id, simulation_input['simulation_id'], File.join(simulation_dir, '_stdout.txt'))
-        end
-
-        # 6f. go to the 6 point
       end
-
-    end
     end
 
     break if config.has_key?('experiment_id')
