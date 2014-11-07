@@ -19,7 +19,7 @@ module PlGridOpenID
     end
 
     # -- Attribute Exchange support --
-    OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn])
+    OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn, :POSTresponse])
 
     return_to = openid_callback_plgrid_url
 
@@ -34,6 +34,8 @@ module PlGridOpenID
   end
 
   # Action for callback from PL-Grid OpenID.
+  # Optional parameters:
+  # - temp_pass
   def openid_callback_plgrid
     validate_params(:openid_id, "openid.claimed_id", "openid.identity")
 
@@ -62,6 +64,8 @@ module PlGridOpenID
 
   private
 
+  # Optional params:
+  # - temp_pass - a password to set for created user
   def openid_callback_plgrid_success(oidresp, params)
     # check if response is from appropriate endpoint
     op_endpoint = params['openid.op_endpoint']
@@ -78,7 +82,7 @@ module PlGridOpenID
 
     Rails.logger.debug("User logged in with OpenID identity: #{plgrid_identity}")
 
-    scalarm_user = PlGridOpenID::get_or_create_user(ax_attrs[:dn], plgrid_login)
+    scalarm_user = PlGridOpenID::get_or_create_user(ax_attrs[:dn], plgrid_login, params[:temp_pass])
 
     x509_proxy_cert =
         Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
@@ -88,26 +92,27 @@ module PlGridOpenID
     update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
-    session[:user] = scalarm_user.id
+    session[:user] = scalarm_user.id.to_s
     successful_login
   end
 
-  def self.get_or_create_user(dn, plgrid_login)
+  def self.get_or_create_user(dn, plgrid_login, password=nil)
     OpenIDUtils::get_user_with(dn: dn, login: plgrid_login) or
         OpenIDUtils::get_user_with(dn: dn) or OpenIDUtils::get_user_with(login: plgrid_login) or
-        OpenIDUtils::create_user_with(plgrid_login, dn: dn, login: plgrid_login)
+        OpenIDUtils::create_user_with(plgrid_login, password, dn: dn, login: plgrid_login)
   end
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)
+    user_id = BSON::ObjectId(scalarm_user_id.to_s)
     grid_credentials =
-        (GridCredentials.find_by_user_id(scalarm_user_id) or GridCredentials.new(user_id: scalarm_user_id))
+        (GridCredentials.find_by_user_id(user_id) or GridCredentials.new(user_id: user_id))
     grid_credentials.login = plgrid_login
     grid_credentials.secret_proxy = proxy_cert
     grid_credentials.save
   end
 
   def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
-    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id, cloud_name: 'pl_cloud') or
+    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud') or
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
     pl_cloud_credentials.secret_proxy = proxy_secret

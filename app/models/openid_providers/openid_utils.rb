@@ -9,6 +9,7 @@ module OpenIDUtils
       user_cert: 'http://openid.plgrid.pl/certificate/userCert',
       proxy_priv_key: 'http://openid.plgrid.pl/certificate/proxyPrivKey',
       dn: 'http://openid.plgrid.pl/certificate/dn1',
+      post_response: 'http://openid.plgrid.pl/POSTresponse',
       email: 'http://axschema.org/contact/email',
       name: 'http://axschema.org/namePerson',
       nickname: 'http://axschema.org/namePerson/friendly',
@@ -46,18 +47,19 @@ module OpenIDUtils
     end]
   end
 
-  def self.get_or_create_user_with(attribute, value, new_login=value)
-    get_user_with(attribute => value) or create_user_with(new_login, attribute => value)
+  def self.get_or_create_user_with(attribute, value, new_login=value, password=nil)
+    get_user_with(attribute => value) or create_user_with(new_login, password, attribute => value)
   end
 
   def self.get_user_with(query)
     ScalarmUser.find_by_query(query)
   end
 
-  def self.create_user_with(login, query)
+  def self.create_user_with(login, password, query)
     # TODO: check if login is not used?
     user_hash = { login: login }
     user = ScalarmUser.new(query.merge(user_hash))
+    user.password = password if password
     user.save
     user
   end

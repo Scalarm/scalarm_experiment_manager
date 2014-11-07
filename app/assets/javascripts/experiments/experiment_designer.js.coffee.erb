@@ -22,8 +22,8 @@ class window.ExperimentDesigner
             $("[id^='doe-group-'] li.bullet-item").each (index, bulletItem) =>
                 if $(bulletItem).is("[param_id]") and ($(bulletItem).attr('param_id') == parameterId)
                     $(bulletItem).find("a.button").click()
-                # remove the parameter from the parameter list
-                @removeRangeParameter(parameterId)
+            # remove the parameter from the parameter list
+            @removeRangeParameter(parameterId)
 
         @updateSelectElements()
 
@@ -48,10 +48,10 @@ class window.ExperimentDesigner
         # disable button if there is no options
         if selectElement.html() == ''
             $('#' + doeGroupId + " select#parameters").hide()
-            $('#' + doeGroupId + " .price a.button").hide()
+            $('#' + doeGroupId + " .price span.button").hide()
         else # enable otherwise
             $('#' + doeGroupId + " select#parameters").show()
-            $('#' + doeGroupId + " .price a.button").show()
+            $('#' + doeGroupId + " .price span.button").show()
 
     createDoeGroup: (selectId) =>
         select = $('#' + selectId)

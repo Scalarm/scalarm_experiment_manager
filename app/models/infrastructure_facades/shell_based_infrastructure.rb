@@ -6,13 +6,24 @@ module ShellBasedInfrastructure
 
   def self.start_simulation_manager_cmd(record)
     sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
-    chain(
-        mute('source .rvm/environments/default'),
-        mute(rm(sm_dir_name, true)),
-        mute("unzip #{sm_dir_name}.zip"),
-        mute(cd(sm_dir_name)),
-        run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
-    )
+
+    if Rails.configuration.simulation_manager_version == :go
+      chain(
+          mute(rm(sm_dir_name, true)),
+          mute("unzip #{sm_dir_name}.zip"),
+          mute(cd(sm_dir_name)),
+          mute('chmod a+x scalarm_simulation_manager'),
+          run_in_background('./scalarm_simulation_manager', record.log_path, '&1')
+      )
+    elsif Rails.configuration.simulation_manager_version == :ruby
+      chain(
+          mute('source .rvm/environments/default'),
+          mute(rm(sm_dir_name, true)),
+          mute("unzip #{sm_dir_name}.zip"),
+          mute(cd(sm_dir_name)),
+          run_in_background('ruby simulation_manager.rb', record.log_path, '&1')
+      )
+    end
   end
 
   def log_exists?(record, ssh)

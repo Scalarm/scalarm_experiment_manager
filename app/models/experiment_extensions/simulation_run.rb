@@ -24,7 +24,7 @@ class SimulationRun < MongoActiveRecord
   end
 
   def where(conditions, options)
-    super(conditions, { sort: [ ['index', :asc] ] }.merge(options))
+    super(conditions, {sort: [['index', :asc]]}.merge(options))
   end
 
   def self.create_table_for_experiment(experiment_id)

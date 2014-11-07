@@ -126,7 +126,7 @@ class SimulationScenariosController < ApplicationController
 
     @user = nil
 
-    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login])).blank?
+    if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login].to_s)).blank?
       flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
@@ -168,7 +168,7 @@ class SimulationScenariosController < ApplicationController
     validate_params(:default, adapter_type, "#{adapter_type}_id", "#{adapter_type}_name")
 
     if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id']
+      adapter_id = params[adapter_type + '_id'].to_s
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
 
       if not adapter.nil? and adapter.user_id == @current_user.id
@@ -211,7 +211,7 @@ class SimulationScenariosController < ApplicationController
           flash[:error] = t('simulations.create.bad_simulation_input')
         end
 
-      when (not (scenarios = Simulation.where({name: params[:simulation_name], user_id: @current_user.id})).blank?)
+      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: @current_user.id})).blank?)
         unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end

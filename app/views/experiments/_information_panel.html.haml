@@ -37,7 +37,7 @@
           - if @experiment.shared_with.blank?
             = t('experiments.monitoring_actions.blank_shared_with_list')
           - else
-            - @experiment.shared_with.to_a.map{|id| ScalarmUser.find_by_id(id) }.each do |u|
+            - @experiment.shared_with.to_a.map{|id| ScalarmUser.find_by_id(id.to_s) }.each do |u|
               = form_tag share_experiment_path(@experiment.id), class: 'custom', style: "display: inline;" do
                 = hidden_field_tag 'mode', 'unshare'
                 = hidden_field_tag 'sharing_with_login', u.login

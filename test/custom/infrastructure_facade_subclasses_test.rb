@@ -23,6 +23,7 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
       :sm_record_class,
       :add_credentials,
       :remove_credentials,
+      :get_credentials,
       :get_sm_records,
       :get_sm_record_by_id,
       :enabled_for_user?

@@ -26,6 +26,10 @@ module QcgScheduler
       self.class.short_name
     end
 
+    def onsite_monitorable?
+      true
+    end
+
     def prepare_job_files(sm_uuid, params)
       execution_dir = if params.include?(:dest_dir)
         "/tmp/#{params[:dest_dir]}"
@@ -165,8 +169,8 @@ module QcgScheduler
     end
 
     def get_log(ssh, job)
-      err_log = ssh.exec! "tail -25 #{job.log_path}.err"
-      out_log = ssh.exec! "tail -25 #{job.log_path}.out"
+      err_log = ssh.exec! "tail -40 #{job.log_path}.err"
+      out_log = ssh.exec! "tail -40 #{job.log_path}.out"
       ssh.exec! "rm #{job.log_path}.err"
       ssh.exec! "rm #{job.log_path}.out"
 
@@ -193,8 +197,8 @@ module QcgScheduler
     def get_log_cmd(sm_record)
       [
         "echo '--- QCG info ---'", sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
-        "echo '--- STDOUT ---'", "tail -25 #{sm_record.log_path}.out",
-        "echo '--- STDOUT ---'", "tail -25 #{sm_record.log_path}.err",
+        "echo '--- STDOUT ---'", "tail -40 #{sm_record.log_path}.out",
+        "echo '--- STDOUT ---'", "tail -40 #{sm_record.log_path}.err",
         "rm #{sm_record.log_path}.err", "rm #{sm_record.log_path}.out"
       ].join(';')
     end
@@ -206,11 +210,11 @@ module QcgScheduler
     def self.available_hosts
       [
         'zeus.cyfronet.pl',
-        # 'nova.wcss.wroc.pl',# TODO: check ruby
+        'nova.wcss.wroc.pl',
         'galera.task.gda.pl',
-        # 'reef.man.poznan.pl', # TODO: no ruby available!
-        # 'inula.man.poznan.pl', # TODO: no ruby available!
-        # 'hydra.icm.edu.pl', # TODO: no ruby available!
+        'reef.man.poznan.pl',
+        'inula.man.poznan.pl',
+        'hydra.icm.edu.pl',
         'moss.man.poznan.pl'
       ]
     end
