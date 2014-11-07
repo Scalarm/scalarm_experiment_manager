@@ -14,22 +14,26 @@
 
       .row
         %section.panel.radius#input-definition
-          %ul.button-group.right.round
-            %li
-              %a#input-designer-on.tiny.button.secondary.clicked(href="#") Use designer
-            %li
-              %a#input-designer-off.tiny.button.secondary(href="#") Upload
+          .row
+            %ul.button-group.right.round
+              %li
+                %a#input-designer-on.tiny.button.secondary.clicked(href="#") Use designer
+              %li
+                %a#input-designer-off.tiny.button.secondary(href="#") Upload
+            %h4.subheader= "Input definition"
+          .row
+            #input-designer.hidden
+              .row
+                .small-6.columns
+                  %h5.subheader= "Parameters"
+                  #params-tree.hidden
+                .small-6.columns
+                  %h5.subheader= "Parameter specification"
 
-          %h4.subheader= "Input definition"
-
-          #input-designer
-            .content
-              = "Hello world"
-
-          #input-upload
-            .content
-              = render partial: 'form_row', object: 'simulation_input',
-                locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
+            #input-upload.hidden
+              .content
+                = render partial: 'form_row', object: 'simulation_input',
+                  locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
 
       .row
         = render partial: 'form_row', object: 'simulation_binaries',

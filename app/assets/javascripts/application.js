@@ -16,7 +16,6 @@
 //= require jquery-tmpl
 //= require custom.modernizr
 //= require foundation
-//= require_tree .
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
 //= require highcharts/modules/exporting
@@ -25,6 +24,8 @@
 //= require toastr
 //= require jquery.remotipart
 //= require d3
+//= require jstree
+//= require_tree .
 
 
 $(function() {

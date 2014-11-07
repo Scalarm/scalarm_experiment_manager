@@ -6,9 +6,49 @@ class window.ScenarioRegistration
 
     $("#input-designer-on").click()
 
-  inputDesignerOn: (event) ->
-    console.log 'hello on'
+    $.jstree._themes = '/assets/jstree-themes/'
 
+    @parameters = [
+      {
+        'text': "Param 1",
+        'type': "parameter",
+        'data': "hello"
+      }
+      {
+        'text': "Param 2",
+        'type': "parameter",
+        'data': "hello2"
+      }
+    ]
+
+    @tree = $("#params-tree")
+    @updateTree()
+    @tree.show()
+
+  updateTree: ->
+    @tree.jstree({
+      "core": {
+        'data': @parameters
+      },
+      "animation" : 0,
+      "check_callback" : true,
+      "themes" : { "stripes" : true },
+      "types" : {
+        "parameter" : {
+          "max_children" : 0,
+          "max_depth" : 0,
+          "icon" : "fi-asterisk"
+        }
+      },
+      "plugins" : [
+        "contextmenu", "dnd", "search",
+        "state", "types", "wholerow"
+      ]
+    })
+
+
+
+  inputDesignerOn: (event) ->
     $("#input-designer-on").addClass("clicked")
     $("#input-designer-off").removeClass("clicked")
 
@@ -16,8 +56,6 @@ class window.ScenarioRegistration
     $("#input-definition #input-upload").hide()
 
   inputDesignerOff: (event) ->
-    console.log 'hello off'
-
     $("#input-designer-on").removeClass("clicked")
     $("#input-designer-off").addClass("clicked")
 

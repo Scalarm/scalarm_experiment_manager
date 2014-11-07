@@ -11,11 +11,13 @@
  *= require_self
  *= require foundation
  *= require foundation_and_overrides
- *= require_tree .
  *= require dataTables/jquery.dataTables
  *= require toastr
  *= require font-awesome
+ *= require jstree-themes/default/style
+ *= require_tree .
  * require jquery-ui
+ * require_tree jstree-themes
  */
 
  @import 'foundation-icons';
