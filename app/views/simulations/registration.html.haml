@@ -13,10 +13,27 @@
           locals: { input_element: text_area_tag('simulation_description'), offset: 0 }
 
       .row
+        %section.panel.radius#input-definition
+          %ul.button-group.right.round
+            %li
+              %a#input-designer-on.tiny.button.secondary.clicked(href="#") Use designer
+            %li
+              %a#input-designer-off.tiny.button.secondary(href="#") Upload
+
+          %h4.subheader= "Input definition"
+
+          #input-designer
+            .content
+              = "Hello world"
+
+          #input-upload
+            .content
+              = render partial: 'form_row', object: 'simulation_input',
+                locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
+
+      .row
         = render partial: 'form_row', object: 'simulation_binaries',
           locals: { input_element: file_field_tag('simulation_binaries'), offset: 0 }
-        = render partial: 'form_row', object: 'simulation_input',
-          locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
 
       .row
         = render partial: 'form_row', object: 'input_writer',
@@ -64,4 +81,6 @@
     $(function() {
       window.toggle_panels_on_title_click();
       $('.last-element h3:first').click();
+
+      var scenario_registration = new window.ScenarioRegistration()
     });
