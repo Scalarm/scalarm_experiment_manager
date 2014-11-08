@@ -1,6 +1,19 @@
+# Scalarm configuration
 config/secrets.yml
 config/scalarm.yml
 config/puma.rb
+
+# IDE settings
 .idea/
+
+# binaries
 bin/mongos
+
+# temporary files
+puma.pid
+tmp/
+
+# OSX specific
+.DS_Store
+config/DS_Store
 
