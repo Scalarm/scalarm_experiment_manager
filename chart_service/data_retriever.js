@@ -171,8 +171,9 @@ var connect = function(success, error){
 		var getPareto = function(id, outputParam, success, error){
 			getData(id, function(array, args, mins, maxes){
 				effects = [];
-				effects.push(Math.abs(calculateAverage(array, args[0], maxes[args[0]], outputParam)-calculateAverage(array, args[0], mins[args[0]], outputParam)));
-				effects.push(Math.abs(calculateAverage(array, args[1], maxes[args[1]], outputParam)-calculateAverage(array, args[1], mins[args[1]], outputParam)));
+				for(i in args) {
+					effects.push(Math.abs(calculateAverage(array, args[i], maxes[args[i]], outputParam)-calculateAverage(array, args[i], mins[args[i]], outputParam)));
+				}
 				var data = [];
 				for(i in args) {
 					data.push({
