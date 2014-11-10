@@ -50,7 +50,7 @@
 
       try {
         //TODO - insert appropriate address
-        var ws = new WebSocket("ws://localhost:8080/#{@experiment.id}");
+        var ws = new WebSocket("wss://localhost/chart/#{@experiment.id}");
       }
       catch (e) {
         console.log("Unable to establish WebSocket connection.");
