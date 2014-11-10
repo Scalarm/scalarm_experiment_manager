@@ -61,6 +61,15 @@ function string_with_delimeters() {
     return string_copy.split("").reverse().join("");
 }
 
+// Used to listen to invoke events for object only if it does not have 'disabled' class
+function ignore_if_disabled(obj, fun) {
+    if (obj.is('.disabled')) {
+        return false;
+    } else {
+        return fun();
+    }
+}
+
 String.prototype.with_delimeters = string_with_delimeters;
 
 window.loaderHTML = '<div class="row small-1 small-centered" style="margin-bottom: 10px;"><img src="/assets/loading.gif"/></div>'

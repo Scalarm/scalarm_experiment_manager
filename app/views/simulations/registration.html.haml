@@ -25,48 +25,75 @@
             #input-designer.hidden
               .row
                 .small-4.columns
-                  %h5.subheader= "Parameters"
-                  #params-tree.hidden
+                  .row
+                    %h5.subheader= "Parameters"
+                  .row
+                    %ul.stack-for-small.radius.button-group
+                      %li
+                        %a.button.tiny.success#add-param
+                          %i.fa.fa-plus.fa-fw
+                          = 'Add'
+                      %li
+                        %a.button.tiny.alert#remove-param
+                          %i.fa.fa-minus.fa-fw
+                          = 'Remove'
+                  .row#params-tree.hidden
                 .small-8.columns
-                  #param-config.hidden
-                    %h5.subheader= "Parameter specification"
-                    .row
-                      .small-3.columns
-                        %label.right.inline{for: 'param_id'}= 'Parameter ID:'
-                      .small-9.columns
-                        %input#param_id{type: 'text', name: 'param_id'}
-                    .row
-                      .small-3.columns
-                        %label.right.inline{for: 'param_label'}= 'Label:'
-                      .small-9.columns
-                        %input#param_label{type: 'text', name: 'param_label'}
-                    .row
-                      .small-3.columns
-                        %label.right.inline{for: 'param_type'}= 'Type:'
-                      .small-9.columns
-                        %select#param_type{name: 'param_type'}
-                          %option{value: 'integer'}= "Integer"
-                          %option{value: 'float'}= "Float"
-                          %option{value: 'string'}= "String"
+                  .row
+                    #param-config.hidden
+                      %h5.subheader= "Parameter specification"
+                      .row
+                        .small-3.columns
+                          %label.right.inline{for: 'param_id'}= 'Parameter ID:'
+                        .small-9.columns
+                          %input#param_id{type: 'text', name: 'param_id'}
+                      .row
+                        .small-3.columns
+                          %label.right.inline{for: 'param_label'}= 'Label:'
+                        .small-9.columns
+                          %input#param_label{type: 'text', name: 'param_label'}
+                      .row
+                        .small-3.columns
+                          %label.right.inline{for: 'param_type'}= 'Type:'
+                        .small-9.columns
+                          %select#param_type{name: 'param_type'}
+                            %option{value: 'integer'}= "Integer"
+                            %option{value: 'float'}= "Float"
+                            %option{value: 'string'}= "String"
 
-                    .row#param-range.hidden
-                      .small-6.columns
-                        .row
-                          .small-3.columns
-                            %label.right.inline{for: 'param_min'}= 'Min:'
-                          .small-9.columns
-                            %input#param_min{type: 'text', name: 'param_min'}
-                      .small-6.columns
-                        .row
-                          .small-3.columns
-                            %label.right.inline{for: 'param_max'}= 'Max:'
-                          .small-9.columns
-                            %input#param_max{type: 'text', name: 'param_max'}
-                    .row#param-allowed.hidden
-                      .small-3.columns
-                        %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
-                      .small-9.columns
-                        %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
+                      .row#param-range.hidden
+                        .small-6.columns
+                          .row
+                            .small-3.columns
+                              %label.right.inline{for: 'param_min'}= 'Min:'
+                            .small-9.columns
+                              %input#param_min{type: 'text', name: 'param_min'}
+                        .small-6.columns
+                          .row
+                            .small-3.columns
+                              %label.right.inline{for: 'param_max'}= 'Max:'
+                            .small-9.columns
+                              %input#param_max{type: 'text', name: 'param_max'}
+                      .row#param-allowed.hidden
+                        .small-3.columns
+                          %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
+                        .small-9.columns
+                          %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
+                      .row#editor-buttons
+                        %ul.stack-for-small.radius.button-group
+                          %li
+                            %a.button.tiny.success#editor-save.disabled
+                              %i.fa.fa-save.fa-fw
+                              = 'Save changes'
+                            %a.button.tiny.alert#editor-discard.disabled
+                              %i.fa.fa-undo.fa-fw
+                              = 'Discard changes'
+                    #unsaved-modal.reveal-modal{'data-reveal' => true}
+                      .row
+                        = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
+                      .row
+                        %a#unsaved-ok.button.medium.center= 'OK'
+
 
             #input-upload.hidden
               .content
@@ -124,5 +151,5 @@
       window.toggle_panels_on_title_click();
       $('.last-element h3:first').click();
 
-      var scenario_registration = new window.ScenarioRegistration()
+      window.scenario_registration = new window.ScenarioRegistration();
     });
