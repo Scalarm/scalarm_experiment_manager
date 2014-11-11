@@ -70,6 +70,18 @@ function ignore_if_disabled(obj, fun) {
     }
 }
 
+$.prototype.enable = function () {
+    $.each(this, function (index, el) {
+        $(el).removeAttr('disabled');
+    });
+}
+
+$.prototype.disable = function () {
+    $.each(this, function (index, el) {
+        $(el).attr('disabled', 'disabled');
+    });
+}
+
 String.prototype.with_delimeters = string_with_delimeters;
 
 window.loaderHTML = '<div class="row small-1 small-centered" style="margin-bottom: 10px;"><img src="/assets/loading.gif"/></div>'

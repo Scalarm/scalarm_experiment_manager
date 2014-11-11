@@ -6,7 +6,10 @@ class window.ScenarioRegistration
     @inputDesignerOffDiv = $("#input-designer-off")
     @inputDesignerOnDiv.on("click", @inputDesignerOn)
     @inputDesignerOffDiv.on("click", @inputDesignerOff)
+    # use designer by default
     @inputDesignerOnDiv.click()
+
+    @designer_value = $('#designer_value')
 
     # handle param_type selector events
     $('#param_type').change(@handleParamTypeChanged)
@@ -26,8 +29,9 @@ class window.ScenarioRegistration
 
     $('#unsaved-ok').click(-> $('#unsaved-modal').foundation('reveal', 'close'))
 
-    @monitorEditorControls()
+    $('#scenario_form').submit(@formSubmit)
 
+    @monitorEditorControls()
     @createSimpleModel()
 #    [
 #      {
@@ -249,13 +253,30 @@ class window.ScenarioRegistration
     @inputDesignerOnDiv.addClass("clicked")
     @inputDesignerOffDiv.removeClass("clicked")
 
-    $("#input-definition #input-designer").show()
-    $("#input-definition #input-upload").hide()
+    $("#input-designer").show()
+    $("#input-designer").enable()
+    $("#input-upload").hide()
+    $("#input-upload").disable()
 
   inputDesignerOff: (event) =>
     @inputDesignerOnDiv.removeClass("clicked")
     @inputDesignerOffDiv.addClass("clicked")
 
-    $("#input-definition #input-designer").hide()
-    $("#input-definition #input-upload").show()
+    $("#input-designer").hide()
+    $("#input-designer").disable()
+    $("#input-upload").show()
+    $("#input-upload").enable()
+
+  isDesignerUsed: =>
+    @inputDesignerOnDiv.is(".clicked")
+
+  formSubmit: =>
+    if @isDesignerUsed()
+      # send designer model data
+      @designer_value.enable()
+      @designer_value.val(JSON.stringify(@input_model))
+      return true
+    else
+      @designer_value.disable()
+      return true
 

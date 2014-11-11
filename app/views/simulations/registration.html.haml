@@ -5,119 +5,141 @@
   %h3.subheader= t('.experiments_label')
 
   .content
-    = form_tag(simulations_path, multipart: true, class: 'custom') do
+    = form_tag(simulations_path, id: 'scenario_form', multipart: true, class: 'custom') do
       .row
-        = render partial: 'form_row', object: 'simulation_name',
-          locals: { input_element: text_field_tag('simulation_name'), offset: 0 }
-        = render partial: 'form_row', object: 'simulation_description',
-          locals: { input_element: text_area_tag('simulation_description'), offset: 0 }
+        %fieldset
+          %legend= t("simulations.registration.basic_information")
+          .row
+            .small-3.columns
+              %label.right.inline{for: 'simulation_name'}= t("simulations.registration.simulation_name")
+            .small-9.columns
+              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;'
+          .row
+            .small-3.columns
+              %label.right.inline{for: 'simulation_description'}= t("simulations.registration.simulation_description")
+            .small-9.columns
+              = text_area_tag 'simulation_description', '', rows: 2, style: 'max-width: 100%;'
+
+      -# will be used as computed value of input definition designer
+      %input#designer_value{type: 'hidden', name: 'simulation_input'}
 
       .row
-        %section.panel.radius#input-definition
+        %ul.button-group.right.round{style: 'margin-top: -3rem; margin-bottom: 0rem; margin-right: 1rem'}
+          %li
+            %a#input-designer-on.tiny.button.secondary.clicked(href="#") Use designer
+          %li
+            %a#input-designer-off.tiny.button.secondary(href="#") Upload
+
+      .row
+        %fieldset#input-upload
+          %legend= t('simulations.registration.simulation_input')
           .row
-            %ul.button-group.right.round
-              %li
-                %a#input-designer-on.tiny.button.secondary.clicked(href="#") Use designer
-              %li
-                %a#input-designer-off.tiny.button.secondary(href="#") Upload
-            %h4.subheader= "Input definition"
+            .small-5.columns
+              %label.right.inline{for: 'simulation_input'}= t("simulations.registration.simulation_input_desc") + ':'
+            .small-7.columns
+              = file_field_tag 'simulation_input'
+
+        %fieldset#input-designer
+          %legend= t('simulations.registration.simulation_input')
           .row
-            #input-designer.hidden
+            .small-4.columns
               .row
-                .small-4.columns
+                %h5.subheader= "Parameters"
+              .row
+                %ul.stack-for-small.radius.button-group
+                  %li
+                    %a.button.tiny.success#add-param.unselectable
+                      %i.fa.fa-plus.fa-fw
+                      = 'Add'
+                  %li
+                    %a.button.tiny.alert#remove-param.unselectable
+                      %i.fa.fa-minus.fa-fw
+                      = 'Remove'
+              .row#params-tree.hidden
+            .small-8.columns
+              .row
+                #param-config.hidden
+                  %h5.subheader= "Parameter specification"
                   .row
-                    %h5.subheader= "Parameters"
+                    .small-3.columns
+                      %label.right.inline{for: 'param_id'}= 'Parameter ID:'
+                    .small-9.columns
+                      %input#param_id{type: 'text', name: 'param_id'}
                   .row
+                    .small-3.columns
+                      %label.right.inline{for: 'param_label'}= 'Label:'
+                    .small-9.columns
+                      %input#param_label{type: 'text', name: 'param_label'}
+                  .row
+                    .small-3.columns
+                      %label.right.inline{for: 'param_type'}= 'Type:'
+                    .small-9.columns
+                      %select#param_type{name: 'param_type'}
+                        %option{value: 'integer'}= "Integer"
+                        %option{value: 'float'}= "Float"
+                        %option{value: 'string'}= "String"
+
+                  .row#param-range.hidden
+                    .small-6.columns
+                      .row
+                        .small-3.columns
+                          %label.right.inline{for: 'param_min'}= 'Min:'
+                        .small-9.columns
+                          %input#param_min{type: 'text', name: 'param_min'}
+                    .small-6.columns
+                      .row
+                        .small-3.columns
+                          %label.right.inline{for: 'param_max'}= 'Max:'
+                        .small-9.columns
+                          %input#param_max{type: 'text', name: 'param_max'}
+                  .row#param-allowed.hidden
+                    .small-3.columns
+                      %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
+                    .small-9.columns
+                      %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
+                  .row#editor-buttons
                     %ul.stack-for-small.radius.button-group
                       %li
-                        %a.button.tiny.success#add-param
-                          %i.fa.fa-plus.fa-fw
-                          = 'Add'
-                      %li
-                        %a.button.tiny.alert#remove-param
-                          %i.fa.fa-minus.fa-fw
-                          = 'Remove'
-                  .row#params-tree.hidden
-                .small-8.columns
+                        %a.button.tiny.success#editor-save.disabled.unselectable
+                          %i.fa.fa-save.fa-fw
+                          = 'Save changes'
+                        %a.button.tiny.alert#editor-discard.disabled.unselectable
+                          %i.fa.fa-undo.fa-fw
+                          = 'Discard changes'
+                #unsaved-modal.reveal-modal{'data-reveal' => true}
                   .row
-                    #param-config.hidden
-                      %h5.subheader= "Parameter specification"
-                      .row
-                        .small-3.columns
-                          %label.right.inline{for: 'param_id'}= 'Parameter ID:'
-                        .small-9.columns
-                          %input#param_id{type: 'text', name: 'param_id'}
-                      .row
-                        .small-3.columns
-                          %label.right.inline{for: 'param_label'}= 'Label:'
-                        .small-9.columns
-                          %input#param_label{type: 'text', name: 'param_label'}
-                      .row
-                        .small-3.columns
-                          %label.right.inline{for: 'param_type'}= 'Type:'
-                        .small-9.columns
-                          %select#param_type{name: 'param_type'}
-                            %option{value: 'integer'}= "Integer"
-                            %option{value: 'float'}= "Float"
-                            %option{value: 'string'}= "String"
-
-                      .row#param-range.hidden
-                        .small-6.columns
-                          .row
-                            .small-3.columns
-                              %label.right.inline{for: 'param_min'}= 'Min:'
-                            .small-9.columns
-                              %input#param_min{type: 'text', name: 'param_min'}
-                        .small-6.columns
-                          .row
-                            .small-3.columns
-                              %label.right.inline{for: 'param_max'}= 'Max:'
-                            .small-9.columns
-                              %input#param_max{type: 'text', name: 'param_max'}
-                      .row#param-allowed.hidden
-                        .small-3.columns
-                          %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
-                        .small-9.columns
-                          %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
-                      .row#editor-buttons
-                        %ul.stack-for-small.radius.button-group
-                          %li
-                            %a.button.tiny.success#editor-save.disabled
-                              %i.fa.fa-save.fa-fw
-                              = 'Save changes'
-                            %a.button.tiny.alert#editor-discard.disabled
-                              %i.fa.fa-undo.fa-fw
-                              = 'Discard changes'
-                    #unsaved-modal.reveal-modal{'data-reveal' => true}
-                      .row
-                        = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
-                      .row
-                        %a#unsaved-ok.button.medium.center= 'OK'
-
-
-            #input-upload.hidden
-              .content
-                = render partial: 'form_row', object: 'simulation_input',
-                  locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
+                    = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
+                  .row
+                    %a#unsaved-ok.button.medium.center= 'OK'
 
       .row
-        = render partial: 'form_row', object: 'simulation_binaries',
-          locals: { input_element: file_field_tag('simulation_binaries'), offset: 0 }
+        %fieldset#simulation-files
+          %legend= t('simulations.registration.files')
+          .row
+            .row
+              .small-10.columns.small-centered
+                %fieldset
+                  %legend= t("simulations.registration.simulation_binaries")
+                  .row
+                    .small-5.columns
+                      %label.right.inline{for: 'simulation_binaries'}= t("simulations.registration.simulation_binaries_desc") + ':'
+                    .small-7.columns
+                      = file_field_tag 'simulation_binaries'
 
-      .row
-        = render partial: 'form_row', object: 'input_writer',
-          locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers), class: 'medium') }
-        = render partial: 'form_row', object: 'executor',
-          locals: { input_element: select_tag('executor_id', options_for_select(@executors), class: 'medium') }
-      .row
-        = render partial: 'form_row', object: 'output_reader',
-          locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers), class: 'medium') }
-        = render partial: 'form_row', object: 'progress_monitor',
-          locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors), class: 'medium') }
+            .row
+              = render partial: 'form_row', object: 'input_writer',
+                locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers), class: 'medium') }
+              = render partial: 'form_row', object: 'executor',
+                locals: { input_element: select_tag('executor_id', options_for_select(@executors), class: 'medium') }
+            .row
+              = render partial: 'form_row', object: 'output_reader',
+                locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers), class: 'medium') }
+              = render partial: 'form_row', object: 'progress_monitor',
+                locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors), class: 'medium') }
 
-      .row
-        .small-2.small-centered.columns
-          = submit_tag t('.upload'), class: 'button expand radius last-element'
+          .row
+            .small-2.small-centered.columns
+              = submit_tag t('.upload'), class: 'button expand radius last-element'
 
 
 %section.panel.radius.last-element
