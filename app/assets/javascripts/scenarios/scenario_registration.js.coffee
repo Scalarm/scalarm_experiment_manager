@@ -27,34 +27,17 @@ class window.ScenarioRegistration
     $('#editor-save').click(=> ignore_if_disabled($('#editor-save'), @saveParameterChanges))
     $('#editor-discard').click(=> ignore_if_disabled($('#editor-discard'), @discardParameterChanges))
 
-    $('#unsaved-ok').click(-> $('#unsaved-modal').foundation('reveal', 'close'))
+    $('#unsaved-ok').click(->
+      $('#unsaved-modal').foundation('reveal', 'close')
+      $('html, body').animate({
+        scrollTop: $("#input-designer").offset().top
+      }, 2000);
+    )
 
     $('#scenario_form').submit(@formSubmit)
 
     @monitorEditorControls()
     @createSimpleModel()
-#    [
-#      {
-#        "entities": [
-#          {
-#            "parameters": [
-#              {
-#                "id": 'param1',
-#                'label': 'First',
-#                'type': 'float',
-#                'min': 0, 'max': 1000
-#              },
-#                {
-#                  "id": 'param2',
-#                  'label': 'second',
-#                  'type': 'float',
-#                  'min': -100, 'max': 100
-#                },
-#            ]
-#          }
-#        ]
-#      }
-#    ]
 
     @editorModified = false
     @updateTree()
@@ -84,16 +67,28 @@ class window.ScenarioRegistration
     @setSaved()
 
   saveEditorToParam: () =>
+    # getting parameter by old parameter id
+    parameter = @getModelParamById(@selectedNodeId)
+
     param_id = $('#param-config #param_id').val()
     param_label = $('#param-config #param_label').val()
     param_type = $('#param-config #param_type').val()
 
-    # getting parameter by old parameter id
-    parameter = @getModelParamById(@selectedNodeId)
-
     parameter.id = param_id
     parameter.label = param_label
     parameter.type = param_type
+
+    if param_type == 'string'
+      param_allowed = $('#param-config #param_allowed_area').val()
+      allowed = param_allowed.split(/\n|\r\n/)
+      parameter.allowed_values = allowed
+
+    else if (param_type == 'integer' || param_type == 'float')
+      param_min = $('#param-config #param_min').val()
+      parameter.min = (param_type == 'integer' && parseInt(param_min) || parseFloat(param_min))
+      param_max = $('#param-config #param_max').val()
+      parameter.max = (param_type == 'integer' && parseInt(param_max) || parseFloat(param_max))
+
 
     @updateTree()
     @loadParamToEditor(null)
@@ -177,6 +172,10 @@ class window.ScenarioRegistration
       $('#param-config #param_id').val(p.id)
       $('#param-config #param_label').val(p.label || '')
       $('#param-config #param_type').val(p.type || 'integer')
+      $('#param-config #param_min').val(p.min? && p.min.toString() || '')
+      $('#param-config #param_max').val(p.max? && p.max.toString() || '')
+      $('#param-config #param_allowed_area').val(p.allowed_values && p.allowed_values.join("\n") || '')
+
       @handleParamTypeChanged()
       $('#param-config').show()
     else
@@ -227,7 +226,6 @@ class window.ScenarioRegistration
         },
         animation : 0,
         check_callback : true,
-        themes : { stripes : true },
         types : {
           parameter : {
             max_children : 0,
@@ -254,29 +252,33 @@ class window.ScenarioRegistration
     @inputDesignerOffDiv.removeClass("clicked")
 
     $("#input-designer").show()
-    $("#input-designer").enable()
+    $("#input-designer #param-config").enable()
     $("#input-upload").hide()
-    $("#input-upload").disable()
+    $("#input-upload #simulation_input_file").disable()
 
   inputDesignerOff: (event) =>
     @inputDesignerOnDiv.removeClass("clicked")
     @inputDesignerOffDiv.addClass("clicked")
 
     $("#input-designer").hide()
-    $("#input-designer").disable()
+    $("#input-designer #param-config").disable()
     $("#input-upload").show()
-    $("#input-upload").enable()
+    $("#input-upload #simulation_input_file").enable()
 
   isDesignerUsed: =>
     @inputDesignerOnDiv.is(".clicked")
 
   formSubmit: =>
     if @isDesignerUsed()
-      # send designer model data
-      @designer_value.enable()
-      @designer_value.val(JSON.stringify(@input_model))
-      return true
+      if @editorModified
+        $('#unsaved-modal').foundation('reveal', 'open')
+        false
+      else
+        # send designer model data
+        @designer_value.enable()
+        @designer_value.val(JSON.stringify(@input_model))
+        true
     else
       @designer_value.disable()
-      return true
+      true
 

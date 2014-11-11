@@ -23,94 +23,96 @@
       -# will be used as computed value of input definition designer
       %input#designer_value{type: 'hidden', name: 'simulation_input'}
 
-      .row
-        %ul.button-group.right.round{style: 'margin-top: -3rem; margin-bottom: 0rem; margin-right: 1rem'}
-          %li
-            %a#input-designer-on.tiny.button.secondary.clicked(href="#") Use designer
-          %li
-            %a#input-designer-off.tiny.button.secondary(href="#") Upload
 
-      .row
-        %fieldset#input-upload
+
+
+        %fieldset#input-definition
           %legend= t('simulations.registration.simulation_input')
-          .row
+
+          .row{style: 'margin-top: -3rem;'}
+            %ul.button-group.right.round
+              %li
+                %a#input-designer-on.tiny.button.secondary.clicked(href="#") Design
+              %li
+                %a#input-designer-off.tiny.button.secondary(href="#") Upload JSON
+
+          .row#input-upload.hide
             .small-5.columns
               %label.right.inline{for: 'simulation_input'}= t("simulations.registration.simulation_input_desc") + ':'
             .small-7.columns
-              = file_field_tag 'simulation_input'
+              = file_field_tag 'simulation_input', id: 'simulation_input_file'
 
-        %fieldset#input-designer
-          %legend= t('simulations.registration.simulation_input')
-          .row
-            .small-4.columns
-              .row
-                %h5.subheader= "Parameters"
-              .row
-                %ul.stack-for-small.radius.button-group
-                  %li
-                    %a.button.tiny.success#add-param.unselectable
-                      %i.fa.fa-plus.fa-fw
-                      = 'Add'
-                  %li
-                    %a.button.tiny.alert#remove-param.unselectable
-                      %i.fa.fa-minus.fa-fw
-                      = 'Remove'
-              .row#params-tree.hidden
-            .small-8.columns
-              .row
-                #param-config.hidden
-                  %h5.subheader= "Parameter specification"
-                  .row
-                    .small-3.columns
-                      %label.right.inline{for: 'param_id'}= 'Parameter ID:'
-                    .small-9.columns
-                      %input#param_id{type: 'text', name: 'param_id'}
-                  .row
-                    .small-3.columns
-                      %label.right.inline{for: 'param_label'}= 'Label:'
-                    .small-9.columns
-                      %input#param_label{type: 'text', name: 'param_label'}
-                  .row
-                    .small-3.columns
-                      %label.right.inline{for: 'param_type'}= 'Type:'
-                    .small-9.columns
-                      %select#param_type{name: 'param_type'}
-                        %option{value: 'integer'}= "Integer"
-                        %option{value: 'float'}= "Float"
-                        %option{value: 'string'}= "String"
+          .row#input-designer.hide
+            .small-5.columns
+              %fieldset#param-list
+                %legend= "Parameters"
+                .row
+                  %ul.stack-for-small.button-group
+                    %li
+                      %a.button.tiny.radius#add-param.unselectable
+                        %i.fa.fa-plus.fa-fw
+                        = 'Add'
+                    %li
+                      %a.button.tiny.radius#remove-param.unselectable
+                        %i.fa.fa-minus.fa-fw
+                        = 'Remove'
+                .row#params-tree.hidden
+            .small-7.columns
+              %fieldset#param-config.hidden
+                %legend= "Parameter specification"
+                .row
+                  .small-3.columns
+                    %label.right.inline{for: 'param_id'}= 'Parameter ID:'
+                  .small-9.columns
+                    %input#param_id{type: 'text', name: 'param_id'}
+                .row
+                  .small-3.columns
+                    %label.right.inline{for: 'param_label'}= 'Label:'
+                  .small-9.columns
+                    %input#param_label{type: 'text', name: 'param_label'}
+                .row
+                  .small-3.columns
+                    %label.right.inline{for: 'param_type'}= 'Type:'
+                  .small-9.columns
+                    %select#param_type{name: 'param_type'}
+                      %option{value: 'integer'}= "Integer"
+                      %option{value: 'float'}= "Float"
+                      %option{value: 'string'}= "String"
 
-                  .row#param-range.hidden
-                    .small-6.columns
-                      .row
-                        .small-3.columns
-                          %label.right.inline{for: 'param_min'}= 'Min:'
-                        .small-9.columns
-                          %input#param_min{type: 'text', name: 'param_min'}
-                    .small-6.columns
-                      .row
-                        .small-3.columns
-                          %label.right.inline{for: 'param_max'}= 'Max:'
-                        .small-9.columns
-                          %input#param_max{type: 'text', name: 'param_max'}
-                  .row#param-allowed.hidden
-                    .small-3.columns
-                      %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
-                    .small-9.columns
-                      %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
-                  .row#editor-buttons
-                    %ul.stack-for-small.radius.button-group
-                      %li
-                        %a.button.tiny.success#editor-save.disabled.unselectable
-                          %i.fa.fa-save.fa-fw
-                          = 'Save changes'
-                        %a.button.tiny.alert#editor-discard.disabled.unselectable
-                          %i.fa.fa-undo.fa-fw
-                          = 'Discard changes'
-                #unsaved-modal.reveal-modal{'data-reveal' => true}
+                .row#param-range.hidden
+                  .small-6.columns
+                    .row
+                      .small-3.columns
+                        %label.right.inline{for: 'param_min'}= 'Min:'
+                      .small-9.columns
+                        %input#param_min{type: 'text', name: 'param_min'}
+                  .small-6.columns
+                    .row
+                      .small-3.columns
+                        %label.right.inline{for: 'param_max'}= 'Max:'
+                      .small-9.columns
+                        %input#param_max{type: 'text', name: 'param_max'}
+                .row#param-allowed.hidden
+                  .small-3.columns
+                    %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
+                  .small-9.columns
+                    %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
+                .row#editor-buttons
+                  %ul.stack-for-small.button-group
+                    %li
+                      %a.tiny.button.radius.success#editor-save.disabled.unselectable
+                        %i.fa.fa-save.fa-fw
+                        = 'Save changes'
+                      %a.tiny.button.radius#editor-discard.disabled.unselectable
+                        %i.fa.fa-undo.fa-fw
+                        = 'Discard changes'
+                #unsaved-modal.reveal-modal.small{'data-reveal' => true}
+                  .row{style: "margin-bottom: 25px;"}
+                    .small-12.columns
+                      = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
                   .row
-                    = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
-                  .row
-                    %a#unsaved-ok.button.medium.center= 'OK'
+                    .small-12.columns.text-center
+                      %a#unsaved-ok.button.radius.medium= 'OK'
 
       .row
         %fieldset#simulation-files
