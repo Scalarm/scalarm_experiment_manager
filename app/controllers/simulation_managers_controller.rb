@@ -123,6 +123,30 @@ class SimulationManagersController < ApplicationController
     end
   end
 
+  # TODO: this is infrastructure-dependent
+  # GET params
+  # - infrastructure
+  def independent_alive
+    render json: {status: 'error', msg: 'Only Simulation Managers can use this method'}, status: 403 unless @sm_user
+    sm_uuid = @sm_user.sm_uuid
+    sm_user_id = @sm_user.scalarm_user.id
+    record = IndependentRecord.find_by_sm_uuid(sm_uuid) or
+        IndependentRecord.new({
+            sm_uuid: sm_uuid,
+            user_id: sm_user_id
+                              })
+    record.last_ping = Time.now
+    record.save
+    render nothing: true, status: 200
+  end
+
+  # GET params
+  # - experiment_id
+  def get_sm_creds
+    sm_uuid = SecureRandom.uuid
+
+  end
+
   # -- filters --
 
   def set_user_id

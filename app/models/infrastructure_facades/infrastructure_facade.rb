@@ -57,6 +57,15 @@ class InfrastructureFacade
     @logger = InfrastructureTaskLogger.new short_name
   end
 
+  # Idea for distinguish SiM from Monitoring - work in progress
+  # def self.generate_monitoring_login(sm_uuid)
+  #   "monitoring_#{sm_uuid}"
+  # end
+  #
+  # def self.monitoring_login?(login)
+  #   !!(/monitoring_.*/ =~ login)
+  # end
+
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
     Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
 
