@@ -209,9 +209,11 @@ class window.ScenarioRegistration
       ]
 
   paramModelToTree: (p) =>
+    label = @cutText(p.label, 13)
+    id = @cutText(p.id, 10)
     {
       id: p.id,
-      text: "<strong>#{p.label}</strong> (#{p.id})",
+      text: "<strong>#{label}</strong> (#{id})",
       type: 'parameter'
     }
 
@@ -296,3 +298,8 @@ class window.ScenarioRegistration
       @designer_value.disable()
       true
 
+  cutText: (text, maxChars) ->
+    if text.length > maxChars
+      "#{text.substring(0, maxChars)}..."
+    else
+      text
