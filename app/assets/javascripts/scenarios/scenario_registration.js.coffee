@@ -36,12 +36,26 @@ class window.ScenarioRegistration
 
     $('#scenario_form').submit(@formSubmit)
 
+    @editorSaveOnEnter($("#param_id"))
+    @editorSaveOnEnter($("#param_label"))
+    @editorSaveOnEnter($("#param_min"))
+    @editorSaveOnEnter($("#param_max"))
+
     @monitorEditorControls()
     @createSimpleModel()
 
     @editorModified = false
     @updateTree()
     @tree.show()
+
+  editorSaveOnEnter: (object) =>
+    object.keypress((event) =>
+      if event.keyCode == 13
+        $("#editor-save").click()
+        false
+      else
+        true
+    )
 
   monitorEditorControls: =>
     $('#param-config input').on('input', => @setModified())
