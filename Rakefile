@@ -10,9 +10,9 @@ namespace :service do
   task :start, [:debug] => [:environment] do |t, args|
     puts 'puma -C config/puma.rb'
     %x[puma -C config/puma.rb]
-    
-    create_anonymous_user
+
     monitoring_probe('start')
+    create_anonymous_user
   end
 
   desc 'Stop the service'
