@@ -1,6 +1,6 @@
 class window.ScenarioRegistration
 
-  constructor: ->
+  constructor: (@input_model=null) ->
     # bind input designer switch events
     @inputDesignerOnDiv = $("#input-designer-on")
     @inputDesignerOffDiv = $("#input-designer-off")
