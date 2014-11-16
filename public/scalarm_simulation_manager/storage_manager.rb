@@ -1,3 +1,4 @@
+require_relative 'sim_utils'
 
 class StorageManager
   BOUNDARY = 'AaB03xZZZZZZ11322321111XSDW'

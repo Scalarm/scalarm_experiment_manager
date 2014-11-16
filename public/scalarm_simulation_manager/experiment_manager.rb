@@ -2,6 +2,7 @@ require 'json'
 require 'uri'
 require 'openssl'
 require 'net/https'
+require_relative 'sim_utils'
 
 class ExperimentManager
 
@@ -96,7 +97,9 @@ class ExperimentManager
     puts form_data.inspect
     request.set_form_data(form_data)
 
-    http.request(request).body
+    multiple_tries do
+      http.request(request).body
+    end
   end
 
   def report_intermediate_result(experiment_id, simulation_id, results)
@@ -113,7 +116,9 @@ class ExperimentManager
     request.basic_auth(@user, @pass)
     request.set_form_data({'result' => results.to_json})
 
-    http.request(request).body
+    multiple_tries do
+      http.request(request).body
+    end
   end
 
   def path_to(method)
@@ -136,7 +141,10 @@ class ExperimentManager
     else
       ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
     end
-    response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
+
+    response = multiple_tries do
+      Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
+    end
 
     response.body
   end

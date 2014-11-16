@@ -4,6 +4,7 @@ require 'net/http'
 require 'uri'
 require 'fileutils'
 require 'socket' # for remote heartbeat monitoring
+require_relative 'sim_utils'
 
 require_relative 'experiment_manager'
 require_relative 'storage_manager'

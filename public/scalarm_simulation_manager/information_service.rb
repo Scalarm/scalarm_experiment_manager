@@ -2,6 +2,7 @@ require 'json'
 require 'uri'
 require 'openssl'
 require 'net/https'
+require_relative 'sim_utils'
 
 class InformationService
 
@@ -54,7 +55,9 @@ class InformationService
       ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
     end
 
-    response = Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
+    response = multiple_tries do
+      Net::HTTP.start(uri.host, uri.port, ssl_options) { |http| http.request(req) }
+    end
 
     return response.code, response.body
   end
