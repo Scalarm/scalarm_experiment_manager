@@ -74,13 +74,13 @@ $.prototype.enable = function () {
     $.each(this, function (index, el) {
         $(el).removeAttr('disabled');
     });
-}
+};
 
 $.prototype.disable = function () {
     $.each(this, function (index, el) {
         $(el).attr('disabled', 'disabled');
     });
-}
+};
 
 String.prototype.with_delimeters = string_with_delimeters;
 
