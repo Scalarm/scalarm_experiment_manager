@@ -29,7 +29,7 @@
           .row{style: 'margin-top: -3rem;'}
             %ul.button-group.right.round
               %li
-                %a#input-designer-on.tiny.button.secondary.clicked(href="#") Design
+                %a#input-designer-on.tiny.button.secondary(href="#") Design
               %li
                 %a#input-designer-off.tiny.button.secondary(href="#") Upload JSON
 
@@ -40,6 +40,12 @@
               = file_field_tag 'simulation_input', id: 'simulation_input_file'
 
           .row#input-designer.hide
+            .row
+              .small-10.columns.small-centered
+                #cannot_edit_alert.alert-box.warning.radius.hidden{'data-alert' => true}
+                  ="This simulation scenario input definition cannot be edited with graphical editor due to its nested structure. If you use editor, it will overwrite old input definition."
+
+
             .small-5.columns
               %fieldset#param-list
                 %legend= "Parameters"
