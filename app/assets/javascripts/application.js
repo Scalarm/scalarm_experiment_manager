@@ -72,15 +72,17 @@ function ignore_if_disabled(obj, fun) {
 
 $.prototype.enable = function () {
     $.each(this, function (index, el) {
+        $(el).removeClass('disabled');
         $(el).removeAttr('disabled');
     });
-}
+};
 
 $.prototype.disable = function () {
     $.each(this, function (index, el) {
+        $(el).addClass('disabled');
         $(el).attr('disabled', 'disabled');
     });
-}
+};
 
 String.prototype.with_delimeters = string_with_delimeters;
 

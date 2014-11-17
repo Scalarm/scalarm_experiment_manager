@@ -3,11 +3,16 @@ class window.ScenarioRegistration
   constructor: (@input_model=null) ->
     # bind input designer switch events
     @inputDesignerOnDiv = $("#input-designer-on")
-    @inputDesignerOffDiv = $("#input-designer-off")
     @inputDesignerOnDiv.on("click", @inputDesignerOn)
+    @inputDesignerOffDiv = $("#input-designer-off")
     @inputDesignerOffDiv.on("click", @inputDesignerOff)
-    # use designer by default
-    @inputDesignerOnDiv.click()
+
+    if @input_model && !@isInputModelFlat()
+      $('#cannot_edit_alert').show()
+      @inputDesignerOffDiv.click()
+      @input_model = null
+    else
+      @inputDesignerOnDiv.click()
 
     @designer_value = $('#designer_value')
 
@@ -303,3 +308,11 @@ class window.ScenarioRegistration
       "#{text.substring(0, maxChars)}..."
     else
       text
+
+  isInputModelFlat: =>
+    # there is no groups at all
+    @input_model.length == 0 ||
+      # or there is only one group without id and it has no entities
+      @input_model.length == 1 && !@input_model[0].id? && (@input_model[0].length == 0 ||
+        # or there is only one group without id and it has one entity without id
+        @input_model[0].entities.length == 1 && !@input_model[0].entities[0].id?)
