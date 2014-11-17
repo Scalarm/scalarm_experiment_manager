@@ -43,6 +43,7 @@ namespace :service do
   task :setup do
     puts 'Setup started'
     install_mongodb unless check_mongodb
+    build_monitoring unless check_monitoring
     puts 'Setup finished'
   end
 
@@ -154,6 +155,12 @@ def get_mongodb(version='2.6.5')
   mongo_name
 end
 
+def build_monitoring
+  puts 'Invoking Monitoring package install script...'
+  `./build_monitoring.sh`
+  raise 'Monitoring build failed' unless $?.to_i == 0
+end
+
 def install_mongodb
   puts 'Downloading MongoDB...'
   base_name = get_mongodb
@@ -203,11 +210,17 @@ end
 def _validate
   print 'Checking bin/mongos... '
   raise "No /bin/mongos file found" unless check_mongodb
+  raise "No monitoring package found" unless check_monitoring
   puts 'OK'
 end
 
 def check_mongodb
   `ls bin/mongos`
+  $?.to_i == 0
+end
+
+def check_monitoring
+  `ls public/scalarm_monitoring/scalarm_monitoring_linux_x86_64.xz`
   $?.to_i == 0
 end
 
