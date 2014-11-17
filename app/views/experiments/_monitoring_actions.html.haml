@@ -9,11 +9,11 @@
             = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
       - if @experiment.is_running
-        .row
-          .small-8.columns.small-centered
-            %span#boostButton{class: button_classes}
-              %i.fi-plus
-              = t('.boost_button')
+        -#.row
+        -#  .small-8.columns.small-centered
+        -#    %span#boostButton{class: button_classes}
+        -#      %i.fi-plus
+        -#      = t('.boost_button')
 
         .row
           .small-8.columns.small-centered
