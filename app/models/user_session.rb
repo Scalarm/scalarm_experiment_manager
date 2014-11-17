@@ -1,3 +1,4 @@
+require 'securerandom'
 
 class UserSession < MongoActiveRecord
 
@@ -28,5 +29,12 @@ class UserSession < MongoActiveRecord
     session
   end
 
+  def generate_token
+    token = SecureRandom.uuid
+    self.tokens = [] unless self.tokens
+    self.tokens << token
+    self.save
+    token
+  end
 
 end

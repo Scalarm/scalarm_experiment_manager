@@ -16,15 +16,21 @@
 //= require jquery-tmpl
 //= require custom.modernizr
 //= require foundation
-//= require_tree .
+// TODO - workaround for "uncaught exception: Highcharts error #16: www.highcharts.com/errors/16"
+try {
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
+} catch (err) {
+    console.log("An error occured when loading highcharts: " + err.message);
+}
 //= require highcharts/modules/exporting
 //= require dataTables/jquery.dataTables
 //= require jit-yc
 //= require toastr
 //= require jquery.remotipart
 //= require d3
+//= require jstree
+//= require_tree .
 
 
 $(function() {
@@ -59,6 +65,29 @@ function string_with_delimeters() {
 
     return string_copy.split("").reverse().join("");
 }
+
+// Used to listen to invoke events for object only if it does not have 'disabled' class
+function ignore_if_disabled(obj, fun) {
+    if (obj.is('.disabled')) {
+        return false;
+    } else {
+        return fun();
+    }
+}
+
+$.prototype.enable = function () {
+    $.each(this, function (index, el) {
+        $(el).removeClass('disabled');
+        $(el).removeAttr('disabled');
+    });
+};
+
+$.prototype.disable = function () {
+    $.each(this, function (index, el) {
+        $(el).addClass('disabled');
+        $(el).attr('disabled', 'disabled');
+    });
+};
 
 String.prototype.with_delimeters = string_with_delimeters;
 

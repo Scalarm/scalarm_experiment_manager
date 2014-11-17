@@ -128,14 +128,19 @@ en:
     registration:
       title: Simulation registration
       experiments_label: Simulation scenario registration
+      basic_information: Basic information
+      files: Files
+
       simulation_name: Simulation name
       simulation_description: Simulation description
       simulation_input: Input definition
+      simulation_input_desc: Input definition file (JSON)
       simulation_binaries: Simulation binaries
-      input_writer: Input writer
-      output_reader: Output reader
+      simulation_binaries_desc: Simulation binaries package (ZIP)
+      input_writer: Input writer (optional)
+      output_reader: Output reader (optional)
       executor: Executor
-      progress_monitor: Progress monitor
+      progress_monitor: Progress monitor (optional)
       upload: Upload
       component_registration_title: Adapter registration
       component_name: Adapter name
@@ -167,8 +172,10 @@ en:
 
       parametrization_tab:
         header: Specify parametrization for each input parameter below
-        entity_group_header: "Group - '%{label}'"
-        entity_header: "'%{label}'"
+        entity_group_header: "Group: %{label}"
+        default_group: "Default group"
+        entity_header: "Entity: %{label}"
+        default_entity: "Default entity"
         parameter_header: "Set parameter '%{label}' to:"
 
       parameters_values_tab:

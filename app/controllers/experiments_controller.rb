@@ -23,7 +23,7 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    @public_storage_manager_url = sample_public_storage_manager
+    @public_storage_manager_url = InformationService.new.sample_public_storage_manager
 
     @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
 
@@ -41,10 +41,6 @@ class ExperimentsController < ApplicationController
       format.html
       format.json { render json: {status: 'ok', data: @experiment.to_h } }
     end
-  end
-
-  def sample_public_storage_manager
-    (InformationService.new.get_list_of('storage_managers') or []).sample
   end
 
   def start_update_bars_thread
@@ -633,6 +629,12 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  def results_binaries
+    storage_manager_url = InformationService.new.sample_public_storage_manager
+    redirect_to LogBankUtils::experiment_url(storage_manager_url,
+                                             @experiment.id, @user_session)
+  end
+
   private
 
   def load_experiment
@@ -672,7 +674,7 @@ class ExperimentsController < ApplicationController
     validate_params(:default, :simulation_id, :simulation_name)
 
     @simulation = if params['simulation_id']
-                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'])).first
+                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
                   elsif params['simulation_name']
                     @current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
                   else
