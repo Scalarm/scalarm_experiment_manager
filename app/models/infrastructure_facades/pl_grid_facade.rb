@@ -321,12 +321,15 @@ class PlGridFacade < InfrastructureFacade
         end
 
         ssh = shared_ssh_session(sm_record.credentials)
-        if scheduler.submit_job(ssh, sm_record)
+
+        begin
+          sm_record.job_id = scheduler.submit_job(ssh, sm_record)
           sm_record.save
-        else
+        rescue JobSubmissionFailed => job_failed
           logger.warn 'Scheduling job failed!'
-          sm_record.store_error('install_failed') # TODO: get output from .submit_job and save as error_log
+          sm_record.store_error('install_failed', job_failed.to_s)
         end
+
       rescue Net::SSH::AuthenticationFailed => auth_exception
         logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
         sm_record.store_error('ssh')

@@ -3,7 +3,7 @@
 # - long_name() -> String
 # - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
 # - send_job_files(sm_uuid, scp)
-# - submit_job(ssh, job)
+# - submit_job(ssh, job) - submit job and return job id; if submission fails raise JobSubmissionFailed
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
 # - cancel(ssh, record) - cancels job
 # - status(ssh, record) -> job state in queue mapped to: :initializing, :running, :deactivated, :error
@@ -11,6 +11,8 @@
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
 
 require 'timeout'
+
+class JobSubmissionFailed < StandardError; end
 
 class PlGridSchedulerBase
   attr_reader :logger
