@@ -275,14 +275,20 @@ class SimulationsController < ApplicationController
 
   def results_binaries
     storage_manager_url = InformationService.new.sample_public_storage_manager
-    redirect_to LogBankUtils::simulation_run_binaries_url(storage_manager_url,
+    url = LogBankUtils::simulation_run_binaries_url(storage_manager_url,
                                              @experiment.id, @simulation_run.index, @user_session)
+
+    response = RestClient.get(url)
+    send_data response.body, filename: "simulation_results.tar.gz", disposition: "attachment", :content_type => 'application/x-compressed'
   end
 
   def results_stdout
     storage_manager_url = InformationService.new.sample_public_storage_manager
-    redirect_to LogBankUtils::simulation_run_stdout_url(storage_manager_url,
+    url = LogBankUtils::simulation_run_stdout_url(storage_manager_url,
                                                                    @experiment.id, @simulation_run.index, @user_session)
+
+    response = RestClient.get(url)
+    send_data response.body, filename: "simulation_stdout.txt", disposition: "attachment", :content_type => 'text/plain'
   end
 
   private

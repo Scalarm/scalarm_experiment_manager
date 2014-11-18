@@ -631,8 +631,11 @@ class ExperimentsController < ApplicationController
 
   def results_binaries
     storage_manager_url = InformationService.new.sample_public_storage_manager
-    redirect_to LogBankUtils::experiment_url(storage_manager_url,
+    url = LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, @user_session)
+
+    response = RestClient.get(url)
+    send_data response.body, filename: "experiment_results.zip", disposition: "attachment", :content_type => 'application/zip'
   end
 
   private
