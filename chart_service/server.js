@@ -10,6 +10,7 @@ var decoder_configuration = require("./decoder_configuration.js");
 var cookieDecoder = require("cookieDecoder")(decoder_configuration);
 var ChartsMap = require("./service.js")();	//TODO - zienic zeby modul eksportowal mape a nie funkcje, albo przekazywac handlery
 var DataRetriever = require("./data_retriever.js");
+var LoadBalancerRegistration = require("./load_balancer_registration.js");
 
 var config = require("./config.js");
 var panel_locals = require("./panel_locals.js");
@@ -80,14 +81,27 @@ var app = http.createServer(function(req, res) {
 		res.end();
 	}
 })
-DataRetriever.connect(function(){
-	app.listen(PORT, function(){
-		console.log(new Date() + " Listening on port " + PORT);
-	});
-}, function(){
-	console.log("Connection to database failed");
-	throw new Error("Connection to database failed");
-})
+//slucha na multicascie
+//jesli odbierze adres:
+//  sciaga informacje gdzie jest baza (od IS?) i puszcza do callback'a
+//i wtedy mozemy:
+//  DataRetriever.connect
+//  postawic aplikacje app.listen(...)
+//  dopiero zarejestrowac sie do LB
+LoadBalancerRegistration.retrieveDBAddress(function(address) {
+    DataRetriever.connect(address, function(){
+        app.listen(PORT, function(){
+            LoadBalancerRegistration.registerChartService(function(){
+
+            });
+            console.log(new Date() + " Listening on port " + PORT);
+        });
+    }, function(){
+        console.log("Connection to database failed");
+        throw new Error("Connection to database failed");
+    })
+});
+
 
 var WebSocketServer = require('websocket').server;
 wsServer = new WebSocketServer({

@@ -1,11 +1,11 @@
-var DBURL = require("./config.js").db_url;
+//var DBURL = require("./config.js").db_url;
 var COLLECTION_NAME = "experiment_instances_";
 var mongo = require('mongodb');
 var client = mongo.MongoClient;
 var crypto = require('crypto');
 
-var connect = function(success, error){
-	client.connect(DBURL, function(err, db){
+var connect = function(address, success, error){
+	client.connect(address, function(err, db){
 		if (err){
 			error();
 			return;
