@@ -99,8 +99,10 @@ class window.ScenarioRegistration
 
     if param_type == 'string'
       param_allowed = $('#param-config #param_allowed_area').val()
-      allowed = param_allowed.split(/\n|\r\n/)
+      allowed = $.trim(param_allowed).split(/\n|\r\n/)
       parameter.allowed_values = allowed
+      delete parameter.min
+      delete parameter.max
 
     else if (param_type == 'integer' || param_type == 'float')
       param_min = $('#param-config #param_min').val()
