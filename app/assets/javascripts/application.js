@@ -16,13 +16,8 @@
 //= require jquery-tmpl
 //= require custom.modernizr
 //= require foundation
-// TODO - workaround for "uncaught exception: Highcharts error #16: www.highcharts.com/errors/16"
-try {
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
-} catch (err) {
-    console.log("An error occured when loading highcharts: " + err.message);
-}
 //= require highcharts/modules/exporting
 //= require dataTables/jquery.dataTables
 //= require jit-yc

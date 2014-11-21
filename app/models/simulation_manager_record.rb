@@ -109,7 +109,10 @@ module SimulationManagerRecord
   def store_error(error, error_log=nil)
     set_attribute('state', :error)
     self.error = error
-    self.error_log = error_log if error_log
+    if error_log
+      self.error_log =
+          (self.error_log ? "#{self.error_log}\n\n#{error_log}" : error_log)
+    end
     self.save_if_exists
 
     user.destroy_unused_credentials
