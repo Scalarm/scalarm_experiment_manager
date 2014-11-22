@@ -5,6 +5,8 @@ require File.expand_path('../config/application', __FILE__)
 
 ScalarmExperimentManager::Application.load_tasks
 
+LOCAL_MONGOS_PATH = 'bin/mongos'
+
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:environment, :setup] do |t, args|
@@ -42,7 +44,7 @@ namespace :service do
   desc 'Downloading and installing dependencies'
   task :setup do
     puts 'Setup started'
-    install_mongodb unless check_mongodb
+    install_mongodb unless mongos_path
     build_monitoring unless check_monitoring
     puts 'Setup finished'
   end
@@ -82,13 +84,16 @@ end
 
 # ================ UTILS
 def start_router(config_service_url)
-  router_cmd = "./bin/mongos --bind_ip localhost --configdb #{config_service_url} --logpath log/db_router.log --fork --logappend"
+  bin = mongos_path
+  puts "Using: #{bin}"
+  puts `#{bin} --version 2>&1`
+  router_cmd = "#{mongos_path} --bind_ip localhost --configdb #{config_service_url} --logpath log/db_router.log --fork --logappend"
   puts router_cmd
   puts %x[#{router_cmd}]
 end
 
 def stop_router
-  proc_name = "./mongos .*"
+  proc_name = ".*mongos .*"
   out = %x[ps aux | grep "#{proc_name}"]
   processes_list = out.split("\n").delete_if { |line| line.include? 'grep' }
 
@@ -209,14 +214,23 @@ end
 
 def _validate
   print 'Checking bin/mongos... '
-  raise "No /bin/mongos file found" unless check_mongodb
-  raise "No monitoring package found" unless check_monitoring
+  raise "No /bin/mongos file found and no mongos in PATH" unless mongos_path
+  raise "No Scalarm Monitoring package found" unless check_monitoring
   puts 'OK'
 end
 
-def check_mongodb
-  `ls bin/mongos`
-  $?.to_i == 0
+def mongos_path
+  `ls #{LOCAL_MONGOS_PATH} >/dev/null 2>&1`
+  if $?.to_i == 0
+    LOCAL_MONGOS_PATH
+  else
+    `which mongos > /dev/null 2>&1`
+    if $?.to_i == 0
+      'mongos'
+    else
+      nil
+    end
+  end
 end
 
 def check_monitoring
