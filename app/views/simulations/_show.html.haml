@@ -39,7 +39,12 @@
       - if @simulation_run.error_reason.blank?
         = t('.no_reason_label')
       - else
-        = t('.reason', reason: @simulation_run.error_reason)
+        = t('.reason')
+        .panel.log-box
+          - @simulation_run.error_reason.split("\n").each do |line|
+            = line
+            %br
+
 
 - elsif @simulation_run.is_done
   .row
