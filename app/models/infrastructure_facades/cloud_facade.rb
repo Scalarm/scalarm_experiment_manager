@@ -53,10 +53,10 @@ class CloudFacade < InfrastructureFacade
                               find_stored_params(params))
     rescue CloudErrors::ImageValidationError => ive
       logger.error "Error validating image secrets: #{ive.to_s}"
-      raise InfrastructureErrors::ScheduleError(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
+      raise InfrastructureErrors::ScheduleError.new(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
     rescue Exception => e
       logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
-      raise InfrastructureErrors::ScheduleError(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
+      raise InfrastructureErrors::ScheduleError.new(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
     end
   end
 
