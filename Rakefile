@@ -93,7 +93,7 @@ def start_router(config_service_url)
 end
 
 def stop_router
-  proc_name = ".*mongos .*"
+  proc_name = "#{mongos_path} .*"
   out = %x[ps aux | grep "#{proc_name}"]
   processes_list = out.split("\n").delete_if { |line| line.include? 'grep' }
 
