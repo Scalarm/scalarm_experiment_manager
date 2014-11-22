@@ -134,6 +134,7 @@ class window.ScenarioRegistration
     @activateNodeById(@selectedNodeId) if @selectedNodeId
 
   handleRemoveParam: =>
+    @setSaved()
     @simpleRemoveParam()
 
   createEmptyGroup: =>
