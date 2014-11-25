@@ -15,3 +15,15 @@ setInterval(function () {
         oTableFinal.fnReloadAjax();
     }
 }, 30000);
+
+$('#completed_simulations_table tbody').css('cursor','pointer');
+
+$('#completed_simulations_table').on('click', 'tr', function(event) {
+    if(oTableFinal.fnGetData(this)) {
+        $('#extension-dialog').html(window.loaderHTML);
+
+        var simulation_id = oTableFinal.fnGetData(this)[0];
+        $('#extension-dialog').load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + simulation_id);
+        $('#extension-dialog').foundation('reveal', 'open');
+    }
+});
