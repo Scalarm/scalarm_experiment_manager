@@ -4,7 +4,7 @@ require 'csv'
 require 'rest_client'
 
 class SimulationsController < ApplicationController
-  before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete]
+  before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
     @simulations = @current_user.get_simulation_scenarios
@@ -226,9 +226,6 @@ class SimulationsController < ApplicationController
       @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
     end
 
-    @remote_storage_manager_url = information_service.get_list_of('storage_managers')
-    @remote_storage_manager_url = @remote_storage_manager_url.sample unless @remote_storage_manager_url.nil?
-
     if @simulation_run.nil?
       @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)
       Rails.logger.debug("simulation_run: #{@simulation_run.inspect}")
@@ -274,6 +271,18 @@ class SimulationsController < ApplicationController
     @simulation_parameters = @simulation.input_parameters
 
     render json: { status: 'ok', columns: render_to_string(partial: 'simulations/import/parameter_selection_table', object: parameters) }
+  end
+
+  def results_binaries
+    storage_manager_url = InformationService.new.sample_public_storage_manager
+    redirect_to LogBankUtils::simulation_run_binaries_url(storage_manager_url,
+                                             @experiment.id, @simulation_run.index, @user_session)
+  end
+
+  def results_stdout
+    storage_manager_url = InformationService.new.sample_public_storage_manager
+    redirect_to LogBankUtils::simulation_run_stdout_url(storage_manager_url,
+                                                                   @experiment.id, @simulation_run.index, @user_session)
   end
 
   private
@@ -350,7 +359,9 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation_run.index)
+        size_response = RestClient.get LogBankUtils::simulation_binaries_size_url(@storage_manager_url,
+                                                                                  @experiment.id,
+                                                                                  @simulation_run.index)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
@@ -370,7 +381,9 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation_run.index)
+        size_response = RestClient.get LogBankUtils::simulation_run_stdout_size_url(@storage_manager_url,
+                                                                                    @experiment.id,
+                                                                                    @simulation_run.index)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
@@ -399,30 +412,6 @@ class SimulationsController < ApplicationController
     else
       "#{size} [B]"
     end
-  end
-
-  def log_bank_url(storage_manager_url, experiment)
-    "https://#{storage_manager_url}/experiments/#{experiment.id}"
-  end
-
-  def log_bank_experiment_size_url(storage_manager_url, experiment)
-    "#{log_bank_url(storage_manager_url, experiment)}/size"
-  end
-
-  def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
-  end
-
-  def log_bank_simulation_binaries_size_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
-  end
-
-  def log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
-  end
-
-  def log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)}_size"
   end
 
 end

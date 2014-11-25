@@ -8,6 +8,8 @@ class QcgTest < MiniTest::Test
 
   def setup
     @logger = stub_everything
+    @record = stub_everything
+    @ssh = stub_everything
     @qcg = QcgScheduler::PlGridScheduler.new(@logger)
   end
 
@@ -157,6 +159,40 @@ Purged: false
 
   def test_onsite_monitorable
     assert @qcg.onsite_monitorable?
+  end
+
+  def test_submit_job
+    cmd = mock 'cmd'
+    output = <<-out
+httpg://qcg-broker.man.poznan.pl:8443/qcg/services/
+/C=PL/O=GRID/O=PSNC/CN=qcg-broker/qcg-broker.man.poznan.pl
+Enter GRID pass phrase for this identity:
+UserDN = /C=PL/O=PL-Grid/O=Uzytkownik/O=AGH/CN=Jakub Liput/CN=plgjliput
+ProxyLifetime = 24 Days 23 Hours 59 Minutes 59 Seconds
+
+qcg_test_jl.qcg {}      jobId = J1416336702195__9651
+    out
+
+    @qcg.stubs(:submit_job_cmd).with(@record).returns(cmd)
+    @ssh.stubs(:exec!).with(cmd).returns(output)
+
+    parsed_id = @qcg.submit_job(@ssh, @record)
+
+    assert_equal 'J1416336702195__9651', parsed_id
+  end
+
+  def test_submit_job_failed
+    cmd = mock 'cmd'
+    output = <<-out
+its all wrong...
+    out
+
+    @qcg.stubs(:submit_job_cmd).with(@record).returns(cmd)
+    @ssh.stubs(:exec!).with(cmd).returns(output)
+
+    assert_raises JobSubmissionFailed, output do
+      @qcg.submit_job(@ssh, @record)
+    end
   end
 
 end
