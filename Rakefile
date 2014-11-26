@@ -7,6 +7,10 @@ ScalarmExperimentManager::Application.load_tasks
 
 LOCAL_MONGOS_PATH = 'bin/mongos'
 
+# there is also amd64 by default build, but it is not required
+REQUIRED_ARCHS = ['linux_386']
+
+
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:environment, :setup] do |t, args|
@@ -45,7 +49,9 @@ namespace :service do
   task :setup do
     puts 'Setup started'
     install_mongodb unless mongos_path
-    build_monitoring unless check_monitoring
+    get_monitoring unless check_monitoring
+    get_simulation_managers_go unless check_sim_go
+    get_simulation_manager_ruby unless check_sim_ruby
     puts 'Setup finished'
   end
 
@@ -61,6 +67,39 @@ namespace :service do
     end
   end
 
+end
+
+
+namespace :build do
+  desc 'Building Simulation Managers and Monitoring packages from sources'
+  task all: [:monitoring, :simulation_managers] do
+    puts 'Getting and building Scalarm modules from sources'
+  end
+
+  task :monitoring do
+    puts 'Building Monitoring'
+    build_monitoring
+  end
+
+  task :simulation_managers do
+    puts 'Building Simulation Managers packages'
+    build_simulation_managers_go
+  end
+end
+
+namespace :get do
+  task all: [:monitoring, :simulation_managers] do
+    puts 'Getting Scalarm packages'
+  end
+
+  task :monitoring do
+    get_monitoring
+  end
+
+  task :simulation_managers do
+    get_simulation_managers_go
+    get_simulation_manager_ruby
+  end
 end
 
 namespace :db_router do
@@ -166,6 +205,26 @@ def build_monitoring
   raise 'Monitoring build failed' unless $?.to_i == 0
 end
 
+def get_monitoring
+  `./get_monitoring.sh`
+  raise 'Getting Monitoring from repository failed' unless $?.to_i == 0
+end
+
+def build_simulation_managers_go
+  `./build_simulation_managers.sh`
+  raise 'Simulation Managers build failed' unless $?.to_i == 0
+end
+
+def get_simulation_managers_go
+  `./get_simulation_managers.sh`
+  raise 'Getting simulation managers in Go from repository failed' unless $?.to_i == 0
+end
+
+def get_simulation_manager_ruby
+  `git submodule init && git submodule update`
+  raise 'Getting ScalarmSimulationManager submodule failed' unless $?.to_i == 0
+end
+
 def install_mongodb
   puts 'Downloading MongoDB...'
   base_name = get_mongodb
@@ -215,8 +274,11 @@ end
 def _validate
   print 'Checking bin/mongos... '
   raise "No /bin/mongos file found and no mongos in PATH" unless mongos_path
-  raise "No Scalarm Monitoring package found" unless check_monitoring
+  raise "No Scalarm Monitoring packages found" unless check_monitoring
+  raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
+  raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
   puts 'OK'
+  true
 end
 
 def mongos_path
@@ -234,11 +296,25 @@ def mongos_path
 end
 
 def check_monitoring
-  `ls public/scalarm_monitoring/scalarm_monitoring_linux_x86_64.xz`
+  REQUIRED_ARCHS.all? do |arch|
+    `ls public/scalarm_monitoring/#{arch}/scalarm_monitoring.xz`
+    $?.to_i == 0
+  end
+end
+
+def check_sim_go
+  REQUIRED_ARCHS.all? do |arch|
+    `ls public/scalarm_simulation_manager_go/#{arch}/scalarm_simulation_manager.xz`
+    $?.to_i == 0
+  end
+end
+
+def check_sim_ruby
+  `ls public/scalarm_simulation_manager_ruby/simulation_manager.rb`
   $?.to_i == 0
 end
 
 def valid?
-  _validate and true rescue false
+  _validate rescue false
 end
 
