@@ -51,6 +51,7 @@ namespace :service do
     get_monitoring unless check_monitoring
     get_simulation_managers_go unless check_sim_go
     get_simulation_manager_ruby unless check_sim_ruby
+    _validate_service
     puts 'Setup finished'
   end
 
@@ -123,6 +124,7 @@ namespace :db_router do
 
   task :setup do
     install_mongodb unless mongos_path
+    _validate_db_router
   end
 
   desc 'Check dependencies for db_router'
@@ -304,7 +306,7 @@ def _validate_service
   raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
   puts 'OK'
 
-  %w(gsissh).each do |cmd|
+  %w(gsissh R).each do |cmd|
     check_for_command(cmd)
   end
 
