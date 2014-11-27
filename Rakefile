@@ -48,7 +48,6 @@ namespace :service do
   desc 'Downloading and installing dependencies'
   task :setup do
     puts 'Setup started'
-    install_mongodb unless mongos_path
     get_monitoring unless check_monitoring
     get_simulation_managers_go unless check_sim_go
     get_simulation_manager_ruby unless check_sim_ruby
@@ -59,8 +58,7 @@ namespace :service do
   desc 'Check dependencies'
   task :validate do
     begin
-      _validate
-      puts "OK"
+      _validate_service
     rescue Exception => e
       puts "Error on validation, please read documentation and run service:setup"
       raise
@@ -88,7 +86,7 @@ namespace :build do
 end
 
 namespace :get do
-  task all: [:monitoring, :simulation_managers] do
+  task all: [:monitoring, :simulation_managers, :mongos] do
     puts 'Getting Scalarm packages'
   end
 
@@ -100,11 +98,15 @@ namespace :get do
     get_simulation_managers_go
     get_simulation_manager_ruby
   end
+
+  task :mongos do
+    install_mongodb
+  end
 end
 
 namespace :db_router do
   desc 'Start MongoDB router'
-  task :start, [:debug] => [:environment] do |t, args|
+  task :start, [:debug] => [:environment, :setup] do |t, args|
     information_service = InformationService.new
 
     config_services = information_service.get_list_of('db_config_services')
@@ -117,6 +119,20 @@ namespace :db_router do
 
   task :stop, [:debug] => [:environment] do |t, args|
     stop_router
+  end
+
+  task :setup do
+    install_mongodb unless mongos_path
+  end
+
+  desc 'Check dependencies for db_router'
+  task :validate do
+    begin
+      _validate_db_router
+    rescue Exception => e
+      puts "Error on validation, please read documentation and run db_router:setup"
+      raise
+    end
   end
 end
 
@@ -271,14 +287,53 @@ def download_file_https(domain, path, name)
   name
 end
 
-def _validate
+def _validate_db_router
   print 'Checking bin/mongos... '
   raise "No /bin/mongos file found and no mongos in PATH" unless mongos_path
+  puts 'OK'
+end
+
+def _validate_service
+  print 'Checking Go monitoring packages...'
   raise "No Scalarm Monitoring packages found" unless check_monitoring
+  puts 'OK'
+  print 'Checking Go Simulation Manager...'
   raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
+  puts 'OK'
+  print 'Checking Ruby Simulation Manager...'
   raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
   puts 'OK'
+
+  %w(gsissh).each do |cmd|
+    check_for_command(cmd)
+  end
+
+  check_for_command_alt %w(mpstat iostat)
+
   true
+end
+
+def check_for_command_alt(commands)
+  any_cmd = commands.any? do |cmd|
+    begin
+      check_for_command(cmd)
+      true
+    rescue StandardError
+      puts 'Not found. Checking alternatives...'
+      false
+    end
+  end
+
+  raise 'Some dependecies are missing.' unless any_cmd
+end
+
+def check_for_command(command)
+  print "Checking for #{command}... "
+  `which #{command}`
+  unless $?.to_i == 0
+    raise "No #{command} found in PATH. Please install it."
+  end
+  puts 'OK'
 end
 
 def mongos_path
@@ -312,9 +367,5 @@ end
 def check_sim_ruby
   `ls public/scalarm_simulation_manager_ruby/simulation_manager.rb`
   $?.to_i == 0
-end
-
-def valid?
-  _validate rescue false
 end
 
