@@ -306,7 +306,7 @@ def _validate_service
   raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
   puts 'OK'
 
-  %w(gsissh R).each do |cmd|
+  %w(gsissh R zip).each do |cmd|
     check_for_command(cmd)
   end
 
