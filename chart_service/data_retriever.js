@@ -26,10 +26,7 @@ var connect = function(success, error){
 					return;
 				}
 
-				var args_fullnamed = array[0].arguments.split(',');
-				var args = args_fullnamed.map(function(arg){ 
-					return arg.split('___').slice(-1)[0];
-				});
+				var args = array[0].arguments.split(',');
 
 				array = array.map(function(data){
 					var values = data.values.split(',');
@@ -46,11 +43,17 @@ var connect = function(success, error){
 					data.arguments = new_args;
 					delete data.values;
 
+                    for(var key in data.result){
+                    	if(!Number.isNaN(parseFloat(data.result[key]))){
+                        	data.result[key] = parseFloat(data.result[key]);
+                        }
+                    };
+
 					return data;
 				})
 
 				var mins = [], maxes = [];
-				for (i in args) {
+				for (var i in args) {
 					mins[args[i]] = min(array, args[i]);
 					maxes[args[i]] = max(array, args[i]);
 				}
@@ -79,7 +82,6 @@ var connect = function(success, error){
             db.collection('scalarm_users', function(err, collection){
                 if(err){
                     error(err.toString());
-                    return;
                 }
                 else{
                     collection.findOne({login: username}, function(err, item){
@@ -103,7 +105,7 @@ var connect = function(success, error){
                     })
                 }
             })
-        }
+        };
 
 		var getParameters = function(experimentID, success, error) {
 			var data = {};
@@ -116,29 +118,56 @@ var connect = function(success, error){
 					error(err.toString());
                     return;
 				}
-	        	collection.findOne(filter, function(err, item) {
+	        	collection.findOne(filter, fields, function(err, item) {
 	        		data["result"] = [];
 	        		if(item){
 	        			for(var k in item.result){
-	        				if(typeof item["result"][k] == "number") {
+	        				if(!Number.isNaN(parseFloat(item["result"][k]))){
                                 data["result"].push({
                                     label: (k[0].toUpperCase() + k.slice(1)).split("_").join(" "),
                                     id: k
                                 });
-                            }
-	        			}
-	        		}
-		            db.collection("experiments").find({"experiment_id": mongo.ObjectID(experimentID)}).toArray(function(err, array){
+                            };
+	        			};
+	        		};
+		            db.collection("experiments").findOne({"experiment_id": mongo.ObjectID(experimentID)}, function(err, doc){
 						if (err) error(err.toString());
-						if(array[0]){
-							//TODO - get parameters from all gruops
-							var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
-							data["parameters"] = parameters.map(function(param){
-								return {
-											label: param["label"],
-											id:    param["id"]
-									   };
-							})
+						if(doc){
+                            data["parameters"] = [];
+                            var experiment_input = doc["experiment_input"];
+							for (var i in experiment_input){
+                                var category = experiment_input[i];
+                                var category_id = category["id"];
+                                var category_label = category["label"];
+                                var groups = category["entities"];
+                                for (var j in groups){
+                                    var group = groups[j];
+                                    var group_id = group["id"];
+                                    var group_label = group["label"];
+                                    var parameters = group["parameters"];
+                                    for(var k in parameters){
+                                        var parameter = parameters[k];
+                                        var parameter_id = parameter["id"];
+                                        var parameter_label = parameter["label"];
+
+                                        var labels = [category_label, group_label, parameter_label].filter(function(obj){return obj;});
+                                        var ids = [category_id, group_id, parameter_id].filter(function(obj){return obj;});
+                                        data["parameters"].push({
+                                            label: labels.join(" - "),
+                                            id: ids.join("___")
+                                        });
+                                    }
+                                }
+                            }
+
+//                            //TODO - get parameters from all groups
+//                            var parameters = array[0]["experiment_input"][0]["entities"][0]["parameters"];
+//							data["parameters"] = parameters.map(function(param){
+//								return {
+//											label: param["label"],
+//											id:    param["id"]
+//									   };
+//							})
 							success(data);
 						}
 						else{
@@ -171,11 +200,11 @@ var connect = function(success, error){
 		var getPareto = function(id, outputParam, success, error){
 			getData(id, function(array, args, mins, maxes){
 				effects = [];
-				for(i in args) {
+				for(var i in args) {
 					effects.push(Math.abs(calculateAverage(array, args[i], maxes[args[i]], outputParam)-calculateAverage(array, args[i], mins[args[i]], outputParam)));
 				}
 				var data = [];
-				for(i in args) {
+				for(var i in args) {
 					data.push({
 			 			name:  args[i],
 			 			value: effects[i]
