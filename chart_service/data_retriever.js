@@ -43,6 +43,12 @@ var connect = function(success, error){
 					data.arguments = new_args;
 					delete data.values;
 
+                    for(var key in data.result){
+                    	if(!Number.isNaN(parseFloat(data.result[key]))){
+                        	data.result[key] = parseFloat(data.result[key]);
+                        }
+                    };
+
 					return data;
 				})
 
@@ -116,18 +122,17 @@ var connect = function(success, error){
 	        		data["result"] = [];
 	        		if(item){
 	        			for(var k in item.result){
-	        				if(typeof item["result"][k] == "number") {
+	        				if(!Number.isNaN(parseFloat(item["result"][k]))){
                                 data["result"].push({
                                     label: (k[0].toUpperCase() + k.slice(1)).split("_").join(" "),
                                     id: k
                                 });
-                            }
-	        			}
-	        		}
+                            };
+	        			};
+	        		};
 		            db.collection("experiments").findOne({"experiment_id": mongo.ObjectID(experimentID)}, function(err, doc){
 						if (err) error(err.toString());
 						if(doc){
-//                            console.log(doc);
                             data["parameters"] = [];
                             var experiment_input = doc["experiment_input"];
 							for (var i in experiment_input){
@@ -144,9 +149,12 @@ var connect = function(success, error){
                                         var parameter = parameters[k];
                                         var parameter_id = parameter["id"];
                                         var parameter_label = parameter["label"];
+
+                                        var labels = [category_label, group_label, parameter_label].filter(function(obj){return obj;});
+                                        var ids = [category_id, group_id, parameter_id].filter(function(obj){return obj;});
                                         data["parameters"].push({
-                                            label: [ category_label, group_label, parameter_label ].join(" - "),
-                                            id: [ category_id, group_id, parameter_id ].join("___")
+                                            label: labels.join(" - "),
+                                            id: ids.join("___")
                                         });
                                     }
                                 }
@@ -195,7 +203,7 @@ var connect = function(success, error){
 				for(var i in args) {
 					effects.push(Math.abs(calculateAverage(array, args[i], maxes[args[i]], outputParam)-calculateAverage(array, args[i], mins[args[i]], outputParam)));
 				}
-				var dataa = [];
+				var data = [];
 				for(var i in args) {
 					data.push({
 			 			name:  args[i],
