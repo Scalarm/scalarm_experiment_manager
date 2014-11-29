@@ -150,8 +150,8 @@ var connect = function(success, error){
                                         var parameter_id = parameter["id"];
                                         var parameter_label = parameter["label"];
 
-                                        var labels = [category_label, group_label, parameter_label].filter(function(obj){return obj;});
-                                        var ids = [category_id, group_id, parameter_id].filter(function(obj){return obj;});
+                                        var labels = [category_label, group_label, parameter_label].filter(function(obj){return obj != undefined;});
+                                        var ids = [category_id, group_id, parameter_id].filter(function(obj){return obj != undefined;});
                                         data["parameters"].push({
                                             label: labels.join(" - "),
                                             id: ids.join("___")
