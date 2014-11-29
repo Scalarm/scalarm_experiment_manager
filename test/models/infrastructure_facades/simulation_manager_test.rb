@@ -7,10 +7,10 @@ require 'infrastructure_facades/simulation_manager'
 class SimulationManagerTest < MiniTest::Test
 
   def setup
-    record = stub_everything do
+    @record = stub_everything do
       stubs(:experiment).returns(stub_everything)
     end
-    @sm = SimulationManager.new(record, stub_everything)
+    @sm = SimulationManager.new(@record, stub_everything)
   end
 
   METHOD_NAMES = [
@@ -143,15 +143,17 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_monitoring_destroy_after_stopping
     record = stub_everything 'record' do
-      expects(:destroy).once
       stubs(:experiment).returns(stub_everything)
     end
+
     infrastructure = stub_everything 'infrastructure'
 
     sm = SimulationManager.new(record, infrastructure)
     sm.stubs(:resource_status).returns(:released)
     sm.stubs(:state).returns(:terminating)
     sm.expects(:stop).never
+
+    sm.expects(:destroy_record).once
 
     sm.monitor
   end
@@ -307,6 +309,32 @@ class SimulationManagerTest < MiniTest::Test
     @sm.expects(:store_terminated_error).once
 
     @sm.monitor
+  end
+
+  def test_monitoring_onsite
+    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.expects(:store_no_credentials).never
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:try_all_monitoring_cases)
+
+    @sm.monitor
+  end
+
+  def test_infrastructure_action_general
+    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @sm.stubs(:general_action).with('action').returns('something')
+    @sm.expects(:delegate_to_infrastructure).with('action').never
+
+    assert_equal 'something', @sm.infrastructure_action('action')
+  end
+
+  def test_infrastructure_action_delegated
+    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @sm.stubs(:general_action).with('action').returns(nil)
+    @sm.stubs(:delegate_to_infrastructure).with('action').returns('something')
+    @sm.expects(:delegate_to_infrastructure).with('action').never
+
+    assert_equal 'something', @sm.infrastructure_action('action')
   end
 
 end

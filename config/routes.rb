@@ -50,6 +50,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :next_simulation
       get   :parameter_values
       get   :file_with_configurations
+      get   :results_binaries
 
       post  :stop
       post  :destroy
@@ -82,6 +83,8 @@ ScalarmExperimentManager::Application.routes.draw do
         post :mark_as_complete
         post :progress_info
         get  :get_simulation_data
+        get  :results_binaries
+        get  :results_stdout
       end
     end
   end
@@ -94,6 +97,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :schedule_simulation_managers
       get :infrastructure_info
       post :add_infrastructure_credentials
+      get :get_infrastructure_credentials
       post :remove_credentials
     end
 

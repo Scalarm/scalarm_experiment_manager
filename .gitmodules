@@ -1,0 +1,3 @@
+[submodule "public/scalarm_simulation_manager_ruby"]
+	path = public/scalarm_simulation_manager_ruby
+	url = https://github.com/Scalarm/scalarm_simulation_manager_ruby.git

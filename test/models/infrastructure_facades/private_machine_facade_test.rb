@@ -5,6 +5,11 @@ require 'mocha/test_unit'
 
 class PrivateMachineFacadeTest < MiniTest::Test
 
+  def setup
+    @facade = PrivateMachineFacade.new
+    @facade.stubs(:logger).returns(stub_everything)
+  end
+
   def stub_record(user_id, experiment_id)
     r = Object.new
     r.stubs(:user_id).returns(user_id)
@@ -110,6 +115,15 @@ class PrivateMachineFacadeTest < MiniTest::Test
     status = facade._simulation_manager_resource_status(record)
 
     assert_equal :released, status
+  end
+
+  def test_get_credentials
+    user_id = mock 'user_id'
+    records = mock 'records'
+
+    PrivateMachineCredentials.stubs(:where).with(user_id: user_id, host: 'localhost').returns(records)
+
+    assert_equal records, @facade.get_credentials(user_id, host: 'localhost')
   end
 
 end

@@ -1,6 +1,6 @@
 - scheduler_name = infrastructure_name
 
 - begin
-  = render partial: "infrastructures/scheduler/forms/plgrid/#{scheduler_name}"
+  = render partial: "infrastructures/scheduler/forms/plgrid/#{scheduler_name}", locals: {other_params: other_params}
 - rescue ActionView::MissingTemplate
   - # ignore missing cloud-specific partials

@@ -8,6 +8,7 @@
 # - sm_uuid => string - uuid of configuration files
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
 # - is_terminating => boolean - whether this SM with its resource should be terminated (stop action was invoked)
+# - infrastructure_side_monitoring => boolean - whether this record should be supported by onsite-monitoring
 #
 # Fields with * can be initialized with initialize_fields method after creation.
 #
@@ -108,8 +109,13 @@ module SimulationManagerRecord
   def store_error(error, error_log=nil)
     set_attribute('state', :error)
     self.error = error
-    self.error_log = error_log if error_log
+    if error_log
+      self.error_log =
+          (self.error_log ? "#{self.error_log}\n\n#{error_log}" : error_log)
+    end
     self.save_if_exists
+
+    user.destroy_unused_credentials
   end
 
   def store_no_credentials

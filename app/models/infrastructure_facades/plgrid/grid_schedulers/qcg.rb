@@ -26,6 +26,10 @@ module QcgScheduler
       self.class.short_name
     end
 
+    def onsite_monitorable?
+      true
+    end
+
     def prepare_job_files(sm_uuid, params)
       execution_dir = if params.include?(:dest_dir)
         "/tmp/#{params[:dest_dir]}"
@@ -71,11 +75,12 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      submit_job_output = ssh.exec!(submit_job_cmd(job))
+      cmd = submit_job_cmd(job)
+      submit_job_output = ssh.exec!(cmd)
+      logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
-      logger.debug("QCG output lines: #{submit_job_output}")
-
-      submit_job_output and (job.job_id = QcgScheduler::PlGridScheduler.parse_job_id(submit_job_output))
+      job_id = PlGridScheduler.parse_job_id(submit_job_output)
+      job_id ? job_id : raise(JobSubmissionFailed.new(submit_job_output))
     end
 
     def submit_job_cmd(sm_record)
@@ -85,7 +90,7 @@ module QcgScheduler
 
     def self.parse_job_id(submit_job_output)
       jobid_match = submit_job_output.match(JOBID_RE)
-      jobid_match and jobid_match[1] or nil
+      jobid_match ? jobid_match[1] : nil
     end
 
     # QCG Job states
@@ -165,8 +170,8 @@ module QcgScheduler
     end
 
     def get_log(ssh, job)
-      err_log = ssh.exec! "tail -25 #{job.log_path}.err"
-      out_log = ssh.exec! "tail -25 #{job.log_path}.out"
+      err_log = ssh.exec! "tail -40 #{job.log_path}.err"
+      out_log = ssh.exec! "tail -40 #{job.log_path}.out"
       ssh.exec! "rm #{job.log_path}.err"
       ssh.exec! "rm #{job.log_path}.out"
 
@@ -193,8 +198,8 @@ module QcgScheduler
     def get_log_cmd(sm_record)
       [
         "echo '--- QCG info ---'", sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
-        "echo '--- STDOUT ---'", "tail -25 #{sm_record.log_path}.out",
-        "echo '--- STDOUT ---'", "tail -25 #{sm_record.log_path}.err",
+        "echo '--- STDOUT ---'", "tail -40 #{sm_record.log_path}.out",
+        "echo '--- STDOUT ---'", "tail -40 #{sm_record.log_path}.err",
         "rm #{sm_record.log_path}.err", "rm #{sm_record.log_path}.out"
       ].join(';')
     end
@@ -206,11 +211,11 @@ module QcgScheduler
     def self.available_hosts
       [
         'zeus.cyfronet.pl',
-        # 'nova.wcss.wroc.pl',# TODO: check ruby
+        'nova.wcss.wroc.pl',
         'galera.task.gda.pl',
-        # 'reef.man.poznan.pl', # TODO: no ruby available!
-        # 'inula.man.poznan.pl', # TODO: no ruby available!
-        # 'hydra.icm.edu.pl', # TODO: no ruby available!
+        'reef.man.poznan.pl',
+        'inula.man.poznan.pl',
+        'hydra.icm.edu.pl',
         'moss.man.poznan.pl'
       ]
     end
