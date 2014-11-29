@@ -1,10 +1,10 @@
 .content
   #workers_info.row
-    #state.small-3.columns
+    #state.small-3.columns(style="font-weight: bold;")
     #value.small-1.columns
 
     - if @experiment.is_running
-      .small-8.columns
+      .small-7.small-offset-1.columns
         .row
           .small-8.columns.small-centered
             %span#boostButton.success{class: button_classes}
@@ -14,6 +14,10 @@
             %a{class: button_classes, href: simulation_manager_experiment_path}
               %i.fi-download
               = t('experiments.monitoring_actions.get_sm_button')
+  #workers_alert.row(style="display: none")
+    .small-8.columns.small-centered
+      .alert-box.alert.round.text-center(data-alert='')
+        You should add workers!
 
 - content_for :javascript do
   :javascript
@@ -30,21 +34,23 @@
                    "initializing": 0,
                    "running": 0,
                    "terminating": 0,
-                   "error": 0};
+                   "failed": 0};
         array_of_workers.map(function(worker) {
           var property = worker.state;
           if(worker.experiment_id === '#{@experiment.id}' && worker.user_id === '#{@experiment.user_id}') {
-            if(map.hasOwnProperty(property)) {
-              map[property]++;
-            }
-            else {
-              map[property] = 1;
-            }
+            if(property==="error")
+              property = "failed";
+
+            map[property]++;
           }
         })
         for(var key in map) {
-          ($("<span>").addClass("w-"+key).text(capitaliseFirstLetter(key)+":").append("<br>")).appendTo($("#state"));
+          //capitaliseFirstLetter(key)
+          ($("<span>").addClass("w-"+key).text(key.toUpperCase()+":").append("<br>")).appendTo($("#state"));
           ($("<span>").text(map[key]).append("<br>")).appendTo($("#value"));
+        }
+        if(map["created"] == 0 && map["initializing"]==0 && map["running"]==0) {
+          $("#workers_alert").show();
         }
       })
     });

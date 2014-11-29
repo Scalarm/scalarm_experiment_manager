@@ -13,3 +13,23 @@
     text-align: center;
   }
 }
+
+.w-created {
+  color: black;
+}
+
+.w-initializing {
+  color: goldenrod;
+}
+
+.w-running {
+  color: forestgreen;
+}
+
+.w-terminating {
+  color: #444;
+}
+
+.w-failed {
+  color: firebrick;
+}
