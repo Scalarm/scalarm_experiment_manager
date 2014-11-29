@@ -19,6 +19,10 @@ module QsubScheduler
       self.class.short_name
     end
 
+    def onsite_monitorable?
+      true
+    end
+
     def prepare_job_files(sm_uuid, params)
       if params.include?(:dest_dir) and params.include?(:sm_record)
         job = params[:sm_record]
@@ -37,23 +41,13 @@ module QsubScheduler
     end
 
     def submit_job(ssh, sm_record)
-      # logger.debug("QSUB cmd: #{qsub_cmd.join(' ')}")
-      submit_job_output = ssh.exec!(submit_job_cmd(sm_record))
-      logger.debug("Output lines: #{submit_job_output}")
+      cmd = submit_job_cmd(sm_record)
+      submit_job_output = ssh.exec!(cmd)
+      logger.debug("PBS cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
-      if submit_job_output != nil
-        output_lines = submit_job_output.split("\n")
+      m = submit_job_output.match(/\d+.batch.grid.cyf-kr.edu.pl/)
 
-        output_lines.each do |line|
-          # checking if the first element is integer -> it is the identifier we are looking for
-          if line[0].to_i.to_s == line[0]
-            sm_record.job_id = line.strip
-            return true
-          end
-        end
-      end
-
-      false
+      m ? m[0] : raise(JobSubmissionFailed.new(submit_job_output))
     end
 
     def submit_job_cmd(sm_record)
@@ -126,7 +120,7 @@ module QsubScheduler
       if sm_record.log_path.blank?
         ""
       else
-        "tail -25 #{sm_record.log_path}; rm #{sm_record.log_path}"
+        "tail -80 #{sm_record.log_path}; rm #{sm_record.log_path}"
       end
     end
 

@@ -16,8 +16,11 @@ $(document).ready(function() {
   	yAxis: {
   		title: { text: '<%= @chart.y_axis_label %>' }
   	},
-  	tooltip: {
-  	},
+    tooltip: {
+        formatter: function () {
+            return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b>';
+        }
+    },
   	plotOptions: {
   	},
   	credits: { enabled: false },

@@ -39,7 +39,8 @@ module PlGridOpenID
   def openid_callback_plgrid
     validate_params(:openid_id, "openid.claimed_id", "openid.identity")
 
-    Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")
+    # disabled for security reasons
+    #Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")
 
     parameters = params.reject{|k,v|request.path_parameters[k]}
     parameters.reject!{|k,v|%w{action controller}.include? k.to_s}
@@ -103,15 +104,16 @@ module PlGridOpenID
   end
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)
+    user_id = BSON::ObjectId(scalarm_user_id.to_s)
     grid_credentials =
-        (GridCredentials.find_by_user_id(scalarm_user_id) or GridCredentials.new(user_id: scalarm_user_id))
+        (GridCredentials.find_by_user_id(user_id) or GridCredentials.new(user_id: user_id))
     grid_credentials.login = plgrid_login
     grid_credentials.secret_proxy = proxy_cert
     grid_credentials.save
   end
 
   def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
-    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id, cloud_name: 'pl_cloud') or
+    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud') or
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
     pl_cloud_credentials.secret_proxy = proxy_secret

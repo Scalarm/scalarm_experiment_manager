@@ -1,3 +1,4 @@
+require 'securerandom'
 
 class UserSession < MongoActiveRecord
 
@@ -17,5 +18,23 @@ class UserSession < MongoActiveRecord
     false
   end
 
+  def self.create_and_update_session(user_id)
+    session_id = BSON::ObjectId(user_id)
+
+    session = UserSession.find_by_session_id(session_id)
+    session = UserSession.new(session_id: session_id) if session.nil?
+    session.last_update = Time.now
+    session.save
+
+    session
+  end
+
+  def generate_token
+    token = SecureRandom.uuid
+    self.tokens = [] unless self.tokens
+    self.tokens << token
+    self.save
+    token
+  end
 
 end

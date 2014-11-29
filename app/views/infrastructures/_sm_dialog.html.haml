@@ -54,8 +54,10 @@
             - unless record.error_log.nil?
               %li
                 %strong= t('infrastructure.information.sm_info.error_log') + ': '
-                %br
-                = raw(record.error_log.gsub("\n", '<br/>'))
+                .panel.log-box
+                  - record.error_log.split("\n").each do |line|
+                    = line
+                    %br
       - elsif record.state == :initialized
         %li
           %strong= t('infrastructures.sm_dialog.sm_initialized_at') + ':'

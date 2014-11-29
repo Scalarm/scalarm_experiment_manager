@@ -9,6 +9,10 @@
 class EncryptedMongoActiveRecord < MongoActiveRecord
   Encryptor.default_options.merge!(:key => Digest::SHA256.hexdigest('QjqjFK}7|Xw8DDMUP-O$yp'))
 
+  def to_h
+    super.select {|k, v| !(k =~ /secret_.*/)}
+  end
+
   # this method should be overriden and provide array of attributes which will not be encrypted
   def self.encryption_excluded
     []

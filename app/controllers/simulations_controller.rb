@@ -4,7 +4,7 @@ require 'csv'
 require 'rest_client'
 
 class SimulationsController < ApplicationController
-  before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete]
+  before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
     @simulations = @current_user.get_simulation_scenarios
@@ -44,13 +44,13 @@ class SimulationsController < ApplicationController
 
   def destroy_component
     if params['component_type'] == 'input_writer'
-      SimulationInputWriter.find_by_id(params['component_id']).destroy
+      SimulationInputWriter.find_by_id(params['component_id'].to_s).destroy
     elsif params['component_type'] == 'executor'
-      SimulationExecutor.find_by_id(params['component_id']).destroy
+      SimulationExecutor.find_by_id(params['component_id'].to_s).destroy
     elsif params['component_type'] == 'output_reader'
-      SimulationOutputReader.find_by_id(params['component_id']).destroy
+      SimulationOutputReader.find_by_id(params['component_id'].to_s).destroy
     elsif params['component_type'] == 'progress_monitor'
-      SimulationProgressMonitor.find_by_id(params['component_id']).destroy
+      SimulationProgressMonitor.find_by_id(params['component_id'].to_s).destroy
     end
 
     flash[:notice] = t('simulations.adapter_destroyed')
@@ -111,7 +111,7 @@ class SimulationsController < ApplicationController
   end
 
   def destroy_simulation
-    sim = Simulation.find_by_id(params['component_id'])
+    sim = Simulation.find_by_id(params['component_id'].to_s)
     flash[:notice] = t('simulations.destroy', name: sim.name)
     sim.destroy
 
@@ -120,7 +120,7 @@ class SimulationsController < ApplicationController
 
   # following methods are used in experiment conducting
   def conduct_experiment
-    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation = Simulation.find_by_id(params[:simulation_id].to_s)
     @simulation_input = @simulation.input_specification
   end
 
@@ -226,9 +226,6 @@ class SimulationsController < ApplicationController
       @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
     end
 
-    @remote_storage_manager_url = information_service.get_list_of('storage_managers')
-    @remote_storage_manager_url = @remote_storage_manager_url.sample unless @remote_storage_manager_url.nil?
-
     if @simulation_run.nil?
       @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)
       Rails.logger.debug("simulation_run: #{@simulation_run.inspect}")
@@ -270,10 +267,22 @@ class SimulationsController < ApplicationController
       i += 1
     end
 
-    @simulation = Simulation.find_by_id(params[:simulation_id])
+    @simulation = Simulation.find_by_id(params[:simulation_id].to_s)
     @simulation_parameters = @simulation.input_parameters
 
     render json: { status: 'ok', columns: render_to_string(partial: 'simulations/import/parameter_selection_table', object: parameters) }
+  end
+
+  def results_binaries
+    storage_manager_url = InformationService.new.sample_public_storage_manager
+    redirect_to LogBankUtils::simulation_run_binaries_url(storage_manager_url,
+                                             @experiment.id, @simulation_run.index, @user_session)
+  end
+
+  def results_stdout
+    storage_manager_url = InformationService.new.sample_public_storage_manager
+    redirect_to LogBankUtils::simulation_run_stdout_url(storage_manager_url,
+                                                                   @experiment.id, @simulation_run.index, @user_session)
   end
 
   private
@@ -305,13 +314,12 @@ class SimulationsController < ApplicationController
       @simulation_run.to_sent = false
       @simulation_run.sent_at = Time.now
     end
-
   end
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
 
     if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id']
+      adapter_id = params[adapter_type + '_id'].to_s
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
 
       if not adapter.nil? and adapter.user_id == @current_user.id
@@ -351,7 +359,9 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_binaries_size_url(@storage_manager_url, @experiment, @simulation_run.index)
+        size_response = RestClient.get LogBankUtils::simulation_binaries_size_url(@storage_manager_url,
+                                                                                  @experiment.id,
+                                                                                  @simulation_run.index)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
@@ -371,7 +381,9 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get log_bank_simulation_stdout_size_url(@storage_manager_url, @experiment, @simulation_run.index)
+        size_response = RestClient.get LogBankUtils::simulation_run_stdout_size_url(@storage_manager_url,
+                                                                                    @experiment.id,
+                                                                                    @simulation_run.index)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
@@ -400,30 +412,6 @@ class SimulationsController < ApplicationController
     else
       "#{size} [B]"
     end
-  end
-
-  def log_bank_url(storage_manager_url, experiment)
-    "https://#{storage_manager_url}/experiments/#{experiment.id}"
-  end
-
-  def log_bank_experiment_size_url(storage_manager_url, experiment)
-    "#{log_bank_url(storage_manager_url, experiment)}/size"
-  end
-
-  def log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_url(storage_manager_url, experiment)}/simulations/#{simulation_id}"
-  end
-
-  def log_bank_simulation_binaries_size_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/size"
-  end
-
-  def log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout"
-  end
-
-  def log_bank_simulation_stdout_size_url(storage_manager_url, experiment, simulation_id)
-    "#{log_bank_simulation_stdout_url(storage_manager_url, experiment, simulation_id)}_size"
   end
 
 end
