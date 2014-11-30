@@ -227,6 +227,10 @@ To check if Experiment Manager has been installed correctly just start the servi
 firefox https://172.16.67.77
 ```
 
+Updating
+----
+Every time you want to update this service, please shut down service with ```rake service:stop``` update git repository with ```git pull``` and get new Scalarm external packages with ```rake service:update```. Then You can start service with ```git service:start```.
+
 Building Scalarm external modules manually (optional)
 ----
 Instead of using precompiled binaries, you can build Scalarm Simulation Manager and Scalarm Monitoring packages.
