@@ -1,0 +1,64 @@
+.content
+  #workers_info.row
+    .small-6.columns
+      %ul#state.small-12.columns(style="font-weight: bold;")
+
+      #workers_alert.row(style="display: none; margin-bottom: 10px;")
+        .small-12.columns.w-failed(style="font-weight: bold")
+          No resources in use. Please add them with "Add computing power" button.
+      .row
+        .small-8.columns
+          %a{href: "/infrastructures"}
+            Show details...
+
+    .small-6.columns
+      .row
+        - if @experiment.is_running
+          .small-8.columns.small-centered
+            %span#boostButton{class: button_classes}
+              %i.fi-plus
+              = t('experiments.monitoring_actions.boost_button')
+
+            %a{class: button_classes, href: simulation_manager_experiment_path}
+              %i.fi-download
+              = t('experiments.monitoring_actions.get_sm_button')
+
+
+- content_for :javascript do
+  :javascript
+    function capitaliseFirstLetter(string)
+    {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    $(function() {
+      $.getJSON("/simulation_managers", function(data) {
+        var array_of_workers = data.sm_records;
+        var map = {"created": 0,
+                   "initializing": 0,
+                   "running": 0,
+                   "terminating": 0,
+                   "failed": 0};
+        array_of_workers.map(function(worker) {
+          var property = worker.state;
+          if(worker.experiment_id === '#{@experiment.id}' && worker.user_id === '#{@experiment.user_id}') {
+            if(property==="error")
+              property = "failed";
+
+            map[property]++;
+          }
+        })
+        for(var key in map) {
+          //capitaliseFirstLetter(key)
+          if(map[key]!=0) {
+            //$("<span>").addClass("w-"+key).text(map[key]+" " + key.toUpperCase()).append("<br>").appendTo($("#state"));
+            $("<li>").addClass("w-"+key).text(map[key]+" " + key.toLowerCase()).append("<br>").appendTo($("#state"));
+          }
+        }
+        if(map["created"] == 0 && map["initializing"]==0 && map["running"]==0) {
+          $("#workers_alert").show();
+          $("#boostButton").addClass("success");
+        }
+        $("#actions-loading-workers").hide();
+      })
+    });
