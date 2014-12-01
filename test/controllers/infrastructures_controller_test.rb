@@ -117,8 +117,6 @@ class InfrastructuresControllerTest < ActionController::TestCase
   end
 
   def test_simulation_manager_commands
-    InfrastructuresController.any_instance.stubs(:destroy_temp_password)
-
     commands = %w(restart stop destroy_record)
     commands.each do |cmd|
       mock_sm = stub_everything 'simulation_manager' do
