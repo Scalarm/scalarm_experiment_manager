@@ -4,10 +4,10 @@
       %ul#state.small-12.columns(style="font-weight: bold;")
 
       #workers_alert.row(style="display: none; margin-bottom: 10px;")
-        .small-10.columns.small-centered.text-justify.w-failed(style="font-weight: bold")
+        .small-12.columns.w-failed(style="font-weight: bold")
           No resources in use. Please add them with "Add computing power" button.
       .row
-        .small-8.columns.small-centered.text-center
+        .small-8.columns
           %a{href: "/infrastructures"}
             Show details...
 
@@ -15,7 +15,7 @@
       .row
         - if @experiment.is_running
           .small-8.columns.small-centered
-            %span#boostButton.success{class: button_classes}
+            %span#boostButton{class: button_classes}
               %i.fi-plus
               = t('experiments.monitoring_actions.boost_button')
 
@@ -57,6 +57,7 @@
         }
         if(map["created"] == 0 && map["initializing"]==0 && map["running"]==0) {
           $("#workers_alert").show();
+          $("#boostButton").addClass("success");
         }
         $("#actions-loading-workers").hide();
       })

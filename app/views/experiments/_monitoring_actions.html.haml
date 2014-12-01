@@ -5,8 +5,8 @@
       .small-6.columns
         .row
           .small-12.columns
-            %h4.subheader
-              = t('.left_column_header')
+            %h4.subheader(style="margin-bottom: 20px;")
+              = t('.left_column_header') +":"
               = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
         .row
@@ -25,8 +25,8 @@
       .small-6.columns
         .row
           .small-12.columns
-            %h4.subheader
-              = t('.right_column_header')
+            %h4.subheader(style="margin-bottom: 20px;")
+              = t('.right_column_header') + ":"
               = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
         .row
@@ -47,20 +47,20 @@
 
     - else
       .small-12.columns
-        %h4.subheader
+        %h4.subheader(style="margin-bottom: 20px;")
           = t('.left_column_header')
           = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
-      .small-6.columns
+      .small-offset-1.small-5.columns
         .row
-          .small-8.columns.small-centered
+          .small-11.columns.small-centered
             %span#progressButton{class: button_classes}
               %i.fi-results
               = t('.progress_information_button')
 
-      .small-6.columns
+      .small-5.columns.end
         .row
-          .small-8.columns.small-centered
+          .small-11.columns.small-centered
             %a{href: '#', 'data-dropdown' => 'download-dropdown', class: button_classes}
               %i.fa.fa-cloud-download
               = t('.download_results_button')
