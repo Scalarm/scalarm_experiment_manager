@@ -118,11 +118,8 @@ class CloudFacade < InfrastructureFacade
     record.destroy
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {cloud_name: @short_name}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
-
+  def _get_sm_records(query, params={})
+    query.merge!({cloud_name: @short_name})
     CloudVmRecord.find_all_by_query(query)
   end
 

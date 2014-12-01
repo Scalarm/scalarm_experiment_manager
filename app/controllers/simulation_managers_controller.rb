@@ -18,7 +18,8 @@ class SimulationManagersController < ApplicationController
     sm_records = (if @infrastructure_facade.blank?
                     get_all_sm_records(params[:experiment_id], params[:infrastructure_params])
                   else
-                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id], params[:infrastructure_params])
+                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id],
+                                                          (Utils.parse_json_if_string(params[:infrastructure_params]) or {}) )
                   end)
 
     render json: {

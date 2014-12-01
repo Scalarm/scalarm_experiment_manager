@@ -99,9 +99,7 @@ class PrivateMachineFacade < InfrastructureFacade
     'private_machine'
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = (user_id ? {user_id: user_id} : {})
-    query.merge!({experiment_id: experiment_id}) if experiment_id
+  def _get_sm_records(query, params={})
     PrivateMachineRecord.find_all_by_query(query)
   end
 

@@ -20,7 +20,7 @@ require 'mongo_lock'
 # - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
 #
 # Database support methods:
-# - get_sm_records(user_id=nil, experiment_id=nil, params={}) -> Array of SimulationManagerRecord subclass instances
+# - _get_sm_records(query, params={}) -> Array of SimulationManagerRecord subclass instances
 # - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
 #
 # SimulationManager delegate methods to implement
@@ -286,6 +286,17 @@ class InfrastructureFacade
   end
 
   def destroy_unused_credentials(authentication_mode, user); end
+
+  def get_sm_records(user_id=nil, experiment_id=nil, params={})
+    query = {}
+    #TODO states: tablica lub string, dodać możliwość żeby state_is_not był tablicą (może zmienić nazwę na states_not?)
+    query.merge!({state: {'$not' => {'$eq' => params['state_is_not'].to_sym}}}) if params and params.include? 'state_is_not'
+    query.merge!({infrastructure_side_monitoring: !!params['infrastructure_side_monitoring']}) if params and params.include? 'infrastructure_side_monitoring'
+    query.merge!({user_id: user_id}) if user_id
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+    _get_sm_records(query, params)
+  end
+
 
   private :create_simulation_manager, :init_resources, :clean_up_resources
 end
