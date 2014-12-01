@@ -13,3 +13,12 @@
     text-align: center;
   }
 }
+
+#completed_simulations_table, #running_simulations_table{
+  tbody tr {
+    cursor: pointer;
+    &:hover {
+      background: #99ccff;
+    }
+  }
+}

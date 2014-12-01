@@ -16,8 +16,6 @@ setInterval(function () {
     }
 }, 30000);
 
-$('#completed_simulations_table tbody').css('cursor','pointer');
-
 $('#completed_simulations_table').on('click', 'tr', function(event) {
     if(oTableFinal.fnGetData(this)) {
         $('#extension-dialog').html(window.loaderHTML);
