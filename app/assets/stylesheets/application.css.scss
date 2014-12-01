@@ -34,3 +34,11 @@
   -ms-user-select: none;
   user-select: none;
 }
+
+.log-box {
+  max-height: 350px;
+  overflow-y: scroll;
+  font-size: 12px;
+  font-family: monospace
+}
+

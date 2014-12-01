@@ -63,8 +63,11 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
+    # TODO: implement multiple architectures support
+    arch = 'linux_386'
+
     InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
-    bin_base_name = 'scalarm_monitoring_linux_x86_64'
+    bin_base_name = 'scalarm_monitoring'
 
     remote_proxy_path = '~/.scalarm_proxy'
     key_passphrase = params[:key_passphrase]
@@ -80,7 +83,7 @@ class PlGridFacade < InfrastructureFacade
     credentials.scp_session do |scp|
       scp.upload_multiple! [
                                File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'),
-                               File.join(Rails.root, 'public', 'scalarm_monitoring', "#{bin_base_name}.xz")
+                               File.join(Rails.root, 'public', 'scalarm_monitoring', arch, "#{bin_base_name}.xz")
                            ], '.'
     end
 
