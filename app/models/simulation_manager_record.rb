@@ -114,8 +114,27 @@ module SimulationManagerRecord
           (self.error_log ? "#{self.error_log}\n\n#{error_log}" : error_log)
     end
     self.save_if_exists
+    self.destroy_temp_password
 
     user.destroy_unused_credentials
+  end
+
+  def destroy_temp_password
+    unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)).blank?
+
+      unless temp_pass.experiment_id.nil? or self.sm_uuid.nil?
+        started_simulation_run = Experiment.find_by_id(temp_pass.experiment_id).simulation_runs.
+            where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+
+        unless started_simulation_run.nil?
+          started_simulation_run.to_sent = true
+          started_simulation_run.save
+        end
+
+      end
+
+      temp_pass.destroy
+    end
   end
 
   def store_no_credentials
