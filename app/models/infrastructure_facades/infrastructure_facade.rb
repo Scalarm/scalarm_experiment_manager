@@ -79,6 +79,7 @@ class InfrastructureFacade
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
+        insecure_ssl: !!Rails.application.secrets.insecure_ssl,
     }
 
     unless start_at.blank?
@@ -123,6 +124,7 @@ class InfrastructureFacade
             Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
+        InsecureSSL: !!Rails.application.secrets.insecure_ssl,
         Infrastructures: [ infrastructure_name ],
     }
 
