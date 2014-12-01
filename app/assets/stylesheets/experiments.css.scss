@@ -15,21 +15,21 @@
 }
 
 .w-created {
-  color: black;
+  color: black !important;
 }
 
 .w-initializing {
-  color: goldenrod;
+  color: goldenrod !important;
 }
 
 .w-running {
-  color: forestgreen;
+  color: forestgreen !important;
 }
 
 .w-terminating {
-  color: #444;
+  color: #444 !important;
 }
 
 .w-failed {
-  color: firebrick;
+  color: firebrick !important;
 }
