@@ -120,20 +120,25 @@ module SimulationManagerRecord
   end
 
   def destroy_temp_password
-    unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)).blank?
+    Scalarm::MongoLock.mutex("simulation_run-#{self.sm_uuid}-destroy_temp_password") do
+      unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)).blank?
 
-      unless temp_pass.experiment_id.nil? or self.sm_uuid.nil?
-        started_simulation_run = Experiment.find_by_id(temp_pass.experiment_id).simulation_runs.
-            where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+        unless temp_pass.experiment_id.nil? or self.sm_uuid.nil?
+          experiment_to_update = Experiment.find_by_id(temp_pass.experiment_id)
 
-        unless started_simulation_run.nil?
-          started_simulation_run.to_sent = true
-          started_simulation_run.save
+          started_simulation_run = experiment_to_update.simulation_runs.
+              where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+
+          unless started_simulation_run.nil?
+            started_simulation_run.to_sent = true
+            experiment_to_update.progress_bar_update(started_simulation_run.index, 'rollback')
+            started_simulation_run.save
+          end
+
         end
 
+        temp_pass.destroy
       end
-
-      temp_pass.destroy
     end
   end
 
