@@ -41,7 +41,7 @@
                    "failed": 0};
         array_of_workers.map(function(worker) {
           var property = worker.state;
-          if(worker.experiment_id === '#{@experiment.id}' && worker.user_id === '#{@experiment.user_id}') {
+          if(worker.experiment_id === '#{@experiment.id}') {
             if(property==="error")
               property = "failed";
 
