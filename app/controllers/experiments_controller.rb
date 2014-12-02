@@ -450,6 +450,7 @@ class ExperimentsController < ApplicationController
         simulation_to_send = @experiment.get_next_instance
         unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
+          simulation_to_send.save
         end
       end
 
