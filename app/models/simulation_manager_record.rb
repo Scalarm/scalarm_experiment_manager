@@ -120,7 +120,7 @@ module SimulationManagerRecord
   end
 
   def destroy_temp_password
-    Scalarm::MongoLock.mutex("simulation_run-#{self.sm_uuid}-destroy_temp_password") do
+    Scalarm::MongoLock.mutex("experiment-#{self.experiment_id}-simulation-complete") do
       unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)).blank?
 
         unless temp_pass.experiment_id.nil? or self.sm_uuid.nil?
