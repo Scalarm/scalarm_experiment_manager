@@ -84,8 +84,8 @@ en:
 
     # buttons from the monitoring view
     monitoring_actions:
-      left_column_header: Results browsing
-      right_column_header: Experiment management
+      left_column_header: Browse results
+      right_column_header: Manage experiment
       actions_header: Actions
       stop_button: Stop experiment
       extend_button: Extend input space
