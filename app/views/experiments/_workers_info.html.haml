@@ -5,11 +5,11 @@
 
       #workers_alert.row(style="display: none; margin-bottom: 10px;")
         .small-12.columns.w-failed(style="font-weight: bold")
-          No resources in use. Please add them with "Add computing power" button.
+          = t('experiments.computational_resources.no_workers_alert')
       .row
         .small-8.columns
-          %a{href: "/infrastructures"}
-            Show details...
+          %a{href: infrastructures_path}
+            = t('experiments.computational_resources.show_details_link')
 
     .small-6.columns
       .row
@@ -17,20 +17,15 @@
           .small-8.columns.small-centered
             %span#boostButton{class: button_classes}
               %i.fi-plus
-              = t('experiments.monitoring_actions.boost_button')
+              = t('experiments.computational_resources.boost_button')
 
             %a{class: button_classes, href: simulation_manager_experiment_path}
               %i.fi-download
-              = t('experiments.monitoring_actions.get_sm_button')
+              = t('experiments.computational_resources.get_sm_button')
 
 
 - content_for :javascript do
   :javascript
-    function capitaliseFirstLetter(string)
-    {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
     $(function() {
       $.getJSON("/simulation_managers", function(data) {
         var array_of_workers = data.sm_records;
@@ -49,9 +44,7 @@
           }
         })
         for(var key in map) {
-          //capitaliseFirstLetter(key)
           if(map[key]!=0) {
-            //$("<span>").addClass("w-"+key).text(map[key]+" " + key.toUpperCase()).append("<br>").appendTo($("#state"));
             $("<li>").addClass("w-"+key).text(map[key]+" " + key.toLowerCase()).append("<br>").appendTo($("#state"));
           }
         }

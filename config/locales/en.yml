@@ -89,13 +89,12 @@ en:
       actions_header: Actions
       stop_button: Stop experiment
       extend_button: Extend input space
-      boost_button: Add computing power
       scheduling_button: Set scheduling method
       destroy_button: Destroy
       download_results_button: Download results
       binaries_results_button: Simulations output (binaries)
       get_configurations_button: Configurations (CSV)
-      progress_information_button: Show progress      
+      progress_information_button: Show progress
 
       booster:
         header: Increase computational power
@@ -109,6 +108,11 @@ en:
       unshare: Unshare
       share_with_all: Make it public
       make_private: Make it private
+
+    computational_resources:
+      boost_button: Add computing power
+      show_details_link: Show details...
+      no_workers_alert: "No resources in use. Please add them with 'Add computing power' button."
 
     monitoring_table:
       show_completed: Show/Hide completed
