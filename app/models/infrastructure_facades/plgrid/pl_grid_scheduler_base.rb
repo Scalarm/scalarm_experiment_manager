@@ -42,19 +42,20 @@ if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $
 
 unzip scalarm_simulation_manager_$1.zip
 cd scalarm_simulation_manager_$1
+unxz scalarm_simulation_manager.xz
 chmod a+x scalarm_simulation_manager
 ./scalarm_simulation_manager
     eos
     elsif Rails.configuration.simulation_manager_version == :ruby
       <<-eos
-  #!/bin/bash
-  module add plgrid/tools/ruby/2.0.0-p0
+#!/bin/bash
+module add plgrid/tools/ruby/2.0.0-p0
 
-  if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
+if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
 
-  unzip scalarm_simulation_manager_$1.zip
-  cd scalarm_simulation_manager_$1
-  ruby simulation_manager.rb
+unzip scalarm_simulation_manager_$1.zip
+cd scalarm_simulation_manager_$1
+ruby simulation_manager.rb
       eos
     end
   end

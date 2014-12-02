@@ -12,6 +12,7 @@ module ShellBasedInfrastructure
           mute(rm(sm_dir_name, true)),
           mute("unzip #{sm_dir_name}.zip"),
           mute(cd(sm_dir_name)),
+          mute('unxz scalarm_simulation_manager.xz'),
           mute('chmod a+x scalarm_simulation_manager'),
           run_in_background('./scalarm_simulation_manager', record.log_path, '&1')
       )

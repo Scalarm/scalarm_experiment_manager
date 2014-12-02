@@ -26,11 +26,13 @@ en:
       link_text: "%{name}, started at: %{start_time}"
       no_experiments: "There is no experiment running currently"
     monitoring_actions:
-      get_sm_button: "Download Simulation Manager"
       blank_shared_with_list: "none"
       stop_experiment:
         link: Stop
         tooltip: Stop this experiment. All running Simulation Managers will be stopped.
+
+    computational_resources:
+      get_sm_button: "Download Simulation Manager"
 
     sharing:
       link: "Share"

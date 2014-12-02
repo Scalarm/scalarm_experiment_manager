@@ -85,8 +85,6 @@ GEM
       uuidtools (>= 2.1.0)
     haml (4.0.5)
       tilt
-    highcharts-rails (4.0.4)
-      railties (>= 3.1)
     hike (1.2.3)
     i18n (0.6.11)
     jbuilder (1.5.3)
@@ -415,7 +413,6 @@ DEPENDENCIES
   foundation-rails
   google-api-client
   haml
-  highcharts-rails
   jbuilder (~> 1.2)
   jit-rails
   jquery-datatables-rails!
