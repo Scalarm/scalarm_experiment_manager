@@ -16,7 +16,12 @@ $(document).ready(function() {
   		<% @chart.bucket_names.each do |bucket_name| %>
   		  '<%= bucket_name %>',
   		<% end %>
-  		]
+  		],
+        <% if @chart.resolution > 14 %>
+        labels: {
+            enabled: false
+        }
+        <% end %>
   	},
   	yAxis: {
   		title: {
@@ -26,7 +31,8 @@ $(document).ready(function() {
   	},
   	tooltip: {
   		formatter: function() {
-  			return '#Configurations: ' + this.y;
+  			return '#Configurations: ' + this.y + '<br>'+
+                    'Range: ' + this.x;
   		}
   	},
   	plotOptions: {
