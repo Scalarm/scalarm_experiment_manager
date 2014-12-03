@@ -26,7 +26,7 @@
 
 - content_for :javascript do
   :javascript
-    $(function() {
+    window.retrieveComputationalResourcesSummary = function() {
       $.getJSON("/simulation_managers", function(data) {
         var array_of_workers = data.sm_records;
         var map = {"created": 0,
@@ -43,6 +43,7 @@
             map[property]++;
           }
         })
+        $("#state").empty();
         for(var key in map) {
           if(map[key]!=0) {
             $("<li>").addClass("w-"+key).text(map[key]+" " + key.toLowerCase()).append("<br>").appendTo($("#state"));
@@ -53,5 +54,9 @@
           $("#boostButton").addClass("success");
         }
         $("#actions-loading-workers").hide();
-      })
+      });
+    }
+    $(function() {
+      window.retrieveComputationalResourcesSummary();
+      setInterval(window.retrieveComputationalResourcesSummary, 30000);
     });
