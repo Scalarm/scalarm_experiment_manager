@@ -341,18 +341,21 @@ div.histogram-analysis {
     position: absolute;
     top: 0px;
     right: -110px;
+    cursor: hand;
 }
 
 div.rtree-analysis {
     position: absolute;
     top: 170px;
     right: -110px;
+    cursor: hand;
 }
 
 div.bivariate-analysis {
     position: absolute;
     top: 340px;
     right: -110px;
+    cursor: hand;
 }
 
 /* Experiment links */
@@ -361,18 +364,21 @@ div.running_experiments_link {
     position: absolute;
     top: 0px;
     left: -110px;
+    cursor: hand;
 }
 
 div.available_experiments_link {
     position: absolute;
     top: 170px;
     left: -110px;
+    cursor: hand;
 }
 
 div.historical_experiments_link {
     position: absolute;
     top: 340px;
     left: -110px;
+    cursor: hand;
 }
 
 /* Login */
@@ -424,7 +430,7 @@ div.historical_experiments_link {
 }
 
 article#experiment_stats {
-  position: relative;  
+  position: relative;
   font-size: 15px;
 
   .content {

@@ -1,3 +1,4 @@
+#!/bin/sh
 REPO_URL=http://scalarm.com/repository/
 
 for OS in linux; do

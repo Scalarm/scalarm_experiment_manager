@@ -55,7 +55,10 @@ namespace :service do
     puts 'Setup finished'
   end
 
-  # TODO it's a stub - it should contain checking for system dependencies like gsissh
+  desc 'Update Monitoring and SimulationManager packages from binary repo'
+  task update: ['get:monitoring', 'get:simulation_managers'] do
+  end
+
   desc 'Check dependencies'
   task :validate do
     begin
