@@ -58,16 +58,16 @@ class ApplicationController < ActionController::Base
   def validate_params(mode, *param_names)
     regexp = case mode
                when :default
-                 /^(\w|(-))*$/
+                 /\A(\w|(-))*\z/
 
                when :openid_id
-                 /^(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*$/
+                 /\A(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*\z/
 
                when :json
-                 /^(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*$/
+                 /\A(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*\z/
 
                else
-                 /^$/
+                 /\A\z/
              end
 
     param_names.each do |param_name|
