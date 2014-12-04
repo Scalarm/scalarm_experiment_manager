@@ -4,6 +4,7 @@ class window.InfrastructuresTree
                 @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
 
     @bindRefreshTreeButton('refresh-button')
+    @bindFilterTreeButton('filter-button')
 
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
@@ -13,6 +14,7 @@ class window.InfrastructuresTree
     @fetchNodesFunctions = {}
 
     @root = null
+    @experiment = null
 
     @m = [20, 80, 20, 80]
     @w = 1000 - @m[1] - @m[3]
@@ -40,7 +42,10 @@ class window.InfrastructuresTree
 
       fetchUpdateNodes = (local_root, data) =>
         $.getJSON(@simulation_manager_records_infrastructure_path, data, (child_json) =>
+          child_json = child_json.filter (child) =>
+            return (not @experiment?) or (@experiment == child.experiment_id)
           child_json = null if child_json.length == 0
+          console.log(child_json)
 
           # Old code: Perform action only if node [is expanded or was not initialized before]
           # and when fetched children are not the same as in node
@@ -162,6 +167,13 @@ class window.InfrastructuresTree
 
     # Compute the new tree layout.
     nodes = @tree.nodes(@root).reverse()
+#    console.log(nodes)
+#    nodes = nodes.map (node) =>
+#      if node.children?
+#        node.children = node.children.filter (d) => (not @experiment?) or (not d._id?) or (@experiment == d._id)
+#      node
+#    nodes = nodes.filter (d) => (not @experiment?) or (not d._id?) or (@experiment == d._id)
+#    console.log(nodes)
 
     # Normalize for fixed-depth.
     for d in nodes
@@ -394,9 +406,18 @@ class window.InfrastructuresTree
       @updateAllInfrastrctureNodes()
     )
 
+  bindFilterTreeButton: (button_id) ->
+    $("##{button_id}").on("click", =>
+      @experiment = if $("#experiment_id").val() == "" then null else $("#experiment_id").val()
+      console.log(@experiment)
+      @updateAllInfrastructureNodes()
+#      @updateTree(@root)
+#      @updateTree(@root)
+    )
+
   updateInfrastructureNode: (infrastructure_name) ->
     @fetchNodesFunctions[infrastructure_name]()
 
-  updateAllInfrastrctureNodes: () ->
+  updateAllInfrastructureNodes: () ->
     for name, fun of @fetchNodesFunctions
       fun()

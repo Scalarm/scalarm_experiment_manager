@@ -5,6 +5,14 @@
     .small-1.columns
       %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
         %i.fi-refresh
+  .row
+    .small-2.columns
+      = label_tag :experiment_id, 'Experiment'
+    .small-5.columns
+      = select_tag :experiment_id, options_for_select(experiments_select_data(@current_user, true))
+    .small-2.columns
+      %span#filter-button{class: 'button radius expand action-button', title: 'Filter'} Filter
+    .small-2.columns
 
   .row
     .small-12.columns
