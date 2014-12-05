@@ -8,6 +8,8 @@ module PlGridOpenID
   PLGRID_OID_URI = 'https://openid.plgrid.pl/gateway'
 
   # Invoke PL-Grid OpenID login procedure.
+  # Optional parameters:
+  # - generate_temp_pass - boolean - should temp password be generated
   def login_openid_plgrid
     begin
       oidreq = consumer.begin(PLGRID_OID_URI)
@@ -21,7 +23,7 @@ module PlGridOpenID
     # -- Attribute Exchange support --
     OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn, :POSTresponse])
 
-    return_to = openid_callback_plgrid_url
+    return_to = openid_callback_plgrid_url((params[:generate_temp_pass] ? SecureRandom.hex(4) : nil))
 
     # remove following "/" from url (to match PL-Grid OpenID realm)
     realm = root_url.match(/(.*)\//)[1]
