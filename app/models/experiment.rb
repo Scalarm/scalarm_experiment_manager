@@ -610,7 +610,7 @@ class Experiment < MongoActiveRecord
 
     when 'value'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      if /^((\w)|(-)|(\.))+$/.match(parameter['value']).nil?
+      if /\A((\w)|(-)|(\.))+\z/.match(parameter['value']).nil?
         raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
       end
 
@@ -619,7 +619,7 @@ class Experiment < MongoActiveRecord
     when 'range'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       [ parameter['type'], parameter['step'], parameter['min'], parameter['max'] ].each do |some_value|
-        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
           raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
         end
       end
@@ -640,7 +640,7 @@ class Experiment < MongoActiveRecord
     when 'gauss'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       [ parameter['mean'], parameter['variance'] ].each do |some_value|
-        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
           raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
         end
       end
@@ -652,7 +652,7 @@ class Experiment < MongoActiveRecord
     when 'uniform'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       [ parameter['min'], parameter['max'] ].each do |some_value|
-        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
           raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
         end
       end
@@ -793,7 +793,7 @@ class Experiment < MongoActiveRecord
       parameter = get_parameter_doc(parameter_uid)
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       [ parameter_uid, parameter['min'], parameter['max'], parameter['step'] ].each do |some_value|
-        if /^((\w)|(-)|(\.))+$/.match(some_value).nil?
+        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
           raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
         end
       end
