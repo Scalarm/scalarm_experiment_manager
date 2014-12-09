@@ -6,7 +6,7 @@
     = image_tag 'loading.gif', size: '16x16', style: 'display: none', id: "busy_basic_#{experiment.id}_#{moe_name}_#{resolution}"
   .row
     %span.button= t('charts.hide_button')
-    %input{type: "checkbox", checked: ""} Toggle x axis labels
+    %input{type: "checkbox", checked: "", style: "margin-left: 20px;"} Show x axis labels
     -# TODO handle the refresh option
     -#= button_to_function 'Refresh',
     -#    "refresh_chart('#{experiment.id}', '#{moe_name}', #{resolution}, '#{experiments_update_basic_statistics_chart_path}')", class: 'nice_button'
@@ -17,12 +17,13 @@
 
   :javascript
     $(function() {
-      var visible = false;
+      var visible = "#{resolution}"<14;
+      $("input").attr("checked", visible);
       $('input').on('click', function() {
 
         var chart = $("#basic_chart_container_#{experiment.id}_#{moe_name}_#{resolution}").highcharts();
-        chart.xAxis[0].update({labels: {enabled: visible}});
         visible = !visible;
+        chart.xAxis[0].update({labels: {enabled: visible}});
       })
       $('.plot .button').on('click', function() {
         $(this).parent().parent().remove()
