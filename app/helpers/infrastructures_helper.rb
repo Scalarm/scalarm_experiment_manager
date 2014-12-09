@@ -44,13 +44,11 @@ module InfrastructuresHelper
     InfrastructureFacadeFactory.get_facade_for(infrastructure_name).count_sm_records(user_id)
   end
 
-  def experiments_select_data(user, blank = false)
+  def experiments_select_data(user)
     shared_prefix = "[#{I18n.t('infrastructure.information.shared_experiment')}] "
-    array = user.get_running_experiments.map do |exp|
+    user.get_running_experiments.map do |exp|
       ["#{user.owns?(exp) ? '' : shared_prefix}#{exp.name} (#{exp.id})", exp.id]
     end
-    array.unshift [:All, ""] if blank
-    array
   end
 
 end

@@ -6,13 +6,11 @@
       %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
         %i.fi-refresh
   .row
-    .small-2.columns
-      = label_tag :experiment_id, 'Experiment'
+    .small-3.columns
+      = label_tag :experiment_filter_id, 'Select experiment'
     .small-5.columns
-      = select_tag :experiment_id, options_for_select(experiments_select_data(@current_user, true))
-    .small-2.columns
-      %span#filter-button{class: 'button radius expand action-button', title: 'Filter'} Filter
-    .small-2.columns
+      = select_tag :experiment_filter_id, options_for_select([['All experiments', '']] + experiments_select_data(@current_user), experiment_id)
+    .small-3.columns
 
   .row
     .small-12.columns
@@ -36,7 +34,7 @@
     $(function() {
       window.infrastructuresTree = new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'dialog',
         "#{list_infrastructure_path}", "#{simulation_manager_records_infrastructure_path}",
-        "#{simulation_manager_command_infrastructure_path}");
+        "#{simulation_manager_command_infrastructure_path}", "#{experiment_id}");
     });
 
 

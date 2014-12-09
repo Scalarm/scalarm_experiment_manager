@@ -1,10 +1,10 @@
 # TODO: translate tooltips (for .attr("title"...
 class window.InfrastructuresTree
   constructor: (@baseSmDialogUrl, genericDialogId, @list_infrastructure_path,
-                @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path) ->
+                @simulation_manager_records_infrastructure_path, @simulation_manager_command_infrastructure_path, @experiment_id) ->
 
     @bindRefreshTreeButton('refresh-button')
-    @bindFilterTreeButton('filter-button')
+    @bindFilterTreeSelect('experiment_filter_id')
 
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
@@ -14,7 +14,6 @@ class window.InfrastructuresTree
     @fetchNodesFunctions = {}
 
     @root = null
-    @experiment = null
 
     @m = [20, 80, 20, 80]
     @w = 1000 - @m[1] - @m[3]
@@ -43,16 +42,15 @@ class window.InfrastructuresTree
       fetchUpdateNodes = (local_root, data) =>
         $.getJSON(@simulation_manager_records_infrastructure_path, data, (child_json) =>
           child_json = child_json.filter (child) =>
-            return (not @experiment?) or (@experiment == child.experiment_id)
+            return (@experiment_id == "") or (@experiment_id == child.experiment_id)
           child_json = null if child_json.length == 0
-          console.log(child_json)
 
           # Old code: Perform action only if node [is expanded or was not initialized before]
           # and when fetched children are not the same as in node
 #          if not local_root['_children'] and not @childsEqual(local_root['children'], child_json)
 
           # Now - update when fetched children are not the same as in node
-          if not @childsEqual(local_root['children'], child_json)
+          if not @childsEqual(local_root, child_json)
             if (local_root['children']) # is expanded
               local_root['children'] = child_json
             else # is collapsed
@@ -83,8 +81,13 @@ class window.InfrastructuresTree
 
   # Compare children arrays: childs_local should be taken from current tree
   # childs_remote should be fetched from server.
-  childsEqual: (childs_local, childs_remote) ->
-    childs_local = null if typeof childs_local is 'undefined'
+  childsEqual: (node, childs_remote) ->
+    if !!node['children']
+      childs_local = node['children']
+    else if !!node['_children']
+      childs_local = node['_children']
+    else
+      childs_local = null
 
     if not childs_local? and not childs_remote?
       return true
@@ -167,13 +170,6 @@ class window.InfrastructuresTree
 
     # Compute the new tree layout.
     nodes = @tree.nodes(@root).reverse()
-#    console.log(nodes)
-#    nodes = nodes.map (node) =>
-#      if node.children?
-#        node.children = node.children.filter (d) => (not @experiment?) or (not d._id?) or (@experiment == d._id)
-#      node
-#    nodes = nodes.filter (d) => (not @experiment?) or (not d._id?) or (@experiment == d._id)
-#    console.log(nodes)
 
     # Normalize for fixed-depth.
     for d in nodes
@@ -403,16 +399,13 @@ class window.InfrastructuresTree
 
   bindRefreshTreeButton: (button_id) ->
     $("##{button_id}").on("click", =>
-      @updateAllInfrastrctureNodes()
+      @updateAllInfrastructureNodes()
     )
 
-  bindFilterTreeButton: (button_id) ->
-    $("##{button_id}").on("click", =>
-      @experiment = if $("#experiment_id").val() == "" then null else $("#experiment_id").val()
-      console.log(@experiment)
+  bindFilterTreeSelect: (select_id) ->
+    $("##{select_id}").change(() =>
+      @experiment_id = $("##{select_id}").val()
       @updateAllInfrastructureNodes()
-#      @updateTree(@root)
-#      @updateTree(@root)
     )
 
   updateInfrastructureNode: (infrastructure_name) ->
