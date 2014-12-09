@@ -136,7 +136,7 @@ class InfrastructureFacade
     }
 
     if Rails.application.secrets.include? :certificate_path
-      sm_config[:ScalarmCertificatePath] = '~/.scalarm_certificate'
+      sm_config[:ScalarmCertificatePath] = '.scalarm_certificate'
     end
 
     if Rails.application.secrets.include?(:sm_information_service_url)
