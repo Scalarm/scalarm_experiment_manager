@@ -42,8 +42,8 @@ class window.ParameterConstraintsManager
 
     if (event.detail.parametrizationType == "range" || event.detail.parametrizationType == "custom") &&
     (parameter.parameter.type == "integer" || parameter.parameter.type == "float")
-
-      @addRangeParameter(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
+      if not @isRangeParameterAdded(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
+        @addRangeParameter(event.detail.entityGroupId, event.detail.entityId, event.detail.parameterId)
 
     else
 #    remove already parameter if already chosen
@@ -100,3 +100,9 @@ class window.ParameterConstraintsManager
 #      option = $("option").val(p.fullId).text(parameterLabel)
       sourceParametersElement.append(option.clone())
       targetParametersElement.append(option.clone())
+
+  isRangeParameterAdded: (entityGroupId, entityId, parameterId) =>
+    output = @rangeParameters.filter (rangeParameter) ->
+      rangeParameter.fullId == entityGroupId+"___"+entityId+"___"+parameterId
+
+    return output.length > 0
