@@ -47,6 +47,6 @@ module ShellBasedInfrastructure
   end
 
   def app_running?(ssh, pid)
-    not pid.blank? and not ssh.exec!("ps #{pid} | tail -n +2").blank?
+    not pid.blank? and (ssh.exec_sc!("ps -p #{pid}").exit_code == 0)
   end
 end
