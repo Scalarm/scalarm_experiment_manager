@@ -21,7 +21,7 @@
               = password_field_tag 'password', '', class: 'inline', autocomplete: :off
           .row
             .small-12.small-centered.columns(style="text-align: center;")
-              = submit_tag 'Submit', class: 'button radius'
+              = submit_tag 'Login with username', class: 'button radius'
     - else
       .small-6.columns
         = form_tag login_path do
@@ -43,12 +43,12 @@
 
       .small-6.columns
         .row
-          .small-12.small-centered.columns(style="text-align:center;")
-            %a.button.radius{ href: login_openid_google_url }
-              %i.fi-social-google-plus.small-link
+          .small-9.small-centered.columns
+            %a.button.expand.radius{ href: login_openid_google_url }
+              %i.fa.fa-google-plus.fa-fw.small-link
               = t('openid.login', provider: 'Google')
         .row
-          .small-12.small-centered.columns(style="text-align:center;")
-            %a.button.radius{ href: login_openid_plgrid_url }
-              %i.fi-key.small-link
+          .small-9.small-centered.columns
+            %a.button.expand.radius{ href: login_openid_plgrid_url }
+              %i.fa.fa-openid.fa-fw.small-link
               = t('openid.login', provider: 'PL-Grid')
