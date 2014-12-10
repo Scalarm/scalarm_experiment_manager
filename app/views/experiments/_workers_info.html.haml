@@ -53,6 +53,10 @@
           $("#workers_alert").show();
           $("#boostButton").addClass("success");
         }
+        else {
+          $("#workers_alert").hide();
+          $("#boostButton").removeClass("success");
+        }
         $("#actions-loading-workers").hide();
       });
     }
