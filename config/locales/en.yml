@@ -226,6 +226,7 @@ en:
       header: "Basic statistics about '%{moe}'"
       select_moe: Select MoE
       resolution: Number of bars
+      toggle_x_labels: Show x axis labels
 
     regression:
       section_header: Regression trees

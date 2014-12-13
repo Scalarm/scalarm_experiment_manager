@@ -17,7 +17,7 @@ $(document).ready(function() {
   		  '<%= bucket_name %>',
   		<% end %>
   		],
-        <% if @chart.resolution >= 15 %>
+        <% if @chart.resolution >= @visible_threshold_resolution %>
         labels: {
             enabled: false
         }
