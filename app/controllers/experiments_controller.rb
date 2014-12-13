@@ -509,10 +509,11 @@ class ExperimentsController < ApplicationController
   def histogram
     validate_params(:default, :moe_name)
 
-    if params[:moe_name].blank?
+    resolution = params[:resolution].to_i
+    if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
     end
   end
 
