@@ -81,13 +81,15 @@ class PlGridFacade < InfrastructureFacade
     end
   end
 
-  def send_and_launch_onsite_monitoring(credentials, user_id, params)
+  def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
+    # TODO: implement multiple architectures support
+    arch = 'linux_386'
     sm_uuid = SecureRandom.uuid
 
     InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
-    bin_base_name = 'scalarm_monitoring_linux_x86_64'
+    bin_base_name = 'scalarm_monitoring'
 
-    remote_proxy_path = '~/.scalarm_proxy'
+    remote_proxy_path = '.scalarm_proxy'
     key_passphrase = params[:key_passphrase]
     credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
     credentials.clone_proxy(remote_proxy_path)
@@ -101,7 +103,7 @@ class PlGridFacade < InfrastructureFacade
     credentials.scp_session do |scp|
       scp.upload_multiple! [
                                File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'),
-                               File.join(Rails.root, 'public', 'scalarm_monitoring', "#{bin_base_name}.xz")
+                               File.join(Rails.root, 'public', 'scalarm_monitoring', arch, "#{bin_base_name}.xz")
                            ], '.'
     end
 
@@ -111,11 +113,11 @@ class PlGridFacade < InfrastructureFacade
 
     if Rails.application.secrets.certificate_path
       credentials.ssh_session do |ssh|
-        ssh.exec! 'rm -f ~/.scalarm_certificate'
+        ssh.exec! 'rm -f .scalarm_certificate'
       end
 
       credentials.scp_session do |scp|
-        scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
+        scp.upload! Rails.application.secrets.certificate_path, '.scalarm_certificate'
       end
     end
 
@@ -342,12 +344,15 @@ class PlGridFacade < InfrastructureFacade
         end
 
         ssh = shared_ssh_session(sm_record.credentials)
-        if scheduler.submit_job(ssh, sm_record)
+
+        begin
+          sm_record.job_id = scheduler.submit_job(ssh, sm_record)
           sm_record.save
-        else
+        rescue JobSubmissionFailed => job_failed
           logger.warn 'Scheduling job failed!'
-          sm_record.store_error('install_failed') # TODO: get output from .submit_job and save as error_log
+          sm_record.store_error('install_failed', job_failed.to_s)
         end
+
       rescue Net::SSH::AuthenticationFailed => auth_exception
         logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
         sm_record.store_error('ssh')

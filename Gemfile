@@ -40,11 +40,10 @@ gem 'jquery-ui-rails'
 gem 'jquery-tmpl-rails'
 gem 'haml'
 gem 'foundation-rails'
-gem 'highcharts-rails'
 gem 'jit-rails'
 gem 'foundation-icons-sass-rails'
 gem 'jquery-datatables-rails', git: 'git://github.com/rweng/jquery-datatables-rails.git'
-gem 'font-awesome-sass'
+gem 'font-awesome-sass', '4.1'
 
 # Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
 # gem 'turbolinks'

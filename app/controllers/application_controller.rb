@@ -58,16 +58,16 @@ class ApplicationController < ActionController::Base
   def validate_params(mode, *param_names)
     regexp = case mode
                when :default
-                 /^(\w|(-))*$/
+                 /\A(\w|(-))*\z/
 
                when :openid_id
-                 /^(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*$/
+                 /\A(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*\z/
 
                when :json
-                 /^(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*$/
+                 /\A(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*\z/
 
                else
-                 /^$/
+                 /\A\z/
              end
 
     param_names.each do |param_name|
@@ -80,18 +80,18 @@ class ApplicationController < ActionController::Base
 
   # due to security reasons
   def set_cache_buster
-    response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Server"] = "Scalarm custom server"
-
-    cookies.each do |key, value|
-      response.delete_cookie(key)
-      if value.kind_of?(Hash)
-        response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
-      else
-        response.set_cookie(key, {value: value, expires: 6.hour.from_now})
-      end
-    end
+    #response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
+    #response.headers["Pragma"] = "no-cache"
+    #response.headers["Server"] = "Scalarm custom server"
+    #
+    #cookies.each do |key, value|
+    #  response.delete_cookie(key)
+    #  if value.kind_of?(Hash)
+    #    response.set_cookie(key, value.merge!({expires: 6.hour.from_now}))
+    #  else
+    #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
+    #  end
+    #end
   end
 
   # -- error handling --
