@@ -26,12 +26,7 @@
 
 - content_for :javascript do
   :javascript
-    function capitaliseFirstLetter(string)
-    {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
-    $(function() {
+    window.retrieveComputationalResourcesSummary = function() {
       $.getJSON("/simulation_managers", function(data) {
         var array_of_workers = data.sm_records;
         var map = {"created": 0,
@@ -41,17 +36,16 @@
                    "failed": 0};
         array_of_workers.map(function(worker) {
           var property = worker.state;
-          if(worker.experiment_id === '#{@experiment.id}' && worker.user_id === '#{@experiment.user_id}') {
+          if(worker.experiment_id === '#{@experiment.id}') {
             if(property==="error")
               property = "failed";
 
             map[property]++;
           }
         })
+        $("#state").empty();
         for(var key in map) {
-          //capitaliseFirstLetter(key)
           if(map[key]!=0) {
-            //$("<span>").addClass("w-"+key).text(map[key]+" " + key.toUpperCase()).append("<br>").appendTo($("#state"));
             $("<li>").addClass("w-"+key).text(map[key]+" " + key.toLowerCase()).append("<br>").appendTo($("#state"));
           }
         }
@@ -59,6 +53,14 @@
           $("#workers_alert").show();
           $("#boostButton").addClass("success");
         }
+        else {
+          $("#workers_alert").hide();
+          $("#boostButton").removeClass("success");
+        }
         $("#actions-loading-workers").hide();
-      })
+      });
+    }
+    $(function() {
+      window.retrieveComputationalResourcesSummary();
+      setInterval(window.retrieveComputationalResourcesSummary, 30000);
     });
