@@ -69,7 +69,7 @@ class PlGridFacade < InfrastructureFacade
     InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
     bin_base_name = 'scalarm_monitoring'
 
-    remote_proxy_path = '~/.scalarm_proxy'
+    remote_proxy_path = '.scalarm_proxy'
     key_passphrase = params[:key_passphrase]
     credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
     credentials.clone_proxy(remote_proxy_path)
@@ -93,11 +93,11 @@ class PlGridFacade < InfrastructureFacade
 
     if Rails.application.secrets.certificate_path
       credentials.ssh_session do |ssh|
-        ssh.exec! 'rm -f ~/.scalarm_certificate'
+        ssh.exec! 'rm -f .scalarm_certificate'
       end
 
       credentials.scp_session do |scp|
-        scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
+        scp.upload! Rails.application.secrets.certificate_path, '.scalarm_certificate'
       end
     end
 

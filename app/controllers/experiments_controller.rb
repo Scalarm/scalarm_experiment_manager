@@ -450,6 +450,7 @@ class ExperimentsController < ApplicationController
         simulation_to_send = @experiment.get_next_instance
         unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
+          simulation_to_send.save
         end
       end
 
@@ -508,10 +509,11 @@ class ExperimentsController < ApplicationController
   def histogram
     validate_params(:default, :moe_name)
 
-    if params[:moe_name].blank?
+    resolution = params[:resolution].to_i
+    if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
     end
   end
 
