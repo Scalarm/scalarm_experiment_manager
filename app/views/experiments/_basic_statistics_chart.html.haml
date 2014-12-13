@@ -18,8 +18,9 @@
   :javascript
     $(function() {
       var visible = "#{resolution}"<14;
-      $("input").attr("checked", visible);
-      $('input').on('click', function() {
+      console.log(visible);
+      $("input[type=checkbox]").attr("checked", visible);
+      $('input[type=checkbox]').on('click', function() {
 
         var chart = $("#basic_chart_container_#{experiment.id}_#{moe_name}_#{resolution}").highcharts();
         visible = !visible;
