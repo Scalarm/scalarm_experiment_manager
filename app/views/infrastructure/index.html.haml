@@ -7,9 +7,9 @@
         %i.fi-refresh
   .row
     .small-3.columns
-      = label_tag :experiment_filter_id, 'Select experiment:', class: 'inline right'
+      = label_tag :experiment_filter_id, t('infrastructure.tree_filter.label'), class: 'inline right'
     .small-5.columns
-      = select_tag :experiment_filter_id, options_for_select([['All experiments', '']] + experiments_select_data(@current_user), experiment_id)
+      = select_tag :experiment_filter_id, options_for_select([[t('infrastructure.tree_filter.all_experiments'), '']] + experiments_select_data(@current_user), experiment_id)
     .small-3.columns
 
   .row
