@@ -5,6 +5,12 @@
     .small-1.columns
       %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
         %i.fi-refresh
+  .row
+    .small-3.columns
+      = label_tag :experiment_filter_id, t('infrastructure.tree_filter.label'), class: 'inline right'
+    .small-5.columns
+      = select_tag :experiment_filter_id, options_for_select([[t('infrastructure.tree_filter.all_experiments'), '']] + experiments_select_data(@current_user), experiment_id)
+    .small-3.columns
 
   .row
     .small-12.columns
@@ -28,7 +34,7 @@
     $(function() {
       window.infrastructuresTree = new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'dialog',
         "#{list_infrastructure_path}", "#{simulation_manager_records_infrastructure_path}",
-        "#{simulation_manager_command_infrastructure_path}");
+        "#{simulation_manager_command_infrastructure_path}", "#{experiment_id}");
     });
 
 
