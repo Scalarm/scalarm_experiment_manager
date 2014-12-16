@@ -25,13 +25,12 @@ $(document).ready(function() {
   	},
   	yAxis: {
   		title: {
-  			text: '#Configurations',
-  			align: 'high'
+  			text: 'Num. of simulations'
   		}
   	},
   	tooltip: {
   		formatter: function() {
-  			return '#Configurations: ' + this.y + '<br>'+
+  			return 'Num. of simulations: ' + this.y + '<br>'+
                     'Range: ' + this.x;
   		}
   	},
