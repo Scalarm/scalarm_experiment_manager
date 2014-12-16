@@ -70,8 +70,10 @@
         =record.created_at.since(record.time_limit.to_i.minutes).to_s + ' ' + "(#{record.time_limit.to_s} minutes)"
       %li
         %strong= t('infrastructures.sm_dialog.experiment') + ': '
-        - raise 'No experiment' unless record.experiment
-        = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+        - if record.experiment
+          = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+        - else
+          = t('infrastructure.information.sm_record_error', error: 'No experiment')
 
 
 
