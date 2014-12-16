@@ -103,6 +103,6 @@ class window.ParameterConstraintsManager
 
   isRangeParameterAdded: (entityGroupId, entityId, parameterId) =>
     output = @rangeParameters.filter (rangeParameter) ->
-      rangeParameter.fullId == entityGroupId+"___"+entityId+"___"+parameterId
+      rangeParameter.parameter == InputSpace.getParameter(entityGroupId, entityId, parameterId).parameter
 
     return output.length > 0
