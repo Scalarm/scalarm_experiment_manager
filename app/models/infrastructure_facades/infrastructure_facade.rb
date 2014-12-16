@@ -75,7 +75,6 @@ class InfrastructureFacade
 
     sm_config = {
         experiment_id: experiment_id,
-        #user_id: user_id,
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
