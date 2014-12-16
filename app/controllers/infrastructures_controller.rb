@@ -5,8 +5,10 @@ class InfrastructuresController < ApplicationController
   include InfrastructureErrors
   include GenericErrors
 
+  # GET params:
+  # - experiment_id: (optional) experiment_id
   def index
-    render 'infrastructure/index'
+    render 'infrastructure/index', locals: { experiment_id: params[:experiment_id].to_s }
   end
 
   def list
