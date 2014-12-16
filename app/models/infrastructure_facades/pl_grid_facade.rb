@@ -35,21 +35,40 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
-    sm_uuid = SecureRandom.uuid
+    # 1. checking if the user can schedule SiM
+    credentials = if using_temp_credentials?(additional_params)
+                    create_temp_credentials(additional_params)
+                  else
+                    get_credentials_from_db(user_id)
+                  end
 
-    # prepare locally code of a simulation manager to upload with a configuration file
-    unless additional_params[:onsite_monitoring]
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
+    if credentials.nil?
+      raise InfrastructureErrors::NoCredentialsError.new
     end
 
-    credentials =
-        using_temp_credentials?(additional_params) ? create_temp_credentials(additional_params) : get_credentials_from_db(user_id)
+    if credentials.invalid or (credentials.password.blank? and credentials.secret_proxy.blank?)
+      raise InfrastructureErrors::InvalidCredentialsError.new
+    end
 
-    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
-    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid or (credentials.password.blank? and credentials.secret_proxy.blank?)
+    # 2. create instances_count SiMs
+    records = (1..instances_count).map do
+      # 2.a create temp pass for SiM
+      sm_uuid = SecureRandom.uuid
+      if SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid).nil?
+        SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
+      end
+      # 2.b prepare SiM package unless SiM is monitored on-site
+      unless additional_params[:onsite_monitoring]
+        InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
+      end
+      # 2.c create record for SiM and save it
+      record = create_record(user_id, experiment_id, sm_uuid, additional_params)
+      record.save
 
-    records = create_records(instances_count, user_id, experiment_id, sm_uuid, additional_params)
-    send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
+      record
+    end
+
+    send_and_launch_onsite_monitoring(credentials, user_id, additional_params) if additional_params[:onsite_monitoring]
 
     records
   end
@@ -65,11 +84,12 @@ class PlGridFacade < InfrastructureFacade
   def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
     # TODO: implement multiple architectures support
     arch = 'linux_386'
+    sm_uuid = SecureRandom.uuid
 
     InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
     bin_base_name = 'scalarm_monitoring'
 
-    remote_proxy_path = '~/.scalarm_proxy'
+    remote_proxy_path = '.scalarm_proxy'
     key_passphrase = params[:key_passphrase]
     credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
     credentials.clone_proxy(remote_proxy_path)
@@ -93,11 +113,11 @@ class PlGridFacade < InfrastructureFacade
 
     if Rails.application.secrets.certificate_path
       credentials.ssh_session do |ssh|
-        ssh.exec! 'rm -f ~/.scalarm_certificate'
+        ssh.exec! 'rm -f .scalarm_certificate'
       end
 
       credentials.scp_session do |scp|
-        scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
+        scp.upload! Rails.application.secrets.certificate_path, '.scalarm_certificate'
       end
     end
 

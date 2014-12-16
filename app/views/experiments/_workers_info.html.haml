@@ -8,7 +8,7 @@
           = t('experiments.computational_resources.no_workers_alert')
       .row
         .small-8.columns
-          %a{href: infrastructures_path}
+          %a{href: "#{infrastructures_path}?experiment_id=#{@experiment.id}"}
             = t('experiments.computational_resources.show_details_link')
 
     .small-6.columns
@@ -52,6 +52,10 @@
         if(map["created"] == 0 && map["initializing"]==0 && map["running"]==0) {
           $("#workers_alert").show();
           $("#boostButton").addClass("success");
+        }
+        else {
+          $("#workers_alert").hide();
+          $("#boostButton").removeClass("success");
         }
         $("#actions-loading-workers").hide();
       });
