@@ -93,7 +93,8 @@ class SimulationsController < ApplicationController
 
         simulation.save
       rescue Exception => e
-        Rails.logger.error("Exception occurred : #{e}")
+        flash[:error] = t('simulations.create.internal_error') unless flash[:error]
+        Rails.logger.error("Exception occurred when setting up adapters or binaries: #{e}\n#{e.backtrace.join("\n")}")
       end
     end
 
