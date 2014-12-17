@@ -514,6 +514,7 @@ class ExperimentsController < ApplicationController
       render inline: ""
     else
       @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
+      @visible_threshold_resolution = 15
     end
   end
 
