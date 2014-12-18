@@ -42,7 +42,7 @@
     = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
   - else
     %span{style: "color: red"}
-      Not found
+      = t('infrastructure.information.not_found')
 %td
   %ul{style: 'font-size: 1em;'}
     -begin

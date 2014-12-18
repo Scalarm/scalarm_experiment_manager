@@ -73,7 +73,7 @@
         - if record.experiment
           = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
         - else
-          = t('infrastructure.information.sm_record_error', error: 'No experiment')
+          = t('infrastructure.information.sm_record_error', error: t('infrastructure.information.experiment_not_found'))
 
 
 
