@@ -141,16 +141,24 @@ en:
       simulation_input_desc: Input definition file (JSON)
       simulation_binaries: Simulation binaries
       simulation_binaries_desc: Simulation binaries package (ZIP)
-      input_writer: Input writer (optional)
-      output_reader: Output reader (optional)
+      input_writer: Input writer
+      output_reader: Output reader
       executor: Executor
-      progress_monitor: Progress monitor (optional)
+      progress_monitor: Progress monitor
       upload: Upload
       component_registration_title: Adapter registration
       component_name: Adapter name
       component_code: Adapter code
       component_type: Adapter type
       component_header: "%{component} registration"
+      optional: optional
+
+      select_registered_name: "Select a registered name"
+      provide_name: "and provide a name"
+
+    edit:
+      current_bin: Current file
+      change_bin: Upload new file
 
     conduct_experiment:
       title: Scalarm - prepare new experiment
@@ -226,6 +234,7 @@ en:
       header: "Basic statistics about '%{moe}'"
       select_moe: Select MoE
       resolution: Number of bars
+      toggle_x_labels: Show X axis labels
 
     regression:
       section_header: Regression trees

@@ -23,6 +23,7 @@ en:
       simulation_invalid_name: A simulation scenario with the given name is already in the system.
       mandatory_adapter: "Setting up Simulation%{adapter} is mandatory"
       adapter_not_found: "Cannot find Simulation%{adapter} with the %{id} id"
+      internal_error: "Internal error on registering adapters or simulation files"
       registered: Your simulation scenario has been registered
     conduct:
       doe:
