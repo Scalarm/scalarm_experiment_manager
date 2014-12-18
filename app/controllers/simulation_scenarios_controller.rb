@@ -49,7 +49,8 @@ class SimulationScenariosController < ApplicationController
 
           flash[:notice] = t('simulation_scenarios.update.success', name: @simulation_scenario.name) if flash[:error].nil?
         rescue Exception => e
-          Rails.logger.error("Exception occurred : #{e}")
+          flash[:error] = t('simulations.create.internal_error') unless flash[:error]
+          Rails.logger.error("Exception occurred when setting up adapters or binaries: #{e}\n#{e.backtrace.join("\n")}")
         end
       end
     end
@@ -165,7 +166,7 @@ class SimulationScenariosController < ApplicationController
   private
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
-    validate_params(:default, adapter_type, "#{adapter_type}_id", "#{adapter_type}_name")
+    validate_params(:default, "#{adapter_type}_id", "#{adapter_type}_name")
 
     if params.include?(adapter_type + '_id')
       adapter_id = params[adapter_type + '_id'].to_s
@@ -180,7 +181,13 @@ class SimulationScenariosController < ApplicationController
         end
       end
 
+    # uploading new file
     elsif params.include?(adapter_type)
+      unless Utils::get_validation_regexp(:filename).match(params[adapter_type].original_filename)
+        flash[:error] = t('errors.insecure_filename', param_name: adapter_type)
+        raise SecurityError.new(t('errors.insecure_filename', param_name: adapter_type))
+      end
+
       adapter_name = if params["#{adapter_type}_name"].blank?
                        params[adapter_type].original_filename
                      else

@@ -8,6 +8,7 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - experiment_id: (optional) experiment_id
   def index
+    validate_params(:default, :experiment_id)
     render 'infrastructure/index', locals: { experiment_id: params[:experiment_id].to_s }
   end
 
