@@ -13,7 +13,7 @@
   %section.panel.radius
     .row
       .small-6.columns.small-centered
-        %a.button.expand.radius{ href: login_openid_plgrid_url(params) }
+        %a.button.expand.radius{ href: login_openid_plgrid_url }
           %i.fa.fa-openid.fa-fw.small-link
           = t('openid.login', provider: 'PL-Grid')
 - else
@@ -52,11 +52,11 @@
         .small-6.columns
           .row
             .small-9.small-centered.columns
-              %a.button.expand.radius{ href: login_openid_google_url(params) }
+              %a.button.expand.radius{ href: login_openid_google_url }
                 %i.fa.fa-google-plus.fa-fw.small-link
                 = t('openid.login', provider: 'Google')
           .row
             .small-9.small-centered.columns
-              %a.button.expand.radius{ href: login_openid_plgrid_url(params) }
+              %a.button.expand.radius{ href: login_openid_plgrid_url }
                 %i.fa.fa-openid.fa-fw.small-link
                 = t('openid.login', provider: 'PL-Grid')

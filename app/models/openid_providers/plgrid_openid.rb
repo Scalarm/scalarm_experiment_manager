@@ -23,12 +23,7 @@ module PlGridOpenID
     # -- Attribute Exchange support --
     OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn, :POSTresponse])
 
-    if params.include? :generate_temp_pass
-      params[:generate_temp_pass] = nil
-      params[:temp_pass] = SecureRandom.hex(4)
-    end
-
-    return_to = openid_callback_plgrid_url(params)
+    return_to = openid_callback_plgrid_url((params[:generate_temp_pass] ? SecureRandom.hex(4) : nil))
 
     # remove following "/" from url (to match PL-Grid OpenID realm)
     realm = root_url.match(/(.*)\//)[1]

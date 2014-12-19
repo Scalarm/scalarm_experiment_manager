@@ -34,20 +34,20 @@ module UserControllerHelper
 
   # --- OpenID helpers ---
 
-  def login_openid_google_url(params={})
-    url_for action: 'login_openid_google', only_path: false, params: params
+  def login_openid_google_url
+    url_for :action => 'login_openid_google', :only_path => false
   end
 
-  def openid_callback_google_url(params={})
-    url_for action: 'openid_callback_google', only_path: false, params: params
+  def openid_callback_google_url
+    url_for :action => 'openid_callback_google', :only_path => false
   end
 
-  def login_openid_plgrid_url(params={})
-    url_for action: 'login_openid_plgrid', only_path: false, params: params
+  def login_openid_plgrid_url
+    url_for :action => 'login_openid_plgrid', :only_path => false
   end
 
-  def openid_callback_plgrid_url(params={})
-    url_for action: 'openid_callback_plgrid', only_path: false, params: params
+  def openid_callback_plgrid_url(temp_pass=nil)
+    url_for action: 'openid_callback_plgrid', only_path: false, params: (temp_pass ? {temp_pass: temp_pass} : {})
   end
 
 end
