@@ -18,7 +18,7 @@ module GoogleOpenID
     # -- Attribute Exchange support --
     OpenIDUtils.request_ax_attributes(oidreq, [:email])
 
-    return_to = openid_callback_google_url
+    return_to = openid_callback_google_url(params)
     realm = login_url
 
     if oidreq.send_redirect?(realm, return_to)

@@ -34,6 +34,8 @@ class ApplicationController < ActionController::Base
   def authentication_failed
     Rails.logger.debug('[authentication] failed -> redirect')
 
+    server_name = (@user_session ? @user_session.server_name : nil)
+
     reset_session
     @user_session.destroy unless @user_session.nil?
 
@@ -41,7 +43,7 @@ class ApplicationController < ActionController::Base
     session[:intended_action] = action_name
     session[:intended_controller] = controller_name
 
-    redirect_to :login
+    redirect_to server_name ? login_path(server_name: server_name) : :login
   end
 
   def start_monitoring

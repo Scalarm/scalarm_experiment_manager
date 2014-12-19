@@ -32,3 +32,5 @@ en:
         create_new_group: "Create"
         create_group_label: "Create new parameter group with a DoE method:"
         remove_parameter: "Remove parameter"
+    error:
+      invalid_result_format: "Invalid results format"

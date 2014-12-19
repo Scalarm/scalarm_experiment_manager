@@ -23,7 +23,7 @@ module ScalarmAuthentication
     if @current_user.nil? and @sm_user.nil?
       authentication_failed
     else
-      @user_session = UserSession.create_and_update_session(session[:user].to_s) if @sm_user.nil?
+      @user_session = UserSession.create_and_update_session(session[:user].to_s, params[:server_name]) if @sm_user.nil?
     end
   end
 
@@ -39,7 +39,7 @@ module ScalarmAuthentication
       @session_auth = true unless @current_user.blank?
     else
       flash[:error] = t('session.expired')
-      Rails.logger.debug("[authentication] scalarm user session doesnt exist or its invalid")
+      Rails.logger.debug("[authentication] scalarm user session #{@user_session.nil? ? 'does not exists' : 'is invalid'}")
     end
   end
 
