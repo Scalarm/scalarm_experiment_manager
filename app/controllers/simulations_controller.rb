@@ -152,9 +152,10 @@ class SimulationsController < ApplicationController
             begin
               @simulation_run.result = Utils.parse_json_if_string(params[:result])
             rescue Exception => e
+              Rails.logger.warn("Got invalid result for #{@simulation_run.id} simulation:\n#{params[:result].to_s}")
               @simulation_run.result = {}
               @simulation_run.is_error = true
-              @simulation_run.error_reason = t('simulations.error.invalid_result_format')
+              @simulation_run.error_reason = t('simulations.error.invalid_result_format') + "\n\n" + params[:result].to_s
             end
           end
 
