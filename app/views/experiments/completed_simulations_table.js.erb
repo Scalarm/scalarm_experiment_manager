@@ -25,3 +25,7 @@ $('#completed_simulations_table').on('click', 'tr', function(event) {
         $('#extension-dialog').foundation('reveal', 'open');
     }
 });
+
+$('#completed_simulations_table').wrap("<div id='scrooll_div'></div>");
+console.log($('#scrooll_div').doubleScroll);
+$('#scrooll_div').doubleScroll();
