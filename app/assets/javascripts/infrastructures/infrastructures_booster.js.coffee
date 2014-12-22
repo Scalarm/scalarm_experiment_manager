@@ -48,4 +48,5 @@ class window.InfrastructuresBooster
       )
       .bind('ajax:complete', =>
         window.infrastructuresTree and window.infrastructuresTree.updateInfrastructureNode(@infrastructureName)
+        window.retrieveComputationalResourcesSummary and window.retrieveComputationalResourcesSummary()
       )

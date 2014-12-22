@@ -47,7 +47,8 @@ module GliteScheduler
       submit_job_output = PlGridScheduler.execute_glite_command("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl", ssh)
       logger.debug("Glite submission output lines: #{submit_job_output}")
 
-      submit_job_output ? (job.job_id = GliteScheduler::PlGridScheduler.parse_job_id(submit_job_output)) : nil
+      job_id = GliteScheduler::PlGridScheduler.parse_job_id(submit_job_output)
+      job_id ? job_id : raise(JobSubmissionFailed.new(submit_job_output))
     end
 
     def self.parse_job_id(submit_job_output)

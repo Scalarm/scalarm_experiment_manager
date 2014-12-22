@@ -39,7 +39,12 @@
       - if @simulation_run.error_reason.blank?
         = t('.no_reason_label')
       - else
-        = t('.reason', reason: @simulation_run.error_reason)
+        = t('.reason')
+        .panel.log-box
+          - @simulation_run.error_reason.split("\n").each do |line|
+            = line
+            %br
+
 
 - elsif @simulation_run.is_done
   .row
@@ -53,7 +58,7 @@
   .row
     %h4= t('.binary_output_header')
     - if @output_size_err == 0
-      = link_to 'click to download', log_bank_simulation_run_binaries_url(@remote_storage_manager_url, @experiment, @simulation_run.index)
+      = link_to 'click to download', results_binaries_experiment_simulation_path
       %p
         = t('.size', { size: @output_size_label })
     - else
@@ -62,7 +67,7 @@
 .row
   %h4= t('.stdout_header')
   - if @stdout_size_err == 0
-    = link_to 'click to download', log_bank_simulation_run_stdout_url(@remote_storage_manager_url, @experiment, @simulation_run.index)
+    = link_to 'click to download', results_stdout_experiment_simulation_path
     %p
       = t('.size', { size: @stdout_size_label })
   - else

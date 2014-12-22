@@ -4,6 +4,8 @@ require 'openid/extensions/ax'
 require 'openid_providers/google_openid'
 require 'openid_providers/plgrid_openid'
 
+require 'utils'
+
 class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
@@ -27,14 +29,18 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        requested_user = ScalarmUser.find_by_login(params[:username].to_s)
+        config = Utils::load_config
+        anonymous_login = config['anonymous_login']
+        username = params.include?(:username) ? params[:username].to_s : anonymous_login.to_s
+
+        requested_user = ScalarmUser.find_by_login(username)
         raise t('user_controller.login.user_not_found') if requested_user.nil?
 
         if requested_user.banned_infrastructure?('scalarm')
           raise t('user_controller.login.login_banned', time: requested_user.ban_expire_time('scalarm'))
         end
 
-        session[:user] = ScalarmUser.authenticate_with_password(params[:username], params[:password]).id.to_s
+        session[:user] = ScalarmUser.authenticate_with_password(username, params[:password]).id.to_s
 
         if requested_user.credentials_failed and requested_user.credentials_failed.include?('scalarm')
           requested_user.credentials_failed['scalarm'] = []
@@ -73,7 +79,7 @@ class UserControllerController < ApplicationController
 
       flash[:error] = t('password_repeat_error')
 
-    elsif params[:password].length < 6 or (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
+    elsif params[:password].length < 8 or (/\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
 
       flash[:error] = t('password_too_weak')
 
