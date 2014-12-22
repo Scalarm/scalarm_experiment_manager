@@ -11,15 +11,18 @@
     %span.button.hide= t('charts.hide_button')
     = form_tag '', class: '' do
       .row
-        .small-offset-4.small-5.columns
-          = select_tag 'choose_axis',options_for_select([["Axis X", 'x'], ["Axis Y", 'y']])
-      .small-3.columns
-        = label_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", "Add new x series: ", class: 'inline'
-      .small-7.columns
-        = select_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", '', { class: 'moes_and_params_list' }
-      .small-2.columns
-        %ul.inline-list
-          %li= submit_tag "Add series", class: 'button radius tiny'
+        .small-offset-1.small-3.columns
+          = label_tag "choose_axis_#{@chart.x_axis}_#{@chart.y_axis}", t('charts.scatter.select_axis_to_add'), class: 'inline'
+        .small-5.columns.end
+          = select_tag "choose_axis_#{@chart.x_axis}_#{@chart.y_axis}",options_for_select([[t('charts.axis_x'), 'x'], [t('charts.axis_y'), 'y']])
+      .row
+        .small-offset-1.small-3.columns
+          = label_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", t('charts.scatter.add_new_series'), class: 'inline'
+        .small-5.columns
+          = select_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", '', { class: 'moes_and_params_list' }
+        .small-2.columns.end
+          %ul.inline-list
+            %li= submit_tag t('charts.scatter.add_series'), class: 'button radius tiny'
 
   %br
   .bivariate_chart_container{ id: "bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}" }
@@ -27,7 +30,7 @@
   :javascript
     $(function() {
       var setAxis = "x";
-      $("#choose_axis").change(function() {
+      $("#choose_axis_#{@chart.x_axis}_#{@chart.y_axis}").change(function() {
         setAxis = $(this).find(":selected").val();
       });
       $('.plot .button.hide').on('click', function() {
@@ -38,7 +41,7 @@
       $("#bivariate_charts input[type=submit]").bind("click", function() {
         var axis_label = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').html();
         var axis = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').val();
-        $("#choose_axis").prop("disabled", true);
+        $("#choose_axis_#{@chart.x_axis}_#{@chart.y_axis}").prop("disabled", true);
 
         if(setAxis==="x") {
           $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
@@ -53,8 +56,7 @@
                                                                                                               id: axis,
                                                                                                               title: {
                                                                                                                 text: axis_label
-                                                                                                              },
-                                                                                                              //lineColor: color
+                                                                                                              }
                                                                                                            }, true);
                     $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], xAxis: axis, data: series});
           });
@@ -72,9 +74,8 @@
                                                                                                               id: axis,
                                                                                                               title: {
                                                                                                                 text: axis_label
-                                                                                                              },
-                                                                                                              //lineColor: color
-                                                                                                           }, false); //Boolean isX
+                                                                                                              }
+                                                                                                           }, false);
                     $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], yAxis: axis, data: series});
           });
         }
