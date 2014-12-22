@@ -12,6 +12,18 @@ oTable = $('#running_simulations_table').dataTable({
 
 setInterval(function () {
     if ($('#running_simulations_table').is(":visible")) {
-        oTable.fnReloadAjax();
+        oTable.api().ajax.reload();
     }
 }, 30000);
+
+$('#running_simulations_table tbody').css('cursor','pointer');
+
+$('#running_simulations_table').on('click', 'tr', function(event) {
+    if(oTable.fnGetData(this)) {
+        $('#extension-dialog').html(window.loaderHTML);
+
+        var simulation_id = oTable.fnGetData(this)[0];
+        $('#extension-dialog').load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + simulation_id);
+        $('#extension-dialog').foundation('reveal', 'open');
+    }
+});

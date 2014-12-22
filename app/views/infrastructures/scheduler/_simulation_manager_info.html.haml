@@ -38,7 +38,11 @@
 %td
   ="#{record.time_limit.to_s} min"
 %td
-  = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+  - if record.experiment
+    = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+  - else
+    %span{style: "color: red"}
+      = t('infrastructure.information.not_found')
 %td
   %ul{style: 'font-size: 1em;'}
     -begin

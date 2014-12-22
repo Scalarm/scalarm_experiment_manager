@@ -16,8 +16,6 @@
 //= require jquery-tmpl
 //= require custom.modernizr
 //= require foundation
-//= require foundation/foundation.equalizer
-//= require_tree .
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
 //= require highcharts/modules/exporting
@@ -26,7 +24,8 @@
 //= require toastr
 //= require jquery.remotipart
 //= require d3
-//= require bootstrap/bootstrap
+//= require jstree
+//= require_tree .
 
 
 $(function() {
@@ -40,7 +39,7 @@ toastr.options = {
     "onclick": null,
     "showDuration": "3000",
     "hideDuration": "1000",
-    "timeOut": "5000",
+    "timeOut": "10000",
     "extendedTimeOut": "1000",
     "showEasing": "swing",
     "hideEasing": "linear",
@@ -61,6 +60,29 @@ function string_with_delimeters() {
 
     return string_copy.split("").reverse().join("");
 }
+
+// Used to listen to invoke events for object only if it does not have 'disabled' class
+function ignore_if_disabled(obj, fun) {
+    if (obj.is('.disabled')) {
+        return false;
+    } else {
+        return fun();
+    }
+}
+
+$.prototype.enable = function () {
+    $.each(this, function (index, el) {
+        $(el).removeClass('disabled');
+        $(el).removeAttr('disabled');
+    });
+};
+
+$.prototype.disable = function () {
+    $.each(this, function (index, el) {
+        $(el).addClass('disabled');
+        $(el).attr('disabled', 'disabled');
+    });
+};
 
 String.prototype.with_delimeters = string_with_delimeters;
 

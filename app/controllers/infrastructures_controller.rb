@@ -5,8 +5,11 @@ class InfrastructuresController < ApplicationController
   include InfrastructureErrors
   include GenericErrors
 
+  # GET params:
+  # - experiment_id: (optional) experiment_id
   def index
-    render 'infrastructure/index'
+    validate_params(:default, :experiment_id)
+    render 'infrastructure/index', locals: { experiment_id: params[:experiment_id].to_s }
   end
 
   def list
@@ -271,7 +274,7 @@ class InfrastructuresController < ApplicationController
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
           # destroy temp password and stop a started simulation run if any
-          destroy_temp_password(sm.record) if %w(stop destroy_record).include? command
+          sm.record.destroy_temp_password if %w(stop destroy_record).include? command
           sm.send(params[:command])
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
@@ -286,24 +289,6 @@ class InfrastructuresController < ApplicationController
       render json: { status: 'error', error_code: 'no-such-infrastructure', msg: t('infrastructures_controller.no_such_infrastructure', name: e.to_s)}
     rescue Exception => e
       render json: { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
-    end
-  end
-
-  def destroy_temp_password(record)
-    unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(record.sm_uuid)).blank?
-
-      unless temp_pass.experiment_id.nil? or record.sm_uuid.nil?
-        started_simulation_run = Experiment.find_by_id(temp_pass.experiment_id).simulation_runs.
-            where(sm_uuid: record.sm_uuid, to_sent: false, is_done: false).first
-
-        unless started_simulation_run.nil?
-          started_simulation_run.to_sent = true
-          started_simulation_run.save
-        end
-
-      end
-
-      temp_pass.destroy
     end
   end
 

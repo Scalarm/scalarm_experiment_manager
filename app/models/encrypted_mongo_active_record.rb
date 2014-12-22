@@ -7,7 +7,6 @@
 # record.secret_password = 'my_password'
 # record.save
 class EncryptedMongoActiveRecord < MongoActiveRecord
-  Encryptor.default_options.merge!(:key => Digest::SHA256.hexdigest('QjqjFK}7|Xw8DDMUP-O$yp'))
 
   def to_h
     super.select {|k, v| !(k =~ /secret_.*/)}

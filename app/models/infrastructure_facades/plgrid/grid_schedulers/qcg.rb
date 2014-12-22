@@ -75,11 +75,12 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      submit_job_output = ssh.exec!(submit_job_cmd(job))
+      cmd = submit_job_cmd(job)
+      submit_job_output = ssh.exec!(cmd)
+      logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
-      logger.debug("QCG output lines: #{submit_job_output}")
-
-      submit_job_output and (job.job_id = QcgScheduler::PlGridScheduler.parse_job_id(submit_job_output))
+      job_id = PlGridScheduler.parse_job_id(submit_job_output)
+      job_id ? job_id : raise(JobSubmissionFailed.new(submit_job_output))
     end
 
     def submit_job_cmd(sm_record)
@@ -89,7 +90,7 @@ module QcgScheduler
 
     def self.parse_job_id(submit_job_output)
       jobid_match = submit_job_output.match(JOBID_RE)
-      jobid_match and jobid_match[1] or nil
+      jobid_match ? jobid_match[1] : nil
     end
 
     # QCG Job states

@@ -17,4 +17,23 @@ module Utils
   def self.to_bson_if_string(object_id)
     object_id.kind_of?(String) ? BSON::ObjectId(object_id) : object_id
   end
+
+  def self.get_validation_regexp(mode)
+    case mode
+      when :default
+        /\A(\w|(-))*\z/
+
+      when :openid_id
+        /\A(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*\z/
+
+      when :json
+        /\A(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*\z/
+
+      when :filename
+        /\A(\w|-|_|\.)+\z/
+
+      else
+        /\A\z/
+    end
+  end
 end

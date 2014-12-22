@@ -56,19 +56,7 @@ class ApplicationController < ActionController::Base
   end
 
   def validate_params(mode, *param_names)
-    regexp = case mode
-               when :default
-                 /^(\w|(-))*$/
-
-               when :openid_id
-                 /^(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*$/
-
-               when :json
-                 /^(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*$/
-
-               else
-                 /^$/
-             end
+    regexp = Utils::get_validation_regexp(mode)
 
     param_names.each do |param_name|
       if params.include?(param_name) and regexp.match(params[param_name]).nil?

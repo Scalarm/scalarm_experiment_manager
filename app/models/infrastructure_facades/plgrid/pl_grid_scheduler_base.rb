@@ -3,7 +3,7 @@
 # - long_name() -> String
 # - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
 # - send_job_files(sm_uuid, scp)
-# - submit_job(ssh, job)
+# - submit_job(ssh, job) - submit job and return job id; if submission fails raise JobSubmissionFailed
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
 # - cancel(ssh, record) - cancels job
 # - status(ssh, record) -> job state in queue mapped to: :initializing, :running, :deactivated, :error
@@ -11,6 +11,8 @@
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
 
 require 'timeout'
+
+class JobSubmissionFailed < StandardError; end
 
 class PlGridSchedulerBase
   attr_reader :logger
@@ -40,19 +42,20 @@ if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $
 
 unzip scalarm_simulation_manager_$1.zip
 cd scalarm_simulation_manager_$1
+unxz scalarm_simulation_manager.xz
 chmod a+x scalarm_simulation_manager
 ./scalarm_simulation_manager
     eos
     elsif Rails.configuration.simulation_manager_version == :ruby
       <<-eos
-  #!/bin/bash
-  module add plgrid/tools/ruby/2.0.0-p0
+#!/bin/bash
+module add plgrid/tools/ruby/2.0.0-p0
 
-  if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
+if [[ -n "$TMPDIR" ]]; then echo $TMPDIR; cp scalarm_simulation_manager_$1.zip $TMPDIR/;  cd $TMPDIR; fi
 
-  unzip scalarm_simulation_manager_$1.zip
-  cd scalarm_simulation_manager_$1
-  ruby simulation_manager.rb
+unzip scalarm_simulation_manager_$1.zip
+cd scalarm_simulation_manager_$1
+ruby simulation_manager.rb
       eos
     end
   end

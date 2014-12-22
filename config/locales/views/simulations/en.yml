@@ -16,13 +16,14 @@ en:
       size: "File size: %{size}"
       error_section: "An error occurred during this simulation run:"
       no_reason_label: "No error reason was reported"
-      reason: "Reported error reason: '%{reason}'"
+      reason: "Reported error reason:"
     create:
       bad_params: "You need to provide: simulation name, a file with input description, and simulation binaries"
       bad_simulation_input: The given simulation input has to be a valid JSON document.
       simulation_invalid_name: A simulation scenario with the given name is already in the system.
       mandatory_adapter: "Setting up Simulation%{adapter} is mandatory"
       adapter_not_found: "Cannot find Simulation%{adapter} with the %{id} id"
+      internal_error: "Internal error on registering adapters or simulation files"
       registered: Your simulation scenario has been registered
     conduct:
       doe:
@@ -31,3 +32,5 @@ en:
         create_new_group: "Create"
         create_group_label: "Create new parameter group with a DoE method:"
         remove_parameter: "Remove parameter"
+    error:
+      invalid_result_format: "Invalid results format"

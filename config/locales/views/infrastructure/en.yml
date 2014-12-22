@@ -74,6 +74,9 @@ en:
       no_problems_tooltip: "No problems with connection encountered"
       invalid_tooltip: "Connection verification failed. Please check credentials and host availability."
     tree_title: 'Computational resources tree'
+    tree_filter:
+      label: 'Select experiment:'
+      all_experiments: 'All experiments'
     tree:
       sm_dialog:
         header: 'Simulation Manager information'

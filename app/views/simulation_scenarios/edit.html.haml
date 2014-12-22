@@ -6,29 +6,70 @@
   %h3.subheader= t('.header', name: @simulation_scenario.name)
 
   .content
-    = form_tag(simulation_scenario_path(@simulation_scenario.id), multipart: true, class: 'custom', method: :put) do
-      .row
-        = render partial: 'simulations/form_row', object: 'simulation_name',
-          locals: { input_element: text_field_tag('simulation_name', @simulation_scenario.name), offset: 0 }
-        = render partial: 'simulations/form_row', object: 'simulation_description',
-          locals: { input_element: text_area_tag('simulation_description', @simulation_scenario.description), offset: 0 }
+    = form_tag(simulation_scenario_path(@simulation_scenario.id), id: 'scenario_form',
+      multipart: true, class: 'custom', method: :put) do
 
       .row
-        = render partial: 'simulations/form_row', object: 'simulation_binaries',
-          locals: { input_element: file_field_tag('simulation_binaries'), offset: 0 }
-        = render partial: 'simulations/form_row', object: 'simulation_input',
-          locals: { input_element: file_field_tag('simulation_input'), offset: 0 }
+        %fieldset
+          %legend= t("simulations.registration.basic_information")
+          .row
+            .small-3.columns
+              %label.right.inline{for: 'simulation_name'}= t("simulations.registration.simulation_name")
+            .small-9.columns
+              = text_field_tag 'simulation_name', @simulation_scenario.name, style: 'max-width: 100%;'
+          .row
+            .small-3.columns
+              %label.right.inline{for: 'simulation_description'}= t("simulations.registration.simulation_description")
+            .small-9.columns
+              = text_area_tag 'simulation_description', @simulation_scenario.description, rows: 2, style: 'max-width: 100%;'
 
-      .row
-        = render partial: 'simulations/form_row', object: 'input_writer',
-          locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers, @simulation_scenario.input_writer_id), class: 'medium') }
-        = render partial: 'simulations/form_row', object: 'executor',
-          locals: { input_element: select_tag('executor_id', options_for_select(@executors, @simulation_scenario.executor_id), class: 'medium') }
-      .row
-        = render partial: 'simulations/form_row', object: 'output_reader',
-          locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers, @simulation_scenario.output_reader_id), class: 'medium') }
-        = render partial: 'simulations/form_row', object: 'progress_monitor',
-          locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors, @simulation_scenario.progress_monitor_id), class: 'medium') }
+        = render partial: 'simulations/input_definition_editor'
+
+        .row
+          %fieldset#simulation-files
+            %legend= t('simulations.registration.files')
+            .row
+              .row
+                .small-10.columns.small-centered
+                  %fieldset
+                    %legend= t("simulations.registration.simulation_binaries")
+                    .row
+                      .small-5.small-centered.columns
+                        #current_bin{style: "text-align: center;"}= t("simulations.edit.current_bin") + ': ' + @simulation_scenario.simulation_binaries_name.to_s
+                    .row{style: 'margin-top: 15px;'}
+                      .small-5.columns
+                        %label.right.inline{for: 'binaries_box'}
+                          %input(type="checkbox" id="binaries_box" style="display: inline;")
+                            = t("simulations.edit.change_bin") + ':'
+                      .small-7.columns
+                        = file_field_tag 'simulation_binaries'
+
+                = content_for :javascript do
+                  :javascript
+                    $(function() {
+                      update_bin_row = function() {
+                        if($(this).is(':checked')) {
+                          $("#simulation_binaries").enable();
+                        } else {
+                          $("#simulation_binaries").disable();
+                        }
+                      }
+
+                      $("#binaries_box").on('change', update_bin_row);
+                      $("#binaries_box").change()
+                    });
+
+
+              .row
+                = render partial: 'simulations/form_row', object: 'input_writer',
+                  locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers, @simulation_scenario.input_writer_id), class: 'medium') }
+                = render partial: 'simulations/form_row', object: 'executor',
+                  locals: { input_element: select_tag('executor_id', options_for_select(@executors, @simulation_scenario.executor_id), class: 'medium') }
+              .row
+                = render partial: 'simulations/form_row', object: 'output_reader',
+                  locals: { input_element: select_tag('output_reader_id', options_for_select(@output_readers, @simulation_scenario.output_reader_id), class: 'medium') }
+                = render partial: 'simulations/form_row', object: 'progress_monitor',
+                  locals: { input_element: select_tag('progress_monitor_id', options_for_select(@progress_monitors, @simulation_scenario.progress_monitor_id), class: 'medium') }
 
       .row
         .small-2.small-centered.columns
@@ -84,17 +125,13 @@
 = content_for :javascript do
   :javascript
     $(function() {
+      window.scenario_registration = new window.ScenarioRegistration(#{@simulation_scenario.input_specification.to_json});
+
       var logins = #{share_scenario_with_users.to_json};
 
       $("#sharing_with_login").autocomplete({
         source: logins
       });
 
-      $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1000);
-
-      // disable "disabled" buttons
-      $("[disabled]").click(function(event) {
-          event.stopImmediatePropagation();
-          return(false);
-      });
+      $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1006);
     });
