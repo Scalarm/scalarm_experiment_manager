@@ -64,9 +64,9 @@ class InfrastructureFacade
     # using simulation manager implementation based on application config
     if Rails.configuration.simulation_manager_version == :go
       # TODO checking somehow the destination server architecture
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'), "scalarm_simulation_manager_#{sm_uuid}")
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_go', 'linux_386'), "scalarm_simulation_manager_#{sm_uuid}")
     elsif Rails.configuration.simulation_manager_version == :ruby
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_ruby'), "scalarm_simulation_manager_#{sm_uuid}")
     end
 
     # prepare sm configuration
@@ -75,10 +75,10 @@ class InfrastructureFacade
 
     sm_config = {
         experiment_id: experiment_id,
-        #user_id: user_id,
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
+        insecure_ssl: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true) # TODO insecure SSL by default
     }
 
     unless start_at.blank?
@@ -93,6 +93,13 @@ class InfrastructureFacade
 
     if !!Rails.application.secrets.information_service_development
       sm_config['development'] = true
+    end
+
+    if Rails.application.secrets.include? :certificate_path
+      remote_name = 'scalarm_cert.pem'
+      cert_path = Rails.application.secrets.certificate_path
+      FileUtils.cp(cert_path, File.join("scalarm_simulation_manager_#{sm_uuid}", remote_name))
+      sm_config[:scalarm_certificate_path] = remote_name
     end
 
     IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
@@ -123,11 +130,12 @@ class InfrastructureFacade
             Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
+        InsecureSSL: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true), # TODO insecure SSL by default
         Infrastructures: [ infrastructure_name ],
     }
 
     if Rails.application.secrets.include? :certificate_path
-      sm_config[:ScalarmCertificatePath] = '~/.scalarm_certificate'
+      sm_config[:ScalarmCertificatePath] = '.scalarm_certificate'
     end
 
     if Rails.application.secrets.include?(:sm_information_service_url)

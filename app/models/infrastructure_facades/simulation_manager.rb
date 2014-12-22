@@ -236,7 +236,7 @@ class SimulationManager
       logger.warn 'Forcing removing record, because experiment does not exists'
       stop_and_destroy(false)
     elsif state == :error
-      logger.info 'Has error flag - skipping'
+      logger.debug 'Has error flag - skipping'
     else
       begin
         before_monitor(record)

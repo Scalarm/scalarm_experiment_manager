@@ -142,6 +142,8 @@ class window.ExperimentMonitor
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
 
   progress_bar_listener: (event) =>
+    $('#extension-dialog').html(window.loaderHTML)
+
     if (window.event)
       x = window.event.pageX
     else

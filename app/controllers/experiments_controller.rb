@@ -23,7 +23,7 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    @public_storage_manager_url = sample_public_storage_manager
+    @public_storage_manager_url = InformationService.new.sample_public_storage_manager
 
     @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
 
@@ -41,10 +41,6 @@ class ExperimentsController < ApplicationController
       format.html
       format.json { render json: {status: 'ok', data: @experiment.to_h } }
     end
-  end
-
-  def sample_public_storage_manager
-    (InformationService.new.get_list_of('storage_managers') or []).sample
   end
 
   def start_update_bars_thread
@@ -111,8 +107,8 @@ class ExperimentsController < ApplicationController
         begin
           experiment.experiment_size(true)
         rescue Exception => e
-          Rails.logger.warn("An exception occured: #{t(e.message)}\n#{e.backtrace}")
-          flash[:error] = t(e.message)
+          Rails.logger.warn("An exception occured: #{e.message}\n#{e.backtrace.join("\n")}")
+          flash[:error] = t(e.message, default: e.message)
           experiment.size = 0
         end
 
@@ -139,7 +135,7 @@ class ExperimentsController < ApplicationController
         end
       end
     rescue Exception => e
-      Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace}"
+      Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace.join("\n")}"
       flash[:error] = e.to_s
 
       respond_to do |format|
@@ -454,6 +450,7 @@ class ExperimentsController < ApplicationController
         simulation_to_send = @experiment.get_next_instance
         unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
+          simulation_to_send.save
         end
       end
 
@@ -512,10 +509,12 @@ class ExperimentsController < ApplicationController
   def histogram
     validate_params(:default, :moe_name)
 
-    if params[:moe_name].blank?
+    resolution = params[:resolution].to_i
+    if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
+      @visible_threshold_resolution = 15
     end
   end
 
@@ -643,6 +642,12 @@ class ExperimentsController < ApplicationController
     else
       render inline: experiment.id.to_s
     end
+  end
+
+  def results_binaries
+    storage_manager_url = InformationService.new.sample_public_storage_manager
+    redirect_to LogBankUtils::experiment_url(storage_manager_url,
+                                             @experiment.id, @user_session)
   end
 
   private

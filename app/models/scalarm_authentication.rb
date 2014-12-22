@@ -39,7 +39,7 @@ module ScalarmAuthentication
       @session_auth = true unless @current_user.blank?
     else
       flash[:error] = t('session.expired')
-      Rails.logger.debug("[authentication] scalarm user session doesnt exist and its invalid")
+      Rails.logger.debug("[authentication] scalarm user session doesnt exist or its invalid")
     end
   end
 
