@@ -1,40 +1,84 @@
 - content_for :title, 'Scalarm - monitoring'
 - content_for :help, raw(t('help.experiments.monitoring'))
 
-= render 'experiment_links'
-.analysis-content
-  %a Ładuj!
-  .analysis-panel.panel.radius
-
+-#= render 'experiment_links'
 = render 'analysis_charts'
 
-%section.panel.radius
-  = render 'information_panel'
+-#.row(data-equalizer="")
+= content_for :panel do
+  %section.panel
+    .action-button{style: "text-align: right"}
+      .row
+        %a{href: simulations_path}
+          %span
+            Experiments summary
+          = image_tag "material_design/ic_error_48px.svg"
+      .row
+        %a{href: simulations_path}
+          %span
+            Simulation scenarios
+          = image_tag "material_design/ic_add_circle_outline_48px.svg"
+      .row
+        %a{href: simulations_path}
+          %span
+            Infrastructures view
+          = image_tag "material_design/ic_cloud_circle_48px.svg"
 
-- if @experiment.is_running
-  %section.panel.radius
-    %h3.subheader
-      Computational resources summary
-      = image_tag('loading.gif', id: 'actions-loading-workers')
-    = render 'workers_info'
+    .analyses-panel{style: "text-align: center"}
+      %p
+        = image_tag "material_design/ic_format_list_numbered_48px.svg"
+        %br
+        Histogram
+      %p
+        = image_tag "material_design/ic_format_quote_48px.svg"
+        %br
+        3D charts
+      %p
+        = image_tag "material_design/ic_format_textdirection_l_to_r_48px.svg"
+        %br
+        Regression trees
+      %p
+        = image_tag "material_design/ic_insert_chart_48px.svg"
+        %br
+        Scatter plot
+      %p
+        = image_tag "material_design/ic_insert_comment_48px.svg"
+        %br
+        Interaction
+      %p
+        = image_tag "material_design/ic_border_clear_48px.svg"
+        %br
+        Pareto
 
-%section.panel.radius.last-element#monitoring_section
-  %h3.subheader= t('experiments.show.stats_header')
+%section
+  %section.row.panel.radius
+    = render 'information_panel'
 
-  .content(style="padding-top: 30px; position: relative;" )
+  - if @experiment.is_running
+    %section.panel.radius
+      %h3.subheader
+        Computational resources summary
+        = image_tag('loading.gif', id: 'actions-loading-workers')
+      = render 'workers_info'
 
-    = render 'monitoring_stats'
-    .speedometer{id: "speedometer_#{@experiment.id}"}
+  %section.row.panel.radius.last-element#monitoring_section
+    %h3.subheader= t('experiments.show.stats_header')
 
-    %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
-      %h4.subheader= t('.progress_bar_header')
+    .content(style="padding-top: 30px; position: relative;" )
 
-    = render 'monitoring_actions'
 
-%section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
-  = render 'monitoring_table'
+      = render 'monitoring_stats'
+      .speedometer{id: "speedometer_#{@experiment.id}"}
 
-= render 'scheduling_policy_dialog'
+      %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
+        %h4.subheader= t('.progress_bar_header')
+
+      = render 'monitoring_actions'
+
+  %section.row.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
+    = render 'monitoring_table'
+
+  = render 'scheduling_policy_dialog'
 
 - content_for :javascript do
   :javascript
@@ -45,13 +89,15 @@
 
       var monitor = new window.ExperimentMonitor('#{@experiment.id}');
       monitor.generate_html('experiment_stats');
-      
+
       window.toggle_panels_on_title_click();
 
-      $(".analysis-content a").on("click", function() {
-        $(".analysis-panel").load("/chart/panel?id=#{@experiment.id}");
-        $(document).foundation();
-      })
+      $("#panel .panel").load("/chart/panel?id=#{@experiment.id}", function(response, status, xhr) {
+        if(status==="error") {
+          console.log("No available Chart Service. Using on-site content.");
+        }
+      });
+      $(document).foundation();
 
       window.WebSocket = window.WebSocket || window.MozWebSocket;
 

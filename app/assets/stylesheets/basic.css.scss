@@ -18,7 +18,7 @@ input[type=submit].button {
 $wrapper-margin-top: 50px;
 #wrapper {
   position: relative;
-  max-width: 960px;
+  max-width: 1260px;
   background: url(image_path('bg03.jpg')) repeat;
   margin-top: $wrapper-margin-top;
   margin-right: auto;
@@ -32,6 +32,55 @@ $wrapper-margin-top: 50px;
   -webkit-border-radius: 5px;
 }
 
+#panel {
+  background: url(image_path('bg03.jpg')) repeat;
+  position: fixed;
+  margin-top: 50px;
+  padding: 10px 10px 20px;
+  width: (1260/12)*3px;
+  /* curved border radius */
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+#panel .panel {
+  overflow: hidden;
+  height: 100%;
+  & dl {
+    list-style-type: none;
+  }
+  &:hover {
+    overflow-y: scroll;
+  }
+  & dd {
+    text-align: center;
+    & a {
+      padding: 6px;
+//      text-align: center;
+    }
+    & div {
+//      text-align: center;
+    }
+  }
+
+}
+
+#searchList {
+  margin: 0px;
+  & div li {
+    padding-top: 10px;
+  }
+}
+.panel {
+  margin: 5px !important;
+  padding: 30 40 40px;
+}
+
+.analyses-panel img {
+  width: 117px;
+
+}
 header {
   padding: 5px;
   margin-bottom: 17px;
@@ -66,9 +115,9 @@ header {
 footer {
   padding: 0 20px;
   clear: both;
-  margin: 10px 10px 0 10px;
+  margin: 10px 10px 10px 10px;
   background: url(image_path('bg03.jpg')) repeat;
-  max-width: 960px;
+//  max-width: 960px;
   margin-right: auto;
   margin-left: auto;
   padding: 5px;
@@ -76,6 +125,10 @@ footer {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+}
+
+.row {
+  max-width: 1260px;
 }
 
 i {
@@ -338,38 +391,23 @@ select {
     border: medium solid;
 }
 
-div.histogram-analysis {
-    position: absolute;
-    top: 0px;
-    right: -110px;
-    cursor: pointer;
-}
-
-div.rtree-analysis {
-    position: absolute;
-    top: 170px;
-    right: -110px;
-    cursor: pointer;
-}
-
-div.bivariate-analysis {
-    position: absolute;
-    top: 340px;
-    right: -110px;
-    cursor: pointer;
-}
-
-div.interaction-analysis {
-    position: absolute;
-    top: 510px;
-    right: -110px;
-}
-
-div.pareto-analysis {
-    position: absolute;
-    top: 680px;
-    right: -110px;
-}
+//div.histogram-analysis {
+//    position: absolute;
+//    top: 0px;
+//    right: -110px;
+//}
+//
+//div.rtree-analysis {
+//    position: absolute;
+//    top: 170px;
+//    right: -110px;
+//}
+//
+//div.bivariate-analysis {
+//    position: absolute;
+//    top: 340px;
+//    right: -110px;
+//}
 
 /* Experiment links */
 
@@ -615,6 +653,22 @@ table.simulations {
 textarea {
   max-height: 500px;
   max-width: 500px;
+}
+
+@media screen and (max-width: 1260px) {
+  #panel {
+    width: calc(3*(100%/12));
+    & .panel {
+      background-color: red;
+    };
+    & .action-button span {
+      display: none;
+    }
+  }
+
+  div.action-button .row {
+    text-align: center;
+  }
 }
 
 span.tooltip {

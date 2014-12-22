@@ -1,7 +1,3 @@
-# each authentication method must set:
-# - session[:user] to user id as string,
-# - @current_user or @sm_user to scalarm user or simulation manager temp pass respectively
-# - @session_auth to true if this is session-based authentication
 module ScalarmAuthentication
 
   # the main authentication function + session management
