@@ -10,8 +10,9 @@ class ApplicationController < ActionController::Base
                                            :login_openid_plgrid, :openid_callback_plgrid]
   before_filter :start_monitoring
   after_filter :stop_monitoring
-  # due to security reasons
-  after_filter :set_cache_buster
+
+  # due to security reasons (DISABLED)
+  # after_filter :set_cache_buster
 
   rescue_from SecurityError, BSON::InvalidObjectId, with: :generic_exception_handler
 
@@ -66,8 +67,8 @@ class ApplicationController < ActionController::Base
   end
 
 
-  # due to security reasons
-  def set_cache_buster
+  # DEPRECATED due to security reasons
+  #def set_cache_buster
     #response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
     #response.headers["Pragma"] = "no-cache"
     #response.headers["Server"] = "Scalarm custom server"
@@ -80,6 +81,6 @@ class ApplicationController < ActionController::Base
     #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
     #  end
     #end
-  end
+  #end
 
 end
