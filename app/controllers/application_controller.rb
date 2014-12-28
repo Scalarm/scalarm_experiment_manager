@@ -13,16 +13,16 @@ class ApplicationController < ActionController::Base
   # due to security reasons
   after_filter :set_cache_buster
 
-  rescue_from SecurityError, with: :handle_security_error
+  rescue_from SecurityError, BSON::InvalidObjectId, with: :generic_exception_handler
 
   @@probe = MonitoringProbe.new
 
-  rescue_from SecurityError do |exception| generic_exception_handler(exception) end
-  rescue_from BSON::InvalidObjectId do |exception| generic_exception_handler(exception) end
 
   protected
 
   def generic_exception_handler(exception)
+    Rails.logger.warn("Exception caught in generic_exception_handler: #{exception.message}")
+    Rails.logger.debug("Exception backtrace:\n#{exception.backtrace.join("\n")}")
     flash[:error] = exception.message
 
     respond_to do |format|
@@ -80,15 +80,6 @@ class ApplicationController < ActionController::Base
     #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
     #  end
     #end
-  end
-
-  # -- error handling --
-
-  def handle_security_error(e)
-    respond_to do |format|
-      format.html { raise e }
-      format.json { render json: {status: 'error', message: "Security error: #{e}" }, status: 403 }
-    end
   end
 
 end
