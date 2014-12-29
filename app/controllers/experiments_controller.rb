@@ -88,7 +88,11 @@ class ExperimentsController < ApplicationController
   end
 
   def create
-    validate_params(:default, :replication_level, :execution_time_constraint)
+    validate(
+        replication_level: [:security_default, :integer, :positive],
+        execution_time_constraint: [:security_default, :integer, :positive]
+    )
+
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
@@ -146,8 +150,10 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_experiment_size
-    validate_params(:default, :replication_level, :execution_time_constraint)
     #validate_params(:json, :parameters_constraints, :doe) # TODO :experiment_input
+    validate(
+        replication_level: [:security_default, :integer, :positive]
+    )
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
@@ -174,7 +180,9 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_imported_experiment_size
-    validate_params(:default, :replication_level, :execution_time_constraint)
+    validate(
+        replication_level: [:optional, :security_default]
+    )
 
     parameters_to_include = params.keys.select{ |parameter|
       parameter.start_with?('param_') and params[parameter] == '1'
@@ -310,7 +318,13 @@ class ExperimentsController < ApplicationController
   end
 
   def extend_input_values
-    validate_params(:default, :param_name )#, :range_min, :range_max, :range_step)
+    validate(
+        param_name: :security_default,
+        # TODO - float or integer...
+        range_min: :float,
+        range_max: :float,
+        range_step: :float
+    )
 
     parameter_uid = params[:param_name]
     @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
@@ -351,7 +365,9 @@ class ExperimentsController < ApplicationController
   end
 
   def intermediate_results
-    validate_params(:default, :simulations)
+    validate(
+        simulations: :security_default
+    )
 
     unless @experiment.parameters.blank?
       arguments = @experiment.parameters.flatten
@@ -400,7 +416,9 @@ class ExperimentsController < ApplicationController
   end
 
   def change_scheduling_policy
-    validate_params(:default, :scheduling_policy)
+    validate(
+        scheduling_policy: :security_default
+    )
 
     new_scheduling_policy = params[:scheduling_policy]
 
@@ -507,7 +525,9 @@ class ExperimentsController < ApplicationController
   end
 
   def histogram
-    validate_params(:default, :moe_name)
+    validate(
+        moe_name: [:optional, :security_default]
+    )
 
     resolution = params[:resolution].to_i
     if params[:moe_name].blank? or not resolution.between?(1,100)
@@ -519,7 +539,10 @@ class ExperimentsController < ApplicationController
   end
 
   def scatter_plot
-    validate_params(:default, :x_axis, :y_axis)
+    validate(
+        x_axis: [:optional, :security_default],
+        y_axis: [:optional, :security_default]
+    )
 
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
@@ -530,7 +553,9 @@ class ExperimentsController < ApplicationController
   end
 
   def regression_tree
-    validate_params(:default, :moe_name)
+    validate(
+        moe_name: [:optional, :security_default]
+    )
 
     if params[:moe_name].blank?
       render inline: ""
@@ -541,7 +566,10 @@ class ExperimentsController < ApplicationController
   end
 
   def parameter_values
-    validate_params(:default, :param_name)
+    validate(
+        param_name: :security_default
+    )
+
 
     @parameter_uid = params[:param_name]
 
@@ -561,7 +589,10 @@ class ExperimentsController < ApplicationController
   end
 
   def share
-    validate_params(:default, :mode, :id)
+    validate(
+        mode: :security_default,
+        id: :security_default
+    )
 
     @experiment, @user = nil, nil
 
@@ -641,7 +672,9 @@ class ExperimentsController < ApplicationController
   private
 
   def load_experiment
-    validate_params(:default, :id)
+    validate(
+        id: [:optional, :security_default]
+    )
 
     @experiment = nil
 
@@ -674,7 +707,10 @@ class ExperimentsController < ApplicationController
   end
 
   def load_simulation
-    validate_params(:default, :simulation_id, :simulation_name)
+    validate(
+        simulation_id: [:optional, :security_default],
+        simulation_name: [:optional, :security_default]
+    )
 
     @simulation = if params['simulation_id']
                     @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
@@ -696,7 +732,10 @@ class ExperimentsController < ApplicationController
   end
 
   def input_space_manual_specification(experiment)
-    #validate_params(:json, :doe) # TODO , :experiment_input
+    # TODO , :experiment_input
+    validate(
+        doe: :security_json
+    )
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
 
@@ -733,8 +772,11 @@ class ExperimentsController < ApplicationController
   end
 
   def prepare_new_experiment
-    validate_params(:default, :replication_level, :execution_time_constraint)
-    #validate_params(:json, :parameters_constraints)
+    validate(
+        replication_level: [:optional, :security_default, :integer, :positive],
+        execution_time_constraint: [:optional, :security_default, :integer, :positive],
+        parameter_constraints: [:optional, :security_json]
+    )
 
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
