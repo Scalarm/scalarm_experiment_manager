@@ -40,8 +40,8 @@ module PlGridOpenID
   # - temp_pass
   def openid_callback_plgrid
     validate(
-        'openid.claimed_id' => :security_openid_id,
-        'openid.identity' => :security_openid_id
+        'openid.claimed_id'.to_sym => :security_openid_id,
+        'openid.identity'.to_sym => :security_openid_id
     )
 
     # disabled for security reasons
