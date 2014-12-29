@@ -6,11 +6,15 @@ module ParameterValidation
     def initialize(param_name, value, message)
       @param_name = param_name
       @value = value
-      @message = message
+      @e_message = message
     end
 
     def to_s
-      "Validation error for parameter \"#{@param_name}\" => \"#{@value}\": #{@message}"
+      "Validation error for parameter \"#{@param_name}\" => \"#{@value}\": #{@e_message}"
+    end
+
+    def message
+      self.to_s
     end
   end
 
@@ -23,6 +27,10 @@ module ParameterValidation
 
     def to_s
       "Missing parameters: #{@parameters.join(', ')}"
+    end
+
+    def message
+      self.to_s
     end
   end
 

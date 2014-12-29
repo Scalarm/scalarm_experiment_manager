@@ -31,15 +31,21 @@ class ApplicationController < ActionController::Base
 
     respond_to do |format|
       format.html do
-        flash[:error] = exception.message
+        flash[:error] = exception.to_s
         redirect_to action: :index
       end
+
       format.json do
         render json: {
                         status: 'error',
-                        reason: exception.message
+                        reason: exception.to_s
                      },
                status: 412
+      end
+
+      format.js do
+        @error_message = exception.to_s
+        render partial: '/js_error_handler'
       end
     end
   end

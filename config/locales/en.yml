@@ -252,3 +252,6 @@ en:
     sim_authorization_error: "Simulation Manager '%{sm_uuid}' is not authorized to execute experiment '%{experiment_id}'"
 
   experiment_not_found: "Experiment '%{experiment_id}' for user '%{user}' not found"
+
+  js_error_message: "An error occured: %{error}"
+  js_error_unknown: "An unknown error occured. Please contact administrators."
