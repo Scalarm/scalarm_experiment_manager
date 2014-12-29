@@ -18,7 +18,7 @@ $(document).ready(function() {
   	},
     tooltip: {
         formatter: function () {
-            return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b>';
+            return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b><br />Click for details';
         }
     },
   	plotOptions: {
@@ -28,12 +28,21 @@ $(document).ready(function() {
         name: 'Data',
         color: 'rgba(223, 83, 83, .5)',
         data: [
-            <% @chart.chart_data.each do |x_value, y_values|
-                 y_values.each do |y_value| %>
-                  [ <%= x_value %>, <%= y_value %> ],
+            <% @chart.chart_data.each do |x_value, y_values_simulation_ids|
+                 y_values_simulation_ids.each do |y_value, simulation_id| %>
+                  { x: <%= x_value %>, y: <%= y_value %>, simulation_id: '<%= simulation_id %>' },
                 <% end
             end %>
-        ]
+        ],
+        cursor: 'pointer',
+        point: {
+            events: {
+                click: function () {
+                    $('#extension-dialog').load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + this.simulation_id);
+                    $('#extension-dialog').foundation('reveal', 'open');
+                }
+            }
+        }
     }]
 	});
 });
