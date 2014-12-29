@@ -8,7 +8,10 @@ class InfrastructuresController < ApplicationController
   # GET params:
   # - experiment_id: (optional) experiment_id
   def index
-    validate_params(:default, :experiment_id)
+    validate(
+        experiment_id: [:optional, :security_default]
+    )
+
     render 'infrastructure/index', locals: { experiment_id: params[:experiment_id].to_s }
   end
 
@@ -52,20 +55,18 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
-    validate_params(:default, :infrastructure_name, :job_counter) #:queue
+    validate(
+        infrastructure_name: [:security_default],
+        experiment_id: [:security_default],
+        job_counter: [:security_default, :integer, :positive],
+        time_limit: [:optional, :integer, :positive]
+    ) #:queue
     infrastructure = nil
     infrastructure_name = '?'
 
-    # TODO
-    if !params[:time_limit] or params[:time_limit].to_i <= 0
-      params['time_limit'] = params[:time_limit] = 60
-    end
+    params['time_limit'] = params[:time_limit] = 60 if params[:time_limit].nil?
 
     begin
-      unless validate_schedule_simulation_managers(params)
-        return render json: { status: 'error', error_code: 'missing-parameters', msg: I18n.t('infrastructures_controller.missing_parameters') }
-      end
-
       experiment_id = params[:experiment_id]
       begin
         validate_experiment(experiment_id)
@@ -106,11 +107,6 @@ class InfrastructuresController < ApplicationController
                         error: exc.to_s) }
       Rails.logger.error "#{exc.class.to_s} #{exc.to_s}\n#{exc.backtrace.join("\n")}"
     end
-  end
-
-  def validate_schedule_simulation_managers(params)
-    %w(experiment_id job_counter infrastructure_name).all? {|p| params.include? p} and
-      params[:job_counter].to_i > 0
   end
 
   # POST params (in JSON):
@@ -172,7 +168,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure - name of infrastructure
   # - query_params - Hash of additional filtering options
   def get_infrastructure_credentials
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure: :security_default
+    )
+
     query_params = (params.include?(:query_params) ? JSON.parse(params[:query_params]) : {})
     raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
     raise SecurityError.new('All additional params should be strings') unless query_params.all? do |k, v|
@@ -238,6 +237,12 @@ class InfrastructuresController < ApplicationController
   # - record_id
   # - credential_type (optional)
   def remove_credentials
+    validate(
+        infrastructure_name: :security_default,
+        record_id: :security_default,
+        credential_type: [:optional, :security_default]
+    )
+
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
@@ -252,6 +257,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # All params will be passed to simulation_managers_info in view
   def simulation_managers_summary
+    validate(
+        infrastructure_name: :security_default
+    )
+
     infrastructure_name = params[:infrastructure_name]
     facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
     group = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -322,7 +331,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name (optional)
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
-    validate_params(:default, :infrastructure_name, :experiment_id)
+    validate(
+        experiment_id: [:optional, :security_default],
+        infrastructure_name: [:optional, :security_default]
+    )
 
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -339,7 +351,9 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - other_params - Hash
   def get_booster_partial
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure_name: :security_default
+    )
 
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -358,7 +372,9 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_partial
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure_name: :security_default
+    )
 
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/#{params[:infrastructure_name]}")
@@ -371,7 +387,9 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_table_partial
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure_name: :security_default
+    )
 
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/tables/#{params[:infrastructure_name]}")
@@ -385,7 +403,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - record_id
   def get_resource_status
-    validate_params(:default, :infrastructure_name, :record_id)
+    validate(
+        infrastructure_name: :security_default,
+        record_id: :security_default
+    )
 
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
