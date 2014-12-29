@@ -320,14 +320,29 @@ class ExperimentsController < ApplicationController
   def extend_input_values
     validate(
         param_name: :security_default,
-        # TODO - float or integer...
-        range_min: :float,
-        range_max: :float,
-        range_step: :float
     )
 
     parameter_uid = params[:param_name]
-    @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
+    param_doc = @experiment.get_parameter_doc(parameter_uid)
+    if param_doc.nil?
+      raise ValidationError.new(:param_name, parameter_uid, 'No such parameter in experiment')
+    end
+
+    param_type = param_doc['type'].to_sym
+
+    validate(
+        range_min: [param_type, :positive],
+        range_max: [param_type, :positive],
+        range_step: [param_type, :positive]
+    )
+
+    convert_fun = (param_type == :integer ? :to_i : :to_f)
+    @range_min = params[:range_min].send(convert_fun)
+    @range_max = params[:range_max].send(convert_fun)
+    @range_step = params[:range_step].send(convert_fun)
+
+    validate_input_extension(@range_min, @range_max, @range_step)
+
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
     new_parameter_values = @range_min.step(@range_max, @range_step).to_a
     #@priority = params[:priority].to_i
@@ -355,6 +370,16 @@ class ExperimentsController < ApplicationController
 
     respond_to do |format|
       format.js { render partial: 'extend_input_values' }
+    end
+  end
+
+  def validate_input_extension(range_min, range_max, range_step)
+    unless range_min <= range_max
+      raise ValidationError.new('range_min', range_min, "Range minimum is greater than maximum")
+    end
+
+    unless range_step <= (range_max-range_min)
+      raise ValidationError.new('range_max', range_min, "Range step is too large")
     end
   end
 

@@ -10,7 +10,7 @@ module ParameterValidation
     end
 
     def to_s
-      "Validation error for parameter \"#{@param_name}\" => \"#{@value}\": #{@e_message}"
+      "Validation error for parameter #{@param_name}: #{@value} - #{@e_message}"
     end
 
     def message
@@ -95,6 +95,10 @@ module ParameterValidation
 
   def float(name, value)
     Float value rescue raise ValidationError.new(name, value, 'Not a float')
+  end
+
+  def string(name, value)
+    raise ValidationError.new(name, value, 'Not a string') unless value.kind_of? String
   end
 
 end
