@@ -166,7 +166,10 @@ class SimulationScenariosController < ApplicationController
   private
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
-    validate_params(:default, "#{adapter_type}_id", "#{adapter_type}_name")
+    validate(
+        "#{adapter_type}_id".to_sym => [:optional, :security_default],
+        "#{adapter_type}_name".to_sym => [:optional, :security_default]
+    )
 
     if params.include?(adapter_type + '_id')
       adapter_id = params[adapter_type + '_id'].to_s
@@ -228,7 +231,10 @@ class SimulationScenariosController < ApplicationController
   private
 
   def load_simulation_scenario
-    validate_params(:default, :id, :name)
+    validate(
+        id: [:optional, :security_default],
+        name: [:optional, :security_default]
+    )
 
     users_scenarios = @current_user.get_simulation_scenarios
 
