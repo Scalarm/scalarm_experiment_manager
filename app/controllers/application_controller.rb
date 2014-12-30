@@ -8,6 +8,7 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid]
 
+  before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
   before_filter :start_monitoring
@@ -27,7 +28,6 @@ class ApplicationController < ActionController::Base
   def generic_exception_handler(exception)
     Rails.logger.warn("Exception caught in generic_exception_handler: #{exception.message}")
     Rails.logger.debug("Exception backtrace:\n#{exception.backtrace.join("\n")}")
-
 
     respond_to do |format|
       format.html do
@@ -53,12 +53,16 @@ class ApplicationController < ActionController::Base
   def authentication_failed
     Rails.logger.debug('[authentication] failed -> redirect')
 
-    reset_session
+    session[:original_url] = request.original_url
+    #session[:intended_params] = params.to_hash.except('action', 'controller')
+
+    keep_session_params(:server_name, :original_url) do
+      reset_session
+    end
+
     @user_session.destroy unless @user_session.nil?
 
     flash[:error] = t('login.required')
-    session[:intended_action] = action_name
-    session[:intended_controller] = controller_name
 
     redirect_to :login
   end
@@ -76,6 +80,24 @@ class ApplicationController < ActionController::Base
 
   def validate(validators)
     validate_params(params, validators)
+  end
+
+  def read_server_name
+    session[:server_name] = params[:server_name] if params.include? :server_name
+  end
+
+  def keep_session_params(*args, &block)
+    values = {}
+    args.each do |param|
+      values[param] = session[param] if session.include? param
+    end
+    begin
+      yield block
+    ensure
+      values.each do |param, value|
+        session[param] = value
+      end
+    end
   end
 
   # DEPRECATED due to security reasons
