@@ -12,18 +12,15 @@ class UserControllerController < ApplicationController
   include PlGridOpenID
 
   def successful_login
-    #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
-    session[:intended_controller] = :experiments
-    session[:intended_action] = :index
-    #end
+    original_url = session[:original_url]
+    session[:original_url] = nil
 
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
     @user_session = UserSession.create_and_update_session(session[:user].to_s)
 
-    #redirect_to url_for :controller => session[:intended_controller], :action => session[:intended_action]
-    redirect_to root_path
+    redirect_to (original_url or root_path)
   end
 
   def login
@@ -66,7 +63,9 @@ class UserControllerController < ApplicationController
   end
 
   def logout
-    reset_session
+    keep_session_params(:server_name) do
+      reset_session
+    end
     @user_session.destroy unless @user_session.blank?
     @current_user.destroy_unused_credentials unless @current_user.nil?
 

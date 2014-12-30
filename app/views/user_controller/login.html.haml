@@ -9,7 +9,7 @@
     .small-12.small-centered.columns(style="text-align: center;")
       %h2= t('login-title')
 
-- if %w(scalarm.cyfronet.pl scalarm.plgrid.pl).include? params[:server_name]
+- if session.include? :server_name and Rails.configuration.plgrid_domains.include? session[:server_name]
   %section.panel.radius
     .row
       .small-6.columns.small-centered

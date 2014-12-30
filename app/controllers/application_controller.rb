@@ -4,16 +4,16 @@ class ApplicationController < ActionController::Base
   include ScalarmAuthentication
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid, :login]
+  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid]
 
+  before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
   before_filter :start_monitoring
   after_filter :stop_monitoring
-  # due to security reasons
-  after_filter :set_cache_buster
 
-  rescue_from SecurityError, with: :handle_security_error
+  # due to security reasons (DISABLED)
+  # after_filter :set_cache_buster
 
   @@probe = MonitoringProbe.new
 
@@ -25,6 +25,7 @@ class ApplicationController < ActionController::Base
   def generic_exception_handler(exception)
     flash[:error] = exception.message
 
+
     respond_to do |format|
       format.html { redirect_to action: :index }
       format.json { render json: {status: 'error', reason: flash[:error]}, status: 412 }
@@ -34,12 +35,16 @@ class ApplicationController < ActionController::Base
   def authentication_failed
     Rails.logger.debug('[authentication] failed -> redirect')
 
-    reset_session
+    session[:original_url] = request.original_url
+    #session[:intended_params] = params.to_hash.except('action', 'controller')
+
+    keep_session_params(:server_name, :original_url) do
+      reset_session
+    end
+
     @user_session.destroy unless @user_session.nil?
 
     flash[:error] = t('login.required')
-    session[:intended_action] = action_name
-    session[:intended_controller] = controller_name
 
     redirect_to :login
   end
@@ -57,7 +62,6 @@ class ApplicationController < ActionController::Base
 
   def validate_params(mode, *param_names)
     regexp = Utils::get_validation_regexp(mode)
-
     param_names.each do |param_name|
       if params.include?(param_name) and regexp.match(params[param_name]).nil?
         raise SecurityError.new(t('errors.insecure_parameter', param_name: param_name))
@@ -65,9 +69,26 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def read_server_name
+    session[:server_name] = params[:server_name] if params.include? :server_name
+  end
 
-  # due to security reasons
-  def set_cache_buster
+  def keep_session_params(*args, &block)
+    values = {}
+    args.each do |param|
+      values[param] = session[param] if session.include? param
+    end
+    begin
+      yield block
+    ensure
+      values.each do |param, value|
+        session[param] = value
+      end
+    end
+  end
+
+  # DEPRECATED due to security reasons
+  #def set_cache_buster
     #response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
     #response.headers["Pragma"] = "no-cache"
     #response.headers["Server"] = "Scalarm custom server"
@@ -80,15 +101,6 @@ class ApplicationController < ActionController::Base
     #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
     #  end
     #end
-  end
-
-  # -- error handling --
-
-  def handle_security_error(e)
-    respond_to do |format|
-      format.html { raise e }
-      format.json { render json: {status: 'error', message: "Security error: #{e}" }, status: 403 }
-    end
-  end
+  #end
 
 end
