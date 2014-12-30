@@ -18,7 +18,7 @@ $(document).ready(function() {
   	},
     tooltip: {
         formatter: function () {
-            return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b><br />Click for details';
+            return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b><br /><b>Click for details</b>';
         }
     },
   	plotOptions: {
@@ -39,6 +39,7 @@ $(document).ready(function() {
             events: {
                 click: function () {
                     $('#extension-dialog').load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + this.simulation_id);
+                    window.reopenCharts = true;
                     $('#extension-dialog').foundation('reveal', 'open');
                 }
             }
