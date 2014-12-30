@@ -36,8 +36,6 @@ class window.InfrastructuresBooster
         window.Notices.show_loading_notice()
       )
       .bind('ajax:success', (status, data, xhr) =>
-        window.Notices.hide_notice()
-
         switch data.status
           when 'error'
             toastr.error(data.msg)
@@ -46,7 +44,12 @@ class window.InfrastructuresBooster
           else
             toastr.error(data.msg)
       )
+      .bind('ajax:error', (xhr, data, error) =>
+        resp = data.responseJSON
+        toastr.error(resp and (resp.reason or resp.msg) or "Unknown error - please contact administrators.")
+      )
       .bind('ajax:complete', =>
+        window.Notices.hide_notice()
         window.infrastructuresTree and window.infrastructuresTree.updateInfrastructureNode(@infrastructureName)
         window.retrieveComputationalResourcesSummary and window.retrieveComputationalResourcesSummary()
       )
