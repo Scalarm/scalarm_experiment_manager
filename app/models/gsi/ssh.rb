@@ -42,8 +42,6 @@ module Gsi
           @leftovers << match[1] if match[1] and match[1] != ''
           match[2]
         else
-          puts @input.closed?
-          puts @output.closed?
           raise StandardError.new("Wrong command output: #{cmd_output}")
         end
       end
