@@ -33,7 +33,7 @@ class MongoActiveRecord
 
   def self.available?
     begin
-      Rails.logger.info "FIRST: #{self.get_collection('test').find.first}"
+      self.get_collection('test').find.first
       return true
     rescue
       return false
