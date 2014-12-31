@@ -31,6 +31,15 @@ class MongoActiveRecord
     @options = opts
   end
 
+  def self.available?
+    begin
+      Rails.logger.info "FIRST: #{self.get_collection('test').find.first}"
+      return true
+    rescue
+      return false
+    end
+  end
+
   def self.execute_raw_command_on(db, cmd)
     @@db.connection.db(db).command(cmd)
   end
