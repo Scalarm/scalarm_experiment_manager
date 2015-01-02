@@ -8,7 +8,7 @@ class ExperimentFactory
     _create_record(Experiment, user_id, simulation, params)
   end
 
-  def self.create_manual_point_experiment(user_id, simulation, params={})
+  def self.create_custom_points_experiment(user_id, simulation, params={})
     experiment = _create_record(CustomPointsExperiment, user_id, simulation, params)
     experiment.init_empty(simulation)
 
