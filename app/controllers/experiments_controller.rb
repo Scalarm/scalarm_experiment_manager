@@ -331,8 +331,8 @@ class ExperimentsController < ApplicationController
     param_type = param_doc['type'].to_sym
 
     validate(
-        range_min: [param_type, :positive],
-        range_max: [param_type, :positive],
+        range_min: [param_type],
+        range_max: [param_type],
         range_step: [param_type, :positive]
     )
 
