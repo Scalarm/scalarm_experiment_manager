@@ -5,7 +5,8 @@ require 'csv'
 
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
-  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
+  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
+                                          :start_custom_points_experiment ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -684,6 +685,59 @@ class ExperimentsController < ApplicationController
     storage_manager_url = InformationService.new.sample_public_storage_manager
     redirect_to LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, @user_session)
+  end
+
+  # POST params:
+  # - point - JSON Hash with parameter space point
+  def schedule_point
+    validate(
+        point: []
+    )
+
+    # TODO: CustomPointsExperiment from Experiment
+    custom_experiment = CustomPointsExperiment.where(id: @experiment.id).first
+    raise ValidationError(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+
+    custom_experiment.add_point!(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json { render json: {status: 'ok'}, status: :ok }
+    end
+  end
+
+  # GET params:
+  # - point - JSON Hash with parameter space point
+  def get_result
+    validate(
+        point: []
+    )
+    
+    result = @experiment.get_result_for(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json do
+        if result
+          render json: {status: 'ok', result: result}
+        else
+          render json: {status: 'error', message: 'Point not found'}
+        end
+      end
+    end
+  end
+
+  # POST params:
+  # - simulation_id
+  # TODO: other experiment parameters
+  # TODO: handle errors
+  def start_custom_points_experiment
+    validate(
+        simulation_id: :security_default
+    )
+
+    experiment = ExperimentFactory.create_custom_points_experiment(@current_user.id, @simulation)
+    experiment.save
+
+    render json: {status: 'ok', experiment_id: experiment.id.to_s}
   end
 
   private

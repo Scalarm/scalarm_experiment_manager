@@ -43,6 +43,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :running_experiments
       get :historical_experiments
       get :random_experiment
+      post :start_custom_points_experiment
     end
 
     member do
@@ -58,6 +59,8 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :intermediate_results
       get   :extension_dialog
       post  :change_scheduling_policy
+      post  :schedule_point
+      get   :get_result
 
       # experiment charts
       post :histogram
