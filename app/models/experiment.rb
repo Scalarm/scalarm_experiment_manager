@@ -560,6 +560,26 @@ class Experiment < MongoActiveRecord
     self.doe_info and not self.doe_info.empty? and self.doe_info[0][0] == 'csv_import'
   end
 
+  # parameters - Hash of input parameters
+  # NOTE: all parameters must match (every single parameter must be specified)
+  # returns Hash with result
+  # TODO: handle results with errors
+  def get_result_for(simulation_parameters)
+    # TODO: check if SimulationRun.arguments is always the same as Experiment.parameters
+    values = self.parameters.flatten.collect do |p|
+      simulation_parameters[p.to_s] || simulation_parameters[p.to_sym]
+    end
+
+    values = values.collect(&:to_s).join(',')
+
+    sim_run = self.simulation_runs.where(
+        {is_done: true, values: values},
+        {fields: {_id: 0, result: 1}}
+    ).first
+
+    sim_run and sim_run.result
+  end
+
   private
 
   def self.nested_json_to_hash(nested_json)
