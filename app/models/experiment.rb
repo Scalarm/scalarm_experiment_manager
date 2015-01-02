@@ -273,6 +273,13 @@ class Experiment < MongoActiveRecord
     self.size
   end
 
+  def extend_progress_bar
+    self.create_progress_bar_table.drop
+    self.insert_initial_bar
+    # Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+    Thread.start { self.update_all_bars }
+  end
+
   def experiment_size=(new_size)
     @attributes['experiment_size'] = new_size
     self.size = new_size
@@ -543,6 +550,14 @@ class Experiment < MongoActiveRecord
 
   def self.visible_to(user)
     where({'$or' => [{user_id: user.id}, {shared_with: {'$in' => [user.id]}}]})
+  end
+
+  def csv_parameter_ids
+    self.doe_info[0][1]
+  end
+
+  def csv_imported?
+    self.doe_info and not self.doe_info.empty? and self.doe_info[0][0] == 'csv_import'
   end
 
   private

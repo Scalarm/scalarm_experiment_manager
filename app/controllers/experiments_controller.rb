@@ -159,6 +159,7 @@ class ExperimentsController < ApplicationController
 
     @experiment_input = Experiment.prepare_experiment_input(@simulation, Utils.parse_json_if_string(params['experiment_input']), doe_info)
 
+    # TODO: use ExperimentsFactory
     # create the new type of experiment object
     experiment = Experiment.new({ simulation_id: @simulation.id,
                                   experiment_input: @experiment_input,
@@ -353,16 +354,7 @@ class ExperimentsController < ApplicationController
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
         @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
         @experiment.save
-        if @num_of_new_simulations > 0
-          @experiment.create_progress_bar_table.drop
-          @experiment.insert_initial_bar
-
-          # 4. update progress bar
-          Thread.new do
-            Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-            @experiment.update_all_bars
-          end
-        end
+        @experiment.extend_progress_bar if @num_of_new_simulations > 0
 
         File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
       end
@@ -807,6 +799,7 @@ class ExperimentsController < ApplicationController
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
     parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
 
+    # TODO: use ExperimentsFactory
     # create the new type of experiment object
     experiment = Experiment.new({'simulation_id' => @simulation.id,
                                  'is_running' => true,
