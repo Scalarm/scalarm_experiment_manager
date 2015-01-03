@@ -23,10 +23,14 @@
   :javascript
     var bivariate_chart_tab = new Array();
 
-    var observer = new MutationObserver(function() {
-        $($('#bivariate_charts_form select[name=\'x_axis\'] option[data-type=\'input_parameter\']')[0]).prop('selected', true);
-        $($('#bivariate_charts_form select[name=\'y_axis\'] option[data-type=\'moes_parameter\']')[0]).prop('selected', true);
-        observer.disconnect();
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if(mutation.addedNodes.length > 1) {
+                $($('#bivariate_charts_form select[name=\'x_axis\'] option[data-type=\'input_parameter\']')[0]).prop('selected', true);
+                $($('#bivariate_charts_form select[name=\'y_axis\'] option[data-type=\'moes_parameter\']')[0]).prop('selected', true);
+                observer.disconnect();
+            }
+        })
     });
     var target = document.querySelector('#bivariate_charts_form select[name=\'x_axis\']');
     observer.observe(target, {childList: true});
