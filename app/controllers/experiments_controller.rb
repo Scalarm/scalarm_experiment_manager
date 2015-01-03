@@ -281,7 +281,7 @@ class ExperimentsController < ApplicationController
                  {limit: 1, fields: %w(arguments)}).first
 
     moes_and_params = if done_run.nil?
-                        [ [t('experiments.analysis.no_completed_runs'), nil] ]
+                        [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
                       else
                         result_set + [%w(----------- nil)] +
                           done_run.arguments.split(',').map{|x|
