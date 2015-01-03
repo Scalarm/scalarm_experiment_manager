@@ -283,9 +283,9 @@ class ExperimentsController < ApplicationController
     moes_and_params = if done_run.nil?
                         [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
                       else
-                        result_set + [%w(----------- nil)] +
-                          done_run.arguments.split(',').map{|x|
-                            [ @experiment.input_parameter_label_for(x), x, "input_parameter"]}
+                        done_run.arguments.split(',').map{|x|
+                          [ @experiment.input_parameter_label_for(x), x, "input_parameter"]} +
+                          [%w(----------- nil)] + result_set
                       end
 
     moes_info[:moes] = result_set.map{ |label, id|
