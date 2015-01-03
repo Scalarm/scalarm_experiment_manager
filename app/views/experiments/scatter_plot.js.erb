@@ -38,6 +38,7 @@ $(document).ready(function() {
         point: {
             events: {
                 click: function () {
+                    $('#extension-dialog').html(window.loaderHTML);
                     $('#extension-dialog').load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + this.simulation_id);
                     window.reopenCharts = true;
                     $('#extension-dialog').foundation('reveal', 'open');
