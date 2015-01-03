@@ -133,7 +133,7 @@ class window.ExperimentMonitor
     @obj_id = "experiment_monitor_#{@experiment_id}"
 
     window.scalarm_objects[@obj_id] = this
-    @schedule_update()
+    #@schedule_update()
 
   update: ->
     monitor = this

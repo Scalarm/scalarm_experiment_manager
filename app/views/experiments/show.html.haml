@@ -103,7 +103,7 @@
 
       try {
         //TODO - insert appropriate address
-        var ws = new WebSocket("wss://localhost/chart/#{@experiment.id}");
+        var ws = new WebSocket("wss://172.16.67.206/chart/#{@experiment.id}");
         window.onbeforeunload = function() {
           //Connection closed on Download simulation manager!!
           ws.onclose = function () {}; // disable onclose handler first
