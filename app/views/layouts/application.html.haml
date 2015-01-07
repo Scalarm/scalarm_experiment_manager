@@ -35,10 +35,10 @@
     :javascript
       $(function() {
         if (#{not flash[:notice].nil?}) {
-          toastr['success']("#{flash[:notice] and flash[:notice].gsub("\"", '\"')}");
+          toastr['success']("#{flash[:notice] and h(flash[:notice])}");
         }
         if (#{not flash[:error].nil?}) {
-          toastr['error']("#{flash[:error] and flash[:error].gsub("\"", '\"')}");
+          toastr['error']("#{flash[:error] and h(flash[:error])}");
         }
       });
     = yield :javascript
