@@ -99,6 +99,7 @@ module PlGridOpenID
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
     session[:user] = scalarm_user.id.to_s
+    session[:uuid] = SecureRandom.uuid
     successful_login
   end
 
