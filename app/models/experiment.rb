@@ -313,9 +313,10 @@ class Experiment < MongoActiveRecord
 
   def create_scatter_plot_csv_for(x_axis, y_axis)
     CSV.generate do |csv|
-      csv << [x_axis, y_axis]
+      csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result arguments)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments)}).each do |simulation_run|
+        simulation_run_ind = simulation_run.index.to_s
         simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
         x_axis_value = if simulation_run.result.include?(x_axis)
@@ -333,7 +334,7 @@ class Experiment < MongoActiveRecord
                          simulation_input[y_axis]
                        end
 
-        csv << [x_axis_value, y_axis_value]
+        csv << [x_axis_value, y_axis_value, simulation_run_ind]
       end
     end
   end
