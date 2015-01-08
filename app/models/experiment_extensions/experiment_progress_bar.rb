@@ -32,6 +32,7 @@ module ExperimentProgressBar
                       end
 
     begin
+      result = progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
       bar = progress_bar_table.find_one({bar_num: bar_index})
       table_length = progress_bar_table.count
       color = compute_bar_color(bar)
@@ -41,9 +42,7 @@ module ExperimentProgressBar
                                                 :bar_num => bar["bar_num"],
                                                 :tab_len => table_length,
                                                 :color => color}).save
-
-      progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
-
+     result
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end
