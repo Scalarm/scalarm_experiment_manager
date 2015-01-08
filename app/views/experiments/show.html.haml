@@ -1,54 +1,39 @@
 - content_for :title, 'Scalarm - monitoring'
 - content_for :help, raw(t('help.experiments.monitoring'))
 
--#= render 'experiment_links'
+= render 'experiment_links'
 = render 'analysis_charts'
 
 -#.row(data-equalizer="")
 = content_for :panel do
   %section.panel
-    .action-button{style: "text-align: right"}
+    .action-button
       .row
-        %a{href: simulations_path}
-          %span
-            Experiments summary
-          = image_tag "material_design/ic_error_48px.svg"
+        %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}")
+          = image_tag "material_design/running_experiments_icon.png"
+          = t('experiments.experiment_links.running_experiments')
       .row
-        %a{href: simulations_path}
-          %span
-            Simulation scenarios
-          = image_tag "material_design/ic_add_circle_outline_48px.svg"
+        %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}")
+          = image_tag "material_design/simulation_scenarios_icon.png"
+          = t('experiments.experiment_links.simulation_scenarios')
       .row
-        %a{href: simulations_path}
-          %span
-            Infrastructures view
-          = image_tag "material_design/ic_cloud_circle_48px.svg"
-
+        %a.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}")
+          = image_tag "material_design/historical_experiments_icon.png"
+          = t('experiments.experiment_links.historical_experiments')
+    %hr
     .analyses-panel{style: "text-align: center"}
-      %p
-        = image_tag "material_design/ic_format_list_numbered_48px.svg"
+      %p.histogram-analysis
+        = image_tag "material_design/histogram_icon.png"
         %br
-        Histogram
-      %p
-        = image_tag "material_design/ic_format_quote_48px.svg"
+        %a Histogram
+      %p.rtree-analysis
+        = image_tag "material_design/regression_icon.png"
         %br
-        3D charts
-      %p
-        = image_tag "material_design/ic_format_textdirection_l_to_r_48px.svg"
+        %a Regression trees
+      %p.bivariate-analysis
+        = image_tag "material_design/scatter_icon.png"
         %br
-        Regression trees
-      %p
-        = image_tag "material_design/ic_insert_chart_48px.svg"
-        %br
-        Scatter plot
-      %p
-        = image_tag "material_design/ic_insert_comment_48px.svg"
-        %br
-        Interaction
-      %p
-        = image_tag "material_design/ic_border_clear_48px.svg"
-        %br
-        Pareto
+        %a Scatter plot
 
 %section
   %section.row.panel.radius

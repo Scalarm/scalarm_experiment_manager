@@ -409,27 +409,10 @@ select {
 //    right: -110px;
 //}
 
-/* Experiment links */
-
-div.running_experiments_link {
-    position: absolute;
-    top: 0px;
-    left: -110px;
+p {
+  &.histogram-analysis, &.rtree-analysis, &.bivariate-analysis {
     cursor: pointer;
-}
-
-div.available_experiments_link {
-    position: absolute;
-    top: 170px;
-    left: -110px;
-    cursor: pointer;
-}
-
-div.historical_experiments_link {
-    position: absolute;
-    top: 340px;
-    left: -110px;
-    cursor: pointer;
+  }
 }
 
 /* Login */
@@ -658,9 +641,9 @@ textarea {
 @media screen and (max-width: 1260px) {
   #panel {
     width: calc(3*(100%/12));
-    & .panel {
-      background-color: red;
-    };
+//    & .panel {
+//      background-color: red;
+//    };
     & .action-button span {
       display: none;
     }
