@@ -80,7 +80,7 @@ class UserControllerController < ApplicationController
 
       flash[:error] = t('password_repeat_error')
 
-    elsif params[:password].length < 6 or (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
+    elsif params[:password].length < 8 or (/\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
 
       flash[:error] = t('password_too_weak')
 

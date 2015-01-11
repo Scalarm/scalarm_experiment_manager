@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   include ScalarmAuthentication
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid, :login]
+  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid]
 
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
@@ -58,16 +58,16 @@ class ApplicationController < ActionController::Base
   def validate_params(mode, *param_names)
     regexp = case mode
                when :default
-                 /^(\w|(-))*$/
+                 /\A(\w|(-))*\z/
 
                when :openid_id
-                 /^(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*$/
+                 /\A(\w|(-)|(\.)|(:)|(\/)|(=)|(\?))*\z/
 
                when :json
-                 /^(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*$/
+                 /\A(\w|([{}\[\]":\-=\. ])|(,)|(">)|("<))*\z/
 
                else
-                 /^$/
+                 /\A\z/
              end
 
     param_names.each do |param_name|

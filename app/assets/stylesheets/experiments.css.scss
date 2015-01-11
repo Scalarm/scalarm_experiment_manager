@@ -13,3 +13,31 @@
     text-align: center;
   }
 }
+
+#completed_simulations_table, #running_simulations_table{
+  tbody tr {
+    cursor: pointer;
+    &:hover {
+      background: #99ccff;
+    }
+  }
+}
+.w-created {
+  color: black !important;
+}
+
+.w-initializing {
+  color: goldenrod !important;
+}
+
+.w-running {
+  color: forestgreen !important;
+}
+
+.w-terminating {
+  color: #444 !important;
+}
+
+.w-failed {
+  color: firebrick !important;
+}

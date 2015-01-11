@@ -12,6 +12,16 @@ oTableFinal = $('#completed_simulations_table').dataTable({
 
 setInterval(function () {
     if ($('#completed_simulations_table').is(":visible")) {
-        oTableFinal.fnReloadAjax();
+        oTableFinal.api().ajax.reload();
     }
 }, 30000);
+
+$('#completed_simulations_table').on('click', 'tr', function(event) {
+    if(oTableFinal.fnGetData(this)) {
+        $('#extension-dialog').html(window.loaderHTML);
+
+        var simulation_id = oTableFinal.fnGetData(this)[0];
+        $('#extension-dialog').load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + simulation_id);
+        $('#extension-dialog').foundation('reveal', 'open');
+    }
+});

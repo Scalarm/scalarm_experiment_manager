@@ -5,6 +5,12 @@ require File.expand_path('../config/application', __FILE__)
 
 ScalarmExperimentManager::Application.load_tasks
 
+LOCAL_MONGOS_PATH = 'bin/mongos'
+
+# there is also amd64 by default build, but it is not required
+REQUIRED_ARCHS = ['linux_386']
+
+
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:environment, :setup] do |t, args|
@@ -42,17 +48,21 @@ namespace :service do
   desc 'Downloading and installing dependencies'
   task :setup do
     puts 'Setup started'
-    install_mongodb unless check_mongodb
-    build_monitoring unless check_monitoring
+    get_monitoring unless check_monitoring
+    get_simulation_managers_go unless check_sim_go
+    get_simulation_manager_ruby unless check_sim_ruby
+    _validate_service
     puts 'Setup finished'
   end
 
-  # TODO it's a stub - it should contain checking for system dependencies like gsissh
+  desc 'Update Monitoring and SimulationManager packages from binary repo'
+  task update: ['get:monitoring', 'get:simulation_managers'] do
+  end
+
   desc 'Check dependencies'
   task :validate do
     begin
-      _validate
-      puts "OK"
+      _validate_service
     rescue Exception => e
       puts "Error on validation, please read documentation and run service:setup"
       raise
@@ -61,9 +71,46 @@ namespace :service do
 
 end
 
+
+namespace :build do
+  desc 'Building Simulation Managers and Monitoring packages from sources'
+  task all: [:monitoring, :simulation_managers] do
+    puts 'Getting and building Scalarm modules from sources'
+  end
+
+  task :monitoring do
+    puts 'Building Monitoring'
+    build_monitoring
+  end
+
+  task :simulation_managers do
+    puts 'Building Simulation Managers packages'
+    build_simulation_managers_go
+  end
+end
+
+namespace :get do
+  task all: [:monitoring, :simulation_managers, :mongos] do
+    puts 'Getting Scalarm packages'
+  end
+
+  task :monitoring do
+    get_monitoring
+  end
+
+  task :simulation_managers do
+    get_simulation_managers_go
+    get_simulation_manager_ruby
+  end
+
+  task :mongos do
+    install_mongodb
+  end
+end
+
 namespace :db_router do
   desc 'Start MongoDB router'
-  task :start, [:debug] => [:environment] do |t, args|
+  task :start, [:debug] => [:environment, :setup] do |t, args|
     information_service = InformationService.new
 
     config_services = information_service.get_list_of('db_config_services')
@@ -77,18 +124,36 @@ namespace :db_router do
   task :stop, [:debug] => [:environment] do |t, args|
     stop_router
   end
+
+  task :setup do
+    install_mongodb unless mongos_path
+    _validate_db_router
+  end
+
+  desc 'Check dependencies for db_router'
+  task :validate do
+    begin
+      _validate_db_router
+    rescue Exception => e
+      puts "Error on validation, please read documentation and run db_router:setup"
+      raise
+    end
+  end
 end
 
 
 # ================ UTILS
 def start_router(config_service_url)
-  router_cmd = "./bin/mongos --bind_ip localhost --configdb #{config_service_url} --logpath log/db_router.log --fork --logappend"
+  bin = mongos_path
+  puts "Using: #{bin}"
+  puts `#{bin} --version 2>&1`
+  router_cmd = "#{mongos_path} --bind_ip localhost --configdb #{config_service_url} --logpath log/db_router.log --fork --logappend"
   puts router_cmd
   puts %x[#{router_cmd}]
 end
 
 def stop_router
-  proc_name = "./mongos .*"
+  proc_name = "#{mongos_path} .*"
   out = %x[ps aux | grep "#{proc_name}"]
   processes_list = out.split("\n").delete_if { |line| line.include? 'grep' }
 
@@ -161,6 +226,26 @@ def build_monitoring
   raise 'Monitoring build failed' unless $?.to_i == 0
 end
 
+def get_monitoring
+  `./get_monitoring.sh`
+  raise 'Getting Monitoring from repository failed' unless $?.to_i == 0
+end
+
+def build_simulation_managers_go
+  `./build_simulation_managers.sh`
+  raise 'Simulation Managers build failed' unless $?.to_i == 0
+end
+
+def get_simulation_managers_go
+  `./get_simulation_managers.sh`
+  raise 'Getting simulation managers in Go from repository failed' unless $?.to_i == 0
+end
+
+def get_simulation_manager_ruby
+  `git submodule init && git submodule update`
+  raise 'Getting ScalarmSimulationManager submodule failed' unless $?.to_i == 0
+end
+
 def install_mongodb
   puts 'Downloading MongoDB...'
   base_name = get_mongodb
@@ -207,24 +292,85 @@ def download_file_https(domain, path, name)
   name
 end
 
-def _validate
+def _validate_db_router
   print 'Checking bin/mongos... '
-  raise "No /bin/mongos file found" unless check_mongodb
-  raise "No monitoring package found" unless check_monitoring
+  raise "No /bin/mongos file found and no mongos in PATH" unless mongos_path
   puts 'OK'
 end
 
-def check_mongodb
-  `ls bin/mongos`
-  $?.to_i == 0
+def _validate_service
+  print 'Checking Go monitoring packages...'
+  raise "No Scalarm Monitoring packages found" unless check_monitoring
+  puts 'OK'
+  print 'Checking Go Simulation Manager...'
+  raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
+  puts 'OK'
+  print 'Checking Ruby Simulation Manager...'
+  raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
+  puts 'OK'
+
+  %w(gsissh R zip).each do |cmd|
+    check_for_command(cmd)
+  end
+
+  check_for_command_alt %w(mpstat iostat)
+
+  true
+end
+
+def check_for_command_alt(commands)
+  any_cmd = commands.any? do |cmd|
+    begin
+      check_for_command(cmd)
+      true
+    rescue StandardError
+      puts 'Not found. Checking alternatives...'
+      false
+    end
+  end
+
+  raise 'Some dependecies are missing.' unless any_cmd
+end
+
+def check_for_command(command)
+  print "Checking for #{command}... "
+  `which #{command}`
+  unless $?.to_i == 0
+    raise "No #{command} found in PATH. Please install it."
+  end
+  puts 'OK'
+end
+
+def mongos_path
+  `ls #{LOCAL_MONGOS_PATH} >/dev/null 2>&1`
+  if $?.to_i == 0
+    LOCAL_MONGOS_PATH
+  else
+    `which mongos > /dev/null 2>&1`
+    if $?.to_i == 0
+      'mongos'
+    else
+      nil
+    end
+  end
 end
 
 def check_monitoring
-  `ls public/scalarm_monitoring/scalarm_monitoring_linux_x86_64.xz`
-  $?.to_i == 0
+  REQUIRED_ARCHS.all? do |arch|
+    `ls public/scalarm_monitoring/#{arch}/scalarm_monitoring.xz`
+    $?.to_i == 0
+  end
 end
 
-def valid?
-  _validate and true rescue false
+def check_sim_go
+  REQUIRED_ARCHS.all? do |arch|
+    `ls public/scalarm_simulation_manager_go/#{arch}/scalarm_simulation_manager.xz`
+    $?.to_i == 0
+  end
+end
+
+def check_sim_ruby
+  `ls public/scalarm_simulation_manager_ruby/simulation_manager.rb`
+  $?.to_i == 0
 end
 

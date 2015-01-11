@@ -63,10 +63,13 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
-    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
-    bin_base_name = 'scalarm_monitoring_linux_x86_64'
+    # TODO: implement multiple architectures support
+    arch = 'linux_386'
 
-    remote_proxy_path = '~/.scalarm_proxy'
+    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
+    bin_base_name = 'scalarm_monitoring'
+
+    remote_proxy_path = '.scalarm_proxy'
     key_passphrase = params[:key_passphrase]
     credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
     credentials.clone_proxy(remote_proxy_path)
@@ -80,7 +83,7 @@ class PlGridFacade < InfrastructureFacade
     credentials.scp_session do |scp|
       scp.upload_multiple! [
                                File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'),
-                               File.join(Rails.root, 'public', 'scalarm_monitoring', "#{bin_base_name}.xz")
+                               File.join(Rails.root, 'public', 'scalarm_monitoring', arch, "#{bin_base_name}.xz")
                            ], '.'
     end
 
@@ -90,11 +93,11 @@ class PlGridFacade < InfrastructureFacade
 
     if Rails.application.secrets.certificate_path
       credentials.ssh_session do |ssh|
-        ssh.exec! 'rm -f ~/.scalarm_certificate'
+        ssh.exec! 'rm -f .scalarm_certificate'
       end
 
       credentials.scp_session do |scp|
-        scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
+        scp.upload! Rails.application.secrets.certificate_path, '.scalarm_certificate'
       end
     end
 

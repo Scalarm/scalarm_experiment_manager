@@ -46,10 +46,8 @@ module UserControllerHelper
     url_for :action => 'login_openid_plgrid', :only_path => false
   end
 
-  def openid_callback_plgrid_url
-    url_for action: 'openid_callback_plgrid', only_path: false, params: {
-        temp_pass: SecureRandom.hex(4)
-    }
+  def openid_callback_plgrid_url(temp_pass=nil)
+    url_for action: 'openid_callback_plgrid', only_path: false, params: (temp_pass ? {temp_pass: temp_pass} : {})
   end
 
 end

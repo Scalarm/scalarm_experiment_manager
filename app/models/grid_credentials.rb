@@ -87,7 +87,7 @@ class GridCredentials < EncryptedMongoActiveRecord
     get_attribute('host') or 'ui.cyfronet.pl'
   end
 
-  def clone_proxy(remote_path='~/.scalarm_proxy')
+  def clone_proxy(remote_path='.scalarm_proxy')
     ssh_session do |ssh|
       # TODO: checking if proxy file exists?
       ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
