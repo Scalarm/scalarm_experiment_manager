@@ -18,11 +18,14 @@ class UserSession < MongoActiveRecord
     false
   end
 
-  def self.create_and_update_session(user_id)
+  def self.create_and_update_session(user_id, uuid)
     session_id = BSON::ObjectId(user_id)
+    if uuid.nil?
+      uuid = session[:session_uuid] = SecureRandom.uuid
+    end
 
-    session = UserSession.find_by_session_id(session_id)
-    session = UserSession.new(session_id: session_id) if session.nil?
+    session = (UserSession.where(session_id: session_id, uuid: uuid).first or
+      UserSession.new(session_id: session_id, uuid: uuid))
     session.last_update = Time.now
     session.save
 

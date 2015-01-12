@@ -18,7 +18,8 @@ class UserControllerController < ApplicationController
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
-    @user_session = UserSession.create_and_update_session(session[:user].to_s)
+    @user_session = UserSession.create_and_update_session(session[:user].to_s,
+                                                          session[:uuid])
 
     redirect_to (original_url or root_path)
   end
@@ -38,6 +39,7 @@ class UserControllerController < ApplicationController
         end
 
         session[:user] = ScalarmUser.authenticate_with_password(username, params[:password]).id.to_s
+        session[:uuid] = SecureRandom.uuid
 
         if requested_user.credentials_failed and requested_user.credentials_failed.include?('scalarm')
           requested_user.credentials_failed['scalarm'] = []
