@@ -30,9 +30,10 @@
         .small-3.columns
           %h4.subheader.right= t 'experiments.extension_dialog.values'
         .small-9.columns
-          %ul.circle
+          .panel.log-box(style="font-size: 1.2em;")
             - parameter_info[:values].each do |value|
-              %li= value
+              = value
+              %br
 
   .row.small-12.columns
     %h3.subheader= t('experiments.extension_dialog.expand_header')
