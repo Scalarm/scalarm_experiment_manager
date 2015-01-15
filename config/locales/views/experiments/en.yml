@@ -49,6 +49,7 @@ en:
          one: Selected DoE method requires more than 1 parameter.
          other: "Selected DoE method requires more than %{count} parameters."
       invalid_resolution: Number of bars should be an integer between 1 and 100
+      incorrect_parameter: Incorrect parameter chosen!
 
     edit:
       link: "Edit"

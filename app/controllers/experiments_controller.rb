@@ -273,7 +273,7 @@ class ExperimentsController < ApplicationController
     result_set = if result_set.blank?
       [t('experiments.analysis.no_results')]
     else
-      result_set.map{|x| [Experiment.output_parameter_label_for(x), x]}
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
 
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
@@ -281,18 +281,18 @@ class ExperimentsController < ApplicationController
                  {limit: 1, fields: %w(arguments)}).first
 
     moes_and_params = if done_run.nil?
-                        [ [t('experiments.analysis.no_completed_runs'), nil] ]
+                        [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
                       else
-                        result_set + [%w(----------- nil)] +
-                          done_run.arguments.split(',').map{|x|
-                            [ @experiment.input_parameter_label_for(x), x ]}
+                        done_run.arguments.split(',').map{|x|
+                          [ @experiment.input_parameter_label_for(x), x, "input_parameter"]} +
+                          [%w(----------- nil)] + result_set
                       end
 
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
-    moes_info[:moes_and_params] = moes_and_params.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+    moes_info[:moes_and_params] = moes_and_params.map{ |label, id, type|
+      "<option data-type='#{type}' value='#{id}'>#{label}</option>" }.join
 
     render json: moes_info
   end
