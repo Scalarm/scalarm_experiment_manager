@@ -298,11 +298,27 @@ class InfrastructureFacade
 
   def get_sm_records(user_id=nil, experiment_id=nil, params={})
     query = {}
-    #TODO states: tablica lub string, dodać możliwość żeby state_is_not był tablicą (może zmienić nazwę na states_not?)
-    query.merge!({state: {'$not' => {'$eq' => params['state_is_not'].to_sym}}}) if params and params.include? 'state_is_not'
+
+    # TODO sprawdzić, czemu to się nie wykonuje przy przekazywaniu do funkcji (simulation_managers_controller.rb line 22)
+    params = Utils.parse_json_if_string(params)
+
+    if params and params.include? 'states_not'
+      if params['states_not'].kind_of? String
+        query.merge!({state: {'$ne' => params['states_not'].to_sym}})
+      elsif params['states_not'].kind_of? Array
+        query.merge!({state: {'$nin' => params['states_not'].map{|i| i.to_sym}}})
+      end
+    elsif params and params.include? 'states'
+      if params['states'].kind_of? String
+        query.merge!({state: {'$eq' => params['states'].to_sym}})
+      elsif params['states'].kind_of? Array
+        query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
+      end
+    end
     query.merge!({infrastructure_side_monitoring: !!params['infrastructure_side_monitoring']}) if params and params.include? 'infrastructure_side_monitoring'
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
+    Rails.logger.debug(query)
     _get_sm_records(query, params)
   end
 
