@@ -18,6 +18,9 @@ en:
       no_reason_label: "No error reason was reported"
       reason: "Reported error reason:"
     create:
+      no_simulation_name: "You need to provide simulation name."
+      no_simulation_binaries: "You need to provide simulation binaries."
+      no_simulation_input_description: "You need to provide input description"
       bad_params: "You need to provide: simulation name, a file with input description, and simulation binaries"
       bad_simulation_input: The given simulation input has to be a valid JSON document.
       simulation_invalid_name: A simulation scenario with the given name is already in the system.
