@@ -182,21 +182,6 @@ class InfrastructuresControllerTest < ActionController::TestCase
     assert_equal 'invalid-credentials', resp_hash['error_code']
   end
 
-  def test_schedule_incomplete
-    params = {
-        'experiment_id'=> 'e1',
-        'infrastructure_name'=> 'inf_name',
-        'job_kounter!'=>'3'
-    }
-
-    post :schedule_simulation_managers, params, {user: @tmp_user_id}
-
-    resp_hash = JSON.parse(response.body)
-
-    assert_equal 'error', resp_hash['status']
-    assert_equal 'missing-parameters', resp_hash['error_code']
-  end
-
   def test_schedule_simulation_managers
     require 'json'
 

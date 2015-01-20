@@ -22,7 +22,7 @@
 //= require highcharts/modules/exporting
 //= require dataTables/jquery.dataTables
 //= require jit-yc
-//= require toastr
+//= require toastr.min
 //= require jquery.remotipart
 //= require d3
 //= require jstree
@@ -40,7 +40,7 @@ toastr.options = {
     "onclick": null,
     "showDuration": "3000",
     "hideDuration": "1000",
-    "timeOut": "10000",
+    "timeOut": "18000",
     "extendedTimeOut": "1000",
     "showEasing": "swing",
     "hideEasing": "linear",

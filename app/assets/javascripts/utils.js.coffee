@@ -8,5 +8,8 @@ class window.Notices
   @show_notice = (message) ->
     toastr['success'](message)
 
+  @show_error = (message) ->
+    toastr['error'](message)
+
   @hide_notice = () ->
     $('.notice').slideToggle()

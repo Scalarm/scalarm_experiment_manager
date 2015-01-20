@@ -68,7 +68,8 @@ class PlGridFacade < InfrastructureFacade
       record
     end
 
-    send_and_launch_onsite_monitoring(credentials, user_id, additional_params) if additional_params[:onsite_monitoring]
+    sm_uuid = SecureRandom.uuid
+    send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
 
     records
   end
@@ -84,7 +85,6 @@ class PlGridFacade < InfrastructureFacade
   def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
     # TODO: implement multiple architectures support
     arch = 'linux_386'
-    sm_uuid = SecureRandom.uuid
 
     InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
     bin_base_name = 'scalarm_monitoring'

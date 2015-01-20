@@ -39,7 +39,10 @@ module PlGridOpenID
   # Optional parameters:
   # - temp_pass
   def openid_callback_plgrid
-    validate_params(:openid_id, "openid.claimed_id", "openid.identity")
+    validate(
+        'openid.claimed_id'.to_sym => :security_openid_id,
+        'openid.identity'.to_sym => :security_openid_id
+    )
 
     # disabled for security reasons
     #Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")

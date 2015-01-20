@@ -41,7 +41,7 @@ en:
   logout_success: "You have logged out successfully"
   password_changed: "You have changed your password."
   password_repeat_error: "'Password' and 'Repeat password' must be equal!"
-  password_too_weak: "Password should have at least 6 characters and must include at least one lowercase letter, one uppercase letter, and one digit!"
+  password_too_weak: "Password should have at least 8 characters and must include at least one lowercase letter, one uppercase letter, and one digit!"
   password_wrong: "You didn't provide your current password!"
 
 
@@ -258,3 +258,6 @@ en:
     sim_authorization_error: "Simulation Manager '%{sm_uuid}' is not authorized to execute experiment '%{experiment_id}'"
 
   experiment_not_found: "Experiment '%{experiment_id}' for user '%{user}' not found"
+
+  js_error_message: "An error occured: %{error}"
+  js_error_unknown: "An unknown error occured. Please contact administrators."

@@ -37,11 +37,11 @@
     = javascript_include_tag 'application'
     :javascript
       $(function() {
-        if(#{not flash[:notice].nil?}) {
-          toastr['success']("#{flash[:notice]}");
+        if (#{not flash[:notice].nil?}) {
+          toastr['success']("#{flash[:notice] and flash[:notice].gsub("\"", '\"')}");
         }
-        if(#{not flash[:error].nil?}) {
-          toastr['error']("#{flash[:error]}");
+        if (#{not flash[:error].nil?}) {
+          toastr['error']("#{flash[:error] and flash[:error].gsub("\"", '\"')}");
         }
 
         var pagePosition, scrollHandler = function() {
