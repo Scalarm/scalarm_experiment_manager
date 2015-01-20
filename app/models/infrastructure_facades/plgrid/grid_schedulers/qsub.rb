@@ -33,11 +33,10 @@ module QsubScheduler
       end
     end
 
-    def send_job_files(sm_uuid, scp)
-      paths = ["/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
-               "/tmp/scalarm_job_#{sm_uuid}.sh"
+    def job_files_list
+      [
+          "/tmp/scalarm_job_#{sm_uuid}.sh"
       ]
-      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, sm_record)

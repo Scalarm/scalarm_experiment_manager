@@ -11,7 +11,7 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PlGridFacade < InfrastructureFacade
-  include SharedSSH
+  include SSHAccessedInfrastructure
 
   attr_reader :ssh_sessions
   attr_reader :long_name
@@ -87,49 +87,59 @@ class PlGridFacade < InfrastructureFacade
     arch = 'linux_386'
 
     InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
-    bin_base_name = 'scalarm_monitoring'
-
-    remote_proxy_path = '.scalarm_proxy'
-    key_passphrase = params[:key_passphrase]
-    credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
-    credentials.clone_proxy(remote_proxy_path)
 
     credentials.ssh_session do |ssh|
-      ssh.exec! 'rm -f config.json' # TODO: change name!
-      ssh.exec! "rm -f #{bin_base_name}.xz"
-      ssh.exec! "rm -f #{bin_base_name}"
-    end
-
-    credentials.scp_session do |scp|
-      scp.upload_multiple! [
-                               File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'),
-                               File.join(Rails.root, 'public', 'scalarm_monitoring', arch, "#{bin_base_name}.xz")
-                           ], '.'
-    end
-
-    credentials.ssh_session do |ssh|
-      ssh.exec! "mv #{bin_base_name} #{}"
-    end
-
-    if Rails.application.secrets.certificate_path
-      credentials.ssh_session do |ssh|
-        ssh.exec! 'rm -f .scalarm_certificate'
-      end
-
+      # TODO: implement ssh.scp method for gsissh and use here
       credentials.scp_session do |scp|
-        scp.upload! Rails.application.secrets.certificate_path, '.scalarm_certificate'
+        key_passphrase = params[:key_passphrase]
+        PlGridFacade.generate_proxy(ssh, key_passphrase) if not credentials.secret_proxy and key_passphrase
+        PlGridFacade.clone_proxy(ssh, RemoteAbsolutePath::remote_monitoring_proxy)
+
+        [
+            RemoteHomePath::monitoring_config,
+            RemoteHomePath::monitoring_package,
+            RemoteHomePath::monitoring_binary
+        ].each do |path|
+          ssh.exec! rm(path, true)
+        end
+
+        local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+        local_package = LocalAbsolutePath::monitoring_package(arch)
+
+        scp.upload_multiple! [local_config, local_package], RemoteDir::monitoring
+        # TODO: SCAL-525
+
+        if LocalAbsolutePath::certificate
+          ssh.exec! rm(RemoteAbsolutePath::remote_monitoring_certificate, true)
+          scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
+        end
+
+        cmd = ShellCommands.chain(
+           cd(RemoteDir::monitoring),
+           "unxz -f #{ScalarmFileName::monitoring_package}",
+           "chmod a+x #{ScalarmFileName::monitoring_binary}",
+           "export X509_USER_PROXY=#{ScalarmFileName::remote_monitoring_proxy}",
+           "#{ShellCommands.run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                                                                                   "#{ScalarmFileName::monitoring_binary}-`date +%H-%M_%d-%m-%y`.log")}"
+        )
+        Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
       end
     end
+  end
 
-    credentials.ssh_session do |ssh|
-      cmd = ShellCommands.chain(
-          "unxz -f #{bin_base_name}.xz",
-          "chmod a+x #{bin_base_name}",
-          "X509_USER_PROXY=#{remote_proxy_path} #{ShellCommands.
-              run_in_background("./#{bin_base_name}", "#{bin_base_name}-`date +%H-%M_%d-%m-%y`.log")}"
-      )
-      Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
+  def self.clone_proxy(ssh, remote_path)
+    # TODO: checking if proxy file exists?
+    ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
+  end
+
+  # TODO: NOTE: without voms extension!
+  def self.generate_proxy(ssh, key_passphrase)
+    output = ''
+    Timeout::timeout 30 do
+      output = ssh.exec! "echo #{key_passphrase} | grid-proxy-init -rfc -hours 24"
     end
+    Rails.logger.debug("grid-proxy-init output: #{output}")
+    output
   end
 
   def using_temp_credentials?(params)
@@ -342,6 +352,7 @@ class PlGridFacade < InfrastructureFacade
         sm_record.credentials.scp_session do |scp|
           scheduler.send_job_files(sm_uuid, scp)
         end
+        # TODO: SCAL-525
 
         ssh = shared_ssh_session(sm_record.credentials)
 

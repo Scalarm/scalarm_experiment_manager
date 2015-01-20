@@ -32,13 +32,11 @@ module GliteScheduler
       IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid, params))
     end
 
-    def send_job_files(sm_uuid, scp)
-      paths = [
-          "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip",
+    def job_files_list
+      [
           "/tmp/scalarm_job_#{sm_uuid}.sh",
           "/tmp/scalarm_job_#{sm_uuid}.jdl"
       ]
-      scp.upload_multiple! paths, '.'
     end
 
     def submit_job(ssh, job)

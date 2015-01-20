@@ -1,4 +1,5 @@
 require 'yaml'
+require 'fileutils'
 
 require_relative 'infrastructure_task_logger'
 require_relative 'infrastructure_errors'
@@ -50,6 +51,7 @@ require 'mongo_lock'
 
 class InfrastructureFacade
   include InfrastructureErrors
+  include SSHAccessedInfrastructure
 
   attr_reader :logger
 
@@ -60,13 +62,16 @@ class InfrastructureFacade
   def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
     Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
 
-    Dir.chdir('/tmp')
     # using simulation manager implementation based on application config
-    if Rails.configuration.simulation_manager_version == :go
-      # TODO checking somehow the destination server architecture
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_go', 'linux_386'), "scalarm_simulation_manager_#{sm_uuid}")
-    elsif Rails.configuration.simulation_manager_version == :ruby
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_ruby'), "scalarm_simulation_manager_#{sm_uuid}")
+    case Rails.configuration.simulation_manager_version
+      when :go
+        # TODO checking somehow the destination server architecture
+        arch = 'linux_386'
+        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_go(arch), LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
+      when :ruby
+        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_ruby, LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
+      else
+        raise StandardError "Unsupported simulation manager version (#{Rails.configuration.simulation_manager_version})"
     end
 
     # prepare sm configuration
@@ -95,23 +100,22 @@ class InfrastructureFacade
       sm_config['development'] = true
     end
 
-    if Rails.application.secrets.include? :certificate_path
-      remote_name = 'scalarm_cert.pem'
-      cert_path = Rails.application.secrets.certificate_path
-      FileUtils.cp(cert_path, File.join("scalarm_simulation_manager_#{sm_uuid}", remote_name))
-      sm_config[:scalarm_certificate_path] = remote_name
+    if LocalAbsolutePath::certificate
+      FileUtils.cp(LocalAbsolutePath::certificate, LocalAbsolutePath::tmp_sim_certificate(sm_uuid))
+      sm_config[:scalarm_certificate_path] = ScalarmFileName::remote_certificate
     end
 
-    IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
+    IO.write(LocalAbsolutePath::tmp_sim_config(sm_uuid), sm_config.to_json)
     # zip all files
-    %x[zip /tmp/scalarm_simulation_manager_#{sm_uuid}.zip scalarm_simulation_manager_#{sm_uuid}/*]
-    Dir.chdir(Rails.root)
+    %x[zip #{LocalAbsolutePath::tmp_sim_zip(sm_uuid)} #{LocalAbsoluteDir::tmp_simulation_manager(sm_uuid)}/*]
   end
 
   def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
-    Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
+    Rails.logger.debug "Preparing monitoring configuration for Simulation Manager with id: #{sm_uuid}"
 
-    Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
+    # This temporary directory hold now only config file, rest of files are sent via scp
+    # from their original locations (package, certificate)
+    FileUtils.mkdir_p(LocalAbsoluteDir::tmp_monitoring_package(sm_uuid))
     # prepare sm configuration
     temp_password = SimulationManagerTempPassword.where(user_id: user_id).first
 
@@ -134,20 +138,20 @@ class InfrastructureFacade
         Infrastructures: [ infrastructure_name ],
     }
 
-    if Rails.application.secrets.include? :certificate_path
-      sm_config[:ScalarmCertificatePath] = '.scalarm_certificate'
+    # Only add information about remote location of certificate (it will be sent later)
+    if LocalAbsolutePath::certificate
+      sm_config[:ScalarmCertificatePath] = RemoteAbsolutePath::remote_monitoring_certificate
     end
 
     if Rails.application.secrets.include?(:sm_information_service_url)
       sm_config[:InformationServiceAddress] = Rails.application.secrets.sm_information_service_url
     end
 
-    IO.write(File.join('/tmp', monitoring_package_dir(sm_uuid), 'config.json'), sm_config.to_json)
-    # zip all files
-    Dir.chdir(Rails.root)
+    # Only one generated file - config
+    IO.write(LocalAbsolutePath::tmp_monitoring_config(sm_uuid), sm_config.to_json)
   end
 
-  # TODO: for bakckward compatibility
+  # TODO: DEPRECATED, for bakckward compatibility
   def current_state(user_id)
     "You have #{count_sm_records} Simulation Managers scheduled"
   end

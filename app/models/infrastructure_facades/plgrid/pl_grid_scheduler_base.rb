@@ -2,7 +2,9 @@
 # - short_name() -> String
 # - long_name() -> String
 # - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
-# - send_job_files(sm_uuid, scp)
+# - job_files_list -> Array of file names to transfer from EM server to UI
+#    - should be list of files generated in prepare_job_files
+#    - _without_ simulation manager ZIP package
 # - submit_job(ssh, job) - submit job and return job id; if submission fails raise JobSubmissionFailed
 # - prepare_sesion(ssh) - prepare UI user account to run jobs - eg. init proxy
 # - cancel(ssh, record) - cancels job
@@ -96,6 +98,11 @@ ruby simulation_manager.rb
       cancel_sm_cmd(record),
       submit_job_cmd(record)
     ].join(';')
+  end
+
+  def send_job_files(sm_uuid, scp)
+    sim_path = "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip"
+    scp.upload_multiple! [sim_path]+job_files_list, '.'
   end
 
 end
