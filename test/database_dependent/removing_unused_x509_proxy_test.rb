@@ -23,7 +23,7 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
   def test_plgrid_removing_x509_proxy_grid
     # -- given -- scalarm user with credentials and two different jobs
     PlGridJob.new(user_id: @su.id, state: :error, scheduler_type: 'qsub').save
-    PlGridJob.new(user_id: @su.id, state: :running, infrastructure_side_monitoring: true, scheduler_type: 'qcg').save
+    PlGridJob.new(user_id: @su.id, state: :running, onsite_monitoring: true, scheduler_type: 'qcg').save
     PlGridJob.new(user_id: @su.id, state: :running, scheduler_type: 'glite').save
 
     refute_nil(GridCredentials.where(user_id: @su.id).first.secret_proxy)
@@ -110,7 +110,7 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
   def test_user_removing_x509_proxy
     # -- given -- scalarm user with credentials and two different jobs
     PlGridJob.new(user_id: @su.id, state: :error, scheduler_type: 'qsub').save
-    PlGridJob.new(user_id: @su.id, state: :running, infrastructure_side_monitoring: true, scheduler_type: 'qcg').save
+    PlGridJob.new(user_id: @su.id, state: :running, onsite_monitoring: true, scheduler_type: 'qcg').save
     PlGridJob.new(user_id: @su.id, state: :running, scheduler_type: 'glite').save
     CloudVmRecord.new(user_id: @su.id, state: :error, cloud_name: 'pl_cloud').save
     CloudVmRecord.new(user_id: @su.id, state: :running, cloud_name: 'google').save

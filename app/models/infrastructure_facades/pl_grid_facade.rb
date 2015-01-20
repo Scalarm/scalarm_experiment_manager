@@ -165,7 +165,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
+    job.onsite_monitoring = params.include?(:onsite_monitoring)
 
     job
   end
@@ -243,7 +243,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_stop(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
         sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
@@ -258,7 +258,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_restart(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
       sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
     else
       ssh = shared_ssh_session(sm_record.credentials)
@@ -306,7 +306,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_get_log(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
@@ -322,7 +322,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_prepare_resource(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
@@ -423,7 +423,7 @@ class PlGridFacade < InfrastructureFacade
   		end
 
   		monitored_jobs = PlGridJob.where(user_id: user.id, scheduler_type: {'$in' => ['qsub', 'qcg']},
-  										 state: {'$ne' => :error}, infrastructure_side_monitoring: {'$ne' => true})
+  										 state: {'$ne' => :error}, onsite_monitoring: {'$ne' => true})
   		if monitored_jobs.size > 0
   			return
   		end

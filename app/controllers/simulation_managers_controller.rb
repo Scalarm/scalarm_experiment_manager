@@ -11,15 +11,18 @@ class SimulationManagersController < ApplicationController
 
   # Get Simulation Manager nodes in JSON
   # GET params:
-  # - infrastructure_name: name of Infrastructure
+  # - infrastructure: name of Infrastructure
   # - experiment_id: (optional) experiment_id
-  # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
+  # - options: (optional) hash with query options (e.g. filtering options)
+  #   - states (String or Array of Strings) - allowed states
+  #   - states_not (String or Array of Strings) - not allowed states
+  #   - onsite_monitoring (true/false)
   def index
     sm_records = (if @infrastructure_facade.blank?
-                    get_all_sm_records(params[:experiment_id], params[:infrastructure_params])
+                    get_all_sm_records(params[:experiment_id], params[:options])
                   else
                     @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id],
-                                                          (Utils.parse_json_if_string(params[:infrastructure_params]) or {}) )
+                                                          (Utils.parse_json_if_string(params[:options]) or {}) )
                   end)
 
     render json: {
