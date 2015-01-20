@@ -126,7 +126,8 @@ class PlGridFacade < InfrastructureFacade
           "unxz -f #{bin_base_name}.xz",
           "chmod a+x #{bin_base_name}",
           "X509_USER_PROXY=#{remote_proxy_path} #{ShellCommands.
-              run_in_background("./#{bin_base_name}", "#{bin_base_name}-`date +%H-%M_%d-%m-%y`.log")}"
+              run_in_background("./#{bin_base_name}", "#{bin_base_name}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
+`.log")}"
       )
       Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
     end
@@ -193,10 +194,8 @@ class PlGridFacade < InfrastructureFacade
     record.destroy
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {scheduler_type: scheduler.short_name}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
+  def _get_sm_records(query, params={})
+    query.merge!({scheduler_type: scheduler.short_name})
     PlGridJob.find_all_by_query(query)
   end
 
