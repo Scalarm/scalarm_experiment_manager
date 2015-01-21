@@ -155,8 +155,8 @@ CONTEXT = [
     begin
       parsed_resp = JSON.parse(exec_post(command, args))
       status, data = parsed_resp['status'], parsed_resp['data']
-    rescue
-      Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
+    rescue Exception => e
+      Rails.logger.error "Exception on executing ONE command #{command}(#{args.join(', ')}): #{e}\n#{e.backtrace.join("\n")}"
       nil
     end
 
