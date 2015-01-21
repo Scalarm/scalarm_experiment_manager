@@ -155,15 +155,13 @@ CONTEXT = [
     begin
       parsed_resp = JSON.parse(exec_post(command, args))
       status, data = parsed_resp['status'], parsed_resp['data']
+      raise PLCloudError.new data if status != 0
+      raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
+      data
     rescue Exception => e
       Rails.logger.error "Exception on executing ONE command #{command}(#{args.join(', ')}): #{e}\n#{e.backtrace.join("\n")}"
       nil
     end
-
-    raise PLCloudError.new data if status != 0
-    raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
-
-    data
   end
 
   def exec_post(command, args)
