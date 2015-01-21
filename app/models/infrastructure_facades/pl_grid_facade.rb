@@ -418,9 +418,12 @@ class PlGridFacade < InfrastructureFacade
 
   def destroy_unused_credentials(authentication_mode, user)
   	if authentication_mode == :x509_proxy
-  		if UserSession.where(session_id: user.id).size > 0
-  			return
-  		end
+      user_sessions = UserSession.where(session_id: user.id)
+      return unless user_sessions.select(&:valid?).empty?
+
+  		# if UserSession.where(session_id: user.id).size > 0
+  		# 	return
+  		# end
 
   		monitored_jobs = PlGridJob.where(user_id: user.id, scheduler_type: {'$in' => ['qsub', 'qcg']},
   										 state: {'$ne' => :error}, onsite_monitoring: {'$ne' => true})

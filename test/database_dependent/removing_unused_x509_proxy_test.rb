@@ -38,7 +38,7 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
 
   def test_plgrid_not_removing_x509_proxy_due_to_user_session
     # -- given -- scalarm user with user session
-    UserSession.new(session_id: @su.id).save    
+    UserSession.new(session_id: @su.id, last_update: Time.now).save
 
     refute_nil(GridCredentials.where(user_id: @su.id).first.secret_proxy)
 
@@ -87,13 +87,37 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
 
   def test_plcloud_not_removing_x509_proxy_due_to_user_session
      # -- given -- scalarm user with user session
-     UserSession.new(session_id: @su.id).save
+     UserSession.new(session_id: @su.id, last_update: Time.now).save
 
      refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
      # -- when
      @plcloud.destroy_unused_credentials(:x509_proxy, @su)
      # -- then
      refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  end
+
+  def test_plcloud_removing_x509_proxy_due_to_not_valid_user_session
+    # -- given -- scalarm user with user session
+    UserSession.new(session_id: @su.id,
+                    last_update: Time.now-Rails.configuration.session_threshold.seconds-10.minutes).save
+
+    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+    # -- when
+    @plcloud.destroy_unused_credentials(:x509_proxy, @su)
+    # -- then
+    assert_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first)
+  end
+
+  def test_plgrid_removing_x509_proxy_due_to_not_valid_user_session
+    # -- given -- scalarm user with user session
+    UserSession.new(session_id: @su.id,
+                    last_update: Time.now-Rails.configuration.session_threshold.seconds-10.minutes).save
+
+    refute_nil(GridCredentials.where(user_id: @su.id).first.secret_proxy)
+    # -- when
+    @plgrid.destroy_unused_credentials(:x509_proxy, @su)
+    # -- then
+    assert_nil(GridCredentials.where(user_id: @su.id).first)
   end
 
   def test_plcloud_not_removing_x509_proxy_due_to_monitored_vm
