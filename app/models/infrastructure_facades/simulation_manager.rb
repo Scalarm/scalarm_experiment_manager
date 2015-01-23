@@ -140,6 +140,11 @@ class SimulationManager
             resource_status: [:available, :released],
             effect: :destroy_record,
             message: 'Resource has been terminated successfully - removing record'
+        },
+        monitoring_alive: {
+            condition: :monitoring_present_and_alive?,
+            effect: :store_monitoring_error,
+            message: 'On-site monitoring for this resource seems to be dead - setting to ERROR state'
         }
     }
 
@@ -147,6 +152,12 @@ class SimulationManager
 
   def should_not_be_already_terminated?
     @record.experiment.has_simulations_to_run? and not should_destroy?
+  end
+
+  def monitoring_present_and_alive?
+    not @record.has_onsite_monitoring or
+        (@record.on_site_monitoring_id and
+            @record.on_site_monitoring.pinged_recently?)
   end
 
   def store_terminated_error
@@ -162,6 +173,10 @@ class SimulationManager
   def store_error_resource_status
     # TODO get detailed resource status
     record.store_error('resource_error')
+  end
+
+  def store_monitoring_error
+    record.store_error('monitoring_failed')
   end
 
   def destroy_record
@@ -298,7 +313,7 @@ class SimulationManager
 
   # NOTE: all actions invoked here must be != false/nil
   def general_action(action_name)
-    if action_name == 'resource_status' and record.onsite_monitoring
+    if action_name == 'resource_status' and record.has_onsite_monitoring
       stat = record.resource_status
       stat.nil? ? :not_available : stat
     else

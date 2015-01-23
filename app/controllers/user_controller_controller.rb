@@ -132,6 +132,45 @@ class UserControllerController < ApplicationController
     end
   end
 
+  # GET
+  # - infrastructures: JSON Array with list of infrastructure names that are monitored
+  def monitoring_ping
+    validate(
+        infrastructures: :security_json
+    )
+
+    if @sm_user
+      infrastructures = Utils::parse_json_if_string(params[:infrastructures])
+      if not infrastructures.kind_of? Array or infrastructures.all? {|i| i.kind_of? String}
+        raise ValidationError.new('infrastructures', params[:infrastructures], 'Not an array with Strings')
+      end
+
+      sm_uuid = @sm_user.sm_uuid
+      mon = OnSiteMonitoring.where(sm_uuid: sm_uuid, infrastructures: {'$all' => infrastructures})
+
+      if mon
+        mon.last_ping = Time.now
+        mon.save
+        render json: {
+                   status: 'ok'
+               }, status: :ok
+      else
+        render json: {
+                   status: 'error',
+                   msg: "OnSiteMonitoring entry not found for #{sm_uuid} and infrastructures: #{infrastructures}"
+               }, status: :ok
+      end
+      render json: {
+                 status: 'ok'
+             }, status: :ok
+    else
+      render json: {
+                 status: 'error',
+                 msg: 'Not authorized with SimulationManager credentials'
+             }, status: :forbidden
+    end
+  end
+
   private
 
   # --- OpenID support ---

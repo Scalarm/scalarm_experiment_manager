@@ -108,22 +108,11 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
-  def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
+  def self.prepare_monitoring_package(temp_password, user_id, infrastructure_name)
+    sm_uuid = temp_password.sm_uuid
     Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
 
     Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
-    # prepare sm configuration
-    temp_password = SimulationManagerTempPassword.where(user_id: user_id).first
-
-    if temp_password.nil?
-      temp_password = SimulationManagerTempPassword.new(
-          sm_uuid: sm_uuid,
-          password: SecureRandom.base64,
-          user_id: user_id
-      )
-
-      temp_password.save
-    end
 
     sm_config = {
         InformationServiceAddress: (Rails.application.secrets.sm_information_service_url or
@@ -143,7 +132,6 @@ class InfrastructureFacade
     end
 
     IO.write(File.join('/tmp', monitoring_package_dir(sm_uuid), 'config.json'), sm_config.to_json)
-    # zip all files
     Dir.chdir(Rails.root)
   end
 
@@ -311,7 +299,7 @@ class InfrastructureFacade
         query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
       end
     end
-    query.merge!({onsite_monitoring: !!params['onsite_monitoring']}) if params and params.include? 'onsite_monitoring'
+    query.merge!({has_onsite_monitoring: !!params['onsite_monitoring']}) if params and params.include? 'onsite_monitoring'
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
     _get_sm_records(query, params)

@@ -34,10 +34,27 @@ class PlGridFacade < InfrastructureFacade
     PlGridJob
   end
 
+  # Additional params - Hash with keys:
+  # - time_limit
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     # 1. checking if the user can schedule SiM
-    credentials = if using_temp_credentials?(additional_params)
-                    create_temp_credentials(additional_params)
+    credentials = prepare_and_check_credentials(user_id, additional_params)
+
+    # 2. create instances_count SiMs
+    records = prepare_simulation_managers(instances_count, user_id, experiment_id, additional_params)
+
+    if additional_params[:onsite_monitoring]
+      prepare_and_start_osm(records, user_id, credentials, additional_params)
+    end
+
+    records
+  end
+
+  # Get PlGrid credentials if exists for user and validate them
+  # If there are temp credentials provided with options, create temporary GridCredentials object
+  def prepare_and_check_credentials(user_id, options)
+    credentials = if using_temp_credentials?(options)
+                    create_temp_credentials(user_id, options)
                   else
                     get_credentials_from_db(user_id)
                   end
@@ -50,8 +67,12 @@ class PlGridFacade < InfrastructureFacade
       raise InfrastructureErrors::InvalidCredentialsError.new
     end
 
-    # 2. create instances_count SiMs
-    records = (1..instances_count).map do
+    credentials
+  end
+
+  # Creates SimulationManager and their TempPasswords records and creates files to send in /tmp
+  def prepare_simulation_managers(count, user_id, experiment_id, additional_params)
+    (1..count).map do
       # 2.a create temp pass for SiM
       sm_uuid = SecureRandom.uuid
       if SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid).nil?
@@ -67,26 +88,76 @@ class PlGridFacade < InfrastructureFacade
 
       record
     end
-
-    sm_uuid = SecureRandom.uuid
-    send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
-
-    records
   end
 
-  def create_records(count, *args)
-    (1..count).map do
-      record = create_record(*args)
-      record.save
-      record
+  def prepare_and_start_osm(sim_records, user_id, credentials, additional_params)
+    infrastructure_name = scheduler.short_name
+    monitoring = get_osm_record(user_id, infrastructure_name)
+
+    monitoring_id = if monitoring
+        if monitoring.pinged_recently?
+          monitoring.id
+        else
+          monitoring.destroy
+          start_on_site_monitoring(credentials, infrastructure_name, additional_params).id
+        end
+      else
+        start_on_site_monitoring(credentials, infrastructure_name, additional_params).id
+      end
+
+    sim_records.each do |r|
+      r.on_site_monitoring_id = monitoring_id
+      r.save
     end
   end
 
-  def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
+  # Create OnSiteMontoring record and launch its module on infrastucture
+  def start_on_site_monitoring(credentials, infrastructure_name, options)
+    user_id = credentials.user_id
+    # check if there is monitoring for QCG or PBS already
+    mon = get_any_plgrid_osm_record(user_id)
+    if mon
+      mon.infrastructures << infrastructure_name
+    else
+      mon = create_osm_record(user_id, infrastructure_name)
+    end
+
+    send_and_launch_onsite_monitoring(credentials, mon.temp_password, user_id, options)
+    mon.save
+    mon
+  end
+
+  def get_osm_record(user_id, infrastructure_name)
+    OnSiteMonitoring.where(user_id: user_id, infrastructures: {'$in' => [infrastructure_name]}).first
+  end
+
+  def get_any_plgrid_osm_record(user_id)
+    OnSiteMonitoring.where(user_id: user_id, infrastructures: {'$in' => %w(qsub qcg)}).first
+  end
+
+  def create_osm_record(user_id, infrastructure_name)
+    sm_uuid = SecureRandom.uuid
+    temp_password = SimulationManagerTempPassword.new(
+        sm_uuid: sm_uuid,
+        password: SecureRandom.base64,
+        user_id: user_id
+    )
+    temp_password.save
+
+    OnSiteMonitoring.new(
+        user_id: user_id,
+        infrastructures: [infrastructure_name],
+        sm_uuid: sm_uuid,
+        last_ping: Time.now # fake first ping
+    )
+  end
+
+  def send_and_launch_onsite_monitoring(credentials, temp_password, user_id, params)
+    sm_uuid = temp_password.sm_uuid
     # TODO: implement multiple architectures support
     arch = 'linux_386'
 
-    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
+    InfrastructureFacade.prepare_monitoring_package(temp_password, user_id, scheduler.short_name)
     bin_base_name = 'scalarm_monitoring'
 
     remote_proxy_path = '.scalarm_proxy'
@@ -137,9 +208,9 @@ class PlGridFacade < InfrastructureFacade
     params.include?(:plgrid_login)
   end
 
-  def create_temp_credentials(params)
-    creds = GridCredentials.new({login: params[:plgrid_login]})
-    creds.password = params[:plgrid_password]
+  def create_temp_credentials(user_id, params)
+    creds = GridCredentials.new({user_id: user_id, login: params[:plgrid_login].to_s})
+    creds.password = params[:plgrid_password].to_s
     creds
   end
 
@@ -165,7 +236,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.onsite_monitoring = params.include?(:onsite_monitoring)
+    job.has_onsite_monitoring = params.include?(:onsite_monitoring)
 
     job
   end
@@ -243,7 +314,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_stop(sm_record)
-    if sm_record.onsite_monitoring
+    if sm_record.has_onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
         sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
@@ -258,7 +329,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_restart(sm_record)
-    if sm_record.onsite_monitoring
+    if sm_record.has_onsite_monitoring
       sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
     else
       ssh = shared_ssh_session(sm_record.credentials)
@@ -274,6 +345,9 @@ class PlGridFacade < InfrastructureFacade
     rescue Gsi::ProxyError
       raise
     rescue Exception => e
+      raise
+      # TODO TODO TODO
+
       # remember this error in case of unable to initialize
       sm_record.error_log = e.to_s
       sm_record.save
@@ -306,7 +380,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_get_log(sm_record)
-    if sm_record.onsite_monitoring
+    if sm_record.has_onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
@@ -322,7 +396,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_prepare_resource(sm_record)
-    if sm_record.onsite_monitoring
+    if sm_record.has_onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
@@ -418,15 +492,11 @@ class PlGridFacade < InfrastructureFacade
 
   def destroy_unused_credentials(authentication_mode, user)
   	if authentication_mode == :x509_proxy
-      user_sessions = UserSession.where(session_id: user.id)
+      user_sessions = UserSession.where(session_id: user.id).to_a
       return unless user_sessions.select(&:valid?).empty?
 
-  		# if UserSession.where(session_id: user.id).size > 0
-  		# 	return
-  		# end
-
   		monitored_jobs = PlGridJob.where(user_id: user.id, scheduler_type: {'$in' => ['qsub', 'qcg']},
-  										 state: {'$ne' => :error}, onsite_monitoring: {'$ne' => true})
+  										 state: {'$ne' => :error}, has_onsite_monitoring: {'$ne' => true})
   		if monitored_jobs.size > 0
   			return
   		end

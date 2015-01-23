@@ -171,25 +171,22 @@ class PlGridFacadeTest < MiniTest::Test
     user_id = mock 'user_id'
     instances_count = mock 'instances_count'
     experiment_id = mock 'experiment_id'
-    login = mock('plgrid_login')
-    password = mock('password')
+    records = mock 'records'
     additional_params = {
         onsite_monitoring: true,
-        plgrid_login: login,
-        password: password
+        plgrid_login: mock('login'),
+        password: mock('password')
     }
-    temp_credentials = stub_everything 'temp_credentials' do
-      stubs(:login).returns(login)
-      stubs(:password).returns(password)
-    end
+    temp_credentials = mock 'temp_credentials'
 
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
-    @facade.stubs(:using_temp_credentials?).with(additional_params).returns(true)
-    @facade.stubs(:create_temp_credentials).with(additional_params).returns(temp_credentials)
-    @facade.stubs(:create_records)
-    @facade.stubs(:send_and_launch_onsite_monitoring)
+    @facade.stubs(:prepare_and_check_credentials).with(user_id, additional_params).returns(temp_credentials)
+    @facade.stubs(:prepare_simulation_managers)
+        .with(instances_count, user_id, experiment_id, additional_params).returns(records)
+    @facade.stubs(:prepare_and_start_osm).with(records, user_id, temp_credentials, additional_params)
 
-    @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
+    re = @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
+
+    assert_equal records, re
   end
 
 end

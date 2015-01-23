@@ -18,6 +18,7 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'user_controller/account'
   post 'user_controller/change_password'
   get 'status' => 'user_controller#status'
+  get 'monitoring_ping' => 'user_controller#monitoring_ping'
 
   # OpenID
   get 'login/login_openid_google' => 'user_controller#login_openid_google'

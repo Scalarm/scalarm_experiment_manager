@@ -27,7 +27,7 @@
 
   .row.small-12.columns
     %ul
-      - unless record.onsite_monitoring
+      - unless record.has_onsite_monitoring
         %li
           %strong= t('.resource_state') + ': '
           #resource-state{style: 'display: inline;'}

@@ -8,7 +8,8 @@
 # - sm_uuid => string - uuid of configuration files
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
 # - is_terminating => boolean - whether this SM with its resource should be terminated (stop action was invoked)
-# - onsite_monitoring => boolean - whether this record should be supported by onsite-monitoring
+# - has_onsite_monitoring => boolean - whether this record should be supported by onsite-monitoring
+# - on_site_monitoring_id => id of OnSiteMonitoring that handles this SiM (if has_onsite_monitoring)
 #
 # Fields with * can be initialized with initialize_fields method after creation.
 #
@@ -25,6 +26,7 @@ module SimulationManagerRecord
 
   attr_join :user, ScalarmUser
   attr_join :experiment, Experiment
+  attr_join :on_site_monitoring, OnSiteMonitoring
 
   def initialize_fields
     set_state(:created)
