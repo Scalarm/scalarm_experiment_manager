@@ -17,7 +17,7 @@
       %li
         %a#manual-on.tiny.button.secondary(href="#") Off
 
-    %h3.subheader= t('.input_header')
+    %h3.subheader#manual-header= t('.input_header')
 
     .content
       %dl.tabs(data-tab="")
@@ -94,6 +94,36 @@
       $("#import-off").on("click", window.InputParameterSpaceSwitcher.importSwitchOn);
 
       $("#import-on").click();
+
+      $("#manual-header").on("click", function(event) {
+        if(event.originalEvent) {
+          if($("#manual-off").hasClass("clicked")) {
+            $("#manual-off").removeClass("clicked");
+            $("#manual-on").addClass("clicked");
+            $("#import-off").click();
+          }
+          else {
+            $("#manual-off").addClass("clicked");
+            $("#manual-on").removeClass("clicked");
+            $("#import-on").click();
+          }
+        }
+      });
+
+      $("#import-header").on("click", function(event) {
+        if(event.originalEvent) {
+          if($("#import-off").hasClass("clicked")) {
+            $("#import-off").removeClass("clicked");
+            $("#import-on").addClass("clicked");
+            $("#manual-off").click();
+          }
+          else {
+            $("#import-off").addClass("clicked");
+            $("#import-on").removeClass("clicked");
+            $("#manual-on").click();
+          }
+        }
+      })
 
       $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
     });

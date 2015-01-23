@@ -69,6 +69,7 @@ module GoogleOpenID
 
       flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
       session[:user] = user.id.to_s
+      session[:uuid] = SecureRandom.uuid
       successful_login
 
     else

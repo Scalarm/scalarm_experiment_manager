@@ -20,7 +20,7 @@ require 'mongo_lock'
 # - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
 #
 # Database support methods:
-# - get_sm_records(user_id=nil, experiment_id=nil, params={}) -> Array of SimulationManagerRecord subclass instances
+# - _get_sm_records(query, params={}) -> Array of SimulationManagerRecord subclass instances
 # - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
 #
 # SimulationManager delegate methods to implement
@@ -294,6 +294,29 @@ class InfrastructureFacade
   end
 
   def destroy_unused_credentials(authentication_mode, user); end
+
+  def get_sm_records(user_id=nil, experiment_id=nil, params={})
+    query = {}
+
+    if params and params.include? 'states_not'
+      if params['states_not'].kind_of? String
+        query.merge!({state: {'$ne' => params['states_not'].to_sym}})
+      elsif params['states_not'].kind_of? Array
+        query.merge!({state: {'$nin' => params['states_not'].map{|i| i.to_sym}}})
+      end
+    elsif params and params.include? 'states'
+      if params['states'].kind_of? String
+        query.merge!({state: {'$eq' => params['states'].to_sym}})
+      elsif params['states'].kind_of? Array
+        query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
+      end
+    end
+    query.merge!({onsite_monitoring: !!params['onsite_monitoring']}) if params and params.include? 'onsite_monitoring'
+    query.merge!({user_id: user_id}) if user_id
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+    _get_sm_records(query, params)
+  end
+
 
   private :create_simulation_manager, :init_resources, :clean_up_resources
 end

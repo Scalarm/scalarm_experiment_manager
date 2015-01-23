@@ -312,7 +312,7 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_monitoring_onsite
-    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.stubs(:onsite_monitoring).returns(true)
     @record.expects(:store_no_credentials).never
     @sm.stubs(:state).returns(:created)
     @sm.stubs(:try_all_monitoring_cases)
@@ -321,7 +321,7 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_infrastructure_action_general
-    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.stubs(:onsite_monitoring).returns(true)
     @sm.stubs(:general_action).with('action').returns('something')
     @sm.expects(:delegate_to_infrastructure).with('action').never
 
@@ -329,7 +329,7 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_infrastructure_action_delegated
-    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.stubs(:onsite_monitoring).returns(true)
     @sm.stubs(:general_action).with('action').returns(nil)
     @sm.stubs(:delegate_to_infrastructure).with('action').returns('something')
     @sm.expects(:delegate_to_infrastructure).with('action').never

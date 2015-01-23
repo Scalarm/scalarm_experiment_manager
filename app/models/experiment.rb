@@ -273,6 +273,13 @@ class Experiment < MongoActiveRecord
     self.size
   end
 
+  def extend_progress_bar
+    self.create_progress_bar_table.drop
+    self.insert_initial_bar
+    # Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
+    Thread.start { self.update_all_bars }
+  end
+
   def experiment_size=(new_size)
     @attributes['experiment_size'] = new_size
     self.size = new_size
@@ -306,9 +313,10 @@ class Experiment < MongoActiveRecord
 
   def create_scatter_plot_csv_for(x_axis, y_axis)
     CSV.generate do |csv|
-      csv << [x_axis, y_axis]
+      csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result arguments)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments)}).each do |simulation_run|
+        simulation_run_ind = simulation_run.index.to_s
         simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
         x_axis_value = if simulation_run.result.include?(x_axis)
@@ -326,7 +334,7 @@ class Experiment < MongoActiveRecord
                          simulation_input[y_axis]
                        end
 
-        csv << [x_axis_value, y_axis_value]
+        csv << [x_axis_value, y_axis_value, simulation_run_ind]
       end
     end
   end
@@ -543,6 +551,34 @@ class Experiment < MongoActiveRecord
 
   def self.visible_to(user)
     where({'$or' => [{user_id: user.id}, {shared_with: {'$in' => [user.id]}}]})
+  end
+
+  def csv_parameter_ids
+    self.doe_info[0][1]
+  end
+
+  def csv_imported?
+    self.doe_info and not self.doe_info.empty? and self.doe_info[0][0] == 'csv_import'
+  end
+
+  # parameters - Hash of input parameters
+  # NOTE: all parameters must match (every single parameter must be specified)
+  # returns Hash with result
+  # TODO: handle results with errors
+  def get_result_for(simulation_parameters)
+    # TODO: check if SimulationRun.arguments is always the same as Experiment.parameters
+    values = self.parameters.flatten.collect do |p|
+      simulation_parameters[p.to_s] || simulation_parameters[p.to_sym]
+    end
+
+    values = values.collect(&:to_s).join(',')
+
+    sim_run = self.simulation_runs.where(
+        {is_done: true, values: values},
+        {fields: {_id: 0, result: 1}}
+    ).first
+
+    sim_run and sim_run.result
   end
 
   private

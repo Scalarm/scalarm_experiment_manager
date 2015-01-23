@@ -159,6 +159,7 @@ class ExperimentsController < ApplicationController
 
     @experiment_input = Experiment.prepare_experiment_input(@simulation, Utils.parse_json_if_string(params['experiment_input']), doe_info)
 
+    # TODO: use ExperimentsFactory
     # create the new type of experiment object
     experiment = Experiment.new({ simulation_id: @simulation.id,
                                   experiment_input: @experiment_input,
@@ -272,7 +273,7 @@ class ExperimentsController < ApplicationController
     result_set = if result_set.blank?
       [t('experiments.analysis.no_results')]
     else
-      result_set.map{|x| [Experiment.output_parameter_label_for(x), x]}
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
 
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
@@ -280,11 +281,11 @@ class ExperimentsController < ApplicationController
                  {limit: 1, fields: %w(arguments)}).first
 
     moes_and_params = if done_run.nil?
-                        [ [t('experiments.analysis.no_completed_runs'), nil] ]
+                        [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
                       else
-                        result_set + [%w(----------- nil)] +
-                          done_run.arguments.split(',').map{|x|
-                            [ @experiment.input_parameter_label_for(x), x ]}
+                        done_run.arguments.split(',').map{|x|
+                          [ @experiment.input_parameter_label_for(x), x, "input_parameter"]} +
+                          [%w(----------- nil)] + result_set
                       end
 
     # params = if done_run.nil?
@@ -297,8 +298,8 @@ class ExperimentsController < ApplicationController
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
-    moes_info[:moes_and_params] = moes_and_params.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+    moes_info[:moes_and_params] = moes_and_params.map{ |label, id, type|
+      "<option data-type='#{type}' value='#{id}'>#{label}</option>" }.join
 
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
@@ -341,8 +342,8 @@ class ExperimentsController < ApplicationController
     param_type = param_doc['type'].to_sym
 
     validate(
-        range_min: [param_type, :positive],
-        range_max: [param_type, :positive],
+        range_min: [param_type],
+        range_max: [param_type],
         range_step: [param_type, :positive]
     )
 
@@ -363,16 +364,7 @@ class ExperimentsController < ApplicationController
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
         @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
         @experiment.save
-        if @num_of_new_simulations > 0
-          @experiment.create_progress_bar_table.drop
-          @experiment.insert_initial_bar
-
-          # 4. update progress bar
-          Thread.new do
-            Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-            @experiment.update_all_bars
-          end
-        end
+        @experiment.extend_progress_bar if @num_of_new_simulations > 0
 
         File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
       end
@@ -817,6 +809,7 @@ class ExperimentsController < ApplicationController
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
     parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
 
+    # TODO: use ExperimentsFactory
     # create the new type of experiment object
     experiment = Experiment.new({'simulation_id' => @simulation.id,
                                  'is_running' => true,
