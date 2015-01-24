@@ -195,7 +195,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    true
+    PrivateMachineCredentials.where(user_id: user_id).count > 0
   end
 
   # -- Monitoring utils --
