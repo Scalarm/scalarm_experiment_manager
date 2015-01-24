@@ -32,26 +32,26 @@ module QcgScheduler
 
     def prepare_job_files(sm_uuid, params)
       execution_dir = if params.include?(:dest_dir)
-        "/tmp/#{params[:dest_dir]}"
+        params[:dest_dir]
       else
-        "/tmp"
+        LocalAbsoluteDir::tmp
       end
 
       params = params[:sm_record] if params.include?(:sm_record)
 
-      IO.write("#{execution_dir}/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-      IO.write("#{execution_dir}/scalarm_job_#{sm_uuid}.qcg", prepare_job_descriptor(sm_uuid, params))
+      IO.write("#{execution_dir}/#{job_script_file(sm_uuid)}", prepare_job_executable)
+      IO.write("#{execution_dir}/#{job_qcg_file(sm_uuid)}", prepare_job_descriptor(sm_uuid, params))
     end
 
     def prepare_job_descriptor(uuid, params)
       log_path = PlGridJob.log_path(uuid)
       <<-eos
-#QCG executable=scalarm_job_#{uuid}.sh
+#QCG executable=#{job_script_file(uuid)}
 #QCG argument=#{uuid}
 #QCG output=#{log_path}.out
 #QCG error=#{log_path}.err
-#QCG stage-in-file=scalarm_job_#{uuid}.sh
-#QCG stage-in-file=scalarm_simulation_manager_#{uuid}.zip
+#QCG stage-in-file=#{job_script_file(uuid)}
+#QCG stage-in-file=#{ScalarmFileName::tmp_sim_zip(uuid)}
 #QCG host=#{params['plgrid_host'] or 'zeus.cyfronet.pl'}
 #QCG queue=#{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
 #QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
@@ -66,15 +66,15 @@ module QcgScheduler
       "P#{dd}DT#{hh}H#{mm}M"
     end
 
-    def job_files_list
+    def job_files_list(sm_uuid)
       [
-          "/tmp/scalarm_job_#{sm_uuid}.sh",
-          "/tmp/scalarm_job_#{sm_uuid}.qcg"
+          job_script_file(sm_uuid),
+          job_qcg_file(sm_uuid)
       ]
     end
 
     def submit_job(ssh, job)
-      cmd = submit_job_cmd(job)
+      cmd = chain(cd(RemoteDir::simulation_managers), submit_job_cmd(job))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
@@ -83,8 +83,10 @@ module QcgScheduler
     end
 
     def submit_job_cmd(sm_record)
-      [ "chmod a+x scalarm_job_#{sm_record.sm_uuid}.sh",
-        PlGridScheduler.qcg_command("qcg-sub scalarm_job_#{sm_record.sm_uuid}.qcg") ].join(';')
+      chain(
+          "chmod a+x #{job_script_file(sm_record.sm_uuid)}",
+          PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}")
+      )
     end
 
     def self.parse_job_id(submit_job_output)
@@ -204,7 +206,7 @@ module QcgScheduler
     end
 
     def clean_after_sm_cmd(sm_record)
-      [ super, "rm scalarm_job_#{sm_record.sm_uuid}.qcg" ].join(';')
+      [ super, "rm #{job_qcg_file(sm_record.sm_uuid)}" ].join(';')
     end
 
     def self.available_hosts
@@ -223,6 +225,10 @@ module QcgScheduler
     # Proxy duration is in hours and it must be shorter than current proxy cert duration
     def self.qcg_command(command, proxy_duration_h=DEFAULT_PROXY_DURATION_H)
       "QCG_ENV_PROXY_DURATION_MIN=#{proxy_duration_h} #{command}"
+    end
+
+    def job_qcg_file(sm_uuid)
+      "scalarm_job_#{sm_uuid}.qcg"
     end
 
   end

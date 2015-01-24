@@ -28,21 +28,24 @@ module GliteScheduler
     end
 
     def prepare_job_files(sm_uuid, params)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
-      IO.write("/tmp/scalarm_job_#{sm_uuid}.jdl", prepare_job_descriptor(sm_uuid, params))
+      IO.write(job_script_file(sm_uuid), prepare_job_executable)
+      IO.write(job_jdl_file(sm_uuid), prepare_job_descriptor(sm_uuid, params))
     end
 
-    def job_files_list
+    def job_files_list(sm_uuid)
       [
-          "/tmp/scalarm_job_#{sm_uuid}.sh",
-          "/tmp/scalarm_job_#{sm_uuid}.jdl"
+          job_script_file(sm_uuid),
+          job_jdl_file(sm_uuid)
       ]
     end
 
     def submit_job(ssh, job)
-      ssh.exec!("chmod a+x scalarm_job_#{job.sm_uuid}.sh")
+      ssh.exec!(chain(cd(RemoteDir::simulation_managers), "chmod a+x #{job_script_file(job.sm_uuid)}"))
       #  schedule the job with glite wms
-      submit_job_output = PlGridScheduler.execute_glite_command("glite-wms-job-submit -a scalarm_job_#{job.sm_uuid}.jdl", ssh)
+      submit_job_output =
+          PlGridScheduler.execute_glite_command(
+              chain(cd(RemoteDir::simulation_managers), "glite-wms-job-submit -a #{job_jdl_file(job.sm_uuid)}"),
+              ssh)
       logger.debug("Glite submission output lines: #{submit_job_output}")
 
       job_id = GliteScheduler::PlGridScheduler.parse_job_id(submit_job_output)
@@ -55,7 +58,10 @@ module GliteScheduler
     end
 
     def get_job_info(ssh, job_id)
-      PlGridScheduler.execute_glite_command("glite-wms-job-status #{job_id}", ssh)
+      PlGridScheduler.execute_glite_command(
+          chain(cd(RemoteDir::simulation_managers), "glite-wms-job-status #{job_id}"),
+          ssh
+      )
     end
 
     def glite_state(ssh, job_id)
@@ -102,7 +108,10 @@ module GliteScheduler
     end
 
     def cancel(ssh, record)
-      PlGridScheduler.execute_glite_command cancel_sm_cmd(record), ssh
+      PlGridScheduler.execute_glite_command(
+          chain(RemoteDir::simulation_managers, cancel_sm_cmd(record)),
+          ssh
+      )
     end
 
     def cancel_sm_cmd(record)
@@ -111,7 +120,7 @@ module GliteScheduler
 
     def clean_after_job(ssh, job)
       super
-      ssh.exec!("rm scalarm_job_#{job.sm_uuid}.jdl")
+      ssh.exec!("rm #{job_jdl_file(job.sm_uuid)}")
     end
 
     def self.default_host
@@ -132,9 +141,9 @@ module GliteScheduler
       [
         'dwarf.wcss.wroc.pl',
         'grid.cyf-kr.edu.pl',
-        # 'grid.icm.edu.pl', # TODO: no ruby available!
-        # 'grid.task.gda.pl', # TODO: no ruby available!
-        # 'reef.man.poznan.pl' # TODO: no ruby available!
+        'grid.icm.edu.pl',
+        'grid.task.gda.pl',
+        'reef.man.poznan.pl'
       ]
     end
 
@@ -182,7 +191,10 @@ module GliteScheduler
     end
 
     def get_glite_output_to_file(ssh, job)
-      output = PlGridScheduler.execute_glite_command("glite-wms-job-output --dir . #{job.job_id}", ssh)
+      output = PlGridScheduler.execute_glite_command(
+          chain(cd(RemoteDir::simulation_managers), "glite-wms-job-output --dir . #{job.job_id}"),
+          ssh
+      )
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
       "#{output_dir}/#{job.log_path}"
     end
@@ -206,6 +218,10 @@ module GliteScheduler
       rescue Timeout::Error
         raise StandardError.new 'Timeout executing voms-proxy-init - probably key has passphrase'
       end
+    end
+
+    def job_jdl_file(sm_uuid)
+      "scalarm_job_#{sm_uuid}.jdl"
     end
 
   end

@@ -12,11 +12,17 @@
 # - clean_after_job(ssh, record) - cleans UI user's account from temporary files
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
 
+require 'infrastructure_facades/shell_commands'
+require 'infrastructure_facades/ssh_accessed_infrastructure'
+
 require 'timeout'
 
 class JobSubmissionFailed < StandardError; end
 
 class PlGridSchedulerBase
+  include ShellCommands
+  include SSHAccessedInfrastructure
+
   attr_reader :logger
 
   def initialize(logger)
@@ -87,22 +93,27 @@ ruby simulation_manager.rb
   end
 
   def clean_after_sm_cmd(record)
-    [
-      "rm scalarm_simulation_manager_#{record.sm_uuid}.zip",
-      "rm scalarm_job_#{record.sm_uuid}.sh"
-    ].join(';')
+    sm_uuid = record.sm_uuid
+    chain(
+      rm(ScalarmFileName::tmp_sim_zip(sm_uuid)),
+      rm(job_script_file(sm_uuid))
+    )
   end
 
   def restart_sm_cmd(record)
-    [
+    chain(
       cancel_sm_cmd(record),
       submit_job_cmd(record)
-    ].join(';')
+    )
   end
 
   def send_job_files(sm_uuid, scp)
-    sim_path = "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip"
-    scp.upload_multiple! [sim_path]+job_files_list, '.'
+    sim_path = LocalAbsolutePath::tmp_sim_zip(sm_uuid)
+    scp.upload_multiple! [sim_path]+job_files_list(sm_uuid), RemoteDir::simulation_managers
+  end
+
+  def job_script_file(sm_uuid)
+    "scalarm_job_#{sm_uuid}.sh"
   end
 
 end

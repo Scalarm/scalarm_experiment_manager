@@ -91,22 +91,14 @@ class PlGridFacade < InfrastructureFacade
     credentials.ssh_session do |ssh|
       # TODO: implement ssh.scp method for gsissh and use here
       credentials.scp_session do |scp|
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
+
         key_passphrase = params[:key_passphrase]
         PlGridFacade.generate_proxy(ssh, key_passphrase) if not credentials.secret_proxy and key_passphrase
         PlGridFacade.clone_proxy(ssh, RemoteAbsolutePath::remote_monitoring_proxy)
 
-        [
-            RemoteHomePath::monitoring_config,
-            RemoteHomePath::monitoring_package,
-            RemoteHomePath::monitoring_binary
-        ].each do |path|
-          ssh.exec! rm(path, true)
-        end
-
-        local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
-        local_package = LocalAbsolutePath::monitoring_package(arch)
-
-        scp.upload_multiple! [local_config, local_package], RemoteDir::monitoring
+        remove_remote_monitoring_files(ssh)
+        upload_monitoring_files(scp, sm_uuid, arch)
         # TODO: SCAL-525
 
         if LocalAbsolutePath::certificate
@@ -114,17 +106,38 @@ class PlGridFacade < InfrastructureFacade
           scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
         end
 
-        cmd = ShellCommands.chain(
-           cd(RemoteDir::monitoring),
-           "unxz -f #{ScalarmFileName::monitoring_package}",
-           "chmod a+x #{ScalarmFileName::monitoring_binary}",
-           "export X509_USER_PROXY=#{ScalarmFileName::remote_monitoring_proxy}",
-           "#{ShellCommands.run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                                                                                   "#{ScalarmFileName::monitoring_binary}-`date +%H-%M_%d-%m-%y`.log")}"
-        )
+        cmd = start_monitoring_cmd
         Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
       end
     end
+  end
+
+  def remove_remote_monitoring_files(ssh)
+    [
+        RemoteHomePath::monitoring_config,
+        RemoteHomePath::monitoring_package,
+        RemoteHomePath::monitoring_binary
+    ].each do |path|
+      ssh.exec! rm(path, true)
+    end
+  end
+
+  def upload_monitoring_files(scp, sm_uuid, arch)
+    local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+    local_package = LocalAbsolutePath::monitoring_package(arch)
+
+    scp.upload_multiple! [local_config, local_package], RemoteDir::monitoring
+  end
+
+  def start_monitoring_cmd
+    ShellCommands.chain(
+        cd(RemoteDir::monitoring),
+        "unxz -f #{ScalarmFileName::monitoring_package}",
+        "chmod a+x #{ScalarmFileName::monitoring_binary}",
+        "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
+        "#{ShellCommands.run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                                           "#{ScalarmFileName::monitoring_binary}-`date +%H-%M_%d-%m-%y`.log")}"
+    )
   end
 
   def self.clone_proxy(ssh, remote_path)
@@ -408,24 +421,25 @@ class PlGridFacade < InfrastructureFacade
   # --
 
   def simulation_manager_code(sm_record)
-    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+    sm_uuid = sm_record.sm_uuid
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
 
-    Dir.chdir('/tmp')
+    code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
+
     FileUtils.remove_dir(code_dir, true)
     FileUtils.mkdir(code_dir)
-    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
+    FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
     scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
 
-    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+    Dir.chdir(ScalarmDirName::tmp) do
+      %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
+    end
 
-    Dir.chdir(Rails.root)
-
-    File.join('/', 'tmp', code_dir + ".zip")
+    File.join(LocalAbsolutePath::tmp_sim_code_zip(sm_uuid))
   end
 
   def destroy_unused_credentials(authentication_mode, user)

@@ -31,17 +31,25 @@ module SSHAccessedInfrastructure
     end
 
     def self.tmp_sim_zip(sm_uuid)
-      File.join('/tmp', "scalarm_simulation_manager_#{sm_uuid}.zip")
+      File.join('/tmp', ScalarmFileName::tmp_sim_zip(sm_uuid))
+    end
+
+    def self.tmp_sim_code_zip(sm_uuid)
+      File.join(LocalAbsoluteDir::tmp, "scalarm_simulation_manager_code_#{sm_uuid}.zip")
     end
   end
 
   module LocalAbsoluteDir
     def self.tmp_monitoring_package(sm_uuid)
-      File.join('/tmp', "scalarm_monitoring_#{sm_uuid}")
+      File.join(LocalAbsoluteDir::tmp, ScalarmDirName::tmp_monitoring_package(sm_uuid))
     end
 
     def self.tmp_simulation_manager(sm_uuid)
-      File.join('/tmp', "scalarm_simulation_manager_#{sm_uuid}")
+      File.join(LocalAbsoluteDir::tmp, ScalarmDirName::tmp_simulation_manager(sm_uuid))
+    end
+
+    def self.tmp_sim_code(sm_uuid)
+      File.join(LocalAbsoluteDir::tmp, ScalarmDirName::tmp_sim_code(sm_uuid))
     end
 
     def self.simulation_manager_go(arch)
@@ -50,6 +58,10 @@ module SSHAccessedInfrastructure
 
     def self.simulation_manager_ruby
       File.join(Rails.root, 'public', 'scalarm_simulation_manager_ruby')
+    end
+
+    def self.tmp
+      '/tmp'
     end
   end
 
@@ -90,6 +102,24 @@ module SSHAccessedInfrastructure
 
     def self.sim_config
       'config.json'
+    end
+
+    def self.tmp_sim_zip(sm_uuid)
+      "scalarm_simulation_manager_#{sm_uuid}.zip"
+    end
+  end
+
+  module ScalarmDirName
+    def self.tmp_monitoring_package(sm_uuid)
+     "scalarm_monitoring_#{sm_uuid}"
+    end
+
+    def self.tmp_simulation_manager(sm_uuid)
+      "scalarm_simulation_manager_#{sm_uuid}"
+    end
+
+    def self.tmp_sim_code(sm_uuid)
+      "scalarm_simulation_manager_code_#{sm_uuid}"
     end
   end
 

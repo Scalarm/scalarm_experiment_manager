@@ -17,7 +17,6 @@ gem 'aws-sdk'
 # Google Compute Engine connector
 gem 'google-api-client'
 
-gem 'rubyzip'
 gem 'encryptor'
 gem 'net-ssh'
 gem 'net-scp'

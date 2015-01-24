@@ -27,20 +27,20 @@ module QsubScheduler
       if params.include?(:dest_dir) and params.include?(:sm_record)
         job = params[:sm_record]
 
-        IO.write("/tmp/#{params[:dest_dir]}/scalarm_job_#{job['sm_uuid']}.sh", prepare_job_executable)
+        IO.write(File.join(params[:dest_dir], job_script_file(job['sm_uuid'])), prepare_job_executable)
       else
-        IO.write("/tmp/scalarm_job_#{sm_uuid}.sh", prepare_job_executable)
+        IO.write(File.join(ScalarmDirName::tmp, job_script_file(sm_uuid)), prepare_job_executable)
       end
     end
 
-    def job_files_list
+    def job_files_list(sm_uuid)
       [
-          "/tmp/scalarm_job_#{sm_uuid}.sh"
+          File.join(ScalarmDirName::tmp, job_script_file(sm_uuid))
       ]
     end
 
     def submit_job(ssh, sm_record)
-      cmd = submit_job_cmd(sm_record)
+      cmd = chain(cd(RemoteDir::simulation_managers), submit_job_cmd(sm_record))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("PBS cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
@@ -49,6 +49,7 @@ module QsubScheduler
       m ? m[0] : raise(JobSubmissionFailed.new(submit_job_output))
     end
 
+    # Assumption: working dir contains job files
     def submit_job_cmd(sm_record)
       #  schedule the job with qsub
       qsub_cmd = [
@@ -61,8 +62,9 @@ module QsubScheduler
           '-l', "walltime=#{sm_record.time_limit.to_i.minutes.to_i}" # convert minutes to seconds
       ]
 
-      [ "chmod a+x scalarm_job_#{sm_record.sm_uuid}.sh",
-        "echo \"sh scalarm_job_#{sm_record.sm_uuid}.sh #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}" ].join(';')
+      sm_uuid = sm_record.sm_uuid
+      [ "chmod a+x #{job_script_file(sm_uuid)}",
+        "echo \"sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}" ].join(';')
     end
 
     def pbs_state(ssh, job)

@@ -100,6 +100,7 @@ class InfrastructureFacade
       sm_config['development'] = true
     end
 
+    # copy certificate to SimulationManager package
     if LocalAbsolutePath::certificate
       FileUtils.cp(LocalAbsolutePath::certificate, LocalAbsolutePath::tmp_sim_certificate(sm_uuid))
       sm_config[:scalarm_certificate_path] = ScalarmFileName::remote_certificate
@@ -107,7 +108,11 @@ class InfrastructureFacade
 
     IO.write(LocalAbsolutePath::tmp_sim_config(sm_uuid), sm_config.to_json)
     # zip all files
-    %x[zip #{LocalAbsolutePath::tmp_sim_zip(sm_uuid)} #{LocalAbsoluteDir::tmp_simulation_manager(sm_uuid)}/*]
+
+    Dir.chdir(LocalAbsoluteDir::tmp) do
+      %x[zip #{LocalAbsolutePath::tmp_sim_zip(sm_uuid)} #{ScalarmDirName::tmp_simulation_manager(sm_uuid)}/*]
+      FileUtils.rm_rf(ScalarmDirName::tmp_simulation_manager(sm_uuid))
+    end
   end
 
   def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
