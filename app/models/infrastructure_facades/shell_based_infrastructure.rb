@@ -1,14 +1,18 @@
 require_relative 'shell_commands'
 include ShellCommands
 
+require_relative 'ssh_accessed_infrastructure'
+
 module ShellBasedInfrastructure
+  include SSHAccessedInfrastructure
   # -- Simulation Manager installation --
 
   def self.start_simulation_manager_cmd(record)
-    sm_dir_name = "scalarm_simulation_manager_#{record.sm_uuid}"
+    sm_dir_name = ScalarmDirName::tmp_simulation_manager(record.sm_uuid)
 
     if Rails.configuration.simulation_manager_version == :go
       chain(
+          cd(RemoteDir::simulation_managers),
           mute(rm(sm_dir_name, true)),
           mute("unzip #{sm_dir_name}.zip"),
           mute(cd(sm_dir_name)),
@@ -18,7 +22,8 @@ module ShellBasedInfrastructure
       )
     elsif Rails.configuration.simulation_manager_version == :ruby
       chain(
-          mute('source .rvm/environments/default'),
+          cd(RemoteDir::simulation_managers),
+          mute('source ~/.rvm/environments/default'),
           mute(rm(sm_dir_name, true)),
           mute("unzip #{sm_dir_name}.zip"),
           mute(cd(sm_dir_name)),
@@ -28,14 +33,20 @@ module ShellBasedInfrastructure
   end
 
   def log_exists?(record, ssh)
-    path_exists = (ssh.exec!(run_and_get_pid "ls #{record.log_path}") == 0)
+    path_exists = (ssh.exec_sc!("ls #{record.log_path}").exit_code == 0)
     logger.warn "Log file already exists: #{record.log_path}" if path_exists
     path_exists
   end
 
   def send_and_launch_sm(record, ssh)
-    record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
-    output = ssh.exec!(ShellBasedInfrastructure.start_simulation_manager_cmd(record))
+    SSHAccessedInfrastructure.create_remote_directories(ssh)
+    record.upload_file(LocalAbsolutePath::tmp_sim_zip(record.sm_uuid), RemoteDir::simulation_managers)
+    output = ssh.exec!(
+        chain(
+            cd(RemoteDir::simulation_managers),
+            self.class.start_simulation_manager_cmd(record)
+        )
+    )
     logger.debug "Simulation Manager init (stripped) output: #{output}"
     pid = ShellBasedInfrastructure.output_to_pid(output)
     record.pid = pid if pid

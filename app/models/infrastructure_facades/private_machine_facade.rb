@@ -211,19 +211,18 @@ class PrivateMachineFacade < InfrastructureFacade
 
     InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
 
-    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+    code_dir = LocalAbsoluteDir::tmp_sim_code(sm_record.sm_uuid)
 
-    Dir.chdir('/tmp')
     FileUtils.remove_dir(code_dir, true)
     FileUtils.mkdir(code_dir)
-    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
+    FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_record.sm_uuid), code_dir)
 
     #scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
-    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+    Dir.chdir('/tmp') do
+      %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_record.sm_uuid)} #{code_dir}/*]
+    end
 
-    Dir.chdir(Rails.root)
-
-    File.join('/', 'tmp', code_dir + ".zip")
+    LocalAbsolutePath::tmp_sim_code_zip(sm_record.sm_uuid)
   end
 
 end
