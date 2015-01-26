@@ -42,9 +42,8 @@ module ShellBasedInfrastructure
     SSHAccessedInfrastructure.create_remote_directories(ssh)
     record.upload_file(LocalAbsolutePath::tmp_sim_zip(record.sm_uuid), RemoteDir::simulation_managers)
     output = ssh.exec!(
-        chain(
-            cd(RemoteDir::simulation_managers),
-            self.class.start_simulation_manager_cmd(record)
+        Command::cd_to_simulation_managers(
+            ShellBasedInfrastructure.start_simulation_manager_cmd(record)
         )
     )
     logger.debug "Simulation Manager init (stripped) output: #{output}"

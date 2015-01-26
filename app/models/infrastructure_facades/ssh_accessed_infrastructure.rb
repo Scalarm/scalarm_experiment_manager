@@ -2,6 +2,10 @@ module SSHAccessedInfrastructure
   include SharedSSH
   include ShellCommands
 
+  def initialize(*args)
+    super(*args)
+  end
+
   def self.create_remote_directories(ssh)
     [RemoteDir::scalarm_root, RemoteDir::simulation_managers, RemoteDir::monitoring].each do |name|
       ssh.exec!(mkdir(name))
@@ -170,4 +174,14 @@ module SSHAccessedInfrastructure
       File.join('~', path)
     end
   end
+
+  module Command
+    def self.cd_to_simulation_managers(cmd)
+      chain(
+          cd(RemoteDir::simulation_managers),
+          cmd
+      )
+    end
+  end
+
 end

@@ -40,11 +40,11 @@ module GliteScheduler
     end
 
     def submit_job(ssh, job)
-      ssh.exec!(chain(cd(RemoteDir::simulation_managers), "chmod a+x #{job_script_file(job.sm_uuid)}"))
+      ssh.exec!(Command::cd_to_simulation_managers("chmod a+x #{job_script_file(job.sm_uuid)}"))
       #  schedule the job with glite wms
       submit_job_output =
           PlGridScheduler.execute_glite_command(
-              chain(cd(RemoteDir::simulation_managers), "glite-wms-job-submit -a #{job_jdl_file(job.sm_uuid)}"),
+              Command::cd_to_simulation_managers("glite-wms-job-submit -a #{job_jdl_file(job.sm_uuid)}"),
               ssh)
       logger.debug("Glite submission output lines: #{submit_job_output}")
 
@@ -59,7 +59,7 @@ module GliteScheduler
 
     def get_job_info(ssh, job_id)
       PlGridScheduler.execute_glite_command(
-          chain(cd(RemoteDir::simulation_managers), "glite-wms-job-status #{job_id}"),
+          chain(Command::cd_to_simulation_managers("glite-wms-job-status #{job_id}")),
           ssh
       )
     end
@@ -109,7 +109,7 @@ module GliteScheduler
 
     def cancel(ssh, record)
       PlGridScheduler.execute_glite_command(
-          chain(RemoteDir::simulation_managers, cancel_sm_cmd(record)),
+          Command::cd_to_simulation_managers(cancel_sm_cmd(record)),
           ssh
       )
     end
@@ -192,7 +192,7 @@ module GliteScheduler
 
     def get_glite_output_to_file(ssh, job)
       output = PlGridScheduler.execute_glite_command(
-          chain(cd(RemoteDir::simulation_managers), "glite-wms-job-output --dir . #{job.job_id}"),
+          Command::cd_to_simulation_managers("glite-wms-job-output --dir . #{job.job_id}"),
           ssh
       )
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)

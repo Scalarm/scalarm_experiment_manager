@@ -40,7 +40,7 @@ module QsubScheduler
     end
 
     def submit_job(ssh, sm_record)
-      cmd = chain(cd(RemoteDir::simulation_managers), submit_job_cmd(sm_record))
+      cmd = chain(Command::cd_to_simulation_managers(submit_job_cmd(sm_record)))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("PBS cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
