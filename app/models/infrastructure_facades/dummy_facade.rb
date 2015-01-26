@@ -36,11 +36,7 @@ class DummyFacade < InfrastructureFacade
     nil
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
-
+  def _get_sm_records(query, params={})
     DummyRecord.find_all_by_query(query)
   end
 

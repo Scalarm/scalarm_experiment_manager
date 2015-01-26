@@ -58,7 +58,7 @@ class PrivateMachineFacade < InfrastructureFacade
           ppn: ppn
       )
 
-      record.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
+      record.onsite_monitoring = params.include?(:onsite_monitoring)
 
       record.initialize_fields
       record.save
@@ -99,9 +99,7 @@ class PrivateMachineFacade < InfrastructureFacade
     'private_machine'
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = (user_id ? {user_id: user_id} : {})
-    query.merge!({experiment_id: experiment_id}) if experiment_id
+  def _get_sm_records(query, params={})
     PrivateMachineRecord.find_all_by_query(query)
   end
 
@@ -112,7 +110,7 @@ class PrivateMachineFacade < InfrastructureFacade
   # -- SimulationManager delegation methods --
 
   def _simulation_manager_stop(record)
-    if record.infrastructure_side_monitoring
+    if record.onsite_monitoring
       record.cmd_to_execute_code = "stop"
       record.cmd_to_execute = "kill -9 #{record.pid}"
     else
@@ -146,7 +144,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _simulation_manager_get_log(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = "tail -80 #{sm_record.log_path}"
@@ -159,7 +157,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # Nothing to prepare
   def _simulation_manager_prepare_resource(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)

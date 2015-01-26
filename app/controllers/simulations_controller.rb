@@ -62,16 +62,23 @@ class SimulationsController < ApplicationController
     simulation_input = Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input]))
     # input validation
     case true
-      when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
-        flash[:error] = t('simulations.create.bad_params')
+      when (params[:simulation_name].blank?)
+        flash[:error] = t('simulations.create.no_simulation_name')
 
       when (not Simulation.where(name: params[:simulation_name], user_id: @current_user.id).to_a.blank?)
         flash[:error] = t('simulations.create.simulation_invalid_name')
 
+      when (simulation_input.blank?)
+        flash[:error] = t('simulations.create.no_simulation_input_description')
+
+      when (params[:simulation_binaries].blank?)
+        flash[:error] = t('simulations.create.no_simulation_binaries')
     end
 
-    unless flash[:error].blank? or (begin Utils.parse_json_if_string(simulation_input) and true rescue false end)
-      flash[:error] = t('simulations.create.bad_simulation_input')
+    unless simulation_input.blank?
+      unless flash[:error].blank? or (begin Utils.parse_json_if_string(simulation_input) and true rescue false end)
+        flash[:error] = t('simulations.create.bad_simulation_input')
+      end
     end
     # simulation creation
     if flash[:error].nil?
@@ -320,7 +327,7 @@ class SimulationsController < ApplicationController
 
   def set_up_adapter(adapter_type, simulation, mandatory = true)
 
-    if params.include?(adapter_type + '_id')
+    if params.include?(adapter_type + '_id') and not params["#{adapter_type}_id"].empty?
       adapter_id = params[adapter_type + '_id'].to_s
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
 

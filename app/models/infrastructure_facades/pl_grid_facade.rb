@@ -136,7 +136,8 @@ class PlGridFacade < InfrastructureFacade
         "chmod a+x #{ScalarmFileName::monitoring_binary}",
         "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
         "#{ShellCommands.run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                                           "#{ScalarmFileName::monitoring_binary}-`date +%H-%M_%d-%m-%y`.log")}"
+                                           "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
+`.log")}"
     )
   end
 
@@ -187,7 +188,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
+    job.onsite_monitoring = params.include?(:onsite_monitoring)
 
     job
   end
@@ -216,10 +217,8 @@ class PlGridFacade < InfrastructureFacade
     record.destroy
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {scheduler_type: scheduler.short_name}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
+  def _get_sm_records(query, params={})
+    query.merge!({scheduler_type: scheduler.short_name})
     PlGridJob.find_all_by_query(query)
   end
 
@@ -267,7 +266,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_stop(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
         sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
@@ -282,7 +281,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_restart(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
       sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
     else
       ssh = shared_ssh_session(sm_record.credentials)
@@ -330,7 +329,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_get_log(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
@@ -346,7 +345,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_prepare_resource(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
@@ -444,12 +443,11 @@ class PlGridFacade < InfrastructureFacade
 
   def destroy_unused_credentials(authentication_mode, user)
   	if authentication_mode == :x509_proxy
-  		if UserSession.where(session_id: user.id).size > 0
-  			return
-  		end
+      user_sessions = UserSession.where(session_id: user.id)
+      return unless user_sessions.select(&:valid?).empty?
 
   		monitored_jobs = PlGridJob.where(user_id: user.id, scheduler_type: {'$in' => ['qsub', 'qcg']},
-  										 state: {'$ne' => :error}, infrastructure_side_monitoring: {'$ne' => true})
+  										 state: {'$ne' => :error}, onsite_monitoring: {'$ne' => true})
   		if monitored_jobs.size > 0
   			return
   		end
