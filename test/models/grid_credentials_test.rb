@@ -10,7 +10,7 @@ class GridCredentialsTest < MiniTest::Test
 
   def test_ssh
     require 'net/ssh'
-    Net::SSH.expects(:start).once.with('test_host', 'test_login', {password: 'test_password'}).once
+    Net::SSH.expects(:start).once.with('test_host', 'test_login', {password: 'test_password', auth_methods: %w(keyboard-interactive password)}).once
 
     credentials = GridCredentials.new('host'=>'test_host')
     credentials.login = 'test_login'
@@ -21,7 +21,7 @@ class GridCredentialsTest < MiniTest::Test
 
   def test_scp
     require 'net/scp_ext'
-    Net::SCP.expects(:start).once.with('test_host', 'test_login', {password: 'test_password'}).once
+    Net::SCP.expects(:start).once.with('test_host', 'test_login', {password: 'test_password', auth_methods: %w(keyboard-interactive password)}).once
 
     credentials = GridCredentials.new('host'=>'test_host')
     credentials.login = 'test_login'
