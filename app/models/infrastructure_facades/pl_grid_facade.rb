@@ -12,6 +12,7 @@ require_relative 'infrastructure_errors'
 
 class PlGridFacade < InfrastructureFacade
   include SSHAccessedInfrastructure
+  include SharedSSH
 
   attr_reader :ssh_sessions
   attr_reader :long_name
@@ -123,6 +124,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def upload_monitoring_files(scp, sm_uuid, arch)
+    SSHAccessedInfrastructure::create_remote_directories(ssh)
     local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
     local_package = LocalAbsolutePath::monitoring_package(arch)
 
@@ -361,12 +363,13 @@ class PlGridFacade < InfrastructureFacade
 
       #  upload the code to the Grid user interface machine
       begin
+        ssh = shared_ssh_session(sm_record.credentials)
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
+
         sm_record.credentials.scp_session do |scp|
           scheduler.send_job_files(sm_uuid, scp)
         end
         # TODO: SCAL-525
-
-        ssh = shared_ssh_session(sm_record.credentials)
 
         begin
           sm_record.job_id = scheduler.submit_job(ssh, sm_record)
@@ -434,7 +437,7 @@ class PlGridFacade < InfrastructureFacade
 
     scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
 
-    Dir.chdir(ScalarmDirName::tmp) do
+    Dir.chdir(LocalAbsoluteDir::tmp) do
       %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
     end
 

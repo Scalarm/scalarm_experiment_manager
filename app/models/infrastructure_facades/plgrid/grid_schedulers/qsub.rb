@@ -29,13 +29,13 @@ module QsubScheduler
 
         IO.write(File.join(params[:dest_dir], job_script_file(job['sm_uuid'])), prepare_job_executable)
       else
-        IO.write(File.join(ScalarmDirName::tmp, job_script_file(sm_uuid)), prepare_job_executable)
+        IO.write(File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid)), prepare_job_executable)
       end
     end
 
     def job_files_list(sm_uuid)
       [
-          File.join(ScalarmDirName::tmp, job_script_file(sm_uuid))
+          File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid))
       ]
     end
 
@@ -63,8 +63,11 @@ module QsubScheduler
       ]
 
       sm_uuid = sm_record.sm_uuid
-      [ "chmod a+x #{job_script_file(sm_uuid)}",
-        "echo \"sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}" ].join(';')
+
+      chain(
+          "chmod a+x #{job_script_file(sm_uuid)}",
+          "echo \"sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}"
+      )
     end
 
     def pbs_state(ssh, job)
