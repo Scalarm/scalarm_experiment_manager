@@ -15,6 +15,13 @@ class ExperimentFactory
     experiment
   end
 
+  def self.create_optimization_experiment(user_id, simulation, params={})
+    experiment = _create_record(OptimizationExperiment, user_id, simulation, params)
+    experiment.init_empty(simulation)
+
+    experiment
+  end
+
   private
 
   def self._create_record(record_class, user_id, simulation, params)

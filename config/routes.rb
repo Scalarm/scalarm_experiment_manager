@@ -44,6 +44,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :historical_experiments
       get :random_experiment
       post :start_custom_points_experiment
+      post :start_optimization_experiment
     end
 
     member do
@@ -79,6 +80,10 @@ ScalarmExperimentManager::Application.routes.draw do
       get :simulation_manager
 
       post :share
+
+      # Optimization experiment
+      post :finish
+      post :add_result
     end
 
     resources :simulations do

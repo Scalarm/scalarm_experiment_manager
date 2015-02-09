@@ -740,6 +740,37 @@ class ExperimentsController < ApplicationController
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
   end
 
+  # POST params
+  # - simulation_id
+  # TODO: other experiment parameters
+  # TODO: handle errors
+  def start_optimization_experiment
+    validate(
+        simulation_id: :security_default
+    )
+
+    experiment = ExperimentFactory.create_optimization_experiment(@current_user.id, @simulation)
+    experiment.save
+
+    render json: {status: 'ok', experiment_id: experiment.id.to_s}
+  end
+
+  # POST params:
+  # - result
+  def add_result
+    validate(
+        result: :security_json
+    )
+    # TODO check if experiment is optimization experiment
+    @experiment.add_result! Utils::parse_json_if_string(params[:result])
+  end
+
+  # POST
+  def finish
+    # TODO check if experiment is optimization experiment
+    @experiment.finish!
+  end
+
   private
 
   def load_experiment
