@@ -18,7 +18,7 @@ input[type=submit].button {
 $wrapper-margin-top: 50px;
 #wrapper {
   position: relative;
-  max-width: 1260px;
+  max-width: 960px; //1260
   background: url(image_path('bg03.jpg')) repeat;
   margin-top: $wrapper-margin-top;
   margin-right: auto;
@@ -37,22 +37,23 @@ $wrapper-margin-top: 50px;
   position: fixed;
   margin-top: 50px;
   padding: 10px 10px 20px;
-  width: (1260/12)*3px;
+  width: (960/12)*3px; //1260
   /* curved border radius */
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+
 }
 
 #panel .panel {
-  overflow: hidden;
+  //overflow: hidden;
   height: 100%;
   & dl {
     list-style-type: none;
   }
-  &:hover {
-    overflow-y: scroll;
-  }
+// &:hover {
+  // overflow-y: scroll;
+//}
   & dd {
     text-align: center;
     & a {
@@ -128,7 +129,7 @@ footer {
 }
 
 .row {
-  max-width: 1260px;
+  max-width: 960px; //1260
 }
 
 i {
@@ -628,22 +629,50 @@ textarea {
   max-width: 500px;
 }
 
-@media screen and (max-width: 1260px) {
+@media screen and (min-width: 1366px) {
+  #wrapper {
+   max-width: 1260px;
+  }
   #panel {
-    width: calc(3*(100%/12));
+    position: fixed;
+    width: calc(3*(1260px/12));
+  }
+  .row {
+    max-width: 1260px;
+  }
+}
+@media screen and (max-width: 1366px) {
+  //#panel {
+    //width: calc(3*(100%/12));
 //    & .panel {
 //      background-color: red;
 //    };
-    & .action-button span {
-      display: none;
-    }
-  }
+    //& .action-button span {
+     // display: none;
+   // }
+  //}
 
   div.action-button .row {
     text-align: center;
+  }
+
+
+  #panel {
+    position: fixed;
+    width: calc(3*(95%/12));
+  }
+  .row {
+    max-width: 95%;
+  }
+  #wrapper {
+    max-width: 100%;
   }
 }
 
 span.tooltip {
   margin-top: -$wrapper-margin-top;
+}
+
+.action-button a {
+  margin-bottom: 2px;
 }

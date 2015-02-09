@@ -27,12 +27,21 @@
 //= require jquery.doubleScroll
 //= require d3
 //= require jstree
+//= require jquery.nanoscroller.min
 //= require_tree .
 
 
 $(function() {
     $(document).foundation();
+    if(!navigator.userAgent.match(/Firefox|SeaMonkey/i)) 
+        $(".nano").nanoScroller();
+
 });
+
+$(document).on("resize", function() {
+    if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+        $(".nano").nanoScroller();
+})
 
 toastr.options = {
     "closeButton": true,

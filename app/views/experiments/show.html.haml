@@ -6,34 +6,36 @@
 
 -#.row(data-equalizer="")
 = content_for :panel do
-  %section.panel
-    .action-button
-      .row
-        %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}")
+  .nano(style="overflow: hidden;")
+    %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
+      %h3.text-center
+        Experiment tools
+      .action-button(style="margin-left: 10px;")
+        %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}" style="display: block")
           = image_tag "material_design/running_experiments_icon.png"
           = t('experiments.experiment_links.running_experiments')
-      .row
-        %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}")
+        %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}" style="display: block")
           = image_tag "material_design/simulation_scenarios_icon.png"
           = t('experiments.experiment_links.simulation_scenarios')
-      .row
-        %a.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}")
+        %a.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}" style="display: block")
           = image_tag "material_design/historical_experiments_icon.png"
           = t('experiments.experiment_links.historical_experiments')
-    %hr
-    .analyses-panel{style: "text-align: center"}
-      %p.histogram-analysis
-        = image_tag "material_design/histogram_icon.png"
-        %br
-        %a Histogram
-      %p.rtree-analysis
-        = image_tag "material_design/regression_icon.png"
-        %br
-        %a Regression trees
-      %p.bivariate-analysis
-        = image_tag "material_design/scatter_icon.png"
-        %br
-        %a Scatter plot
+      %hr
+      %h3.text-center
+        Analyses
+      .analyses-panel{style: "text-align: center"}
+        %p.histogram-analysis
+          = image_tag "material_design/histogram_icon.png"
+          %br
+          %a Histogram
+        %p.rtree-analysis
+          = image_tag "material_design/regression_icon.png"
+          %br
+          %a Regression trees
+        %p.bivariate-analysis
+          = image_tag "material_design/scatter_icon.png"
+          %br
+          %a Scatter plot
 
 %section
   %section.row.panel.radius
@@ -81,6 +83,8 @@
         if(status==="error") {
           console.log("No available Chart Service. Using on-site content.");
         }
+        if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+          $(".nano").nanoScroller();
       });
       $(document).foundation();
 
@@ -88,7 +92,7 @@
 
       try {
         //TODO - insert appropriate address
-        var ws = new WebSocket("wss://172.16.67.206/chart/#{@experiment.id}");
+        var ws = new WebSocket("wss://172.16.67.206/chart/experiment_progress/#{@experiment.id}");
         window.onbeforeunload = function() {
           //Connection closed on Download simulation manager!!
           ws.onclose = function () {}; // disable onclose handler first
