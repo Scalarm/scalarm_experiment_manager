@@ -1,9 +1,7 @@
 class OptimizationExperiment < CustomPointsExperiment
 
-  alias_method :super_init_empty, :init_empty
-
   def init_empty(simulation)
-    super_init_empty simulation
+    super simulation
     self.finished = false
     self.result = {}
   end
