@@ -24,7 +24,15 @@ $(document).ready(function() {
   	plotOptions: {
   	},
   	credits: { enabled: false },
-  	series: [{
+    series: [{
+      type: 'line',
+      name: 'Regression line',
+      data: <%= @chart.linear_regression_data %>,
+      marker: {
+        enabled: false
+      },
+      enableMouseTracking: false
+    },{
         name: 'Data',
         color: 'rgba(223, 83, 83, .5)',
         data: [
@@ -46,8 +54,9 @@ $(document).ready(function() {
             }
         }
     }]
-	});
+  });
 });
+
 $('#busy_bivariate').hide();
 // scroll to
 var targetOffset =  $('#bivariate_chart_' + i).offset().top;
