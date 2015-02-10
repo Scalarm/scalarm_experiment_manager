@@ -497,7 +497,7 @@ class ExperimentsController < ApplicationController
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                   'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
+                   'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
         simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
