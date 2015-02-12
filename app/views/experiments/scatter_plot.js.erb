@@ -6,7 +6,7 @@ $("#bivariate_chart_"+i).html("<%= escape_javascript(render partial: 'bivariate_
 $(document).ready(function() {
     bivariate_chart_tab[i] = new Highcharts.Chart({
   	chart: {
-  		renderTo: 'bivariate_chart_container_<%= @chart.x_axis %>_<%= @chart.y_axis %>',
+  		renderTo: 'bivariate_chart_container_<%= @chart.x_axis %>_<%= @chart.y_axis %>_<%= @random_id %>',
         type: 'scatter'
   	},
   	title: { text: '\'<%= @chart.x_axis_label %>\' versus \'<%= @chart.y_axis_label %>\'' },

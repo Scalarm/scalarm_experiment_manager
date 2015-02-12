@@ -572,9 +572,10 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
-      Rails.logger.debug("#{@chart.x_axis},#{@chart.y_axis}")
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
+      @random_id = (0...10).map{ ('a'..'z').to_a[rand(26)]}.join
     end
   end
 
@@ -582,8 +583,8 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
-      Rails.logger.debug("#{@chart.x_axis},#{@chart.y_axis}")
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data
     end

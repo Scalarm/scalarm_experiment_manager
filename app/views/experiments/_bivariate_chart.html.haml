@@ -2,7 +2,7 @@
 %section.panel.radius.plot
   %h3.subheader
     = t('charts.scatter.header', x_axis: @chart.x_axis_label, y_axis: @chart.y_axis_label)
-    = image_tag 'loading.gif', id: "busy_bivariate_#{@chart.x_axis}_#{@chart.y_axis}", size: '16x16', style: 'display: none;'
+    = image_tag 'loading.gif', id: "busy_bivariate_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}", size: '16x16', style: 'display: none;'
 
   .row
     -#= button_to_function "Refresh" ,
@@ -12,36 +12,36 @@
     = form_tag '', class: '' do
       .row
         .small-offset-1.small-3.columns
-          = label_tag "choose_axis_#{@chart.x_axis}_#{@chart.y_axis}", t('charts.scatter.select_axis_to_add'), class: 'inline'
+          = label_tag "choose_axis_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}", t('charts.scatter.select_axis_to_add'), class: 'inline'
         .small-5.columns.end
-          = select_tag "choose_axis_#{@chart.x_axis}_#{@chart.y_axis}",options_for_select([[t('charts.axis_x'), 'x'], [t('charts.axis_y'), 'y']])
+          = select_tag "choose_axis_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}",options_for_select([[t('charts.axis_x'), 'x'], [t('charts.axis_y'), 'y']])
       .row
         .small-offset-1.small-3.columns
-          = label_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", t('charts.scatter.add_new_series'), class: 'inline'
+          = label_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}", t('charts.scatter.add_new_series'), class: 'inline'
         .small-5.columns
-          = select_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}", '', { class: 'moes_and_params_list' }
+          = select_tag "new_series_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}", '', { class: 'moes_and_params_list' }
         .small-2.columns.end
           %ul.inline-list
             %li= submit_tag t('charts.scatter.add_series'), class: 'button radius tiny'
 
   %br
-  .bivariate_chart_container{ id: "bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}" }
+  .bivariate_chart_container{ id: "bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}" }
 
   :javascript
     $(function() {
       var setAxis = "x";
-      $("#choose_axis_#{@chart.x_axis}_#{@chart.y_axis}").change(function() {
+      $("#choose_axis_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").change(function() {
         setAxis = $(this).find(":selected").val();
       });
       $('.plot .button.hide').on('click', function() {
         $(this).parent().parent().remove()
       });
-      $("#new_series_#{@chart.x_axis}_#{@chart.y_axis}").html($("#x_axis").html());
+      $("#new_series_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").html($("#x_axis").html());
 
-      $("#bivariate_charts input[type=submit]").bind("click", function() {
-        var axis_label = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').html();
-        var axis = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis} option:selected').val();
-        $("#choose_axis_#{@chart.x_axis}_#{@chart.y_axis}").prop("disabled", true);
+      $("#bivariate_chart_"+i+" input[type=submit]").bind("click", function() {
+        var axis_label = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id} option:selected').html();
+        var axis = $('#new_series_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id} option:selected').val();
+        $("#choose_axis_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").prop("disabled", true);
 
         if(setAxis==="x") {
           $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
@@ -52,13 +52,13 @@
                       for(ind in data[key])
                         series.push([parseInt(key), parseInt(data[key][ind])])
                     }
-                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addAxis({
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").highcharts().addAxis({
                                                                                                               id: axis,
                                                                                                               title: {
                                                                                                                 text: axis_label
                                                                                                               }
                                                                                                            }, true);
-                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], xAxis: axis, data: series});
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], xAxis: axis, data: series});
           });
         }
         else if(setAxis==="y") {
@@ -70,13 +70,13 @@
                       for(ind in data[key])
                         series.push([parseInt(key), parseInt(data[key][ind])])
                     }
-                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addAxis({
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").highcharts().addAxis({
                                                                                                               id: axis,
                                                                                                               title: {
                                                                                                                 text: axis_label
                                                                                                               }
                                                                                                            }, false);
-                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], yAxis: axis, data: series});
+                    $("#bivariate_chart_container_#{@chart.x_axis}_#{@chart.y_axis}_#{@random_id}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], yAxis: axis, data: series});
           });
         }
 
