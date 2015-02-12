@@ -2,32 +2,51 @@ require 'openid'
 
 class ApplicationController < ActionController::Base
   include ScalarmAuthentication
+  include ParameterValidation
+
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid, :login]
+  protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid]
 
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
   before_filter :start_monitoring
   after_filter :stop_monitoring
-  # due to security reasons
-  after_filter :set_cache_buster
 
-  rescue_from SecurityError, with: :handle_security_error
+  # due to security reasons (DISABLED)
+  # after_filter :set_cache_buster
+
+  rescue_from ValidationError, MissingParametersError, SecurityError, BSON::InvalidObjectId,
+              with: :generic_exception_handler
 
   @@probe = MonitoringProbe.new
 
-  rescue_from SecurityError do |exception| generic_exception_handler(exception) end
-  rescue_from BSON::InvalidObjectId do |exception| generic_exception_handler(exception) end
 
   protected
 
   def generic_exception_handler(exception)
-    flash[:error] = exception.message
+    Rails.logger.warn("Exception caught in generic_exception_handler: #{exception.message}")
+    Rails.logger.debug("Exception backtrace:\n#{exception.backtrace.join("\n")}")
+
 
     respond_to do |format|
-      format.html { redirect_to action: :index }
-      format.json { render json: {status: 'error', reason: flash[:error]}, status: 412 }
+      format.html do
+        flash[:error] = exception.to_s
+        redirect_to action: :index
+      end
+
+      format.json do
+        render json: {
+                        status: 'error',
+                        reason: exception.to_s
+                     },
+               status: 412
+      end
+
+      format.js do
+        @error_message = exception.to_s
+        render partial: '/js_error_handler'
+      end
     end
   end
 
@@ -55,19 +74,12 @@ class ApplicationController < ActionController::Base
     @@probe.send_measurement(controller_name, action_name, processing_time)
   end
 
-  def validate_params(mode, *param_names)
-    regexp = Utils::get_validation_regexp(mode)
-
-    param_names.each do |param_name|
-      if params.include?(param_name) and regexp.match(params[param_name]).nil?
-        raise SecurityError.new(t('errors.insecure_parameter', param_name: param_name))
-      end
-    end
+  def validate(validators)
+    validate_params(params, validators)
   end
 
-
-  # due to security reasons
-  def set_cache_buster
+  # DEPRECATED due to security reasons
+  #def set_cache_buster
     #response.headers["Cache-Control"] = "no-cache, no-store, max-age=0, must-revalidate"
     #response.headers["Pragma"] = "no-cache"
     #response.headers["Server"] = "Scalarm custom server"
@@ -80,15 +92,6 @@ class ApplicationController < ActionController::Base
     #    response.set_cookie(key, {value: value, expires: 6.hour.from_now})
     #  end
     #end
-  end
-
-  # -- error handling --
-
-  def handle_security_error(e)
-    respond_to do |format|
-      format.html { raise e }
-      format.json { render json: {status: 'error', message: "Security error: #{e}" }, status: 403 }
-    end
-  end
+  #end
 
 end

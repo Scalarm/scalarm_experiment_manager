@@ -6,6 +6,4 @@ module GenericErrors
       @error_code = error_code
     end
   end
-
-  class ValidationError < StandardError; end
 end

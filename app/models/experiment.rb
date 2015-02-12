@@ -467,6 +467,7 @@ class Experiment < MongoActiveRecord
     self.save_and_cache
   end
 
+  # Returns parameter doc (Hash) or nil if not found
   def get_parameter_doc(parameter_uid)
     split_uid = parameter_uid.split(ID_DELIM)
     entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
@@ -482,30 +483,19 @@ class Experiment < MongoActiveRecord
     end
 
     self.experiment_input.each do |entity_group|
-
       if entity_group['id'] == entity_group_id || (entity_group_id.blank? and entity_group['id'].blank?)
-
         entity_group['entities'].each do |entity|
-
           if entity['id'] == entity_id || (entity_id.blank? and entity['id'].blank?)
-
             entity['parameters'].each do |parameter|
-
               if parameter['id'] == parameter_id
-
                 return parameter
-
               end
-
             end
-
           end
-
         end
-
       end
-
     end
+    nil
   end
 
   ## returns a list of generated values for the given parameter_uid
