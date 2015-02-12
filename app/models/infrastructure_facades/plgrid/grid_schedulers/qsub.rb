@@ -109,7 +109,9 @@ module QsubScheduler
     end
 
     def cancel(ssh, job)
-      ssh.exec!(cancel_sm_cmd(job))
+      cmd = cancel_sm_cmd(job)
+      output = ssh.exec!(cmd)
+      logger.debug("PBS cmd: #{cmd}, output lines:\n#{output}")
     end
 
     def get_log(ssh, job)
