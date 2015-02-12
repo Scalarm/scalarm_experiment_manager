@@ -828,4 +828,8 @@ class Experiment < MongoActiveRecord
     "data.frame(#{data_frame_list.join(',')})"
   end
 
+  def completed?
+    (experiment.experiment_size == experiment.get_statistics[2])
+  end
+
 end

@@ -19,7 +19,7 @@ class AbstractSimulationManager
   def experiment_end?
     experiment.nil? or
         (experiment.is_running == false) or
-        (experiment.experiment_size == experiment.get_statistics[2])
+        experiment.completed?
   end
 
   def name

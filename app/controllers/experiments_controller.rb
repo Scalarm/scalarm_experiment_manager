@@ -483,7 +483,7 @@ class ExperimentsController < ApplicationController
       simulation_to_send = nil
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.get_next_instance
+        simulation_to_send = @experiment.completed? ? @experiment.get_next_instance : nil
         unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
           simulation_to_send.save
@@ -695,7 +695,7 @@ class ExperimentsController < ApplicationController
     )
 
     # TODO: CustomPointsExperiment from Experiment
-    custom_experiment = CustomPointsExperiment.where(id: @experiment.id).first
+    custom_experiment = (@experiment.type == 'custom_point')
     raise ValidationError(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
 
     custom_experiment.add_point!(Utils::parse_json_if_string(params[:point]))
@@ -744,12 +744,12 @@ class ExperimentsController < ApplicationController
   # - simulation_id
   # TODO: other experiment parameters
   # TODO: handle errors
-  def start_optimization_experiment
+  def start_supervised_experiment
     validate(
         simulation_id: :security_default
     )
 
-    experiment = ExperimentFactory.create_optimization_experiment(@current_user.id, @simulation)
+    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
     experiment.save
 
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
@@ -757,18 +757,18 @@ class ExperimentsController < ApplicationController
 
   # POST params:
   # - result
-  def add_result
+  def set_result
     validate(
         result: :security_json
     )
-    # TODO check if experiment is optimization experiment
-    @experiment.add_result! Utils::parse_json_if_string(params[:result])
+    raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    @experiment.set_result! Utils::parse_json_if_string(params[:result])
   end
 
   # POST
-  def finish
-    # TODO check if experiment is optimization experiment
-    @experiment.finish!
+  def mark_as_complete
+    raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    @experiment.mark_as_complete!
   end
 
   private
