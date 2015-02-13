@@ -6,7 +6,7 @@ require 'csv'
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
-                                          :start_custom_points_experiment ]
+                                          :start_custom_points_experiment, :start_supervised_experiment ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -483,7 +483,7 @@ class ExperimentsController < ApplicationController
       simulation_to_send = nil
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.completed? ? @experiment.get_next_instance : nil
+        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
         unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
           simulation_to_send.save
@@ -501,7 +501,12 @@ class ExperimentsController < ApplicationController
                    'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
-        simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+        if @experiment.supervised and not @experiment.completed?
+          simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
+                                 'duration_in_seconds' => 2})
+        else
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+        end
       end
 
     rescue Exception => e
@@ -761,14 +766,20 @@ class ExperimentsController < ApplicationController
     validate(
         result: :security_json
     )
-    raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    #raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    raise 'Not a supervised experiment' unless @experiment.supervised
     @experiment.set_result! Utils::parse_json_if_string(params[:result])
+    @experiment.save
+    render json: {status: 'ok'}
   end
 
   # POST
   def mark_as_complete
-    raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    #raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    raise 'Not a supervised experiment' unless @experiment.supervised
     @experiment.mark_as_complete!
+    @experiment.save
+    render json: {status: 'ok'}
   end
 
   private
@@ -785,6 +796,11 @@ class ExperimentsController < ApplicationController
 
       if not @current_user.nil?
         @experiment = @current_user.experiments.where(id: experiment_id).first
+        if @experiment.supervised
+          @experiment = SupervisedExperiment.where(id: @experiment.id).first
+        elsif @experiment.type == 'manual_points'
+          @experiment = CustomPointsExperiment.where(id: @experiment.id).first
+        end
 
         if @experiment.nil?
           flash[:error] = t('experiments.not_found', { id: experiment_id, user: @current_user.login })
