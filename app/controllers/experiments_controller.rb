@@ -566,7 +566,8 @@ class ExperimentsController < ApplicationController
   def scatter_plot
     validate(
         x_axis: [:optional, :security_default],
-        y_axis: [:optional, :security_default]
+        y_axis: [:optional, :security_default],
+        container_id: [:optional, :security_default]
     )
 
     if params[:x_axis].blank? or params[:y_axis].blank?
@@ -575,7 +576,8 @@ class ExperimentsController < ApplicationController
       @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
-      @random_id = (0...10).map{ ('a'..'z').to_a[rand(26)]}.join
+      @uuid = SecureRandom.uuid
+      @container_id = params[:container_id] || "bivariate_chart_#{@uuid}"
     end
   end
 
