@@ -580,6 +580,10 @@ class Experiment < MongoActiveRecord
     sim_run and sim_run.result
   end
 
+  def completed?
+    (self.experiment_size == self.get_statistics[2])
+  end
+
   private
 
   def self.nested_json_to_hash(nested_json)
@@ -826,10 +830,6 @@ class Experiment < MongoActiveRecord
     end
 
     "data.frame(#{data_frame_list.join(',')})"
-  end
-
-  def completed?
-    (experiment.experiment_size == experiment.get_statistics[2])
   end
 
 end

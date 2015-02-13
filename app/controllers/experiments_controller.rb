@@ -10,6 +10,8 @@ class ExperimentsController < ApplicationController
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @completed_experiments = @running_experiments.select {|e| e.supervised ? e.completed : e.completed?} # running and not completed
+    @running_experiments.select! {|e| e.supervised ? (not e.completed) : (not e.completed?)} # running and completed
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
     @simulations = @current_user.get_simulation_scenarios
 
@@ -18,6 +20,7 @@ class ExperimentsController < ApplicationController
       format.json { render json: {
           status: 'ok',
           running: @running_experiments.collect { |e| e.id.to_s },
+          completed: @completed_experiments.collect {|e| e.id.to_s},
           historical: @historical_experiments.collect { |e| e.id.to_s }
       }}
     end

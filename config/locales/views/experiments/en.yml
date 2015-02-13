@@ -25,6 +25,9 @@ en:
     running_experiments:
       link_text: "%{name}, started at: %{start_time}"
       no_experiments: "There is no experiment running currently"
+    completed_experiments:
+      link_text: "%{name}, started at: %{start_time}"
+      no_experiments: "There is no completed experiment currently"
     monitoring_actions:
       blank_shared_with_list: "none"
       stop_experiment:

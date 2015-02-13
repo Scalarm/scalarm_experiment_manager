@@ -1,0 +1,12 @@
+%section.panel.radius.list
+  = content_tag :h3, t('completed_experiments.label'), class: 'subheader'
+
+  .content
+    - if @completed_experiments.blank?
+      %p= t('.no_experiments')
+    - else
+      - @completed_experiments.each do |experiment|
+        %a.button.expand.radius.last-element{ href: experiment_path(experiment.id) }
+          - unless @current_user.owns?(experiment)
+            %i.fi-share
+          = t('.link_text', { name: experiment.name, start_time: experiment.start_at.strftime('%Y-%m-%d %H:%M') })
