@@ -1,12 +1,10 @@
-i = bivariate_chart_tab.length;
-
-$("#bivariate_charts").prepend("<div id='bivariate_chart_" + i + "'></div>");
-$("#bivariate_chart_"+i).html("<%= escape_javascript(render partial: 'bivariate_chart') %>")
+$("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
+$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>")
 
 $(document).ready(function() {
-    bivariate_chart_tab[i] = new Highcharts.Chart({
+    new Highcharts.Chart({
   	chart: {
-  		renderTo: 'bivariate_chart_container_<%= @chart.x_axis %>_<%= @chart.y_axis %>',
+  		renderTo: '<%= @container_id %>',
         type: 'scatter'
   	},
   	title: { text: '\'<%= @chart.x_axis_label %>\' versus \'<%= @chart.y_axis_label %>\'' },
@@ -33,7 +31,7 @@ $(document).ready(function() {
       },
       enableMouseTracking: false
     },{
-        name: 'Data',
+        name: '<%= @chart.x_axis_label.split(" - ")[-1]%>',
         color: 'rgba(223, 83, 83, .5)',
         data: [
             <% @chart.chart_data.each do |x_value, y_values_simulation_ids|
@@ -59,5 +57,5 @@ $(document).ready(function() {
 
 $('#busy_bivariate').hide();
 // scroll to
-var targetOffset =  $('#bivariate_chart_' + i).offset().top;
+var targetOffset =  $('#wrapper_<%= @container_id %>').offset().top;
 $('html,body').animate({scrollTop: targetOffset}, 1000);

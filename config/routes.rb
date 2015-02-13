@@ -63,6 +63,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :histogram
       post :scatter_plot
       post :regression_tree
+      get :scatter_plot_series
 
       get :running_simulations_table
       get :completed_simulations_table
