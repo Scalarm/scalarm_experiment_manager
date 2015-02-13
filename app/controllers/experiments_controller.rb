@@ -799,11 +799,6 @@ class ExperimentsController < ApplicationController
 
       if not @current_user.nil?
         @experiment = @current_user.experiments.where(id: experiment_id).first
-        if @experiment.supervised
-          @experiment = SupervisedExperiment.where(id: @experiment.id).first
-        elsif @experiment.type == 'manual_points'
-          @experiment = CustomPointsExperiment.where(id: @experiment.id).first
-        end
 
         if @experiment.nil?
           flash[:error] = t('experiments.not_found', { id: experiment_id, user: @current_user.login })
@@ -822,6 +817,12 @@ class ExperimentsController < ApplicationController
         respond_to do |format|
           format.html { redirect_to action: :index }
           format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
+        end
+      else
+        if @experiment.supervised
+          @experiment = SupervisedExperiment.where(id: @experiment.id).first
+        elsif @experiment.type == 'manual_points'
+          @experiment = CustomPointsExperiment.where(id: @experiment.id).first
         end
       end
     end
