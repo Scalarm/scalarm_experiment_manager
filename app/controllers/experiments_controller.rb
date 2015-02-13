@@ -703,10 +703,11 @@ class ExperimentsController < ApplicationController
     )
 
     # TODO: CustomPointsExperiment from Experiment
-    custom_experiment = (@experiment.type == 'custom_point')
-    raise ValidationError(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+    custom_experiment = (@experiment.type == 'manual_points')
+    #raise ValidationError(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+    raise 'Not a custom-points experiment' unless custom_experiment
 
-    custom_experiment.add_point!(Utils::parse_json_if_string(params[:point]))
+    @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
 
     respond_to do |format|
       format.json { render json: {status: 'ok'}, status: :ok }
