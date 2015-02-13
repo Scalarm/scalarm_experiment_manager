@@ -21,17 +21,38 @@
 
 - content_for :javascript do
   :javascript
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if(mutation.addedNodes.length > 1) {
+                $($('#bivariate_charts_form select[name=\'x_axis\'] option[data-type=\'input_parameter\']')[0]).prop('selected', true);
+                var moes_parameters_from_select_y_axis = $('#bivariate_charts_form select[name=\'y_axis\'] option[data-type=\'moes_parameter\']');
+                if(moes_parameters_from_select_y_axis.length>0) {
+                  $(moes_parameters_from_select_y_axis[0]).prop('selected', true);
+                }
+                else {
+                  $($('#bivariate_charts_form select[name=\'y_axis\'] option[data-type=\'input_parameter\']')[0]).prop('selected', true);
+                }
+                observer.disconnect();
+            }
+        })
+    });
+    var target = document.querySelector('#bivariate_charts_form select[name=\'x_axis\']');
+    observer.observe(target, {childList: true});
+
     // 'Load chart' button handler
     $('#bivariate_charts_form input[type=submit]').bind('click', function() {
-      $('#busy_scatter_plot').show();
-
       var x_axis = $('#bivariate_charts_form select[name=\'x_axis\'] option:selected').val();
       var y_axis = $('#bivariate_charts_form select[name=\'y_axis\'] option:selected').val();
 
-      $.post("#{scatter_plot_experiment_path(@experiment.id)}",
-        { 'x_axis': x_axis, 'y_axis': y_axis },
-        function(data) { $('#busy_scatter_plot').hide(); }
-      );
-
+      if (x_axis==="nil" || y_axis==="nil") {
+        toastr.error("#{t('experiments.errors.incorrect_parameter')}");
+      }
+      else {
+        $('#busy_scatter_plot').show();
+        $.post("#{scatter_plot_experiment_path(@experiment.id)}",
+          { 'x_axis': x_axis, 'y_axis': y_axis },
+          function(data) { $('#busy_scatter_plot').hide(); }
+        );
+      }
       return false;
     });

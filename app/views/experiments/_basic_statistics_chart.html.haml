@@ -13,9 +13,10 @@
     -#= button_to_function 'Refresh',
     -#    "refresh_chart('#{experiment.id}', '#{moe_name}', #{resolution}, '#{experiments_update_basic_statistics_chart_path}')", class: 'nice_button'
 
-  .basic_chart_container{ id: chart_container_id }
-
-  = render partial: 'statistics_box', locals: { stats: stats, experiment: experiment, moe_name: moe_name }
+  .row
+    .small-9.columns.basic_chart_container{ id: chart_container_id }
+    .small-3.columns
+      = render partial: 'statistics_box', locals: { stats: stats, experiment: experiment, moe_name: moe_name }
 
   :javascript
     $(function() {

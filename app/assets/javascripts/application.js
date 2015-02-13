@@ -23,6 +23,7 @@
 //= require jit-yc
 //= require toastr.min
 //= require jquery.remotipart
+//= require jquery.doubleScroll
 //= require d3
 //= require jstree
 //= require_tree .

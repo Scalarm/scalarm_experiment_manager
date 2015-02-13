@@ -118,11 +118,8 @@ class CloudFacade < InfrastructureFacade
     record.destroy
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {cloud_name: @short_name}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
-
+  def _get_sm_records(query, params={})
+    query.merge!({cloud_name: @short_name})
     CloudVmRecord.find_all_by_query(query)
   end
 
@@ -334,9 +331,8 @@ class CloudFacade < InfrastructureFacade
 
   def destroy_unused_credentials(authentication_mode, user)
   	if authentication_mode == :x509_proxy
-  		if UserSession.where(session_id: user.id).size > 0
-  			return
-  		end
+      user_sessions = UserSession.where(session_id: user.id)
+      return unless user_sessions.select(&:valid?).empty?
 
   		monitored_jobs = CloudVmRecord.where(user_id: user.id, cloud_name: 'pl_cloud', state: {'$ne' => :error})
   		if monitored_jobs.size > 0

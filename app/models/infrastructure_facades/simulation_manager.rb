@@ -298,7 +298,7 @@ class SimulationManager
 
   # NOTE: all actions invoked here must be != false/nil
   def general_action(action_name)
-    if action_name == 'resource_status' and record.infrastructure_side_monitoring
+    if action_name == 'resource_status' and record.onsite_monitoring
       stat = record.resource_status
       stat.nil? ? :not_available : stat
     else

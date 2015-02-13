@@ -15,16 +15,17 @@ class ScatterPlotChart
 
     @chart_data = Hash.new
 
-    column_x_idx, column_y_idx = -1, -1
+    column_x_idx, column_y_idx, simulation_ind_idx = -1, -1, -1
     CSV.parse(scatter_plot_csv) do |row|
       if column_x_idx < 0
         column_x_idx = row.index(@x_axis)
         column_y_idx = row.index(@y_axis)
+        simulation_ind_idx = row.index('simulation_run_ind')
       else
         if @chart_data.has_key? row[column_x_idx]
-          @chart_data[row[column_x_idx]] << row[column_y_idx]
+          @chart_data[row[column_x_idx]] << [row[column_y_idx], row[simulation_ind_idx]]
         else
-          @chart_data[row[column_x_idx]] = [row[column_y_idx]]
+          @chart_data[row[column_x_idx]] = [[row[column_y_idx], row[simulation_ind_idx]]]
         end
       end
     end

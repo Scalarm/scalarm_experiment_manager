@@ -22,16 +22,16 @@ module ScalarmAuthentication
 
     if @current_user.nil? and @sm_user.nil?
       authentication_failed
-    else
-      @user_session = UserSession.create_and_update_session(session[:user].to_s) if @sm_user.nil?
+    elsif @sm_user.nil?
+      @user_session = UserSession.create_and_update_session(session[:user].to_s, session[:uuid])
     end
   end
 
   def authenticate_with_session
-    Rails.logger.debug("[authentication] using session: #{session[:user]}")
+    Rails.logger.debug("[authentication] using session: user: #{session[:user]}, uuid: #{session[:uuid]}")
     session_id = BSON::ObjectId(session[:user].to_s)
 
-    @user_session = UserSession.find_by_session_id(session_id)
+    @user_session = UserSession.where(session_id: session_id, uuid: session[:uuid]).first
 
     if (not @user_session.nil?) and @user_session.valid?
       Rails.logger.debug("[authentication] scalarm user session exists and its valid")
@@ -55,6 +55,7 @@ module ScalarmAuthentication
 
     begin
       session[:user] = ScalarmUser.authenticate_with_certificate(cert_dn).id.to_s
+      session[:uuid] = SecureRandom.uuid
       @current_user = ScalarmUser.find_by_id(session[:user].to_s)
     rescue Exception => e
       @current_user = nil
@@ -79,6 +80,7 @@ module ScalarmAuthentication
 
         @current_user = ScalarmUser.authenticate_with_password(login, password)
         session[:user] = @current_user.id.to_s unless @current_user.nil?
+        session[:uuid] = SecureRandom.uuid
       end
 
     end

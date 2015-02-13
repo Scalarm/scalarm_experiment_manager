@@ -99,6 +99,7 @@ module PlGridOpenID
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
     session[:user] = scalarm_user.id.to_s
+    session[:uuid] = SecureRandom.uuid
     successful_login
   end
 
@@ -118,7 +119,7 @@ module PlGridOpenID
   end
 
   def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
-    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud') or
+    pl_cloud_credentials = (CloudSecrets.where(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud').first ||
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
     pl_cloud_credentials.secret_proxy = proxy_secret
