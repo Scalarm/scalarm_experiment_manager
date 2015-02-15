@@ -403,18 +403,32 @@ class Experiment < MongoActiveRecord
 
   end
 
-  def create_result_csv
+  def create_result_csv(with_index=false, with_params=true, with_moes=true)
     moes = self.moe_names
 
     CSV.generate do |csv|
-      csv << self.parameters.flatten + moes
+      header = []
+      header += ['simulation_index'] if with_index
+      header += self.parameters.flatten if with_params
+      header += moes if with_moes
+      csv << header
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: {_id: 0, values: 1, result: 1}}).each do |simulation_run|
-        values = simulation_run.values.split(',')
+      query_fields = {_id: 0}
+      query_fields[:index] = 1 if with_index
+      query_fields[:values] = 1 if with_params
+      query_fields[:result] = 1 if with_moes
+
+      simulation_runs.where(
+          {is_done: true, is_error: {'$exists' => false}},
+          {fields: query_fields}
+      ).each do |simulation_run|
+        line = []
+        line += [simulation_run.index] if with_index
+        line += simulation_run.values.split(',') if with_params
         # getting values of results in a specific order
-        moe_values = moes.map { |moe_name| simulation_run.result[moe_name] || '' }
+        line += moes.map { |moe_name| simulation_run.result[moe_name] || '' } if with_moes
 
-        csv << values + moe_values
+        csv << line
       end
     end
   end
