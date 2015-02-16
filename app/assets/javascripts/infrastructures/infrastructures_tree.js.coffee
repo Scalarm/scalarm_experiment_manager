@@ -374,7 +374,8 @@ class window.InfrastructuresTree
   boosterDialogPath: (infrastructure_name) ->
     # TODO: path as parameter
     "/infrastructure/get_booster_dialog?" + $.param({
-      infrastructure_name: infrastructure_name
+      infrastructure_name: infrastructure_name,
+      experiment_id: @experiment_id
     })
 
   commandConfirmDialogPath: (infrastructure_name, record_id, command) ->

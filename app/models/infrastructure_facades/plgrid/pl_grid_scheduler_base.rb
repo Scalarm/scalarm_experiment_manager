@@ -89,7 +89,8 @@ ruby simulation_manager.rb
 
   def restart(ssh, job)
     cancel(ssh, job)
-    submit_job(ssh, job)
+    job.job_id = submit_job(ssh, job)
+    job.save
   end
 
   def clean_after_sm_cmd(record)

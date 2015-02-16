@@ -77,7 +77,7 @@ class GridCredentials < EncryptedMongoActiveRecord
     end
 
     if password
-      Net::SSH.start(host, login, password: password)
+      Net::SSH.start(host, login, password: password, auth_methods: %w(keyboard-interactive password))
     else
       raise (gsi_error or InfrastructureErrors::NoCredentialsError)
     end
@@ -94,7 +94,7 @@ class GridCredentials < EncryptedMongoActiveRecord
     if secret_proxy
       Gsi::SCP.start(host, login, secret_proxy)
     elsif password
-      Net::SCP.start(host, login, password: password)
+      Net::SCP.start(host, login, password: password, auth_methods: %w(keyboard-interactive password))
     else
       raise InfrastructureErrors::NoCredentialsError
     end
