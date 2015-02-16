@@ -751,17 +751,29 @@ class ExperimentsController < ApplicationController
 
   # POST params
   # - simulation_id
+  # - supervisor_script_id
+  # - supervisor_script_params
   # TODO: other experiment parameters
   # TODO: handle errors
   def start_supervised_experiment
     validate(
-        simulation_id: :security_default
+        simulation_id: :security_default,
+        supervisor_script_id: :security_default,
+        supervisor_script_params: :security_json
     )
-
-    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
-    experiment.save
-
-    render json: {status: 'ok', experiment_id: experiment.id.to_s}
+    response = {}
+    begin
+      experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
+      experiment.save
+      pid = experiment.start_supervisor_script(@current_user,
+                                         params[:supervisor_script_id],
+                                         Utils::parse_json_if_string(params[:supervisor_script_params]))
+      response.merge!({status: 'ok', experiment_id: experiment.id.to_s, pid: pid})
+    rescue Exception => e
+      Rails.logger.debug("Error while starting new supervised experiment: #{e}")
+      response.merge!({'status' => 'error', 'reason' => e.to_s})
+    end
+    render json: response
   end
 
   # POST params:
