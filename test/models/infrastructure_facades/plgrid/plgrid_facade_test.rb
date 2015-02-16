@@ -23,7 +23,7 @@ class PlGridFacadeTest < MiniTest::Test
     end
     scheduler = stub_everything 'scheduler'
     facade = PlGridFacade.new(scheduler)
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package)
     GridCredentials.stubs(:find_by_user_id).with(user_id).returns(credentials)
 
     assert_raises InfrastructureErrors::InvalidCredentialsError do
@@ -184,11 +184,11 @@ class PlGridFacadeTest < MiniTest::Test
       stubs(:password).returns(password)
     end
 
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
-    @facade.stubs(:using_temp_credentials?).with(additional_params).returns(true)
-    @facade.stubs(:create_temp_credentials).with(additional_params).returns(temp_credentials)
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package)
+    InfrastructureFacade.stubs(:send_and_launch_onsite_monitoring)
+    InfrastructureFacade.stubs(:using_temp_credentials?).with(additional_params).returns(true)
+    InfrastructureFacade.stubs(:create_temp_credentials).with(additional_params).returns(temp_credentials)
     @facade.stubs(:create_records)
-    @facade.stubs(:send_and_launch_onsite_monitoring)
 
     @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
   end

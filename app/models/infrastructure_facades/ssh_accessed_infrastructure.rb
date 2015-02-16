@@ -1,5 +1,5 @@
 module SSHAccessedInfrastructure
-  include ShellCommands
+  extend ShellCommands
 
   def initialize(*args)
     super(*args)
@@ -78,7 +78,7 @@ module SSHAccessedInfrastructure
     end
 
     def self.monitoring
-      "#{scalarm_root}/monitoring/"
+      "#{scalarm_root}/workers_monitor/"
     end
   end
 

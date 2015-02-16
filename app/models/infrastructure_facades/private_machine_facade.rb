@@ -167,7 +167,7 @@ class PrivateMachineFacade < InfrastructureFacade
     else
       logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
 
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, sm_record.user_id,
+      InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, sm_record.user_id,
                                                                         sm_record.experiment_id, sm_record.start_at)
 
       error_counter = 0
@@ -208,7 +208,7 @@ class PrivateMachineFacade < InfrastructureFacade
   def simulation_manager_code(sm_record)
     Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
 
     code_dir = LocalAbsoluteDir::tmp_sim_code(sm_record.sm_uuid)
 

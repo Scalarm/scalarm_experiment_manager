@@ -615,7 +615,7 @@ class ExperimentsController < ApplicationController
   def simulation_manager
     sm_uuid = SecureRandom.uuid
     # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, @current_user.id, @experiment.id.to_s)
 
     send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
   end

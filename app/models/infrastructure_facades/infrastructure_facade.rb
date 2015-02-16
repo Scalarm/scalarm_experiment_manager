@@ -59,7 +59,8 @@ class InfrastructureFacade
     @logger = InfrastructureTaskLogger.new short_name
   end
 
-  def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
+  # Write tmp file: ZIP with SimulationManager application and config
+  def self.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, start_at = '')
     Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
 
     # using simulation manager implementation based on application config
@@ -115,7 +116,8 @@ class InfrastructureFacade
     end
   end
 
-  def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
+  # Write tmp file: WorkersMonitor config in unique directory
+  def self.prepare_monitoring_config(sm_uuid, user_id, infrastructure_name)
     Rails.logger.debug "Preparing monitoring configuration for Simulation Manager with id: #{sm_uuid}"
 
     # This temporary directory hold now only config file, rest of files are sent via scp
@@ -153,7 +155,9 @@ class InfrastructureFacade
     end
 
     # Only one generated file - config
-    IO.write(LocalAbsolutePath::tmp_monitoring_config(sm_uuid), sm_config.to_json)
+    path = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+    IO.write(path, sm_config.to_json)
+    path
   end
 
   # TODO: DEPRECATED, for bakckward compatibility

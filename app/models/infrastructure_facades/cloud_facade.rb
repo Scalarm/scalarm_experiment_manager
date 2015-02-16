@@ -213,7 +213,7 @@ class CloudFacade < InfrastructureFacade
       record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
       logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
 
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
+      InfrastructureFacade.prepare_simulation_manager_package(record.sm_uuid, record.user_id,
                                                                         record.experiment_id, record.start_at)
       error_counter = 0
       while true

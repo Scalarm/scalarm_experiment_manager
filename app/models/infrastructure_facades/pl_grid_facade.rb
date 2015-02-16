@@ -13,6 +13,8 @@ require_relative 'infrastructure_errors'
 class PlGridFacade < InfrastructureFacade
   include SSHAccessedInfrastructure
   include SharedSSH
+  include ShellCommands
+  extend ShellCommands
 
   attr_reader :ssh_sessions
   attr_reader :long_name
@@ -37,10 +39,10 @@ class PlGridFacade < InfrastructureFacade
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     # 1. checking if the user can schedule SiM
-    credentials = if using_temp_credentials?(additional_params)
-                    create_temp_credentials(additional_params)
+    credentials = if PlGridFacade.using_temp_credentials?(additional_params)
+                    PlGridFacade.create_temp_credentials(additional_params)
                   else
-                    get_credentials_from_db(user_id)
+                    PlGridFacade.get_credentials_from_db(user_id)
                   end
 
     if credentials.nil?
@@ -60,7 +62,7 @@ class PlGridFacade < InfrastructureFacade
       end
       # 2.b prepare SiM package unless SiM is monitored on-site
       unless additional_params[:onsite_monitoring]
-        InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
+        InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, additional_params['start_at'])
       end
       # 2.c create record for SiM and save it
       record = create_record(user_id, experiment_id, sm_uuid, additional_params)
@@ -69,8 +71,11 @@ class PlGridFacade < InfrastructureFacade
       record
     end
 
-    sm_uuid = SecureRandom.uuid
-    send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
+    if additional_params[:onsite_monitoring]
+      sm_uuid = SecureRandom.uuid
+      PlGridFacade.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id,
+                                                     scheduler.short_name, additional_params)
+    end
 
     records
   end
@@ -83,11 +88,11 @@ class PlGridFacade < InfrastructureFacade
     end
   end
 
-  def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
+  def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler_name, params={})
     # TODO: implement multiple architectures support
     arch = 'linux_386'
 
-    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
+    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, scheduler_name)
 
     credentials.ssh_session do |ssh|
       # TODO: implement ssh.scp method for gsissh and use here
@@ -98,46 +103,45 @@ class PlGridFacade < InfrastructureFacade
         PlGridFacade.generate_proxy(ssh, key_passphrase) if not credentials.secret_proxy and key_passphrase
         PlGridFacade.clone_proxy(ssh, RemoteAbsolutePath::remote_monitoring_proxy)
 
-        remove_remote_monitoring_files(ssh)
-        upload_monitoring_files(scp, sm_uuid, arch)
+        PlGridFacade.remove_remote_monitoring_files(ssh)
+        PlGridFacade.upload_monitoring_files(scp, sm_uuid, arch)
         # TODO: SCAL-525
 
-        if LocalAbsolutePath::certificate
-          ssh.exec! rm(RemoteAbsolutePath::remote_monitoring_certificate, true)
-          scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
-        end
-
-        cmd = start_monitoring_cmd
+        cmd = PlGridFacade.start_monitoring_cmd
         Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
       end
     end
   end
 
-  def remove_remote_monitoring_files(ssh)
+  def self.remove_remote_monitoring_files(ssh)
     [
         RemoteHomePath::monitoring_config,
         RemoteHomePath::monitoring_package,
-        RemoteHomePath::monitoring_binary
+        RemoteHomePath::monitoring_binary,
+        RemoteHomePath::remote_monitoring_certificate,
+        RemoteAbsolutePath::remote_monitoring_proxy
     ].each do |path|
       ssh.exec! rm(path, true)
     end
   end
 
-  def upload_monitoring_files(scp, sm_uuid, arch)
-    SSHAccessedInfrastructure::create_remote_directories(ssh)
+  def self.upload_monitoring_files(scp, sm_uuid, arch)
     local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
     local_package = LocalAbsolutePath::monitoring_package(arch)
-
     scp.upload_multiple! [local_config, local_package], RemoteDir::monitoring
+
+    if LocalAbsolutePath::certificate
+      scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
+    end
   end
 
-  def start_monitoring_cmd
-    ShellCommands.chain(
+  def self.start_monitoring_cmd
+    chain(
         cd(RemoteDir::monitoring),
         "unxz -f #{ScalarmFileName::monitoring_package}",
         "chmod a+x #{ScalarmFileName::monitoring_binary}",
         "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
-        "#{ShellCommands.run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
                                            "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
 `.log")}"
     )
@@ -158,17 +162,17 @@ class PlGridFacade < InfrastructureFacade
     output
   end
 
-  def using_temp_credentials?(params)
+  def self.using_temp_credentials?(params)
     params.include?(:plgrid_login)
   end
 
-  def create_temp_credentials(params)
+  def self.create_temp_credentials(params)
     creds = GridCredentials.new({login: params[:plgrid_login]})
     creds.password = params[:plgrid_password]
     creds
   end
 
-  def get_credentials_from_db(user_id)
+  def self.get_credentials_from_db(user_id)
     GridCredentials.find_by_user_id(user_id)
   end
 
@@ -430,7 +434,7 @@ class PlGridFacade < InfrastructureFacade
 
     Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
 
     code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
 
