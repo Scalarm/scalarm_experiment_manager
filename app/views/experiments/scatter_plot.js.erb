@@ -24,7 +24,7 @@ $(document).ready(function() {
   	credits: { enabled: false },
     series: [{
         type: 'line',
-        name: <%= t '.regression_line' %>,
+        name: "<%= t '.regression_line' %>",
         data: <%= @chart.linear_regression_data %>,
         marker: {
             enabled: false
