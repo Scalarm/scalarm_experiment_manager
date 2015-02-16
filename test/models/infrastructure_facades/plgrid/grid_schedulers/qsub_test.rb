@@ -25,7 +25,7 @@ argument-check: Setting grant ID to default grant ID (plgjliput2014b).
     out
 
     @qsub.stubs(:submit_job_cmd).with(@record).returns(cmd)
-    @ssh.stubs(:exec!).with(cmd).returns(output)
+    @ssh.stubs(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(cmd)).returns(output)
 
     parsed_id = @qsub.submit_job(@ssh, @record)
 
@@ -75,7 +75,7 @@ qsub: submit filter returned an error code, aborting job submission.
     out
 
     @qsub.stubs(:submit_job_cmd).with(@record).returns(cmd)
-    @ssh.stubs(:exec!).with(cmd).returns(output)
+    @ssh.stubs(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(cmd)).returns(output)
 
     assert_raises JobSubmissionFailed, output do
       @qsub.submit_job(@ssh, @record)

@@ -74,7 +74,7 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      cmd = chain(cd(RemoteDir::simulation_managers), submit_job_cmd(job))
+      cmd = chain(Command::cd_to_simulation_managers(submit_job_cmd(job)))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 

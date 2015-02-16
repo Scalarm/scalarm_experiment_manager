@@ -1,6 +1,9 @@
 module SSHAccessedInfrastructure
-  include SharedSSH
   include ShellCommands
+
+  def initialize(*args)
+    super(*args)
+  end
 
   def self.create_remote_directories(ssh)
     [RemoteDir::scalarm_root, RemoteDir::simulation_managers, RemoteDir::monitoring].each do |name|
@@ -107,6 +110,10 @@ module SSHAccessedInfrastructure
     def self.tmp_sim_zip(sm_uuid)
       "scalarm_simulation_manager_#{sm_uuid}.zip"
     end
+
+    def self.sim_log(sm_uuid)
+      "scalarm_simulation_manager_#{sm_uuid}.log"
+    end
   end
 
   module ScalarmDirName
@@ -143,6 +150,10 @@ module SSHAccessedInfrastructure
     def self.remote_monitoring_certificate
       File.join(RemoteDir::monitoring, ScalarmFileName::remote_certificate)
     end
+
+    def self.sim_log(sm_uuid)
+      File.join(RemoteDir::simulation_managers, ScalarmFileName::sim_log(sm_uuid))
+    end
   end
 
   module RemoteAbsolutePath
@@ -166,8 +177,22 @@ module SSHAccessedInfrastructure
       add_home_prefix RemoteHomePath::remote_monitoring_certificate
     end
 
+    def self.sim_log(sm_uuid)
+      add_home_prefix RemoteHomePath::sim_log(sm_uuid)
+    end
+
     def self.add_home_prefix(path)
       File.join('~', path)
     end
   end
+
+  module Command
+    def self.cd_to_simulation_managers(cmd)
+      chain(
+          cd(RemoteDir::simulation_managers),
+          cmd
+      )
+    end
+  end
+
 end

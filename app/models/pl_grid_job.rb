@@ -81,8 +81,8 @@ class PlGridJob < MongoActiveRecord
     PlGridJob.log_path(sm_uuid)
   end
 
-  def self.log_path(uuid)
-    "scalarm_job_#{uuid}.log"
+  def self.log_path(sm_uuid)
+    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
   end
 
   def validate

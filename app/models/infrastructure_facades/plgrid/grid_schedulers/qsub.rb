@@ -29,18 +29,18 @@ module QsubScheduler
 
         IO.write(File.join(params[:dest_dir], job_script_file(job['sm_uuid'])), prepare_job_executable)
       else
-        IO.write(File.join(ScalarmDirName::tmp, job_script_file(sm_uuid)), prepare_job_executable)
+        IO.write(File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid)), prepare_job_executable)
       end
     end
 
     def job_files_list(sm_uuid)
       [
-          File.join(ScalarmDirName::tmp, job_script_file(sm_uuid))
+          File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid))
       ]
     end
 
     def submit_job(ssh, sm_record)
-      cmd = chain(cd(RemoteDir::simulation_managers), submit_job_cmd(sm_record))
+      cmd = chain(Command::cd_to_simulation_managers(submit_job_cmd(sm_record)))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("PBS cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
@@ -63,8 +63,11 @@ module QsubScheduler
       ]
 
       sm_uuid = sm_record.sm_uuid
-      [ "chmod a+x #{job_script_file(sm_uuid)}",
-        "echo \"sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}" ].join(';')
+
+      chain(
+          "chmod a+x #{job_script_file(sm_uuid)}",
+          "echo \"sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}"
+      )
     end
 
     def pbs_state(ssh, job)
