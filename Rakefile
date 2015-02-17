@@ -2,6 +2,7 @@
 # for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
 
 require File.expand_path('../config/application', __FILE__)
+require File.expand_path('../app/models/load_balancer_registration.rb', __FILE__)
 
 ScalarmExperimentManager::Application.load_tasks
 
@@ -17,6 +18,7 @@ namespace :service do
     puts 'puma -C config/puma.rb'
     %x[puma -C config/puma.rb]
 
+    load_balancer_registration
     create_anonymous_user
     monitoring_probe('start')
   end
@@ -27,6 +29,7 @@ namespace :service do
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_probe('stop')
+    load_balancer_unregistration
   end
 
   desc 'Removing unnecessary digests on production'
@@ -138,6 +141,18 @@ namespace :db_router do
       puts "Error on validation, please read documentation and run db_router:setup"
       raise
     end
+  end
+end
+
+namespace :load_balancer do
+  desc 'Registration to load balancer'
+  task :register do
+    load_balancer_registration
+  end
+
+  desc 'Unregistration from load balancer'
+  task :unregister do
+    load_balancer_unregistration
   end
 end
 
@@ -374,3 +389,18 @@ def check_sim_ruby
   $?.to_i == 0
 end
 
+def load_balancer_registration
+  unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
+    LoadBalancerRegistration.register
+  else
+    puts 'disable_load_balancer_registration option is active'
+  end
+end
+
+def load_balancer_unregistration
+  unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
+    LoadBalancerRegistration.unregister
+  else
+    puts 'disable_load_balancer_registration option is active'
+  end
+end
