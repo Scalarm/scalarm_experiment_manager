@@ -22,15 +22,19 @@ $(document).ready(function() {
   	plotOptions: {
   	},
   	credits: { enabled: false },
-    series: [{
-        type: 'line',
-        name: "<%= t '.regression_line' %>",
-        data: <%= @chart.linear_regression_data %>,
-        marker: {
-            enabled: false
-        },
-        enableMouseTracking: false
-    },{
+    series: [
+    <% if @chart.is_linear_regression_well_defined? %>
+      {
+          type: 'line',
+          name: "<%= t '.regression_line' %>",
+          data: <%= @chart.linear_regression_data %>,
+          marker: {
+              enabled: false
+          },
+          enableMouseTracking: false
+      },
+    <% end %>
+    {
         name: '<%= @chart.x_axis_label.split(" - ")[-1]%>',
         color: 'rgba(223, 83, 83, .5)',
         data: [
