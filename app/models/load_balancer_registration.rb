@@ -12,23 +12,38 @@ class LoadBalancerRegistration
     multicast_addr, port  = Rails.application.secrets[:multicast_address].split(':')
     bind_addr = '0.0.0.0'
     message = 'error'
-    begin
-      socket = UDPSocket.new
-      membership = IPAddr.new(multicast_addr).hton + IPAddr.new(bind_addr).hton
-
-      socket.setsockopt(:IPPROTO_IP, :IP_ADD_MEMBERSHIP, membership)
-      socket.setsockopt(:SOL_SOCKET, :SO_REUSEPORT, 1)
-
-      socket.bind(bind_addr, port)
+    counter = 4
+    repeat = true
+    while repeat
+      repeat = false
       begin
-        timeout(30) do
-          message, _ = socket.recvfrom(20)
+        socket = UDPSocket.new
+        membership = IPAddr.new(multicast_addr).hton + IPAddr.new(bind_addr).hton
+
+        socket.setsockopt(:IPPROTO_IP, :IP_ADD_MEMBERSHIP, membership)
+        #socket.setsockopt(:SOL_SOCKET, :SO_REUSEPORT, 1)
+
+        socket.bind(bind_addr, port)
+        begin
+          timeout(30) do
+            message, _ = socket.recvfrom(20)
+          end
+        socket.close
+        rescue Timeout::Error => e
+          puts "Unable to receive load balancer address: #{e.message}"
         end
-      rescue Timeout::Error => e
-        puts "Unable to receive load balancer address: #{e.message}"
+      rescue Errno::EADDRINUSE => e
+        if counter > 0
+          counter -= 1
+          repeat = true
+          puts "Unable to establish multicast connection, reattempt in 20s"
+          sleep(20)
+        else
+          puts "Unable to establish multicast connection: #{e.message}"
+        end
+      rescue Exception => e
+        puts "Unable to establish multicast connection: #{e.message}"
       end
-    rescue SocketError => e
-      puts "Unable to establish multicast connection: #{e.message}"
     end
     message.strip
   end
