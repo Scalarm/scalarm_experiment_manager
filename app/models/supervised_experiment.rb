@@ -9,8 +9,10 @@ class SupervisedExperiment < CustomPointsExperiment
 
   def start_supervisor_script(user, supervisor_script_id, supervisor_script_params)
     supervisor_script_params['experiment_id'] = self.id.to_s
-    supervisor_script_params['user'] = 'plgmwrona' #TODO temp login?
-    supervisor_script_params['password'] = 'ala' #TODO temp password?
+    self.supervisor_script_uuid = SecureRandom.uuid
+    password = SimulationManagerTempPassword.create_new_password_for self.supervisor_script_uuid, self.id
+    supervisor_script_params['user'] = self.supervisor_script_uuid
+    supervisor_script_params['password'] = password.password
     supervisor_script_params['address'] = 'https://localhost:3001' #TODO ???
     # TODO verify whether all params are present
 
@@ -20,7 +22,7 @@ class SupervisedExperiment < CustomPointsExperiment
     }
     self.supervisor_script_log = "log/supervisor_script_log_#{self.id.to_s}"
     # TODO use script id to chose proper optimization script (some hash map?)
-    path = 'public/scalarm_supervisor_scrpits/simulated_annealing/anneal.py'
+    path = 'scalarm_supervisor_scrpits/simulated_annealing/anneal.py'
     pid = Process.spawn("python2 #{path} #{self.supervisor_script_config} > #{self.supervisor_script_log} 2>&1")
     Process.detach(pid)
     self.supervisor_script_pid = pid
@@ -34,7 +36,7 @@ class SupervisedExperiment < CustomPointsExperiment
 
   def mark_as_complete!
     self.completed = true
-    # TODO cleanup
+    # TODO cleanup and destroy temp password
   end
 
   def completed?
