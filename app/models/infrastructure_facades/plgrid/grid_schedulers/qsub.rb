@@ -66,7 +66,7 @@ module QsubScheduler
 
       chain(
           "chmod a+x #{job_script_file(sm_uuid)}",
-          "echo \"sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}"
+          "echo \"sh #{RemoteDir::simulation_managers}/#{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}"
       )
     end
 
