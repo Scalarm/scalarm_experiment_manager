@@ -110,9 +110,20 @@ class InfrastructureFacade
     IO.write(LocalAbsolutePath::tmp_sim_config(sm_uuid), sm_config.to_json)
     # zip all files
 
+    zip_path = LocalAbsolutePath::tmp_sim_zip(sm_uuid)
     Dir.chdir(LocalAbsoluteDir::tmp) do
-      %x[zip #{LocalAbsolutePath::tmp_sim_zip(sm_uuid)} #{ScalarmDirName::tmp_simulation_manager(sm_uuid)}/*]
+      %x[zip #{zip_path} #{ScalarmDirName::tmp_simulation_manager(sm_uuid)}/*]
       FileUtils.rm_rf(ScalarmDirName::tmp_simulation_manager(sm_uuid))
+    end
+
+    if block_given?
+      begin
+        yield zip_path
+      ensure
+        FileUtils.rm_rf(zip_path)
+      end
+    else
+      return zip_path
     end
   end
 
