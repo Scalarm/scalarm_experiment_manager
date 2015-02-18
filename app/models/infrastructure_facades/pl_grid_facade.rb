@@ -442,11 +442,12 @@ class PlGridFacade < InfrastructureFacade
     FileUtils.mkdir(code_dir)
     FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
-    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
+    scheduler.prepare_job_files(sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
 
     Dir.chdir(LocalAbsoluteDir::tmp) do
       %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
     end
+    FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
     File.join(LocalAbsolutePath::tmp_sim_code_zip(sm_uuid))
   end
