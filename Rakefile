@@ -29,7 +29,7 @@ namespace :service do
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_probe('stop')
-    load_balancer_unregistration
+    load_balancer_deregistration
   end
 
   desc 'Removing unnecessary digests on production'
@@ -150,9 +150,9 @@ namespace :load_balancer do
     load_balancer_registration
   end
 
-  desc 'Unregistration from load balancer'
-  task :unregister do
-    load_balancer_unregistration
+  desc 'Deregistration from load balancer'
+  task :deregister do
+    load_balancer_deregistration
   end
 end
 
@@ -397,9 +397,9 @@ def load_balancer_registration
   end
 end
 
-def load_balancer_unregistration
+def load_balancer_deregistration
   unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
-    LoadBalancerRegistration.unregister
+    LoadBalancerRegistration.deregister
   else
     puts 'disable_load_balancer_registration option is active'
   end

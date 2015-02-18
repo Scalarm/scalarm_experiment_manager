@@ -49,7 +49,7 @@ class LoadBalancerRegistration
   end
 
   def self.load_balancer_query(query_type)
-    raise ArgumentError.new('Incorrect query to load balancer') unless ['register', 'unregister'].include?(query_type)
+    raise ArgumentError.new('Incorrect query to load balancer') unless ['register', 'deregister'].include?(query_type)
     message = self.get_load_balancer_address
     if message != 'error'
       port = (Rails.application.secrets[:port] or '3000')
@@ -85,8 +85,8 @@ class LoadBalancerRegistration
     self.load_balancer_query 'register'
   end
 
-  def self.unregister
-    self.load_balancer_query 'unregister'
+  def self.deregister
+    self.load_balancer_query 'deregister'
   end
 
 end
