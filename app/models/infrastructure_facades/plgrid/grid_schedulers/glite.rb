@@ -28,15 +28,19 @@ module GliteScheduler
     end
 
     def prepare_job_files(sm_uuid, params)
-      IO.write(job_script_file(sm_uuid), prepare_job_executable)
-      IO.write(job_jdl_file(sm_uuid), prepare_job_descriptor(sm_uuid, params))
+      [
+          [job_script_file(sm_uuid), prepare_job_executable],
+          [job_jdl_file(sm_uuid), prepare_job_descriptor(sm_uuid, params)]
+      ].each do |file, content|
+        IO.write(File.join(LocalAbsoluteDir::tmp, file), content)
+      end
     end
 
-    def job_files_list(sm_uuid)
+    def tmp_job_files_list(sm_uuid)
       [
           job_script_file(sm_uuid),
           job_jdl_file(sm_uuid)
-      ]
+      ].collect {|name| File.join(LocalAbsoluteDir::tmp, name)}
     end
 
     def submit_job(ssh, job)

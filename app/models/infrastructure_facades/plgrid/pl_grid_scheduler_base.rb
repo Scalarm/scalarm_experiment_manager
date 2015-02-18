@@ -2,7 +2,7 @@
 # - short_name() -> String
 # - long_name() -> String
 # - prepare_job_files(sm_uuid, params) - wrtie files to '/tmp' needed to send to UI
-# - job_files_list -> Array of file names to transfer from EM server to UI
+# - tmp_job_files_list -> Array of file names to transfer from EM server to UI
 #    - should be list of files generated in prepare_job_files
 #    - _without_ simulation manager ZIP package
 # - submit_job(ssh, job) - submit job and return job id; if submission fails raise JobSubmissionFailed
@@ -110,7 +110,7 @@ ruby simulation_manager.rb
 
   def send_job_files(sm_uuid, scp)
     sim_path = LocalAbsolutePath::tmp_sim_zip(sm_uuid)
-    scp.upload_multiple! [sim_path]+job_files_list(sm_uuid), RemoteDir::simulation_managers
+    scp.upload_multiple! [sim_path]+tmp_job_files_list(sm_uuid), RemoteDir::simulation_managers
   end
 
   def job_script_file(sm_uuid)

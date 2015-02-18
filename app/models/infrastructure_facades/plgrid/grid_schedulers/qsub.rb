@@ -33,7 +33,7 @@ module QsubScheduler
       end
     end
 
-    def job_files_list(sm_uuid)
+    def tmp_job_files_list(sm_uuid)
       [
           File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid))
       ]
@@ -64,9 +64,11 @@ module QsubScheduler
 
       sm_uuid = sm_record.sm_uuid
 
+      cmd_for_qsub = Command::cd_to_simulation_managers("sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}")
+
       chain(
           "chmod a+x #{job_script_file(sm_uuid)}",
-          "echo \"sh #{RemoteDir::simulation_managers}/#{job_script_file(sm_uuid)} #{sm_record.sm_uuid}\" | #{qsub_cmd.join(' ')}"
+          "echo \"#{cmd_for_qsub}\" | #{qsub_cmd.join(' ')}"
       )
     end
 

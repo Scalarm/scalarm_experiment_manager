@@ -66,11 +66,11 @@ module QcgScheduler
       "P#{dd}DT#{hh}H#{mm}M"
     end
 
-    def job_files_list(sm_uuid)
+    def tmp_job_files_list(sm_uuid)
       [
           job_script_file(sm_uuid),
           job_qcg_file(sm_uuid)
-      ]
+      ].collect {|name| File.join(LocalAbsoluteDir::tmp, name)}
     end
 
     def submit_job(ssh, job)
@@ -114,7 +114,7 @@ module QcgScheduler
         'PREPROCESSING' => :initializing,
         'PENDING' => :initializing,
         'RUNNING' => :running,
-        'STOPPED' => :deactivated, # TODO: :running? it's probably not ready for fetching logs
+        'STOPPED' => :running,
         'POSTPROCESSING' => :deactivated,
         'FINISHED' => :deactivated,
         'FAILED' => :deactivated,
