@@ -12,6 +12,7 @@ en:
     experiment_links:
       navigation_link: Experiments
       running_experiments: Running experiments
+      completed_experiments: Completed experiments
       simulation_scenarios: Simulation scenarios
       historical_experiments: Historical experiments
       data_exploration_link: Data exploration methods

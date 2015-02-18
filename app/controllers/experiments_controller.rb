@@ -10,10 +10,12 @@ class ExperimentsController < ApplicationController
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @completed_experiments = @running_experiments.select {|e| e.supervised ? e.completed : e.completed?} # running and not completed
-    @running_experiments.select! {|e| e.supervised ? (not e.completed) : (not e.completed?)} # running and completed
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
     @simulations = @current_user.get_simulation_scenarios
+
+    @running_experiments.map! {|e| transform_experiment e}
+    @completed_experiments = @running_experiments.select {|e| e.completed?} # running and not completed
+    @running_experiments.select! {|e| not e.completed?} # running and completed
 
     respond_to do |format|
       format.html
@@ -56,8 +58,18 @@ class ExperimentsController < ApplicationController
 
   def running_experiments
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @running_experiments.map! {|e| transform_experiment e}
+    @running_experiments.select! {|e| not e.completed?} # running and not completed
 
     render partial: 'running_experiments', locals: { show_close_button: true }
+  end
+
+  def completed_experiments
+    @completed_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @completed_experiments.map! {|e| transform_experiment e}
+    @completed_experiments.select! {|e| e.completed?} # running and completed
+
+    render partial: 'completed_experiments', locals: { show_close_button: true }
   end
 
   def historical_experiments
@@ -699,13 +711,11 @@ class ExperimentsController < ApplicationController
   # - point - JSON Hash with parameter space point
   def schedule_point
     validate(
-        point: []
+        point: :security_json
     )
 
-    # TODO: CustomPointsExperiment from Experiment
     custom_experiment = (@experiment.type == 'manual_points')
-    #raise ValidationError(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
-    raise 'Not a custom-points experiment' unless custom_experiment
+    raise ValidationError.new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
 
     @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
 
@@ -718,7 +728,7 @@ class ExperimentsController < ApplicationController
   # - point - JSON Hash with parameter space point
   def get_result
     validate(
-        point: []
+        point: :security_json
     )
     
     result = @experiment.get_result_for(Utils::parse_json_if_string(params[:point]))
@@ -782,8 +792,7 @@ class ExperimentsController < ApplicationController
     validate(
         result: :security_json
     )
-    #raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    raise 'Not a supervised experiment' unless @experiment.supervised
+    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
     @experiment.set_result! Utils::parse_json_if_string(params[:result])
     @experiment.save
     render json: {status: 'ok'}
@@ -791,14 +800,23 @@ class ExperimentsController < ApplicationController
 
   # POST
   def mark_as_complete
-    #raise ValidationError(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    raise 'Not a supervised experiment' unless @experiment.supervised
+    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
     @experiment.mark_as_complete!
     @experiment.save
     render json: {status: 'ok'}
   end
 
   private
+
+  def transform_experiment(experiment)
+    if experiment.supervised
+      SupervisedExperiment.from_experiment(experiment)
+    elsif experiment.type == 'manual_points'
+      CustomPointsExperiment.from_experiment(experiment)
+    else
+      experiment
+    end
+  end
 
   def load_experiment
     validate(
@@ -832,11 +850,7 @@ class ExperimentsController < ApplicationController
           format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
         end
       else
-        if @experiment.supervised
-          @experiment = SupervisedExperiment.where(id: @experiment.id).first
-        elsif @experiment.type == 'manual_points'
-          @experiment = CustomPointsExperiment.where(id: @experiment.id).first
-        end
+        @experiment = transform_experiment @experiment
       end
     end
   end

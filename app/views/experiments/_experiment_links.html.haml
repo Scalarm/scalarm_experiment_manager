@@ -7,6 +7,9 @@
           %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}")
             = t('.running_experiments')
         %li
+          %a.completed_experiments_link(href="#" data-action-url="#{completed_experiments_experiments_path}")
+            = t('.completed_experiments')
+        %li
           %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}")
             = t('.simulation_scenarios')
         %li
