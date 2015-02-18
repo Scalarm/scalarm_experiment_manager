@@ -29,6 +29,10 @@ namespace :service do
     monitoring_probe('stop')
   end
 
+  desc 'Restart the service'
+  task restart: [:stop, :start] do
+  end
+
   desc 'Removing unnecessary digests on production'
   task non_digested: :environment do
     Rake::Task['assets:precompile'].execute
