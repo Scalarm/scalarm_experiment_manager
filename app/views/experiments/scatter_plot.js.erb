@@ -23,7 +23,7 @@ $(document).ready(function() {
   	},
   	credits: { enabled: false },
     series: [
-    <% if @chart.is_linear_regression_well_defined? %>
+    <% if @chart.linear_regression_possible? %>
       {
           type: 'line',
           name: "<%= t '.regression_line' %>",
