@@ -324,7 +324,7 @@ class window.ExperimentLinksManager
     @content = $("#{@modalSelector} .content")
     @busy = $("#{@modalSelector} .busy")
 
-    $(".running_experiments_link, .available_experiments_link, .historical_experiments_link").click (event) =>
+    $(".running_experiments_link, .completed_experiments_link, .available_experiments_link, .historical_experiments_link").click (event) =>
       actionUrl = $(event.currentTarget).attr("data-action-url")
 
       @busy.show()

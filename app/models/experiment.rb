@@ -581,6 +581,10 @@ class Experiment < MongoActiveRecord
     sim_run and sim_run.result
   end
 
+  def completed?
+    (self.experiment_size == self.get_statistics[2])
+  end
+
   private
 
   def self.nested_json_to_hash(nested_json)

@@ -41,8 +41,11 @@ ScalarmExperimentManager::Application.routes.draw do
       post :calculate_experiment_size
       post :calculate_imported_experiment_size
       get :running_experiments
+      get :completed_experiments
       get :historical_experiments
       get :random_experiment
+      post :start_custom_points_experiment
+      post :start_supervised_experiment
     end
 
     member do
@@ -58,6 +61,8 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :intermediate_results
       get   :extension_dialog
       post  :change_scheduling_policy
+      post  :schedule_point
+      get   :get_result
 
       # experiment charts
       post :histogram
@@ -76,6 +81,10 @@ ScalarmExperimentManager::Application.routes.draw do
       get :simulation_manager
 
       post :share
+
+      # Optimization experiment
+      post :mark_as_complete
+      post :set_result
     end
 
     resources :simulations do

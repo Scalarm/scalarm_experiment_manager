@@ -5,18 +5,24 @@ require 'csv'
 
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
-  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
+  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
+                                          :start_custom_points_experiment, :start_supervised_experiment ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
     @simulations = @current_user.get_simulation_scenarios
 
+    @running_experiments.map! {|e| transform_experiment e}
+    @completed_experiments = @running_experiments.select {|e| e.completed?} # running and not completed
+    @running_experiments.select! {|e| not e.completed?} # running and completed
+
     respond_to do |format|
       format.html
       format.json { render json: {
           status: 'ok',
           running: @running_experiments.collect { |e| e.id.to_s },
+          completed: @completed_experiments.collect {|e| e.id.to_s},
           historical: @historical_experiments.collect { |e| e.id.to_s }
       }}
     end
@@ -52,8 +58,18 @@ class ExperimentsController < ApplicationController
 
   def running_experiments
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @running_experiments.map! {|e| transform_experiment e}
+    @running_experiments.select! {|e| not e.completed?} # running and not completed
 
     render partial: 'running_experiments', locals: { show_close_button: true }
+  end
+
+  def completed_experiments
+    @completed_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @completed_experiments.map! {|e| transform_experiment e}
+    @completed_experiments.select! {|e| e.completed?} # running and completed
+
+    render partial: 'completed_experiments', locals: { show_close_button: true }
   end
 
   def historical_experiments
@@ -492,7 +508,7 @@ class ExperimentsController < ApplicationController
       simulation_to_send = nil
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.get_next_instance
+        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
         unless @sm_user.nil? or simulation_to_send.nil?
           simulation_to_send.sm_uuid = @sm_user.sm_uuid
           simulation_to_send.save
@@ -510,7 +526,12 @@ class ExperimentsController < ApplicationController
                    'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
-        simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+        if @experiment.supervised and not @experiment.completed?
+          simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
+                                 'duration_in_seconds' => 2})
+        else
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+        end
       end
 
     rescue Exception => e
@@ -696,7 +717,116 @@ class ExperimentsController < ApplicationController
                                              @experiment.id, @user_session)
   end
 
+  # POST params:
+  # - point - JSON Hash with parameter space point
+  def schedule_point
+    validate(
+        point: :security_json
+    )
+
+    custom_experiment = (@experiment.type == 'manual_points')
+    raise ValidationError.new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+
+    @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json { render json: {status: 'ok'}, status: :ok }
+    end
+  end
+
+  # GET params:
+  # - point - JSON Hash with parameter space point
+  def get_result
+    validate(
+        point: :security_json
+    )
+    
+    result = @experiment.get_result_for(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json do
+        if result
+          render json: {status: 'ok', result: result}
+        else
+          render json: {status: 'error', message: 'Point not found'}
+        end
+      end
+    end
+  end
+
+  # POST params:
+  # - simulation_id
+  # TODO: other experiment parameters
+  # TODO: handle errors
+  def start_custom_points_experiment
+    validate(
+        simulation_id: :security_default
+    )
+
+    experiment = ExperimentFactory.create_custom_points_experiment(@current_user.id, @simulation)
+    experiment.save
+
+    render json: {status: 'ok', experiment_id: experiment.id.to_s}
+  end
+
+  # POST params
+  # - simulation_id
+  # - supervisor_script_id
+  # - supervisor_script_params
+  # TODO: other experiment parameters
+  # TODO: handle errors
+  def start_supervised_experiment
+    validate(
+        simulation_id: :security_default,
+        supervisor_script_id: :security_default,
+        supervisor_script_params: :security_json
+    )
+    response = {}
+    begin
+      experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
+      experiment.save
+      pid = experiment.start_supervisor_script(@current_user,
+                                         params[:supervisor_script_id],
+                                         Utils::parse_json_if_string(params[:supervisor_script_params]))
+      response.merge!({status: 'ok', experiment_id: experiment.id.to_s, pid: pid})
+    rescue Exception => e
+      Rails.logger.debug("Error while starting new supervised experiment: #{e}")
+      response.merge!({'status' => 'error', 'reason' => e.to_s})
+    end
+    render json: response
+  end
+
+  # POST params:
+  # - result
+  def set_result
+    validate(
+        result: :security_json
+    )
+    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    @experiment.set_result! Utils::parse_json_if_string(params[:result])
+    @experiment.save
+    render json: {status: 'ok'}
+  end
+
+  # POST
+  def mark_as_complete
+    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    @experiment.mark_as_complete!
+    @experiment.save
+    render json: {status: 'ok'}
+  end
+
   private
+
+  def transform_experiment(experiment)
+    if experiment.supervised
+      SupervisedExperiment.from_experiment(experiment)
+    elsif experiment.type == 'manual_points'
+      CustomPointsExperiment.from_experiment(experiment)
+    else
+      experiment
+    end
+  end
 
   def load_experiment
     validate(
@@ -729,6 +859,8 @@ class ExperimentsController < ApplicationController
           format.html { redirect_to action: :index }
           format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
         end
+      else
+        @experiment = transform_experiment @experiment
       end
     end
   end
