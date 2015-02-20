@@ -1,0 +1,28 @@
+= hidden_field_tag 'supervisor_script_id', 'sa'
+= hidden_field_tag 'supervisor_script_params'
+
+%section.panel.radius
+  %h3.subheader= t('experiments.simulated_annealing.title')
+
+  .content
+    .row
+      .small-5.columns
+        = label_tag :maxiter, t('experiments.simulated_annealing.maxiter') + ':', class: 'right inline'
+      .small-4.columns.end
+        = number_field_tag :maxiter, 1, min: 1, required: true, class: 'text-right'
+
+    .row
+      .small-5.columns
+        = label_tag :dwell, t('experiments.simulated_annealing.dwell') + ':', class: 'right inline'
+      .small-4.columns.end
+        = number_field_tag :dwell, 1, min: 1, required: true, class: 'text-right'
+
+    .row
+      .small-5.columns
+        = label_tag :schedule, t('experiments.simulated_annealing.schedule') + ':', class: 'right inline'
+      .small-4.columns.end
+        = text_field_tag :schedule, 'boltzmann', min: 1, required: true, class: 'text-right'
+
+
+
+

@@ -46,6 +46,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :random_experiment
       post :start_custom_points_experiment
       post :start_supervised_experiment
+      get :new_se
     end
 
     member do

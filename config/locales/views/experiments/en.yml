@@ -62,6 +62,9 @@ en:
       success: "The experiment has been updated"
       failure: "You cannot edit this experiment because you are not its owner"
 
+    new_se:
+      submit_button: "Start experiment"
+
     new:
       parameter_label: "Parameter '%{label}' - Value constraints: [ %{min}, %{max} ]"
       parameter_label_allowed_values: "Parameter '%{label}' - allowed values: [ %{allowed_values} ]"
@@ -146,3 +149,9 @@ en:
        caption: "Started simulation runs"
        started_at: "Started at"
        results_header: "Intermediate results"
+
+    simulated_annealing:
+      title: Simulated annealing
+      maxiter: Maximum number of iterations
+      dwell: dwell
+      schedule: Scheduling method

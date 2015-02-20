@@ -1,0 +1,41 @@
+- content_for :title, t('new.title')
+- content_for :help, raw(t('help.simulations.conduct'))
+
+= form_tag experiments_path, id: 'experiment_submit_form' do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'experiment_input'
+  = render 'experiments/new/basic_information'
+  = render 'experiments/new/simulated_annealing'
+
+.row.submit-section
+  = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
+  = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
+
+#error-dialog.reveal-modal.hidden(data-reveal="")
+  %h2.subheader= t("new.error_dialog_header")
+  %a.close-reveal-modal &#215;
+
+  .alert-box.alert.radius.hidden(data-alert="")
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      window.toggle_panels_on_title_click();
+
+      var input_space = new window.InputSpace(#{raw @simulation.input_specification.to_json});
+
+
+      $("#experiment_submit_form").on("submit", function() {
+        var builder = {};
+        builder.maxiter = parseInt($("input[name='maxiter']").val());
+        builder.dwell = parseInt($("input[name='dwell']").val());
+        builder.schedule = $("input[name='schedule']").val();
+        $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
+
+        input_space.updateAllInputParameterValues();
+      });
+
+      $("#new_experiment_submit").on("click", function() {
+        $("#experiment_submit_form").submit();
+      });
+    });
