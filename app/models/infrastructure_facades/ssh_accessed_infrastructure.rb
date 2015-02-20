@@ -6,7 +6,7 @@ module SSHAccessedInfrastructure
   end
 
   def self.create_remote_directories(ssh)
-    [RemoteDir::scalarm_root, RemoteDir::simulation_managers, RemoteDir::monitoring].each do |name|
+    [RemoteDir::scalarm_root].each do |name|
       ssh.exec!(mkdir(name))
     end
   end
@@ -72,14 +72,6 @@ module SSHAccessedInfrastructure
     def self.scalarm_root
       'scalarm/'
     end
-
-    def self.simulation_managers
-      "#{scalarm_root}/simulation_managers/"
-    end
-
-    def self.monitoring
-      "#{scalarm_root}/workers_monitor/"
-    end
   end
 
   module ScalarmFileName
@@ -132,27 +124,27 @@ module SSHAccessedInfrastructure
 
   module RemoteHomePath
     def self.monitoring_config
-      File.join(RemoteDir::monitoring, ScalarmFileName::monitoring_config)
+      File.join(RemoteDir::scalarm_root, ScalarmFileName::monitoring_config)
     end
 
     def self.monitoring_binary
-      File.join(RemoteDir::monitoring, ScalarmFileName::monitoring_binary)
+      File.join(RemoteDir::scalarm_root, ScalarmFileName::monitoring_binary)
     end
 
     def self.monitoring_package
-      File.join(RemoteDir::monitoring, ScalarmFileName::monitoring_package)
+      File.join(RemoteDir::scalarm_root, ScalarmFileName::monitoring_package)
     end
 
     def self.remote_monitoring_proxy
-      File.join(RemoteDir::monitoring, ScalarmFileName::remote_proxy)
+      File.join(RemoteDir::scalarm_root, ScalarmFileName::remote_proxy)
     end
 
     def self.remote_monitoring_certificate
-      File.join(RemoteDir::monitoring, ScalarmFileName::remote_certificate)
+      File.join(RemoteDir::scalarm_root, ScalarmFileName::remote_certificate)
     end
 
     def self.sim_log(sm_uuid)
-      File.join(RemoteDir::simulation_managers, ScalarmFileName::sim_log(sm_uuid))
+      File.join(RemoteDir::scalarm_root, ScalarmFileName::sim_log(sm_uuid))
     end
   end
 
@@ -189,7 +181,7 @@ module SSHAccessedInfrastructure
   module Command
     def self.cd_to_simulation_managers(cmd)
       chain(
-          cd(RemoteDir::simulation_managers),
+          cd(RemoteDir::scalarm_root),
           cmd
       )
     end

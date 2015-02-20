@@ -68,6 +68,15 @@ ruby simulation_manager.rb
     end
   end
 
+  def create_tmp_job_files(sm_uuid, params)
+    begin
+      prepare_job_files(sm_uuid, params)
+      yield
+    ensure
+      tmp_job_files_list(sm_uuid).each { |f| FileUtils.rm_rf(f) } if block_given?
+    end
+  end
+
   def clean_after_job(ssh, job)
     ssh.exec!(clean_after_sm_cmd(job))
   end
@@ -97,7 +106,7 @@ ruby simulation_manager.rb
     sm_uuid = record.sm_uuid
     chain(
       rm(ScalarmFileName::tmp_sim_zip(sm_uuid)),
-      rm(job_script_file(sm_uuid))
+      rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)))
     )
   end
 
@@ -110,7 +119,7 @@ ruby simulation_manager.rb
 
   def send_job_files(sm_uuid, scp)
     sim_path = LocalAbsolutePath::tmp_sim_zip(sm_uuid)
-    scp.upload_multiple! [sim_path]+tmp_job_files_list(sm_uuid), RemoteDir::simulation_managers
+    scp.upload_multiple! [sim_path]+tmp_job_files_list(sm_uuid), RemoteDir::scalarm_root
   end
 
   def job_script_file(sm_uuid)

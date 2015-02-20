@@ -168,25 +168,28 @@ class PrivateMachineFacade < InfrastructureFacade
       logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
 
       InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, sm_record.user_id,
-                                                                        sm_record.experiment_id, sm_record.start_at)
+                                                                        sm_record.experiment_id, sm_record.start_at) do
 
-      error_counter = 0
-      while true
-        begin
-          ssh = shared_ssh_session(sm_record.credentials)
-          break if log_exists?(sm_record, ssh) or send_and_launch_sm(sm_record, ssh)
-        rescue Exception => e
-          logger.warn "Exception #{e} occured while communication with "\
-  "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
-          error_counter += 1
-          if error_counter > 10
-            sm_record.store_error('install_failed', e.to_s)
-            break
+        error_counter = 0
+        while true
+          begin
+            ssh = shared_ssh_session(sm_record.credentials)
+            break if log_exists?(sm_record, ssh) or send_and_launch_sm(sm_record, ssh)
+          rescue Exception => e
+            logger.warn "Exception #{e} occured while communication with "\
+    "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
+            error_counter += 1
+            if error_counter > 10
+              sm_record.store_error('install_failed', e.to_s)
+              break
+            end
           end
+
+          sleep(20)
         end
 
-        sleep(20)
       end
+
     end
   end
 
@@ -206,22 +209,35 @@ class PrivateMachineFacade < InfrastructureFacade
   # --
 
   def simulation_manager_code(sm_record)
-    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+    sm_uuid = sm_record.sm_uuid
 
-    InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    code_dir = LocalAbsoluteDir::tmp_sim_code(sm_record.sm_uuid)
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at) do
+      code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
 
-    FileUtils.remove_dir(code_dir, true)
-    FileUtils.mkdir(code_dir)
-    FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_record.sm_uuid), code_dir)
+      FileUtils.remove_dir(code_dir, true)
+      FileUtils.mkdir(code_dir)
+      FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
-    #scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
-    Dir.chdir('/tmp') do
-      %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_record.sm_uuid)} #{code_dir}/*]
+      Dir.chdir(LocalAbsoluteDir::tmp) do
+        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{code_dir}/*]
+      end
+      FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
+
+      zip_path = LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)
+
+      if block_given?
+        begin
+          yield zip_path
+        ensure
+          FileUtils.rm_rf(zip_path)
+        end
+      else
+        return zip_path
+      end
     end
 
-    LocalAbsolutePath::tmp_sim_code_zip(sm_record.sm_uuid)
   end
 
 end

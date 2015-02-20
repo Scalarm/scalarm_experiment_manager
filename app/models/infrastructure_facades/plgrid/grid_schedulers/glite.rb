@@ -122,9 +122,8 @@ module GliteScheduler
       "glite-wms-job-cancel --no-int #{record.job_id}"
     end
 
-    def clean_after_job(ssh, job)
-      super
-      ssh.exec!("rm #{job_jdl_file(job.sm_uuid)}")
+    def clean_after_sm_cmd(sm_record)
+      chain(super, rm(File.join(RemoteDir::scalarm_root, job_jdl_file(sm_record.sm_uuid))))
     end
 
     def self.default_host
@@ -151,15 +150,16 @@ module GliteScheduler
       ]
     end
 
+    # Paths can be used relative to working dir (where submission is executed)
     def prepare_job_descriptor(uuid, params)
-      log_path = PlGridJob.log_path(uuid)
+      log_path = ScalarmFileName::sim_log(uuid)
       <<-eos
-  Executable = "scalarm_job_#{uuid}.sh";
+  Executable = "#{job_script_file(uuid)}";
   Arguments = "#{uuid}";
   StdOutput = "#{log_path}";
   StdError = "#{log_path}";
   OutputSandbox = {"#{log_path}"};
-  InputSandbox = {"scalarm_job_#{uuid}.sh", "scalarm_simulation_manager_#{uuid}.zip"};
+  InputSandbox = {"#{job_script_file(uuid)}", "#{ScalarmFileName.tmp_sim_zip(uuid)}"};
   Requirements = (other.GlueCEUniqueID == "#{self.class.host_addresses[(params['plgrid_host'] or self.class.default_host)]}");
   VirtualOrganisation = "vo.plgrid.pl";
       eos
@@ -184,13 +184,17 @@ module GliteScheduler
     # end
 
     def get_log(ssh, job)
-      out_log = ssh.exec!(tail(get_glite_output_to_file(ssh, job), 25))
+      log_path = get_glite_output_to_file(ssh, job)
+
+      out_log_content = ssh.exec!(tail(log_path, 25))
+      # TODO: remove also output dir
+      ssh.exec!(rm(log_path))
 
         <<-eos
 --- gLite info ---
 #{get_job_info(ssh, job.job_id)}
 --- Simulation Manager log ---
-#{out_log}
+#{out_log_content}
         eos
     end
 
@@ -200,7 +204,7 @@ module GliteScheduler
           ssh
       )
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
-      "#{output_dir}/#{job.log_path}"
+      "#{output_dir}/#{ScalarmFileName::sim_log(job.sm_uuid)}"
     end
 
     def self.parse_get_output(output)

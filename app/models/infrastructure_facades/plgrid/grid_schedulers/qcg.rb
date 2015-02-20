@@ -43,8 +43,9 @@ module QcgScheduler
       IO.write("#{execution_dir}/#{job_qcg_file(sm_uuid)}", prepare_job_descriptor(sm_uuid, params))
     end
 
+    # Script uses working dir (where job is submitted) relative paths
     def prepare_job_descriptor(uuid, params)
-      log_path = PlGridJob.log_path(uuid)
+      log_path = ScalarmFileName::sim_log(uuid)
       <<-eos
 #QCG executable=#{job_script_file(uuid)}
 #QCG argument=#{uuid}
@@ -171,42 +172,27 @@ module QcgScheduler
     end
 
     def get_log(ssh, job)
-      err_log = ssh.exec! "tail -40 #{job.log_path}.err"
-      out_log = ssh.exec! "tail -40 #{job.log_path}.out"
-      ssh.exec! "rm #{job.log_path}.err"
-      ssh.exec! "rm #{job.log_path}.out"
-
-      if qcg_state(ssh, job.job_id) == 'FAILED'
-        <<-eos
---- QCG info ---
-#{get_job_info(ssh, job.job_id)}
---- STDOUT ---
-#{out_log}
---- STDERR ---
-#{err_log}
-        eos
-      else
-        <<-eos
---- STDOUT ---
-#{out_log}
---- STDERR ---
-#{err_log}
-        eos
-      end
+      ssh.exec!(get_log_cmd(job))
     end
 
-    # only for the on-site monitoring
     def get_log_cmd(sm_record)
-      [
-        "echo '--- QCG info ---'", sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
-        "echo '--- STDOUT ---'", "tail -40 #{sm_record.log_path}.out",
-        "echo '--- STDOUT ---'", "tail -40 #{sm_record.log_path}.err",
-        "rm #{sm_record.log_path}.err", "rm #{sm_record.log_path}.out"
-      ].join(';')
+      absolute_log_path = sm_record.absolute_log_path
+      stdout_path = "#{absolute_log_path}.out"
+      stderr_path = "#{absolute_log_path}.err"
+
+      chain(
+        "echo '--- QCG info ---'",
+        sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
+        "echo '--- STDOUT ---'",
+        "tail -40 #{stdout_path}",
+        "echo '--- STDERR ---'",
+        "tail -40 #{stderr_path}",
+        "rm -f #{stderr_path} #{stderr_path}"
+      )
     end
 
     def clean_after_sm_cmd(sm_record)
-      [ super, "rm #{job_qcg_file(sm_record.sm_uuid)}" ].join(';')
+      chain(super, rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid))))
     end
 
     def self.available_hosts

@@ -24,19 +24,23 @@ module QsubScheduler
     end
 
     def prepare_job_files(sm_uuid, params)
-      if params.include?(:dest_dir) and params.include?(:sm_record)
-        job = params[:sm_record]
+      execution_dir = if params.include?(:dest_dir)
+                        params[:dest_dir]
+                      else
+                        LocalAbsoluteDir::tmp
+                      end
 
-        IO.write(File.join(params[:dest_dir], job_script_file(job['sm_uuid'])), prepare_job_executable)
-      else
-        IO.write(File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid)), prepare_job_executable)
-      end
+      params = params[:sm_record] if params.include?(:sm_record)
+
+      IO.write("#{execution_dir}/#{job_script_file(sm_uuid)}", prepare_job_executable)
+      IO.write("#{execution_dir}/#{job_pbs_file(sm_uuid)}", prepare_job_descriptor(sm_uuid, params))
     end
 
     def tmp_job_files_list(sm_uuid)
       [
-          File.join(LocalAbsoluteDir::tmp, job_script_file(sm_uuid))
-      ]
+          job_script_file(sm_uuid),
+          job_pbs_file(sm_uuid)
+      ].collect {|name| File.join(LocalAbsoluteDir::tmp, name)}
     end
 
     def submit_job(ssh, sm_record)
@@ -51,25 +55,28 @@ module QsubScheduler
 
     # Assumption: working dir contains job files
     def submit_job_cmd(sm_record)
-      #  schedule the job with qsub
-      qsub_cmd = [
-          'qsub',
-          '-q', sm_record.queue,
-          "#{sm_record.grant_id.blank? ? '' : "-A #{sm_record.grant_id}"}",
-          "#{sm_record.nodes.blank? ? '' : "-l nodes=#{sm_record.nodes}:ppn=#{sm_record.ppn}"}",
-          '-j oe', # mix stderr with stdout
-          '-o', sm_record.log_path, # output log
-          '-l', "walltime=#{sm_record.time_limit.to_i.minutes.to_i}" # convert minutes to seconds
-      ]
-
       sm_uuid = sm_record.sm_uuid
-
-      cmd_for_qsub = Command::cd_to_simulation_managers("sh #{job_script_file(sm_uuid)} #{sm_record.sm_uuid}")
 
       chain(
           "chmod a+x #{job_script_file(sm_uuid)}",
-          "echo \"#{cmd_for_qsub}\" | #{qsub_cmd.join(' ')}"
+          "qsub #{job_pbs_file(sm_uuid)}"
       )
+    end
+
+    def prepare_job_descriptor(uuid, params)
+      log_path = ScalarmFileName::sim_log(uuid)
+      <<-eos
+#!/bin/bash
+#PBS -q #{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
+#PBS -j oe
+#PBS -o #{log_path}
+#PBS -l walltime=#{params['time_limit'].to_i.minutes.to_i}
+#{params['nodes'].blank? ? '' : "#PBS -l nodes=#{params['nodes']}:ppn=#{params['ppn'] || 1}" }
+#{params['grant_id'].blank? ? '' : "#PBS -A #{params['grant_id']}" }
+
+cd $PBS_O_WORKDIR
+./#{job_script_file(uuid)} #{uuid} # SiM unpacking and execution script
+      eos
     end
 
     def pbs_state(ssh, job)
@@ -125,20 +132,30 @@ module QsubScheduler
     end
 
     def get_log_cmd(sm_record)
-      if sm_record.log_path.blank?
-        ""
+      log_path = sm_record.absolute_log_path
+      if log_path.blank?
+        'echo no log_path specified'
       else
-        "tail -80 #{sm_record.log_path}; rm #{sm_record.log_path}"
+        "tail -80 #{log_path}; rm -f #{log_path}"
       end
     end
 
     def cancel_sm_cmd(sm_record)
       if sm_record.job_id.blank?
-        ""
+        'echo no job_id specified'
       else
         "qdel #{sm_record.job_id}"
       end
     end
+
+    def clean_after_sm_cmd(sm_record)
+      chain(super, rm(File.join(RemoteDir::scalarm_root, job_pbs_file(sm_record.sm_uuid))))
+    end
+
+    def job_pbs_file(sm_uuid)
+      "scalarm_job_#{sm_uuid}.pbs"
+    end
+
 
   end
 

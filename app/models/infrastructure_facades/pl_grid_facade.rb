@@ -60,10 +60,7 @@ class PlGridFacade < InfrastructureFacade
       if SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid).nil?
         SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
       end
-      # 2.b prepare SiM package unless SiM is monitored on-site
-      unless additional_params[:onsite_monitoring]
-        InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, additional_params['start_at'])
-      end
+
       # 2.c create record for SiM and save it
       record = create_record(user_id, experiment_id, sm_uuid, additional_params)
       record.save
@@ -128,7 +125,7 @@ class PlGridFacade < InfrastructureFacade
   def self.upload_monitoring_files(scp, sm_uuid, arch)
     local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
     local_package = LocalAbsolutePath::monitoring_package(arch)
-    scp.upload_multiple! [local_config, local_package], RemoteDir::monitoring
+    scp.upload_multiple! [local_config, local_package], RemoteDir::scalarm_root
 
     if LocalAbsolutePath::certificate
       scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
@@ -137,7 +134,7 @@ class PlGridFacade < InfrastructureFacade
 
   def self.start_monitoring_cmd
     chain(
-        cd(RemoteDir::monitoring),
+        cd(RemoteDir::scalarm_root),
         "unxz -f #{ScalarmFileName::monitoring_package}",
         "chmod a+x #{ScalarmFileName::monitoring_binary}",
         "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
@@ -183,9 +180,10 @@ class PlGridFacade < InfrastructureFacade
         scheduler_type: scheduler.short_name,
         sm_uuid: sm_uuid,
         time_limit: params['time_limit'].to_i,
-        infrastructure: short_name
+        infrastructure: short_name,
     )
 
+    job.start_at = params['start_at']
     job.grant_id = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
@@ -275,8 +273,8 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
-        sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
-                                     scheduler.clean_after_sm_cmd(sm_record) ].join(';')
+        sm_record.cmd_to_execute = chain(scheduler.cancel_sm_cmd(sm_record),
+                                     scheduler.clean_after_sm_cmd(sm_record))
         sm_record.save
       end
 
@@ -366,17 +364,18 @@ class PlGridFacade < InfrastructureFacade
 
       sm_record.validate
 
-      scheduler.prepare_job_files(sm_uuid, sm_record.to_h)
-
       #  upload the code to the Grid user interface machine
       begin
         ssh = shared_ssh_session(sm_record.credentials)
         SSHAccessedInfrastructure::create_remote_directories(ssh)
 
-        sm_record.credentials.scp_session do |scp|
-          scheduler.send_job_files(sm_uuid, scp)
+
+        InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, sm_record.start_at)
+        scheduler.create_tmp_job_files(sm_uuid, sm_record.to_h) do
+          ssh.scp do |scp|
+            scheduler.send_job_files(sm_uuid, scp)
+          end
         end
-        # TODO: SCAL-525
         
         begin
           sm_record.job_id = scheduler.submit_job(ssh, sm_record)
@@ -434,22 +433,35 @@ class PlGridFacade < InfrastructureFacade
 
     Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at) do
+      code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
+      FileUtils.remove_dir(code_dir, true)
+      FileUtils.mkdir(code_dir)
+      scheduler.create_tmp_job_files(sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h}) do
 
-    code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
 
-    FileUtils.remove_dir(code_dir, true)
-    FileUtils.mkdir(code_dir)
-    FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
+        FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
-    scheduler.prepare_job_files(sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
+        Dir.chdir(LocalAbsoluteDir::tmp) do
+          %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{code_dir}/*]
+        end
+        FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
-    Dir.chdir(LocalAbsoluteDir::tmp) do
-      %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
+        zip_path = LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)
+
+        if block_given?
+          begin
+            yield zip_path
+          ensure
+            FileUtils.rm_rf(zip_path)
+          end
+        else
+          return zip_path
+        end
+      end
+      FileUtils.remove_dir(code_dir, true)
     end
-    FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
-    File.join(LocalAbsolutePath::tmp_sim_code_zip(sm_uuid))
   end
 
   def destroy_unused_credentials(authentication_mode, user)
