@@ -1,5 +1,9 @@
 en:
   experiments:
+    optimization_method:
+      title: Optimization method
+      choose: Set optimization method
+
     click_to_expand: "(click to expand)"
 
     information_panel:
@@ -61,9 +65,6 @@ en:
       submit_btn: "Update"
       success: "The experiment has been updated"
       failure: "You cannot edit this experiment because you are not its owner"
-
-    new_se:
-      submit_button: "Start experiment"
 
     new:
       parameter_label: "Parameter '%{label}' - Value constraints: [ %{min}, %{max} ]"

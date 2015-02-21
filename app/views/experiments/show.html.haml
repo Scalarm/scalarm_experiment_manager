@@ -32,8 +32,9 @@
 
 = render 'scheduling_policy_dialog'
 
-%section.panel.radius(style="margin-top: 20px;")
-  = render 'experiment_result'
+- unless @experiment.result.nil?
+  %section.panel.radius(style="margin-top: 20px;")
+    = render 'experiment_result'
 
 - content_for :javascript do
   :javascript

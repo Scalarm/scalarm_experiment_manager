@@ -689,10 +689,6 @@ class ExperimentsController < ApplicationController
     @simulation_input = @simulation.input_specification
   end
 
-  def new_se
-    @simulation_input = @simulation.input_specification
-  end
-
   # getting id of a random running experiment
   def random_experiment
     @running_experiments = if not @current_user.nil?
