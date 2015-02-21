@@ -5,6 +5,7 @@ class window.InfrastructuresTree
 
     @bindRefreshTreeButton('refresh-button')
     @bindFilterTreeSelect('experiment_filter_id')
+    @bindStopAllSMButton('stop-all-button')
 
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
@@ -164,6 +165,51 @@ class window.InfrastructuresTree
 #    $.post(@simulation_manager_command_infrastructure_path, data,
 #      (json) => @updateInfrastructureNode(d["infrastructure_name"]) # update infrastructure leaf
 #    )
+  retrieveLeaves: (node) ->
+    leaves = []
+    if !!node['children']
+      children = (n for n in node.children)
+    else if !!node['_children']
+      children = (n for n in node._children)
+    else
+      return node
+    
+    for child in children
+      leaves = leaves.concat(@retrieveLeaves(child))
+
+    return leaves
+
+  stopAllSimulationManagers: () ->
+    $('#destroy-no').on 'click', =>
+      $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+
+    $(".dialog-header").hide()
+    $(".dialog-header#stop_all-header").show()
+
+    button = $('#destroy-yes')
+    button.off()
+    button.unbind()
+    button.on 'click', =>
+      $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+      mainNode = d3.select("#infrastructures-tree").selectAll("g.node").data().filter((e) -> e.name=="Scalarm" )[0]
+      leaves = @retrieveLeaves(mainNode)
+      smNodes = leaves.filter((d) => d.type == 'sm-node')
+      smNodesCount = smNodes.length
+      if smNodesCount != 0
+        window.Notices.show_loading_notice()
+      for d in smNodes
+        data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': 'stop' }
+        $.post(@simulation_manager_command_infrastructure_path, data, ((infrastructure_name) =>
+          (json) =>
+            @updateInfrastructureNode(infrastructure_name)
+            if --smNodesCount == 0
+              window.Notices.hide_notice()
+            switch json.status
+              when 'error' then toastr.error(json.msg)
+              when 'ok' then toastr.success(json.msg)
+              else toastr.error(json.msg))(d['infrastructure_name'])
+        )
+    $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
 
   updateTree: (source) ->
     duration = (d3.event && d3.event.altKey) and 5000 or 500
@@ -407,6 +453,11 @@ class window.InfrastructuresTree
     $("##{select_id}").change(() =>
       @experiment_id = $("##{select_id}").val()
       @updateAllInfrastructureNodes()
+    )
+
+  bindStopAllSMButton: (button_id) ->
+    $("##{button_id}").on("click", =>
+      @stopAllSimulationManagers()
     )
 
   updateInfrastructureNode: (infrastructure_name) ->
