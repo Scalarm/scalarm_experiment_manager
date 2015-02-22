@@ -1,5 +1,9 @@
 en:
   experiments:
+    optimization_method:
+      title: Optimization method
+      choose: Set optimization method
+
     click_to_expand: "(click to expand)"
 
     information_panel:
@@ -53,7 +57,6 @@ en:
          one: Selected DoE method requires more than 1 parameter.
          other: "Selected DoE method requires more than %{count} parameters."
       invalid_resolution: Number of bars should be an integer between 1 and 100
-      incorrect_parameter: Incorrect parameter chosen!
 
     edit:
       link: "Edit"
@@ -147,6 +150,12 @@ en:
        caption: "Started simulation runs"
        started_at: "Started at"
        results_header: "Intermediate results"
+
+    simulated_annealing:
+      title: Simulated annealing
+      maxiter: Maximum number of iterations
+      dwell: dwell
+      schedule: Scheduling method
 
     scatter_plot:
       click_for_details: "Click for details"

@@ -1,65 +1,78 @@
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
 
-= form_tag experiments_path, id: 'experiment_submit_form' do
-  = hidden_field_tag 'simulation_id', @simulation.id
-  = hidden_field_tag 'experiment_input'
-  = hidden_field_tag 'doe'
-  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
-  = hidden_field_tag 'parameters_constraints'
+%section.panel.radius
+  %h3.subheader= t('experiments.optimization_method.title')
+  .content
+    .row
+      .small-5.columns
+        %label.inline.right
+          = t('experiments.optimization_method.choose')
+      .small-7.columns
+        = select_tag 'optimization_method_choose',
+        options_for_select([['None', 'none'], ['Simulated annealing', 'simulated_annealing']], selected: ['None', 'none'])
 
-  = render 'experiments/new/basic_information'
+%div(optimization-method-type="simulated_annealing" class="hidden")
+  = render 'experiments/new/optimization_method/simulated_annealing'
 
-  %section.panel.radius.simulation_input
-    %ul.button-group.right.round
-      %li
-        %a#manual-off.tiny.button.secondary.clicked(href="#") On
-      %li
-        %a#manual-on.tiny.button.secondary(href="#") Off
+%div(optimization-method-type="none")
+  = form_tag experiments_path, id: 'experiment_submit_form' do
+    = hidden_field_tag 'simulation_id', @simulation.id
+    = hidden_field_tag 'experiment_input'
+    = hidden_field_tag 'doe'
+    = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+    = hidden_field_tag 'parameters_constraints'
 
-    %h3.subheader#manual-header= t('.input_header')
+    = render 'experiments/new/basic_information'
 
-    .content
-      %dl.tabs(data-tab="")
-        %dd.active
-          = link_to t('.input_parametrization_types'), '#parametrization'
-        %dd
-          = link_to t('.input_doe'), '#doe'
-        %dd
-          = link_to t('.params_constraints'), '#constraints'
+    %section.panel.radius.simulation_input
+      %ul.button-group.right.round
+        %li
+          %a#manual-off.tiny.button.secondary.clicked(href="#") On
+        %li
+          %a#manual-on.tiny.button.secondary(href="#") Off
 
-      .tabs-content
-        #parametrization.content.active
-          = render 'experiments/new/parametrization'
-        #doe.content
-          = render 'experiments/new/design_of_experiment'
-        #constraints.content
-          = render 'experiments/new/parameter_constraints'
+      %h3.subheader#manual-header= t('.input_header')
 
-%section#import.panel.radius.last-element
-  = render 'experiments/new/import_tab'
+      .content
+        %dl.tabs(data-tab="")
+          %dd.active
+            = link_to t('.input_parametrization_types'), '#parametrization'
+          %dd
+            = link_to t('.input_doe'), '#doe'
+          %dd
+            = link_to t('.params_constraints'), '#constraints'
 
-.row.submit-section
-  = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
-  = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
-  = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
+        .tabs-content
+          #parametrization.content.active
+            = render 'experiments/new/parametrization'
+          #doe.content
+            = render 'experiments/new/design_of_experiment'
+          #constraints.content
+            = render 'experiments/new/parameter_constraints'
 
+    %section#import.panel.radius.last-element
+      = render 'experiments/new/import_tab'
 
-#experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
-  %h2.subheader= raw t('.experiment_size_dialog_body')
-  %a.close-reveal-modal &#215;
+  .row.submit-section
+    = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
+    = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+    = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
 
-#error-dialog.reveal-modal.hidden(data-reveal="")
-  %h2.subheader= t(".error_dialog_header")
-  %a.close-reveal-modal &#215;
+  #experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
+    %h2.subheader= raw t('.experiment_size_dialog_body')
+    %a.close-reveal-modal &#215;
 
-  .alert-box.alert.radius.hidden(data-alert="")
+  #error-dialog.reveal-modal.hidden(data-reveal="")
+    %h2.subheader= t(".error_dialog_header")
+    %a.close-reveal-modal &#215;
+
+    .alert-box.alert.radius.hidden(data-alert="")
 
 - content_for :javascript do
   :javascript
     $(function() {
       window.toggle_panels_on_title_click();
-
       var input_space = new window.InputSpace(#{raw @simulation.input_specification.to_json});
       var input_space_importer = new window.InputSpaceImporter("#{simulations_upload_parameter_space_path}",
                                                                "#{calculate_imported_experiment_size_experiments_path}");
@@ -126,4 +139,10 @@
       })
 
       $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
+
+      $("select#optimization_method_choose").change(function(){
+        $("[optimization-method-type]").hide();
+        $selected = $("#optimization_method_choose option:selected").val();
+        $("[optimization-method-type='" + $selected + "']").show();
+      })
     });

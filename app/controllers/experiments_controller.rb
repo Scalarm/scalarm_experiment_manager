@@ -6,7 +6,7 @@ require 'csv'
 class ExperimentsController < ApplicationController
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
-                                          :start_custom_points_experiment, :start_supervised_experiment ]
+                                          :start_custom_points_experiment, :start_supervised_experiment, :new_se ]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -110,6 +110,11 @@ class ExperimentsController < ApplicationController
     )
 
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
+
+    if params.has_key?(:supervisor_script_id) and params.has_key?(:supervisor_script_params)
+      start_supervised_experiment
+      return
+    end
 
     begin
       experiment = prepare_new_experiment
@@ -794,7 +799,8 @@ class ExperimentsController < ApplicationController
     validate(
         simulation_id: :security_default,
         supervisor_script_id: :security_default,
-        supervisor_script_params: :security_json
+        supervisor_script_params: :security_json,
+        experiment_input: :security_json
     )
     response = {}
     begin
@@ -802,13 +808,17 @@ class ExperimentsController < ApplicationController
       experiment.save
       pid = experiment.start_supervisor_script(@current_user,
                                          params[:supervisor_script_id],
-                                         Utils::parse_json_if_string(params[:supervisor_script_params]))
+                                         Utils::parse_json_if_string(params[:supervisor_script_params]),
+                                         Utils::parse_json_if_string(params[:experiment_input]))
       response.merge!({status: 'ok', experiment_id: experiment.id.to_s, pid: pid})
     rescue Exception => e
       Rails.logger.debug("Error while starting new supervised experiment: #{e}")
       response.merge!({'status' => 'error', 'reason' => e.to_s})
     end
-    render json: response
+    respond_to do |format|
+      format.html { redirect_to experiment_path(experiment.id) }
+      format.json { render json: response }
+    end
   end
 
   # POST params:
