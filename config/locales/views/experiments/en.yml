@@ -11,7 +11,7 @@ en:
 
     experiment_links:
       navigation_link: Experiments
-      running_experiments: Running experiments
+      running_experiments: Experiments in progress
       completed_experiments: Completed experiments
       simulation_scenarios: Simulation scenarios
       historical_experiments: Historical experiments
@@ -147,3 +147,15 @@ en:
        caption: "Started simulation runs"
        started_at: "Started at"
        results_header: "Intermediate results"
+
+    scatter_plot:
+      click_for_details: "Click for details"
+      regression_line: "Regression line"
+
+    menu_panel:
+      experiment_tools: "Management"
+      analysis:
+        header: "Analysis"
+        histogram: "Histogram"
+        regression_tree: "Regression tree"
+        scatter_plot: "Scatter plot"

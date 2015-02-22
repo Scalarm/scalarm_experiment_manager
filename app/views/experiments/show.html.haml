@@ -9,33 +9,36 @@
   .nano(style="overflow: hidden;")
     %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
       %h3.text-center
-        Experiment tools
-      .action-button(style="margin-left: 10px;")
-        %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}" style="display: block")
-          = image_tag "material_design/running_experiments_icon.png"
-          = t('experiments.experiment_links.running_experiments')
-        %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}" style="display: block")
+        = t('experiments.menu_panel.experiment_tools')
+      .action-button(style="margin-left: 4px; margin-top: 10px;")
+        %a.experiment_menu_icon.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}" style="display: block")
           = image_tag "material_design/simulation_scenarios_icon.png"
           = t('experiments.experiment_links.simulation_scenarios')
-        %a.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}" style="display: block")
+        %a.experiment_menu_icon.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}" style="display: block")
+          = image_tag "material_design/running_experiments_icon.png"
+          = t('experiments.experiment_links.running_experiments')
+        %a.experiment_menu_icon.completed_experiments_link(href="#" data-action-url="#{completed_experiments_experiments_path}" style="display: block")
+          = image_tag "material_design/completed_experiments_icon.png"
+          = t('experiments.experiment_links.completed_experiments')
+        %a.experiment_menu_icon.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}" style="display: block")
           = image_tag "material_design/historical_experiments_icon.png"
           = t('experiments.experiment_links.historical_experiments')
       %hr
       %h3.text-center
-        Analyses
+        = t('experiments.menu_panel.analysis.header')
       .analyses-panel{style: "text-align: center"}
         %p.histogram-analysis
           = image_tag "material_design/histogram_icon.png"
           %br
-          %a Histogram
+          %a= t('experiments.menu_panel.analysis.histogram')
         %p.rtree-analysis
           = image_tag "material_design/regression_icon.png"
           %br
-          %a Regression trees
+          %a= t('experiments.menu_panel.analysis.regression_tree')
         %p.bivariate-analysis
           = image_tag "material_design/scatter_icon.png"
           %br
-          %a Scatter plot
+          %a= t('experiments.menu_panel.analysis.scatter_plot')
 
 %section
   %section.row.panel.radius
