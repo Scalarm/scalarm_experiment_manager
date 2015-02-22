@@ -311,7 +311,14 @@ class InfrastructureFacade
         query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
       end
     end
-    query.merge!({onsite_monitoring: !!params['onsite_monitoring']}) if params and params.include? 'onsite_monitoring'
+
+    if params and params.include? 'onsite_monitoring'
+      if !!params['onsite_monitoring']
+        query.merge!({onsite_monitoring: {'$eq' => true}})
+      else
+        query.merge!({onsite_monitoring: {'$ne' => true}})
+      end
+    end
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
     _get_sm_records(query, params)

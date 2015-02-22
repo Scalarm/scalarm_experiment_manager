@@ -523,7 +523,7 @@ class ExperimentsController < ApplicationController
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                   'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
+                   'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
         if @experiment.supervised and not @experiment.completed?
@@ -589,14 +589,29 @@ class ExperimentsController < ApplicationController
   def scatter_plot
     validate(
         x_axis: [:optional, :security_default],
-        y_axis: [:optional, :security_default]
+        y_axis: [:optional, :security_default],
+        container_id: [:optional, :security_default]
     )
 
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
+      @uuid = SecureRandom.uuid
+      @container_id = params[:container_id] || "bivariate_chart_#{@uuid}"
+    end
+  end
+
+  def scatter_plot_series
+    if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
+      render inline: ""
+    else
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
+      @chart.prepare_chart_data
+      render json: @chart.chart_data
     end
   end
 

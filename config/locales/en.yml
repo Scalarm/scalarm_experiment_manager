@@ -230,6 +230,8 @@ en:
   charts:
     hide_button: Hide chart
     load_button: Load chart
+    axis_x: Axis X
+    axis_y: Axis Y
 
     histogram:
       section_header: Basic statistics about Measures of Effectiveness
@@ -248,6 +250,9 @@ en:
       header: "Scatter plot: '%{x_axis}' versus '%{y_axis}'"
       select_x: Select values for the X axis (MoE or input)
       select_y: Select values for the Y axis (MoE or input)
+      add_new_series: "Add new series: "
+      add_series: "Add series"
+      select_axis_to_add: "Select axis to add series: "
 
     interaction:
       section_header: Interaction analysis

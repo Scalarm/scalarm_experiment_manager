@@ -21,8 +21,6 @@
 
 - content_for :javascript do
   :javascript
-    var bivariate_chart_tab = new Array();
-
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if(mutation.addedNodes.length > 1) {

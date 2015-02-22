@@ -248,6 +248,7 @@ class PlGridFacade < InfrastructureFacade
         sm_record.cmd_to_execute_code = "stop"
         sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
                                      scheduler.clean_after_sm_cmd(sm_record) ].join(';')
+        sm_record.save
       end
 
     else
@@ -259,7 +260,9 @@ class PlGridFacade < InfrastructureFacade
 
   def _simulation_manager_restart(sm_record)
     if sm_record.onsite_monitoring
+      sm_record.cmd_to_execute_code = 'restart'
       sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
+      sm_record.save
     else
       ssh = shared_ssh_session(sm_record.credentials)
       scheduler.restart(ssh, sm_record)
