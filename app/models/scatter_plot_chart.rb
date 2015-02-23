@@ -53,7 +53,7 @@ class ScatterPlotChart
 
     @linear_regression_data = [[x1, y1],[x2, y2]]
   end
-
+  
   def linear_regression_possible?
     @linear_regression_data.flatten.all? { |item| !item.nan? }
   end

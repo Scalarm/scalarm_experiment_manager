@@ -8,7 +8,7 @@
 = content_for :panel do
   .nano(style="overflow: hidden;")
     %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
-      %h3.text-center
+      %h3.text-center.subheader
         = t('experiments.menu_panel.experiment_tools')
       .action-button(style="margin-left: 4px; margin-top: 10px;")
         %a.experiment_menu_icon.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}" style="display: block")
@@ -24,21 +24,24 @@
           = image_tag "material_design/historical_experiments_icon.png"
           = t('experiments.experiment_links.historical_experiments')
       %hr
-      %h3.text-center
+      %h3.text-center.subheader
         = t('experiments.menu_panel.analysis.header')
-      .analyses-panel{style: "text-align: center"}
-        %p.histogram-analysis
-          = image_tag "material_design/histogram_icon.png"
-          %br
-          %a= t('experiments.menu_panel.analysis.histogram')
-        %p.rtree-analysis
-          = image_tag "material_design/regression_icon.png"
-          %br
-          %a= t('experiments.menu_panel.analysis.regression_tree')
-        %p.bivariate-analysis
-          = image_tag "material_design/scatter_icon.png"
-          %br
-          %a= t('experiments.menu_panel.analysis.scatter_plot')
+      %ul.analyses-panel{style: "text-align: center; list-style: none;"}
+        %li.histogram-analysis{style: "padding-bottom: 10px;"}
+          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
+            = image_tag "material_design/histogram_icon.png"
+            %hr
+            %span= t('experiments.menu_panel.analysis.histogram')
+        %li.rtree-analysis{style: "padding-bottom: 10px;"}
+          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
+            = image_tag "material_design/regression_icon.png"
+            %hr
+            %span= t('experiments.menu_panel.analysis.regression_tree')
+        %li.bivariate-analysis{style: "padding-bottom: 10px;"}
+          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
+            = image_tag "material_design/scatter_icon.png"
+            %hr
+            %span= t('experiments.menu_panel.analysis.scatter_plot')
 
 %section
   %section.row.panel.radius
@@ -77,6 +80,13 @@
 - content_for :javascript do
   :javascript
     $(function() {
+      $("ul.analyses-panel li a").mouseenter(function() {
+        $(this).css("background-color", "#EEE");
+      });
+      $("ul.analyses-panel li a").mouseleave(function() {
+        $(this).css("background-color", "#f5f5f5");
+      });
+
       var booster = new window.ExperimentBooster('booster_dialog');
 
       new window.ExperimentSpeedometer('#{@experiment.id}').show();
