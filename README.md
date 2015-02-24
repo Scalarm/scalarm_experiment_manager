@@ -242,7 +242,7 @@ Needed dependencies:
 
 * git
 * go (https://golang.org/dl/)
- * you should build cross compilers for linux 386 and linux amd64
+ * you should build cross compilers for linux 386 and linux amd64: http://stackoverflow.com/questions/12168873/cross-compile-go-on-osx
 
 
 To fetch codes from git and start build, use:

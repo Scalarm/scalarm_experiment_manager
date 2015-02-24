@@ -49,11 +49,13 @@ namespace :service do
   end
 
   desc 'Downloading and installing dependencies'
-  task :setup do
+  task :setup, [:debug] => [:environment] do
     puts 'Setup started'
     get_monitoring unless check_monitoring
     get_simulation_managers_go unless check_sim_go
     get_simulation_manager_ruby unless check_sim_ruby
+    install_r_libraries
+
     _validate_service
     puts 'Setup finished'
   end
@@ -259,6 +261,15 @@ end
 def get_simulation_manager_ruby
   `git submodule init && git submodule update`
   raise 'Getting ScalarmSimulationManager submodule failed' unless $?.to_i == 0
+end
+
+def install_r_libraries
+  puts 'Checking R libraries...'
+  Rails.configuration.r_interpreter.eval(
+      ".libPaths(c(\"#{Dir.pwd}/r_libs\", .libPaths()))
+    if(!require(AlgDesign, quietly=TRUE)){
+      install.packages(\"AlgDesign\", repos=\"http://cran.rstudio.com/\")
+    }")
 end
 
 def install_mongodb
