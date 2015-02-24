@@ -29,7 +29,9 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    @public_storage_manager_url = InformationService.new.sample_public_storage_manager
+    information_service = InformationService.new
+    @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
+    @public_chart_service_url = information_service.sample_public_url 'chart_services'
 
     @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
 

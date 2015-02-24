@@ -96,7 +96,7 @@
 
       window.toggle_panels_on_title_click();
 
-      $("#panel .analyses-panel").load("/chart/panel?id=#{@experiment.id}", function(response, status, xhr) {
+      $("#panel .analyses-panel").load("https://#{@public_chart_service_url}/panel?id=#{@experiment.id}", function(response, status, xhr) {
         if(status==="error") {
           console.log("No available Chart Service. Using on-site content.");
         }
@@ -108,8 +108,7 @@
       window.WebSocket = window.WebSocket || window.MozWebSocket;
 
       try {
-        //TODO - insert appropriate address
-        var ws = new WebSocket("wss://149.156.10.32:6755/chart/experiment_progress/#{@experiment.id}");
+        var ws = new WebSocket("wss://#{@public_chart_service_url}/experiment_progress/#{@experiment.id}");
         window.onbeforeunload = function() {
           //Connection closed on Download simulation manager!!
           ws.onclose = function () {}; // disable onclose handler first

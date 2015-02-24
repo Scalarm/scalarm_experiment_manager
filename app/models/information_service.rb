@@ -92,8 +92,8 @@ class InformationService
     return nil, nil
   end
 
-  def sample_public_storage_manager
-    (get_list_of('storage_managers') or []).sample
+  def sample_public_url(service)
+    (get_list_of(service) or []).sample
   end
 
 end
