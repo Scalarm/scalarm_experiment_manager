@@ -51,7 +51,10 @@ $(document).ready(function() {
                     var extension_dialog = $('#extension-dialog')
                     extension_dialog.html(window.loaderHTML);
                     extension_dialog.load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + this.simulation_id);
-                    window.reopenCharts = true;
+                    window.reopeningModals = {
+                      id: "experiment-analysis-modal",
+                      isActive: true
+                    }
                     extension_dialog.foundation('reveal', 'open');
                 }
             }
