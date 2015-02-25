@@ -122,7 +122,9 @@ class SimulationScenariosController < ApplicationController
   end
 
   def share
-    validate_params(:default, :mode)
+    validate(
+        mode: :security_default
+    )
     # TODO validate sharing with login params - it should denote scalarm user login
 
     @user = nil
