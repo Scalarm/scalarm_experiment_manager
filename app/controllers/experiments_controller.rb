@@ -734,7 +734,7 @@ class ExperimentsController < ApplicationController
   end
 
   def results_binaries
-    storage_manager_url = InformationService.new.sample_public_storage_manager
+    storage_manager_url = InformationService.new.sample_public_url 'storage_managers'
     redirect_to LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, @user_session)
   end
