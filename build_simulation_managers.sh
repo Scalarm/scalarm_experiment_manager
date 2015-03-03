@@ -1,6 +1,8 @@
 #!/bin/bash
 
-TREE='development'
+if [ -z "$TREE" ]; then
+    TREE='development'
+fi
 BUILD_DIR='tmp/sim_build/'
 GIT_DIR='scalarm_simulation_manager_go'
 
