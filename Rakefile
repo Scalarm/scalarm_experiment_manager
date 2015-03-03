@@ -401,6 +401,10 @@ def check_sim_ruby
 end
 
 def load_balancer_registration
+  unless Rails.application.secrets.include? :load_balancer
+    puts 'load balancer configuration is missing in secrets.yml'
+    return
+  end
   unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
     LoadBalancerRegistration.register
   else
@@ -409,6 +413,10 @@ def load_balancer_registration
 end
 
 def load_balancer_deregistration
+  unless Rails.application.secrets.include? :load_balancer
+    puts 'load balancer configuration is missing in secrets.yml'
+    return
+  end
   unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
     LoadBalancerRegistration.deregister
   else

@@ -6,6 +6,9 @@ require 'openssl'
 class LoadBalancerRegistration
 
   def self.get_load_balancer_address
+    unless Rails.application.secrets.include? :load_balancer
+      raise StandardError.new('load balancer configuration is missing in secrets.yml')
+    end
     if Rails.application.secrets.load_balancer["multicast_address"].blank?
       raise StandardError.new("multicast_address is missing in secrets configuration")
     end
@@ -49,6 +52,9 @@ class LoadBalancerRegistration
   end
 
   def self.load_balancer_query(query_type)
+    unless Rails.application.secrets.include? :load_balancer
+      raise StandardError.new('load balancer configuration is missing in secrets.yml')
+    end
     raise ArgumentError.new('Incorrect query to load balancer') unless ['register', 'deregister'].include?(query_type)
     message = self.get_load_balancer_address
     if message != 'error'
