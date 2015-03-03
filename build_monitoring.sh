@@ -1,6 +1,8 @@
 #!/bin/bash
 
-TREE='master'
+if [ -z "$TREE" ]; then
+    TREE='master'
+fi
 GIT_DIR='scalarm_workers_manager'
 BUILD_DIR="tmp/${GIT_DIR}_build"
 
