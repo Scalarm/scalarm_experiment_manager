@@ -6,10 +6,10 @@ require 'openssl'
 class LoadBalancerRegistration
 
   def self.get_load_balancer_address
-    unless Rails.application.secrets.include? :multicast_address
+    if Rails.application.secrets.load_balancer["multicast_address"].blank?
       raise StandardError.new("multicast_address is missing in secrets configuration")
     end
-    multicast_addr, port  = Rails.application.secrets[:multicast_address].split(':')
+    multicast_addr, port  = Rails.application.secrets.load_balancer["multicast_address"].split(':')
     bind_addr = '0.0.0.0'
     message = 'error'
     counter = 4
@@ -52,9 +52,9 @@ class LoadBalancerRegistration
     raise ArgumentError.new('Incorrect query to load balancer') unless ['register', 'deregister'].include?(query_type)
     message = self.get_load_balancer_address
     if message != 'error'
-      port = (Rails.application.secrets[:port] or '3000')
+      port = (Rails.application.secrets.load_balancer["port"] or '3000')
       scheme = 'https'
-      if Rails.application.secrets.load_balancer_development
+      if Rails.application.secrets.load_balancer["development"]
         scheme = 'http'
       end
       load_balancer_address = "#{scheme}://#{message.strip}/#{query_type}"
