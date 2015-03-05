@@ -808,8 +808,7 @@ class ExperimentsController < ApplicationController
     begin
       experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
       experiment.save
-      pid = experiment.start_supervisor_script(@current_user,
-                                         params[:supervisor_script_id],
+      pid = experiment.start_supervisor_script(params[:supervisor_script_id],
                                          Utils::parse_json_if_string(params[:supervisor_script_params]),
                                          Utils::parse_json_if_string(params[:experiment_input]))
       response.merge!({status: 'ok', experiment_id: experiment.id.to_s, pid: pid})
