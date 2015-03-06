@@ -139,7 +139,8 @@ class PlGridFacade < InfrastructureFacade
 
   def create_temp_credentials(params)
     creds = GridCredentials.new({login: params[:plgrid_login]})
-    creds.password = params[:plgrid_password]
+    creds.password = params[:plgrid_password] if params.include? :plgrid_password
+    creds.secret_proxy = params[:proxy] if params.include? :proxy
     creds
   end
 
