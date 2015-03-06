@@ -2,6 +2,8 @@
 # - session[:user] to user id as string,
 # - @current_user or @sm_user to scalarm user or simulation manager temp pass respectively
 # - @session_auth to true if this is session-based authentication
+require 'grid-proxy'
+
 module ScalarmAuthentication
 
   # the main authentication function + session management
@@ -12,6 +14,9 @@ module ScalarmAuthentication
     case true
       when (not session[:user].blank?)
         authenticate_with_session
+
+      when proxy_provided?
+        authenticate_with_proxy
 
       when password_provided?
         authenticate_with_password
@@ -84,6 +89,35 @@ module ScalarmAuthentication
       end
 
     end
+  end
+
+  def proxy_provided?
+    params.include? :proxy
+  end
+
+  def authenticate_with_proxy
+    proxy_s = Utils.read_if_file(params[:proxy])
+
+    proxy = GP::Proxy.new(proxy_s)
+    username = proxy.username
+    begin
+      Rails.logger.debug("[authentication] using proxy certificate: '#{username}'") # TODO: DN
+
+      proxy.valid_for_plgrid?
+      @current_user = ScalarmUser.authenticate_with_proxy(proxy, false)
+
+      if @current_user.nil?
+        Rails.logger.debug "[authentication] creating new user basing on proxy certificate: #{username}"
+        @current_user = ScalarmUser.new(login: username)
+        @current_user.save
+      end
+
+      session[:user] = @current_user.id.to_s unless @current_user.nil?
+      session[:uuid] = SecureRandom.uuid
+    rescue GP::ProxyValidationError => e
+      Rails.logger.warn "Proxy validation error: #{e}"
+    end
+
   end
 
 end

@@ -78,3 +78,4 @@ gem 'mocha', group: :test
 gem 'remotipart', '~> 1.0'
 
 gem 'newrelic_rpm'
+

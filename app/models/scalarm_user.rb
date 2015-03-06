@@ -2,6 +2,7 @@
 # _id => auto generated user id
 # dn => distinguished user name from certificate
 # login => last CN attribute value from dn
+require 'grid-proxy'
 
 class ScalarmUser < MongoActiveRecord
 
@@ -65,6 +66,13 @@ class ScalarmUser < MongoActiveRecord
     end
 
     user
+  end
+
+  # Arguments:
+  # - proxy - GP::Proxy or String containing proxy certificate
+  def self.authenticate_with_proxy(proxy, verify=true)
+    proxy = (proxy.is_a?(GP::Proxy) ? proxy : GP::Proxy.new(proxy))
+    ScalarmUser.where(login: proxy.username).first if !verify or proxy.valid_for_plgrid?
   end
 
   def grid_credentials
