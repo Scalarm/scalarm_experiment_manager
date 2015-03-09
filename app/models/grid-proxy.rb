@@ -8,8 +8,7 @@ module GP
   class Proxy
     def verify_for_plgrid!
       crl = nil # TODO CRL
-      ca = File.read('/etc/grid-security/certificates/afed687d.0')
-      #ca = File.read('/etc/grid-security/certificates/PolishGrid.pem') # TODO load earlier, config
+      ca = PROXY_CERT_CA
       verify!(ca, crl)
     end
 

@@ -58,6 +58,7 @@ class ScalarmUser < MongoActiveRecord
 
   def self.authenticate_with_certificate(dn)
     # backward-compatibile: there are some dn's formatted by PL-Grid OpenID in database - try to convert
+    # TODO: migrate database to proper DN's
     user = (ScalarmUser.find_by_dn(dn.to_s) or
         ScalarmUser.find_by_dn(PlGridOpenID.browser_dn_to_plgoid_dn(dn)))
 

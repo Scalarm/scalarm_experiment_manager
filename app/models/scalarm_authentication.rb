@@ -6,6 +6,8 @@ require 'grid-proxy'
 
 module ScalarmAuthentication
 
+  PROXY_HEADER = 'HTTP_X509_PROXY_CERT'
+
   # the main authentication function + session management
   def authenticate
     Rails.logger.debug("[authentication] starting")
@@ -15,7 +17,7 @@ module ScalarmAuthentication
       when (not session[:user].blank?)
         authenticate_with_session
 
-      when proxy_provided?
+      when use_proxy_auth? and proxy_provided?
         authenticate_with_proxy
 
       when password_provided?
@@ -91,31 +93,46 @@ module ScalarmAuthentication
     end
   end
 
+  def use_proxy_auth?
+    not PROXY_CERT_CA.nil?
+  end
+
   def proxy_provided?
-    params.include? :proxy
+    request.env.include?(PROXY_HEADER)
   end
 
   def authenticate_with_proxy
-    proxy_s = Utils.read_if_file(params[:proxy])
+    proxy_s = request.env[PROXY_HEADER].gsub(/(\\r)?\\n/, "\n")
 
     proxy = GP::Proxy.new(proxy_s)
     username = proxy.username
-    begin
-      Rails.logger.debug("[authentication] using proxy certificate: '#{username}'") # TODO: DN
 
-      proxy.valid_for_plgrid?
+    if username.nil?
+      Rails.logger.warn("[authentication] #{PROXY_HEADER} header present, but contains invalid data")
+      return
+    end
+
+    begin
+      dn = proxy.proxycert.issuer.to_s
+      Rails.logger.debug("[authentication] using proxy certificate: '#{dn}'") # TODO: DN
+
+      proxy.verify_for_plgrid!
+
+      # pass validation check, because it is already done
       @current_user = ScalarmUser.authenticate_with_proxy(proxy, false)
 
       if @current_user.nil?
-        Rails.logger.debug "[authentication] creating new user basing on proxy certificate: #{username}"
-        @current_user = ScalarmUser.new(login: username)
+        Rails.logger.debug "[authentication] creating new user based on proxy certificate: #{username}"
+        @current_user = ScalarmUser.new(login: username, dn: dn)
         @current_user.save
       end
 
       session[:user] = @current_user.id.to_s unless @current_user.nil?
       session[:uuid] = SecureRandom.uuid
     rescue GP::ProxyValidationError => e
-      Rails.logger.warn "Proxy validation error: #{e}"
+      Rails.logger.warn "[authentication] proxy validation error: #{e}"
+    rescue OpenSSL::X509::CertificateError => e
+      Rails.logger.warn "[authentication] OpenSSL error when trying to use proxy certificate: #{e}"
     end
 
   end
