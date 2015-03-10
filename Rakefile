@@ -402,7 +402,7 @@ end
 
 def load_balancer_registration
   unless Rails.application.secrets.include? :load_balancer
-    puts 'load balancer configuration is missing in secrets.yml'
+    puts 'There is no configuration for load balancer in secrets.yml - LB registration will be disabled'
     return
   end
   unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
@@ -414,7 +414,7 @@ end
 
 def load_balancer_deregistration
   unless Rails.application.secrets.include? :load_balancer
-    puts 'load balancer configuration is missing in secrets.yml'
+    puts 'There is no configuration for load balancer in secrets.yml - LB deregistration will be disabled'
     return
   end
   unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
