@@ -124,6 +124,8 @@ ScalarmExperimentManager::Application.routes.draw do
     end
   end
 
+  get "statistics" => "user_controller#statistics"
+
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
 

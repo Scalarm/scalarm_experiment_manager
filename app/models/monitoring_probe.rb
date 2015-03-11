@@ -15,8 +15,7 @@ class MonitoringProbe
     @interval = @config['interval'].to_i
     @metrics = @config['metrics'].split(':')
 
-    @host = "localhost"
-    # UDPSocket.open { |s| s.connect('64.233.187.99', 1); @host = s.addr.last }
+    @host = LOCAL_IP
     @host.gsub!("\.", "_")
   end
 

@@ -11,6 +11,10 @@ class MongoActiveRecord
   @conditions = {}
   @options = {}
 
+  def self.create_class(collection_name)
+
+  end
+
   def self.ids_auto_convert
     true
   end

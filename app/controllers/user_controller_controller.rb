@@ -132,6 +132,68 @@ class UserControllerController < ApplicationController
     end
   end
 
+
+  # --- Monitoring Statistics ---
+  def statistics
+    host = LOCAL_IP
+    host.gsub!("\.", "_")
+
+    collections = [
+        "#{host}.ExperimentManager___experiments___next_simulation",
+        "#{host}.ExperimentManager___simulations___mark_as_complete",
+        "#{host}.StorageManager___log_bank___put_simulation_output",
+        "#{host}.StorageManager___log_bank___put_stimulation_stdout",
+        "#{host}.System___NULL___CPU",
+        "#{host}.System___NULL___Mem",
+        "#{host}.Storage___vda___await",
+        "#{host}.Storage___vda___rMB_s",
+        "#{host}.Storage___vda___r_s",
+        "#{host}.Storage___vda___wMB_s",
+        "#{host}.Storage___vda___w_s",
+        "#{host}.Storage___vdb___await",
+        "#{host}.Storage___vdb___rMB_s",
+        "#{host}.Storage___vdb___r_s",
+        "#{host}.Storage___vdb___wMB_s",
+        "#{host}.Storage___vdb___w_s",
+        "#{host}.System___NULL___CPU",
+        "#{host}.System___NULL___Mem"
+    ]
+
+    results = Hash[
+        collections.collect do |cname|
+          coll = MONITORING_DB[cname]
+          values = coll.find({}, {fields: { date: 1, value: 1, _id: 0 }}).sort('$natural' => -1).limit(10).collect {|doc| doc.to_h}
+
+          [cname, values]
+        end
+    ]
+
+    mark_coll = MONITORING_DB["#{host}.ExperimentManager___simulations___mark_as_complete"]
+    now = Time.now - 2.second
+    mark_count = mark_coll.find({date: {'$gte'=>now.change(usec: 0), '$lt'=>now.change(usec: 999999)}}).count
+
+    results = {mark_as_complete_count: [{date: now, value: mark_count}]}.merge(results)
+
+    experiment_id = params[:experiment_id]
+
+    if experiment_id
+      exp = Experiment.where(id: experiment_id.to_s).first
+      e_stat = exp.get_statistics
+      all, sent, done = e_stat
+      results = {experiment: [{date: now, all: exp.experiment_size, sent: sent, done: done}]}.merge(results)
+    end
+
+    respond_to do |format|
+      format.json do
+        render json: results
+      end
+      format.text do
+        render text: JSON.pretty_generate(results)
+      end
+    end
+  end
+
+
   private
 
   # --- OpenID support ---
