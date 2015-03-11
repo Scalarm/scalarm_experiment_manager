@@ -8,6 +8,10 @@ module ScalarmAuthentication
 
   PROXY_HEADER = 'HTTP_X509_PROXY_CERT'
 
+  def initialize
+    @proxy_s = nil
+  end
+
   # the main authentication function + session management
   def authenticate
     Rails.logger.debug("[authentication] starting")
@@ -117,6 +121,8 @@ module ScalarmAuthentication
       Rails.logger.debug("[authentication] using proxy certificate: '#{dn}'") # TODO: DN
 
       proxy.verify_for_plgrid!
+      # set proxy string in instance variable for further use in PL-Grid
+      @proxy_s = proxy_s
 
       # pass validation check, because it is already done
       @current_user = ScalarmUser.authenticate_with_proxy(proxy, false)
@@ -134,7 +140,6 @@ module ScalarmAuthentication
     rescue OpenSSL::X509::CertificateError => e
       Rails.logger.warn "[authentication] OpenSSL error when trying to use proxy certificate: #{e}"
     end
-
   end
 
 end
