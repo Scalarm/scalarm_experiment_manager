@@ -134,7 +134,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def using_temp_credentials?(params)
-    params.include?(:plgrid_login)
+    params.include?(:plgrid_login) or params.include?(:proxy)
   end
 
   def create_temp_credentials(params)

@@ -6,7 +6,9 @@ require 'grid-proxy'
 
 module ScalarmAuthentication
 
-  PROXY_HEADER = 'HTTP_X509_PROXY_CERT'
+  PROXY_HEADER = 'X-Proxy-Cert'
+
+  RAILS_PROXY_HEADER = 'HTTP_' + PROXY_HEADER.upcase.gsub('-', '_')
 
   def initialize
     @proxy_s = nil
@@ -21,7 +23,7 @@ module ScalarmAuthentication
       when (not session[:user].blank?)
         authenticate_with_session
 
-      when use_proxy_auth? and proxy_provided?
+      when (use_proxy_auth? and proxy_provided?)
         authenticate_with_proxy
 
       when password_provided?
@@ -102,11 +104,11 @@ module ScalarmAuthentication
   end
 
   def proxy_provided?
-    request.env.include?(PROXY_HEADER)
+    request.env.include?(RAILS_PROXY_HEADER)
   end
 
   def authenticate_with_proxy
-    proxy_s = request.env[PROXY_HEADER].gsub(/(\\r)?\\n/, "\n")
+    proxy_s = request.env[RAILS_PROXY_HEADER].gsub(/(\\r)?\\n/, "\n")
 
     proxy = GP::Proxy.new(proxy_s)
     username = proxy.username
