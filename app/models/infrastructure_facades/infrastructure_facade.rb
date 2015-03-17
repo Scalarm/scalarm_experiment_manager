@@ -311,9 +311,8 @@ class InfrastructureFacade
         query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
       end
     end
-
     if params and params.include? 'onsite_monitoring'
-      if !!params['onsite_monitoring']
+      if params['onsite_monitoring'] == 'true'
         query.merge!({onsite_monitoring: {'$eq' => true}})
       else
         query.merge!({onsite_monitoring: {'$ne' => true}})
