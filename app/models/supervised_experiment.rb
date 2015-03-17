@@ -15,47 +15,21 @@ class SupervisedExperiment < CustomPointsExperiment
     script_params['password'] = password.password
     script_params['address'] = 'https://localhost:3001' #TODO ???
 
-    script_params['lower_limit'] = []
-    script_params['upper_limit'] = []
-    script_params['parameters_ids'] = []
-    experiment_input.each do |category|
-      category['entities'].each do |entity|
-        entity['parameters'].each do |parameter|
-          script_params['lower_limit'].append parameter['min']
-          script_params['upper_limit'].append parameter['max']
-          script_params['parameters_ids'].append "#{category['id']}___#{entity['id']}___#{parameter['id']}"
-        end
-      end
+    res = nil
+    begin
+      res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  id: supervisor_script_id,
+                                                                          config: script_params.to_json,
+                                                                          experiment_input: experiment_input
+      )
+      res = Utils::parse_json_if_string res
+    rescue Exception => e
+      res = {status: 'error', reason: e.to_s}
     end
-
-    if script_params['start_point'].nil?
-      script_params['start_point'] = []
-      script_params['lower_limit'].zip(script_params['upper_limit']).each do |e|
-        # TODO string params
-        script_params['start_point'].append((e[0]+e[1])/2)
-      end
-    end
-    # TODO verify whether all params are present
-
-    script_config = "/tmp/supervisor_script_config_#{self.id.to_s}"
-    File.open(script_config, 'w+') {
-        |file| file.write(script_params.to_json)
-    }
-    script_log = "log/supervisor_script_log_#{self.id.to_s}"
-    # TODO use script id to chose proper optimization script (some hash map?)
-    path = 'scalarm_supervisor_scrpits/simulated_annealing/anneal.py'
-    pid = Process.spawn("python2 #{path} #{script_config}", out: script_log, err: script_log)
-    Process.detach(pid)
-    self.supervisor_script_pid = pid
-    self.save
-    pid
+    res
   end
 
-  def set_result!(result)
+  def mark_as_complete!(result)
     self.result = result
-  end
-
-  def mark_as_complete!
     self.completed = true
     # TODO cleanup and destroy temp password
   end

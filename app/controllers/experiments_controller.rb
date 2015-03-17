@@ -804,18 +804,15 @@ class ExperimentsController < ApplicationController
         supervisor_script_params: :security_json,
         experiment_input: :security_json
     )
-    response = {}
-    begin
-      experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
-      experiment.save
-      pid = experiment.start_supervisor_script(params[:supervisor_script_id],
-                                         Utils::parse_json_if_string(params[:supervisor_script_params]),
-                                         Utils::parse_json_if_string(params[:experiment_input]))
-      response.merge!({status: 'ok', experiment_id: experiment.id.to_s, pid: pid})
-    rescue Exception => e
-      Rails.logger.debug("Error while starting new supervised experiment: #{e}")
-      response.merge!({'status' => 'error', 'reason' => e.to_s})
-    end
+
+    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
+    experiment.save
+    response = experiment.start_supervisor_script(params[:supervisor_script_id],
+                                       Utils::parse_json_if_string(params[:supervisor_script_params]),
+                                       params[:experiment_input])
+
+    response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
+
     respond_to do |format|
       format.html { redirect_to experiment_path(experiment.id) }
       format.json { render json: response }
@@ -824,20 +821,12 @@ class ExperimentsController < ApplicationController
 
   # POST params:
   # - result
-  def set_result
+  def mark_as_complete
     validate(
         result: :security_json
     )
     raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    @experiment.set_result! Utils::parse_json_if_string(params[:result])
-    @experiment.save
-    render json: {status: 'ok'}
-  end
-
-  # POST
-  def mark_as_complete
-    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    @experiment.mark_as_complete!
+    @experiment.mark_as_complete! Utils::parse_json_if_string(params[:result])
     @experiment.save
     render json: {status: 'ok'}
   end

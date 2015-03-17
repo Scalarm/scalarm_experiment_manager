@@ -85,7 +85,6 @@ ScalarmExperimentManager::Application.routes.draw do
 
       # Optimization experiment
       post :mark_as_complete
-      post :set_result
     end
 
     resources :simulations do
