@@ -36,4 +36,8 @@ module Utils
         /\A\z/
     end
   end
+
+  def self.header_newlines_deserialize(value)
+    value.gsub(/(\\r)?\\n/, "\n")
+  end
 end

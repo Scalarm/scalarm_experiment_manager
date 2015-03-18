@@ -108,7 +108,7 @@ module ScalarmAuthentication
   end
 
   def authenticate_with_proxy
-    proxy_s = request.env[RAILS_PROXY_HEADER].gsub(/(\\r)?\\n/, "\n")
+    proxy_s = Utils::header_newlines_deserialize(request.env[RAILS_PROXY_HEADER])
 
     proxy = GP::Proxy.new(proxy_s)
     username = proxy.username
