@@ -16,8 +16,9 @@ class SimulationManagersController < ApplicationController
   # - states: (String or Array of Strings) (optional) allowed states
   # - states_not: (String or Array of Strings) (optional) not allowed states
   # - onsite_monitoring: (true/false) (optional)
-  # - host: (String) private machines only, host name
-  # - port: (String) private machines only, port number
+  # GET params, Private machines only:
+  # - host: (String) host name (optional)
+  # - port: (String) port number (optional)
   def index
     sm_records = (if @infrastructure_facade.blank?
                     get_all_sm_records(params[:experiment_id], params)
