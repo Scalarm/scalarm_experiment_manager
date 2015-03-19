@@ -104,8 +104,8 @@ class PrivateMachineFacade < InfrastructureFacade
       cred_query = {}
       cred_query.merge!({host: {'$eq' => params['host'].to_sym}})
       cred_query.merge!({port: {'$eq' => params['port'].to_i}})
-      (PrivateMachineCredentials.where(cred_query).map do
-          |cred| PrivateMachineRecord.find_all_by_query(query.merge({credentials_id: cred.id}))
+      (PrivateMachineCredentials.where(cred_query).map do |cred|
+        PrivateMachineRecord.find_all_by_query(query.merge({credentials_id: cred.id}))
       end).flatten
     else
       PrivateMachineRecord.find_all_by_query(query)
