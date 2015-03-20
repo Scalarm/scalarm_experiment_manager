@@ -77,6 +77,8 @@ class InfrastructuresController < ApplicationController
       infrastructure_name = params[:infrastructure_name]
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
       begin
+        # add proxy from ApplicationController (if available) if not explicitly passed specified in params
+        params[:proxy] = @proxy_s if @proxy_s
         records = infrastructure.start_simulation_managers(
             @current_user.id, params[:job_counter].to_i, experiment_id, params
         )
