@@ -11,6 +11,7 @@ module ScalarmAuthentication
   RAILS_PROXY_HEADER = 'HTTP_' + PROXY_HEADER.upcase.gsub('-', '_')
 
   def initialize
+    super
     @proxy_s = nil
   end
 
