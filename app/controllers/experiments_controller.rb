@@ -89,8 +89,9 @@ class ExperimentsController < ApplicationController
 
   def create
     validate(
-        replication_level: [:security_default, :integer, :positive],
-        execution_time_constraint: [:security_default, :integer, :positive]
+        replication_level: [:optional, :security_default, :integer, :positive],
+        execution_time_constraint: [:optional, :security_default, :integer, :positive],
+        parameter_constraints: [:optional, :security_json]
     )
 
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
@@ -804,11 +805,6 @@ class ExperimentsController < ApplicationController
   end
 
   def prepare_new_experiment
-    validate(
-        replication_level: [:optional, :security_default, :integer, :positive],
-        execution_time_constraint: [:optional, :security_default, :integer, :positive],
-        parameter_constraints: [:optional, :security_json]
-    )
 
     replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
     time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
