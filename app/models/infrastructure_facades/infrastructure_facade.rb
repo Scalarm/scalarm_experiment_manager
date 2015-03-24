@@ -297,23 +297,23 @@ class InfrastructureFacade
 
   def get_sm_records(user_id=nil, experiment_id=nil, params={})
     query = {}
+    params ||= {}
 
-    if params and params.include? 'states_not'
+    if params.include? 'states_not'
       if params['states_not'].kind_of? String
         query.merge!({state: {'$ne' => params['states_not'].to_sym}})
       elsif params['states_not'].kind_of? Array
         query.merge!({state: {'$nin' => params['states_not'].map{|i| i.to_sym}}})
       end
-    elsif params and params.include? 'states'
+    elsif params.include? 'states'
       if params['states'].kind_of? String
         query.merge!({state: {'$eq' => params['states'].to_sym}})
       elsif params['states'].kind_of? Array
         query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
       end
     end
-
-    if params and params.include? 'onsite_monitoring'
-      if !!params['onsite_monitoring']
+    if params.include? 'onsite_monitoring'
+      if params['onsite_monitoring'].downcase == 'true'
         query.merge!({onsite_monitoring: {'$eq' => true}})
       else
         query.merge!({onsite_monitoring: {'$ne' => true}})
