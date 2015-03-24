@@ -149,7 +149,7 @@ cd $PBS_O_WORKDIR
     end
 
     def clean_after_sm_cmd(sm_record)
-      chain(super, rm(File.join(RemoteDir::scalarm_root, job_pbs_file(sm_record.sm_uuid))))
+      chain(super, rm(File.join(RemoteDir::scalarm_root, job_pbs_file(sm_record.sm_uuid)), true))
     end
 
     def job_pbs_file(sm_uuid)

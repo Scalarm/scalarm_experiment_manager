@@ -106,7 +106,7 @@ ruby simulation_manager.rb
     sm_uuid = record.sm_uuid
     chain(
       rm(ScalarmFileName::tmp_sim_zip(sm_uuid)),
-      rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)))
+      rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)), true)
     )
   end
 
