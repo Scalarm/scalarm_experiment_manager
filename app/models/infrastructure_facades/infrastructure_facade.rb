@@ -108,7 +108,7 @@ class InfrastructureFacade
     Dir.chdir(Rails.root)
   end
 
-  def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
+  def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure)
     Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
 
     Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
@@ -125,13 +125,19 @@ class InfrastructureFacade
       temp_password.save
     end
 
+    infrastructure_data = { :Name => infrastructure[:Name], }
+    if infrastructure[:Name] == 'private_machine'
+      infrastructure_data[:Host] = infrastructure[:Host]
+      infrastructure_data[:Port] = infrastructure[:Port]
+    end
+
     sm_config = {
         InformationServiceAddress: (Rails.application.secrets.sm_information_service_url or
             Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
         InsecureSSL: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true), # TODO insecure SSL by default
-        Infrastructures: [ { 'Name' => infrastructure_name } ],
+        Infrastructures: infrastructure_data
     }
 
     if Rails.application.secrets.include? :certificate_path
