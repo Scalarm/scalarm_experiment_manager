@@ -131,7 +131,7 @@ class InfrastructureFacade
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
         InsecureSSL: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true), # TODO insecure SSL by default
-        Infrastructures: [ infrastructure_name ],
+        Infrastructures: [ { 'Name' => infrastructure_name } ],
     }
 
     if Rails.application.secrets.include? :certificate_path
