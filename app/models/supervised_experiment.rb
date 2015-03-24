@@ -15,15 +15,36 @@ class SupervisedExperiment < CustomPointsExperiment
     script_params['password'] = password.password
     script_params['address'] = 'https://localhost:3001' #TODO ???
 
+
+    script_params['lower_limit'] = []
+    script_params['upper_limit'] = []
+    script_params['parameters_ids'] = []
+    experiment_input.each do |category|
+      category['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          script_params['lower_limit'].append parameter['min']
+          script_params['upper_limit'].append parameter['max']
+          script_params['parameters_ids'].append "#{category['id']}___#{entity['id']}___#{parameter['id']}"
+        end
+      end
+    end
+    if script_params['start_point'].nil?
+      script_params['start_point'] = []
+      script_params['lower_limit'].zip(script_params['upper_limit']).each do |e|
+        # TODO string params
+        script_params['start_point'].append((e[0]+e[1])/2)
+      end
+    end
+
     res = nil
+    puts script_params.to_json
+
     begin
-      res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  id: supervisor_script_id,
-                                                                          config: script_params.to_json,
-                                                                          experiment_input: experiment_input
-      )
+      res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  script_id: supervisor_script_id,
+                                                                          config: script_params.to_json)
       res = Utils::parse_json_if_string res
     rescue Exception => e
-      res = {status: 'error', reason: e.to_s}
+      res = {'status' => 'error', 'reason' => e.to_s}
     end
     res
   end

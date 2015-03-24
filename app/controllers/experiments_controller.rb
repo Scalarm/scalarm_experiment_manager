@@ -809,12 +809,16 @@ class ExperimentsController < ApplicationController
     experiment.save
     response = experiment.start_supervisor_script(params[:supervisor_script_id],
                                        Utils::parse_json_if_string(params[:supervisor_script_params]),
-                                       params[:experiment_input])
+                                       Utils::parse_json_if_string(params[:experiment_input]))
 
     response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
+    if response['status'] == 'error'
+      experiment.destroy
+      flash['error'] = "There has been an error while creating new supervised experiment: #{response['reason']}"
+    end
 
     respond_to do |format|
-      format.html { redirect_to experiment_path(experiment.id) }
+      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
       format.json { render json: response }
     end
   end
