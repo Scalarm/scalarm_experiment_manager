@@ -2,6 +2,7 @@
 # for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
 
 require File.expand_path('../config/application', __FILE__)
+require File.expand_path('../app/models/load_balancer_registration.rb', __FILE__)
 
 ScalarmExperimentManager::Application.load_tasks
 
@@ -17,6 +18,7 @@ namespace :service do
     puts 'puma -C config/puma.rb'
     %x[puma -C config/puma.rb]
 
+    load_balancer_registration
     create_anonymous_user
     monitoring_probe('start')
   end
@@ -27,6 +29,7 @@ namespace :service do
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_probe('stop')
+    load_balancer_deregistration
   end
 
   desc 'Restart the service'
@@ -50,11 +53,13 @@ namespace :service do
   end
 
   desc 'Downloading and installing dependencies'
-  task :setup do
+  task :setup, [:debug] => [:environment] do
     puts 'Setup started'
     get_monitoring unless check_monitoring
     get_simulation_managers_go unless check_sim_go
     get_simulation_manager_ruby unless check_sim_ruby
+    install_r_libraries
+
     _validate_service
     puts 'Setup finished'
   end
@@ -142,6 +147,18 @@ namespace :db_router do
       puts "Error on validation, please read documentation and run db_router:setup"
       raise
     end
+  end
+end
+
+namespace :load_balancer do
+  desc 'Registration to load balancer'
+  task :register do
+    load_balancer_registration
+  end
+
+  desc 'Deregistration from load balancer'
+  task :deregister do
+    load_balancer_deregistration
   end
 end
 
@@ -248,6 +265,15 @@ end
 def get_simulation_manager_ruby
   `git submodule init && git submodule update`
   raise 'Getting ScalarmSimulationManager submodule failed' unless $?.to_i == 0
+end
+
+def install_r_libraries
+  puts 'Checking R libraries...'
+  Rails.configuration.r_interpreter.eval(
+      ".libPaths(c(\"#{Dir.pwd}/r_libs\", .libPaths()))
+    if(!require(AlgDesign, quietly=TRUE)){
+      install.packages(\"AlgDesign\", repos=\"http://cran.rstudio.com/\")
+    }")
 end
 
 def install_mongodb
@@ -378,3 +404,26 @@ def check_sim_ruby
   $?.to_i == 0
 end
 
+def load_balancer_registration
+  unless Rails.application.secrets.include? :load_balancer
+    puts 'There is no configuration for load balancer in secrets.yml - LB registration will be disabled'
+    return
+  end
+  unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
+    LoadBalancerRegistration.register
+  else
+    puts 'load_balancer.disable_registration option is active'
+  end
+end
+
+def load_balancer_deregistration
+  unless Rails.application.secrets.include? :load_balancer
+    puts 'There is no configuration for load balancer in secrets.yml - LB deregistration will be disabled'
+    return
+  end
+  unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
+    LoadBalancerRegistration.deregister
+  else
+    puts 'load_balancer.disable_registration option is active'
+  end
+end
