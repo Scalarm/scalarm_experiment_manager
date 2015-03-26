@@ -102,7 +102,7 @@ class PlGridFacade < InfrastructureFacade
 
         PlGridFacade.remove_remote_monitoring_files(ssh)
         PlGridFacade.upload_monitoring_files(scp, sm_uuid, arch)
-        # TODO: SCAL-525
+        PlGridFacade.remove_local_monitoring_config(sm_uuid)
 
         cmd = PlGridFacade.start_monitoring_cmd
         Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
@@ -122,6 +122,7 @@ class PlGridFacade < InfrastructureFacade
     end
   end
 
+  # TODO: can be moved to base class or util class
   def self.upload_monitoring_files(scp, sm_uuid, arch)
     local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
     local_package = LocalAbsolutePath::monitoring_package(arch)
@@ -130,6 +131,11 @@ class PlGridFacade < InfrastructureFacade
     if LocalAbsolutePath::certificate
       scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
     end
+  end
+
+  # TODO: can be moved to base class or util class
+  def self.remove_local_monitoring_config(sm_uuid)
+    FileUtils.rm_rf(LocalAbsoluteDir::tmp_monitoring_package(sm_uuid))
   end
 
   def self.start_monitoring_cmd
