@@ -7,12 +7,12 @@ module ShellBasedInfrastructure
   include SSHAccessedInfrastructure
   # -- Simulation Manager installation --
 
+   # Starts SimulationManager app assuming the ZIP with SiM is in current directory
   def self.start_simulation_manager_cmd(record)
     sm_dir_name = ScalarmDirName::tmp_simulation_manager(record.sm_uuid)
 
     if Rails.configuration.simulation_manager_version == :go
       chain(
-          cd(RemoteDir::scalarm_root),
           mute(rm(sm_dir_name, true)),
           mute("unzip #{sm_dir_name}.zip"),
           mute(cd(sm_dir_name)),
@@ -22,7 +22,6 @@ module ShellBasedInfrastructure
       )
     elsif Rails.configuration.simulation_manager_version == :ruby
       chain(
-          cd(RemoteDir::scalarm_root),
           mute('source ~/.rvm/environments/default'),
           mute(rm(sm_dir_name, true)),
           mute("unzip #{sm_dir_name}.zip"),
@@ -41,6 +40,7 @@ module ShellBasedInfrastructure
 
   def send_and_launch_sm(record, ssh)
     SSHAccessedInfrastructure.create_remote_directories(ssh)
+    Rails.logger.warn "ls: #{ssh.exec! 'ls'}"
     record.upload_file(LocalAbsolutePath::tmp_sim_zip(record.sm_uuid), RemoteDir::scalarm_root)
     output = ssh.exec!(
         Command::cd_to_simulation_managers(

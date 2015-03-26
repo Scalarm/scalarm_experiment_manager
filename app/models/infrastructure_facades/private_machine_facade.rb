@@ -171,7 +171,9 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.cmd_to_execute = Command::cd_to_simulation_managers(
+          ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      )
       sm_record.save
 
     else

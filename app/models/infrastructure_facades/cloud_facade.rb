@@ -8,6 +8,7 @@ class CloudFacade < InfrastructureFacade
   include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
+  include SSHAccessedInfrastructure
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
@@ -141,9 +142,10 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_stop(record)
-    handle_proxy_error(record.secrets) do
-      cloud_client_instance(record.user_id).terminate(record.vm_id)
-    end
+    Rails.logger.warn("stop disabled")
+    # handle_proxy_error(record.secrets) do
+    #   cloud_client_instance(record.user_id).terminate(record.vm_id)
+    # end
   end
 
   def _simulation_manager_restart(record)

@@ -41,6 +41,7 @@ class PlGridSchedulerBase
     false
   end
 
+  # TODO: reuse ShellBasedInfrastructure start_simulation_manager_cmd
   def prepare_job_executable
     if Rails.configuration.simulation_manager_version == :go
     <<-eos
