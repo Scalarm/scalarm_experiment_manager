@@ -46,7 +46,7 @@ ruby/2.1.1' load complete. 9871
     DummyShellBasedInfrastructure.any_instance.stubs(:logger).returns(stub_everything)
 
     ssh = stub_everything 'ssh' do
-      expects(:exec!).with(command).returns(output)
+      expects(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(command)).returns(output)
     end
 
     infrastructure = DummyShellBasedInfrastructure.new

@@ -4,6 +4,8 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
+  include SSHAccessedInfrastructure
+
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
 
@@ -615,10 +617,13 @@ class ExperimentsController < ApplicationController
 
   def simulation_manager
     sm_uuid = SecureRandom.uuid
-    # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
-
-    send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
+    # prepare locally code of a simulation manager to download with a configuration file
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, @current_user.id, @experiment.id.to_s) do |path|
+      contents = File.open(path) {|f| f.read}
+      send_data contents,
+                filename: File.basename(path),
+                type: 'application/zip'
+    end
   end
 
   def share
