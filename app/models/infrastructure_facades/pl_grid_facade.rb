@@ -370,7 +370,7 @@ class PlGridFacade < InfrastructureFacade
         SSHAccessedInfrastructure::create_remote_directories(ssh)
 
 
-        InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, sm_record.start_at)
+        InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, sm_record.user_id, experiment_id, sm_record.start_at)
         scheduler.create_tmp_job_files(sm_uuid, sm_record.to_h) do
           ssh.scp do |scp|
             scheduler.send_job_files(sm_uuid, scp)
@@ -386,7 +386,7 @@ class PlGridFacade < InfrastructureFacade
         end
 
       rescue Net::SSH::AuthenticationFailed => auth_exception
-        logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
+        logger.error "Authentication failed when starting simulation managers for user #{sm_record.user_id}: #{auth_exception.to_s}"
         sm_record.store_error('ssh')
       rescue Exception => ex
         logger.error "Exception when starting simulation managers for user #{sm_record.user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
