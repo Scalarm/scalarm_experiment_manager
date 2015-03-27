@@ -492,9 +492,8 @@ class ExperimentsController < ApplicationController
         end
       end
 
-      Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
-        Rails.logger.info("Next simulation run is : #{simulation_to_send.index}")
+        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
@@ -503,6 +502,7 @@ class ExperimentsController < ApplicationController
                    'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
+        Rails.logger.debug('next_simulation: Simulation to send is nil!')
         simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
       end
 
@@ -613,8 +613,18 @@ class ExperimentsController < ApplicationController
     @param_type = {}
     @param_type['type'] = @parametrization_type
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
-  end
+    end
 
+=begin
+@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+@apiName GetSimulationManager
+@apiGroup Experiment
+
+@apiParam {Number} some Something
+
+@apiSuccess {String} something One
+@apiSuccess {String} something_two Two
+=end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
     # prepare locally code of a simulation manager to download with a configuration file
