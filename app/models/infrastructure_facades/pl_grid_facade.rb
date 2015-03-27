@@ -86,7 +86,7 @@ class PlGridFacade < InfrastructureFacade
     # TODO: implement multiple architectures support
     arch = 'linux_386'
 
-    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, {:Name => scheduler.short_name})
+    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, [{name: scheduler.short_name}])
     bin_base_name = 'scalarm_monitoring'
 
     remote_proxy_path = '.scalarm_proxy'
