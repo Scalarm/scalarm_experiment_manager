@@ -27,7 +27,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:init_time_exceeded?).returns(false)
     end
 
-    InfrastructureFacade.expects(:prepare_simulation_manager_package).once
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package).yields
 
     cloud_client = mock 'cloud_client' do
       stubs(:vm_instance).returns(stub_everything)
