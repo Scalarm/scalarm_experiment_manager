@@ -79,8 +79,12 @@ class SimulationManagersController < ApplicationController
         render inline: t('simulation_managers.not_found', id: params[:id]), status: 400
       else
         code_path = @infrastructure_facade.simulation_manager_code(sm_record)
+        contents = File.open(code_path) do |file|
+          file.read
+        end
+        FileUtils::rm_rf(code_path)
 
-        send_file code_path, type: 'application/zip'
+        send_data contents, filename: File.basename(code_path), type: 'application/zip'
       end
     end
 

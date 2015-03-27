@@ -77,12 +77,12 @@ class PlGridJob < MongoActiveRecord
     @credentials ||= GridCredentials.find_by_user_id(user_id)
   end
 
-  def log_path
-    PlGridJob.log_path(sm_uuid)
+  def log_file_name
+    PlGridJob.log_file_name(sm_uuid)
   end
 
-  def self.log_path(uuid)
-    "scalarm_job_#{uuid}.log"
+  def self.log_file_name(sm_uuid)
+    SSHAccessedInfrastructure::ScalarmFileName::sim_log(sm_uuid)
   end
 
   def validate

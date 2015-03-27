@@ -237,6 +237,8 @@ class SimulationManager
       stop_and_destroy(false)
     elsif state == :error
       logger.debug 'Has error flag - skipping'
+    elsif (not @record.cmd_to_execute_code.blank?) or (not @record.cmd_to_execute.blank?)
+      logger.info "Waiting for command to execute in WorkersManager: #{cmd_to_execute_code}"
     else
       begin
         before_monitor(record)

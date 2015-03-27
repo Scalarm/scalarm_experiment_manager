@@ -62,7 +62,7 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def log_path
-    "/tmp/log_sm_#{sm_uuid}"
+    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
   end
 
   def monitoring_group
