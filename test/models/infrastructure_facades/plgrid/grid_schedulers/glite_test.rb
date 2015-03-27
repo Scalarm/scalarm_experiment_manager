@@ -164,7 +164,7 @@ have been successfully retrieved and stored in the directory:
   end
 
   def test_get_log
-    ssh = mock 'ssh'
+    ssh = stub_everything 'ssh'
     job = mock 'job'
     job_id = mock 'job_id'
     job.stubs(:job_id).returns(job_id)

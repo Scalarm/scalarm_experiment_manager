@@ -32,6 +32,10 @@ namespace :service do
     load_balancer_deregistration
   end
 
+  desc 'Restart the service'
+  task restart: [:stop, :start] do
+  end
+
   desc 'Removing unnecessary digests on production'
   task non_digested: :environment do
     Rake::Task['assets:precompile'].execute
@@ -401,17 +405,25 @@ def check_sim_ruby
 end
 
 def load_balancer_registration
-  unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
+  unless Rails.application.secrets.include? :load_balancer
+    puts 'There is no configuration for load balancer in secrets.yml - LB registration will be disabled'
+    return
+  end
+  unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
     LoadBalancerRegistration.register
   else
-    puts 'disable_load_balancer_registration option is active'
+    puts 'load_balancer.disable_registration option is active'
   end
 end
 
 def load_balancer_deregistration
-  unless Rails.env.test? or Rails.application.secrets.disable_load_balancer_registration
+  unless Rails.application.secrets.include? :load_balancer
+    puts 'There is no configuration for load balancer in secrets.yml - LB deregistration will be disabled'
+    return
+  end
+  unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
     LoadBalancerRegistration.deregister
   else
-    puts 'disable_load_balancer_registration option is active'
+    puts 'load_balancer.disable_registration option is active'
   end
 end

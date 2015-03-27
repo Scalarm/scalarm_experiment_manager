@@ -181,14 +181,7 @@ class MongoActiveRecord
   end
 
   def self.find_by_query(query)
-    attributes = self.collection.find_one(query)
-
-    if attributes.nil?
-      nil
-    else
-      #Object.const_get(name).new(attributes)
-      self.new(attributes)
-    end
+    self.where(query, {limit: 1}).first
   end
 
   def self.find_all_by_query(query, opts = {})

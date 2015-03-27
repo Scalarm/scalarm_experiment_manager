@@ -9,6 +9,10 @@ module Gsi
 
       def initialize(host, user, proxy)
         begin
+          @host = host
+          @user = user
+          @proxy = proxy
+
           @proxy_path = "/tmp/proxy-#{SecureRandom.uuid}"
           File.open(@proxy_path, 'w') { |file| file.write(proxy) }
           File.chmod(0600, @proxy_path)
@@ -69,6 +73,12 @@ module Gsi
         to_pop = @leftovers
         @leftovers = []
         to_pop
+      end
+
+      def scp(&block)
+        Gsi::SCP.start(@host, @user, @proxy) do |scp|
+          yield scp
+        end
       end
     end
 

@@ -100,7 +100,17 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _get_sm_records(query, params={})
-    PrivateMachineRecord.find_all_by_query(query)
+    if params and params.include? 'host' and params.include? 'port'
+      cred_query = {}
+      cred_query.merge!({host: {'$eq' => params['host'].to_sym}})
+      cred_query.merge!({port: {'$eq' => params['port'].to_i}})
+      (PrivateMachineCredentials.where(cred_query).map do |cred|
+        PrivateMachineRecord.find_all_by_query(query.merge({credentials_id: cred.id}))
+      end).flatten
+    else
+      PrivateMachineRecord.find_all_by_query(query)
+    end
+
   end
 
   def get_sm_record_by_id(record_id)
@@ -161,32 +171,37 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.cmd_to_execute = Command::cd_to_simulation_managers(
+          ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      )
       sm_record.save
 
     else
       logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
 
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, sm_record.user_id,
-                                                                        sm_record.experiment_id, sm_record.start_at)
+      InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, sm_record.user_id,
+                                                                        sm_record.experiment_id, sm_record.start_at) do
 
-      error_counter = 0
-      while true
-        begin
-          ssh = shared_ssh_session(sm_record.credentials)
-          break if log_exists?(sm_record, ssh) or send_and_launch_sm(sm_record, ssh)
-        rescue Exception => e
-          logger.warn "Exception #{e} occured while communication with "\
-  "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
-          error_counter += 1
-          if error_counter > 10
-            sm_record.store_error('install_failed', e.to_s)
-            break
+        error_counter = 0
+        while true
+          begin
+            ssh = shared_ssh_session(sm_record.credentials)
+            break if log_exists?(sm_record, ssh) or send_and_launch_sm(sm_record, ssh)
+          rescue Exception => e
+            logger.warn "Exception #{e} occured while communication with "\
+    "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
+            error_counter += 1
+            if error_counter > 10
+              sm_record.store_error('install_failed', e.to_s)
+              break
+            end
           end
+
+          sleep(20)
         end
 
-        sleep(20)
       end
+
     end
   end
 
@@ -194,7 +209,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    true
+    PrivateMachineCredentials.where(user_id: user_id).count > 0
   end
 
   # -- Monitoring utils --
@@ -206,23 +221,35 @@ class PrivateMachineFacade < InfrastructureFacade
   # --
 
   def simulation_manager_code(sm_record)
-    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+    sm_uuid = sm_record.sm_uuid
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at) do
+      code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
 
-    Dir.chdir('/tmp')
-    FileUtils.remove_dir(code_dir, true)
-    FileUtils.mkdir(code_dir)
-    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
+      FileUtils.remove_dir(code_dir, true)
+      FileUtils.mkdir(code_dir)
+      FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
-    #scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
-    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+      Dir.chdir(LocalAbsoluteDir::tmp) do
+        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{code_dir}/*]
+      end
+      FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
-    Dir.chdir(Rails.root)
+      zip_path = LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)
 
-    File.join('/', 'tmp', code_dir + ".zip")
+      if block_given?
+        begin
+          yield zip_path
+        ensure
+          FileUtils.rm_rf(zip_path)
+        end
+      else
+        return zip_path
+      end
+    end
+
   end
 
 end

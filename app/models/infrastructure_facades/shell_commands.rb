@@ -27,6 +27,10 @@ module ShellCommands
     "tail -#{num_lines} #{path}"
   end
 
+  def mkdir(dir_name, parents=true)
+    "mkdir #{parents ? '-p' : ''} #{dir_name}"
+  end
+
   def run_and_get_pid(command, stdout='/dev/null', stderr='&1')
     "#{command} >#{stdout} 2>#{stderr} & echo $!"
   end
