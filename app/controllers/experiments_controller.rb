@@ -827,10 +827,10 @@ class ExperimentsController < ApplicationController
   # - result
   def mark_as_complete
     validate(
-        result: :security_json
+        results: :security_json
     )
     raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    @experiment.mark_as_complete! Utils::parse_json_if_string(params[:result])
+    @experiment.mark_as_complete! Utils::parse_json_if_string(params[:results])
     @experiment.save
     render json: {status: 'ok'}
   end

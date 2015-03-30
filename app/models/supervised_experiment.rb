@@ -49,8 +49,8 @@ class SupervisedExperiment < CustomPointsExperiment
     res
   end
 
-  def mark_as_complete!(result)
-    self.result = result
+  def mark_as_complete!(results)
+    self.results = results
     self.completed = true
     # TODO cleanup and destroy temp password
   end
