@@ -801,15 +801,14 @@ class ExperimentsController < ApplicationController
     validate(
         simulation_id: :security_default,
         supervisor_script_id: :security_default,
-        supervisor_script_params: :security_json,
-        experiment_input: :security_json
+        supervisor_script_params: :security_json
     )
 
     experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
     experiment.save
-    response = experiment.start_supervisor_script(params[:supervisor_script_id],
-                                       Utils::parse_json_if_string(params[:supervisor_script_params]),
-                                       Utils::parse_json_if_string(params[:experiment_input]))
+    response = experiment.start_supervisor_script(params[:simulation_id],
+                                        params[:supervisor_script_id],
+                                        Utils::parse_json_if_string(params[:supervisor_script_params]))
 
     response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
     if response['status'] == 'error'

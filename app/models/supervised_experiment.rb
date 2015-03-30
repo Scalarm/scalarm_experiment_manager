@@ -7,7 +7,7 @@ class SupervisedExperiment < CustomPointsExperiment
     self.result = {}
   end
 
-  def start_supervisor_script(supervisor_script_id, script_params, experiment_input)
+  def start_supervisor_script(simulation_id, supervisor_script_id, script_params)
     script_params['experiment_id'] = self.id.to_s
     self.supervisor_script_uuid = SecureRandom.uuid
     password = SimulationManagerTempPassword.create_new_password_for self.supervisor_script_uuid, self.id
@@ -19,7 +19,8 @@ class SupervisedExperiment < CustomPointsExperiment
     script_params['lower_limit'] = []
     script_params['upper_limit'] = []
     script_params['parameters_ids'] = []
-    experiment_input.each do |category|
+
+    Simulation.find_by_id(simulation_id).input_specification.each do |category|
       category['entities'].each do |entity|
         entity['parameters'].each do |parameter|
           script_params['lower_limit'].append parameter['min']
