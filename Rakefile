@@ -32,6 +32,10 @@ namespace :service do
     load_balancer_deregistration
   end
 
+  desc 'Restart the service'
+  task restart: [:stop, :start] do
+  end
+
   desc 'Removing unnecessary digests on production'
   task non_digested: :environment do
     Rake::Task['assets:precompile'].execute

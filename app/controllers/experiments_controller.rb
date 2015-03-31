@@ -4,6 +4,8 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
+  include SSHAccessedInfrastructure
+
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
                                           :start_custom_points_experiment, :start_supervised_experiment, :new_se ]
@@ -101,8 +103,51 @@ class ExperimentsController < ApplicationController
     end
   end
 
+=begin
+  @api {get} /experiments/:id/file_with_configurations
+  @apiName GetFileWithConfigurations
+  @apiGroup Experiment
+
+  @apiParam {Number} with_index "1" to add simulation index column to result CSV, by default this column is skipped.
+  @apiParam {Number} with_params "1" to add params columns to result CSV, this is default.
+  @apiParam {Number} with_moes "1" to add moes columns to result CSV, this is default.
+
+  @apiSuccess {File} CSV text file containing completed simulations runs configurations and results
+=end
   def file_with_configurations
-    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+    send_data(_configurations_csv,
+              type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+  end
+
+=begin
+  @api {get} /experiments/:id/configurations
+  @apiName GetConfigurations
+  @apiGroup Experiment
+
+  @apiParam {Number} with_index "1" to add simulation index column to result CSV, by default this column is skipped.
+  @apiParam {Number} with_params "1" to add params columns to result CSV, this is default.
+  @apiParam {Number} with_moes "1" to add moes columns to result CSV, this is default.                                                                                                                                                                                                                                                                               @apiSuccess {File} CSV text file containing completed simulations runs configurations and results
+=end
+  def configurations
+    respond_to do |format|
+      format.html { render text: _configurations_csv.gsub("\n", '<br/>') }
+      format.json { render json: {status: 'ok', data: _configurations_csv} }
+    end
+  end
+
+  # NOT a controller method, only helper
+  def _configurations_csv
+    validate(
+        with_index: [:optional, :security_default],
+        with_params: [:optional, :security_default],
+        with_moes: [:optional, :security_default]
+    )
+
+    w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
+    w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
+    w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
+
+    @experiment.create_result_csv(w_index, w_params, w_moes)
   end
 
   def create
@@ -523,9 +568,8 @@ class ExperimentsController < ApplicationController
         end
       end
 
-      Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
-        Rails.logger.info("Next simulation run is : #{simulation_to_send.index}")
+        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
@@ -534,6 +578,7 @@ class ExperimentsController < ApplicationController
                    'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
+        Rails.logger.debug('next_simulation: Simulation to send is nil!')
         if @experiment.supervised and not @experiment.completed?
           simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
                                  'duration_in_seconds' => 2})
@@ -651,12 +696,25 @@ class ExperimentsController < ApplicationController
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
   end
 
+=begin
+@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+@apiName GetSimulationManager
+@apiGroup Experiment
+
+@apiParam {Number} some Something
+
+@apiSuccess {String} something One
+@apiSuccess {String} something_two Two
+=end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
-    # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
-
-    send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
+    # prepare locally code of a simulation manager to download with a configuration file
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, @current_user.id, @experiment.id.to_s) do |path|
+      contents = File.open(path) {|f| f.read}
+      send_data contents,
+                filename: File.basename(path),
+                type: 'application/zip'
+    end
   end
 
   def share

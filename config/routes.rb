@@ -53,6 +53,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :next_simulation
       get   :parameter_values
       get   :file_with_configurations
+      get   :configurations
       get   :results_binaries
 
       post  :stop

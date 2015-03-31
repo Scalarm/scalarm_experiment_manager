@@ -174,7 +174,7 @@ qcg_test_jl.qcg {}      jobId = J1416336702195__9651
     out
 
     @qcg.stubs(:submit_job_cmd).with(@record).returns(cmd)
-    @ssh.stubs(:exec!).with(cmd).returns(output)
+    @ssh.stubs(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(cmd)).returns(output)
 
     parsed_id = @qcg.submit_job(@ssh, @record)
 
@@ -188,7 +188,7 @@ its all wrong...
     out
 
     @qcg.stubs(:submit_job_cmd).with(@record).returns(cmd)
-    @ssh.stubs(:exec!).with(cmd).returns(output)
+    @ssh.stubs(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(cmd)).returns(output)
 
     assert_raises JobSubmissionFailed, output do
       @qcg.submit_job(@ssh, @record)
