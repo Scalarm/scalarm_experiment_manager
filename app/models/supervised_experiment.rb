@@ -13,8 +13,6 @@ class SupervisedExperiment < CustomPointsExperiment
     password = SimulationManagerTempPassword.create_new_password_for self.supervisor_script_uuid, self.id
     script_params['user'] = self.supervisor_script_uuid
     script_params['password'] = password.password
-    script_params['address'] = 'https://localhost:3001' #TODO ???
-
 
     script_params['lower_limit'] = []
     script_params['upper_limit'] = []
