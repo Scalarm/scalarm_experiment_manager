@@ -25,7 +25,7 @@ class SupervisedExperiment < CustomPointsExperiment
         entity['parameters'].each do |parameter|
           script_params['lower_limit'].append parameter['min']
           script_params['upper_limit'].append parameter['max']
-          script_params['parameters_ids'].append "#{category['id']}___#{entity['id']}___#{parameter['id']}"
+          script_params['parameters_ids'].append Experiment.parameter_uid(category, entity, parameter)
         end
       end
     end
