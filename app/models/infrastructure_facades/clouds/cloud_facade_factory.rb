@@ -13,12 +13,13 @@ class CloudFacadeFactory < DependencyInjectionFactory
 
   # Selects only Clouds, for which secrets are defined
   # @return [Hash<String, String>] full cloud name => short name
+  # @return [Hash<String, String>] full cloud name => short name
   def provider_names_select(user_id)
-    clouds_with_creds = client_classes.select do |name, _|
-      not CloudSecrets.find_by_query('cloud_name'=>name.to_s, 'user_id'=>user_id.to_s).nil?
+    enabled_clouds = (client_classes.collect {|name, cc| [name, CloudFacade.new(cc)]}).select do |name, cf|
+      cf.enabled_for_user? user_id
     end
 
-    Hash[clouds_with_creds.map {|name, client| [client.long_name, name]}]
+    Hash[enabled_clouds.map {|name, client| [client.long_name, name]}]
   end
 
 end
