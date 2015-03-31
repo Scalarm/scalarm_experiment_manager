@@ -134,6 +134,8 @@ class Experiment < MongoActiveRecord
     result
   end
 
+  # @return [Array<String>] Array of parameter ids in proper order
+  # NOTICE: value of this function should be cached
   def parameters
     parameters = []
 

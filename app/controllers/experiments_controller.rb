@@ -85,8 +85,51 @@ class ExperimentsController < ApplicationController
     end
   end
 
+=begin
+  @api {get} /experiments/:id/file_with_configurations
+  @apiName GetFileWithConfigurations
+  @apiGroup Experiment
+
+  @apiParam {Number} with_index "1" to add simulation index column to result CSV, by default this column is skipped.
+  @apiParam {Number} with_params "1" to add params columns to result CSV, this is default.
+  @apiParam {Number} with_moes "1" to add moes columns to result CSV, this is default.
+
+  @apiSuccess {File} CSV text file containing completed simulations runs configurations and results
+=end
   def file_with_configurations
-    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+    send_data(_configurations_csv,
+              type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+  end
+
+=begin
+  @api {get} /experiments/:id/configurations
+  @apiName GetConfigurations
+  @apiGroup Experiment
+
+  @apiParam {Number} with_index "1" to add simulation index column to result CSV, by default this column is skipped.
+  @apiParam {Number} with_params "1" to add params columns to result CSV, this is default.
+  @apiParam {Number} with_moes "1" to add moes columns to result CSV, this is default.                                                                                                                                                                                                                                                                               @apiSuccess {File} CSV text file containing completed simulations runs configurations and results
+=end
+  def configurations
+    respond_to do |format|
+      format.html { render text: _configurations_csv.gsub("\n", '<br/>') }
+      format.json { render json: {status: 'ok', data: _configurations_csv} }
+    end
+  end
+
+  # NOT a controller method, only helper
+  def _configurations_csv
+    validate(
+        with_index: [:optional, :security_default],
+        with_params: [:optional, :security_default],
+        with_moes: [:optional, :security_default]
+    )
+
+    w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
+    w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
+    w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
+
+    @experiment.create_result_csv(w_index, w_params, w_moes)
   end
 
   def create
