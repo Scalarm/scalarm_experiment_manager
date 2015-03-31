@@ -4,7 +4,7 @@ module DBHelper
 
   def setup
     unless MongoActiveRecord.connected?
-      MongoActiveRecord.connect_to_db_with_name DATABASE_NAME
+      raise StandardError.new('Connection to database failed') unless MongoActiveRecord.connection_init('localhost', DATABASE_NAME)
       puts "Connecting to database #{DATABASE_NAME}"
     end
   end

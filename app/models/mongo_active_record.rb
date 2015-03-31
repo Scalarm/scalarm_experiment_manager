@@ -137,19 +137,6 @@ class MongoActiveRecord
 
   #### Class Methods ####
 
-  def self.connect_to_db_with_name(db_name)
-    unless self.connection_init('localhost', db_name)
-      information_service = InformationService.new
-      storage_manager_list = information_service.get_list_of('db_routers')
-
-      unless storage_manager_list.blank?
-        db_router_url = storage_manager_list.sample
-        slog('mongo_active_record', "Connecting to '#{db_router_url}'")
-        self.connection_init(db_router_url, db_name)
-      end
-    end
-  end
-
   def self.connected?
     !@@client.nil?
   end
