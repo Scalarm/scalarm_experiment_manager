@@ -51,20 +51,32 @@ class ApplicationController < ActionController::Base
   end
 
   def authentication_failed
-    Rails.logger.debug('[authentication] failed -> redirect')
+    Rails.logger.debug('[authentication] failed')
+    respond_to do |format|
+      format.html do
+        Rails.logger.debug('[authentication] redirecting to login page')
 
-    session[:original_url] = request.original_url
-    #session[:intended_params] = params.to_hash.except('action', 'controller')
+        session[:original_url] = request.original_url
+        #session[:intended_params] = params.to_hash.except('action', 'controller')
 
-    keep_session_params(:server_name, :original_url) do
-      reset_session
+        keep_session_params(:server_name, :original_url) do
+          reset_session
+        end
+
+        @user_session.destroy unless @user_session.nil?
+
+        flash[:error] = t('login.required')
+
+        redirect_to :login
+      end
+
+      format.json do
+        Rails.logger.debug('[authentication] 403')
+
+        render json: {status: 'error', reason: 'Authentication failed'}, status: :unauthorized
+      end
     end
 
-    @user_session.destroy unless @user_session.nil?
-
-    flash[:error] = t('login.required')
-
-    redirect_to :login
   end
 
   def start_monitoring
