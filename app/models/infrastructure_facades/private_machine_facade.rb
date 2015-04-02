@@ -115,7 +115,7 @@ class PrivateMachineFacade < InfrastructureFacade
     scp.upload_multiple! [local_config, local_package], RemoteDir::scalarm_root
 
     if LocalAbsolutePath::certificate
-      scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
+      scp.upload! LocalAbsolutePath::certificate, RemoteHomePath::remote_monitoring_certificate
     end
   end
 
@@ -294,7 +294,7 @@ class PrivateMachineFacade < InfrastructureFacade
       FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
       Dir.chdir(LocalAbsoluteDir::tmp) do
-        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{code_dir}/*]
+        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
       end
       FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
