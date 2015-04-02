@@ -815,6 +815,22 @@ class ExperimentsController < ApplicationController
     end
   end
 
+=begin
+@api {post} /experiments/:id/schedule_points
+@apiName SchedulePoints
+@apiGroup Experiment
+
+@apiParam {String} points CSV text with configurations to add
+  First line should be names of parameters. Next lines are values separated with ","
+
+@apiSuccess {String} status "ok" or "error"
+=end
+  def schedule_points
+    validate(
+        points: :security_default
+    )
+  end
+
   # GET params:
   # - point - JSON Hash with parameter space point
   def get_result
