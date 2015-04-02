@@ -111,6 +111,7 @@ default: &DEFAULT
   #storage_manager_url: "localhost:20000"
   # if you want to pass to Simulation Manager a different URL of Information Service than the one mentioned above
   #sm_information_service_url: "localhost:37128"
+  #certificate_path: "/path/to/ca_for_information_service.pem"
 
 development:
   <<: *DEFAULT
