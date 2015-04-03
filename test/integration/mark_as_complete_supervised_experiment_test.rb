@@ -15,7 +15,7 @@ class MarkAsCompleteSupervisedExperimentTest < ActionDispatch::IntegrationTest
     assert_no_difference 'Experiment.count' do
       post mark_as_complete_experiment_path(experiment_id), results: EXPERIMENT_RESULT.to_json
     end
-    supervised_experiment = SupervisedExperiment.first
+    supervised_experiment = SupervisedExperiment.find_by_id(supervised_experiment.id)
 
     assert supervised_experiment.completed?, 'Marked as complete experiment must be completed'
     assert_equal EXPERIMENT_RESULT, supervised_experiment.results
