@@ -54,6 +54,8 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     assert_equal Experiment.count, 1 # to make sure proper id in next line
     assert_redirected_to experiment_path(Experiment.first.id)
     assert flash['error'].nil?, 'Flash[\'error\'] is not empty'
+    follow_redirect!
+    assert_template 'experiments/_experiment_result'
   end
 
   test "test proper behavior on failure to start supervisor script with json response" do

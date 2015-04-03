@@ -16,10 +16,7 @@ class ExperimentFactory
   end
 
   def self.create_supervised_experiment(user_id, simulation, params={})
-    experiment = _create_record(SupervisedExperiment, user_id, simulation, params)
-    experiment.init_empty(simulation)
-
-    experiment
+     _create_record(SupervisedExperiment, user_id, simulation, params)
   end
 
   private

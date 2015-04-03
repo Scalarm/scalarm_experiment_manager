@@ -1,10 +1,10 @@
 class SupervisedExperiment < CustomPointsExperiment
 
-  def init_empty(simulation)
-    super simulation
+  def initialize(attributes)
+    super(attributes)
     self.supervised = true
     self.completed = false
-    self.result = {}
+    self.results = {}
   end
 
   def start_supervisor_script(simulation_id, supervisor_script_id, script_params)
