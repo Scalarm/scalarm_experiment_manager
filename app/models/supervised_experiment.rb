@@ -9,14 +9,14 @@
 #
 # List of possible attributes:
 # * supervised - always true, marker which allow to distinguish normal experiment from
-#   supervised one [sets by initialize]
+#   supervised one [sets by #initialize]
 # * completed - boolean, marker which allow to check if experiment is completed
-#   (which equals that supervisor script finished and sent result) [sets false by initialize,
-#   modified to true by mark_as_complete]
+#   (which equals that supervisor script finished and sent result) [sets false by #initialize,
+#   modified to true by #mark_as_complete!]
 # * results - contains result of experiment (sent by supervisor script) [sets empty by
-#   initialize, modified by mark_as_complete]
+#   initialize, modified by #mark_as_complete!]
 # * supervisor_script_uuid - id of supervisor script, used for authentication [sets by
-#   start_supervisor_script]
+#   #start_supervisor_script]
 class SupervisedExperiment < CustomPointsExperiment
 
   ##
