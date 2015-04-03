@@ -36,8 +36,6 @@ class SupervisedExperiment < CustomPointsExperiment
     end
 
     res = nil
-    puts script_params.to_json
-
     begin
       res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  script_id: supervisor_script_id,
                                                                           config: script_params.to_json)
