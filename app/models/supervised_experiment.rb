@@ -32,7 +32,7 @@ class SupervisedExperiment < CustomPointsExperiment
   # This method updates given supervisor script params with necessary information
   # and posts to start_supervisor_script method of Experiment Supervisor.
   # Set supervisor script parameters:
-  # * experiemnt_id - id of current experiment
+  # * experiment_id - id of current experiment
   # * user - user name created by SimulationManagerTempPassword
   # * password - password created by SimulationManagerTempPassword
   # * lower_limit - input space lower limits parsed from simulation input specification
