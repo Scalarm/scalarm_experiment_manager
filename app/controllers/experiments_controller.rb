@@ -791,18 +791,59 @@ class ExperimentsController < ApplicationController
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
   end
 
-  # POST params
-  # - simulation_id
-  # - supervisor_script_id
-  # - supervisor_script_params
-  # TODO: other experiment parameters
-  # TODO: handle errors
+=begin
+  @api {post} /experiments/start_supervised_experiment(.:format) Start Supervised Experiment
+  @apiName start_supervised_experiment
+  @apiGroup Experiment
+  @apiDescription This action allows user to start new supervised experiment with given parameters.
+  Action supports two possible result formats:
+  * .json - json with info about performed action
+  * .html - redirection to experiment view page
+
+  @apiParam {String} simulation_id Mandatory, id of simulation used to perform experiment
+  @apiParam {String} supervisor_script_id Mandatory, id of supervisor script used to manage experiment
+  @apiParam {json} supervisor_script_params Mandatory, parameters passed to supervisor script
+
+  @apiParamExample Params-Example
+    simulation_id: '551fca1f2ab4f259fc000002'
+    supervisor_script_id: 'simulated annealing'
+    supervisor_script_params:
+      {
+        "maxiter": 2,
+        "dwell": 1,
+        "schedule": "boltzmann"
+      }
+
+  @apiSuccess {Object} info json object with information about new experiment
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+  @apiSuccess {String} info.experiment_id id of created experiment
+  @apiSuccess {Number} info.pid pid of supervisor script managing experiment
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+      'experiment_id': '551fc1932ab4f259fc000001'
+      'pid': 1234
+    }
+
+  @apiError {Object} info json object with information about new experiment
+  @apiError {String} info.status status of performed action, on failure always 'error'
+  @apiError {String} info.reason reason of failure to start experiment
+
+  @apiErrorExample {json} Failure-Response
+    {
+      'status': 'error'
+      'reason': 'Unable to connect with Experiment Supervisor'
+    }
+=end
   def start_supervised_experiment
     validate(
         simulation_id: :security_default,
         supervisor_script_id: :security_default,
         supervisor_script_params: :security_json
     )
+    # TODO: other experiment parameters
+    # TODO: handle errors
 
     experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
     experiment.save
@@ -822,8 +863,31 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  # POST params:
-  # - result
+=begin
+  @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
+  @apiName mark_as_complete
+  @apiGroup Experiment
+  @apiDescription This action allows user to mark experiment as complete and upload its results
+
+  @apiParam {String} id Mandatory, unique id of experiment on which action will be performed
+  @apiParam {json} results Mandatory, results of experiment
+
+  @apiParamExample Params-Example
+    results:
+      {
+        "key": "value"
+        "foo": "bar"
+        "baz": 42
+      }
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+    }
+=end
   def mark_as_complete
     validate(
         results: :security_json
