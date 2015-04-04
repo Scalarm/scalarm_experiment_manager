@@ -814,7 +814,7 @@ class ExperimentsController < ApplicationController
         "schedule": "boltzmann"
       }
 
-  @apiSuccess {Object} info json object with information about new experiment
+  @apiSuccess {Object} info json object with iinformation about performed action
   @apiSuccess {String} info.status status of performed action, on success always 'ok'
   @apiSuccess {String} info.experiment_id id of created experiment
   @apiSuccess {Number} info.pid pid of supervisor script managing experiment
@@ -826,7 +826,7 @@ class ExperimentsController < ApplicationController
       'pid': 1234
     }
 
-  @apiError {Object} info json object with information about new experiment
+  @apiError {Object} info json object with information about performed action
   @apiError {String} info.status status of performed action, on failure always 'error'
   @apiError {String} info.reason reason of failure to start experiment
 
