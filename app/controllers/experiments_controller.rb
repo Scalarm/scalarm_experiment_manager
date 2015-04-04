@@ -794,7 +794,7 @@ class ExperimentsController < ApplicationController
 =begin
   @api {post} /experiments/start_supervised_experiment(.:format) Start Supervised Experiment
   @apiName start_supervised_experiment
-  @apiGroup Experiment
+  @apiGroup Experiments
   @apiDescription This action allows user to start new supervised experiment with given parameters.
   Action supports two possible result formats:
   * .json - json with info about performed action
@@ -866,7 +866,7 @@ class ExperimentsController < ApplicationController
 =begin
   @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
   @apiName mark_as_complete
-  @apiGroup Experiment
+  @apiGroup Experiments
   @apiDescription This action allows user to mark experiment as complete and upload its results
 
   @apiParam {String} id Mandatory, unique id of experiment on which action will be performed
