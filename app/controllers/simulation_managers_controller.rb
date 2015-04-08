@@ -9,16 +9,31 @@ class SimulationManagersController < ApplicationController
   rescue_from InfrastructureErrors::NoSuchInfrastructureError, with: :handle_no_such_infrastructure_error
   rescue_from Exception, with: :handle_exception
 
-  # Get Simulation Manager nodes in JSON
-  # GET params:
-  # - infrastructure: (String) name of Infrastructure
-  # - experiment_id: (String) (optional) experiment_id
-  # - states: (String or Array of Strings) (optional) allowed states
-  # - states_not: (String or Array of Strings) (optional) not allowed states
-  # - onsite_monitoring: (true/false) (optional)
-  # GET params, Private machines only:
-  # - host: (String) host name (optional)
-  # - port: (String) port number (optional)
+=begin
+  @apiDefine PrivateMachineOnly Private machine parameters
+=end
+
+  #TODO: describe basic sm_record elements, eg. sm_record.id...
+=begin
+  @api {get} /simulation_managers Get list of Simulation Manager objects (records) for authenticated user in JSON
+  @apiName GetAllSimulationManagers
+  @apiGroup SimulationManagers
+
+  @apiParam {String} [infrastructure] Get objects only for specified infrastructure
+  @apiParam {String} [experiment_id] Get objects only for specified experiment
+  @apiParam {String[]/String="created","initializing","running","terminating","error"} [states] Get only objects in specified states.
+                                Also single String is supported if filtering by one state
+  @apiParam {String[]/String="created","initializing","running","terminating","error"} [states_not] Get only objects that are __not__
+                                    in specified states.
+                                    Also single String is supported if filtering by one state
+  @apiParam {String=true,false} [onsite_monitoring] Get only objects which are onsite monitored or not
+
+  @apiParam (PrivateMachineOnly) {String} [host] Filter private machines by host name
+  @apiParam (PrivateMachineOnly) {String} [port] Filter private machines by SSH port number
+
+  @apiSuccess {Object[]} [sm_records] List of SimulationManagerRecords if request was success
+  @apiSuccess {String} status "ok" if success, "error" otherwise
+=end
   def index
     sm_records = (if @infrastructure_facade.blank?
                     get_all_sm_records(params[:experiment_id], params)
