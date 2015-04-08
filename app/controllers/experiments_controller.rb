@@ -870,15 +870,21 @@ class ExperimentsController < ApplicationController
   @apiDescription This action allows user to mark experiment as complete and upload its results
 
   @apiParam {String} id Mandatory, unique id of experiment on which action will be performed
-  @apiParam {json} results Mandatory, results of experiment
+  @apiParam {json} results Optional, results of experiment
+  @apiParam {String} status Optional, status of experiment; allowed values: ['error', 'ok']
+  @apiParam {String} reason Optional, description of error
 
-  @apiParamExample Params-Example
+  @apiParamExample Params-with-result
     results:
       {
         "key": "value"
         "foo": "bar"
         "baz": 42
       }
+
+  @apiParamExample Params-with-error
+    status: 'error'
+    reason: 'Supervisor script has died'
 
   @apiSuccess {Object} info json object with information about performed action
   @apiSuccess {String} info.status status of performed action, on success always 'ok'
@@ -890,10 +896,18 @@ class ExperimentsController < ApplicationController
 =end
   def mark_as_complete
     validate(
-        results: :security_json
+        results: [:optional, :security_json],
+        status: [:optional, :security_default],
+        reason: [:optional, :security_default]
     )
     raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    @experiment.mark_as_complete! Utils::parse_json_if_string(params[:results])
+
+    if params.include?(:status) and params[:status] == 'error'
+      @experiment.is_error = true
+      @experiment.error_reason = params[:reason] if params.include?(:reason)
+    elsif params.include?(:results)
+      @experiment.mark_as_complete! Utils::parse_json_if_string(params[:results])
+    end
     @experiment.save
     render json: {status: 'ok'}
   end

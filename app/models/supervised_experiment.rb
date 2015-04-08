@@ -8,15 +8,18 @@
 # some value or point from input space.
 #
 # List of possible attributes:
-# * supervised - always true, marker which allow to distinguish normal experiment from
-#   supervised one [sets by #initialize]
+# * supervised - boolean, always true, marker which allow to distinguish normal experiment from
+#   supervised one [set by #initialize]
 # * completed - boolean, marker which allow to check if experiment is completed
-#   (which equals that supervisor script finished and sent result) [sets false by #initialize,
+#   (which equals that supervisor script finished and sent result) [set false by #initialize,
 #   modified to true by #mark_as_complete!]
-# * results - contains result of experiment (sent by supervisor script) [sets empty by
+# * results - hash, contains result of experiment (sent by supervisor script) [set empty by
 #   initialize, modified by #mark_as_complete!]
-# * supervisor_script_uuid - id of supervisor script, used for authentication [sets by
+# * supervisor_script_uuid - string, id of supervisor script, used for authentication [set by
 #   #start_supervisor_script]
+# * is_error - boolean, this flag is true when experiment is in error state
+#   [set by ExperimentController#mark_as_complete]
+# * error_reason - string, set with is_error flag is_reason [set by ExperimentController#mark_as_complete]
 class SupervisedExperiment < CustomPointsExperiment
 
   ##
