@@ -21,11 +21,11 @@ class SupervisedExperiment < CustomPointsExperiment
 
   ##
   # Sets parameters needed for SupervisorExperiment (described above), and calls super.
-  def initialize(attributes)
+  def initialize(attributes = {})
     super(attributes)
-    self.supervised = true
-    self.completed = false
-    self.results = {}
+    self.supervised = true unless attributes.has_key?('supervised')
+    self.completed = false unless attributes.has_key?('completed')
+    self.results = {} unless attributes.has_key?('results')
   end
 
   ##

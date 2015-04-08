@@ -15,8 +15,14 @@ class MarkAsCompleteSupervisedExperimentTest < ActionDispatch::IntegrationTest
     assert_no_difference 'Experiment.count' do
       post mark_as_complete_experiment_path(experiment_id), results: EXPERIMENT_RESULT.to_json
     end
-    supervised_experiment = SupervisedExperiment.find_by_id(supervised_experiment.id)
+    response_hash = JSON.parse(response.body)
+    # test if response contains only allowed entries with proper values
+    assert_nothing_raised do
+      response_hash.assert_valid_keys('status')
+    end
+    assert_equal response_hash['status'], 'ok'
 
+    supervised_experiment = SupervisedExperiment.find_by_id(supervised_experiment.id)
     assert supervised_experiment.completed?, 'Marked as complete experiment must be completed'
     assert_equal EXPERIMENT_RESULT, supervised_experiment.results
   end
