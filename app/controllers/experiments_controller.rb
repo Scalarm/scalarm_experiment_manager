@@ -104,15 +104,19 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
-  @api {get} /experiments/:id/file_with_configurations
+  @apiDefine ConfigurationsParams
+
+  @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
+  @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
+  @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
+=end
+
+=begin
+  @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
   @apiName GetFileWithConfigurations
-  @apiGroup Experiment
+  @apiGroup Experiments
 
-  @apiParam {Number} with_index "1" to add simulation index column to result CSV, by default this column is skipped.
-  @apiParam {Number} with_params "1" to add params columns to result CSV, this is default.
-  @apiParam {Number} with_moes "1" to add moes columns to result CSV, this is default.
-
-  @apiSuccess {File} CSV text file containing completed simulations runs configurations and results
+  @apiUse ConfigurationsParams
 =end
   def file_with_configurations
     send_data(_configurations_csv,
@@ -120,13 +124,11 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
-  @api {get} /experiments/:id/configurations
+  @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
   @apiName GetConfigurations
-  @apiGroup Experiment
+  @apiGroup Experiments
 
-  @apiParam {Number} with_index "1" to add simulation index column to result CSV, by default this column is skipped.
-  @apiParam {Number} with_params "1" to add params columns to result CSV, this is default.
-  @apiParam {Number} with_moes "1" to add moes columns to result CSV, this is default.                                                                                                                                                                                                                                                                               @apiSuccess {File} CSV text file containing completed simulations runs configurations and results
+  @apiUse ConfigurationsParams
 =end
   def configurations
     respond_to do |format|
@@ -699,12 +701,7 @@ class ExperimentsController < ApplicationController
 =begin
 @api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
 @apiName GetSimulationManager
-@apiGroup Experiment
-
-@apiParam {Number} some Something
-
-@apiSuccess {String} something One
-@apiSuccess {String} something_two Two
+@apiGroup Experiments
 =end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
