@@ -87,6 +87,11 @@ module SupervisedExperimentHelper
     post login_path, username: USER_NAME, password: PASSWORD
     @@simulation.user_id = @@user.id
     @@simulation.save
+    # mock information service
+    information_service = mock()
+    information_service.stubs(:get_list_of).returns([])
+    information_service.stubs(:sample_public_url).returns(nil)
+    InformationService.stubs(:new).returns(information_service)
   end
 
 end
