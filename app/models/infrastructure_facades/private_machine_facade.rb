@@ -169,7 +169,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   def _get_sm_records(query, params={})
     if params and params.include? 'credentials_id'
-      query.merge!({credentials_id: {'$eq' => BSON::ObjectId(params['credentials_id'].to_s)}})
+      query.merge!({credentials_id: BSON::ObjectId(params['credentials_id'].to_s)})
     end
     PrivateMachineRecord.find_all_by_query(query)
   end
