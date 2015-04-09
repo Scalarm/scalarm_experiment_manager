@@ -839,17 +839,20 @@ class ExperimentsController < ApplicationController
   def start_supervised_experiment
     validate(
         simulation_id: :security_default,
-        supervisor_script_id: :security_default,
-        supervisor_script_params: :security_json
+        supervisor_script_id: [:optional, :security_default],
+        supervisor_script_params: [:optional, :security_json]
     )
     # TODO: other experiment parameters
     # TODO: handle errors
 
     experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
     experiment.save
-    response = experiment.start_supervisor_script(params[:simulation_id],
-                                        params[:supervisor_script_id],
-                                        Utils::parse_json_if_string(params[:supervisor_script_params]))
+    response = {'status' => 'ok'}
+    if params.has_key?(:supervisor_script_id)
+      response = experiment.start_supervisor_script(params[:simulation_id],
+                            params[:supervisor_script_id],
+                            Utils::parse_json_if_string(params[:supervisor_script_params]))
+    end
 
     response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
     if response['status'] == 'error'
