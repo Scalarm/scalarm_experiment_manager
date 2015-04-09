@@ -46,7 +46,7 @@ class PrivateMachineFacade < InfrastructureFacade
     ppn = shared_ssh_session(machine_creds).exec!("cat /proc/cpuinfo | grep MHz | wc -l").strip
     ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
-    (1..instances_count).map do
+    records = (1..instances_count).map do
       record = PrivateMachineRecord.new(
           user_id: user_id,
           experiment_id: experiment_id,
@@ -65,6 +65,74 @@ class PrivateMachineFacade < InfrastructureFacade
 
       record
     end
+
+    if params[:onsite_monitoring]
+      sm_uuid = SecureRandom.uuid
+      PrivateMachineFacade.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id,
+                                                             short_name, params)
+    end
+
+    records
+  end
+
+  def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, infrastructure_name, params={})
+    # TODO: implement multiple architectures support
+    arch = 'linux_386'
+
+    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id,
+                                                   [{name: infrastructure_name, credentials_id: credentials.id.to_s}])
+
+    credentials.ssh_session do |ssh|
+      # TODO: implement ssh.scp method for gsissh and use here
+      credentials.scp_session do |scp|
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
+
+        PrivateMachineFacade.remove_remote_monitoring_files(ssh)
+        PrivateMachineFacade.upload_monitoring_files(scp, sm_uuid, arch)
+        PrivateMachineFacade.remove_local_monitoring_config(sm_uuid)
+
+        cmd = PrivateMachineFacade.start_monitoring_cmd
+        Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
+      end
+    end
+  end
+
+  def self.remove_remote_monitoring_files(ssh)
+    [
+        RemoteHomePath::monitoring_config,
+        RemoteHomePath::monitoring_package,
+        RemoteHomePath::monitoring_binary,
+        RemoteHomePath::remote_monitoring_certificate
+    ].each do |path|
+      ssh.exec! rm(path, true)
+    end
+  end
+
+  # TODO: can be moved to base class or util class
+  def self.upload_monitoring_files(scp, sm_uuid, arch)
+    local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+    local_package = LocalAbsolutePath::monitoring_package(arch)
+    scp.upload_multiple! [local_config, local_package], RemoteDir::scalarm_root
+
+    if LocalAbsolutePath::certificate
+      scp.upload! LocalAbsolutePath::certificate, RemoteHomePath::remote_monitoring_certificate
+    end
+  end
+
+  # TODO: can be moved to base class or util class
+  def self.remove_local_monitoring_config(sm_uuid)
+    FileUtils.rm_rf(LocalAbsoluteDir::tmp_monitoring_package(sm_uuid))
+  end
+
+  def self.start_monitoring_cmd
+    chain(
+        cd(RemoteDir::scalarm_root),
+        "unxz -f #{ScalarmFileName::monitoring_package}",
+        "chmod a+x #{ScalarmFileName::monitoring_binary}",
+        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                             "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
+`.log")}"
+    )
   end
 
   def add_credentials(user, params, session)
@@ -100,17 +168,10 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _get_sm_records(query, params={})
-    if params and params.include? 'host' and params.include? 'port'
-      cred_query = {}
-      cred_query.merge!({host: {'$eq' => params['host'].to_sym}})
-      cred_query.merge!({port: {'$eq' => params['port'].to_i}})
-      (PrivateMachineCredentials.where(cred_query).map do |cred|
-        PrivateMachineRecord.find_all_by_query(query.merge({credentials_id: cred.id}))
-      end).flatten
-    else
-      PrivateMachineRecord.find_all_by_query(query)
+    if params and params.include? 'credentials_id'
+      query.merge!({credentials_id: {'$eq' => BSON::ObjectId(params['credentials_id'].to_s)}})
     end
-
+    PrivateMachineRecord.find_all_by_query(query)
   end
 
   def get_sm_record_by_id(record_id)
@@ -171,9 +232,7 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = Command::cd_to_simulation_managers(
-          ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
-      )
+      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
       sm_record.save
 
     else
@@ -233,7 +292,7 @@ class PrivateMachineFacade < InfrastructureFacade
       FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
       Dir.chdir(LocalAbsoluteDir::tmp) do
-        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{code_dir}/*]
+        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
       end
       FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
@@ -248,6 +307,7 @@ class PrivateMachineFacade < InfrastructureFacade
       else
         return zip_path
       end
+      FileUtils.remove_dir(code_dir, true)
     end
 
   end
