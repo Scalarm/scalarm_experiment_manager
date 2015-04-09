@@ -800,9 +800,9 @@ class ExperimentsController < ApplicationController
   * .json - json with info about performed action
   * .html - redirection to experiment view page
 
-  @apiParam {String} simulation_id Mandatory, id of simulation used to perform experiment
-  @apiParam {String} supervisor_script_id Mandatory, id of supervisor script used to manage experiment
-  @apiParam {json} supervisor_script_params Mandatory, parameters passed to supervisor script
+  @apiParam {String} simulation_id  ID of simulation used to perform experiment
+  @apiParam {String} supervisor_script_id ID of supervisor script used to manage experiment
+  @apiParam {json} supervisor_script_params Parameters passed to supervisor script
 
   @apiParamExample Params-Example
     simulation_id: '551fca1f2ab4f259fc000002'
@@ -872,10 +872,11 @@ class ExperimentsController < ApplicationController
   @apiGroup Experiments
   @apiDescription This action allows user to mark experiment as complete and upload its results
 
-  @apiParam {String} id Mandatory, unique id of experiment on which action will be performed
-  @apiParam {json} results Optional, results of experiment
-  @apiParam {String} status Optional, status of experiment; allowed values: ['error', 'ok']
-  @apiParam {String} reason Optional, description of error
+  @apiParam {String} id Unique id of experiment on which action will be performed
+  @apiParam {json} [results] Results of experiment
+  @apiParam {string} [results.values] CSV representation of input space final coordinates of result
+  @apiParam {String} [status] Status of experiment; allowed values: ['error', 'ok']
+  @apiParam {String} [reason] Description of error
 
   @apiParamExample Params-with-result
     results:
