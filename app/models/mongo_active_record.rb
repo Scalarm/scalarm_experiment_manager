@@ -249,7 +249,20 @@ class MongoActiveRecord
       if key == :_id
         value = BSON::ObjectId(value.to_s)
       elsif key.to_s.ends_with?('_id') and self.ids_auto_convert
-        value = Utils::to_bson_if_string(value)
+        # some ugly hack - if ID can be converted to BSON (or is BSON) use both String and BSON in query
+        # otherwise, use only stringified value
+        bson_value = begin
+          Utils::to_bson_if_string(value)
+        rescue BSON::InvalidObjectId
+          nil
+        end
+
+        str_value = value.to_s
+        if bson_value
+          value = {'$in' => [str_value, bson_value]}
+        else
+          value = str_value
+        end
       end
 
       mongo_class.conditions[key] = value
