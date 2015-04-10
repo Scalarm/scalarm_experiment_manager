@@ -10,6 +10,7 @@ class MongoActiveRecord
 
   @conditions = {}
   @options = {}
+  @@client = nil
 
   def self.ids_auto_convert
     true
@@ -135,6 +136,10 @@ class MongoActiveRecord
   end
 
   #### Class Methods ####
+
+  def self.connected?
+    !@@client.nil?
+  end
 
   def self.collection_name
     raise 'This is an abstract method, which must be implemented by all subclasses'
