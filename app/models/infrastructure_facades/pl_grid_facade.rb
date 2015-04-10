@@ -90,7 +90,7 @@ class PlGridFacade < InfrastructureFacade
     # TODO: implement multiple architectures support
     arch = 'linux_386'
 
-    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, scheduler_name)
+    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
 
     credentials.ssh_session do |ssh|
       # TODO: implement ssh.scp method for gsissh and use here
@@ -130,7 +130,7 @@ class PlGridFacade < InfrastructureFacade
     scp.upload_multiple! [local_config, local_package], RemoteDir::scalarm_root
 
     if LocalAbsolutePath::certificate
-      scp.upload! LocalAbsolutePath::certificate, RemoteAbsolutePath::remote_monitoring_certificate
+      scp.upload! LocalAbsolutePath::certificate, RemoteHomePath::remote_monitoring_certificate
     end
   end
 

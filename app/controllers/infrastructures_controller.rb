@@ -102,7 +102,7 @@ class InfrastructuresController < ApplicationController
       render json: { status: 'error', error_code: error.error_code, msg: I18n.t('infrastructures_controller.schedule_error',
                          name: infrastructure ? infrastructure.long_name : infrastructure_name,
                          error: error.to_s) }
-      Rails.logger.error "#{exc.class.to_s} #{exc.to_s}\n#{exc.backtrace.join("\n")}"
+      Rails.logger.error "#{error.class.to_s} #{error.to_s}\n#{error.backtrace.join("\n")}"
     rescue Exception => exc
       render json: { status: 'error', error_code: 'scheduling-failed', msg: I18n.t('infrastructures_controller.schedule_error',
                         name: infrastructure ? infrastructure.long_name : infrastructure_name,
