@@ -801,8 +801,10 @@ class ExperimentsController < ApplicationController
   * .html - redirection to experiment view page
 
   @apiParam {String} simulation_id  ID of simulation used to perform experiment
-  @apiParam {String} supervisor_script_id ID of supervisor script used to manage experiment
-  @apiParam {json} supervisor_script_params Parameters passed to supervisor script
+  @apiParam {String} [supervisor_script_id] ID of supervisor script used to manage experiment, without this
+                      param supervisor script will not be started
+  @apiParam {json} [supervisor_script_params] Parameters passed to supervisor script, mandatory when
+                      supervisor_script_id is present
 
   @apiParamExample Params-Example
     simulation_id: '551fca1f2ab4f259fc000002'
@@ -817,7 +819,8 @@ class ExperimentsController < ApplicationController
   @apiSuccess {Object} info json object with information about performed action
   @apiSuccess {String} info.status status of performed action, on success always 'ok'
   @apiSuccess {String} info.experiment_id id of created experiment
-  @apiSuccess {Number} info.pid pid of supervisor script managing experiment
+  @apiSuccess {Number} [info.pid] pid of supervisor script managing experiment, only when
+                      supervisor_script_id param is present
 
   @apiSuccessExample {json} Success-Response
     {
