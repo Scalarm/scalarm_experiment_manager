@@ -2,6 +2,7 @@ module DBHelper
 
   DATABASE_NAME = 'scalarm_db_test'
 
+  # DB Router should listen on localhost on default port
   def setup
     unless MongoActiveRecord.connected?
       raise StandardError.new('Connection to database failed') unless MongoActiveRecord.connection_init('localhost', DATABASE_NAME)

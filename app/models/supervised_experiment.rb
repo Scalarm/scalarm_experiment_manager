@@ -114,4 +114,11 @@ class SupervisedExperiment < CustomPointsExperiment
     self.completed
   end
 
+  ##
+  # Query only SupervisedExperiments from DB with additional conditions.
+  #
+  def self.where(cond, opts = {})
+    super({supervised: true}.merge(cond), opts)
+  end
+
 end
