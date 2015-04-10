@@ -601,23 +601,6 @@ class Experiment < MongoActiveRecord
     (self.experiment_size == self.get_statistics[2])
   end
 
-  private
-
-  def self.nested_json_to_hash(nested_json)
-    hash_counterpart = Hash.new
-
-    nested_json.each do |entity_group|
-      entity_group['entities'].each do |entity|
-        entity['parameters'].each do |parameter|
-          parameter_uid = parameter_uid(entity_group, entity, parameter)
-          hash_counterpart[parameter_uid] = parameter
-        end
-      end
-    end
-
-    hash_counterpart
-  end
-
   def parameter_uid(entity_group, entity, parameter)
     Experiment.parameter_uid(entity_group, entity, parameter)
   end
@@ -638,6 +621,23 @@ class Experiment < MongoActiveRecord
     parameter_id = parameter.include?('id') ? parameter['id'] : parameter
 
     [ entity_group_id, entity_id, parameter_id ].compact.join(ID_DELIM)
+  end
+
+  private
+
+  def self.nested_json_to_hash(nested_json)
+    hash_counterpart = Hash.new
+
+    nested_json.each do |entity_group|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          parameter_uid = parameter_uid(entity_group, entity, parameter)
+          hash_counterpart[parameter_uid] = parameter
+        end
+      end
+    end
+
+    hash_counterpart
   end
 
   def generate_parameter_values(parameter)

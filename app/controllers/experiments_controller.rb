@@ -847,54 +847,130 @@ class ExperimentsController < ApplicationController
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
   end
 
-  # POST params
-  # - simulation_id
-  # - supervisor_script_id
-  # - supervisor_script_params
-  # TODO: other experiment parameters
-  # TODO: handle errors
+=begin
+  @api {post} /experiments/start_supervised_experiment(.:format) Start Supervised Experiment
+  @apiName start_supervised_experiment
+  @apiGroup Experiments
+  @apiDescription This action allows user to start new supervised experiment with given parameters.
+  Action supports two possible result formats:
+  * .json - json with info about performed action
+  * .html - redirection to experiment view page
+
+  @apiParam {String} simulation_id  ID of simulation used to perform experiment
+  @apiParam {String} [supervisor_script_id] ID of supervisor script used to manage experiment, without this
+                      param supervisor script will not be started
+  @apiParam {json} [supervisor_script_params] Parameters passed to supervisor script, mandatory when
+                      supervisor_script_id is present
+
+  @apiParamExample Params-Example
+    simulation_id: '551fca1f2ab4f259fc000002'
+    supervisor_script_id: 'simulated annealing'
+    supervisor_script_params:
+      {
+        "maxiter": 2,
+        "dwell": 1,
+        "schedule": "boltzmann"
+      }
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+  @apiSuccess {String} info.experiment_id id of created experiment
+  @apiSuccess {Number} [info.pid] pid of supervisor script managing experiment, only when
+                      supervisor_script_id param is present
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+      'experiment_id': '551fc1932ab4f259fc000001'
+      'pid': 1234
+    }
+
+  @apiError {Object} info json object with information about performed action
+  @apiError {String} info.status status of performed action, on failure always 'error'
+  @apiError {String} info.reason reason of failure to start experiment
+
+  @apiErrorExample {json} Failure-Response
+    {
+      'status': 'error'
+      'reason': 'Unable to connect with Experiment Supervisor'
+    }
+=end
   def start_supervised_experiment
     validate(
         simulation_id: :security_default,
-        supervisor_script_id: :security_default,
-        supervisor_script_params: :security_json,
-        experiment_input: :security_json
+        supervisor_script_id: [:optional, :security_default],
+        supervisor_script_params: [:optional, :security_json]
     )
-    response = {}
-    begin
-      experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
-      experiment.save
-      pid = experiment.start_supervisor_script(@current_user,
-                                         params[:supervisor_script_id],
-                                         Utils::parse_json_if_string(params[:supervisor_script_params]),
-                                         Utils::parse_json_if_string(params[:experiment_input]))
-      response.merge!({status: 'ok', experiment_id: experiment.id.to_s, pid: pid})
-    rescue Exception => e
-      Rails.logger.debug("Error while starting new supervised experiment: #{e}")
-      response.merge!({'status' => 'error', 'reason' => e.to_s})
+    # TODO: other experiment parameters
+    # TODO: handle errors
+
+    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
+    experiment.save
+    response = {'status' => 'ok'}
+    if params.has_key?(:supervisor_script_id)
+      response = experiment.start_supervisor_script(params[:simulation_id],
+                            params[:supervisor_script_id],
+                            Utils::parse_json_if_string(params[:supervisor_script_params]))
     end
+
+    response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
+    if response['status'] == 'error'
+      experiment.destroy
+      flash['error'] = "There has been an error while creating new supervised experiment: #{response['reason']}"
+    end
+
     respond_to do |format|
-      format.html { redirect_to experiment_path(experiment.id) }
+      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
       format.json { render json: response }
     end
   end
 
-  # POST params:
-  # - result
-  def set_result
+=begin
+  @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
+  @apiName mark_as_complete
+  @apiGroup Experiments
+  @apiDescription This action allows user to mark experiment as complete and upload its results
+
+  @apiParam {String} id Unique id of experiment on which action will be performed
+  @apiParam {json} [results] Results of experiment
+  @apiParam {string} [results.values] CSV representation of input space final coordinates of result
+  @apiParam {String} [status] Status of experiment; allowed values: ['error', 'ok']
+  @apiParam {String} [reason] Description of error
+
+  @apiParamExample Params-with-result
+    results:
+      {
+        "key": "value"
+        "foo": "bar"
+        "baz": 42
+      }
+
+  @apiParamExample Params-with-error
+    status: 'error'
+    reason: 'Supervisor script has died'
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+    }
+=end
+  def mark_as_complete
     validate(
-        result: :security_json
+        results: [:optional, :security_json],
+        status: [:optional, :security_default],
+        reason: [:optional, :security_default]
     )
     raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    @experiment.set_result! Utils::parse_json_if_string(params[:result])
-    @experiment.save
-    render json: {status: 'ok'}
-  end
 
-  # POST
-  def mark_as_complete
-    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
-    @experiment.mark_as_complete!
+    if params.include?(:status) and params[:status] == 'error'
+      @experiment.is_error = true
+      @experiment.error_reason = params[:reason] if params.include?(:reason)
+    elsif params.include?(:results)
+      @experiment.mark_as_complete! Utils::parse_json_if_string(params[:results])
+    end
     @experiment.save
     render json: {status: 'ok'}
   end
