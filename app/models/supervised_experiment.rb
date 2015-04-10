@@ -24,11 +24,18 @@ class SupervisedExperiment < CustomPointsExperiment
 
   ##
   # Sets parameters needed for SupervisorExperiment (described above), and calls super.
-  def initialize(attributes = {})
-    super(attributes)
-    self.supervised = true unless attributes.has_key?('supervised')
-    self.completed = false unless attributes.has_key?('completed')
-    self.results = {} unless attributes.has_key?('results')
+  # Must be call once on creation to proper initialization
+  def init_empty(simulation)
+    super simulation
+    self.supervised = true
+    self.completed = false
+    self.results = {}
+  end
+
+  ##
+  # Query only SupervisedExperiments from DB with additional conditions.
+  def self.where(cond, opts = {})
+    super({supervised: true}.merge(cond), opts)
   end
 
   ##
