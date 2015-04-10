@@ -17,6 +17,7 @@ class LoadBalancerRegistration
     message = 'error'
     counter = 4
     repeat = true
+    puts "Listening on #{multicast_addr} to retrieve LB address."
     while repeat
       repeat = false
       begin
@@ -51,19 +52,20 @@ class LoadBalancerRegistration
     message.strip
   end
 
-  def self.load_balancer_query(query_type)
+  def self.load_balancer_query(query_type, address=nil)
     unless Rails.application.secrets.include? :load_balancer
       raise StandardError.new('load balancer configuration is missing in secrets.yml')
     end
     raise ArgumentError.new('Incorrect query to load balancer') unless ['register', 'deregister'].include?(query_type)
-    message = self.get_load_balancer_address
-    if message != 'error'
+    address = address || self.get_load_balancer_address
+    if address != 'error'
+      puts "Using Load Balancer at #{address} to #{query_type}"
       port = (Rails.application.secrets.load_balancer["port"] or '3000')
       scheme = 'https'
       if Rails.application.secrets.load_balancer["development"]
         scheme = 'http'
       end
-      load_balancer_address = "#{scheme}://#{message.strip}/#{query_type}"
+      load_balancer_address = "#{scheme}://#{address.strip}/#{query_type}"
 
       begin
         uri = URI(URI.encode(load_balancer_address))
@@ -80,19 +82,19 @@ class LoadBalancerRegistration
 
         puts "Load balancer message: #{response.body}"
       rescue StandardError, Timeout::Error => e
-        puts "Registration to load balancer failed: #{e.message}"
+        puts "Communication with load balancer failed: #{e.message}"
         raise
       end
     end
 
   end
 
-  def self.register
-    self.load_balancer_query 'register'
+  def self.register(*args)
+    self.load_balancer_query 'register', *args
   end
 
-  def self.deregister
-    self.load_balancer_query 'deregister'
+  def self.deregister(*args)
+    self.load_balancer_query 'deregister', *args
   end
 
 end

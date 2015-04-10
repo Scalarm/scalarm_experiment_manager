@@ -410,7 +410,7 @@ def load_balancer_registration
     return
   end
   unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
-    LoadBalancerRegistration.register
+    LoadBalancerRegistration.register(Rails.application.secrets.load_balancer["address"])
   else
     puts 'load_balancer.disable_registration option is active'
   end
@@ -422,7 +422,7 @@ def load_balancer_deregistration
     return
   end
   unless Rails.env.test? or Rails.application.secrets.load_balancer["disable_registration"]
-    LoadBalancerRegistration.deregister
+    LoadBalancerRegistration.deregister(Rails.application.secrets.load_balancer["address"])
   else
     puts 'load_balancer.disable_registration option is active'
   end
