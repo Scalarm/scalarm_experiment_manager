@@ -17,6 +17,7 @@
 # - has_valid_credentials? -> returns false if corresponding credentials have invalid flag
 #   - please do not check credentials here
 
+require 'mongo_lock'
 
 module SimulationManagerRecord
   include MongoActiveRecordUtils
