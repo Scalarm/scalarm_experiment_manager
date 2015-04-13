@@ -15,7 +15,7 @@ class SimulationManagersController < ApplicationController
 
   #TODO: describe basic sm_record elements, eg. sm_record.id...
 =begin
-  @api {get} /simulation_managers Get list of Simulation Manager objects (records) for authenticated user in JSON
+  @api {get} /simulation_managers Get list of Simulation Manager objects for authenticated user
   @apiName GetAllSimulationManagers
   @apiGroup SimulationManagers
 
@@ -31,15 +31,16 @@ class SimulationManagersController < ApplicationController
   @apiParam (PrivateMachineOnly) {String} [host] Filter private machines by host name
   @apiParam (PrivateMachineOnly) {String} [port] Filter private machines by SSH port number
 
+  @apiSuccess {String=ok,error} status
   @apiSuccess {Object[]} [sm_records] List of SimulationManagerRecords if request was success
-  @apiSuccess {String} status "ok" if success, "error" otherwise
 =end
   def index
+    params[:states_not] = Utils.parse_json_if_string(params[:states_not]) if params.include? :states_not
+
     sm_records = (if @infrastructure_facade.blank?
                     get_all_sm_records(params[:experiment_id], params)
                   else
-                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id],
-                                                          (Utils.parse_json_if_string(params) or {}) )
+                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id], params)
                   end)
 
     render json: {
@@ -55,7 +56,14 @@ class SimulationManagersController < ApplicationController
 
   # TODO refactor - reuse envelope, handle exceptions
 
-  # GET enveloped hash of single simulation manager
+=begin
+  @api {get} /simulation_managers/:id Get simulation manager object by ID
+  @apiName GetSimulationManager
+  @apiGroup SimulationManagers
+
+  @apiSuccess {String=ok,error} status
+  @apiSuccess {Object} record Simulation Manager record
+=end
   def show
     result = { status: 'ok' }
 
@@ -148,6 +156,37 @@ class SimulationManagersController < ApplicationController
     end
   end
 
+=begin
+  @api {post} /infrastructure/simulation_manager_command Invoke command on this Infrastructure's SimulationManager
+  @apiName SimulationManagerCommand
+  @apiGroup Infrastructures
+
+  @apiParam {String=stop,restart,destroy_record} command
+  @apiParam {String} record_id SimulationManager ID
+  @apiParam {String} infrastructure_name Name of infrastructure
+
+  @apiSuccess {String=ok,error} status
+  @apiSuccess {String} msg Message
+  @apiSuccess {String=stop,restart,destroy_record} [command] Name of command which was tried to be invoked
+
+  @apiSuccess {String=wrong-command,no-such-simulation-manager,access-denied,no-such-infrastructure,unknown} [error_code]
+    Error code in case of command invocation failure
+=end
+  def simulation_manager_command
+    validate(
+        command: :security_default,
+        record_id: :security_default,
+        infrastructure_name: :security_default
+    )
+
+    facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name].to_s)
+    facade.public_simulation_manager_command(params[:command].to_s, params[:record_id])
+  end
+
+  def cmd_start
+
+  end
+
   # -- filters --
 
   def set_user_id
@@ -155,7 +194,26 @@ class SimulationManagersController < ApplicationController
   end
 
   def load_infrastructure
+    validate(
+        infrastructure: [:optional, :security_default],
+        id: [:optional, :security_default]
+    )
+
     @infrastructure_facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure]) if params.include? :infrastructure
+
+    if params.include? :id
+      @record = if @infrastructure_facade
+        @infrastructure_facade.get_sm_record_by_id(params[:id])
+      else
+        (get_all_infrastructures.each do |facade|
+          record = facade.get_sm_record_by_id(params[:id].to_s)
+        end).find {|rec| not rec.nil?}
+      end
+
+      if @infrastructure_facade.nil? and @record
+        @record.infrastructure # TODO
+      end
+    end
   end
 
   # -- error handling --

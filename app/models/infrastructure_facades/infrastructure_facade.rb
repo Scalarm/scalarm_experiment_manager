@@ -352,6 +352,26 @@ class InfrastructureFacade
     _get_sm_records(query, params)
   end
 
+  def public_simulation_manager_command(command, record_id)
+    begin
+      if %w(stop restart destroy_record).include? command
+        yield_simulation_manager(get_sm_record(record_id, self)) do |sm|
+          sm.send(command)
+        end
+        {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: command)}
+      else
+        {status: 'error', error_code: 'wrong-command', msg: I18n.t('infrastructures_controller.wrong_command', command: params[:command])}
+      end
+    rescue NoSuchSimulationManagerError => e
+      { status: 'error', error_code: 'no-such-simulation-manager', msg: t('infrastructures_controller.no_such_simulation_manager')}
+    rescue AccessDeniedError => e
+      { status: 'error', error_code: 'access-denied', msg: t('infrastructures_controller.access_to_sm_denied')}
+    rescue NoSuchInfrastructureError => e
+      { status: 'error', error_code: 'no-such-infrastructure', msg: t('infrastructures_controller.no_such_infrastructure', name: e.to_s)}
+    rescue Exception => e
+      { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
+    end
+  end
 
   private :create_simulation_manager, :init_resources, :clean_up_resources
 end

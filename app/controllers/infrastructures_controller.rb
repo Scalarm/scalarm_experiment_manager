@@ -275,32 +275,31 @@ class InfrastructuresController < ApplicationController
            }
   end
 
-  # GET params:
-  # - command - one of: stop, restart; command name that will be executed on simulation manager
-  # - record_id - record id of simulation manager which will execute command
-  # - infrastructure_name - infrastructure id to which simulation manager belongs to
+=begin
+  @api {post} /infrastructure/simulation_manager_command Invoke command on this Infrastructure's SimulationManager
+  @apiName SimulationManagerCommand
+  @apiGroup Infrastructures
+
+  @apiParam {String=stop,restart,destroy_record} command
+  @apiParam {String} record_id SimulationManager ID
+  @apiParam {String} infrastructure_name Name of infrastructure
+
+  @apiSuccess {String=ok,error} status
+  @apiSuccess {String} msg Message
+  @apiSuccess {String=stop,restart,destroy_record} [command] Name of command which was tried to be invoked
+
+  @apiSuccess {String=wrong-command,no-such-simulation-manager,access-denied,no-such-infrastructure,unknown} [error_code]
+    Error code in case of command invocation failure
+=end
   def simulation_manager_command
-    begin
-      command = params[:command]
-      if %w(stop restart destroy_record).include? command
-        yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-          # destroy temp password and stop a started simulation run if any
-          sm.record.destroy_temp_password if %w(stop destroy_record).include? command
-          sm.send(params[:command])
-        end
-        render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
-      else
-        render json: {status: 'error', error_code: 'wrong-command', msg: I18n.t('infrastructures_controller.wrong_command', command: params[:command])}
-      end
-    rescue NoSuchSimulationManagerError => e
-      render json: { status: 'error', error_code: 'no-such-simulation-manager', msg: t('infrastructures_controller.no_such_simulation_manager')}
-    rescue AccessDeniedError => e
-      render json: { status: 'error', error_code: 'access-denied', msg: t('infrastructures_controller.access_to_sm_denied')}
-    rescue NoSuchInfrastructureError => e
-      render json: { status: 'error', error_code: 'no-such-infrastructure', msg: t('infrastructures_controller.no_such_infrastructure', name: e.to_s)}
-    rescue Exception => e
-      render json: { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
-    end
+    validate(
+        command: :security_default,
+        record_id: :security_default,
+        infrastructure_name: :security_default
+    )
+
+    facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name].to_s)
+    facade.public_simulation_manager_command(params[:command].to_s, params[:record_id])
   end
 
   # Mandatory GET params:

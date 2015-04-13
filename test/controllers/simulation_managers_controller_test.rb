@@ -1,29 +1,34 @@
 require 'test_helper'
+require 'db_helper'
 
 # TODO - these tests do not work!
 class SimulationManagersControllerTest < ActionController::TestCase
+  include DBHelper
+
   def setup
-    @user = mock 'user'
-    @user_id = mock 'user_id'
+    super
 
-    ScalarmUser.stubs(:find_by_id).with(@user_id).returns(@user)
+    @u = ScalarmUser.new(login: 'a')
+    @u.password = 'b'
+    @u.save
 
-    ApplicationController.any_instance.stubs(:authenticate)
-    ApplicationController.any_instance.stubs(:start_monitoring)
-    ApplicationController.any_instance.stubs(:stop_monitoring)
-
-    SimulationManagersController.any_instance.stubs(:set_user_id)
-    SimulationManagersController.any_instance.stubs(:instance_variable_get).with(:@user_id).returns(@user_id)
-    SimulationManagersController.any_instance.stubs(:load_infrastructure)
+    request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials('a', 'b')
+    request.env['ACCEPT'] = 'application/json'
   end
 
-  def test_index
-    r1 = mock 'record1' do
-      expects(:to_h)
-    end
-    sm_records = [r1]
-    SimulationManagersController.any_instance.expects(:get_all_sm_records).returns(sm_records)
-    get :index
-    assert_response :success, @response.body.to_s
+  def test_get_states_not
+    dr1 = DummyRecord.new(user_id: @u.id)
+    dr1.save
+
+    dr1.set_state(:initializing)
+    assert_equal :initializing, dr1.state
+
+    get :index, states_not: ['initializing'].to_json
+    body = JSON.parse(response.body)
+    records = body['sm_records']
+
+    assert_equal 'ok', body['status']
+    assert_equal 0, records.count, records
   end
+
 end

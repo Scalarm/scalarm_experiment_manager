@@ -47,7 +47,7 @@ class SimulationManager
     SimulationManager.all_resource_states
   end
 
-  # Delegates set_state to record and if it is ERROR, tries to stop resource if it was acqured
+  # Delegates set_state to record and if it is ERROR, tries to stop resource if it was acquired
   def set_state(state)
     stop if state == :error and [:initializing, :ready, :running_sm].include? resource_status
     record.set_state(state)
@@ -286,10 +286,7 @@ class SimulationManager
         logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
         ERROR_DELEGATES[action_name.to_sym]
       else
-        result = (general_action(action_name) or delegate_to_infrastructure(action_name))
-        # NOTICE: terminating state is set twice if stop was invoked from monitoring case
-        set_state(:terminating) if action_name == 'stop'
-        result
+        delegate_to_infrastructure(action_name) if general_action(action_name).nil?
       end
     rescue InfrastructureErrors::NoCredentialsError => e
       logger.warn "No credentials exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -298,13 +295,22 @@ class SimulationManager
     end
   end
 
-  # NOTE: all actions invoked here must be != false/nil
+  # Executes additional action before delegate_to_infrastructure for action_name
+  # return nil to continue and delegate action to infrastructure
+  # or return other value to stop execution
   def general_action(action_name)
-    if action_name == 'resource_status' and record.onsite_monitoring
-      stat = record.resource_status
-      stat.nil? ? :not_available : stat
-    else
-      nil
+    case action_name
+      when 'resource_status'
+        record.resource_status || :not_available if record.onsite_monitoring
+      when 'stop'
+        set_state(:terminating)
+        @record.destroy_temp_password
+        nil
+      when 'destroy_record', 'restart'
+        @record.destroy_temp_password
+        nil
+      else
+        nil
     end
   end
 
