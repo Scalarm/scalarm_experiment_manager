@@ -16,6 +16,7 @@
 # - resource_id() -> returns short description of resource, e.g. VM id
 # - has_valid_credentials? -> returns false if corresponding credentials have invalid flag
 #   - please do not check credentials here
+# - infrastructure_name -> String, short name of infrastructure
 
 require 'mongo_lock'
 
@@ -73,9 +74,16 @@ module SimulationManagerRecord
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
   end
 
+  def infrastructure
+    attributes['infrastructure'] || self.infrastructure_name
+  end
+
   def to_h
     h = super.merge(name: (self.resource_id or '...'))
-    h.has_key?('state') and h or h.merge(state: self.state.to_s)
+    h['state'] = self.state.to_s unless h.has_key?('state')
+    h['infrastructure'] = infrastructure unless h.has_key?('infrastructure')
+
+    h
   end
 
   def to_json
