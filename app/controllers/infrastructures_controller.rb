@@ -275,11 +275,29 @@ class InfrastructuresController < ApplicationController
            }
   end
 
-  # GET params:
-  # - command - one of: stop, restart; command name that will be executed on simulation manager
-  # - record_id - record id of simulation manager which will execute command
-  # - infrastructure_name - infrastructure id to which simulation manager belongs to
+=begin
+  @api {post} /infrastructure/simulation_manager_command Invoke command on this Infrastructure's SimulationManager
+  @apiName SimulationManagerCommand
+  @apiGroup Infrastructures
+
+  @apiParam {String=stop,restart,destroy_record} command
+  @apiParam {String} record_id SimulationManager ID
+  @apiParam {String} infrastructure_name Name of infrastructure
+
+  @apiSuccess {String=ok,error} status
+  @apiSuccess {String} msg Message
+  @apiSuccess {String=stop,restart,destroy_record} [command] Name of command which was tried to be invoked
+
+  @apiSuccess {String=wrong-command,no-such-simulation-manager,access-denied,no-such-infrastructure,unknown} [error_code]
+    Error code in case of command invocation failure
+=end
   def simulation_manager_command
+    validate(
+        command: :security_default,
+        record_id: :security_default,
+        infrastructure_name: :security_default
+    )
+
     begin
       command = params[:command]
       if %w(stop restart destroy_record).include? command
