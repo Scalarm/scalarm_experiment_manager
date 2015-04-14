@@ -2,7 +2,7 @@ require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
-class ExperimentTest < MiniTest::Test
+class ExperimentCsvTest < MiniTest::Test
 
   def setup
     @experiment = Experiment.new({})
