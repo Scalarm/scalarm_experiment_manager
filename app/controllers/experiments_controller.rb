@@ -961,7 +961,7 @@ class ExperimentsController < ApplicationController
     validate(
         results: [:optional, :security_json],
         status: [:optional, :security_default],
-        reason: [:optional, :security_default]
+        reason: [:optional, :string]
     )
     raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
 
