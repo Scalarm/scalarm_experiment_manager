@@ -166,13 +166,13 @@ class PlGridFacade < InfrastructureFacade
     output
   end
 
-  def using_temp_credentials?(params)
+  def self.using_temp_credentials?(params)
     params.include?(:plgrid_login) or params.include?(:proxy)
   end
 
   # Params is a Hash, it should contain :
   # - login:
-  def create_temp_credentials(params)
+  def self.create_temp_credentials(params)
     login = ((params[:proxy] and GP::Proxy.new(params[:proxy]).username) or params[:plgrid_login])
     raise StandardError.new('Neither plgrid_login nor proxy provided to create temporary credentials') unless login
 
