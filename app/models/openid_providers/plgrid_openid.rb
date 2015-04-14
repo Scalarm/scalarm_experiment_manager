@@ -107,7 +107,7 @@ module PlGridOpenID
     OpenIDUtils::get_user_with(dn: dn, login: plgrid_login) or
         OpenIDUtils::get_user_with(dn: dn) or OpenIDUtils::get_user_with(login: plgrid_login) or
         OpenIDUtils::create_user_with(plgrid_login, password,
-                                      dn: self.class.plgoid_dn_to_browser_dn(dn),
+                                      dn: plgoid_dn_to_browser_dn(dn),
                                       login: plgrid_login)
   end
 
