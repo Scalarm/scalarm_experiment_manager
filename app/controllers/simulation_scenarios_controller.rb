@@ -48,6 +48,8 @@ class SimulationScenariosController < ApplicationController
           @simulation_scenario.save
 
           flash[:notice] = t('simulation_scenarios.update.success', name: @simulation_scenario.name) if flash[:error].nil?
+        rescue SecurityError => e
+          raise e
         rescue Exception => e
           flash[:error] = t('simulations.create.internal_error') unless flash[:error]
           Rails.logger.error("Exception occurred when setting up adapters or binaries: #{e}\n#{e.backtrace.join("\n")}")
