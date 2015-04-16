@@ -5,7 +5,7 @@ class MongoActiveRecordDBTest < ActiveSupport::TestCase
   include DBHelper
 
   TEXT = 'text'
-  OTHER_TEXT = 'text'
+  OTHER_TEXT = 'other_text'
 
   test "proper behaviour of reload method" do
     e = Experiment.new({})
