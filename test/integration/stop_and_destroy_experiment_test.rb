@@ -39,8 +39,13 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with json response' do
+    assert_no_difference 'Experiment.count' do
+      post "#{stop_experiment_path(@@experiment.id)}.json"
+    end
 
-    post "#{stop_experiment_path(@@experiment.id)}.json"
+    experiment = Experiment.find_by_id(@@experiment.id)
+    assert_not experiment.is_running, 'Flag is_running should be false after stop'
+    assert experiment.attributes.has_key?('end_at'), 'Field end_at should be set after stop'
 
     response_hash = JSON.parse(response.body)
     assert_nothing_raised do
@@ -50,24 +55,28 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     assert_equal response.status, 412
     assert_equal response_hash['status'], 'error'
     assert_equal response_hash['reason'], STOP_REASON
-
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with html response' do
+    assert_no_difference 'Experiment.count' do
+      post stop_experiment_path(@@experiment.id)
+    end
 
-    post stop_experiment_path(@@experiment.id)
+    experiment = Experiment.find_by_id(@@experiment.id)
+    assert_not experiment.is_running, 'Flag is_running should be false after stop'
+    assert experiment.attributes.has_key?('end_at'), 'Field end_at should be set after stop'
 
     assert_redirected_to experiments_path
     assert_equal flash['error'], STOP_REASON
-
   end
 
   test 'unsuccessful destroying experiment by non-owner coworker with json response' do
-
     @@experiment.is_running = false
     @@experiment.save
 
-    delete "#{experiment_path(@@experiment.id)}.json"
+    assert_difference 'Experiment.count', -1 do
+      delete "#{experiment_path(@@experiment.id)}.json"
+    end
 
     response_hash = JSON.parse(response.body)
     assert_nothing_raised do
@@ -77,18 +86,17 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     assert_equal response.status, 412
     assert_equal response_hash['status'], 'error'
     assert_equal response_hash['reason'], DESTROY_REASON
-
   end
 
   test 'unsuccessful destroying experiment by non-owner coworker with html response' do
-
     @@experiment.is_running = false
     @@experiment.save
 
-    delete experiment_path(@@experiment.id)
+    assert_difference 'Experiment.count', -1 do
+      delete experiment_path(@@experiment.id)
+    end
 
     assert_redirected_to experiments_path
     assert_equal flash['error'], DESTROY_REASON
-
   end
 end
