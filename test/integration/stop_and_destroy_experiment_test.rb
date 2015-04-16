@@ -27,7 +27,7 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     @@coworker.save
     post login_path, username: COWORKER_NAME, password: COWORKER_PASSWORD
 
-    @@experiment = Experiment.new({user_id: @@owner.id})
+    @@experiment = Experiment.new({user_id: @@owner.id, is_running: true})
     @@experiment.add_to_shared(@@coworker.id)
     @@experiment.save
 
@@ -39,13 +39,17 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with json response' do
+    experiment = Experiment.find_by_id(@@experiment.id)
+    assert experiment.is_running, 'Flag is_running should be true before stop'
+    assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set before stop'
+
     assert_no_difference 'Experiment.count' do
       post "#{stop_experiment_path(@@experiment.id)}.json"
     end
 
     experiment = Experiment.find_by_id(@@experiment.id)
-    assert_not experiment.is_running, 'Flag is_running should be false after stop'
-    assert experiment.attributes.has_key?('end_at'), 'Field end_at should be set after stop'
+    assert experiment.is_running, 'Flag is_running should be true after unsuccessful stop'
+    assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set after unsuccessful stop'
 
     response_hash = JSON.parse(response.body)
     assert_nothing_raised do
@@ -58,13 +62,17 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with html response' do
+    experiment = Experiment.find_by_id(@@experiment.id)
+    assert experiment.is_running, 'Flag is_running should be true before stop'
+    assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set before stop'
+
     assert_no_difference 'Experiment.count' do
       post stop_experiment_path(@@experiment.id)
     end
 
     experiment = Experiment.find_by_id(@@experiment.id)
-    assert_not experiment.is_running, 'Flag is_running should be false after stop'
-    assert experiment.attributes.has_key?('end_at'), 'Field end_at should be set after stop'
+    assert experiment.is_running, 'Flag is_running should be true after unsuccessful stop'
+    assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set after unsuccessful stop'
 
     assert_redirected_to experiments_path
     assert_equal flash['error'], STOP_REASON
@@ -74,7 +82,7 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     @@experiment.is_running = false
     @@experiment.save
 
-    assert_difference 'Experiment.count', -1 do
+    assert_no_difference 'Experiment.count' do
       delete "#{experiment_path(@@experiment.id)}.json"
     end
 
@@ -92,7 +100,7 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     @@experiment.is_running = false
     @@experiment.save
 
-    assert_difference 'Experiment.count', -1 do
+    assert_no_difference 'Experiment.count' do
       delete experiment_path(@@experiment.id)
     end
 
