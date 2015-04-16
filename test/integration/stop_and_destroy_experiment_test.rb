@@ -53,6 +53,15 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
 
   end
 
+  test 'unsuccessful stopping experiment by non-owner coworker with html response' do
+
+    post stop_experiment_path(@@experiment.id)
+
+    assert_redirected_to experiments_path
+    assert_equal flash['error'], STOP_REASON
+
+  end
+
   test 'unsuccessful destroying experiment by non-owner coworker with json response' do
 
     @@experiment.is_running = false
@@ -68,6 +77,18 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     assert_equal response.status, 412
     assert_equal response_hash['status'], 'error'
     assert_equal response_hash['reason'], DESTROY_REASON
+
+  end
+
+  test 'unsuccessful destroying experiment by non-owner coworker with html response' do
+
+    @@experiment.is_running = false
+    @@experiment.save
+
+    delete experiment_path(@@experiment.id)
+
+    assert_redirected_to experiments_path
+    assert_equal flash['error'], DESTROY_REASON
 
   end
 end
