@@ -12,6 +12,7 @@ class MongoActiveRecordDBTest < ActiveSupport::TestCase
     e.test = TEXT
     e.save
     e.test = OTHER_TEXT
+    assert_equal e.test, OTHER_TEXT
     e.reload
     assert_equal e.test, TEXT
   end
@@ -25,6 +26,7 @@ class MongoActiveRecordDBTest < ActiveSupport::TestCase
     e2.test = OTHER_TEXT
     e2.save
 
+    assert_equal e.test, TEXT
     e.reload
     assert_equal e.test, OTHER_TEXT
   end
