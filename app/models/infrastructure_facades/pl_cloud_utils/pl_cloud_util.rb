@@ -10,7 +10,7 @@ require 'gsi'
 class PLCloudError < StandardError; end
 
 class PLCloudUtil
-  PLCLOUD_URL = 'https://cloud.plgrid.pl:3443'
+  PLCLOUD_URL = 'https://onecloud.plgrid.pl:3443'
   DNAT_URL = "#{PLCLOUD_URL}/dnat"
 
   RE_ID = /ID: (\d+)/
