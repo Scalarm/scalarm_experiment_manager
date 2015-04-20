@@ -114,6 +114,10 @@ class MongoActiveRecord
     @attributes.delete('_id')
   end
 
+  def reload
+    @attributes = self.class.find_by_query(id: self.id).attributes
+  end
+
   def to_s
     if self.nil?
       'Nil'
