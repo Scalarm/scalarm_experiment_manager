@@ -26,6 +26,7 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'login/login_openid_plgrid' => 'user_controller#login_openid_plgrid'
   post 'login/openid_callback_plgrid' => 'user_controller#openid_callback_plgrid'
 
+  get 'simulation_scenarios' => 'simulations#index'
   get 'simulations' => 'simulations#index'
   get 'simulations/index'
   get 'simulations/registration'
