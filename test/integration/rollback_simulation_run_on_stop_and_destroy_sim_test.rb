@@ -40,7 +40,7 @@ class RollbackSimulationRunOnStopAndDestroySimTest < ActionDispatch::Integration
     SimulationManagerTempPassword.expects(:find_by_sm_uuid).with(record.sm_uuid).returns(temp_pass)
   end
 
-  test "rollback simulation on stop simulation manager" do
+  test "rollback simulation on stop simulation manager by API" do
     assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
                'Simulation run should not be in to sent state before rollback'
     post simulation_manager_command_infrastructure_path, command: 'stop',
@@ -49,11 +49,36 @@ class RollbackSimulationRunOnStopAndDestroySimTest < ActionDispatch::Integration
            'Simulation run should be rolled back after executing stop command on SiM'
   end
 
-  test "rollback simulation on destroy_record simulation manager" do
+  test "rollback simulation on stop simulation manager" do
+    assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+               'Simulation run should not be in to sent state before rollback'
+
+    facade = InfrastructureFacadeFactory.get_facade_for(DUMMY)
+    record = facade.get_sm_record_by_id(@record_id)
+    facade.yield_simulation_manager(record)  do |sm|
+      sm.send('stop')
+    end
+    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+           'Simulation run should be rolled back after executing stop command on SiM'
+  end
+
+  test "rollback simulation on destroy_record simulation manager by API" do
     assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
                'Simulation run should not be in to sent state before rollback'
     post simulation_manager_command_infrastructure_path, command: 'destroy_record',
          record_id: @record_id, infrastructure_name: DUMMY
+    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+           'Simulation run should be rolled back after executing destroy_record command on SiM'
+  end
+
+  test "rollback simulation on destroy_record simulation manager" do
+    assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+               'Simulation run should not be in to sent state before rollback'
+    facade = InfrastructureFacadeFactory.get_facade_for(DUMMY)
+    record = facade.get_sm_record_by_id(@record_id)
+    facade.yield_simulation_manager(record)  do |sm|
+      sm.send('destroy_record')
+    end
     assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
            'Simulation run should be rolled back after executing destroy_record command on SiM'
   end
