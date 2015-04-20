@@ -282,8 +282,6 @@ class InfrastructuresController < ApplicationController
       command = params[:command]
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-          # destroy temp password and stop a started simulation run if any
-          sm.record.destroy_temp_password if %w(stop destroy_record).include? command
           sm.send(params[:command])
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}

@@ -166,7 +166,7 @@ class SimulationManager
 
   def destroy_record
     user = ScalarmUser.where(user_id: record.user_id).first
-
+    record.destroy_temp_password
     record.destroy
 
     unless user.nil?
@@ -264,6 +264,9 @@ class SimulationManager
 
   def method_missing(m, *args, &block)
     action_name = m.to_s
+    if action_name == 'stop'
+      record.destroy_temp_password
+    end
     if DELEGATES.include? action_name
       begin
         infrastructure_action(action_name)
