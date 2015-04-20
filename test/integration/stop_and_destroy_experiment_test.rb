@@ -13,23 +13,22 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   STOP_REASON = 'You cannot stop this experiment because you are not its owner'
   DESTROY_REASON = 'You cannot destroy this experiment because you are not its owner'
 
-  @@owner = ScalarmUser.new({login: OWNER_NAME})
-  @@coworker = ScalarmUser.new({login: COWORKER_NAME})
-  @@experiment
 
   def setup
     super
     # create two users, log in one and set sample shared experiment
-    @@owner.password = OWNER_PASSWORD
-    @@owner.save
+    @owner = ScalarmUser.new({login: OWNER_NAME})
+    @owner.password = OWNER_PASSWORD
+    @owner.save
 
-    @@coworker.password = COWORKER_PASSWORD
-    @@coworker.save
+    @coworker = ScalarmUser.new({login: COWORKER_NAME})
+    @coworker.password = COWORKER_PASSWORD
+    @coworker.save
     post login_path, username: COWORKER_NAME, password: COWORKER_PASSWORD
 
-    @@experiment = Experiment.new({user_id: @@owner.id, is_running: true})
-    @@experiment.add_to_shared(@@coworker.id)
-    @@experiment.save
+    @experiment = Experiment.new({user_id: @owner.id, is_running: true})
+    @experiment.add_to_shared(@coworker.id)
+    @experiment.save
 
     # mock information service
     information_service = mock
@@ -39,15 +38,15 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with json response' do
-    experiment = Experiment.find_by_id(@@experiment.id)
+    experiment = Experiment.find_by_id(@experiment.id)
     assert experiment.is_running, 'Flag is_running should be true before stop'
     assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set before stop'
 
     assert_no_difference 'Experiment.count' do
-      post "#{stop_experiment_path(@@experiment.id)}.json"
+      post "#{stop_experiment_path(@experiment.id)}.json"
     end
 
-    experiment = Experiment.find_by_id(@@experiment.id)
+    experiment = Experiment.find_by_id(@experiment.id)
     assert experiment.is_running, 'Flag is_running should be true after unsuccessful stop'
     assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set after unsuccessful stop'
 
@@ -62,15 +61,15 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with html response' do
-    experiment = Experiment.find_by_id(@@experiment.id)
+    experiment = Experiment.find_by_id(@experiment.id)
     assert experiment.is_running, 'Flag is_running should be true before stop'
     assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set before stop'
 
     assert_no_difference 'Experiment.count' do
-      post stop_experiment_path(@@experiment.id)
+      post stop_experiment_path(@experiment.id)
     end
 
-    experiment = Experiment.find_by_id(@@experiment.id)
+    experiment = Experiment.find_by_id(@experiment.id)
     assert experiment.is_running, 'Flag is_running should be true after unsuccessful stop'
     assert_not experiment.attributes.has_key?('end_at'), 'Field end_at should not be set after unsuccessful stop'
 
@@ -79,11 +78,11 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful destroying experiment by non-owner coworker with json response' do
-    @@experiment.is_running = false
-    @@experiment.save
+    @experiment.is_running = false
+    @experiment.save
 
     assert_no_difference 'Experiment.count' do
-      delete "#{experiment_path(@@experiment.id)}.json"
+      delete "#{experiment_path(@experiment.id)}.json"
     end
 
     response_hash = JSON.parse(response.body)
@@ -97,11 +96,11 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
   end
 
   test 'unsuccessful destroying experiment by non-owner coworker with html response' do
-    @@experiment.is_running = false
-    @@experiment.save
+    @experiment.is_running = false
+    @experiment.save
 
     assert_no_difference 'Experiment.count' do
-      delete experiment_path(@@experiment.id)
+      delete experiment_path(@experiment.id)
     end
 
     assert_redirected_to experiments_path
