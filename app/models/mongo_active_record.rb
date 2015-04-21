@@ -116,6 +116,7 @@ class MongoActiveRecord
 
   def reload
     @attributes = self.class.find_by_query(id: self.id).attributes
+    self
   end
 
   def to_s
