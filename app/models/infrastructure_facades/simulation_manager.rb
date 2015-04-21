@@ -166,7 +166,7 @@ class SimulationManager
 
   def destroy_record
     user = ScalarmUser.where(user_id: record.user_id).first
-
+    record.clean_up_database!
     record.destroy
 
     unless user.nil?
@@ -286,10 +286,8 @@ class SimulationManager
         logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
         ERROR_DELEGATES[action_name.to_sym]
       else
-        result = (general_action(action_name) or delegate_to_infrastructure(action_name))
-        # NOTICE: terminating state is set twice if stop was invoked from monitoring case
-        set_state(:terminating) if action_name == 'stop'
-        result
+        general_result = general_action(action_name)
+        general_result.nil? ? delegate_to_infrastructure(action_name) : general_result
       end
     rescue InfrastructureErrors::NoCredentialsError => e
       logger.warn "No credentials exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -298,13 +296,22 @@ class SimulationManager
     end
   end
 
-  # NOTE: all actions invoked here must be != false/nil
+  # Executes additional action before delegate_to_infrastructure for action_name
+  # return nil to continue and delegate action to infrastructure
+  # or return other value to stop execution
   def general_action(action_name)
-    if action_name == 'resource_status' and record.onsite_monitoring
-      stat = record.resource_status
-      stat.nil? ? :not_available : stat
-    else
-      nil
+    case action_name
+      when 'resource_status' && record.onsite_monitoring
+        record.resource_status || :not_available
+      when 'stop'
+        set_state(:terminating)
+        @record.clean_up_database!
+        nil
+      when 'restart'
+        @record.clean_up_database!
+        nil
+      else
+        nil
     end
   end
 
