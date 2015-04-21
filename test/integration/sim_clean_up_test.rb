@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'db_helper'
 
-class RollbackSimulationRunOnStopAndDestroySimTest < ActionDispatch::IntegrationTest
+class SimCleanUpTest < ActionDispatch::IntegrationTest
   include DBHelper
 
   USER_NAME = 'user'
@@ -15,29 +15,29 @@ class RollbackSimulationRunOnStopAndDestroySimTest < ActionDispatch::Integration
     user.save
     post login_path, username: USER_NAME, password: PASSWORD
 
-    simulation = Simulation.new(name: 'name', description: 'description',
+    @simulation = Simulation.new(name: 'name', description: 'description',
                                 input_parameters: {}, input_specification: [])
-    simulation.user_id = user.id
-    simulation.save
+    @simulation.user_id = user.id
+    @simulation.save
 
-    experiment = Experiment.new({})
-    experiment.experiment_input = Experiment.prepare_experiment_input(simulation, [], [])
-    experiment.save
-    @experiment_id = experiment.id
+    @experiment = Experiment.new({})
+    @experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, [], [])
+    @experiment.save
+    @experiment_id = @experiment.id
 
     infrastructure = InfrastructureFacadeFactory.get_facade_for(DUMMY)
-    record = infrastructure.start_simulation_managers(user.id, 1, experiment.id, {}).first
-    @record_id = record.id
+    @record = infrastructure.start_simulation_managers(user.id, 1, @experiment.id, {}).first
+    @record_id = @record.id
 
-    simulation_run = experiment.create_new_simulation(1)
-    simulation_run.sm_uuid = record.sm_uuid
-    simulation_run.save
-    @simulation_run_id = simulation_run.id
+    @simulation_run = @experiment.create_new_simulation(1)
+    @simulation_run.sm_uuid = @record.sm_uuid
+    @simulation_run.save
+    @simulation_run_id = @simulation_run.id
 
-    temp_pass = mock
-    temp_pass.expects(:experiment_id).returns(experiment.id.to_s).twice
-    temp_pass.expects(:destroy)
-    SimulationManagerTempPassword.expects(:find_by_sm_uuid).with(record.sm_uuid).returns(temp_pass)
+    DummyRecord.any_instance.stubs(:get_current_simulation_run).returns(@simulation_run)
+
+    @temp_pass = SimulationManagerTempPassword.create_new_password_for(@record.sm_uuid, @record.experiment_id)
+    @temp_pass.save
   end
 
   test "rollback simulation on stop simulation manager by API" do
@@ -56,7 +56,7 @@ class RollbackSimulationRunOnStopAndDestroySimTest < ActionDispatch::Integration
     facade = InfrastructureFacadeFactory.get_facade_for(DUMMY)
     record = facade.get_sm_record_by_id(@record_id)
     facade.yield_simulation_manager(record)  do |sm|
-      sm.send('stop')
+      sm.stop
     end
     assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
            'Simulation run should be rolled back after executing stop command on SiM'
@@ -77,9 +77,28 @@ class RollbackSimulationRunOnStopAndDestroySimTest < ActionDispatch::Integration
     facade = InfrastructureFacadeFactory.get_facade_for(DUMMY)
     record = facade.get_sm_record_by_id(@record_id)
     facade.yield_simulation_manager(record)  do |sm|
-      sm.send('destroy_record')
+      sm.destroy_record
     end
     assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
            'Simulation run should be rolled back after executing destroy_record command on SiM'
+  end
+
+  test "clean up on SiM error" do
+    # given
+    assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+               'Simulation run should not be in to sent state before rollback'
+    assert_not_nil SimulationManagerTempPassword.find_by_id(@temp_pass.id)
+
+    # when
+    facade = InfrastructureFacadeFactory.get_facade_for(DUMMY)
+    record = facade.get_sm_record_by_id(@record_id)
+    facade.yield_simulation_manager(record)  do |sm|
+      sm.record.store_error('bad_one')
+    end
+
+    # then
+    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+           'Simulation run should be rolled back after executing destroy_record command on SiM'
+    assert_nil SimulationManagerTempPassword.find_by_id(@temp_pass.id)
   end
 end
