@@ -195,41 +195,12 @@ class MongoActiveRecord
 
   def self.find_by(parameter, value)
     value = value.first if value.is_a? Enumerable
-
-    if parameter == 'id'
-      begin
-        value = BSON::ObjectId(value.to_s)
-        parameter = '_id'
-      rescue BSON::InvalidObjectId
-        return nil
-      end
-    end
-
-    attributes = self.collection.find_one({ parameter => value })
-
-    if attributes.nil?
-      nil
-    else
-      self.new(attributes)
-    end
+    self.find_by_query(parameter => value)
   end
 
   def self.find_all_by(parameter, value)
     value = value.first if value.is_a? Enumerable
-
-    if parameter == 'id'
-      begin
-        value = BSON::ObjectId(value.to_s)
-        parameter = '_id'
-      rescue BSON::InvalidObjectId
-        return nil
-      end
-    end
-
-    self.collection.find({parameter => value}).map do |attributes|
-      self.new(attributes)
-    end
-
+    self.find_all_by_query(parameter => value)
   end
 
   def self.get_database(db_name)
