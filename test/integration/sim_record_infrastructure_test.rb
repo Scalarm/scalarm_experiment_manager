@@ -10,23 +10,26 @@ class SimRecordInfrastructureTest < ActionDispatch::IntegrationTest
     rec_inf.save
 
     rec_wo = DummyRecord.new({})
-    rec_inf.save
+    rec_wo.save
 
     rec_wo2 = DummyRecord.new({})
     rec_wo2.infrastructure = 'dummy2'
     rec_wo2.save
 
-    assert_equal 'dummy1', rec_inf.infrastructure
-    assert_equal 'dummy', rec_wo.infrastructure
-    assert_equal 'dummy2', rec_wo2.infrastructure
+    assert_equal 'dummy1', rec_inf.reload.infrastructure
+    assert_equal 'dummy', rec_wo.reload.infrastructure
+    assert_equal 'dummy2', rec_wo2.reload.infrastructure
   end
 
   def test_cloud_records
     rec1 = CloudVmRecord.new(cloud_name: 'one')
-    rec2 = CloudVmRecord.new(cloud_name: 'two', infrastructure: 'three')
+    rec1.save
 
-    assert_equal 'one', rec1.infrastructure
-    assert_equal 'three', rec2.infrastructure
+    rec2 = CloudVmRecord.new(cloud_name: 'two', infrastructure: 'three')
+    rec2.save
+
+    assert_equal 'one', rec1.reload.infrastructure
+    assert_equal 'three', rec2.reload.infrastructure
   end
 
 end
