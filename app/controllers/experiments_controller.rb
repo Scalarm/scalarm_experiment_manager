@@ -70,6 +70,7 @@ class ExperimentsController < ApplicationController
 
   # stops the currently running DF experiment (if any)
   def stop
+    raise SecurityError.new(t('experiments.stop.failure')) unless @experiment.user_id == @current_user.id
     @experiment.is_running = false
     @experiment.end_at = Time.now
 
@@ -85,8 +86,53 @@ class ExperimentsController < ApplicationController
     end
   end
 
+=begin
+  @apiDefine ConfigurationsParams
+
+  @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
+  @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
+  @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
+=end
+
+=begin
+  @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
+  @apiName GetFileWithConfigurations
+  @apiGroup Experiments
+
+  @apiUse ConfigurationsParams
+=end
   def file_with_configurations
-    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+    send_data(_configurations_csv,
+              type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+  end
+
+=begin
+  @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
+  @apiName GetConfigurations
+  @apiGroup Experiments
+
+  @apiUse ConfigurationsParams
+=end
+  def configurations
+    respond_to do |format|
+      format.html { render text: _configurations_csv.gsub("\n", '<br/>') }
+      format.json { render json: {status: 'ok', data: _configurations_csv} }
+    end
+  end
+
+  # NOT a controller method, only helper
+  def _configurations_csv
+    validate(
+        with_index: [:optional, :security_default],
+        with_params: [:optional, :security_default],
+        with_moes: [:optional, :security_default]
+    )
+
+    w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
+    w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
+    w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
+
+    @experiment.create_result_csv(w_index, w_params, w_moes)
   end
 
   def create
@@ -462,6 +508,7 @@ class ExperimentsController < ApplicationController
 
   def destroy
     unless @experiment.nil?
+      raise SecurityError.new(t('experiments.destroy.failure')) unless @experiment.user_id == @current_user.id
       @experiment.destroy
       flash[:notice] = 'Your experiment has been destroyed.'
     else
@@ -618,12 +665,7 @@ class ExperimentsController < ApplicationController
 =begin
 @api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
 @apiName GetSimulationManager
-@apiGroup Experiment
-
-@apiParam {Number} some Something
-
-@apiSuccess {String} something One
-@apiSuccess {String} something_two Two
+@apiGroup Experiments
 =end
   def simulation_manager
     sm_uuid = SecureRandom.uuid

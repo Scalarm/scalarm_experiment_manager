@@ -17,6 +17,10 @@ class PlGridJob < MongoActiveRecord
     'grid_jobs'
   end
 
+  def infrastructure_name
+    scheduler_type
+  end
+
   def self.ids_auto_convert
     false
   end

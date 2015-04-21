@@ -128,7 +128,11 @@ class InfrastructureFacade
   end
 
   # Write tmp file: WorkersMonitor config in unique directory
-  def self.prepare_monitoring_config(sm_uuid, user_id, infrastructure_name)
+  # infrastructure - array of hashes
+  #   name - name of infrastructure
+  #   host - private machine host
+  #   port - private machine port
+  def self.prepare_monitoring_config(sm_uuid, user_id, infrastructures)
     Rails.logger.debug "Preparing monitoring configuration for Simulation Manager with id: #{sm_uuid}"
 
     # This temporary directory hold now only config file, rest of files are sent via scp
@@ -153,7 +157,7 @@ class InfrastructureFacade
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
         InsecureSSL: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true), # TODO insecure SSL by default
-        Infrastructures: [ infrastructure_name ],
+        Infrastructures: infrastructures
     }
 
     # Only add information about remote location of certificate (it will be sent later)

@@ -15,6 +15,10 @@ class PrivateMachineRecord < MongoActiveRecord
     'private_machine_records'
   end
 
+  def infrastructure_name
+    'private_machine'
+  end
+
   def self.ids_auto_convert
     false
   end

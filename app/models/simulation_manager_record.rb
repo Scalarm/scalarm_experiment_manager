@@ -16,7 +16,9 @@
 # - resource_id() -> returns short description of resource, e.g. VM id
 # - has_valid_credentials? -> returns false if corresponding credentials have invalid flag
 #   - please do not check credentials here
+# - infrastructure_name -> String, short name of infrastructure
 
+require 'mongo_lock'
 
 module SimulationManagerRecord
   include MongoActiveRecordUtils
@@ -72,9 +74,16 @@ module SimulationManagerRecord
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
   end
 
+  def infrastructure
+    attributes['infrastructure'] || self.infrastructure_name
+  end
+
   def to_h
     h = super.merge(name: (self.resource_id or '...'))
-    h.has_key?('state') and h or h.merge(state: self.state.to_s)
+    h['state'] = self.state.to_s unless h.has_key?('state')
+    h['infrastructure'] = infrastructure unless h.has_key?('infrastructure')
+
+    h
   end
 
   def to_json
@@ -114,31 +123,35 @@ module SimulationManagerRecord
           (self.error_log ? "#{self.error_log}\n\n#{error_log}" : error_log)
     end
     self.save_if_exists
-    self.destroy_temp_password
+    self.clean_up_database!
 
     user.destroy_unused_credentials
   end
 
-  def destroy_temp_password
+  # Destroy temp password and rollback current simulation run
+  def clean_up_database!
     Scalarm::MongoLock.mutex("experiment-#{self.experiment_id}-simulation-complete") do
-      unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)).blank?
+      destroy_temp_password!
+      rollback_current_simulation_run!
+    end
+  end
 
-        unless temp_pass.experiment_id.nil? or self.sm_uuid.nil?
-          experiment_to_update = Experiment.find_by_id(temp_pass.experiment_id)
+  def destroy_temp_password!
+    get_temp_password.try :destroy
+  end
 
-          started_simulation_run = experiment_to_update.simulation_runs.
-              where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+  def rollback_current_simulation_run!
+    get_current_simulation_run.try :rollback!
+  end
 
-          unless started_simulation_run.nil?
-            started_simulation_run.to_sent = true
-            experiment_to_update.progress_bar_update(started_simulation_run.index, 'rollback')
-            started_simulation_run.save
-          end
+  def get_temp_password
+    SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)
+  end
 
-        end
-
-        temp_pass.destroy
-      end
+  def get_current_simulation_run
+    unless experiment or self.sm_uuid.nil?
+      experiment.simulation_runs.
+          where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
     end
   end
 
