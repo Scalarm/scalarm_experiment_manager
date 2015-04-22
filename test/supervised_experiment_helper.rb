@@ -30,10 +30,28 @@ module SupervisedExperimentHelper
       'experiment_id' => EXPERIMENT_ID,
       'user' => USER_NAME,
       'password' => PASSWORD,
-      'lower_limit' =>[-3, -2],
-      'upper_limit' =>[3, 2],
-      'parameters_ids' => %w(c___g___x c___g___y),
-      'start_point' =>[0, 0],
+      'parameters' => [
+          {
+              'type' => 'float',
+              'id' => 'c___g___x',
+              'min' => -3,
+              'max' => 3,
+              'start_value' => 0
+          },
+          {
+              'type' => 'int',
+              'id' => 'c___g___y',
+              'min' => -2,
+              'max' => 2,
+              'start_value' => 0
+          },
+          {
+              'type' => 'string',
+              'id' => 'c___g___z',
+              'allowed_values' => %w(aaa bbb ccc),
+              'start_value' => 'aaa'
+          }
+      ],
   }
   INPUT_SPECIFICATION = [
       {
@@ -53,18 +71,23 @@ module SupervisedExperimentHelper
                                   'min' => -3,
                                   'max' => 3,
                                   'index' => 1,
-                                  'parametrizationType' => 'value',
                                   'value' => '-3'
                               },
                               {
                                   'id' => 'y',
                                   'label' => 'y',
-                                  'type' => 'float',
+                                  'type' => 'int',
                                   'min' => -2,
                                   'max' => 2,
                                   'index' => 2,
-                                  'parametrizationType' => 'value',
                                   'value' => '-2'
+                              },
+                              {
+                                  'id' => 'z',
+                                  'label' => 'z',
+                                  'type' => 'string',
+                                  'index' => 3,
+                                  'allowed_values' => %w(aaa bbb ccc)
                               }
                           ]
                   }
@@ -88,9 +111,10 @@ module SupervisedExperimentHelper
     @@simulation.user_id = @@user.id
     @@simulation.save
     # mock information service
-    information_service = mock()
-    information_service.stubs(:get_list_of).returns([])
-    information_service.stubs(:sample_public_url).returns(nil)
+    information_service = mock do
+      stubs(:get_list_of).returns([])
+      stubs(:sample_public_url).returns(nil)
+    end
     InformationService.stubs(:new).returns(information_service)
   end
 

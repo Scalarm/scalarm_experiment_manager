@@ -16,14 +16,16 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
 
     # set user and password to specified value (needed to test post params to supervisor)
     SecureRandom.expects(:uuid).returns(USER_NAME).at_least_once
-    password = mock()
-    password.expects(:password).returns(PASSWORD)
+    password = mock {expects(:password).returns(PASSWORD)}
     SimulationManagerTempPassword.expects(:create_new_password_for).with(USER_NAME, BSON::ObjectId(EXPERIMENT_ID))
         .returns(password)
 
     # mock experiment supervisor response with testing proper query params
-    RestClient.expects(:post).with(EXPERIMENT_SUPERVISOR_ADDRESS, script_id: SCRIPT_ID,
-                                   config: FULL_SCRIPT_PARAMS.to_json).returns(RESPONSE_ON_SUCCESS.to_json)
+    RestClient.expects(:post).with do |url, params|
+      url == EXPERIMENT_SUPERVISOR_ADDRESS and
+      params[:script_id] == SCRIPT_ID and
+      JSON.parse(params[:config]) == FULL_SCRIPT_PARAMS
+    end.returns(RESPONSE_ON_SUCCESS.to_json)
     # test
     assert_difference 'Experiment.count', 1 do
       post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @@simulation.id,

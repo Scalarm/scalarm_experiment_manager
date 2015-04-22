@@ -67,26 +67,30 @@ class SupervisedExperiment < CustomPointsExperiment
     script_params['user'] = self.supervisor_script_uuid
     script_params['password'] = password.password
 
-    script_params['lower_limit'] = []
-    script_params['upper_limit'] = []
-    script_params['parameters_ids'] = []
+    script_params['parameters'] = []
+
 
     Simulation.find_by_id(simulation_id).input_specification.each do |category|
       category['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          script_params['lower_limit'].append parameter['min']
-          script_params['upper_limit'].append parameter['max']
-          script_params['parameters_ids'].append Experiment.parameter_uid(category, entity, parameter)
+          param = {
+            id: Experiment.parameter_uid(category, entity, parameter),
+            type: parameter['type']
+          }
+          if %w(int float).include? parameter['type']
+            param[:min] = parameter['min']
+            param[:max] = parameter['max']
+            param[:start_value] = (parameter['min'] + parameter['max'])/2
+            param[:start_value] = param[:start_value].to_i if parameter['type']
+          elsif parameter['type'] == 'string'
+            param[:allowed_values] = parameter['allowed_values']
+            param[:start_value] = param[:allowed_values].first
+          end
+          script_params['parameters'].append param
         end
       end
     end
-    if script_params['start_point'].nil?
-      script_params['start_point'] = []
-      script_params['lower_limit'].zip(script_params['upper_limit']).each do |e|
-        # TODO string params
-        script_params['start_point'].append((e[0]+e[1])/2)
-      end
-    end
+
 
     res = nil
     begin
