@@ -10,19 +10,20 @@ module SupervisedExperimentHelper
   PID = 'pid'
   EXPERIMENT_SUPERVISOR_ADDRESS = 'http://localhost:13337/start_supervisor_script'
   RESPONSE_ON_SUCCESS = {
-      'status' => 'ok',
-      'pid' => PID
+      status: 'ok',
+      pid: PID
   }
   REASON = 'reason'
   RESPONSE_ON_FAILURE = {
-      'status' => 'error',
-      'reason' => REASON
+      status: 'error',
+      reason: REASON
   }
   INPUT_SCRIPT_PARAMS = {
-      'maxiter' => 1,
-      'dwell' => 1,
-      'schedule' => 'boltzmann'
+      maxiter: 1,
+      dwell: 1,
+      schedule: 'boltzmann'
   }
+  # Here must be strings as hash keys, JSON.parse returns hash with strings as keys
   FULL_SCRIPT_PARAMS = {
       'maxiter' => 1,
       'dwell' => 1,
@@ -53,6 +54,7 @@ module SupervisedExperimentHelper
           }
       ],
   }
+  # Here must be strings as hash keys
   INPUT_SPECIFICATION = [
       {
           'id' => 'c',
@@ -94,22 +96,22 @@ module SupervisedExperimentHelper
               ]
       }
   ]
+  # Here must be strings as hash keys
   EXPERIMENT_RESULT = {
       'result' => 'result'
   }
 
-  @@simulation = Simulation.new(name: 'name', description: 'description',
-                                input_parameters: {}, input_specification: INPUT_SPECIFICATION)
-  @@user = ScalarmUser.new({login: USER_NAME})
-
   def setup
     super
     # log in user and set sample simulation
-    @@user.password = PASSWORD
-    @@user.save
+    @user = ScalarmUser.new({login: USER_NAME})
+    @user.password = PASSWORD
+    @user.save
     post login_path, username: USER_NAME, password: PASSWORD
-    @@simulation.user_id = @@user.id
-    @@simulation.save
+    @simulation = Simulation.new(name: 'name', description: 'description',
+                                  input_parameters: {}, input_specification: INPUT_SPECIFICATION)
+    @simulation.user_id = @user.id
+    @simulation.save
     # mock information service
     information_service = mock do
       stubs(:get_list_of).returns([])

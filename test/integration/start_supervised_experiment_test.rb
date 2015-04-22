@@ -10,7 +10,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
   test "successful start of supervised experiment with json result" do
     # mocks
     # mock supervised experiment instance to return specified id (needed to test post params to supervisor)
-    supervised_experiment = ExperimentFactory.create_supervised_experiment(@@user.id, @@simulation)
+    supervised_experiment = ExperimentFactory.create_supervised_experiment(@user.id, @simulation)
     supervised_experiment.expects(:id).returns(BSON::ObjectId(EXPERIMENT_ID)).times(3)
     ExperimentFactory.expects(:create_supervised_experiment).returns(supervised_experiment)
 
@@ -28,7 +28,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     end.returns(RESPONSE_ON_SUCCESS.to_json)
     # test
     assert_difference 'Experiment.count', 1 do
-      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @@simulation.id,
+      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @simulation.id,
              supervisor_script_id: SCRIPT_ID,
              supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
     end
@@ -49,7 +49,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).returns(RESPONSE_ON_SUCCESS.to_json)
     #test
     assert_difference 'Experiment.count', 1 do
-      post start_supervised_experiment_experiments_path, simulation_id: @@simulation.id,
+      post start_supervised_experiment_experiments_path, simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
            supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
     end
@@ -66,7 +66,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
     # test
     assert_no_difference 'Experiment.count' do
-      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @@simulation.id,
+      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
            supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
     end
@@ -85,7 +85,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).raises(StandardError, REASON)
     # test
     assert_no_difference 'Experiment.count' do
-      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @@simulation.id,
+      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
            supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
     end
@@ -105,7 +105,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
     # test
     assert_no_difference 'Experiment.count', 1 do
-      post start_supervised_experiment_experiments_path, simulation_id: @@simulation.id,
+      post start_supervised_experiment_experiments_path, simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
            supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
     end
