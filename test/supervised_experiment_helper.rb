@@ -10,19 +10,20 @@ module SupervisedExperimentHelper
   PID = 'pid'
   EXPERIMENT_SUPERVISOR_ADDRESS = 'http://localhost:13337/start_supervisor_script'
   RESPONSE_ON_SUCCESS = {
-      'status' => 'ok',
-      'pid' => PID
+      status: 'ok',
+      pid: PID
   }
   REASON = 'reason'
   RESPONSE_ON_FAILURE = {
-      'status' => 'error',
-      'reason' => REASON
+      status: 'error',
+      reason: REASON
   }
   INPUT_SCRIPT_PARAMS = {
-      'maxiter' => 1,
-      'dwell' => 1,
-      'schedule' => 'boltzmann'
+      maxiter: 1,
+      dwell: 1,
+      schedule: 'boltzmann'
   }
+  # Here must be strings as hash keys, JSON.parse returns hash with strings as keys
   FULL_SCRIPT_PARAMS = {
       'maxiter' => 1,
       'dwell' => 1,
@@ -30,11 +31,30 @@ module SupervisedExperimentHelper
       'experiment_id' => EXPERIMENT_ID,
       'user' => USER_NAME,
       'password' => PASSWORD,
-      'lower_limit' =>[-3, -2],
-      'upper_limit' =>[3, 2],
-      'parameters_ids' => %w(c___g___x c___g___y),
-      'start_point' =>[0, 0],
+      'parameters' => [
+          {
+              'type' => 'float',
+              'id' => 'c___g___x',
+              'min' => -3,
+              'max' => 3,
+              'start_value' => 0
+          },
+          {
+              'type' => 'int',
+              'id' => 'c___g___y',
+              'min' => -2,
+              'max' => 2,
+              'start_value' => 0
+          },
+          {
+              'type' => 'string',
+              'id' => 'c___g___z',
+              'allowed_values' => %w(aaa bbb ccc),
+              'start_value' => 'aaa'
+          }
+      ],
   }
+  # Here must be strings as hash keys
   INPUT_SPECIFICATION = [
       {
           'id' => 'c',
@@ -53,44 +73,50 @@ module SupervisedExperimentHelper
                                   'min' => -3,
                                   'max' => 3,
                                   'index' => 1,
-                                  'parametrizationType' => 'value',
                                   'value' => '-3'
                               },
                               {
                                   'id' => 'y',
                                   'label' => 'y',
-                                  'type' => 'float',
+                                  'type' => 'int',
                                   'min' => -2,
                                   'max' => 2,
                                   'index' => 2,
-                                  'parametrizationType' => 'value',
                                   'value' => '-2'
+                              },
+                              {
+                                  'id' => 'z',
+                                  'label' => 'z',
+                                  'type' => 'string',
+                                  'index' => 3,
+                                  'allowed_values' => %w(aaa bbb ccc)
                               }
                           ]
                   }
               ]
       }
   ]
+  # Here must be strings as hash keys
   EXPERIMENT_RESULT = {
       'result' => 'result'
   }
 
-  @@simulation = Simulation.new(name: 'name', description: 'description',
-                                input_parameters: {}, input_specification: INPUT_SPECIFICATION)
-  @@user = ScalarmUser.new({login: USER_NAME})
-
   def setup
     super
     # log in user and set sample simulation
-    @@user.password = PASSWORD
-    @@user.save
+    @user = ScalarmUser.new({login: USER_NAME})
+    @user.password = PASSWORD
+    @user.save
     post login_path, username: USER_NAME, password: PASSWORD
-    @@simulation.user_id = @@user.id
-    @@simulation.save
+    @simulation = Simulation.new(name: 'name', description: 'description',
+                                  input_parameters: {}, input_specification: INPUT_SPECIFICATION)
+    @simulation.user_id = @user.id
+    @simulation.save
     # mock information service
-    information_service = mock()
-    information_service.stubs(:get_list_of).returns([])
-    information_service.stubs(:sample_public_url).returns(nil)
+    information_service = mock do
+      stubs(:get_list_of).returns([])
+      stubs(:sample_public_url).returns(nil)
+    end
     InformationService.stubs(:new).returns(information_service)
   end
 
