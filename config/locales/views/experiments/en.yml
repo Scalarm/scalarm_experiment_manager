@@ -67,6 +67,12 @@ en:
       success: "The experiment has been updated"
       failure: "You cannot edit this experiment because you are not its owner"
 
+    stop:
+      failure: "You cannot stop this experiment because you are not its owner"
+
+    destroy:
+      failure: "You cannot destroy this experiment because you are not its owner"
+
     new:
       parameter_label: "Parameter '%{label}' - Value constraints: [ %{min}, %{max} ]"
       parameter_label_allowed_values: "Parameter '%{label}' - allowed values: [ %{allowed_values} ]"

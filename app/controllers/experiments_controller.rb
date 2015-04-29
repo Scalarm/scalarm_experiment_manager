@@ -88,6 +88,7 @@ class ExperimentsController < ApplicationController
 
   # stops the currently running DF experiment (if any)
   def stop
+    raise SecurityError.new(t('experiments.stop.failure')) unless @experiment.user_id == @current_user.id
     @experiment.is_running = false
     @experiment.end_at = Time.now
 
@@ -540,6 +541,7 @@ class ExperimentsController < ApplicationController
 
   def destroy
     unless @experiment.nil?
+      raise SecurityError.new(t('experiments.destroy.failure')) unless @experiment.user_id == @current_user.id
       @experiment.destroy
       flash[:notice] = 'Your experiment has been destroyed.'
     else
