@@ -6,6 +6,15 @@ GIT
       jquery-rails
       sass-rails
 
+PATH
+  remote: /home/jliput/Scalarm/scalarm-database
+  specs:
+    scalarm-database (0.0.2)
+      bson
+      bson_ext
+      mongo
+      rails (= 4.1.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -435,6 +444,7 @@ DEPENDENCIES
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
+  scalarm-database!
   sdoc
   therubyracer
   uglifier (>= 1.3.0)

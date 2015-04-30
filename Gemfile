@@ -79,3 +79,5 @@ gem 'remotipart', '~> 1.0'
 
 gem 'newrelic_rpm'
 
+gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
+#gem 'scalarm-database', git: 'git://github.com/Scalarm/scalarm-database.git'
