@@ -24,6 +24,7 @@ class MarkAsCompleteSupervisedExperimentTest < ActionDispatch::IntegrationTest
 
     supervised_experiment = SupervisedExperiment.find_by_id(experiment_id)
     assert supervised_experiment.completed?, 'Marked as complete experiment must be completed'
+    assert supervised_experiment.end?, 'Marked as complete experiment must be ended'
     assert_equal EXPERIMENT_RESULT, supervised_experiment.results
   end
 

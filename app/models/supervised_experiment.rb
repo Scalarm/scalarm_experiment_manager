@@ -118,6 +118,7 @@ class SupervisedExperiment < CustomPointsExperiment
 
   ##
   # By calling this method one can determinate whether experiment is completed
+  # Was this experiment marked as complete?
   #
   # Returns:
   # * true when experiment is completed, false otherwise

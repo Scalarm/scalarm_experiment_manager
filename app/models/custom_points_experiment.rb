@@ -69,6 +69,7 @@ class CustomPointsExperiment < Experiment
     end
   end
 
+  # If experiment is not empty (uninitialized with points yet), are all scheduled simulation points done?
   def completed?
     if self.experiment_size == 0
       false
