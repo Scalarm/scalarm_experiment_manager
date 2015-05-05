@@ -6,6 +6,8 @@ require 'openid_providers/plgrid_openid'
 
 require 'utils'
 
+require 'scalarm/database/core/mongo_active_record'
+
 class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
@@ -144,7 +146,7 @@ class UserControllerController < ApplicationController
   # --- Status tests ---
 
   def status_test_database
-    MongoActiveRecord.available?
+    Scalarm::Database::MongoActiveRecord.available?
   end
 
 end

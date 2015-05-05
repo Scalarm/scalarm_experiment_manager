@@ -40,25 +40,6 @@ class Experiment < Scalarm::Database::Model::Experiment
 
   ID_DELIM = '___'
 
-  attr_join :simulation, Simulation
-  attr_join :user, ScalarmUser
-
-  def simulation_runs
-    SimulationRun.for_experiment(id)
-  end
-
-  def self.collection_name
-    'experiments'
-  end
-
-  def initialize(attributes)
-    super(attributes)
-  end
-
-  def simulation
-    Simulation.find_by_id self.simulation_id
-  end
-
   def save_and_cache
     self.save
   end

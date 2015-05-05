@@ -6,17 +6,11 @@
 #
 # other fields are cloud-specific, e.g. image_login, secret_password, secret_token
 
-class CloudImageSecrets < EncryptedMongoActiveRecord
+require 'scalarm/database/model'
 
-  attr_join :user, ScalarmUser
-
-  def self.collection_name
-    'cloud_image_secrets'
-  end
-
+class CloudImageSecrets < Scalarm::Database::Model::CloudImageSecrets
   # Image secrets are considered always valid, because to verify, real VM must be created
   def valid?
     true
   end
-
 end

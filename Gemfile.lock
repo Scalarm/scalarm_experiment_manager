@@ -13,7 +13,6 @@ PATH
       bson
       bson_ext
       mongo
-      rails (= 4.1.1)
 
 GEM
   remote: https://rubygems.org/

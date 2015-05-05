@@ -1,3 +1,5 @@
+require 'scalarm/database/core'
+
 class MonitoringProbe
   TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -7,7 +9,7 @@ class MonitoringProbe
     # TODO refactor
     begin
       @db_name = @config['db_name']
-      @db = MongoActiveRecord.get_database(@db_name)
+      @db = Scalarm::Database::MongoActiveRecord.get_database(@db_name)
     rescue Exception => e
       log("Monitoring probe failed to start due to exception: #{e.to_s}")
       @db = nil
