@@ -86,9 +86,14 @@ class Experiment < Scalarm::Database::Model::Experiment
     experiment_size > (sent+done)
   end
 
+  # Should, in this moment, more computations for this experiment should be made?
   def end?
-    (self.is_running == false) or
-        (self.experiment_size == self.count_done_simulations)
+    (self.is_running == false) or completed?
+  end
+
+  # Are all scheduled simulations done?
+  def completed?
+    (self.experiment_size == self.count_done_simulations)
   end
 
   def get_statistics
@@ -598,10 +603,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     ).first
 
     sim_run and sim_run.result
-  end
-
-  def completed?
-    (self.experiment_size == self.get_statistics[2])
   end
 
   def parameter_uid(entity_group, entity, parameter)
