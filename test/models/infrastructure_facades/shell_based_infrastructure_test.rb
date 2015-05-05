@@ -56,4 +56,19 @@ ruby/2.1.1' load complete. 9871
     assert_equal pid, launch_output
   end
 
+  # check if sim start cmd for :go is not empty and does not raise anything
+  def test_start_simulation_manager_cmd_pass
+    record = mock 'record' do
+      stubs(:sm_uuid).returns('sm_uuid')
+      stubs(:log_file_name).returns('some.log')
+    end
+
+    configuration = mock 'configuration' do
+      stubs(:simulation_manager_version).returns(:go)
+    end
+    Rails.stubs(:configuration).returns(configuration)
+
+    refute_empty ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+  end
+
 end
