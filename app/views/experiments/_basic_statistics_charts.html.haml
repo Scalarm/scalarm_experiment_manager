@@ -31,7 +31,7 @@
         var moe_name = $('#basic_charts_form select[name=\'moe_name\'] option:selected').val();
         var resolution = $('#basic_charts_form input[name=\'resolution\']').val();
         resolution = parseInt(resolution);
-        if(Number.isNaN(resolution) || resolution < 1 || resolution > 100){
+        if(isNaN(resolution) || resolution < 1 || resolution > 100){
           toastr.error("#{t('experiments.errors.invalid_resolution')}");
           $('#busy_basic').hide();
         }

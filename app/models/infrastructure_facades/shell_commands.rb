@@ -4,7 +4,11 @@ module ShellCommands
   end
 
   def mute(command)
-    "#{command} >/dev/null 2>&1"
+    log(command, '/dev/null')
+  end
+
+  def log(command, stdout, stderr='&1')
+    "#{command} >#{stdout} 2>#{stderr}"
   end
 
   def cd(dir)

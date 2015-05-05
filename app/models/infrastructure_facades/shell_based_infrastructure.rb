@@ -11,22 +11,24 @@ module ShellBasedInfrastructure
   def self.start_simulation_manager_cmd(record)
     sm_dir_name = ScalarmDirName::tmp_simulation_manager(record.sm_uuid)
 
+    log_path = record.log_file_name
+
     if Rails.configuration.simulation_manager_version == :go
       chain(
-          mute(rm(sm_dir_name, true)),
-          mute("unzip #{sm_dir_name}.zip"),
-          mute(cd(sm_dir_name)),
-          mute('unxz scalarm_simulation_manager.xz'),
-          mute('chmod a+x scalarm_simulation_manager'),
-          run_in_background('./scalarm_simulation_manager', record.log_file_name, '&1')
+          log(rm(sm_dir_name, true), log_path),
+          log("unzip #{sm_dir_name}.zip", log_path),
+          log(cd(sm_dir_name), log_path),
+          log('unxz scalarm_simulation_manager.xz', log_path),
+          log('chmod a+x scalarm_simulation_manager', log_path),
+          run_in_background('./scalarm_simulation_manager', log_path, '&1')
       )
     elsif Rails.configuration.simulation_manager_version == :ruby
       chain(
-          mute('source ~/.rvm/environments/default'),
-          mute(rm(sm_dir_name, true)),
-          mute("unzip #{sm_dir_name}.zip"),
-          mute(cd(sm_dir_name)),
-          run_in_background('ruby simulation_manager.rb', record.log_file_name, '&1')
+          log('source ~/.rvm/environments/default', log_path),
+          log(rm(sm_dir_name, true), log_path),
+          log("unzip #{sm_dir_name}.zip", log_path),
+          log(cd(sm_dir_name), log_path),
+          run_in_background('ruby simulation_manager.rb', log_path, '&1')
       )
     end
   end
