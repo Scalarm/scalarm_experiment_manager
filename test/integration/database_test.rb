@@ -2,16 +2,21 @@ require 'mocha'
 require 'minitest/autorun'
 require 'test_helper'
 
+require 'db_helper'
+
 class DatabaseTest < MiniTest::Test
+  include DBHelper
+
   def setup
-    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    super
   end
 
-  class SomeRecord < MongoActiveRecord
-    def self.collection_name
-      'some_records'
-    end
+  def teardown
+    super
+  end
+
+  class SomeRecord < Scalarm::Database::MongoActiveRecord
+    use_collection 'some_records'
   end
 
   def test_mixed_attrs

@@ -2,25 +2,17 @@
 # - credentials_id => id of PrivateMachineCredentials
 # - pid => PID of SimulationManager process executed at remote machine
 
-class PrivateMachineRecord < MongoActiveRecord
+require 'scalarm/database/model/private_machine_record'
+
+class PrivateMachineRecord < Scalarm::Database::Model::PrivateMachineRecord
   extend Forwardable
   include SimulationManagerRecord
 
   # delegate session methods just for convenience
-  def_delegators :@credentials, :upload_file, :ssh_session, :scp_session
-
-  attr_join :credentials, PrivateMachineCredentials
-
-  def self.collection_name
-    'private_machine_records'
-  end
+  def_delegators :credentials, :upload_file, :ssh_session, :scp_session
 
   def infrastructure_name
     'private_machine'
-  end
-
-  def self.ids_auto_convert
-    false
   end
 
   def resource_id
@@ -29,14 +21,6 @@ class PrivateMachineRecord < MongoActiveRecord
 
   def task_desc
     "#{credentials.nil? ? '[credentials missing!]' : credentials.machine_desc} (#{pid.nil? ? 'init' : pid})"
-  end
-
-  def credentials
-    @credentials ||= PrivateMachineCredentials.find_by_id(credentials_id)
-  end
-
-  def experiment
-    @experiment ||= Experiment.find_by_id(experiment_id)
   end
 
   def log_path

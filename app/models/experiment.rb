@@ -38,8 +38,6 @@ class Experiment < Scalarm::Database::Model::Experiment
   include ExperimentExtender
   include SimulationRunModule
 
-  ID_DELIM = '___'
-
   def save_and_cache
     self.save
   end
@@ -554,10 +552,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     progress_bar_update(simulation_run.index, 'rollback')
   end
 
-  def self.visible_to(user)
-    where({'$or' => [{user_id: user.id}, {shared_with: {'$in' => [user.id]}}]})
-  end
-
   def csv_parameter_ids
     self.doe_info[0][1]
   end
@@ -584,28 +578,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     ).first
 
     sim_run and sim_run.result
-  end
-
-  def parameter_uid(entity_group, entity, parameter)
-    Experiment.parameter_uid(entity_group, entity, parameter)
-  end
-
-  def self.parameter_uid(entity_group, entity, parameter)
-    entity_group_id = if entity_group.include?('id') || entity_group.include?('entities')
-                        entity_group['id'] || nil
-                      else
-                        entity_group
-                      end
-
-    entity_id = if entity.include?('id') || entity.include?('parameters')
-                  entity['id'] || nil
-                else
-                  entity
-                end
-
-    parameter_id = parameter.include?('id') ? parameter['id'] : parameter
-
-    [ entity_group_id, entity_id, parameter_id ].compact.join(ID_DELIM)
   end
 
   private

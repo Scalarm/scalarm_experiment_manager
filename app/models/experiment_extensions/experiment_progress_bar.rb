@@ -1,3 +1,5 @@
+require 'scalarm/database/core'
+
 module ExperimentProgressBar
   CANVAS_WIDTH = 960.0
   MINIMUM_SLOT_WIDTH = 2.0
@@ -5,7 +7,7 @@ module ExperimentProgressBar
 
   def progress_bar_table
       table_name = "experiment_progress_bar_#{self.experiment_id}"
-      MongoActiveRecord.get_collection(table_name)
+      Scalarm::Database::MongoActiveRecord.get_collection(table_name)
   end
 
   def parts_per_progress_bar_slot

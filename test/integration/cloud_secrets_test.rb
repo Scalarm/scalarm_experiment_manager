@@ -2,13 +2,18 @@ require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
 
+require 'db_helper'
+
 # Tests usage of EncryptedMongoActiveRecord with CloudSecrets
 class CloudSecretsTest < MiniTest::Test
-  # TODO: this test uses databse connection
+  include DBHelper
 
   def setup
-    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    super
+  end
+
+  def teardown
+    super
   end
 
   def test_encryption

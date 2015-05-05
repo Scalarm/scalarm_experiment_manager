@@ -4,14 +4,25 @@ require 'test_helper'
 require 'mocha/test_unit'
 require 'db_helper'
 
+require 'scalarm/database/simulation_run_factory'
+
+# CSV_FILE = 'experiment_52f257042acf1465af000001.csv'
+# SIMULATIONS_COUNT = 24206
+
+CSV_FILE = 'experiment_2.csv'
+SIMULATIONS_COUNT = 9
+
+
 class ExperimentTest < MiniTest::Test
-  # TODO: this test uses database connection
+  # NOTICE: slow test
   include DBHelper
 
   def setup
+    super
+
     i, @parameters, @parameter_values = 0, [], []
 
-    CSV.foreach(File.join(__dir__, 'experiment_52f257042acf1465af000001.csv')) do |row|
+    CSV.foreach(File.join(__dir__, CSV_FILE)) do |row|
       if i == 0
         @parameters = row
       else
@@ -34,7 +45,17 @@ class ExperimentTest < MiniTest::Test
       i += 1
     end
 
-    @simulation = Simulation.new({ 'input_specification' => "[\n  {\n    \"id\": \"clustering\",\n    \"label\": \"Clustering\",\n\n    \"entities\": [\n      {\n        \"id\": \"phase_1\",\n        \"label\": \"Phase 1 - kdist\",\n        \"parameters\": [\n          {\n            \"id\": \"minpts\",\n            \"label\": \"Neighbourhood counter\",\n            \"type\": \"integer\",\n            \"min\": 250,\n            \"max\": 260\n          }\n        ]\n      }\n    ] \n  }\n]".to_json })
+    input_specification = [
+        {id: 'clustering',
+         label: 'Clustering',
+         entities: [
+             {id: 'phase_1', label: 'Phase 1 - kdist', parameters: [
+                 {id: 'minpts', label: 'Neighbourhood counter', type: 'integer', min: 250, max: 260}
+             ]}
+         ]}
+    ]
+
+    @simulation = Simulation.new({ input_specification: input_specification.to_json })
 
     Rails.configuration.experiment_seeks = {}
   end
@@ -47,7 +68,7 @@ class ExperimentTest < MiniTest::Test
     experiment = Experiment.new({ 'doe_info' => [ [ 'csv_import', @parameters, @parameter_values ] ] })
     experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
 
-    assert_equal 24206, experiment.experiment_size
+    assert_equal SIMULATIONS_COUNT, experiment.experiment_size
     assert_equal 2, experiment.parameters.flatten.size
   end
 
@@ -65,7 +86,7 @@ class ExperimentTest < MiniTest::Test
       simulation_ids << next_simulation_id.unpack('i').first unless next_simulation_id.nil?
     end
 
-    assert_equal 24206, simulation_ids.size
+    assert_equal SIMULATIONS_COUNT, simulation_ids.size
 
     1.upto(experiment.experiment_size).each do |sim_id|
       assert simulation_ids.include?(sim_id)
@@ -80,7 +101,9 @@ class ExperimentTest < MiniTest::Test
 
     experiment.create_file_with_ids
 
-    experiment.expects(:simulation_runs).at_least_once.returns(SimulationRun.for_experiment('1'))
+    experiment.expects(:simulation_runs).at_least_once.returns(
+        Scalarm::Database::SimulationRunFactory.for_experiment('1')
+    )
 
     simulation_ids = []
 
@@ -88,7 +111,7 @@ class ExperimentTest < MiniTest::Test
       simulation_ids << simulation_id
     end
 
-    assert_equal 24206, simulation_ids.size
+    assert_equal SIMULATIONS_COUNT, simulation_ids.size
 
     1.upto(experiment.experiment_size).each do |sim_id|
       assert simulation_ids.include?(sim_id)
@@ -105,9 +128,9 @@ class ExperimentTest < MiniTest::Test
 
     File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
 
-    experiment.expects(:simulation_runs).at_least_once.returns([])
+    #experiment.expects(:simulation_runs).at_least_once.returns([])
     #experiment.expects(:save_simulation).at_least_once
-    experiment.expects(:naive_partition_based_simulation_hash).returns(nil)
+    #experiment.expects(:naive_partition_based_simulation_hash).returns(nil)
 
     simulation_ids = []
 
@@ -115,7 +138,7 @@ class ExperimentTest < MiniTest::Test
       simulation_ids << simulation_run.index
     end
 
-    assert_equal 24206, simulation_ids.size
+    assert_equal SIMULATIONS_COUNT, simulation_ids.size
 
     1.upto(experiment.experiment_size).each do |sim_id|
       assert simulation_ids.include?(sim_id)
@@ -132,9 +155,9 @@ class ExperimentTest < MiniTest::Test
 
     File.delete(experiment.file_with_ids_path) if File.exist?(experiment.file_with_ids_path)
 
-    experiment.expects(:simulation_runs).at_least_once.returns([])
+    #experiment.expects(:simulation_runs).at_least_once.returns([])
     #experiment.expects(:save_simulation).at_least_once
-    experiment.expects(:naive_partition_based_simulation_hash).at_least_once.returns(nil)
+    #experiment.expects(:naive_partition_based_simulation_hash).at_least_once.returns(nil)
 
     simulation_ids = []
     threads = []
@@ -142,14 +165,14 @@ class ExperimentTest < MiniTest::Test
     8.times do
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
-          simulation_ids << simulation_run['index']
+          simulation_ids << simulation_run.index
         end
       end
 
       threads.each{|t| t.join}
     end
 
-    assert_equal 24206, simulation_ids.size
+    assert_equal SIMULATIONS_COUNT, simulation_ids.size
 
     1.upto(experiment.experiment_size).each do |sim_id|
       assert simulation_ids.include?(sim_id)
@@ -157,8 +180,7 @@ class ExperimentTest < MiniTest::Test
   end
 
   def test_naive_partition_based_simulation_hash
-    Rails.logger.debug(MongoActiveRecord.get_collection('experiment_52f257042acf1465af000001').db.name)
-    experiment_size = 24206
+    experiment_size = SIMULATIONS_COUNT
     # experiment_size = 1000
 
     experiment = Experiment.new({
@@ -181,7 +203,8 @@ class ExperimentTest < MiniTest::Test
       i += 1
       puts("#{Time.now} - Size: #{i}") if i % 100 == 0
       simulation_ids << simulation_id
-      simulation_run = SimulationRun.new(index: simulation_id, to_sent: false)
+      simulation_run_class = Scalarm::Database::SimulationRunFactory.for_experiment(experiment.id)
+      simulation_run = simulation_run_class.new(index: simulation_id, to_sent: false)
       simulation_run.save
       experiment.progress_bar_update(simulation_id, 'done')
     end
@@ -208,7 +231,7 @@ class ExperimentTest < MiniTest::Test
     8.times do
       threads << Thread.new do
         while not (simulation_run = experiment.get_next_instance).nil?
-          simulation_ids << simulation_run['index']
+          simulation_ids << simulation_run.index
           Rails.logger.debug("#{Time.now} - #{simulation_ids.size}") if simulation_ids.size % 100 == 0
         end
       end
@@ -216,10 +239,11 @@ class ExperimentTest < MiniTest::Test
       threads.each{|t| t.join}
     end
 
-    assert_equal 24206, simulation_ids.size
+    assert_equal SIMULATIONS_COUNT, simulation_ids.size
 
     1.upto(experiment.experiment_size).each do |sim_id|
-      assert simulation_ids.include?(sim_id)
+      assert simulation_ids.include?(sim_id),
+             "#{sim_id} should be in #{simulation_ids}"
     end
   end
 
