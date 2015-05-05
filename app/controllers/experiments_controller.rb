@@ -145,7 +145,9 @@ class ExperimentsController < ApplicationController
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
-      experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, params)
+      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
+                                   :description, :parameter_constraints)
+      experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
