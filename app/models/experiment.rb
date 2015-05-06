@@ -38,13 +38,27 @@ class Experiment < Scalarm::Database::Model::Experiment
   include ExperimentExtender
   include SimulationRunModule
 
+  # attr_joins are overriden to get proper classes (not basic models)
+  attr_join :simulation, Simulation
+  attr_join :user, ScalarmUser
+
+  def simulation_runs
+    SimulationRunFactory.for_experiment(id)
+  end
+
   def save_and_cache
     self.save
   end
 
-  def save
-    share_with_anonymous
-    super
+  def stop!
+    self.is_running = false
+    self.end_at = Time.now
+    destroy_temp_passwords!
+    self.save_and_cache
+  end
+
+  def destroy_temp_passwords!
+    simulation_manager_temp_passwords.each &:destroy
   end
 
   def share_with_anonymous

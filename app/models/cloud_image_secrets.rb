@@ -9,6 +9,8 @@
 require 'scalarm/database/model'
 
 class CloudImageSecrets < Scalarm::Database::Model::CloudImageSecrets
+  attr_join :user, ScalarmUser
+
   # Image secrets are considered always valid, because to verify, real VM must be created
   def valid?
     true

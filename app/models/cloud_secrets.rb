@@ -8,6 +8,8 @@ require 'infrastructure_facades/infrastructure_errors'
 require 'scalarm/database/model'
 
 class CloudSecrets < Scalarm::Database::Model::CloudSecrets
+  attr_join :user, ScalarmUser
+
   def valid?
     begin
       # do not rescue from all exceptions raised from factory related operations

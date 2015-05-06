@@ -1,5 +1,5 @@
 unless Rails.env.test?
-  require 'scalarm/database/mongo_active_record'
+  require 'scalarm/database/core/mongo_active_record'
 
   # class initizalization
   config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))

@@ -18,6 +18,8 @@ class CloudVmRecord < Scalarm::Database::Model::CloudVmRecord
   include SimulationManagerRecord
   include SSHEnabledRecord
 
+  attr_join :image_secrets, CloudImageSecrets
+
   SSH_AUTH_METHODS = %w(password)
 
   def resource_id

@@ -5,7 +5,9 @@ class ExperimentFactory
   DEFAULT_PARAMETER_CONSTRAINTS = {}
 
   def self.create_experiment(user_id, simulation, params={})
-    _create_record(Experiment, user_id, simulation, params)
+    r = _create_record(Experiment, user_id, simulation, params)
+    r.share_with_anonymous
+    r
   end
 
   def self.create_custom_points_experiment(user_id, simulation, params={})
