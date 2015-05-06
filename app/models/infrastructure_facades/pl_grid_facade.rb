@@ -78,7 +78,7 @@ class PlGridFacade < InfrastructureFacade
         raise InfrastructureErrors::InvalidCredentialsError.new
       rescue Errno::ECONNREFUSED => e
         records.each { |record| record.store_error('ssh', e.to_s) }
-        raise InfrastructureErrors::AccessDeniedError.new
+        raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
       end
     end
 
