@@ -10,6 +10,7 @@ PATH
   remote: /home/jliput/Scalarm/scalarm-database
   specs:
     scalarm-database (0.0.2)
+      activesupport
       bson
       bson_ext
       mongo

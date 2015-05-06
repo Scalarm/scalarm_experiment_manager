@@ -1,5 +1,3 @@
-require 'scalarm/database/simulation_run_factory'
-
 module DatabaseUpdateUtils
   def self.convert_strings_to_json
     # Experiment: experiment_input, doe_info,  parameters_constraints
@@ -15,7 +13,7 @@ module DatabaseUpdateUtils
         experiment.save
 
 
-        Scalarm::Database::SimulationRunFactory.
+       SimulationRunFactory.
             for_experiment(experiment.id).all.each do |simulation_run|
               begin
                 simulation_run.result = Utils.parse_json_if_string(simulation_run.result)

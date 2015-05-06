@@ -30,7 +30,7 @@ require 'scalarm/database/model/experiment'
 class Experiment < Scalarm::Database::Model::Experiment
   require 'experiment_extensions/experiment_extender'
   require 'experiment_extensions/experiment_progress_bar'
-  require 'experiment_extensions/simulation_run'
+  require 'experiment_extensions/simulation_run_module'
   require 'experiment_extensions/simulation_scheduler'
 
   include ExperimentProgressBar

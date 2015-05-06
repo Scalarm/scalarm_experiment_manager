@@ -144,7 +144,8 @@ module SimulationManagerRecord
   end
 
   def rollback_current_simulation_run!
-    get_current_simulation_run.try :rollback!
+    get_current_simulation_run.rollback!
+    #get_current_simulation_run.try :rollback!
   end
 
   def get_temp_password
@@ -152,7 +153,7 @@ module SimulationManagerRecord
   end
 
   def get_current_simulation_run
-    unless experiment or self.sm_uuid.nil?
+    if not experiment.nil? and self.sm_uuid.nil?
       experiment.simulation_runs.
           where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
     end

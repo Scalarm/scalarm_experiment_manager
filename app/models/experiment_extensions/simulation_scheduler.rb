@@ -1,5 +1,3 @@
-require 'scalarm/database/simulation_run_factory'
-
 module SimulationScheduler
 
   def get_next_instance
@@ -159,7 +157,7 @@ module SimulationScheduler
     columns = %w(index experiment_id is_done to_sent trial arguments values)
     values = [simulation_id, self._id, false, true, trial, self.parameters.flatten.join(','), combination.join(',')]
 
-    simulation_run_class = Scalarm::Database::SimulationRunFactory.for_experiment(id)
+    simulation_run_class = SimulationRunFactory.for_experiment(id)
     simulation_run_class.new(Hash[*columns.zip(values).flatten])
   end
 

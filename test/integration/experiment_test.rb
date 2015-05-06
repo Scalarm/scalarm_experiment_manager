@@ -4,8 +4,6 @@ require 'test_helper'
 require 'mocha/test_unit'
 require 'db_helper'
 
-require 'scalarm/database/simulation_run_factory'
-
 # CSV_FILE = 'experiment_52f257042acf1465af000001.csv'
 # SIMULATIONS_COUNT = 24206
 
@@ -102,7 +100,7 @@ class ExperimentTest < MiniTest::Test
     experiment.create_file_with_ids
 
     experiment.expects(:simulation_runs).at_least_once.returns(
-        Scalarm::Database::SimulationRunFactory.for_experiment('1')
+        SimulationRunFactory.for_experiment('1')
     )
 
     simulation_ids = []
