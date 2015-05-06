@@ -145,7 +145,9 @@ class ExperimentsController < ApplicationController
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
-      experiment = prepare_new_experiment
+      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
+                                   :description, :parameter_constraints)
+      experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
@@ -859,29 +861,6 @@ class ExperimentsController < ApplicationController
       experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
     end
-  end
-
-  def prepare_new_experiment
-
-    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
-    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
-    parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
-
-    # TODO: use ExperimentsFactory
-    # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'is_running' => true,
-                                 'replication_level' => replication_level,
-                                 'time_constraint_in_sec' => time_constraint,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-    experiment.parameters_constraints = parameters_constraints
-
-    experiment
   end
 
 end
