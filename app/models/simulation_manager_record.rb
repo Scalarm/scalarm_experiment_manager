@@ -149,7 +149,7 @@ module SimulationManagerRecord
   end
 
   def get_current_simulation_run
-    unless experiment or self.sm_uuid.nil?
+    if not experiment.nil? and self.sm_uuid.nil?
       experiment.simulation_runs.
           where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
     end
