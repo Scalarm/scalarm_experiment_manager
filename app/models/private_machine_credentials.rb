@@ -10,8 +10,10 @@
 
 require 'scalarm/database/model/private_machine_record'
 
-class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineRecord
+class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCredentials
   include SSHEnabledRecord
+
+  attr_join :user, ScalarmUser
 
   SSH_AUTH_METHODS = %w(password)
 

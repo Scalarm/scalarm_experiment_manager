@@ -1,5 +1,7 @@
 require 'scalarm/database/core'
 
+require 'scalarm/database/model'
+
 module ExperimentProgressBar
   CANVAS_WIDTH = 960.0
   MINIMUM_SLOT_WIDTH = 2.0
@@ -38,12 +40,15 @@ module ExperimentProgressBar
       bar = progress_bar_table.find_one({bar_num: bar_index})
       table_length = progress_bar_table.count
       color = compute_bar_color(bar)
-      ExperimentProgressNotification.new(:experiment_id => self.experiment_id.to_s,
-                                            :date => Time.now.to_i,
-                                            :bar_info => {
-                                                :bar_num => bar["bar_num"],
-                                                :tab_len => table_length,
-                                                :color => color}).save
+      Scalarm::Database::Model::ExperimentProgressNotification.
+          new(experiment_id: self.experiment_id,
+               date: Time.now.to_i,
+               bar_info: {
+                   bar_num: bar["bar_num"],
+                   tab_len: table_length,
+                   color: color
+               }
+          ).save
      result
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")

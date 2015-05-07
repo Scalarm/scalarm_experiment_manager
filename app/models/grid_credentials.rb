@@ -17,6 +17,8 @@ require 'scalarm/database/model/grid_credentials'
 class GridCredentials < Scalarm::Database::Model::GridCredentials
   include SSHEnabledRecord
 
+  attr_join :user, ScalarmUser
+
   # Exclude also hashed password field
   def to_h
     super.select {|k, v| k != 'hashed_password'}

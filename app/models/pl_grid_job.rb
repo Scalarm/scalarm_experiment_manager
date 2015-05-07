@@ -14,6 +14,8 @@ require 'scalarm/database/model/pl_grid_job'
 class PlGridJob < Scalarm::Database::Model::PlGridJob
   include SimulationManagerRecord
 
+  attr_join :experiment, Experiment
+
   def infrastructure_name
     scheduler_type
   end

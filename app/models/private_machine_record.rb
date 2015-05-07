@@ -8,6 +8,9 @@ class PrivateMachineRecord < Scalarm::Database::Model::PrivateMachineRecord
   extend Forwardable
   include SimulationManagerRecord
 
+  attr_join :credentials, PrivateMachineCredentials
+  attr_join :experiment, Experiment
+
   # delegate session methods just for convenience
   def_delegators :credentials, :upload_file, :ssh_session, :scp_session
 

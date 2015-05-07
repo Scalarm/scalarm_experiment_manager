@@ -12,6 +12,17 @@ class ActiveSupport::TestCase
   #fixtures :all
 
   # Add more helper methods to be used by all tests here...
+
+  def use_custom_controller(controller, &block)
+    old_controller = self.class.controller_class
+    begin
+      self.class.controller_class = controller
+      yield
+    ensure
+      self.class.controller_class = old_controller
+    end
+  end
+
 end
 
 class MockCollection

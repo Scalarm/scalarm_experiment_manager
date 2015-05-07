@@ -8,6 +8,7 @@ module SimulationRunExtensions
     self.to_sent = true
     experiment.progress_bar_update(self.index, 'rollback')
     self.save
+    self
   end
 end
 

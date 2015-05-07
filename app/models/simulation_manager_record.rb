@@ -144,8 +144,7 @@ module SimulationManagerRecord
   end
 
   def rollback_current_simulation_run!
-    get_current_simulation_run.rollback!
-    #get_current_simulation_run.try :rollback!
+    get_current_simulation_run.try :rollback!
   end
 
   def get_temp_password

@@ -6,4 +6,19 @@
 require 'scalarm/database/model/simulation_manager_temp_password'
 
 class SimulationManagerTempPassword < Scalarm::Database::Model::SimulationManagerTempPassword
+  attr_join :experiment, Experiment
+
+  def scalarm_user
+    if self.user_id.nil?
+
+      if self.experiment_id.nil?
+        nil
+      else
+        ScalarmUser.find_by_id(Experiment.find_by_id(self.experiment_id).user_id)
+      end
+
+    else
+      ScalarmUser.find_by_id(self.user_id)
+    end
+  end
 end
