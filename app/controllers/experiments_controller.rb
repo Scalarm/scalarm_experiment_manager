@@ -153,19 +153,8 @@ class ExperimentsController < ApplicationController
     @experiment.create_result_csv(w_index, w_params, w_moes)
   end
 
-  def create
-    validate(
-        replication_level: [:optional, :security_default, :integer, :positive],
-        execution_time_constraint: [:optional, :security_default, :integer, :positive],
-        parameter_constraints: [:optional, :security_json]
-    )
-
+  def create_experiment
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
-
-    if params.has_key?(:supervisor_script_id) and params.has_key?(:supervisor_script_params)
-      start_supervised_experiment
-      return
-    end
 
     begin
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
@@ -221,6 +210,119 @@ class ExperimentsController < ApplicationController
         format.json { render json: {status: 'error', message: flash[:error]} }
       end
     end
+  end
+
+  # POST params:
+  # - simulation_id
+  # TODO: other experiment parameters
+  # TODO: handle errors
+  def create_custom_points_experiment
+    validate(
+        simulation_id: :security_default
+    )
+
+    experiment = ExperimentFactory.create_custom_points_experiment(@current_user.id, @simulation)
+    experiment.save
+
+    render json: {status: 'ok', experiment_id: experiment.id.to_s}
+  end
+
+=begin
+  @api {post} /experiments/ Create SupervisedExperiment
+  @apiName start_supervised_experiment
+  @apiGroup Experiments
+  @apiDescription This action allows user to start new supervised experiment with given parameters.
+  Action supports two possible result formats:
+  * .json - json with info about performed action
+  * .html - redirection to experiment view page
+
+  @apiParam {String} type experiment type. must be 'supervised'
+  @apiParam {String} simulation_id  ID of simulation used to perform experiment
+  @apiParam {String} [supervisor_script_id] ID of supervisor script used to manage experiment, without this
+                      param supervisor script will not be started
+  @apiParam {json} [supervisor_script_params] Parameters passed to supervisor script, mandatory when
+                      supervisor_script_id is present
+
+  @apiParamExample Params-Example
+    type: 'supervised'
+    simulation_id: '551fca1f2ab4f259fc000002'
+    supervisor_script_id: 'simulated annealing'
+    supervisor_script_params:
+      {
+        "maxiter": 2,
+        "dwell": 1,
+        "schedule": "boltzmann"
+      }
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+  @apiSuccess {String} info.experiment_id id of created experiment
+  @apiSuccess {Number} [info.pid] pid of supervisor script managing experiment, only when
+                      supervisor_script_id param is present
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+      'experiment_id': '551fc1932ab4f259fc000001'
+      'pid': 1234
+    }
+
+  @apiError {Object} info json object with information about performed action
+  @apiError {String} info.status status of performed action, on failure always 'error'
+  @apiError {String} info.reason reason of failure to start experiment
+
+  @apiErrorExample {json} Failure-Response
+    {
+      'status': 'error'
+      'reason': 'Unable to connect with Experiment Supervisor'
+    }
+=end
+  def create_supervised_experiment
+    validate(
+        simulation_id: :security_default,
+        supervisor_script_id: [:optional, :security_default],
+        supervisor_script_params: [:optional, :security_json]
+    )
+    # TODO: other experiment parameters
+    # TODO: handle errors
+
+    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
+    experiment.save
+    response = {'status' => 'ok'}
+    if params.has_key?(:supervisor_script_id)
+      response = experiment.start_supervisor_script(params[:simulation_id],
+                                                    params[:supervisor_script_id],
+                                                    Utils::parse_json_if_string(params[:supervisor_script_params]))
+    end
+
+    response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
+    if response['status'] == 'error'
+      experiment.destroy
+      flash['error'] = "There has been an error while creating new supervised experiment: #{response['reason']}"
+    end
+
+    respond_to do |format|
+      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
+      format.json { render json: response }
+    end
+  end
+
+  CONSTRUCTORS = {
+      'experiment' => :create_experiment,
+      'custom_points' => :create_custom_points_experiment,
+      'supervised' => :create_supervised_experiment
+  }
+
+  def create
+    validate(
+        replication_level: [:optional, :security_default, :integer, :positive],
+        execution_time_constraint: [:optional, :security_default, :integer, :positive],
+        parameter_constraints: [:optional, :security_json],
+        type: [:optional, :security_default]
+    )
+    type = params[:type] || 'experiment'
+    raise ValidationError.new('type', type, 'Not a correct experiment type') unless CONSTRUCTORS.has_key? type
+    send(CONSTRUCTORS[type])
   end
 
   def calculate_experiment_size
@@ -833,99 +935,6 @@ class ExperimentsController < ApplicationController
           render json: {status: 'error', message: 'Point not found'}
         end
       end
-    end
-  end
-
-  # POST params:
-  # - simulation_id
-  # TODO: other experiment parameters
-  # TODO: handle errors
-  def start_custom_points_experiment
-    validate(
-        simulation_id: :security_default
-    )
-
-    experiment = ExperimentFactory.create_custom_points_experiment(@current_user.id, @simulation)
-    experiment.save
-
-    render json: {status: 'ok', experiment_id: experiment.id.to_s}
-  end
-
-=begin
-  @api {post} /experiments/start_supervised_experiment(.:format) Start Supervised Experiment
-  @apiName start_supervised_experiment
-  @apiGroup Experiments
-  @apiDescription This action allows user to start new supervised experiment with given parameters.
-  Action supports two possible result formats:
-  * .json - json with info about performed action
-  * .html - redirection to experiment view page
-
-  @apiParam {String} simulation_id  ID of simulation used to perform experiment
-  @apiParam {String} [supervisor_script_id] ID of supervisor script used to manage experiment, without this
-                      param supervisor script will not be started
-  @apiParam {json} [supervisor_script_params] Parameters passed to supervisor script, mandatory when
-                      supervisor_script_id is present
-
-  @apiParamExample Params-Example
-    simulation_id: '551fca1f2ab4f259fc000002'
-    supervisor_script_id: 'simulated annealing'
-    supervisor_script_params:
-      {
-        "maxiter": 2,
-        "dwell": 1,
-        "schedule": "boltzmann"
-      }
-
-  @apiSuccess {Object} info json object with information about performed action
-  @apiSuccess {String} info.status status of performed action, on success always 'ok'
-  @apiSuccess {String} info.experiment_id id of created experiment
-  @apiSuccess {Number} [info.pid] pid of supervisor script managing experiment, only when
-                      supervisor_script_id param is present
-
-  @apiSuccessExample {json} Success-Response
-    {
-      'status': 'ok'
-      'experiment_id': '551fc1932ab4f259fc000001'
-      'pid': 1234
-    }
-
-  @apiError {Object} info json object with information about performed action
-  @apiError {String} info.status status of performed action, on failure always 'error'
-  @apiError {String} info.reason reason of failure to start experiment
-
-  @apiErrorExample {json} Failure-Response
-    {
-      'status': 'error'
-      'reason': 'Unable to connect with Experiment Supervisor'
-    }
-=end
-  def start_supervised_experiment
-    validate(
-        simulation_id: :security_default,
-        supervisor_script_id: [:optional, :security_default],
-        supervisor_script_params: [:optional, :security_json]
-    )
-    # TODO: other experiment parameters
-    # TODO: handle errors
-
-    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
-    experiment.save
-    response = {'status' => 'ok'}
-    if params.has_key?(:supervisor_script_id)
-      response = experiment.start_supervisor_script(params[:simulation_id],
-                            params[:supervisor_script_id],
-                            Utils::parse_json_if_string(params[:supervisor_script_params]))
-    end
-
-    response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
-    if response['status'] == 'error'
-      experiment.destroy
-      flash['error'] = "There has been an error while creating new supervised experiment: #{response['reason']}"
-    end
-
-    respond_to do |format|
-      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
-      format.json { render json: response }
     end
   end
 
