@@ -129,7 +129,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).never
     # test
     assert_difference 'Experiment.count', 1 do
-      post "#{experiments_path}.json", simulation_id: @simulation.id
+      post "#{experiments_path}.json", simulation_id: @simulation.id, type: 'supervised'
     end
     response_hash = JSON.parse(response.body)
     # test if response contains only allowed entries with proper values
