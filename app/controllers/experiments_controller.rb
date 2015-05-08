@@ -145,6 +145,14 @@ class ExperimentsController < ApplicationController
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
+      params[:replication_level] = params[:replication_level].to_i unless params[:replication_level].blank?
+      unless params[:execution_time_constraint].blank?
+        params[:execution_time_constraint] = (params[:execution_time_constraint].to_i * 60)
+      end
+      unless params[:parameters_constraints].blank?
+        params[:parameters_constraints] = Utils.parse_json_if_string(params[:parameters_constraints])
+      end
+
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
                                    :description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
