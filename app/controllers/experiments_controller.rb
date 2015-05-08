@@ -155,7 +155,7 @@ class ExperimentsController < ApplicationController
 
       parse.call :replication_level, lambda {|x| x.to_i}
       parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
-      parse.call :parameters_constraints, lambda  {|x| Utils.parse_json_if_string(x)}
+      parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
 
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
                                    :description, :parameter_constraints)
