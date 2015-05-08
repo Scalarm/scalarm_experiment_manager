@@ -1,8 +1,7 @@
 require 'test_helper'
 
 
-class ExperimeechntsControllerTest < ActionController::TestCase
-  tests ExperimentsController
+class ExperimentsControllerTest < ActionController::TestCase
 
   # TODO?
   # test "experiment_size" do
