@@ -117,4 +117,26 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     assert_redirected_to experiments_path
     assert_not flash['error'].nil?, 'Flash[\'error\'] is empty'
   end
+
+
+  test "successful start of supervised experiment without starting supervisor script" do
+    # mocks
+    # mock supervised experiment instance to return specified id (needed to test post params to supervisor)
+    supervised_experiment = ExperimentFactory.create_supervised_experiment(@user.id, @simulation)
+    supervised_experiment.expects(:id).returns(BSON::ObjectId(EXPERIMENT_ID))
+    ExperimentFactory.expects(:create_supervised_experiment).returns(supervised_experiment)
+    # mock experiment supervisor response with testing proper query params
+    RestClient.expects(:post).never
+    # test
+    assert_difference 'Experiment.count', 1 do
+      post "#{experiments_path}.json", simulation_id: @simulation.id
+    end
+    response_hash = JSON.parse(response.body)
+    # test if response contains only allowed entries with proper values
+    assert_nothing_raised do
+      response_hash.assert_valid_keys('status', 'experiment_id')
+    end
+    assert_equal response_hash['status'], 'ok'
+    assert_equal response_hash['experiment_id'], EXPERIMENT_ID.to_s
+  end
 end
