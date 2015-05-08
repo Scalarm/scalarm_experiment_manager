@@ -1,6 +1,5 @@
 require 'test_helper'
 
-
 class ExperimentsControllerTest < ActionController::TestCase
 
   # TODO?

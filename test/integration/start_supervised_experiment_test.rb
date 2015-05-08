@@ -28,9 +28,10 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     end.returns(RESPONSE_ON_SUCCESS.to_json)
     # test
     assert_difference 'Experiment.count', 1 do
-      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @simulation.id,
+      post "#{experiments_path}.json", simulation_id: @simulation.id,
              supervisor_script_id: SCRIPT_ID,
-             supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
+             supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json,
+             type: 'supervised'
     end
     response_hash = JSON.parse(response.body)
     # test if response contains only allowed entries with proper values
@@ -49,9 +50,10 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).returns(RESPONSE_ON_SUCCESS.to_json)
     #test
     assert_difference 'Experiment.count', 1 do
-      post start_supervised_experiment_experiments_path, simulation_id: @simulation.id,
+      post experiments_path, simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
-           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
+           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json,
+           type: 'supervised'
     end
     assert_equal Experiment.count, 1 # to make sure proper id in next line
     assert_redirected_to experiment_path(Experiment.first.id)
@@ -66,9 +68,10 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
     # test
     assert_no_difference 'Experiment.count' do
-      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @simulation.id,
+      post "#{experiments_path}.json", simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
-           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
+           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json,
+           type: 'supervised'
     end
     response_hash = JSON.parse(response.body)
     # test if response contains only allowed entries with proper values
@@ -85,9 +88,10 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).raises(StandardError, REASON)
     # test
     assert_no_difference 'Experiment.count' do
-      post "#{start_supervised_experiment_experiments_path}.json", simulation_id: @simulation.id,
+      post "#{experiments_path}.json", simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
-           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
+           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json,
+           type: 'supervised'
     end
     response_hash = JSON.parse(response.body)
     # test if response contains only allowed entries with proper values
@@ -105,9 +109,10 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
     # test
     assert_no_difference 'Experiment.count', 1 do
-      post start_supervised_experiment_experiments_path, simulation_id: @simulation.id,
+      post experiments_path, simulation_id: @simulation.id,
            supervisor_script_id: SCRIPT_ID,
-           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json
+           supervisor_script_params: INPUT_SCRIPT_PARAMS.to_json,
+           type: 'supervised'
     end
     assert_redirected_to experiments_path
     assert_not flash['error'].nil?, 'Flash[\'error\'] is empty'
