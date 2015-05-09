@@ -168,6 +168,18 @@ class ExperimentsController < ApplicationController
     end
 
     begin
+      parse = lambda do |id, parse_method|
+        if params[id].blank?
+          params.delete id
+        else
+          params[id] = parse_method.call(params[id])
+        end
+      end
+
+      parse.call :replication_level, lambda {|x| x.to_i}
+      parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
+      parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
+
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
                                    :description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
