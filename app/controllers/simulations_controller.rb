@@ -91,10 +91,10 @@ class SimulationsController < ApplicationController
       })
 
       begin
-        set_up_adapter('input_writer', simulation, false)
-        set_up_adapter('executor', simulation)
-        set_up_adapter('output_reader', simulation, false)
-        set_up_adapter('progress_monitor', simulation, false)
+        simulation.set_up_adapter('input_writer', params, @current_user, false)
+        simulation.set_up_adapter('executor', params, @current_user)
+        simulation.set_up_adapter('output_reader', params, @current_user, false)
+        simulation.set_up_adapter('progress_monitor', params, @current_user, false)
 
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 
@@ -323,44 +323,6 @@ class SimulationsController < ApplicationController
       @simulation_run.to_sent = false
       @simulation_run.sent_at = Time.now
     end
-  end
-
-  def set_up_adapter(adapter_type, simulation, mandatory = true)
-
-    if params.include?(adapter_type + '_id') and not params["#{adapter_type}_id"].empty?
-      adapter_id = params[adapter_type + '_id'].to_s
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
-
-      if not adapter.nil? and adapter.user_id == @current_user.id
-        simulation.send(adapter_type + '_id=', adapter.id)
-      else
-        if mandatory
-          flash[:error] = t('simulations.create.adapter_not_found', { adapter: adapter_type.camelize, id: adapter_id })
-          raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory")
-        end
-      end
-
-    elsif params.include?(adapter_type)
-      adapter_name = if params["#{adapter_type}_name"].blank?
-                       params[adapter_type].original_filename
-                     else
-                       params["#{adapter_type}_name"]
-                     end
-
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
-                                           name: adapter_name,
-                                           code: Utils.read_if_file(params[adapter_type]),
-                                           user_id: @current_user.id})
-      adapter.save
-      Rails.logger.debug(adapter)
-      simulation.send(adapter_type + '_id=', adapter.id)
-    else
-      if mandatory
-        flash[:error] = t('simulations.create.mandatory_adapter', { adapter: adapter_type.camelize, id: adapter_id })
-        raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory")
-      end
-    end
-
   end
 
   def simulation_output_size
