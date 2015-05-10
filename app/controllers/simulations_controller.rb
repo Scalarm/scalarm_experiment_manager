@@ -91,10 +91,21 @@ class SimulationsController < ApplicationController
       })
 
       begin
-        simulation.set_up_adapter('input_writer', @current_user, params, false)
-        simulation.set_up_adapter('executor', @current_user, params)
-        simulation.set_up_adapter('output_reader', @current_user, params, false)
-        simulation.set_up_adapter('progress_monitor', @current_user, params, false)
+        begin
+          simulation.set_up_adapter('input_writer', @current_user, params, false)
+          simulation.set_up_adapter('executor', @current_user, params)
+          simulation.set_up_adapter('output_reader', @current_user, params, false)
+          simulation.set_up_adapter('progress_monitor', @current_user, params, false)
+        rescue AdapterNotFoundError => e
+          flash[:error] = t('simulations.create.adapter_not_found', {adapter: e.adapter_type, id: e.adapter_id})
+          raise Exception.new("Setting up Simulation#{e.adapter_type} is mandatory")
+        rescue SecurityError => e
+          flash[:error] = e.to_s
+          raise e
+        rescue MissingAdapterError => e
+          flash[:error] = t('simulations.create.mandatory_adapter', {adapter: e.adapter_type, id: e.adapter_id})
+          raise Exception("Setting up Simulation#{e.adapter_type} is mandatory")
+        end
 
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 

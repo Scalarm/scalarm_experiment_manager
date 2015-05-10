@@ -104,7 +104,7 @@ class Simulation < MongoActiveRecord
     where({'$or' => [{user_id: user.id}, {shared_with: {'$in' => [user.id]}}, {is_public: true}]})
   end
 
-  def set_up_adapter(adapter_type, params, current_user, mandatory = true)
+  def set_up_adapter(adapter_type, current_user, params, mandatory = true)
     validate(
         "#{adapter_type}_id".to_sym => [:optional, :security_default],
         "#{adapter_type}_name".to_sym => [:optional, :security_default]
@@ -118,15 +118,13 @@ class Simulation < MongoActiveRecord
         send(adapter_type + '_id=', adapter.id)
       else
         if mandatory
-          flash[:error] = t('simulations.create.adapter_not_found', {adapter: adapter_type.camelize, id: adapter_id})
-          raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory")
+          raise AdapterNotFoundError.new(adapter_type.camelize, adapter_id)
         end
       end
 
       # uploading new file
     elsif params.include?(adapter_type)
       unless Utils::get_validation_regexp(:filename).match(params[adapter_type].original_filename)
-        flash[:error] = t('errors.insecure_filename', param_name: adapter_type)
         raise SecurityError.new(t('errors.insecure_filename', param_name: adapter_type))
       end
 
@@ -145,10 +143,32 @@ class Simulation < MongoActiveRecord
       send(adapter_type + '_id=', adapter.id)
     else
       if mandatory
-        flash[:error] = t('simulations.create.mandatory_adapter', {adapter: adapter_type.camelize, id: adapter_id})
-        raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory")
+        raise MissingAdapterError.new(adapter_type.camelize, adapter_id)
       end
     end
+  end
+
+end
+
+class AdapterNotFoundError < StandardError
+  attr_reader :adapter_id
+  attr_reader :adapter_type
+
+  def initialize(adapter_type, adapter_id)
+    @adapter_type = adapter_type
+    @adapter_id = adapter_id
+  end
+
+end
+
+
+class MissingAdapterError < StandardError
+  attr_reader :adapter_id
+  attr_reader :adapter_type
+
+  def initialize(adapter_type, adapter_id)
+    @adapter_type = adapter_type
+    @adapter_id = adapter_id
   end
 
 end

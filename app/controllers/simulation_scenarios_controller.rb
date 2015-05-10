@@ -36,10 +36,21 @@ class SimulationScenariosController < ApplicationController
         @simulation_scenario.created_at = Time.now
 
         begin
-          @simulation_scenario.set_up_adapter('input_writer', @current_user, params, false)
-          @simulation_scenario.set_up_adapter('executor', @current_user, params)
-          @simulation_scenario.set_up_adapter('output_reader', @current_user, params, false)
-          @simulation_scenario.set_up_adapter('progress_monitor', @current_user, params, false)
+          begin
+            @simulation_scenario.set_up_adapter('input_writer', @current_user, params, false)
+            @simulation_scenario.set_up_adapter('executor', @current_user, params)
+            @simulation_scenario.set_up_adapter('output_reader', @current_user, params, false)
+            @simulation_scenario.set_up_adapter('progress_monitor', @current_user, params, false)
+          rescue AdapterNotFoundError => e
+            flash[:error] = t('simulations.create.adapter_not_found', {adapter: e.adapter_type, id: e.adapter_id})
+            raise Exception.new("Setting up Simulation#{e.adapter_type} is mandatory")
+          rescue SecurityError => e
+            flash[:error] = e.to_s
+            raise e
+          rescue MissingAdapterError => e
+            flash[:error] = t('simulations.create.mandatory_adapter', {adapter: e.adapter_type, id: e.adapter_id})
+            raise Exception("Setting up Simulation#{e.adapter_type} is mandatory")
+          end
 
           unless (binaries = params[:simulation_binaries]).blank?
             @simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
