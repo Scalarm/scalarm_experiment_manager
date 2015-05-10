@@ -91,10 +91,10 @@ class SimulationsController < ApplicationController
       })
 
       begin
-        simulation.set_up_adapter('input_writer', params, @current_user, false)
-        simulation.set_up_adapter('executor', params, @current_user)
-        simulation.set_up_adapter('output_reader', params, @current_user, false)
-        simulation.set_up_adapter('progress_monitor', params, @current_user, false)
+        simulation.set_up_adapter('input_writer', @current_user, params, false)
+        simulation.set_up_adapter('executor', @current_user, params)
+        simulation.set_up_adapter('output_reader', @current_user, params, false)
+        simulation.set_up_adapter('progress_monitor', @current_user, params, false)
 
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 

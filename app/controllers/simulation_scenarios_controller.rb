@@ -36,10 +36,10 @@ class SimulationScenariosController < ApplicationController
         @simulation_scenario.created_at = Time.now
 
         begin
-          @simulation_scenario.set_up_adapter('input_writer', params, @current_user, false)
-          @simulation_scenario.set_up_adapter('executor', params, @current_user)
-          @simulation_scenario.set_up_adapter('output_reader', params, @current_user, false)
-          @simulation_scenario.set_up_adapter('progress_monitor', params, @current_user, false)
+          @simulation_scenario.set_up_adapter('input_writer', @current_user, params, false)
+          @simulation_scenario.set_up_adapter('executor', @current_user, params)
+          @simulation_scenario.set_up_adapter('output_reader', @current_user, params, false)
+          @simulation_scenario.set_up_adapter('progress_monitor', @current_user, params, false)
 
           unless (binaries = params[:simulation_binaries]).blank?
             @simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
