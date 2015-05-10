@@ -68,8 +68,16 @@ class PrivateMachineFacade < InfrastructureFacade
 
     if params[:onsite_monitoring]
       sm_uuid = SecureRandom.uuid
-      PrivateMachineFacade.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id,
+      begin
+        PrivateMachineFacade.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id,
                                                              short_name, params)
+      rescue Net::SSH::AuthenticationFailed => e
+        records.each { |record| record.store_error('ssh', e.to_s) }
+        raise InfrastructureErrors::InvalidCredentialsError.new
+      rescue Errno::ECONNREFUSED => e
+        records.each { |record| record.store_error('ssh', e.to_s) }
+        raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
+      end
     end
 
     records
