@@ -9,6 +9,7 @@ require 'yaml'
 #name: user specified name
 #description: (optional) a longer description of the experiment
 #is_running: bool
+#replication_level: how many times each configuration should be executed
 #simulation_id: id of a simulation which is executed during the experiment
 #user_id: ObjectId
 #time_constraint_in_sec: integer - threshold for simulation execution
@@ -255,7 +256,7 @@ class Experiment < MongoActiveRecord
     if self.size.nil?
       self.size = 0
       list_of_values = value_list(debug)
-      max_size = list_of_values.reduce(1){|acc, x| acc * x.size}
+      max_size = list_of_values.reduce(1){|acc, x| acc * x.size} * replication_level
 
       if parameters_constraints.blank?
         self.size = max_size
