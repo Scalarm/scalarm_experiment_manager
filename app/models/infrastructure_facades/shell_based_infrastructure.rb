@@ -36,6 +36,7 @@ module ShellBasedInfrastructure
   def send_and_launch_sm(record, ssh)
     record.upload_file("/tmp/scalarm_simulation_manager_#{record.sm_uuid}.zip")
     output = ssh.exec!(ShellBasedInfrastructure.start_simulation_manager_cmd(record))
+    output = output.split("\n").join('\n').strip
     logger.debug "Simulation Manager init (stripped) output: #{output}"
     pid = ShellBasedInfrastructure.output_to_pid(output)
     record.pid = pid if pid
