@@ -1,18 +1,19 @@
 require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
-
+require 'db_helper'
 require 'mongo_lock'
 
+# NOTICE: long execution time (ca. 23 seconds)
 class LockTest < MiniTest::Test
-  # TODO: this test uses database connection
+  include DBHelper
 
   def setup
-    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    super
   end
 
   def teardown
+    super
   end
 
   THREAD_NUM = 3
