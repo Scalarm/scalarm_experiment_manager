@@ -8,7 +8,7 @@ module SupervisedExperimentHelper
   SCRIPT_ID = 'script_id'
   PASSWORD = 'password'
   PID = 'pid'
-  EXPERIMENT_SUPERVISOR_ADDRESS = 'https://localhost/start_supervisor_script'
+  EXPERIMENT_SUPERVISOR_ADDRESS = 'https://localhost/supervisor_runs'
   RESPONSE_ON_SUCCESS = {
       status: 'ok',
       pid: PID

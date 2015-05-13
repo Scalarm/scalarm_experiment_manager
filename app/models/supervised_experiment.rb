@@ -97,7 +97,7 @@ class SupervisedExperiment < CustomPointsExperiment
       # TODO: this may be slow - cache ES url
       supervisor_url = self.class.get_private_supervisor_url
       raise 'No supervisor url can be obtained from IS' if supervisor_url.blank?
-      res = RestClient.post("https://#{supervisor_url}/start_supervisor_script",  script_id: supervisor_script_id,
+      res = RestClient.post("https://#{supervisor_url}/supervisor_runs",  supervisor_id: supervisor_script_id,
                                                                           config: script_params.to_json)
       res = Utils::parse_json_if_string res
     rescue RestClient::Exception, StandardError => e
