@@ -8,7 +8,7 @@ module SupervisedExperimentHelper
   SCRIPT_ID = 'script_id'
   PASSWORD = 'password'
   PID = 'pid'
-  EXPERIMENT_SUPERVISOR_ADDRESS = 'http://localhost:13337/start_supervisor_script'
+  EXPERIMENT_SUPERVISOR_ADDRESS = 'https://localhost/start_supervisor_script'
   RESPONSE_ON_SUCCESS = {
       status: 'ok',
       pid: PID
@@ -118,6 +118,8 @@ module SupervisedExperimentHelper
       stubs(:sample_public_url).returns(nil)
     end
     InformationService.stubs(:new).returns(information_service)
+
+    SupervisedExperiment.stubs(:get_private_supervisor_url).returns('localhost')
   end
 
 end

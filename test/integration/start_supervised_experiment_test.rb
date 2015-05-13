@@ -48,6 +48,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     # mocks
     # mock experiment supervisor response
     RestClient.expects(:post).returns(RESPONSE_ON_SUCCESS.to_json)
+
     #test
     assert_difference 'Experiment.count', 1 do
       post experiments_path, simulation_id: @simulation.id,
@@ -66,6 +67,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     # mocks
     # mock experiment supervisor response
     RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
+
     # test
     assert_no_difference 'Experiment.count' do
       post "#{experiments_path}.json", simulation_id: @simulation.id,
@@ -86,6 +88,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     # mocks
     # mock experiment supervisor response
     RestClient.expects(:post).raises(StandardError, REASON)
+
     # test
     assert_no_difference 'Experiment.count' do
       post "#{experiments_path}.json", simulation_id: @simulation.id,

@@ -94,7 +94,10 @@ class SupervisedExperiment < CustomPointsExperiment
 
     res = nil
     begin
-      res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  script_id: supervisor_script_id,
+      # TODO: this may be slow - cache ES url
+      supervisor_url = self.class.get_private_supervisor_url
+      raise 'No supervisor url can be obtained from IS' if supervisor_url.blank?
+      res = RestClient.post("https://#{supervisor_url}/start_supervisor_script",  script_id: supervisor_script_id,
                                                                           config: script_params.to_json)
       res = Utils::parse_json_if_string res
     rescue RestClient::Exception, StandardError => e
@@ -102,6 +105,10 @@ class SupervisedExperiment < CustomPointsExperiment
       res = {'status' => 'error', 'reason' => e.to_s}
     end
     res
+  end
+
+  def self.get_private_supervisor_url
+    InformationService.new.sample_public_url('experiment_supervisors')
   end
 
   ##
