@@ -23,7 +23,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     # mock experiment supervisor response with testing proper query params
     RestClient.expects(:post).with do |url, params|
       url == EXPERIMENT_SUPERVISOR_ADDRESS and
-      params[:script_id] == SCRIPT_ID and
+      params[:supervisor_id] == SCRIPT_ID and
       JSON.parse(params[:config]) == FULL_SCRIPT_PARAMS
     end.returns(RESPONSE_ON_SUCCESS.to_json)
     # test

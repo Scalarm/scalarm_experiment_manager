@@ -94,7 +94,7 @@ class SupervisedExperiment < CustomPointsExperiment
 
     res = nil
     begin
-      res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  script_id: supervisor_script_id,
+      res = RestClient.post( 'http://localhost:13337/supervisor_runs',  supervisor_id: supervisor_script_id,
                                                                           config: script_params.to_json)
       res = Utils::parse_json_if_string res
     rescue RestClient::Exception, StandardError => e
