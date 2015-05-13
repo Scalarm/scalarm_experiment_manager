@@ -70,15 +70,8 @@ class PlGridFacade < InfrastructureFacade
 
     if additional_params[:onsite_monitoring]
       sm_uuid = SecureRandom.uuid
-      begin
-        PlGridFacade.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id,
-                                                     scheduler.short_name, additional_params)
-      rescue Net::SSH::AuthenticationFailed => e
-        records.each { |record| record.store_error('ssh', e.to_s) }
-        raise InfrastructureErrors::InvalidCredentialsError.new
-      rescue Errno::ECONNREFUSED => e
-        records.each { |record| record.store_error('ssh', e.to_s) }
-        raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
+      self.class.handle_monitoring_send_errors(records) do
+        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler.short_name, additional_params)
       end
     end
 
