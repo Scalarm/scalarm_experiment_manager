@@ -1,0 +1,29 @@
+%section.panel.radius.simulation_input
+  %ul.button-group.right.round
+    %li
+      %a#manual-off.tiny.button.secondary.clicked(href="#") On
+    %li
+      %a#manual-on.tiny.button.secondary(href="#") Off
+
+  %h3.subheader#manual-header= t('.input_header')
+
+  .content
+    %dl.tabs(data-tab="")
+      %dd.active
+        = link_to t('.input_parametrization_types'), '#parametrization'
+      %dd
+        = link_to t('.input_doe'), '#doe'
+      %dd
+        = link_to t('.params_constraints'), '#constraints'
+
+    .tabs-content
+      #parametrization.content.active
+        = render 'experiments/new/parametrization'
+      #doe.content
+        = render 'experiments/new/design_of_experiment'
+      #constraints.content
+        = render 'experiments/new/parameter_constraints'
+
+
+%section#import.panel.radius.last-element
+  = render 'experiments/new/import_tab'

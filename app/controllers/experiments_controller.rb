@@ -8,7 +8,9 @@ class ExperimentsController < ApplicationController
 
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
-                                          :start_custom_points_experiment, :start_supervised_experiment, :new_se ]
+                                          :start_custom_points_experiment, :start_supervised_experiment,
+                                          :input_space_form]
+  before_filter :add_cors_header, only: [:new]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
@@ -890,6 +892,11 @@ class ExperimentsController < ApplicationController
     @simulation_input = @simulation.input_specification
   end
 
+  def input_space_form
+    @simulation_input = @simulation.input_specification
+    render layout: false
+  end
+
   # getting id of a random running experiment
   def random_experiment
     @running_experiments = if not @current_user.nil?
@@ -1112,6 +1119,10 @@ class ExperimentsController < ApplicationController
       experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
     end
+  end
+
+  def add_cors_header
+    response['Access-Control-Allow-Origin'] = '*'
   end
 
 end

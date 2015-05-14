@@ -1,7 +1,7 @@
 class window.SupervisorBooster
-  constructor: (@dialogId) ->
-    @dialog = $("##{dialogId}")
-    @schedulerForm = $('#scheduler-form form')
+  constructor: (@dialogId, @simulation_id) ->
+#    @dialog = $("##{dialogId}")
+#    @schedulerForm = $('#scheduler-form form')
 #    @bindToSubmissionForms()
 
     @supervisorSelect = $('#supervisor_select')
@@ -12,11 +12,16 @@ class window.SupervisorBooster
     selectValue = @supervisorSelect.val()
     console.log(selectValue)
 
+    fieldsURL = ""
     if selectValue != 'none'
       fieldsURL = "http://localhost:13337/supervisors/#{selectValue}/start_panel"
-      fieldsDiv = $('#supervisor_fields')
-      fieldsDiv.html(window.loaderHTML)
-      fieldsDiv.load(fieldsURL)
+    else
+      params = $.param({simulation_id: @simulation_id})
+      fieldsURL = "/experiments/input_space_form?#{params}"
+
+    fieldsDiv = $('#supervisor_fields')
+    fieldsDiv.html(window.loaderHTML)
+    fieldsDiv.load(fieldsURL)
 
 
 

@@ -45,6 +45,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :completed_experiments
       get :historical_experiments
       get :random_experiment
+      get :input_space_form
     end
 
     member do

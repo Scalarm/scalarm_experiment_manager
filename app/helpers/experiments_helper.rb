@@ -45,4 +45,14 @@ module ExperimentsHelper
     [">", ">="]
   end
 
+  def supervisor_methods
+    # TODO get address from IS
+    JSON.parse(RestClient.get('http://localhost:13337/supervisors')).map {|x| x['id']}
+  end
+
+  def supervisor_start_panel(id)
+    # TODO get address from IS
+    RestClient.get("http://localhost:13337/supervisors/#{id}/start_panel")
+  end
+
 end
