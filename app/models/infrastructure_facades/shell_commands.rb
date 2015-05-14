@@ -28,7 +28,7 @@ module ShellCommands
   end
 
   def run_and_get_pid(command, stdout='/dev/null', stderr='&1')
-    "sh -c '#{command} >#{stdout} 2>#{stderr} & echo $! 2>/dev/null '"
+    "bash -c '#{command} >#{stdout} 2>#{stderr} & echo $! 2>/dev/null '"
   end
 
   def run_in_background(command, stdout='/dev/null', stderr='&1')
