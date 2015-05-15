@@ -35,15 +35,15 @@ module SupervisedExperimentHelper
           {
               'type' => 'float',
               'id' => 'c___g___x',
-              'min' => -3,
-              'max' => 3,
-              'start_value' => 0
+              'min' => 0,
+              'max' => 1,
+              'start_value' => 0.5
           },
           {
               'type' => 'int',
               'id' => 'c___g___y',
-              'min' => -2,
-              'max' => 2,
+              'min' => 0,
+              'max' => 1,
               'start_value' => 0
           },
           {
@@ -70,8 +70,8 @@ module SupervisedExperimentHelper
                                   'id' => 'x',
                                   'label' => 'x',
                                   'type' => 'float',
-                                  'min' => -3,
-                                  'max' => 3,
+                                  'min' => 0,
+                                  'max' => 1,
                                   'index' => 1,
                                   'value' => '-3'
                               },
@@ -79,8 +79,8 @@ module SupervisedExperimentHelper
                                   'id' => 'y',
                                   'label' => 'y',
                                   'type' => 'int',
-                                  'min' => -2,
-                                  'max' => 2,
+                                  'min' => 0,
+                                  'max' => 1,
                                   'index' => 2,
                                   'value' => '-2'
                               },

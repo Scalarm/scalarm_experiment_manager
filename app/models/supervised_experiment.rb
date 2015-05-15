@@ -80,8 +80,8 @@ class SupervisedExperiment < CustomPointsExperiment
           if %w(int float).include? parameter['type']
             param[:min] = parameter['min']
             param[:max] = parameter['max']
-            param[:start_value] = (parameter['min'] + parameter['max'])/2
-            param[:start_value] = param[:start_value].to_i if parameter['type']
+            param[:start_value] = (parameter['min'] + parameter['max'])/2.0
+            param[:start_value] = param[:start_value].to_i if parameter['type'] == 'int'
           elsif parameter['type'] == 'string'
             param[:allowed_values] = parameter['allowed_values']
             param[:start_value] = param[:allowed_values].first
