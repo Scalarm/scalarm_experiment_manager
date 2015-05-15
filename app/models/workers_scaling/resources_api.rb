@@ -51,11 +51,15 @@ module ResourcesAPI
   # Returns statistics about given infrastructure:
   # * workers_count
   def get_infrastructure_statistics(infrastructure_name, params = {})
-    {
-        workers_count: InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-                           .count_sm_records(user_id, experiment_id)
-                           # TODO this loads all sm records form db
-    }
+    begin
+      {
+          workers_count: InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+                             .count_sm_records(user_id, experiment_id)
+                             # TODO this loads all sm records form db
+      }
+    rescue InfrastructureErrors::NoSuchInfrastructureError
+      nil
+    end
   end
 
   ##
@@ -66,18 +70,33 @@ module ResourcesAPI
 
   ##
   # Returns workers records for given infrastructure
-  def get_workers_records(infrastructure_name, params = {})
+  def get_workers_records_by_infrastructure(infrastructure_name, params = {})
     # TODO load from db only specific parameters
-    InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-        .get_sm_records(user_id, experiment_id, params) || []
+    begin
+      InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+          .get_sm_records(user_id, experiment_id, params) || []
+    rescue InfrastructureErrors::NoSuchInfrastructureError
+      nil
+    end
+  end
+
+  ##
+  # Returns workers records for given ids and infrastructure
+  def get_workers_records_by_ids(ids, infrastructure_name)
+    # TODO load from db only specific parameters
+    ids.map {|id| get_worker_record id, infrastructure_name}
   end
 
   ##
   # Returns worker record for given id and infrastructure
-  def get_worker_record(id, infrastructure_name, params = {})
+  def get_worker_record(id, infrastructure_name)
     # TODO load from db only specific parameters
-    InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-        .get_sm_record_by_id(id)
+    begin
+      InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+          .get_sm_record_by_id(id)
+    rescue InfrastructureErrors::NoSuchInfrastructureError
+      nil
+    end
   end
 
   ##
@@ -88,32 +107,50 @@ module ResourcesAPI
 
   ##
   # Returns worker for given infrastructure
-  def get_workers(infrastructure_name, params = {})
-    InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-        .yield_simulation_managers(user_id, experiment_id, params) {|x| x}
+  def get_workers_by_infrastructure(infrastructure_name, params = {})
+    begin
+      InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+          .yield_simulation_managers(user_id, experiment_id, params) {|x| x}
+    rescue InfrastructureErrors::NoSuchInfrastructureError
+      nil
+    end
+  end
+
+  #
+  # Returns workers for given ids and infrastructure
+  def get_workers_by_ids(ids, infrastructure_name)
+    ids.map {|id| get_worker id, infrastructure_name }
   end
 
   ##
   # Returns worker for given id and infrastructure
-  def get_worker(id, infrastructure_name, params = {})
-    InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-        .yield_simulation_manager(get_worker_record(id, infrastructure_name)) {|x| x}
+  def get_worker(id, infrastructure_name)
+    begin
+      InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+          .yield_simulation_manager(get_worker_record(id, infrastructure_name)) {|x| x}
+    rescue InfrastructureErrors::NoSuchInfrastructureError
+      nil
+    end
   end
 
   ##
   # Executes command on workers with on given infrastructure
   # Possible commands is in #execute_command_on_worker
   def execute_command_on_workers(infrastructure_name, command)
-    nil unless %w(stop restart destroy_record).include? command
-    get_workers(infrastructure_name).each {|x| x.send command}
+    return nil unless %w(stop restart destroy_record).include? command
+    workers = get_workers_by_infrastructure(infrastructure_name)
+    return nil if workers.nil?
+    workers.each {|x| x.send command}
   end
 
   ##
   # Executes command on worker with given id and infrastructure
   # Possible commands: 'stop', 'destroy_record', 'restart'
   def execute_command_on_worker(id, infrastructure_name, command)
-    nil unless %w(stop restart destroy_record).include? command
-    get_worker(id, infrastructure_name).sens command
+    return nil unless %w(stop restart destroy_record).include? command
+    worker = get_worker(id, infrastructure_name)
+    return nil if worker.nil?
+    worker.send command
   end
 
   private
