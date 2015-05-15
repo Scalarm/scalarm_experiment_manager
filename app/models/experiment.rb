@@ -33,11 +33,13 @@ class Experiment < Scalarm::Database::Model::Experiment
   require 'experiment_extensions/experiment_progress_bar'
   require 'experiment_extensions/simulation_run_module'
   require 'experiment_extensions/simulation_scheduler'
+  require 'workers_scaling/resources_api.rb'
 
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
   include SimulationRunModule
+  include ResourcesAPI
 
   # attr_joins are overriden to get proper classes (not basic models)
   attr_join :simulation, Simulation
