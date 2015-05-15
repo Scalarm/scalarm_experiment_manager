@@ -1,41 +1,25 @@
 module StatisticsAPI
 
   ##
-  # Returns indices of already created SimulationRuns for current Experiment
-  def get_simulations_ids
-    simulation_runs.all.to_a.map { |sr| sr.index }
+  # Returns ids of already created SimulationRuns for current Experiment
+  def get_simulation_runs_ids
+    simulation_runs.where({}, :fields => ['_id']).all.to_a.map { |sr| sr._id }
   end
 
   ##
   # Returns SimulationRun
-  # * id - index of SimulationRun (not _id)
+  # * id - id of SimulationRun
   # * params - additional parameters
-  def get_simulation(id, params = {})
-    simulation_runs.where(index: id.to_i).first
+  def get_simulation_run(id, params = {})
+    simulation_runs.where({_id: id}, params).first
   end
 
   ##
   # Returns SimulationRuns
-  # * ids - list od indices of SimulationRuns (not _id)
+  # * ids - list od ids of SimulationRuns
   # * params - additional parameters
-  def get_simulations(ids, params = {})
-    ids.map { |id| get_simulation id, params}
-  end
-
-  ##
-  # Returns execution_statistics for SimulationRun
-  # * id - index of SimulationRun (not _id)
-  # * params - additional parameters
-  def get_simulation_execution_statistics(id, params = {})
-    get_simulation(id, params).simulation_statistics
-  end
-
-  ##
-  # Returns execution_statistics for SimulationRuns
-  # * ids - list od indices of SimulationRuns (not _id)
-  # * params - additional parameters
-  def get_simulations_execution_statistics(ids, params = {})
-    get_simulations(ids, params).map { |sr| sr.simulation_statistics }
+  def get_simulation_runs(ids, params = {})
+    ids.map { |id| get_simulation_run id, params}
   end
 
 end
