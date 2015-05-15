@@ -30,11 +30,13 @@ class Experiment < MongoActiveRecord
   require 'experiment_extensions/experiment_progress_bar'
   require 'experiment_extensions/simulation_run'
   require 'experiment_extensions/simulation_scheduler'
+  require 'workers_scaling/statistics_api'
 
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
   include SimulationRunModule
+  include StatisticsAPI
 
   ID_DELIM = '___'
 
