@@ -7,7 +7,7 @@ module StatisticsAPI
   end
 
   ##
-  # Returns SimulationRun
+  # Returns SimulationRun with given id
   # * id - id of SimulationRun
   # * params - additional parameters
   def get_simulation_run(id, params = {})
@@ -15,7 +15,7 @@ module StatisticsAPI
   end
 
   ##
-  # Returns SimulationRuns
+  # Returns SimulationRuns with given ids
   # * ids - list od ids of SimulationRuns
   # * params - additional parameters
   def get_simulation_runs(ids, params = {})
