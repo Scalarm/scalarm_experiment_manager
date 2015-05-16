@@ -293,7 +293,7 @@ class ExperimentsController < ApplicationController
     validate(
         simulation_id: :security_default,
         supervisor_script_id: [:optional, :security_default],
-        supervisor_script_params: [:optional, :security_json]
+        supervisor_script_params: [:optional, :json_or_hash]
     )
     # TODO: other experiment parameters
     # TODO: handle errors

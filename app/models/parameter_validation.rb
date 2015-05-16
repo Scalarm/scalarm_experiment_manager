@@ -101,4 +101,10 @@ module ParameterValidation
     raise ValidationError.new(name, value, 'Not a string') unless value.kind_of? String
   end
 
+  def json_or_hash(name, value)
+    unless value.kind_of?(Hash) or validate_security(:json, name, value)
+      raise ValidationError.new(name, value, 'Not hash nor json')
+    end
+  end
+
 end
