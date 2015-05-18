@@ -40,6 +40,7 @@ ruby/2.1.1' load complete. 9871
   def test_send_and_launch_sm
     pid = mock 'pid'
     output = mock 'output'
+    stripped_output = mock 'stripped output'
     command = mock 'command'
 
     record = stub_everything 'record' do
@@ -47,8 +48,9 @@ ruby/2.1.1' load complete. 9871
       expects(:upload_file).once
     end
 
+    DummyShellBasedInfrastructure.expects(:strip_pid_output).with(output).returns(stripped_output)
     ShellBasedInfrastructure.stubs(:start_simulation_manager_cmd).with(record).returns(command)
-    ShellBasedInfrastructure.expects(:output_to_pid).with(output).returns(pid)
+    ShellBasedInfrastructure.expects(:output_to_pid).with(stripped_output).returns(pid)
     DummyShellBasedInfrastructure.any_instance.stubs(:logger).returns(stub_everything)
 
     ssh = stub_everything 'ssh' do
