@@ -43,7 +43,7 @@ module ShellBasedInfrastructure
   end
 
   def self.output_to_pid(output)
-    match = output.match /.*^(\d+)\s/m
+    match = output.match /.*^(\d+)\s*/m
     pid = match ? match[1].to_i : nil
     (pid and pid > 0) ? pid : nil
   end
