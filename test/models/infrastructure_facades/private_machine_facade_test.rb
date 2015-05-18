@@ -136,7 +136,7 @@ class PrivateMachineFacadeTest < MiniTest::Test
       expects(:store_error).never
     end
 
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package).yields
 
     PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(0)
 
@@ -159,7 +159,7 @@ class PrivateMachineFacadeTest < MiniTest::Test
       end
     end
 
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package).yields
 
     PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(0)
 
@@ -182,7 +182,7 @@ class PrivateMachineFacadeTest < MiniTest::Test
       end
     end
 
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package).yields
     PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(0)
 
     @facade.stubs(:shared_ssh_session).with(credentials).once.raises(Errno::ECONNREFUSED)
@@ -206,7 +206,7 @@ class PrivateMachineFacadeTest < MiniTest::Test
       end
     end
 
-    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package).yields
     PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(3)
     PrivateMachineFacade.stubs(:sim_installation_retry_delay).returns(1)
 
