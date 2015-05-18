@@ -119,11 +119,104 @@ class PrivateMachineFacadeTest < MiniTest::Test
 
   def test_get_credentials
     user_id = mock 'user_id'
-    records = mock 'records'
+    records = stub_everything 'records'
 
     PrivateMachineCredentials.stubs(:where).with(user_id: user_id, host: 'localhost').returns(records)
 
     assert_equal records, @facade.get_credentials(user_id, host: 'localhost')
+  end
+
+  def test_prepare_resource_when_send_and_launch_success
+    credentials = stub_everything 'credentials'
+    ssh = stub_everything 'ssh'
+
+    record = stub_everything 'record' do
+      stubs(:onsite_monitoring).returns(false)
+      stubs(:credentials).returns(credentials)
+      expects(:store_error).never
+    end
+
+    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+
+    PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(0)
+
+    @facade.stubs(:shared_ssh_session).with(credentials).once.returns(ssh)
+    @facade.stubs(:log_exists?).returns(false)
+    @facade.expects(:send_and_launch_sm).once.with(record, ssh).returns(100)
+
+    assert_equal 100, @facade._simulation_manager_prepare_resource(record)
+  end
+
+  def test_prepare_resource_when_send_and_launch_failed
+    credentials = stub_everything 'credentials'
+    ssh = stub_everything 'ssh'
+
+    record = stub_everything 'record' do
+      stubs(:onsite_monitoring).returns(false)
+      stubs(:credentials).returns(credentials)
+      expects(:store_error).once do |a, _|
+        a == 'install_failed'
+      end
+    end
+
+    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+
+    PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(0)
+
+    @facade.stubs(:shared_ssh_session).with(credentials).once.returns(ssh)
+    @facade.stubs(:log_exists?).returns(false)
+    @facade.expects(:send_and_launch_sm).once.with(record, ssh).returns(nil)
+
+    @facade._simulation_manager_prepare_resource(record)
+  end
+
+  def test_prepare_resource_when_ssh_fails
+    credentials = stub_everything 'credentials'
+    ssh = stub_everything 'ssh'
+
+    record = stub_everything 'record' do
+      stubs(:onsite_monitoring).returns(false)
+      stubs(:credentials).returns(credentials)
+      expects(:store_error).once do |a, _|
+        a == 'install_failed'
+      end
+    end
+
+    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(0)
+
+    @facade.stubs(:shared_ssh_session).with(credentials).once.raises(Errno::ECONNREFUSED)
+    @facade.stubs(:log_exists?).never
+    @facade.expects(:send_and_launch_sm).never
+
+    assert_raises(Errno::ECONNREFUSED) do
+      @facade._simulation_manager_prepare_resource(record)
+    end
+  end
+
+  def test_prepare_resource_when_ssh_fails_mutiple_times
+    credentials = stub_everything 'credentials'
+    ssh = stub_everything 'ssh'
+
+    record = stub_everything 'record' do
+      stubs(:onsite_monitoring).returns(false)
+      stubs(:credentials).returns(credentials)
+      expects(:store_error).once do |a, _|
+        a == 'install_failed'
+      end
+    end
+
+    InfrastructureFacade.stubs(:prepare_configuration_for_simulation_manager)
+    PrivateMachineFacade.stubs(:sim_installation_retry_count).returns(3)
+    PrivateMachineFacade.stubs(:sim_installation_retry_delay).returns(1)
+
+    @facade.stubs(:shared_ssh_session).with(credentials).times(3).raises(Errno::ECONNREFUSED)
+    @facade.stubs(:log_exists?).never
+    @facade.expects(:send_and_launch_sm).never
+
+    assert_raises(Errno::ECONNREFUSED) do
+      @facade._simulation_manager_prepare_resource(record)
+    end
   end
 
 end
