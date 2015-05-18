@@ -292,8 +292,8 @@ class ExperimentsController < ApplicationController
   def create_supervised_experiment
     validate(
         simulation_id: :security_default,
-        supervisor_script_id: [:optional, :security_default],
-        supervisor_script_params: [:optional, :json_or_hash]
+        supervisor_script_id: [:optional, :security_default]
+        #supervisor_script_params: [:optional, :json_or_hash]
     )
     # TODO: other experiment parameters
     # TODO: handle errors
