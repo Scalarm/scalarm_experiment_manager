@@ -75,7 +75,7 @@ class InformationService
     if @development
       ssl_options = {}
     else
-      ssl_options = { use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE }
+      ssl_options = { use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE }
     end
 
     begin
@@ -83,10 +83,12 @@ class InformationService
       #puts "#{Time.now} --- response from Information Service is #{response.code} #{response.body}"
       return response.code, response.body
     rescue Exception => e
-      slog('IS', "Exception occurred but nothing terrible :)")
+      slog('IS', "Exception occurred on request to Information Service: #{e.to_s}")
       slog('IS', "================== BACKTRACE ==================")
       slog('IS', e.backtrace.join("\n\t"))
       slog('IS', "================== ========= ==================")
+
+      raise
     end
 
     return nil, nil

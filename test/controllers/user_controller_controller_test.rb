@@ -1,11 +1,15 @@
 require 'test_helper'
+require 'db_helper'
 
 class UserControllerControllerTest < ActionController::TestCase
-  # TODO: this test uses database connection
+  include DBHelper
 
   def setup
-    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    super
+  end
+
+  def teardown
+    super
   end
 
   def test_login_get

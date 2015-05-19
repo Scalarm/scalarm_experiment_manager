@@ -1,6 +1,7 @@
 require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
+require 'db_helper'
 
 require 'db_helper'
 

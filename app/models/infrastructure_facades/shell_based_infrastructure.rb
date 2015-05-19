@@ -42,20 +42,27 @@ module ShellBasedInfrastructure
 
   def send_and_launch_sm(record, ssh)
     SSHAccessedInfrastructure.create_remote_directories(ssh)
-    Rails.logger.warn "ls: #{ssh.exec! 'ls'}"
+    logger.debug("Uploading SiM to #{record.host}")
     record.upload_file(LocalAbsolutePath::tmp_sim_zip(record.sm_uuid), RemoteDir::scalarm_root)
+    start_command = ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+    logger.debug("Starting SiM with #{start_command} in remote SiM dir")
     output = ssh.exec!(
         Command::cd_to_simulation_managers(
-            ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+            start_command
         )
     )
+    output = ShellBasedInfrastructure.strip_pid_output(output)
     logger.debug "Simulation Manager init (stripped) output: #{output}"
     pid = ShellBasedInfrastructure.output_to_pid(output)
     record.pid = pid if pid
   end
 
+  def self.strip_pid_output(output)
+    output.split("\n").last.strip
+  end
+
   def self.output_to_pid(output)
-    match = output.match /.*^(\d+)\s/m
+    match = output.match /.*^(\d+)\s*/m
     pid = match ? match[1].to_i : nil
     (pid and pid > 0) ? pid : nil
   end

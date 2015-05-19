@@ -5,7 +5,7 @@ require 'mocha/test_unit'
 require 'db_helper'
 require 'controller_integration_test_helper'
 
-class ExperimentsControllerTest < ActionDispatch::IntegrationTest
+class ExperimentsControllerIntegrationTest < ActionDispatch::IntegrationTest
   include DBHelper
   include ControllerIntegrationTestHelper
 

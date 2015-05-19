@@ -80,8 +80,8 @@ class SupervisedExperiment < CustomPointsExperiment
           if %w(int float).include? parameter['type']
             param[:min] = parameter['min']
             param[:max] = parameter['max']
-            param[:start_value] = (parameter['min'] + parameter['max'])/2
-            param[:start_value] = param[:start_value].to_i if parameter['type']
+            param[:start_value] = (parameter['min'] + parameter['max'])/2.0
+            param[:start_value] = param[:start_value].to_i if parameter['type'] == 'int'
           elsif parameter['type'] == 'string'
             param[:allowed_values] = parameter['allowed_values']
             param[:start_value] = param[:allowed_values].first
@@ -94,7 +94,7 @@ class SupervisedExperiment < CustomPointsExperiment
 
     res = nil
     begin
-      res = RestClient.post( 'http://localhost:13337/start_supervisor_script',  script_id: supervisor_script_id,
+      res = RestClient.post( 'http://localhost:13337/supervisor_runs',  supervisor_id: supervisor_script_id,
                                                                           config: script_params.to_json)
       res = Utils::parse_json_if_string res
     rescue RestClient::Exception, StandardError => e
