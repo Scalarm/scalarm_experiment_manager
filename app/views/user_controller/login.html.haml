@@ -27,6 +27,7 @@
                 %label.right.inline(for='password')= t('user_controller.account.password')
               .small-9.columns
                 = password_field_tag 'password', '', class: 'inline', autocomplete: :off
+
             .row
               .small-12.small-centered.columns(style="text-align: center;")
                 = submit_tag 'Login with username', class: 'button radius'
@@ -60,3 +61,11 @@
               %a.button.expand.radius{ href: login_openid_plgrid_url }
                 %i.fa.fa-openid.fa-fw.small-link
                 = t('openid.login', provider: 'PL-Grid')
+
+
+%section.panel.radius
+  .row    
+    .small-9.small-centered.columns
+      %a.button.expand.radius.success{ href: 'https://docs.cyfronet.pl/pages/viewpage.action?pageId=16023704' }
+        %i.fa.fa-book.fa-fw.small-link
+        = "New to Scalarm? Read a user guide! (Polish)"

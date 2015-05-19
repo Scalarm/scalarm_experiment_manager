@@ -227,6 +227,14 @@ class PrivateMachineFacade < InfrastructureFacade
     end
   end
 
+  def self.sim_installation_retry_count
+    5
+  end
+
+  def self.sim_installation_retry_delay
+    5
+  end
+
   # Nothing to prepare
   def _simulation_manager_prepare_resource(sm_record)
     if sm_record.onsite_monitoring
@@ -242,25 +250,38 @@ class PrivateMachineFacade < InfrastructureFacade
                                                                         sm_record.experiment_id, sm_record.start_at) do
 
         error_counter = 0
+        ssh = nil
+
+        # trying to connect via SSH multiple times
         while true
           begin
             ssh = shared_ssh_session(sm_record.credentials)
-            break if log_exists?(sm_record, ssh) or send_and_launch_sm(sm_record, ssh)
-          rescue Exception => e
+            break
+          rescue StandardError => e
             logger.warn "Exception #{e} occured while communication with "\
     "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
             error_counter += 1
-            if error_counter > 10
+            if error_counter >= self.class.sim_installation_retry_count
               sm_record.store_error('install_failed', e.to_s)
-              break
+              raise
             end
           end
 
-          sleep(20)
+          sleep(self.class.sim_installation_retry_delay)
         end
 
+        if log_exists?(sm_record, ssh)
+          logger.warn("Log file for #{sm_record.id} already exists - not sending SiM")
+        else
+          pid = send_and_launch_sm(sm_record, ssh)
+          if pid.blank?
+            logger.error("PID is blank after SiM (#{sm_record.id}) send and launch - it may be caused by not-supported shell")
+            sm_record.store_error('install_failed', 'Cannot get PID')
+          else
+            return pid
+          end
+        end
       end
-
     end
   end
 
