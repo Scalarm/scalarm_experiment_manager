@@ -1,7 +1,6 @@
 require_relative '../pl_grid_scheduler_base'
 
-require 'infrastructure_facades/shell_commands'
-include ShellCommands
+require 'infrastructure_facades/bash_command'
 
 module GliteScheduler
 
@@ -173,7 +172,7 @@ module GliteScheduler
     # end
 
     def get_log(ssh, job)
-      out_log = ssh.exec!(tail(get_glite_output_to_file(ssh, job), 25))
+      out_log = ssh.exec!(BashCommand.new.tail(get_glite_output_to_file(ssh, job), 25).to_s)
 
         <<-eos
 --- gLite info ---

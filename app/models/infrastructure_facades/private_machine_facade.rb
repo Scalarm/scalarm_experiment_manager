@@ -3,7 +3,6 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PrivateMachineFacade < InfrastructureFacade
-  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
 
@@ -160,7 +159,7 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record).to_s
       sm_record.save
 
     else
