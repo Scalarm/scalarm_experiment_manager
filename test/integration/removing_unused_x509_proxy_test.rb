@@ -10,8 +10,7 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
   include DBHelper
 
   def setup
-    MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    super
 
     @su = ScalarmUser.new(login: 'user'); @su.save
     

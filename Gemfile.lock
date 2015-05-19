@@ -1,19 +1,21 @@
 GIT
+  remote: git://github.com/Scalarm/scalarm-database.git
+  revision: 79feadbde940914f355a81e8797befe723e01994
+  specs:
+    scalarm-database (0.1.3)
+      activesupport
+      bson
+      bson_ext
+      encryptor
+      mongo
+
+GIT
   remote: git://github.com/rweng/jquery-datatables-rails.git
   revision: d0f07e9aded9de30a2ca796d8036b332b41645dc
   specs:
     jquery-datatables-rails (3.0.0)
       jquery-rails
       sass-rails
-
-PATH
-  remote: /home/jliput/Scalarm/scalarm-database
-  specs:
-    scalarm-database (0.0.2)
-      activesupport
-      bson
-      bson_ext
-      mongo
 
 GEM
   remote: https://rubygems.org/
@@ -55,9 +57,9 @@ GEM
     aws-sdk-v1 (1.58.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
-    bson (1.11.1)
-    bson_ext (1.11.1)
-      bson (~> 1.11.1)
+    bson (1.12.1)
+    bson_ext (1.12.1)
+      bson (~> 1.12.1)
     builder (3.2.2)
     coffee-rails (4.0.1)
       coffee-script (>= 2.2.0)
@@ -95,7 +97,7 @@ GEM
     haml (4.0.5)
       tilt
     hike (1.2.3)
-    i18n (0.6.11)
+    i18n (0.7.0)
     jbuilder (1.5.3)
       activesupport (>= 3.0.0)
       multi_json (>= 1.2.0)
@@ -108,7 +110,7 @@ GEM
       rails (>= 3.1.0)
     jquery-ui-rails (5.0.2)
       railties (>= 3.2.16)
-    json (1.8.1)
+    json (1.8.2)
     jwt (1.0.0)
     launchy (2.4.3)
       addressable (~> 2.3)
@@ -119,11 +121,11 @@ GEM
     metaclass (0.0.4)
     mime-types (1.25.1)
     mini_portile (0.6.1)
-    minitest (5.4.2)
+    minitest (5.6.1)
     mocha (1.1.0)
       metaclass (~> 0.0.1)
-    mongo (1.11.1)
-      bson (= 1.11.1)
+    mongo (1.12.1)
+      bson (= 1.12.1)
     multi_json (1.10.1)
     multipart-post (2.0.0)
     net-scp (1.2.1)
@@ -394,7 +396,7 @@ GEM
       libv8 (~> 3.16.14.0)
       ref
     thor (0.19.1)
-    thread_safe (0.3.4)
+    thread_safe (0.3.5)
     tilt (1.4.1)
     treetop (1.4.15)
       polyglot

@@ -4,6 +4,8 @@ require 'mocha/test_unit'
 require 'db_helper'
 require 'mongo_lock'
 
+require 'scalarm/database/core'
+
 # NOTICE: long execution time (ca. 23 seconds)
 class LockTest < MiniTest::Test
   include DBHelper
@@ -22,7 +24,7 @@ class LockTest < MiniTest::Test
   PROC_NUM = 3
   COUNT_PROC = 20
 
-  class LockTestEntry < MongoActiveRecord
+  class LockTestEntry < Scalarm::Database::MongoActiveRecord
     def self.collection_name
       'lock_test_entries'
     end

@@ -166,7 +166,9 @@ module ExperimentProgressBar
         bar_created = true
 
         return progress_bar
-      rescue Exception => e
+
+      # experimental - rescuing only StandardError
+      rescue => e
         Rails.logger.error("Couldn't create progress bar table")
       end
     end
