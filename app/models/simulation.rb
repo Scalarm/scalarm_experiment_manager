@@ -105,11 +105,6 @@ class Simulation < MongoActiveRecord
   end
 
   def set_up_adapter(adapter_type, current_user, params, mandatory = true)
-    validate(
-        "#{adapter_type}_id".to_sym => [:optional, :security_default],
-        "#{adapter_type}_name".to_sym => [:optional, :security_default]
-    )
-
     if params.include?(adapter_type + '_id') and not params["#{adapter_type}_id"].empty?
       adapter_id = params[adapter_type + '_id'].to_s
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)

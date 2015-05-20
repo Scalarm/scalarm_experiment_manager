@@ -4,6 +4,7 @@ require 'csv'
 require 'rest_client'
 
 class SimulationsController < ApplicationController
+  include AdaptersSetup
   before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
@@ -91,21 +92,10 @@ class SimulationsController < ApplicationController
       })
 
       begin
-        begin
-          simulation.set_up_adapter('input_writer', @current_user, params, false)
-          simulation.set_up_adapter('executor', @current_user, params)
-          simulation.set_up_adapter('output_reader', @current_user, params, false)
-          simulation.set_up_adapter('progress_monitor', @current_user, params, false)
-        rescue AdapterNotFoundError => e
-          flash[:error] = t('simulations.create.adapter_not_found', {adapter: e.adapter_type, id: e.adapter_id})
-          raise Exception.new("Setting up Simulation#{e.adapter_type} is mandatory")
-        rescue SecurityError => e
-          flash[:error] = e.to_s
-          raise e
-        rescue MissingAdapterError => e
-          flash[:error] = t('simulations.create.mandatory_adapter', {adapter: e.adapter_type, id: e.adapter_id})
-          raise Exception("Setting up Simulation#{e.adapter_type} is mandatory")
-        end
+        set_up_adapter_checked(simulation, 'input_writer', @current_user, params, false)
+        set_up_adapter_checked(simulation, 'executor', @current_user, params)
+        set_up_adapter_checked(simulation, 'output_reader', @current_user, params, false)
+        set_up_adapter_checked(simulation, 'progress_monitor', @current_user, params, false)
 
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 
