@@ -1,10 +1,9 @@
 require 'securerandom'
 
-class UserSession < MongoActiveRecord
+require 'scalarm/database/model/user_session'
 
-  def self.collection_name
-    'user_sessions'
-  end
+# TODO: move logic to separate gem
+class UserSession < Scalarm::Database::Model::UserSession
 
   def valid?
     if Time.now.to_i - self.last_update.to_i > Rails.configuration.session_threshold
@@ -12,10 +11,6 @@ class UserSession < MongoActiveRecord
     else
       true
     end
-  end
-
-  def self.ids_auto_convert
-    false
   end
 
   def self.create_and_update_session(user_id, uuid)

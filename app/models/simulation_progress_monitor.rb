@@ -1,7 +1,4 @@
-class SimulationProgressMonitor < MongoActiveRecord
+require 'scalarm/database/model/simulation_progress_monitor'
 
-  def self.collection_name
-    'simulation_progress_monitors'
-  end
-
+class SimulationProgressMonitor < Scalarm::Database::Model::SimulationProgressMonitor
 end

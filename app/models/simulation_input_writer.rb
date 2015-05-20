@@ -1,8 +1,4 @@
+require 'scalarm/database/model/simulation_input_writer'
 
-class SimulationInputWriter < MongoActiveRecord
-
-  def self.collection_name
-    'simulation_input_writers'
-  end
-
+class SimulationInputWriter < Scalarm::Database::Model::SimulationInputWriter
 end
