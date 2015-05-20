@@ -352,6 +352,20 @@ class InfrastructureFacade
     _get_sm_records(query, params)
   end
 
+  def self.handle_monitoring_send_errors(records)
+    begin
+      yield
+    rescue Net::SSH::AuthenticationFailed => e
+      records.each { |record| record.store_error('ssh', e.to_s) }
+      raise InfrastructureErrors::InvalidCredentialsError.new
+    rescue Errno::ECONNREFUSED => e
+      records.each { |record| record.store_error('ssh', e.to_s) }
+      raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
+    rescue Exception => e
+      records.each { |record| record.store_error('onsite_monitoring', e.to_s) }
+      raise
+    end
+  end
 
   private :create_simulation_manager, :init_resources, :clean_up_resources
 end

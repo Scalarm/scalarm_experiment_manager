@@ -105,6 +105,7 @@ en:
         errors:
           install_failed: 'Simulation Manager installation failed'
           monitoring: 'Resource monitoring cannot be completed'
+          onsite_monitoring: 'Could not initialize on-site workers monitoring'
           resource_action: 'Computational resource cannot complete operation'
           initialization_time_exceeded: "Simulation Manager initialization time exceeded"
           terminated: "Simulation Manager terminated"
