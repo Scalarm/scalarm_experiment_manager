@@ -42,7 +42,21 @@ class ExperimentIntegrationTest < ActionDispatch::IntegrationTest
 
     assert_response :success, response.code
     assert_equal 'ok', JSON.parse(response.body)['status']
-    assert_equal user_id.to_s, session[:user]
+
+    # session creation on proxy authentication was disabled
+    # assert_equal user_id.to_s, session[:user]
+  end
+
+  def test_token
+    u = ScalarmUser.new(login: 'user')
+    u.save
+    s = UserSession.create_and_update_session(u.id, '1')
+    token = s.generate_token
+    s.save
+
+    get '/', {token: token}, {'HTTP_ACCEPT' => 'application/json'}
+
+    assert_response :success, response.body
   end
 
 end

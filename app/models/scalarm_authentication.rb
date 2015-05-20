@@ -21,6 +21,9 @@ module ScalarmAuthentication
     @current_user = nil; @sm_user = nil; @session_auth = false; @user_session = nil
 
     case true
+      when token_provided?(params)
+        authenticate_with_token(params[:token])
+
       when (not session[:user].blank?)
         authenticate_with_session
 
@@ -36,8 +39,10 @@ module ScalarmAuthentication
 
     if @current_user.nil? and @sm_user.nil?
       authentication_failed
-    elsif @sm_user.nil?
+    elsif @sm_user.nil? and not session[:user].nil?
       @user_session = UserSession.create_and_update_session(session[:user], session[:uuid])
+    else
+      Rails.logger.debug("[authentication] one-time authentication (without session saving)")
     end
   end
 
@@ -47,14 +52,7 @@ module ScalarmAuthentication
 
     @user_session = UserSession.where(session_id: session_id, uuid: session[:uuid]).first
 
-    if (not @user_session.nil?) and @user_session.valid?
-      Rails.logger.debug("[authentication] scalarm user session exists and its valid")
-      @current_user = ScalarmUser.find_by_id(session_id)
-      @session_auth = true unless @current_user.blank?
-    else
-      flash[:error] = t('session.expired')
-      Rails.logger.debug("[authentication] scalarm user session doesnt exist or its invalid")
-    end
+    validate_and_use_session
   end
 
   def certificate_provided?
@@ -84,7 +82,6 @@ module ScalarmAuthentication
   def authenticate_with_password
     authenticate_or_request_with_http_basic do |login, password|
       temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(login.to_s)
-
       unless temp_pass.nil?
         Rails.logger.debug("[authentication] SM using uuid: '#{login}'")
 
@@ -96,7 +93,6 @@ module ScalarmAuthentication
         session[:user] = @current_user.id.to_s unless @current_user.nil?
         session[:uuid] = SecureRandom.uuid
       end
-
     end
   end
 
@@ -136,12 +132,43 @@ module ScalarmAuthentication
         @current_user.save
       end
 
-      session[:user] = @current_user.id.to_s unless @current_user.nil?
-      session[:uuid] = SecureRandom.uuid
+      # session saving on proxy authentication was disabled
+      # session[:user] = @current_user.id.to_s unless @current_user.nil?
+      # session[:uuid] = SecureRandom.uuid
     rescue GP::ProxyValidationError => e
       Rails.logger.warn "[authentication] proxy validation error: #{e}"
     rescue OpenSSL::X509::CertificateError => e
       Rails.logger.warn "[authentication] OpenSSL error when trying to use proxy certificate: #{e}"
+    end
+  end
+
+  def token_provided?(params)
+    !!params[:token]
+  end
+
+  def authenticate_with_token(token)
+    @user_session = ScalarmAuthentication.find_session_by_token(token)
+    if @user_session
+      @user_session.tokens.delete(token)
+      @user_session.save
+      validate_and_use_session
+    else
+      Rails.logger.warn("Invalid token provided for login: #{token}")
+    end
+  end
+
+  def self.find_session_by_token(token)
+    UserSession.where(tokens: token).first
+  end
+
+  def validate_and_use_session
+    if (not @user_session.nil?) and @user_session.valid?
+      Rails.logger.debug("[authentication] scalarm user session exists and its valid")
+      @current_user = ScalarmUser.find_by_id(@user_session.session_id)
+      @session_auth = true unless @current_user.blank?
+    else
+      flash[:error] = t('session.expired')
+      Rails.logger.debug("[authentication] scalarm user session doesnt exist and its invalid")
     end
   end
 
