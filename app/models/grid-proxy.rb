@@ -20,5 +20,9 @@ module GP
         false
       end
     end
+
+    def dn
+      proxycert.issuer.to_s
+    end
   end
 end

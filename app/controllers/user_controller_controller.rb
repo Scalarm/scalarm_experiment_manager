@@ -13,6 +13,17 @@ class UserControllerController < ApplicationController
   include GoogleOpenID
   include PlGridOpenID
 
+  ##
+  # Normally render welcome page
+  # Render trivial json if Accept: application/json specified,
+  # for testing and authentication tests purposes
+  def index
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok', message: 'Welcome to Scalarm' } }
+    end
+  end
+
   def successful_login
     original_url = session[:original_url]
     session[:original_url] = nil

@@ -14,7 +14,7 @@ class UserSession < Scalarm::Database::Model::UserSession
   end
 
   def self.create_and_update_session(user_id, uuid)
-    session_id = BSON::ObjectId(user_id)
+    session_id = BSON::ObjectId(user_id.to_s)
     if uuid.nil?
       uuid = session[:session_uuid] = SecureRandom.uuid
     end

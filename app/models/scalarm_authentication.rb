@@ -37,7 +37,7 @@ module ScalarmAuthentication
     if @current_user.nil? and @sm_user.nil?
       authentication_failed
     elsif @sm_user.nil?
-      @user_session = UserSession.create_and_update_session(session[:user].to_s, session[:uuid])
+      @user_session = UserSession.create_and_update_session(session[:user], session[:uuid])
     end
   end
 
@@ -120,7 +120,7 @@ module ScalarmAuthentication
     end
 
     begin
-      dn = proxy.proxycert.issuer.to_s
+      dn = proxy.dn
       Rails.logger.debug("[authentication] using proxy certificate: '#{dn}'") # TODO: DN
 
       proxy.verify_for_plgrid!
