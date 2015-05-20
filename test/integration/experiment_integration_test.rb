@@ -11,7 +11,7 @@ CSV_FILE = 'experiment_2.csv'
 SIMULATIONS_COUNT = 9
 
 
-class ExperimentTest < MiniTest::Test
+class ExperimentIntegrationTest < MiniTest::Test
   # NOTICE: slow test
   include DBHelper
 
