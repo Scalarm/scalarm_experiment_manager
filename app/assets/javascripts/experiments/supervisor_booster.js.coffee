@@ -1,51 +1,21 @@
 class window.SupervisorBooster
-  constructor: (@dialogId, @simulation_id) ->
-#    @dialog = $("##{dialogId}")
-#    @schedulerForm = $('#scheduler-form form')
-#    @bindToSubmissionForms()
-
+  constructor: () ->
     @supervisorSelect = $('#supervisor_select')
     @supervisorSelect.change(@onSupervisorSelectChange)
     @onSupervisorSelectChange()
 
   onSupervisorSelectChange: () =>
     selectValue = @supervisorSelect.val()
-    console.log(selectValue)
-
-    fieldsURL = ""
     if selectValue != 'none'
       fieldsURL = "http://localhost:13337/supervisors/#{selectValue}/start_panel"
+      fieldsDiv = $('#supervisor_fields')
+      fieldsDiv.html(window.loaderHTML)
+      fieldsDiv.load(fieldsURL)
+      $('#input-space-parameters').hide();
+      $('#check-experiment-size').hide();
+      $('#supervisor_fields').show();
     else
-      params = $.param({simulation_id: @simulation_id})
-      fieldsURL = "/experiments/input_space_form?#{params}"
+      $('#supervisor_fields').empty();
+      $('#input-space-parameters').show();
+      $('#check-experiment-size').show();
 
-    fieldsDiv = $('#supervisor_fields')
-    fieldsDiv.html(window.loaderHTML)
-    fieldsDiv.load(fieldsURL)
-
-
-
-#  bindToSubmissionForms: () =>
-#    @schedulerForm
-#    .bind('ajax:before', () =>
-#      @dialog.foundation('reveal', 'close')
-#      window.Notices.show_loading_notice()
-#    )
-#    .bind('ajax:success', (status, data, xhr) =>
-#      switch data.status
-#        when 'error'
-#          toastr.error(data.msg)
-#        when 'ok'
-#          toastr.success(data.msg)
-#        else
-#          toastr.error(data.msg)
-#    )
-#    .bind('ajax:error', (xhr, data, error) =>
-#      resp = data.responseJSON
-#      toastr.error(resp and (resp.reason or resp.msg) or "Unknown error - please contact administrators.")
-#    )
-#    .bind('ajax:complete', =>
-#      window.Notices.hide_notice()
-#      window.infrastructuresTree and window.infrastructuresTree.updateInfrastructureNode(@infrastructureName)
-#      window.retrieveComputationalResourcesSummary and window.retrieveComputationalResourcesSummary()
-#    )
