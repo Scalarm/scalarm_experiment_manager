@@ -3,7 +3,7 @@ module StatisticsAPI
   ##
   # Returns ids of already created SimulationRuns for current Experiment
   def get_simulation_runs_ids
-    simulation_runs.where({}, :fields => ['_id']).all.to_a.map { |sr| sr._id }
+    simulation_runs.where({}, fields: ['_id']).all.to_a.map { |sr| sr._id }
   end
 
   ##
