@@ -1,6 +1,7 @@
 require 'zip'
 
 class SimulationScenariosController < ApplicationController
+  include AdaptersSetup
   before_filter :load_simulation_scenario, except: [ :index, :create ]
 
   def index
@@ -36,10 +37,10 @@ class SimulationScenariosController < ApplicationController
         @simulation_scenario.created_at = Time.now
 
         begin
-          set_up_adapter('input_writer', @simulation_scenario, false)
-          set_up_adapter('executor', @simulation_scenario)
-          set_up_adapter('output_reader', @simulation_scenario, false)
-          set_up_adapter('progress_monitor', @simulation_scenario, false)
+          set_up_adapter_checked(@simulation_scenario, 'input_writer', @current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'executor', @current_user, params)
+          set_up_adapter_checked(@simulation_scenario, 'output_reader', @current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'progress_monitor', @current_user, params, false)
 
           unless (binaries = params[:simulation_binaries]).blank?
             @simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
@@ -168,53 +169,6 @@ class SimulationScenariosController < ApplicationController
   end
 
   private
-
-  def set_up_adapter(adapter_type, simulation, mandatory = true)
-    validate(
-        "#{adapter_type}_id".to_sym => [:optional, :security_default],
-        "#{adapter_type}_name".to_sym => [:optional, :security_default]
-    )
-
-    if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id'].to_s
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
-
-      if not adapter.nil? and adapter.user_id == @current_user.id
-        simulation.send(adapter_type + '_id=', adapter.id)
-      else
-        if mandatory
-          flash[:error] = t('simulations.create.adapter_not_found', {adapter: adapter_type.camelize, id: adapter_id})
-          raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory")
-        end
-      end
-
-    # uploading new file
-    elsif params.include?(adapter_type)
-      unless Utils::get_validation_regexp(:filename).match(params[adapter_type].original_filename)
-        flash[:error] = t('errors.insecure_filename', param_name: adapter_type)
-        raise SecurityError.new(t('errors.insecure_filename', param_name: adapter_type))
-      end
-
-      adapter_name = if params["#{adapter_type}_name"].blank?
-                       params[adapter_type].original_filename
-                     else
-                       params["#{adapter_type}_name"]
-                     end
-
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
-                                                                               name: adapter_name,
-                                                                               code: Utils.read_if_file(params[adapter_type]),
-                                                                               user_id: @current_user.id})
-      adapter.save
-      Rails.logger.debug(adapter)
-      simulation.send(adapter_type + '_id=', adapter.id)
-    else
-      if mandatory
-        flash[:error] = t('simulations.create.mandatory_adapter', {adapter: adapter_type.camelize, id: adapter_id})
-        raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory")
-      end
-    end
-  end
 
   def simulation_scenario_params_validation(simulation_input)
     case true
