@@ -2,7 +2,6 @@
 # _id => auto generated user id
 # dn => distinguished user name from certificate
 # login => last CN attribute value from dn
-require 'grid-proxy'
 
 require 'scalarm/database/model/scalarm_user'
 

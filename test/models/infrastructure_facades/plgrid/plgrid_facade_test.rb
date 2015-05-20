@@ -193,4 +193,9 @@ class PlGridFacadeTest < MiniTest::Test
     @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
   end
 
+  def test_create_temp_credentials_proxy
+
+    PlGridFacade.create_temp_credentials(proxy: 'zxc')
+  end
+
 end

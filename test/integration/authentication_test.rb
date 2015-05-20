@@ -17,7 +17,8 @@ class ExperimentIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   def test_login_access_proxy
-    require 'grid-proxy'
+    require 'scalarm/service_core/grid-proxy'
+    require 'scalarm/service_core/scalarm_authentication'
 
     header_proxy = 'serialized proxy frome header'
     proxy = mock 'deserialized proxy'
@@ -38,7 +39,8 @@ class ExperimentIntegrationTest < ActionDispatch::IntegrationTest
       _user_id == user_id
     end
 
-    get '/', {}, { ScalarmAuthentication::RAILS_PROXY_HEADER => header_proxy, 'HTTP_ACCEPT' => 'application/json' }
+    get '/', {}, { Scalarm::ServiceCore::ScalarmAuthentication::RAILS_PROXY_HEADER => header_proxy,
+                   'HTTP_ACCEPT' => 'application/json' }
 
     assert_response :success, response.code
     assert_equal 'ok', JSON.parse(response.body)['status']
