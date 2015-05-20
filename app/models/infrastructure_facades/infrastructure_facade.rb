@@ -361,6 +361,9 @@ class InfrastructureFacade
     rescue Errno::ECONNREFUSED => e
       records.each { |record| record.store_error('ssh', e.to_s) }
       raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
+    rescue Exception => e
+      records.each { |record| record.store_error('onsite_monitoring', e.to_s) }
+      raise
     end
   end
 

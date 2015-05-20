@@ -54,33 +54,28 @@ class PlGridFacade < InfrastructureFacade
     end
 
     # 2. create instances_count SiMs
-    begin
-      records = (1..instances_count).map do
-        # 2.a create temp pass for SiM
-        sm_uuid = SecureRandom.uuid
-        if SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid).nil?
-          SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
-        end
-
-        # 2.c create record for SiM and save it
-        record = create_record(user_id, experiment_id, sm_uuid, additional_params)
-        record.save
-
-        record
+    records = (1..instances_count).map do
+      # 2.a create temp pass for SiM
+      sm_uuid = SecureRandom.uuid
+      if SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid).nil?
+        SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
       end
 
-      if additional_params[:onsite_monitoring]
-        sm_uuid = SecureRandom.uuid
-        self.class.handle_monitoring_send_errors(records) do
-          self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler.short_name, additional_params)
-        end
-      end
+      # 2.c create record for SiM and save it
+      record = create_record(user_id, experiment_id, sm_uuid, additional_params)
+      record.save
 
-      records
-    rescue Exception => e
-      records.each { |record| record.store_error('onsite_monitoring', e.to_s) }
-      raise e
+      record
     end
+
+    if additional_params[:onsite_monitoring]
+      sm_uuid = SecureRandom.uuid
+      self.class.handle_monitoring_send_errors(records) do
+        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler.short_name, additional_params)
+      end
+    end
+
+    records
   end
 
   def create_records(count, *args)
