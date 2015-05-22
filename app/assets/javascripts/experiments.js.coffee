@@ -134,12 +134,54 @@ class window.ExperimentMonitor
 
     window.scalarm_objects[@obj_id] = this
     @schedule_update()
+    @handleUpdates()
 
-  update: ->
     monitor = this
 
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
+
+
+  update: ->
+    monitor = this
+
+#    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
+
+  handleUpdates: ->
+    lastTimestamp = new Date().getTime();
+
+    source = new EventSource("#{@experiment_id}/notifications")
+    source.addEventListener('progress-bar-update', (e) =>
+      console.log(e.data)
+      updateInfo = JSON.parse(e.data)
+
+      console.log("Time checking: #{lastTimestamp} - #{updateInfo.timestamp}" )
+
+      if lastTimestamp <= updateInfo.timestamp
+        console.log("We have new update to apply...")
+
+        # there should be information regarding: sent, done, percentage_counter, and updated bar
+        $("#exp_sent_counter").html(updateInfo.sent.toString().with_delimeters())
+        $("#exp_done_counter").html(updateInfo.done_num.toString().with_delimeters())
+        $("#exp_done_percentage_counter").html(updateInfo.done_percentage)
+
+        canvas = document.getElementById("exp_progress_bar_2")
+        context = canvas.getContext("2d")
+        part_width = canvas.width / @bar_cells.length
+
+        cellBorders = @bar_cells[updateInfo.bar_num]
+        context.fillStyle = if(updateInfo.bar_color == 0) then "#BDBDBD" else "rgb(0, #{updateInfo.bar_color}, 0)"
+
+        if updateInfo.bar_num == @bar_cells.length - 1
+          context.fillRect(@part_width * updateInfo.bar_num, 10, @part_width, canvas.height - 10)
+        else
+          context.fillRect(@part_width * updateInfo.bar_num, 10, @part_width*0.95, canvas.height - 10)
+
+        lastTimestamp = updateInfo.timestamp
+      else
+        console.log("Received message is too old - #{lastTimestamp}")
+    )
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)
@@ -170,7 +212,7 @@ class window.ExperimentMonitor
     bar_colors = eval(statistics.progress_bar)
     canvas = document.getElementById("exp_progress_bar_2")
     context = canvas.getContext("2d")
-    part_width = canvas.width / bar_colors.length
+    @part_width = canvas.width / bar_colors.length
 
     context.fillStyle = "rgb(255, 255, 255)"
     context.fillRect(0, 10, canvas.width, canvas.height - 10)
@@ -185,11 +227,11 @@ class window.ExperimentMonitor
         context.fillStyle = "#F62217"
 
       if i == bar_colors.length - 1
-        context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
-        @bar_cells.push([part_width * i, part_width * i + part_width])
+        context.fillRect(@part_width * i, 10, @part_width, canvas.height - 10)
+        @bar_cells.push([@part_width * i, @part_width * i + @part_width])
       else
-        context.fillRect(part_width * i, 10, part_width*0.95, canvas.height - 10)
-        @bar_cells.push([part_width * i, part_width * i + part_width*0.95])
+        context.fillRect(@part_width * i, 10, @part_width*0.95, canvas.height - 10)
+        @bar_cells.push([@part_width * i, @part_width * i + @part_width*0.95])
 
 #   formating avg execution time
     if(statistics.avg_execution_time != undefined)

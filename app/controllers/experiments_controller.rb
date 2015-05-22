@@ -4,6 +4,8 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
+  include ActionController::Live
+
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
 
@@ -685,6 +687,35 @@ class ExperimentsController < ApplicationController
     storage_manager_url = InformationService.new.sample_public_storage_manager
     redirect_to LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, @user_session)
+  end
+
+  def notifications
+    notifications = MongoActiveRecord.get_collection('notifications')
+    tailf = Mongo::Cursor.new(notifications, tailable: true, order: [['$natural', 1]])
+
+    response.headers['Content-Type'] = 'text/event-stream'
+    sse = SSE.new(response.stream)
+
+    begin
+      loop do
+        while (doc = tailf.next) != nil
+          if doc['event'] == 'progress-bar-update' and doc['experiment_id'].to_s == @experiment.id.to_s
+            sse.write(doc, event: doc['event'])
+          end
+        end
+
+        sleep 1
+      end
+
+      render nothing: true
+
+    rescue IOError
+      logger.debug("IO error")
+    ensure
+      tailf.close
+      # response.stream.close
+      sse.close
+    end
   end
 
   private

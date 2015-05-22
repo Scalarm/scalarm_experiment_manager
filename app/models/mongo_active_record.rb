@@ -289,6 +289,11 @@ class MongoActiveRecord
       @@db = @@client[db_name]
       @@grid = Mongo::Grid.new(@@db)
 
+      # DK : creating a new capped collection for notifications
+      unless @@db.collection_names.include?('notifications')
+        @@db.create_collection('notifications', capped: true, size: 10000)
+      end
+
       return true
     rescue Exception => e
       Rails.logger.debug "Could not initialize connection with MongoDB --- #{e}"

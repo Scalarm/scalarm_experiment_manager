@@ -1,6 +1,6 @@
 module ExperimentProgressBar
   CANVAS_WIDTH = 960.0
-  MINIMUM_SLOT_WIDTH = 2.0
+  MINIMUM_SLOT_WIDTH = 4.0
   PROGRESS_BAR_THRESHOLD = 10000
 
   def progress_bar_table
@@ -15,7 +15,7 @@ module ExperimentProgressBar
     [(MINIMUM_SLOT_WIDTH / part_width).ceil, 1].max
   end
 
-  def progress_bar_update(simulation_id, update_type)
+  def progress_bar_update(simulation_id, update_type, notify = true)
     return if self.experiment_size > PROGRESS_BAR_THRESHOLD and update_type == 'sent'
 
     parts_per_slot = parts_per_progress_bar_slot
@@ -33,6 +33,19 @@ module ExperimentProgressBar
 
     begin
       progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
+
+      # notification to clients
+      _, sent, done = self.get_statistics
+      bar = progress_bar_table.find_one({bar_num: bar_index})
+
+      Notification.new(event: 'progress-bar-update',
+                       experiment_id: self.id.to_s,
+                       sent: sent,
+                       done_num: done,
+                       done_percentage: "'%.2f'" % ((done.to_f / self.experiment_size) * 100),
+                       bar_num: bar_index,
+                       bar_color: compute_bar_color(bar)).save
+
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end

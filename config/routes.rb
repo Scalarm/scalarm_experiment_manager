@@ -72,6 +72,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :completed_simulations_count
       get :experiment_stats
       get :experiment_moes
+      get :notifications
 
       get :simulation_manager
 
