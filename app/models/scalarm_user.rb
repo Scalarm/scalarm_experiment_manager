@@ -5,6 +5,8 @@
 
 require 'scalarm/service_core/scalarm_user'
 
+##
+# Scalarm::ServiceCore::User extended with experiment management methods.
 class ScalarmUser < Scalarm::ServiceCore::ScalarmUser
 
   def grid_credentials

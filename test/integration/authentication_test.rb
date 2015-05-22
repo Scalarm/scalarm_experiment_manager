@@ -23,6 +23,7 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
     header_proxy = 'serialized proxy frome header'
     proxy = mock 'deserialized proxy'
     proxy_obj = mock 'proxy obj' do
+      stubs(:class).returns(Scalarm::ServiceCore::GridProxy::Proxy)
       stubs(:username).returns('plguser')
       stubs(:dn).returns('dn')
       expects(:verify_for_plgrid!).at_least_once
@@ -34,7 +35,8 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
 
     Utils.stubs(:header_newlines_deserialize).with(header_proxy).returns(proxy)
     Scalarm::ServiceCore::GridProxy::Proxy.stubs(:new).with(proxy).returns(proxy_obj)
-    ScalarmUser.expects(:authenticate_with_proxy).at_least_once.with(proxy_obj, false).returns(scalarm_user)
+    Scalarm::ServiceCore::ScalarmUser.expects(:authenticate_with_proxy).
+        at_least_once.with(proxy_obj, false).returns(scalarm_user)
     UserSession.stubs(:create_and_update_session) do |_user_id, session_id|
       _user_id == user_id
     end
@@ -68,7 +70,8 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
 
     Utils.stubs(:header_newlines_deserialize).with(header_proxy).returns(proxy)
     Scalarm::ServiceCore::GridProxy::Proxy.stubs(:new).with(proxy).returns(proxy_obj)
-    ScalarmUser.stubs(:authenticate_with_proxy).with(proxy_obj, false).returns(scalarm_user)
+    Scalarm::ServiceCore::ScalarmUser.stubs(:authenticate_with_proxy).with(proxy_obj, false).returns(scalarm_user)
+    Scalarm::ServiceCore::ScalarmUser.stubs(:authenticate_with_proxy).with(proxy_obj, true).returns(nil)
     UserSession.stubs(:create_and_update_session) do |_user_id, session_id|
       _user_id == user_id
     end
