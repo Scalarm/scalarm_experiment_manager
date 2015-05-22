@@ -30,13 +30,11 @@ class Experiment < MongoActiveRecord
   require 'experiment_extensions/experiment_progress_bar'
   require 'experiment_extensions/simulation_run'
   require 'experiment_extensions/simulation_scheduler'
-  require 'workers_scaling/resources_api.rb'
 
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
   include SimulationRunModule
-  include ResourcesAPI
 
   ID_DELIM = '___'
 
