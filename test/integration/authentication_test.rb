@@ -100,4 +100,21 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
     assert_response :success, response.body
   end
 
+  def test_basic_auth_success
+    login = 'user'
+    password = 'pass'
+
+    u = ScalarmUser.new(login: login)
+    u.password = password
+    u.save
+
+    get '/', {}, {
+               'HTTP_ACCEPT' => 'application/json',
+               'HTTP_AUTHORIZATION' =>
+                   ActionController::HttpAuthentication::Basic.encode_credentials(login, password)
+           }
+
+    assert_response :success, response.body
+  end
+
 end

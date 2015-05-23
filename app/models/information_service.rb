@@ -1,14 +1,11 @@
-require 'openssl'
-require 'net/https'
-
 require 'scalarm/service_core/information_service'
 
 class InformationService < Scalarm::ServiceCore::InformationService
-  def instance
+  def self.instance
     @instance ||= create_from_config
   end
 
-  def create_from_config
+  def self.create_from_config
     config = Rails.application.secrets
 
     service_url = config['information_service_url']

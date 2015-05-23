@@ -36,6 +36,7 @@ class ApplicationController < ActionController::Base
   def authenticate
     super
     @current_user = @current_user.convert_to(ScalarmUser) if @current_user
+    @sm_user = @sm_user.convert_to(SimulationManagerTempPassword) if @sm_user
     @user_session = @user_session.convert_to(UserSession) if @user_session
   end
 
