@@ -1,8 +1,8 @@
 GIT
   remote: git://github.com/Scalarm/scalarm-database.git
-  revision: 74047dcfa38d468ade627d61904296d64ed62d2d
+  revision: bb5038b2bf1877a5b799468a1c542266e69e5a16
   specs:
-    scalarm-database (0.1.3.1)
+    scalarm-database (0.1.3.2)
       activesupport
       bson
       bson_ext

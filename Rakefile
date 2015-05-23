@@ -14,13 +14,19 @@ REQUIRED_ARCHS = ['linux_386']
 
 namespace :service do
   desc 'Start the service'
-  task :start, [:debug] => [:environment, :setup] do |t, args|
+  task :start, [:debug] => [:ensure_config, :setup, :environment] do |t, args|
     puts 'puma -C config/puma.rb'
     %x[puma -C config/puma.rb]
 
     load_balancer_registration
     create_anonymous_user
-    monitoring_probe('start')
+
+    # start monitoring only if there is configuration
+    if Rails.application.secrets.monitoring
+      monitoring_probe('start')
+    else
+      puts 'Monitoring probe disabled due to lack of configuration'
+    end
   end
 
   desc 'Stop the service'
@@ -28,7 +34,12 @@ namespace :service do
     puts 'pumactl -F config/puma.rb -T scalarm stop'
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
-    monitoring_probe('stop')
+    if Rails.application.secrets.monitoring
+      monitoring_probe('stop')
+    else
+      puts 'Monitoring probe will not be stopped due to lack of configuration'
+    end
+
     load_balancer_deregistration
   end
 
@@ -50,6 +61,12 @@ namespace :service do
       non_digested = File.join(source)
       FileUtils.cp(file, non_digested)
     end
+  end
+
+  desc 'Create default configuration files if these do not exist'
+  task :ensure_config do
+    copy_example_config_if_not_exists('config/secrets.yml')
+    copy_example_config_if_not_exists('config/puma.rb')
   end
 
   desc 'Downloading and installing dependencies'
@@ -188,39 +205,40 @@ end
 def monitoring_probe(action)
   probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
 
-  if action == 'start'
-    Process.daemon(true)
-    monitoring_job_pid = fork {
-      # requiring all class from the model
-      Dir[File.join(Rails.root, 'app', 'models', "**/*.rb")].each do |f|
-        require f
+  case action
+    when 'start'
+      Process.daemon(true)
+      monitoring_job_pid = fork do
+        # requiring all class from the model
+        Dir[File.join(Rails.root, 'app', 'models', '**/*.rb')].each do |f|
+          require f
+        end
+
+        probe = MonitoringProbe.new
+        probe.start_monitoring
+
+        ExperimentWatcher.watch_experiments
+        InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
       end
 
-      probe = MonitoringProbe.new
-      probe.start_monitoring
+      IO.write(probe_pid_path, monitoring_job_pid)
 
-      ExperimentWatcher.watch_experiments
-      InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
-    }
-
-    IO.write(probe_pid_path, monitoring_job_pid)
-
-    Process.detach(monitoring_job_pid)
-
-  elsif action == 'stop'
+      Process.detach(monitoring_job_pid)
+    when
     if File.exist?(probe_pid_path)
       monitoring_job_pid = IO.read(probe_pid_path)
       Process.kill('TERM', monitoring_job_pid.to_i)
     end
   end
-
 end
 
 def create_anonymous_user
   unless Rails.env.test?
     require 'utils'
 
-    config = Utils::load_config
+    # anonymous_login and anonymous_password moved to secrets.yml
+    #config = Utils::load_config
+    config = Rails.application.secrets.anonymous_user
 
     anonymous_login = config['anonymous_login']
     anonymous_password = config['anonymous_password']
@@ -425,5 +443,15 @@ def load_balancer_deregistration
     LoadBalancerRegistration.deregister(Rails.application.secrets.load_balancer["address"])
   else
     puts 'load_balancer.disable_registration option is active'
+  end
+end
+
+def copy_example_config_if_not_exists(base_name, prefix='example')
+  config = base_name
+  example_config = "#{base_name}.example"
+
+  unless File.exists?(config)
+    puts "Copying #{example_config} to #{config}"
+    FileUtils.cp(example_config, config)
   end
 end

@@ -2,7 +2,10 @@ require 'json'
 
 module Utils
   def self.load_config
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+    # moved to secrets.yml
+    # config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
+
+    Rails.application.secrets
   end
 
   # Used in controller methods, where parameter can be either a string or a uploaded file

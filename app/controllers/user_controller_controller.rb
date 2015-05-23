@@ -40,8 +40,8 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        config = Utils::load_config
-        anonymous_login = config['anonymous_login']
+        config = Utils::load_config.anonymous_user
+        anonymous_login = config['login']
         username = params.include?(:username) ? params[:username].to_s : anonymous_login.to_s
 
         requested_user = ScalarmUser.find_by_login(username)
