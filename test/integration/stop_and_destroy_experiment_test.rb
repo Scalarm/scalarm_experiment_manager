@@ -34,7 +34,7 @@ class StopAndDestroyExperimentTest < ActionDispatch::IntegrationTest
     information_service = mock
     information_service.stubs(:get_list_of).returns([])
     information_service.stubs(:sample_public_url).returns(nil)
-    InformationService.stubs(:new).returns(information_service)
+    InformationService.stubs(:instance).returns(information_service)
   end
 
   test 'unsuccessful stopping experiment by non-owner coworker with json response' do

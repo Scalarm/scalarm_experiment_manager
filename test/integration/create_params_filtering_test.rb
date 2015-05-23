@@ -39,7 +39,7 @@ class CreateParamsFilteringTest < ActionDispatch::IntegrationTest
       stubs(:get_list_of).returns([])
       stubs(:sample_public_url).returns(nil)
     end
-    InformationService.stubs(:new).returns(information_service)
+    InformationService.stubs(:instance).returns(information_service)
   end
 
   test 'create should filter forbidden values in params passed to experiment factory' do

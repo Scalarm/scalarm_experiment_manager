@@ -14,6 +14,7 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
 
   def teardown
     super
+    Scalarm::ServiceCore::Utils.unstub(:header_newlines_deserialize)
   end
 
   def test_authentication_proxy_success
@@ -29,11 +30,15 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
       expects(:verify_for_plgrid!).at_least_once
     end
     user_id = BSON::ObjectId.new
-    scalarm_user = mock 'scalarm user' do
+    em_scalarm_user = mock 'scalarm_user' do
       stubs(:id).returns(user_id)
     end
+    scalarm_user = mock 'scalarm user' do
+      stubs(:id).returns(user_id)
+      stubs(:convert_to).with(ScalarmUser).returns(em_scalarm_user)
+    end
 
-    Utils.stubs(:header_newlines_deserialize).with(header_proxy).returns(proxy)
+    Scalarm::ServiceCore::Utils.stubs(:header_newlines_deserialize).with(header_proxy).returns(proxy)
     Scalarm::ServiceCore::GridProxy::Proxy.stubs(:new).with(proxy).returns(proxy_obj)
     Scalarm::ServiceCore::ScalarmUser.expects(:authenticate_with_proxy).
         at_least_once.with(proxy_obj, false).returns(scalarm_user)
@@ -68,7 +73,7 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
       stubs(:id).returns(user_id)
     end
 
-    Utils.stubs(:header_newlines_deserialize).with(header_proxy).returns(proxy)
+    Scalarm::ServiceCore::Utils.stubs(:header_newlines_deserialize).with(header_proxy).returns(proxy)
     Scalarm::ServiceCore::GridProxy::Proxy.stubs(:new).with(proxy).returns(proxy_obj)
     Scalarm::ServiceCore::ScalarmUser.stubs(:authenticate_with_proxy).with(proxy_obj, false).returns(scalarm_user)
     Scalarm::ServiceCore::ScalarmUser.stubs(:authenticate_with_proxy).with(proxy_obj, true).returns(nil)

@@ -31,7 +31,7 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    information_service = InformationService.new
+    information_service = InformationService.instance
     @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
     @public_chart_service_url = information_service.sample_public_url 'chart_services'
 
@@ -906,7 +906,7 @@ class ExperimentsController < ApplicationController
   end
 
   def results_binaries
-    storage_manager_url = InformationService.new.sample_public_url 'storage_managers'
+    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
     redirect_to LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, @user_session)
   end

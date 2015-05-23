@@ -137,7 +137,7 @@ end
 namespace :db_router do
   desc 'Start MongoDB router'
   task :start, [:debug] => [:environment, :setup] do |t, args|
-    information_service = InformationService.new
+    information_service = InformationService.instance
 
     config_services = information_service.get_list_of('db_config_services')
     puts "Config services: #{config_services.inspect}"

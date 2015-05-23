@@ -438,8 +438,7 @@ class Experiment < Scalarm::Database::Model::Experiment
 
   def destroy
     # TODO TMP due to problem with routing in PLGCloud
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    information_service = InformationService.new
+    information_service = InformationService.instance
     @storage_manager_url = information_service.get_list_of('storage').sample
 
     unless @storage_manager_url

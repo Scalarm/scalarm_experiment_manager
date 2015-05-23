@@ -28,7 +28,7 @@ unless Rails.env.test?
   unless Scalarm::Database::MongoActiveRecord.connection_init('localhost', config['db_name'])
 
     slog('mongo_active_record', 'Cannot connect to local mongodb - fetching mongodb adresses from IS')
-    information_service = InformationService.new
+    information_service = InformationService.instance
     storage_manager_list = information_service.get_list_of('db_routers')
 
     if storage_manager_list.blank?
