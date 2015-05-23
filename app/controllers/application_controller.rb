@@ -1,10 +1,11 @@
 require 'openid'
 
 require 'scalarm/service_core/scalarm_authentication'
+require 'scalarm/service_core/parameter_validation'
 
 class ApplicationController < ActionController::Base
   include Scalarm::ServiceCore::ScalarmAuthentication
-  include ParameterValidation
+  include Scalarm::ServiceCore::ParameterValidation
 
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.

@@ -522,7 +522,8 @@ class ExperimentsController < ApplicationController
     parameter_uid = params[:param_name]
     param_doc = @experiment.get_parameter_doc(parameter_uid)
     if param_doc.nil?
-      raise ValidationError.new(:param_name, parameter_uid, 'No such parameter in experiment')
+      raise ValidationError.
+                new(:param_name, parameter_uid, 'No such parameter in experiment')
     end
 
     param_type = param_doc['type'].to_sym
@@ -563,11 +564,13 @@ class ExperimentsController < ApplicationController
 
   def validate_input_extension(range_min, range_max, range_step)
     unless range_min <= range_max
-      raise ValidationError.new('range_min', range_min, "Range minimum is greater than maximum")
+      raise ValidationError.
+                new('range_min', range_min, "Range minimum is greater than maximum")
     end
 
     unless range_step <= (range_max-range_min)
-      raise ValidationError.new('range_max', range_min, "Range step is too large")
+      raise ValidationError.
+                new('range_max', range_min, "Range step is too large")
     end
   end
 
@@ -919,7 +922,8 @@ class ExperimentsController < ApplicationController
     )
 
     custom_experiment = (@experiment.type == 'manual_points')
-    raise ValidationError.new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
 
     @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
 
@@ -986,7 +990,8 @@ class ExperimentsController < ApplicationController
         status: [:optional, :security_default],
         reason: [:optional, :string]
     )
-    raise ValidationError.new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
 
     if params.include?(:status) and params[:status] == 'error'
       @experiment.is_error = true
