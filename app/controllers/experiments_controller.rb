@@ -8,7 +8,7 @@ class ExperimentsController < ApplicationController
 
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
   before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
-                                          :start_custom_points_experiment, :start_supervised_experiment, :new_se ]
+                                          :start_custom_points_experiment, :start_supervised_experiment]
 
   def index
     @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }

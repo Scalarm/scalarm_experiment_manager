@@ -45,4 +45,24 @@ module ExperimentsHelper
     [">", ">="]
   end
 
+  def supervisor_options
+    # TODO get address from IS
+    supervisors = {}
+    begin
+      supervisors = JSON.parse(RestClient.get('http://localhost:13337/supervisors'))
+    rescue RestClient::Exception, StandardError => e
+      Rails.logger.infor "Unable to connect with Supervisor: #{e.to_s}"
+    end
+    none = ['None', 'none']
+    options = [none]
+    supervisors.each do |supervisor|
+      if supervisor.has_key? 'name'
+        options.append [supervisor['name'], supervisor['id']]
+      else
+        options.append [supervisor['id'], supervisor['id']]
+      end
+    end
+    options_for_select options, selected: none
+  end
+
 end
