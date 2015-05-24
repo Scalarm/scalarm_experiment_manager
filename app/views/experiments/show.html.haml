@@ -1,4 +1,4 @@
-- require "erb"
+-#- require "erb"
 -# include ERB::Util
 
 - content_for :title, 'Scalarm - monitoring'
@@ -83,6 +83,15 @@
 - content_for :javascript do
   :javascript
     $(function() {
+      var booster = new window.ExperimentBooster('booster_dialog');
+
+      var experiment_id = "#{@experiment.id}";
+      var chart_service_url = "#{@public_chart_service_url}";
+
+      if (!chart_service_url) {
+        console.log("There are no chart services available.");
+      }
+
       $("ul.analyses-panel li a").mouseenter(function() {
         $(this).css("background-color", "#EEE");
       });
@@ -90,46 +99,53 @@
         $(this).css("background-color", "#f5f5f5");
       });
 
-      var booster = new window.ExperimentBooster('booster_dialog');
+      new window.ExperimentSpeedometer(experiment_id).show();
 
-      new window.ExperimentSpeedometer('#{@experiment.id}').show();
-
-      var monitor = new window.ExperimentMonitor('#{@experiment.id}');
+      var monitor = new window.ExperimentMonitor(experiment_id);
       monitor.generate_html('experiment_stats');
 
       window.toggle_panels_on_title_click();
 
-      $("#panel .analyses-panel").load("https://#{@public_chart_service_url}/panels?id=#{@experiment.id}&base_url=#{ERB::Util.url_encode('https://' + @public_chart_service_url)}", function(response, status, xhr) {
-        if(status==="error") {
-          console.log("No available Chart Service. Using on-site content.");
-        }
-        if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
-          $(".nano").nanoScroller();
-      });
+      if (!!chart_service_url) {
+        var base_url = encodeURIComponent(chart_service_url);
+
+        $("#panel .analyses-panel").load("https://" + chart_service_url + "/panels?id=experiment_id&base_url=" + base_url, function(response, status, xhr) {
+          if(status==="error") {
+            console.log("No available Chart Service. Using on-site content.");
+          }
+
+          // disable nanoscroller in Firefox and SeaMonkey, TODO - repair nanoscroller
+          if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+            $(".nano").nanoScroller();
+        });
+      }
+
       $(document).foundation();
 
       window.WebSocket = window.WebSocket || window.MozWebSocket;
 
-      try {
-        var ws = new WebSocket("wss://#{@public_chart_service_url}/experiment_progress/#{@experiment.id}");
-        window.onbeforeunload = function() {
-          //Connection closed on Download simulation manager!!
-          ws.onclose = function () {}; // disable onclose handler first
-          ws.close()
-        };
+      if (chart_service_url) {
+        try {
+          var ws = new WebSocket("wss://" + chart_service_url + "/experiment_progress/" + experiment_id);
+          window.onbeforeunload = function() {
+            //Connection closed on Download simulation manager!!
+            ws.onclose = function () {}; // disable onclose handler first
+            ws.close()
+          };
 
-        ws.onmessage = function(message) {
-          console.log("refreshing progress bar...");
-          console.log(message.data);
-          monitor.update_bar(message.data);
-        };
+          ws.onmessage = function(message) {
+            console.log("refreshing progress bar...");
+            console.log(message.data);
+            monitor.update_bar(message.data);
+          };
 
-        ws.onerror = function(message) {
-          console.log(message);
+          ws.onerror = function(message) {
+            console.log(message);
+          }
         }
-      }
-      catch (e) {
-        console.log(e);
-        console.log("Unable to establish WebSocket connection.");
+        catch (e) {
+          console.log(e);
+          console.log("Unable to establish WebSocket connection.");
+        }
       }
     });
