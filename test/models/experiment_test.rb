@@ -85,4 +85,13 @@ class ExperimentTest < MiniTest::Test
     refute (@experiment.end?)
   end
 
+  def test_replication_level
+    @experiment.size = nil
+    @experiment.replication_level = 5
+    @experiment.parameter_constraints = nil
+    @experiment.stubs(:value_list).returns([[1, 2, 3], [1, 2]])
+
+    assert @experiment.experiment_size == 30, 'Experiment size should be equal to 30 for replication level 5 and values [[1, 2, 3], [1, 2]]'
+  end
+
 end
