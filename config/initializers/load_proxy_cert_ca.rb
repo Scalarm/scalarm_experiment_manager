@@ -1,12 +1,14 @@
-if Rails.application.secrets.proxy_cert_ca.blank?
-  Rails.logger.warn('Proxy certificate CA path not provided - proxy authentication will be disabled')
-  PROXY_CERT_CA = nil
-else
-  PROXY_CERT_CA = File.read(Rails.application.secrets.proxy_cert_ca)
-  begin
-    # check if provided file contains certificate (TODO: it is not validated)
-    ce = OpenSSL::X509::Certificate.new(PROXY_CERT_CA)
-  rescue OpenSSL::X509::CertificateError => error
-    Rails.logger.error("OpenSSL error on loading proxy CA: #{error}")
-  end
+require 'scalarm/service_core/configuration'
+
+custom_proxy_ca = Rails.application.secrets.proxy_cert_ca
+custom_proxy_crl = Rails.application.secrets.proxy_cert_crl
+
+if custom_proxy_ca
+  slog('proxy', "Using custom proxy CA: #{custom_proxy_ca}")
+  Scalarm::ServiceCore::Configuration.load_proxy_ca(custom_proxy_ca)
+end
+
+if custom_proxy_crl
+  slog('proxy', "Using custom proxy CRL: #{custom_proxy_crl}")
+  Scalarm::ServiceCore::Configuration.load_proxy_crl(custom_proxy_crl)
 end
