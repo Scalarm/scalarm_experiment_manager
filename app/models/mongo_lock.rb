@@ -1,12 +1,10 @@
 require 'socket'
 
+require 'scalarm/database/core'
+
 module Scalarm
 
-  class MongoLockRecord < MongoActiveRecord
-    def self.collection_name
-      'mongo_locks'
-    end
-  end
+  MongoLockRecord = Database::Model::MongoLockRecord
 
   class MongoLock
 

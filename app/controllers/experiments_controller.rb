@@ -88,20 +88,18 @@ class ExperimentsController < ApplicationController
 
   # stops the currently running DF experiment (if any)
   def stop
-    raise SecurityError.new(t('experiments.stop.failure')) unless @experiment.user_id == @current_user.id
-    @experiment.is_running = false
-    @experiment.end_at = Time.now
+    raise SecurityError.new(t('experiments.stop.failure')) unless current_user_owns_experiment?
 
-    @experiment.save_and_cache
-
-    SimulationManagerTempPassword.where(experiment_id: @experiment.id).each do |tmp_pass|
-      tmp_pass.destroy
-    end
+    @experiment.stop!
 
     respond_to do |format|
       format.html { redirect_to action: :index }
       format.json { render json: { status: 'ok' } }
     end
+  end
+
+  def current_user_owns_experiment?
+    @experiment.user_id == @current_user.id
   end
 
 =begin
@@ -198,7 +196,7 @@ class ExperimentsController < ApplicationController
           experiment.save
           # create progress bar
           experiment.insert_initial_bar
-          experiment.simulation_runs.create_table_for_experiment(experiment.id)
+          experiment.simulation_runs.create_table
         end
       end
 

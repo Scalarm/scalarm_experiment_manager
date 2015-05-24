@@ -8,20 +8,14 @@
 #
 # other fields are user defined and should be of String class to enable encryption!
 
-class PrivateMachineCredentials < EncryptedMongoActiveRecord
-  include SSHEnabledRecord
+require 'scalarm/database/model/private_machine_record'
 
-  SSH_AUTH_METHODS = %w(password)
+class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCredentials
+  include SSHEnabledRecord
 
   attr_join :user, ScalarmUser
 
-  def self.collection_name
-    'private_machine_credentials'
-  end
-
-  def machine_desc
-    "#{login}@#{host}:#{port}"
-  end
+  SSH_AUTH_METHODS = %w(password)
 
   def ssh_params
     {

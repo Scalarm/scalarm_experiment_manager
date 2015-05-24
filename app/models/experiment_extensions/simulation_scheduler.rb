@@ -14,8 +14,9 @@ module SimulationScheduler
 
       return instance_to_check
 
-    rescue Exception => e
-      logger.debug("get_next_instance --- #{e}")
+    rescue => e
+      Rails.logger.debug("get_next_instance --- #{e}")
+      raise
     end
 
     nil
@@ -53,9 +54,9 @@ module SimulationScheduler
     #Rails.logger.debug("Scheduling_policy is set to #{self.scheduling_policy}")
     begin
       self.send("#{self.scheduling_policy}_scheduling")
-    rescue Exception => e
+    rescue => e
       Rails.logger.debug("[simulation_scheduler] fetch_instance_from_db --- #{e} --- #{e.backtrace.inspect}")
-      nil
+      raise
     end
   end
 
@@ -126,7 +127,7 @@ module SimulationScheduler
       simulation_run = simulation_runs.where({index: next_simulation_id}, limit: 1).first
       Rails.logger.debug("Next simulation id - simulation run #{simulation_run.inspect}")
 
-      next if simulation_run.nil? or (simulation.to_sent == true)
+      next if simulation_run.nil? or (simulation_run.to_sent == true)
       next_simulation_id = -1
     end
 
@@ -156,7 +157,8 @@ module SimulationScheduler
     columns = %w(index experiment_id is_done to_sent trial arguments values)
     values = [simulation_id, self._id, false, true, trial, self.parameters.flatten.join(','), combination.join(',')]
 
-    SimulationRun.new(Hash[*columns.zip(values).flatten])
+    simulation_run_class = SimulationRunFactory.for_experiment(id)
+    simulation_run_class.new(Hash[*columns.zip(values).flatten])
   end
 
   def simulation_hash_to_sent

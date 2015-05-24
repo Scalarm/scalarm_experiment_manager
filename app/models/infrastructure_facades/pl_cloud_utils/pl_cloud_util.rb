@@ -209,6 +209,9 @@ CONTEXT = [
   def redirections_for(vm_ip)
     resp = RestClient.get "#{DNAT_URL}/#{vm_ip}",
                           content_type: :json, accept: :json
+
+    Rails.logger.info "RESPONSE: #{resp}"
+
     raise PLCloudError if resp =~ /400 Bad Request/
 
     data = JSON.parse resp
@@ -244,9 +247,13 @@ CONTEXT = [
 
   # -- Proxy utils --
 
-  # Arguments for proxy from PL-Grid OpenID: proxy cert, user cert
-  def self.certs_to_pl_cloud_secret_proxy(*certs)
-    (certs.map {|cert_txt| Base64.encode64(cert_txt.gsub('<br>', "\n")).gsub("\n", '\n')}).join('|')
+  def self.openid_proxy_to_cloud_proxy(proxy)
+    Base64.encode64(proxy).split("\n").join('\n')
   end
+
+  # Arguments for proxy from PL-Grid OpenID: proxy cert, user cert
+  # def self.certs_to_pl_cloud_secret_proxy(*certs)
+  #   (certs.map {|cert_txt| Base64.encode64(cert_txt.gsub('<br>', "\n")).gsub("\n", '\n')}).join('|')
+  # end
 
 end

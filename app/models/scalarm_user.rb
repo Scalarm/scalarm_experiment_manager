@@ -4,10 +4,12 @@
 # login => last CN attribute value from dn
 require 'grid-proxy'
 
-class ScalarmUser < MongoActiveRecord
+require 'scalarm/database/model/scalarm_user'
 
-  def self.collection_name
-    'scalarm_users'
+class ScalarmUser < Scalarm::Database::Model::ScalarmUser
+
+  def grid_credentials
+    GridCredentials.find_by_user_id(id)
   end
 
   def experiments
@@ -33,13 +35,8 @@ class ScalarmUser < MongoActiveRecord
   # returns simulation scenarios owned by this user or shared with this user
   def get_simulation_scenarios
     Simulation.where({'$or' => [
-        {user_id: self.id}, {shared_with: {'$in' => [self.id]}}, {is_public: true}]}).sort { |s1, s2|
+                         {user_id: self.id}, {shared_with: {'$in' => [self.id]}}, {is_public: true}]}).sort { |s1, s2|
       s2.created_at <=> s1.created_at }
-  end
-
-  def password=(pass)
-    salt = [Array.new(6) { rand(256).chr }.join].pack('m').chomp
-    self.password_salt, self.password_hash = salt, Digest::SHA256.hexdigest(pass + salt)
   end
 
   def owns?(experiment)
@@ -58,7 +55,6 @@ class ScalarmUser < MongoActiveRecord
 
   def self.authenticate_with_certificate(dn)
     # backward-compatibile: there are some dn's formatted by PL-Grid OpenID in database - try to convert
-    # TODO: migrate database to proper DN's
     user = (ScalarmUser.find_by_dn(dn.to_s) or
         ScalarmUser.find_by_dn(PlGridOpenID.browser_dn_to_plgoid_dn(dn)))
 
@@ -67,17 +63,6 @@ class ScalarmUser < MongoActiveRecord
     end
 
     user
-  end
-
-  # Arguments:
-  # - proxy - GP::Proxy or String containing proxy certificate
-  def self.authenticate_with_proxy(proxy, verify=true)
-    proxy = (proxy.is_a?(GP::Proxy) ? proxy : GP::Proxy.new(proxy))
-    ScalarmUser.where(login: proxy.username).first if !verify or proxy.valid_for_plgrid?
-  end
-
-  def grid_credentials
-    GridCredentials.find_by_user_id(id.to_s)
   end
 
   def banned_infrastructure?(infrastructure_name)

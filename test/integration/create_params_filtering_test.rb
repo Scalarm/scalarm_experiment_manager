@@ -48,7 +48,11 @@ class CreateParamsFilteringTest < ActionDispatch::IntegrationTest
            experiment_input: INPUT_SPECIFICATION.to_json,
            bad_param: 'param'
     end
-    id = JSON.parse(response.body)["experiment_id"]
+
+    json_response = JSON.parse(response.body)
+    assert_equal 'ok', json_response['status'], "Wrong experiment creation response: #{json_response}"
+
+    id = json_response["experiment_id"]
 
     experiment = Experiment.find_by_id(id)
     assert_not experiment.attributes.has_key?("bad_param"), 'Bad params should be filtered'
