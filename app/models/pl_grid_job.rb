@@ -121,7 +121,7 @@ class PlGridJob < Scalarm::Database::Model::PlGridJob
   def valid_proxy?(proxy)
     true
 
-    # TODO
+    # TODO - use Scalarm::ServiceCore::GP::Proxy validation
     # begin
     #   GP::Proxy.new(proxy).verify!(ca_cert)
     # rescue GP::ProxyValidationError => validation_error

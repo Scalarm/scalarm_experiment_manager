@@ -2,6 +2,7 @@ require 'csv'
 require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
+require 'mocha/parameter_matchers'
 
 class PlGridFacadeTest < MiniTest::Test
   require 'infrastructure_facades/infrastructure_errors'
@@ -191,6 +192,29 @@ class PlGridFacadeTest < MiniTest::Test
     @facade.stubs(:create_records)
 
     @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
+  end
+
+  def test_create_temp_credentials_proxy
+    require 'scalarm/service_core/grid_proxy'
+
+    proxy_s = 'zxc'
+    username_s = 'user1'
+
+    proxy_mock = mock 'proxy' do
+      stubs(:username).returns(username_s)
+    end
+
+    creds_mock = mock 'credentials' do
+      expects(:secret_proxy=).with(proxy_s)
+    end
+
+    GridCredentials.expects(:new).
+        with(has_entry(login: username_s)).
+        returns(creds_mock)
+
+    Scalarm::ServiceCore::GridProxy::Proxy.stubs(:new).with(proxy_s).returns(proxy_mock)
+
+    assert_equal creds_mock, PlGridFacade.create_temp_credentials(proxy: proxy_s)
   end
 
 end

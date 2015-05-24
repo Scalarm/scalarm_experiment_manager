@@ -13,6 +13,17 @@ class UserControllerController < ApplicationController
   include GoogleOpenID
   include PlGridOpenID
 
+  ##
+  # Normally render welcome page
+  # Render trivial json if Accept: application/json specified,
+  # for testing and authentication tests purposes
+  def index
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok', message: 'Welcome to Scalarm' } }
+    end
+  end
+
   def successful_login
     original_url = session[:original_url]
     session[:original_url] = nil
@@ -29,9 +40,13 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        config = Utils::load_config
-        anonymous_login = config['anonymous_login']
-        username = params.include?(:username) ? params[:username].to_s : anonymous_login.to_s
+        anonymous_config = Utils::load_config.anonymous_user
+
+        username = if anonymous_config and not params.include?(:username)
+                     config['login'].to_s
+                   else
+                     params[:username].to_s
+                   end
 
         requested_user = ScalarmUser.find_by_login(username)
         raise t('user_controller.login.user_not_found') if requested_user.nil?
@@ -49,7 +64,7 @@ class UserControllerController < ApplicationController
         end
 
         successful_login
-      rescue Exception => e
+      rescue => e
         Rails.logger.debug("Exception on login: #{e}\n#{e.backtrace.join("\n")}")
         reset_session
         flash[:error] = e.to_s

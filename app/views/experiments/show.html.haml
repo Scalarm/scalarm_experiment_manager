@@ -1,3 +1,6 @@
+- require "erb"
+-# include ERB::Util
+
 - content_for :title, 'Scalarm - monitoring'
 - content_for :help, raw(t('help.experiments.monitoring'))
 
@@ -96,7 +99,7 @@
 
       window.toggle_panels_on_title_click();
 
-      $("#panel .analyses-panel").load("https://#{@public_chart_service_url}/panel?id=#{@experiment.id}", function(response, status, xhr) {
+      $("#panel .analyses-panel").load("https://#{@public_chart_service_url}/panels?id=#{@experiment.id}&base_url=#{ERB::Util.url_encode('https://' + @public_chart_service_url)}", function(response, status, xhr) {
         if(status==="error") {
           console.log("No available Chart Service. Using on-site content.");
         }

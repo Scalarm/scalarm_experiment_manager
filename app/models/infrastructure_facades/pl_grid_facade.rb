@@ -2,7 +2,7 @@ require 'securerandom'
 require 'fileutils'
 require 'net/ssh'
 require 'net/scp_ext'
-require 'grid-proxy'
+require 'scalarm/service_core/grid_proxy'
 
 require_relative 'plgrid/pl_grid_simulation_manager'
 
@@ -174,7 +174,9 @@ class PlGridFacade < InfrastructureFacade
   # Params is a Hash, it should contain :
   # - login:
   def self.create_temp_credentials(params)
-    login = ((params[:proxy] and GP::Proxy.new(params[:proxy]).username) or params[:plgrid_login])
+    # if proxy provided, use user name from proxy
+    login = ((params[:proxy] and Scalarm::ServiceCore::GridProxy::Proxy.new(params[:proxy]).username) or
+        params[:plgrid_login])
     raise StandardError.new('Neither plgrid_login nor proxy provided to create temporary credentials') unless login
 
     creds = GridCredentials.new({login: login})

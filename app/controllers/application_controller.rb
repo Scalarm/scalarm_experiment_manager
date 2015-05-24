@@ -1,8 +1,11 @@
 require 'openid'
 
+require 'scalarm/service_core/scalarm_authentication'
+require 'scalarm/service_core/parameter_validation'
+
 class ApplicationController < ActionController::Base
-  include ScalarmAuthentication
-  include ParameterValidation
+  include Scalarm::ServiceCore::ScalarmAuthentication
+  include Scalarm::ServiceCore::ParameterValidation
 
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
@@ -11,8 +14,6 @@ class ApplicationController < ActionController::Base
   before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid]
-  before_filter :start_monitoring, except: [:status]
-  after_filter :stop_monitoring, except: [:status]
 
   # due to security reasons (DISABLED)
   # after_filter :set_cache_buster
@@ -20,10 +21,24 @@ class ApplicationController < ActionController::Base
   rescue_from ValidationError, MissingParametersError, SecurityError, BSON::InvalidObjectId,
               with: :generic_exception_handler
 
-  @@probe = MonitoringProbe.new
+  if Rails.application.secrets.monitoring
+    before_filter :start_monitoring, except: [:status]
+    after_filter :stop_monitoring, except: [:status]
+    @@probe =  MonitoringProbe.new
+  end
 
 
   protected
+
+  ##
+  # Override authenticate to use SclarmUser class from ExperimentManager
+  # @current_user and @user_session should be initialized in Scalarm::ServiceCore::ScalarmAuthentication
+  def authenticate
+    super
+    @current_user = @current_user.convert_to(ScalarmUser) if @current_user
+    @sm_user = @sm_user.convert_to(SimulationManagerTempPassword) if @sm_user
+    @user_session = @user_session.convert_to(UserSession) if @user_session
+  end
 
   def generic_exception_handler(exception)
     Rails.logger.warn("Exception caught in generic_exception_handler: #{exception.message}")
