@@ -27,6 +27,19 @@ class ApplicationController < ActionController::Base
     @@probe =  MonitoringProbe.new
   end
 
+  ##
+  # Query random public url of service of services_name type (plural name)
+  def sample_service_url(services_name)
+    service_url = nil
+    begin
+      service_url = InformationService.instance.sample_public_url(services_name)
+    rescue => e
+      Rails.logger.error "Error accessing InformationService: #{e.to_s}\n#{e.backtrace.join("\n")}"
+    end
+    service_url
+  end
+
+  helper_method :sample_service_url
 
   protected
 

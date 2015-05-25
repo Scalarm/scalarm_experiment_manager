@@ -1,77 +1,87 @@
+- es_url = sample_service_url('experiment_supervisors')
+- supervisor_ids = get_supervisor_ids(es_url)
+
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
 
-%section.panel.radius
-  %h3.subheader= t('experiments.optimization_method.title')
-  .content
-    .row
-      .small-5.columns
-        %label.inline.right
-          = t('experiments.optimization_method.choose')
-      .small-7.columns
-        = select_tag 'optimization_method_choose',
-        options_for_select([['None', 'none'], ['Simulated annealing', 'simulated_annealing']], selected: ['None', 'none'])
+= render 'experiments/new/basic_information'
 
-%div(optimization-method-type="simulated_annealing" class="hidden")
-  = render 'experiments/new/optimization_method/simulated_annealing'
+- unless supervisor_ids.empty?
+  %section.panel.radius
+    %h3.subheader= t('experiments.optimization_method.title')
+    .content
+      .row
+        .small-5.columns
+          %label.inline.right
+            = t('experiments.optimization_method.choose')
+        .small-7.columns
+          = select_tag 'supervisor_select', supervisor_options(supervisor_ids)
 
-%div(optimization-method-type="none")
-  = form_tag experiments_path, id: 'experiment_submit_form' do
-    = hidden_field_tag 'simulation_id', @simulation.id
-    = hidden_field_tag 'experiment_input'
-    = hidden_field_tag 'doe'
-    = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
-    = hidden_field_tag 'parameters_constraints'
+= form_tag experiments_path, id: 'experiment_submit_form' do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'experiment_input'
+  = hidden_field_tag 'doe'
+  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+  = hidden_field_tag 'parameters_constraints'
 
-    = render 'experiments/new/basic_information'
+  #supervisor_fields
 
-    %section.panel.radius.simulation_input
-      %ul.button-group.right.round
-        %li
-          %a#manual-off.tiny.button.secondary.clicked(href="#") On
-        %li
-          %a#manual-on.tiny.button.secondary(href="#") Off
+#input-space-parameters
+  %section.panel.radius.simulation_input
+    %ul.button-group.right.round
+      %li
+        %a#manual-off.tiny.button.secondary.clicked(href="#") On
+      %li
+        %a#manual-on.tiny.button.secondary(href="#") Off
 
-      %h3.subheader#manual-header= t('.input_header')
+    %h3.subheader#manual-header= t('.input_header')
 
-      .content
-        %dl.tabs(data-tab="")
-          %dd.active
-            = link_to t('.input_parametrization_types'), '#parametrization'
-          %dd
-            = link_to t('.input_doe'), '#doe'
-          %dd
-            = link_to t('.params_constraints'), '#constraints'
+    .content
+      %dl.tabs(data-tab="")
+        %dd.active
+          = link_to t('.input_parametrization_types'), '#parametrization'
+        %dd
+          = link_to t('.input_doe'), '#doe'
+        %dd
+          = link_to t('.params_constraints'), '#constraints'
 
-        .tabs-content
-          #parametrization.content.active
-            = render 'experiments/new/parametrization'
-          #doe.content
-            = render 'experiments/new/design_of_experiment'
-          #constraints.content
-            = render 'experiments/new/parameter_constraints'
+      .tabs-content
+        #parametrization.content.active
+          = render 'experiments/new/parametrization'
+        #doe.content
+          = render 'experiments/new/design_of_experiment'
+        #constraints.content
+          = render 'experiments/new/parameter_constraints'
 
-    %section#import.panel.radius.last-element
-      = render 'experiments/new/import_tab'
+  %section#import.panel.radius.last-element
+    = render 'experiments/new/import_tab'
 
-  .row.submit-section
-    = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
-    = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
-    = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
+.row.submit-section
+  = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
+  = button_tag t('.experiment_size_button'), class: 'button radius last-element', id: 'check-experiment-size'
+  = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
 
-  #experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
-    %h2.subheader= raw t('.experiment_size_dialog_body')
-    %a.close-reveal-modal &#215;
+#experiment-size-dialog.reveal-modal(data-reveal="" style="display: none;")
+  %h2.subheader= raw t('.experiment_size_dialog_body')
+  %a.close-reveal-modal &#215;
 
-  #error-dialog.reveal-modal.hidden(data-reveal="")
-    %h2.subheader= t(".error_dialog_header")
-    %a.close-reveal-modal &#215;
+#error-dialog.reveal-modal.hidden(data-reveal="")
+  %h2.subheader= t(".error_dialog_header")
+  %a.close-reveal-modal &#215;
 
-    .alert-box.alert.radius.hidden(data-alert="")
+  .alert-box.alert.radius.hidden(data-alert="")
 
 - content_for :javascript do
   :javascript
     $(function() {
+      var es_url = "#{es_url}";
+
+      if (es_url) {
+        new window.SupervisorBooster(es_url);
+      } else {
+        Console.log("ExperimentSupervisor view script was not loaded due to lack of ES url");
+      }
+
       window.toggle_panels_on_title_click();
       var input_space = new window.InputSpace(#{raw @simulation.input_specification.to_json});
       var input_space_importer = new window.InputSpaceImporter("#{simulations_upload_parameter_space_path}",
@@ -79,16 +89,30 @@
 
       var doe_manager = new window.ExperimentDesigner(input_space);
 
-      $("#experiment_submit_form").on("submit", function() {
-        input_space.updateAllInputParameterValues();
-      });
-
       $("#new_experiment_submit").on("click", function() {
-        if($("#manual-off").hasClass("clicked")) {
+        if($('#input-space-parameters').is(":visible")) {
+          // standart experiment
+          if($("#manual-off").hasClass("clicked")) {
+            input_space.updateAllInputParameterValues();
+            $("#experiment_submit_form").submit();
+          }
+          else {
+            $("#import-form").submit();
+          }
+        } else {
+          // supervised
+          var builder = {};
+          $('#supervisor_params *').filter(':input').each(function(key, value){
+              if (value.name != "utf8" && value.name != "authenticity_token") {
+                if (value.type == 'number') {
+                  builder[value.name] = Number(value.value)
+                } else {
+                  builder[value.name] = value.value
+                }
+              }
+          });
+          $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
           $("#experiment_submit_form").submit();
-        }
-        else {
-          $("#import-form").submit();
         }
       });
 
@@ -139,10 +163,4 @@
       })
 
       $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
-
-      $("select#optimization_method_choose").change(function(){
-        $("[optimization-method-type]").hide();
-        $selected = $("#optimization_method_choose option:selected").val();
-        $("[optimization-method-type='" + $selected + "']").show();
-      })
     });

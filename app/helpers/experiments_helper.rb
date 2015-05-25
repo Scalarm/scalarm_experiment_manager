@@ -45,4 +45,18 @@ module ExperimentsHelper
     [">", ">="]
   end
 
+  def supervisor_options(supervisors)
+    none = ['None', 'none']
+    options = [none]
+    supervisors.each do |supervisor|
+      if supervisor.has_key? 'name'
+        options.append [supervisor['name'], supervisor['id']]
+      else
+        options.append [supervisor['id'], supervisor['id']]
+      end
+    end
+    options_for_select options, selected: none
+
+  end
+
 end
