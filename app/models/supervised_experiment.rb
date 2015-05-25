@@ -41,6 +41,12 @@ class SupervisedExperiment < CustomPointsExperiment
   ##
   # This method updates given supervisor script params with necessary information
   # and posts to start_supervisor_script method of Experiment Supervisor.
+  #
+  # @param [BSON::ObjectID] simulation_id
+  # @param [String] supervisor_script_id
+  # @param [Hash] script_params
+  # @param [Hash] cookies - cookies Hash used to authenticate to ExperimentSupervisor
+  #
   # Set supervisor script parameters:
   # * experiment_id - id of current experiment
   # * user - user name created by SimulationManagerTempPassword
@@ -60,7 +66,7 @@ class SupervisedExperiment < CustomPointsExperiment
   #   * status - 'ok' or 'error' - informs if action was performed successfully
   #   * pid - only when status is 'ok' - pid of supervisor script
   #   * reason - only when status is 'error' - reason of failure to start supervisor script
-  def start_supervisor_script(simulation_id, supervisor_script_id, script_params)
+  def start_supervisor_script(simulation_id, supervisor_script_id, script_params, cookies)
     script_params['experiment_id'] = self.id.to_s
     self.supervisor_script_uuid = SecureRandom.uuid
     password = SimulationManagerTempPassword.create_new_password_for self.supervisor_script_uuid, self.id
@@ -97,18 +103,26 @@ class SupervisedExperiment < CustomPointsExperiment
       # TODO: this may be slow - cache ES url
       supervisor_url = self.class.get_private_supervisor_url
       raise 'No supervisor url can be obtained from IS' if supervisor_url.blank?
-      res = RestClient.post("https://#{supervisor_url}/supervisor_runs",  supervisor_id: supervisor_script_id,
-                                                                          config: script_params.to_json)
+      res = RestClient.post("https://#{supervisor_url}/supervisor_runs",
+                            {
+                                supervisor_id: supervisor_script_id,
+                                config: script_params.to_json
+                            },
+                            {
+                                cookies: cookies
+                            }
+      )
       res = Utils::parse_json_if_string res
     rescue RestClient::Exception, StandardError => e
-      Rails.logger.debug e.to_s
+      Rails.logger.debug "Exception on starting supervised experiment: #{e.to_s}\n#{e.backtrace.join("\n")}"
       res = {'status' => 'error', 'reason' => e.to_s}
     end
     res
   end
 
+  # TODO: use general sample public url method, now in applications controller
   def self.get_private_supervisor_url
-    InformationService.new.sample_public_url('experiment_supervisors')
+    InformationService.instance.sample_public_url('experiment_supervisors')
   end
 
   ##

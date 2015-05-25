@@ -302,7 +302,9 @@ class ExperimentsController < ApplicationController
     if params.has_key?(:supervisor_script_id)
       response = experiment.start_supervisor_script(params[:simulation_id],
                                                     params[:supervisor_script_id],
-                                                    Utils::parse_json_if_string(params[:supervisor_script_params]))
+                                                    Utils::parse_json_if_string(params[:supervisor_script_params]),
+                                                    request.cookies
+      )
     end
 
     response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
@@ -1002,6 +1004,35 @@ class ExperimentsController < ApplicationController
     @experiment.save
     render json: {status: 'ok'}
   end
+
+
+  ##
+  # Search avaliable supervisors (scripts) using InformationService
+  # and available ExperimentSupervisors
+  def get_supervisor_ids(es_url)
+    # TODO SCAL-770 there can be many ES instances - get all supervisors from them
+    # TODO ES development (http)?
+    supervisors = []
+
+    if es_url.blank?
+      Rails.logger.error('There are no Experiment Supervisors available')
+    else
+      begin
+        Rails.logger.error('[supervisor_options] Using Experiment Supervisor:' + es_url)
+        supervisors_resp = RestClient.get(
+            "https://#{es_url}/supervisors",
+            cookies: {'_scalarm_session' => request.cookies['_scalarm_session']}
+        )
+        supervisors = JSON.parse(supervisors_resp)
+      rescue RestClient::Exception, StandardError => e
+        Rails.logger.error "Unable to connect with Supervisor: #{e.to_s}"
+      end
+    end
+
+    supervisors
+  end
+
+  helper_method :get_supervisor_ids
 
   private
 
