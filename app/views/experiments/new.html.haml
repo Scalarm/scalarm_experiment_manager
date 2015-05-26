@@ -14,8 +14,10 @@
         .small-5.columns
           %label.inline.right
             = t('experiments.optimization_method.choose')
-        .small-7.columns
+        .small-5.columns
           = select_tag 'supervisor_select', supervisor_options(supervisor_ids)
+        .small-2.columns
+          #supervisor_form_loader
 
 = form_tag experiments_path, id: 'experiment_submit_form' do
   = hidden_field_tag 'simulation_id', @simulation.id

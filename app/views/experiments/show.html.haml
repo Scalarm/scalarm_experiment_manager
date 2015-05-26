@@ -109,14 +109,23 @@
       if (!!chart_service_url) {
         var base_url = encodeURIComponent(chart_service_url);
 
-        $("#panel .analyses-panel").load("https://" + chart_service_url + "/panels?id=experiment_id&base_url=" + base_url, function(response, status, xhr) {
-          if(status==="error") {
-            console.log("No available Chart Service. Using on-site content.");
-          }
 
-          // disable nanoscroller in Firefox and SeaMonkey, TODO - repair nanoscroller
-          if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
-            $(".nano").nanoScroller();
+        var panel_url = "https://" + chart_service_url + "/panels/" + experiment_id + "?base_url=" + base_url;
+        $.ajax({
+          url: panel_url,
+          xhrFields: {
+            withCredentials: true
+          },
+          success: function(data, textStatus, jqXHR) {
+            $("#panel .analyses-panel").html(data);
+
+            // disable nanoscroller in Firefox and SeaMonkey, TODO - repair nanoscroller
+            if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+              $(".nano").nanoScroller();
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.log("Error fetching panel: " + textStatus + " " + errorThrown);
+          }
         });
       }
 
