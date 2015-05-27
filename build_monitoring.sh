@@ -3,18 +3,20 @@
 if [ -z "$TREE" ]; then
     TREE='master'
 fi
-GIT_DIR='scalarm_workers_manager'
-BUILD_DIR="tmp/${GIT_DIR}_build"
+GIT_DIR='github.com/scalarm/scalarm_workers_manager'
+BUILD_DIR="`pwd`/tmp/scalarm_workers_manager_build"
+SRC_DIR="${BUILD_DIR}/src"
+
+export GOPATH=$BUILD_DIR
 
 rm -rf $BUILD_DIR
-mkdir -p $BUILD_DIR
-
-pushd $BUILD_DIR
-    git clone https://github.com/Scalarm/scalarm_workers_manager.git
+mkdir -p $SRC_DIR
+pushd $SRC_DIR
+    go get $GIT_DIR
     pushd $GIT_DIR
         git checkout $TREE
         ./build.sh
     popd
 popd
 
-cp -r $BUILD_DIR/$GIT_DIR/packages/* public/scalarm_monitoring/
+cp -r $SRC_DIR/$GIT_DIR/packages/* public/scalarm_monitoring/
