@@ -105,6 +105,8 @@ default: &DEFAULT
       #multicast_address: "224.1.2.3:8000"
       # if you use load balancer on http you need to specify this
       #development: true
+      # if you want to register service in load balancer with other host than default
+      #host: localhost
       # if you want to run and register service in load balancer on other port than default
       #port: "3000"
   # if you want to communicate with Storage Manager using a different URL than the one stored in Information Service
