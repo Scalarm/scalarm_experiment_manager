@@ -131,6 +131,8 @@
 
       $(document).foundation();
 
+      // websockets disabled due to lack of WS support in scalarm_data_explorer
+      /*
       window.WebSocket = window.WebSocket || window.MozWebSocket;
 
       if (chart_service_url) {
@@ -157,4 +159,6 @@
           console.log("Unable to establish WebSocket connection.");
         }
       }
+      */
+
     });
