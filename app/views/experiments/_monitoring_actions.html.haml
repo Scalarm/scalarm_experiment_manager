@@ -93,7 +93,7 @@
       new window.MonitoringActionButtons("#{extension_dialog_experiment_path(@experiment.id)}",
                                          "#{get_booster_dialog_infrastructure_path(experiment_id: @experiment.id)}")
       $("#extension-dialog").on("closed", function() {
-        if(window.reopeningModals.isActive){
+        if (window.reopeningModals && window.reopeningModals.isActive) {
           $("#" + window.reopeningModals.id).foundation("reveal", "open");
           window.reopeningModals.isActive = false;
         }
