@@ -34,6 +34,16 @@ class ExperimentCsvTest < MiniTest::Test
     @experiment.stubs(:simulation_runs).returns(simulation_runs)
   end
 
+  def test_convert_type
+    assert_equal 1, ExperimentCsvImporter.convert_type('1')
+    assert_equal 1.2, ExperimentCsvImporter.convert_type('1.2')
+    assert_equal 'hello', ExperimentCsvImporter.convert_type('hello')
+
+    assert ExperimentCsvImporter.convert_type('1').kind_of? Integer
+    assert ExperimentCsvImporter.convert_type('1.0').kind_of? Float
+    assert ExperimentCsvImporter.convert_type('hello').kind_of? String
+  end
+
   def test_csv_full
     # given
     csv_should = <<-CSV
