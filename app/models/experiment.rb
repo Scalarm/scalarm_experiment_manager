@@ -252,6 +252,10 @@ class Experiment < Scalarm::Database::Model::Experiment
     end
   end
 
+  def replication_level
+    super or 1
+  end
+
   def experiment_size(debug = false)
     if self.size.nil?
       self.size = 0
