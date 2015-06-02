@@ -35,8 +35,8 @@ class ExperimentCsvImporter
           begin
             parsed_cell = JSON.parse(cell)
             row_values << parsed_cell.map {|v| self.class.convert_type(v)}
-          rescue Exception => e
-            row_values << [ cell.to_f ]
+          rescue JSON::ParserError
+            row_values << [ self.class.convert_type(cell) ]
           end
         end
 
