@@ -762,17 +762,32 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  ##
+  # GET Params:
+  # - x_axis
+  # - y_axis
+  # - container_id
+  # - x_axis_type
+  # - y_axis_type
   def scatter_plot
     validate(
         x_axis: [:optional, :security_default],
         y_axis: [:optional, :security_default],
+        x_axis_type: [:optional, :security_default],
+        y_axis_type: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
 
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      @chart = ScatterPlotChart.new(
+          @experiment,
+          params[:x_axis].to_s,
+          params[:y_axis].to_s,
+          x_axis_type: params[:x_axis_type].to_s,
+          y_axis_type: params[:y_axis_type].to_s
+      )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       @uuid = SecureRandom.uuid
