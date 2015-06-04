@@ -152,14 +152,13 @@ class window.ExperimentMonitor
     lastTimestamp = new Date().getTime();
 
     source = new EventSource("#{@experiment_id}/notifications")
-    source.addEventListener('progress-bar-update', (e) =>
-      console.log(e.data)
+    source.addEventListener 'progress-bar-update', (e) =>
       updateInfo = JSON.parse(e.data)
 
       console.log("Time checking: #{lastTimestamp} - #{updateInfo.timestamp}" )
 
       if lastTimestamp <= updateInfo.timestamp
-        console.log("We have new update to apply...")
+#        console.log("We have new update to apply...")
 
         # there should be information regarding: sent, done, percentage_counter, and updated bar
         $("#exp_sent_counter").html(updateInfo.sent.toString().with_delimeters())
@@ -171,7 +170,10 @@ class window.ExperimentMonitor
         part_width = canvas.width / @bar_cells.length
 
         cellBorders = @bar_cells[updateInfo.bar_num]
-        context.fillStyle = if(updateInfo.bar_color == 0) then "#BDBDBD" else "rgb(0, #{updateInfo.bar_color}, 0)"
+        context.fillStyle = switch
+          when (updateInfo.bar_color == 0) then "#BDBDBD"
+          when (updateInfo.bar_color < 0)  then "#F62217"
+          else "rgb(0, #{updateInfo.bar_color}, 0)"
 
         if updateInfo.bar_num == @bar_cells.length - 1
           context.fillRect(@part_width * updateInfo.bar_num, 10, @part_width, canvas.height - 10)
@@ -181,7 +183,6 @@ class window.ExperimentMonitor
         lastTimestamp = updateInfo.timestamp
       else
         console.log("Received message is too old - #{lastTimestamp}")
-    )
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)
@@ -221,7 +222,7 @@ class window.ExperimentMonitor
     @cellCounter = bar_colors.length
     @simsPerCell = Math.floor(statistics.all / bar_colors.length)
 
-    for i in [0..bar_colors.length]
+    for i in [0..bar_colors.length-1]
       context.fillStyle = if(bar_colors[i] == 0) then "#BDBDBD" else "rgb(0, #{bar_colors[i]}, 0)"
       if(bar_colors[i] < 0)
         context.fillStyle = "#F62217"

@@ -36,7 +36,7 @@ module ExperimentProgressBar
 
       # notification to clients
       _, sent, done = self.get_statistics
-      bar = progress_bar_table.find_one({bar_num: bar_index})
+      # bar = progress_bar_table.find_one({bar_num: bar_index})
 
       Notification.new(event: 'progress-bar-update',
                        experiment_id: self.id.to_s,
@@ -44,7 +44,7 @@ module ExperimentProgressBar
                        done_num: done,
                        done_percentage: "'%.2f'" % ((done.to_f / self.experiment_size) * 100),
                        bar_num: bar_index,
-                       bar_color: compute_bar_color(bar)).save
+                       bar_color: color_of_bar(bar_index)).save
 
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
