@@ -276,8 +276,8 @@ class Experiment < MongoActiveRecord
   def extend_progress_bar
     self.create_progress_bar_table.drop
     self.insert_initial_bar
-    # Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-    Thread.start { self.update_all_bars }
+    self.update_all_bars
+    Notification.new(event: 'progress-bar-refresh', experiment_id: self.id.to_s).save
   end
 
   def experiment_size=(new_size)

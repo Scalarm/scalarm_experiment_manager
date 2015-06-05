@@ -46,6 +46,10 @@ module ExperimentProgressBar
                        bar_num: bar_index,
                        bar_color: color_of_bar(bar_index)).save
 
+      if done.to_i == self.experiment_size.to_i
+        Notification.new(event: 'progress-bar-refresh', experiment_id: self.id.to_s).save
+      end
+
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end

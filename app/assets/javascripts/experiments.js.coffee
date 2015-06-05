@@ -152,6 +152,8 @@ class window.ExperimentMonitor
     lastTimestamp = new Date().getTime();
 
     source = new EventSource("#{@experiment_id}/notifications")
+    source.onopen = (e) => console.log "Event source on open"
+
     source.addEventListener 'progress-bar-update', (e) =>
       updateInfo = JSON.parse(e.data)
 
@@ -183,6 +185,21 @@ class window.ExperimentMonitor
         lastTimestamp = updateInfo.timestamp
       else
         console.log("Received message is too old - #{lastTimestamp}")
+
+    source.addEventListener 'progress-bar-refresh', (e) =>
+      console.log "Progress bar refresh"
+      updateInfo = JSON.parse(e.data)
+
+      console.log("Progress bar refresh - Time checking: #{lastTimestamp} - #{updateInfo.timestamp}" )
+
+      if lastTimestamp <= updateInfo.timestamp
+        monitor = this
+        $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
+
+        lastTimestamp = updateInfo.timestamp
+      else
+        console.log("Progress bar refresh  Received message is too old - #{lastTimestamp}")
+
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)

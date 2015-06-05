@@ -699,7 +699,9 @@ class ExperimentsController < ApplicationController
     begin
       loop do
         while (doc = tailf.next) != nil
-          if doc['event'] == 'progress-bar-update' and doc['experiment_id'].to_s == @experiment.id.to_s
+
+          if doc['experiment_id'].to_s == @experiment.id.to_s and
+              ['progress-bar-update', 'progress-bar-refresh'].include?(doc['event'])
             sse.write(doc, event: doc['event'])
           end
         end
