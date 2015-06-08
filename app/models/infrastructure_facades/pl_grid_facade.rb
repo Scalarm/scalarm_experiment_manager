@@ -122,14 +122,15 @@ class PlGridFacade < InfrastructureFacade
     end
 
     credentials.ssh_session do |ssh|
-      cmd = ShellCommands.chain(
-          "unxz -f #{bin_base_name}.xz",
-          "chmod a+x #{bin_base_name}",
-          "X509_USER_PROXY=#{remote_proxy_path} #{ShellCommands.
-              run_in_background("./#{bin_base_name}", "#{bin_base_name}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
-`.log")}"
-      )
-      Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
+      proxy_cmd_stdout = "#{bin_base_name}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)`.log"
+      proxy_cmd = BashCommand.new.run_in_background("./#{bin_base_name}", proxy_cmd_stdout)
+      set_proxy_cmd = "X509_USER_PROXY=#{remote_proxy_path} #{proxy_cmd.to_s}"
+
+      cmd = BashCommand.new.append("unxz -f #{bin_base_name}.xz").
+          append("chmod a+x #{bin_base_name}").
+          append(set_proxy_cmd)
+
+      Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd.to_s)}")
     end
   end
 
