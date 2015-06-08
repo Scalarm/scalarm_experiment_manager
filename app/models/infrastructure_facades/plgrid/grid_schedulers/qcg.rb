@@ -54,7 +54,7 @@ module QcgScheduler
 #QCG stage-in-file=#{job_script_file(uuid)}
 #QCG stage-in-file=#{ScalarmFileName::tmp_sim_zip(uuid)}
 #QCG host=#{params['plgrid_host'] or 'zeus.cyfronet.pl'}
-#QCG queue=#{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
+#QCG queue=#{params['queue_name'] or PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
 #QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
 #{params['nodes'].blank? ? '' : "#QCG nodes=#{params['nodes']}:#{params['ppn']}" }
 #{params['grant_id'].blank? ? '' : "#QCG grant=#{params['grant_id']}" }

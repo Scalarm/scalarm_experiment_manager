@@ -67,7 +67,7 @@ module QsubScheduler
       log_path = ScalarmFileName::sim_log(uuid)
       <<-eos
 #!/bin/bash
-#PBS -q #{PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
+#PBS -q #{params['queue_name'] or PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
 #PBS -j oe
 #PBS -o #{log_path}
 #PBS -l walltime=#{params['time_limit'].to_i.minutes.to_i}

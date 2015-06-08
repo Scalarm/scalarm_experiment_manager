@@ -195,4 +195,20 @@ its all wrong...
     end
   end
 
+  ##
+  # Queue name should be used if provided in record
+  def test_prepare_job_descriptor_queue
+    sm_uuid = 'sm_uuid'
+    time_limit = 1000
+
+    PlGridJob.expects(:queue_for_minutes).never
+
+    desc = @qcg.prepare_job_descriptor('sm_uuid',
+                                        'queue_name' => 'some_queue',
+                                        'time_limit' => time_limit
+    )
+
+    assert_match /#QCG queue=some_queue\s*\n/, desc
+  end
+
 end
