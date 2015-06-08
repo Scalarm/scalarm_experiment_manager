@@ -140,6 +140,18 @@ class SimulationManager
             resource_status: [:available, :released],
             effect: :destroy_record,
             message: 'Resource has been terminated successfully - removing record'
+        },
+        resource_invalid_state_on_initializing: {
+            source_states: [:initializing],
+            target_state: :error,
+            resource_status: [:not_available, :available],
+            message: 'Resource status came back to too early state when SiM state is initializing'
+        },
+        resource_invalid_state_on_terminating: {
+            source_states: [:terminating],
+            target_state: :error,
+            resource_status: [:not_available, :available, :initializing, :ready],
+            message: 'Resource status came back to too early state when SiM state is terminating'
         }
     }
 
@@ -215,7 +227,7 @@ class SimulationManager
           change_state_for(monitoring_case)
           break # at most one action from all actions should be taken
         end
-      rescue Exception => e
+      rescue => e
         logger.error "Exception on monitoring case #{case_name.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         begin
           if record.should_destroy?
@@ -223,7 +235,7 @@ class SimulationManager
             record.store_error('monitoring', "Exception on monitoring (#{case_name.to_s}): #{e.to_s}\n#{record.error_log}")
             stop
           end
-        rescue Exception => de
+        rescue => de
           logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}"
           logger.error 'Please check if corresponding resource is terminated!'
         end

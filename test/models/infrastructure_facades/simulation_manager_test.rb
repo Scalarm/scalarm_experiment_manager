@@ -337,4 +337,28 @@ class SimulationManagerTest < MiniTest::Test
     assert_equal 'something', @sm.infrastructure_action('action')
   end
 
+  ##
+  # When SiM is INITIALIZING and resource is back to AVAILABLE
+  # there should be error reported
+  def test_available_and_initializing
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @sm.expects(:set_state).with(:error)
+
+    @sm.monitor
+  end
+
+  ##
+  # When SiM is TERIMNATING and resource is back to READY
+  # there should be error reported
+  def test_ready_and_terminating
+    @sm.stubs(:state).returns(:terminating)
+    @sm.stubs(:resource_status).returns(:ready)
+
+    @sm.expects(:set_state).with(:error)
+
+    @sm.monitor
+  end
+
 end
