@@ -184,7 +184,7 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_initializing_init_time_exceeded
     @sm.stubs(:state).returns(:initializing)
-    @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:resource_status).returns(:initializing)
     @sm.stubs(:init_time_exceeded?).returns(true)
 
     @sm.expects(:restart).once
@@ -350,10 +350,10 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   ##
-  # When SiM is TERIMNATING and resource is back to READY
+  # When SiM is TERIMNATING and resource is back between NOT_AVAILABLE and READY
   # there should be error reported
   def test_ready_and_terminating
-    [:initializing, :ready, :running_sm, :released].each do |rstate|
+    [:not_available, :available, :initializing, :ready].each do |rstate|
       @sm.stubs(:state).returns(:terminating)
       @sm.stubs(:resource_status).returns(rstate)
 
@@ -371,6 +371,38 @@ class SimulationManagerTest < MiniTest::Test
     @sm.stubs(:resource_status).returns(:initializing)
 
     @sm.expects(:set_state).with(:error)
+
+    @sm.monitor
+  end
+
+  def test_monitoring_on_command_delegation
+    cmd_code = 'some'
+    cmd_cmd = 'some_exec'
+
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @record.stubs(:cmd_to_execute_code).returns(cmd_code)
+    @record.stubs(:cmd_to_execute).returns(cmd_cmd)
+
+    @sm.expects(:effect_pass)
+    @sm.expects(:prepare_resource).never
+
+    @sm.monitor
+  end
+
+  def test_monitoring_on_command_delegation_error
+    cmd_code = 'some'
+    cmd_cmd = 'some_exec'
+
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @record.stubs(:cmd_to_execute_code).returns(cmd_code)
+    @record.stubs(:cmd_to_execute).returns(cmd_cmd)
+
+    @sm.expects(:set_state).with(:error)
+    @sm.expects(:effect_pass).never
 
     @sm.monitor
   end
