@@ -152,6 +152,12 @@ class SimulationManager
             target_state: :error,
             resource_status: [:not_available, :available, :initializing, :ready],
             message: 'Resource status came back to too early state when SiM state is terminating'
+        },
+        resource_reports_work_without_resource_id: {
+            source_states: [:created],
+            target_state: :error,
+            resource_status: [:not_available, :available, :initializing, :ready],
+            message: 'Resource status is later than available, but state is created'
         }
     }
 

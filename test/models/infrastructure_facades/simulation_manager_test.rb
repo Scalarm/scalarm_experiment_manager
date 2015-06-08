@@ -353,8 +353,22 @@ class SimulationManagerTest < MiniTest::Test
   # When SiM is TERIMNATING and resource is back to READY
   # there should be error reported
   def test_ready_and_terminating
-    @sm.stubs(:state).returns(:terminating)
-    @sm.stubs(:resource_status).returns(:ready)
+    [:initializing, :ready, :running_sm, :released].each do |rstate|
+      @sm.stubs(:state).returns(:terminating)
+      @sm.stubs(:resource_status).returns(rstate)
+
+      @sm.expects(:set_state).with(:error)
+
+      @sm.monitor
+    end
+  end
+
+  ##
+  # When SiM is initializing (or later) and there
+  # is no resource id yet, it should be error
+  def test_initializing_without_resource_id
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:initializing)
 
     @sm.expects(:set_state).with(:error)
 
