@@ -108,6 +108,7 @@ en:
         error_log: "Error details"
         no_ssh_address: "not available"
         errors:
+          unknown: 'Simulation Manager failed for unknown reason - read error details if available'
           install_failed: 'Simulation Manager installation failed'
           monitoring: 'Resource monitoring cannot be completed'
           onsite_monitoring: 'Could not initialize on-site workers monitoring'
