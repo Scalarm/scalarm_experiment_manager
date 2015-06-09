@@ -366,29 +366,18 @@ class PlGridFacade < InfrastructureFacade
       sm_record.save
 
     else
-
-      sm_uuid = sm_record.sm_uuid
-
       sm_record.validate
 
       #  upload the code to the Grid user interface machine
       begin
         ssh = shared_ssh_session(sm_record.credentials)
-        SSHAccessedInfrastructure::create_remote_directories(ssh)
+        create_and_upload_simulation_manager(ssh, sm_record)
 
-
-        InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, sm_record.user_id, sm_record.experiment_id, sm_record.start_at)
-        scheduler.create_tmp_job_files(sm_uuid, sm_record.to_h) do
-          ssh.scp do |scp|
-            scheduler.send_job_files(sm_uuid, scp)
-          end
-        end
-        
         begin
           sm_record.job_id = scheduler.submit_job(ssh, sm_record)
           sm_record.save
         rescue JobSubmissionFailed => job_failed
-          logger.warn 'Scheduling job failed!'
+          logger.warn "Scheduling job failed: #{job_failed.to_s}"
           sm_record.store_error('install_failed', job_failed.to_s)
         end
 
@@ -400,6 +389,19 @@ class PlGridFacade < InfrastructureFacade
         sm_record.store_error('install_failed', "#{ex.to_s}\n#{ex.backtrace.join("\n")}")
       end
 
+    end
+  end
+
+  def create_and_upload_simulation_manager(ssh, sm_record)
+    sm_uuid = sm_record.sm_uuid
+    SSHAccessedInfrastructure::create_remote_directories(ssh)
+
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, sm_record.user_id, sm_record.experiment_id, sm_record.start_at) do
+      scheduler.create_tmp_job_files(sm_uuid, sm_record.to_h) do
+        ssh.scp do |scp|
+          scheduler.send_job_files(sm_uuid, scp)
+        end
+      end
     end
   end
 
