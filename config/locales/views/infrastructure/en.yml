@@ -116,6 +116,7 @@ en:
           validation: "Database record for Simulation Manager is invalid"
           credentials: "Credentials for host infrastructure are invalid or missing"
           resource_error: "There was a problem reading resource state, please check it manually"
+          on_site_not_responding: "On-site monitoring communication timed out"
       sm_record_no_view: "Sorry, details are not available"
       table_label: "Manage submitted credentials"
       machine_submission_label: "Add credentials"
