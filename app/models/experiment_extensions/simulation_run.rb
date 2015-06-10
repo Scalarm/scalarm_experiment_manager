@@ -79,6 +79,10 @@ class SimulationRun < MongoActiveRecord
     true
   end
 
+  def started_at
+    self.sent_at.nil? ? 'N/A' : self.sent_at.strftime('%Y-%m-%d %H:%M')
+  end
+
 end
 
 #Attributes:

@@ -15,6 +15,7 @@
 }
 
 #completed_simulations_table, #running_simulations_table{
+  width: 100%;
   tbody tr {
     cursor: pointer;
     &:hover {

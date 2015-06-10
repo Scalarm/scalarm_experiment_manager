@@ -160,8 +160,6 @@ class window.ExperimentMonitor
       console.log("Time checking: #{lastTimestamp} - #{updateInfo.timestamp}" )
 
       if lastTimestamp <= updateInfo.timestamp
-#        console.log("We have new update to apply...")
-
         # there should be information regarding: sent, done, percentage_counter, and updated bar
         $("#exp_sent_counter").html(updateInfo.sent.toString().with_delimeters())
         $("#exp_done_counter").html(updateInfo.done_num.toString().with_delimeters())
@@ -200,6 +198,51 @@ class window.ExperimentMonitor
       else
         console.log("Progress bar refresh  Received message is too old - #{lastTimestamp}")
 
+    source.addEventListener 'simulation-started', (e) =>
+      console.log "Simulation started"
+      updateInfo = JSON.parse(e.data)
+
+      if lastTimestamp <= updateInfo.timestamp
+        $row = $("<tr></tr>").attr("sim_index", updateInfo.index)
+        $indexCell = $("<td></td>").addClass("index").text(updateInfo.index)
+        $timeCell = $("<td></td>").addClass("time").text(updateInfo.time)
+        $resulCell = $("<td></td>").addClass("results").text(updateInfo.results)
+        $row.append($indexCell).append($timeCell).append($resulCell)
+        $("#running_simulations_table").append($row)
+
+        lastTimestamp = updateInfo.timestamp
+
+    source.addEventListener 'simulation-progress-update', (e) =>
+      console.log "Simulation progress update"
+      updateInfo = JSON.parse(e.data)
+
+      if lastTimestamp <= updateInfo.timestamp
+        if $("#running_simulations_table tr[sim_index=#{updateInfo.index}]").length
+          # here we are updating the row
+          $resultsCell = $("#running_simulations_table tr[sim_index=#{updateInfo.index}] td.results")
+          $resultsCell.text(JSON.stringify(updateInfo.results))
+
+        lastTimestamp = updateInfo.timestamp
+
+    source.addEventListener 'simulation-stopped', (e) =>
+      updateInfo = JSON.parse(e.data)
+
+      if lastTimestamp <= updateInfo.timestamp
+        $("#running_simulations_table").remove("tr[sim_index=#{updateInfo.index}]")
+
+    source.addEventListener 'simulation-completed', (e) =>
+      updateInfo = JSON.parse(e.data)
+
+      if lastTimestamp <= updateInfo.timestamp
+        $("#running_simulations_table tr[sim_index=#{updateInfo.index}]").remove()
+
+        $row = $("<tr></tr>").attr("sim_index", updateInfo.index)
+        $indexCell = $("<td></td>").addClass("index").text(updateInfo.index)
+        $timeCell = $("<td></td>").addClass("time").text(updateInfo.time)
+        $resulCell = $("<td></td>").addClass("results").text(JSON.stringify(updateInfo.results))
+        $row.append($indexCell).append($timeCell).append($resulCell)
+
+        $("#completed_simulations_table").append($row)
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)

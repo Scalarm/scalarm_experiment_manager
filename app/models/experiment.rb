@@ -547,6 +547,8 @@ class Experiment < MongoActiveRecord
     simulation_run.save    
 
     progress_bar_update(simulation_run.index, 'rollback')
+
+    Notification.new(event: 'simulation-stopped', experiment_id: self.id.to_s, index: simulation_run.index).save
   end
 
   def self.visible_to(user)

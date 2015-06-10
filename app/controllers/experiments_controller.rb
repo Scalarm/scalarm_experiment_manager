@@ -499,6 +499,9 @@ class ExperimentsController < ApplicationController
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
 
+        Notification.new(event: 'simulation-started', experiment_id: @experiment.id.to_s,
+          index: simulation_to_send.index, time: simulation_to_send.started_at, results: 'N/A').save
+
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                    'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
@@ -701,7 +704,8 @@ class ExperimentsController < ApplicationController
         while (doc = tailf.next) != nil
 
           if doc['experiment_id'].to_s == @experiment.id.to_s and
-              ['progress-bar-update', 'progress-bar-refresh'].include?(doc['event'])
+              %w(progress-bar-update progress-bar-refresh simulation-started simulation-progress-update
+                 simulation-stopped simulation-completed).include?(doc['event'])
             sse.write(doc, event: doc['event'])
           end
         end

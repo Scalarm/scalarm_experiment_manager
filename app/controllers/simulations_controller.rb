@@ -192,11 +192,20 @@ class SimulationsController < ApplicationController
           # TODO adding caching capability
           #@simulation.remove_from_cache
 
+          sim_duration = (@simulation_run.sent_at.nil? or @simulation_run.done_at.nil?) ? 'N/A' : "#{@simulation_run.done_at - @simulation_run.sent_at} [s]"
+
           if params.include?(:status) and params[:status] == 'error'
             @experiment.progress_bar_update(@simulation_run.index, 'error')
+
+            Notification.new(event: 'simulation-completed', experiment_id: @experiment.id.to_s,
+              index: @simulation_run.index, time: sim_duration, results: @simulation_run.error_reason || 'N\A').save
           else
             @experiment.progress_bar_update(@simulation_run.index, 'done')
+
+            Notification.new(event: 'simulation-completed', experiment_id: @experiment.id.to_s,
+              index: @simulation_run.index, time: sim_duration, results: @simulation_run.result || 'N\A').save
           end
+
         end
       end
     rescue Exception => e
@@ -216,6 +225,9 @@ class SimulationsController < ApplicationController
       else
         @simulation_run.tmp_result = Utils.parse_json_if_string(params[:result])
         @simulation_run.save
+
+        Notification.new(event: 'simulation-progress-update', experiment_id: params[:experiment_id],
+          index: @simulation_run.index, results: @simulation_run.tmp_result).save
       end
     rescue Exception => e
       Rails.logger.debug("Error in the 'progress_info' function - #{e}")

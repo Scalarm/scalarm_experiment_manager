@@ -14,7 +14,7 @@
       = image_tag('loading.gif', id: 'actions-loading-workers')
     = render 'workers_info'
 
-%section.panel.radius.last-element#monitoring_section
+%section.panel.radius#monitoring_section
   %h3.subheader= t('experiments.show.stats_header')
 
   .content(style="padding-top: 30px; position: relative;" )
@@ -27,7 +27,7 @@
 
     = render 'monitoring_actions'
 
-%section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
+%section.panel.radius.last-element#progressInformationWrapper(style="display: none;")
   = render 'monitoring_table'
 
 = render 'scheduling_policy_dialog'
