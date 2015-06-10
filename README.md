@@ -1,9 +1,9 @@
 ![Scalarm Logo](http://scalarm.com/images/scalarmNiebieskiemale.png)
 
-Scalarm Experiment Manager
+Scalarm experiment manager
 ==========================
 
-Experiment Manager is the main component of the Scalarm platform. It provides core functionalities and User Interfaces
+Experiment manager is the main component of the Scalarm platform. It provides core functionality and User Interfaces
 necessary to conduct data farming experiments according to the following workflow:
   * input parameter space definition,
   * simulations execution (scheduling workers onto Clouds, Grids, etc.)
@@ -170,7 +170,7 @@ Before the first start (in the production mode) of the service you need to compi
 rake service:non_digested
 ```
  
-With the configuration as above Experiment Manager will be listening on linux socket. To make it available for other services we will use a HTTP server - nginx - which will also handle SSL.
+With the configuration as above Experiment manager will be listening on linux socket. To make it available for other services we will use a HTTP server - nginx - which will also handle SSL.
 
 To configure NGINX you basically need to add some information to NGINX configuration, e.g. in the /etc/nginx/conf.d/default.conf file.
 
@@ -192,6 +192,43 @@ server {
   ssl_verify_depth 5;
   ssl_session_timeout 30m;
 
+  # Experiment manager - notifications SSE support
+  location ~ ^/(.*)/notifications$ {
+    proxy_pass http://scalarm_experiment_manager;
+
+    proxy_set_header SSL_CLIENT_S_DN $ssl_client_s_dn;
+    proxy_set_header SSL_CLIENT_I_DN $ssl_client_i_dn;
+    proxy_set_header SSL_CLIENT_VERIFY $ssl_client_verify;
+    proxy_set_header SSL_CLIENT_CERT $ssl_client_cert;
+    proxy_set_header X-Real-IP  $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+
+    proxy_set_header Connection '';
+    proxy_http_version 1.1;
+    chunked_transfer_encoding off;
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_read_timeout 24h;
+
+    break;
+  }
+
+  # Experiment manager - the rest
+  location / {
+    proxy_pass http://scalarm_experiment_manager;
+
+    proxy_set_header SSL_CLIENT_S_DN $ssl_client_s_dn;
+    proxy_set_header SSL_CLIENT_I_DN $ssl_client_i_dn;
+    proxy_set_header SSL_CLIENT_VERIFY $ssl_client_verify;
+    proxy_set_header SSL_CLIENT_CERT $ssl_client_cert;
+    proxy_set_header X-Real-IP  $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+
+    break;
+  }
+
   location / {
     proxy_pass http://scalarm_experiment_manager;
 
@@ -207,7 +244,8 @@ server {
     break;
   }
 }
-# it is also needed to force HTTPS
+
+# Force HTTPS
 server {
   listen 80;
   return 301 https://$host$request_uri;
