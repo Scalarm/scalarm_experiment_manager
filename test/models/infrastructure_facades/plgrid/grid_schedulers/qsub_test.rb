@@ -1,6 +1,7 @@
-require 'minitest/autorun'
 require 'test_helper'
-require 'mocha'
+require 'minitest/autorun'
+require 'mocha/mini_test'
+
 
 require 'infrastructure_facades/plgrid/grid_schedulers/qsub'
 
@@ -80,6 +81,22 @@ qsub: submit filter returned an error code, aborting job submission.
     assert_raises JobSubmissionFailed, output do
       @qsub.submit_job(@ssh, @record)
     end
+  end
+
+  ##
+  # Queue name should be used if provided in record
+  def test_prepare_job_descriptor_queue
+    sm_uuid = 'sm_uuid'
+    time_limit = 1000
+
+    PlGridJob.expects(:queue_for_minutes).never
+
+    desc = @qsub.prepare_job_descriptor('sm_uuid',
+                                 'queue_name' => 'some_queue',
+                                 'time_limit' => time_limit
+    )
+
+    assert_match /#PBS -q some_queue\s*\n/, desc
   end
 
 end

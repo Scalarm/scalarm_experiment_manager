@@ -63,6 +63,30 @@ class SimulationManager
 
   def generate_monitoring_cases
     {
+        resource_invalid_state_on_initializing: {
+            source_states: [:initializing],
+            target_state: :error,
+            resource_status: [:not_available, :available],
+            message: 'Resource status came back to too early state when SiM state is initializing'
+        },
+        resource_invalid_state_on_terminating: {
+            source_states: [:terminating],
+            target_state: :error,
+            resource_status: [:not_available, :available, :initializing, :ready],
+            message: 'Resource status came back to too early state when SiM state is terminating'
+        },
+        resource_reports_work_without_resource_id: {
+            source_states: [:created],
+            target_state: :error,
+            resource_status: [:initializing, :ready, :running_sm, :released],
+            message: 'Resource status is later than available, but state is created'
+        },
+        waiting_for_command_delegation: {
+            source_states: SimulationManagerRecord::POSSIBLE_STATES,
+            condition: :waiting_for_command_delegation?,
+            effect: :effect_pass,
+            message: "Waiting for command to execute in WorkersManager: #{@record.cmd_to_execute_code}"
+        },
         error_resource_status: {
             source_states: SimulationManagerRecord::POSSIBLE_STATES - [:error],
             target_state: :error,
@@ -149,6 +173,14 @@ class SimulationManager
     @record.experiment.has_simulations_to_run? and not should_destroy?
   end
 
+  def waiting_for_command_delegation?
+    not @record.cmd_to_execute_code.blank? or not @record.cmd_to_execute.blank?
+  end
+
+  def effect_pass
+    # just passes - for testing purposes
+  end
+
   def store_terminated_error
     record.store_error('terminated', get_log)
     # NOTICE: stop will be invoked twice, because of set_state(:error) behaviour
@@ -215,7 +247,7 @@ class SimulationManager
           change_state_for(monitoring_case)
           break # at most one action from all actions should be taken
         end
-      rescue Exception => e
+      rescue => e
         logger.error "Exception on monitoring case #{case_name.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         begin
           if record.should_destroy?
@@ -223,7 +255,7 @@ class SimulationManager
             record.store_error('monitoring', "Exception on monitoring (#{case_name.to_s}): #{e.to_s}\n#{record.error_log}")
             stop
           end
-        rescue Exception => de
+        rescue => de
           logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}"
           logger.error 'Please check if corresponding resource is terminated!'
         end
@@ -237,8 +269,6 @@ class SimulationManager
       stop_and_destroy(false)
     elsif state == :error
       logger.debug 'Has error flag - skipping'
-    elsif (not @record.cmd_to_execute_code.blank?) or (not @record.cmd_to_execute.blank?)
-      logger.info "Waiting for command to execute in WorkersManager: #{@record.cmd_to_execute_code}"
     else
       begin
         before_monitor(record)

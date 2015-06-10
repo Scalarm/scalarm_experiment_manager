@@ -24,7 +24,7 @@
       $("#checkbox_#{experiment.id}_#{moe_name}_#{resolution}").attr("checked", visible);
       $("#checkbox_#{experiment.id}_#{moe_name}_#{resolution}").on('click', function() {
 
-        var chart = $(this).parent().parent().children("#basic_chart_container_#{experiment.id}_#{moe_name}_#{resolution}").highcharts();
+        var chart = $(this).parent().parent().find("#basic_chart_container_#{experiment.id}_#{moe_name}_#{resolution}").highcharts();
         visible = !visible;
         chart.xAxis[0].update({labels: {enabled: visible}});
       })
