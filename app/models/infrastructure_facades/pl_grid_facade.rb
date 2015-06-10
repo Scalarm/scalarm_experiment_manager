@@ -292,6 +292,7 @@ class PlGridFacade < InfrastructureFacade
         sm_record.cmd_to_execute_code = "stop"
         sm_record.cmd_to_execute = chain(scheduler.cancel_sm_cmd(sm_record),
                                      scheduler.clean_after_sm_cmd(sm_record))
+        sm_record.cmd_delegated_at = Time.now
         sm_record.save
       end
 
@@ -306,6 +307,7 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
       sm_record.cmd_to_execute_code = 'restart'
       sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
     else
       ssh = shared_ssh_session(sm_record.credentials)
@@ -357,6 +359,7 @@ class PlGridFacade < InfrastructureFacade
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
       nil
@@ -373,6 +376,7 @@ class PlGridFacade < InfrastructureFacade
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else

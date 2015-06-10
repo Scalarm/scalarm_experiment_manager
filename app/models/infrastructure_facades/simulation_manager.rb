@@ -63,6 +63,29 @@ class SimulationManager
 
   def generate_monitoring_cases
     {
+        ## handle command delegation cases
+        command_delegation_timeout: {
+            source_states: SimulationManagerRecord::POSSIBLE_STATES,
+            target_state: :error,
+            condition: :on_site_cmd_timed_out?,
+            effect: :error_cmd_delegation_timed_out,
+            message: "Waiting for command execution in onsite monitoring timed out: #{@record.cmd_to_execute_code} -> #{@record.cmd_to_execute}"
+        },
+        created_on_site_timeout: {
+            source_states: [:created],
+            target_state: :error,
+            condition: :on_site_creation_timed_out?,
+            effect: :error_created_on_site_timed_out,
+            message: 'Timeout on SiM initialization after creation with on-site monitoring'
+        },
+        waiting_for_command_delegation: {
+            source_states: SimulationManagerRecord::POSSIBLE_STATES,
+            condition: :cmd_delegated_on_site?,
+            effect: :effect_pass,
+            message: "Waiting for command to execute in WorkersManager: #{@record.cmd_to_execute_code}"
+        },
+
+        ## handling invalid states combinations
         resource_invalid_state_on_initializing: {
             source_states: [:initializing],
             target_state: :error,
@@ -81,12 +104,8 @@ class SimulationManager
             resource_status: [:initializing, :ready, :running_sm, :released],
             message: 'Resource status is later than available, but state is created'
         },
-        waiting_for_command_delegation: {
-            source_states: SimulationManagerRecord::POSSIBLE_STATES,
-            condition: :waiting_for_command_delegation?,
-            effect: :effect_pass,
-            message: "Waiting for command to execute in WorkersManager: #{@record.cmd_to_execute_code}"
-        },
+
+        ## general cases
         error_resource_status: {
             source_states: SimulationManagerRecord::POSSIBLE_STATES - [:error],
             target_state: :error,
@@ -166,15 +185,21 @@ class SimulationManager
             message: 'Resource has been terminated successfully - removing record'
         }
     }
-
   end
 
-  def should_not_be_already_terminated?
-    @record.experiment.has_simulations_to_run? and not should_destroy?
+  ##
+  # True if it is monitored by on-site monitoring
+  def cmd_delegated_on_site?
+    !!@record.onsite_monitoring and
+        not @record.cmd_to_execute_code.blank? or not @record.cmd_to_execute.blank?
   end
 
-  def waiting_for_command_delegation?
-    not @record.cmd_to_execute_code.blank? or not @record.cmd_to_execute.blank?
+  def on_site_creation_timed_out?
+    !!@record.onsite_monitoring and @record.on_site_creation_time_exceeded?
+  end
+
+  def on_site_cmd_timed_out?
+    cmd_delegated_on_site? and @record.cmd_delegation_time_exceeded?
   end
 
   def effect_pass
@@ -194,6 +219,14 @@ class SimulationManager
   def store_error_resource_status
     # TODO get detailed resource status
     record.store_error('resource_error')
+  end
+
+  def error_created_on_site_timed_out
+    record.store_error('on_site_not_responding', 'Simulation Manager start timeout')
+  end
+
+  def error_cmd_delegation_timed_out
+    record.store_error('on_site_not_responding', "Execution timed out: #{@record.cmd_to_execute}")
   end
 
   def destroy_record
