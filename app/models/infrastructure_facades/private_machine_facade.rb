@@ -185,6 +185,7 @@ class PrivateMachineFacade < InfrastructureFacade
     if record.onsite_monitoring
       record.cmd_to_execute_code = "stop"
       record.cmd_to_execute = "kill -9 #{record.pid}"
+      sm_record.cmd_delegated_at = Time.now
       record.save
     else
       shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
@@ -221,6 +222,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = "tail -80 #{sm_record.log_path}"
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else
@@ -242,6 +244,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else

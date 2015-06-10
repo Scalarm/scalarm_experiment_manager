@@ -375,7 +375,20 @@ class SimulationManagerTest < MiniTest::Test
     @sm.monitor
   end
 
-  def test_monitoring_on_command_delegation
+  def test_monitoring_created_available_wo_cmd
+    cmd_code = 'some'
+    cmd_cmd = 'some_exec'
+
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @sm.expects(:effect_pass).never
+    @sm.expects(:prepare_resource)
+
+    @sm.monitor
+  end
+
+  def test_monitoring_on_command_delegation_pass
     cmd_code = 'some'
     cmd_cmd = 'some_exec'
 
@@ -391,18 +404,35 @@ class SimulationManagerTest < MiniTest::Test
     @sm.monitor
   end
 
-  def test_monitoring_on_command_delegation_error
-    cmd_code = 'some'
-    cmd_cmd = 'some_exec'
-
+  def test_monitoring_cmd_delegation_timeout
     @sm.stubs(:state).returns(:initializing)
     @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:cmd_delegated_on_site?).returns(true)
+    @record.stubs(:cmd_delegation_time_exceeded?).returns(true)
 
-    @record.stubs(:cmd_to_execute_code).returns(cmd_code)
-    @record.stubs(:cmd_to_execute).returns(cmd_cmd)
-
-    @sm.expects(:set_state).with(:error)
     @sm.expects(:effect_pass).never
+    @sm.expects(:error_cmd_delegation_timed_out)
+
+    @sm.monitor
+  end
+
+  def test_created_timeout_not_on_site
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:not_available)
+    @sm.stubs(:on_site_creation_timed_out?).returns(false)
+
+    @sm.expects(:error_created_on_site_timed_out).never
+
+    @sm.monitor
+  end
+
+  def test_created_on_site_timeout
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:not_available)
+    @sm.stubs(:cmd_delegated_on_site?).returns(false)
+    @sm.stubs(:on_site_creation_timed_out?).returns(true)
+
+    @sm.expects(:error_created_on_site_timed_out)
 
     @sm.monitor
   end

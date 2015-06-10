@@ -106,6 +106,17 @@ module SimulationManagerRecord
     Time.now > self.stopped_at + 2.minutes
   end
 
+  ##
+  # If cmd_delegated_at has been set, check if it exceeded limit.
+  # If cmd_delegated_at has not been set, return false.
+  def cmd_delegation_time_exceeded?
+    self.cmd_delegated_at.nil? or self.cmd_delegated_at + 3.minutes < Time.now
+  end
+
+  def on_site_creation_time_exceeded?
+    self.created_at + 3.minutes < Time.now
+  end
+
   def should_destroy?
     (time_limit_exceeded? or experiment_end?) and record.state != :error
   end
