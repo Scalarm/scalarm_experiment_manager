@@ -14,4 +14,4 @@
       %tr(sim_index="#{sim_run.index}")
         %td.index= sim_run.index
         %td.time= sim_run.sent_at.nil? ? 'N/A' : sim_run.sent_at.strftime('%Y-%m-%d %H:%M')
-        %td.results= sim_run.tmp_result.to_json.to_s || 'No data available'
+        %td.results= sim_run.tmp_result.nil? ? 'N/A' : sim_run.tmp_result.to_json.to_s

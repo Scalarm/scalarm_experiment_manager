@@ -379,9 +379,15 @@ class ExperimentsController < ApplicationController
   end
 
   def running_simulations_table
+    respond_to do |format|
+      format.html { render partial: 'running_simulations_table' }
+    end
   end
 
   def completed_simulations_table
+    respond_to do |format|
+      format.html { render partial: 'completed_simulations_table' }
+    end
   end
 
   def intermediate_results
