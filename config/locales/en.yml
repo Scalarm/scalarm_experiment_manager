@@ -115,8 +115,8 @@ en:
       no_workers_alert: "No resources in use. Please add them with 'Add computing power' button."
 
     monitoring_table:
-      show_completed: Show/Hide completed
-      show_running: Show/Hide running
+      show_completed: Toggle completed simulations
+      show_running: Toggle running simulations
       header: Progress information
 
     import:

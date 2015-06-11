@@ -1,12 +1,13 @@
 %article{id: 'progress_information', style: 'overflow:auto;'}
-  %h4.subheader= t('.header')
+  %div.right
+    %span.button.tiny.radius.loadRunningSimulationsTable
+      %i.fi-minus
+      = t('.show_running')
+    %span.button.tiny.radius.loadCompletedSimulationsTable
+      %i.fi-check
+      = t('.show_completed')
 
-  %ul.inline-list
-    %li
-      %span.button.small.radius.loadRunningSimulationsTable= t('.show_running')
-    %li
-      %span.button.small.radius.loadCompletedSimulationsTable= t('.show_completed')
-
+  %h3.subheader= t('.header')
 
   #running_simulations_table_wrapper{style: 'display: none;'}
   #completed_simulations_table_wrapper{style: 'display: none;'}
