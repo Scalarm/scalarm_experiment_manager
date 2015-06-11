@@ -18,9 +18,12 @@ class UserControllerController < ApplicationController
   # Render trivial json if Accept: application/json specified,
   # for testing and authentication tests purposes
   def index
+    Rails.logger.info "index #{@current_user}"
     respond_to do |format|
       format.html
-      format.json { render json: {status: 'ok', message: 'Welcome to Scalarm' } }
+      format.json { render json: {status: 'ok',
+                                  message: 'Welcome to Scalarm',
+                                  user_id: @current_user.id.to_s } }
     end
   end
 

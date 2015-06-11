@@ -303,7 +303,7 @@ class ExperimentsController < ApplicationController
       response = experiment.start_supervisor_script(params[:simulation_id],
                                                     params[:supervisor_script_id],
                                                     Utils::parse_json_if_string(params[:supervisor_script_params]),
-                                                    request.cookies
+                                                    @current_user
       )
     end
 
@@ -1020,6 +1020,7 @@ class ExperimentsController < ApplicationController
     render json: {status: 'ok'}
   end
 
+  require 'scalarm/service_core/token_utils'
 
   ##
   # Search avaliable supervisors (scripts) using InformationService
@@ -1034,9 +1035,10 @@ class ExperimentsController < ApplicationController
     else
       begin
         Rails.logger.error('[supervisor_options] Using Experiment Supervisor:' + es_url)
-        supervisors_resp = RestClient.get(
+        supervisors_resp = Scalarm::ServiceCore::TokenUtils.get(
             "https://#{es_url}/supervisors",
-            cookies: {'_scalarm_session' => request.cookies['_scalarm_session']}
+            @current_user,
+            {}
         )
         supervisors = JSON.parse(supervisors_resp)
       rescue RestClient::Exception, StandardError => e

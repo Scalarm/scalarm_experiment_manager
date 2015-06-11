@@ -6,6 +6,9 @@
 
 = render 'experiments/new/basic_information'
 
+-#:coffeescript
+-#  window.alert("supervisors_ids: #{supervisor_ids.to_s}")
+
 - unless supervisor_ids.empty?
   %section.panel.radius
     %h3.subheader= t('experiments.optimization_method.title')

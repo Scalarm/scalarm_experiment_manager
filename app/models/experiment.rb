@@ -441,6 +441,7 @@ class Experiment < Scalarm::Database::Model::Experiment
     end
   end
 
+  # TODO: use token authentication
   def destroy
     # TODO TMP due to problem with routing in PLGCloud
     information_service = InformationService.instance
@@ -450,18 +451,20 @@ class Experiment < Scalarm::Database::Model::Experiment
       # destroy all binary files stored for this experiments
       sm_uuid = SecureRandom.uuid
       temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, self.experiment_id)
-      config = {'storage_manager' => { 'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password} }
-      Rails.logger.debug("Destroy config = #{config}")
-
-      sm_proxy = StorageManagerProxy.new(config)
       begin
-        success = sm_proxy.delete_experiment_output(self.experiment_id, self.experiment_size)
-        Rails.logger.debug("Deletion of experiment output #{experiment_size} completed successfully ? #{success}")
-      rescue Exception => e
-        Rails.logger.debug("Data farming experiment destroy error - #{e}")
-      end
+        config = {'storage_manager' => { 'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password} }
+        Rails.logger.debug("Destroy config = #{config}")
 
-      temp_password.destroy
+        sm_proxy = StorageManagerProxy.new(config)
+        begin
+          success = sm_proxy.delete_experiment_output(self.experiment_id, self.experiment_size)
+          Rails.logger.debug("Deletion of experiment output #{experiment_size} completed successfully ? #{success}")
+        rescue Exception => e
+          Rails.logger.debug("Data farming experiment destroy error - #{e}")
+        end
+      ensure
+        temp_password.destroy
+      end
     end
 
     # drop simulation table
