@@ -223,7 +223,7 @@ class window.ExperimentMonitor
 
           $ul = $("<ul></ul>").addClass("last-element")
           for p of updateInfo.results
-            $li = $("<li></li>").html("<b>#{p}</b>: #{updateInfo.results[p]}")
+            $li = $("<li></li>").html("<b>#{p}</b>: #{JSON.stringify(updateInfo.results[p])}")
             $ul.append($li)
 
           $resultsCell.html($ul)
@@ -249,7 +249,7 @@ class window.ExperimentMonitor
 
         $ul = $("<ul></ul>").addClass("last-element")
         for p of updateInfo.results
-          $li = $("<li></li>").html("<b>#{p}</b>: #{updateInfo.results[p]}")
+          $li = $("<li></li>").html("<b>#{p}</b>: #{JSON.stringify(updateInfo.results[p])}")
           $ul.append($li)
 
         $resultsCell.html($ul)
