@@ -168,31 +168,32 @@ class PlGridFacadeTest < MiniTest::Test
     refute @facade.enabled_for_user?(user_id)
   end
 
-  def test_start_simulation_managers
-    skip 'TODO - mocks are incorrectly configured'
-    user_id = mock 'user_id'
-    instances_count = mock 'instances_count'
-    experiment_id = mock 'experiment_id'
-    login = mock('plgrid_login')
-    password = mock('password')
-    additional_params = {
-        onsite_monitoring: true,
-        plgrid_login: login,
-        password: password
-    }
-    temp_credentials = stub_everything 'temp_credentials' do
-      stubs(:login).returns(login)
-      stubs(:password).returns(password)
-    end
-
-    InfrastructureFacade.stubs(:prepare_simulation_manager_package)
-    InfrastructureFacade.stubs(:send_and_launch_onsite_monitoring)
-    InfrastructureFacade.stubs(:using_temp_credentials?).with(additional_params).returns(true)
-    InfrastructureFacade.stubs(:create_temp_credentials).with(additional_params).returns(temp_credentials)
-    @facade.stubs(:create_records)
-
-    @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
-  end
+  ## TODO: this test is old and buggy but functionality works - consider rewrite
+  # def test_start_simulation_managers
+  #   skip 'TODO - mocks are incorrectly configured'
+  #   user_id = mock 'user_id'
+  #   instances_count = mock 'instances_count'
+  #   experiment_id = mock 'experiment_id'
+  #   login = mock('plgrid_login')
+  #   password = mock('password')
+  #   additional_params = {
+  #       onsite_monitoring: true,
+  #       plgrid_login: login,
+  #       password: password
+  #   }
+  #   temp_credentials = stub_everything 'temp_credentials' do
+  #     stubs(:login).returns(login)
+  #     stubs(:password).returns(password)
+  #   end
+  #
+  #   InfrastructureFacade.stubs(:prepare_simulation_manager_package)
+  #   InfrastructureFacade.stubs(:send_and_launch_onsite_monitoring)
+  #   InfrastructureFacade.stubs(:using_temp_credentials?).with(additional_params).returns(true)
+  #   InfrastructureFacade.stubs(:create_temp_credentials).with(additional_params).returns(temp_credentials)
+  #   @facade.stubs(:create_records)
+  #
+  #   @facade.start_simulation_managers(user_id, instances_count, experiment_id, additional_params)
+  # end
 
   def test_create_temp_credentials_proxy
     require 'scalarm/service_core/grid_proxy'

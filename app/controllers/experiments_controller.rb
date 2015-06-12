@@ -305,6 +305,7 @@ class ExperimentsController < ApplicationController
                                                     Utils::parse_json_if_string(params[:supervisor_script_params]),
                                                     @current_user
       )
+      Rails.logger.debug("Start supervisor script request to supervisor, response: #{response}")
     end
 
     response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'

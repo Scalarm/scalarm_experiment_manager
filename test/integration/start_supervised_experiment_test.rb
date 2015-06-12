@@ -21,11 +21,14 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
         .returns(password)
 
     # mock experiment supervisor response with testing proper query params
-    RestClient.expects(:post).with do |url, params|
+    ScalarmUser.any_instance.expects(:post_with_token).with do |url, params|
       url == EXPERIMENT_SUPERVISOR_ADDRESS and
       params[:supervisor_id] == SCRIPT_ID and
       JSON.parse(params[:config]) == FULL_SCRIPT_PARAMS
     end.returns(RESPONSE_ON_SUCCESS.to_json)
+
+    supervised_experiment.expects(:destroy).never
+
     # test
     assert_difference 'Experiment.count', 1 do
       post "#{experiments_path}.json", simulation_id: @simulation.id,
@@ -47,7 +50,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
   test "test proper redirection on successful start of supervised experiment" do
     # mocks
     # mock experiment supervisor response
-    RestClient.expects(:post).returns(RESPONSE_ON_SUCCESS.to_json)
+    ScalarmUser.any_instance.expects(:post_with_token).returns(RESPONSE_ON_SUCCESS.to_json)
 
     #test
     assert_difference 'Experiment.count', 1 do
@@ -66,7 +69,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
   test "test proper behavior on failure to start supervisor script with json response" do
     # mocks
     # mock experiment supervisor response
-    RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
+    ScalarmUser.any_instance.expects(:post_with_token).returns(RESPONSE_ON_FAILURE.to_json)
 
     # test
     assert_no_difference 'Experiment.count' do
@@ -87,7 +90,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
   test "test proper behavior on failure to connect with experiment supervisor with json response" do
     # mocks
     # mock experiment supervisor response
-    RestClient.expects(:post).raises(StandardError, REASON)
+    ScalarmUser.any_instance.expects(:post_with_token).raises(StandardError, REASON)
 
     # test
     assert_no_difference 'Experiment.count' do
@@ -109,7 +112,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
   test "test proper redirection on unsuccessful start of supervised experiment" do
     # mocks
     # mock experiment supervisor response
-    RestClient.expects(:post).returns(RESPONSE_ON_FAILURE.to_json)
+    ScalarmUser.any_instance.expects(:post_with_token).returns(RESPONSE_ON_FAILURE.to_json)
     # test
     assert_no_difference 'Experiment.count', 1 do
       post experiments_path, simulation_id: @simulation.id,
@@ -129,7 +132,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     supervised_experiment.expects(:id).returns(BSON::ObjectId(EXPERIMENT_ID))
     ExperimentFactory.expects(:create_supervised_experiment).returns(supervised_experiment)
     # mock experiment supervisor response with testing proper query params
-    RestClient.expects(:post).never
+    ScalarmUser.any_instance.expects(:post_with_token).never
     # test
     assert_difference 'Experiment.count', 1 do
       post "#{experiments_path}.json", simulation_id: @simulation.id, type: 'supervised'
