@@ -1,23 +1,23 @@
 module LogBankUtils
   def self.log_bank_url_base(storage_manager_url, experiment_id)
-    protocol = Rails.application.secrets.include?(:storage_manager_development) ? 'http' : 'https'
+    protocol = Rails.application.secrets[:storage_manager_development] ? 'http' : 'https'
     "#{protocol}://#{storage_manager_url}/experiments/#{experiment_id}"
   end
 
-  def self.add_token(url, user_session=nil)
-    user_session ? "#{url}?token=#{user_session.generate_token}" : url
+  def self.add_token(url, scalarm_user=nil)
+    scalarm_user ? "#{url}?token=#{scalarm_user.generate_token}" : url
   end
 
-  def self.experiment_url(storage_manager_url, experiment_id, user_session=nil)
-    add_token(log_bank_url_base(storage_manager_url, experiment_id), user_session)
+  def self.experiment_url(storage_manager_url, experiment_id, scalarm_user=nil)
+    add_token(log_bank_url_base(storage_manager_url, experiment_id), scalarm_user)
   end
 
-  def self.simulation_run_binaries_url(storage_manager_url, experiment_id, simulation_id, user_session=nil)
-    add_token("#{log_bank_url_base(storage_manager_url, experiment_id)}/simulations/#{simulation_id}", user_session)
+  def self.simulation_run_binaries_url(storage_manager_url, experiment_id, simulation_id, scalarm_user=nil)
+    add_token("#{log_bank_url_base(storage_manager_url, experiment_id)}/simulations/#{simulation_id}", scalarm_user)
   end
 
-  def self.simulation_run_stdout_url(storage_manager_url, experiment, simulation_id, user_session=nil)
-    add_token("#{simulation_run_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout", user_session)
+  def self.simulation_run_stdout_url(storage_manager_url, experiment, simulation_id, scalarm_user=nil)
+    add_token("#{simulation_run_binaries_url(storage_manager_url, experiment, simulation_id)}/stdout", scalarm_user)
   end
 
   # These StorageManager LogBankController methods don't require authorization:

@@ -2,6 +2,7 @@ require 'csv'
 require 'minitest/autorun'
 require 'mocha/test_unit'
 
+require 'scalarm/service_core'
 require 'scalarm/service_core/logger'
 require 'scalarm/service_core/test_utils/authentication_test_cases'
 
