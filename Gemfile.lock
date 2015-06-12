@@ -10,20 +10,21 @@ GIT
       mongo
 
 GIT
+  remote: git://github.com/Scalarm/scalarm-service_core.git
+  revision: f1451d67ebe818f59dd2800e8ff2bea485e6a2f2
+  specs:
+    scalarm-service_core (0.2.1)
+      actionpack (~> 4.1)
+      activesupport (~> 4.1)
+      rest-client (~> 1.8)
+
+GIT
   remote: git://github.com/rweng/jquery-datatables-rails.git
   revision: d0f07e9aded9de30a2ca796d8036b332b41645dc
   specs:
     jquery-datatables-rails (3.0.0)
       jquery-rails
       sass-rails
-
-PATH
-  remote: /home/jliput/Scalarm/scalarm-service_core
-  specs:
-    scalarm-service_core (0.1)
-      actionpack (~> 4.1)
-      activesupport (~> 4.1)
-      rest-client (~> 1.8)
 
 GEM
   remote: https://rubygems.org/
@@ -464,7 +465,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.2)!
-  scalarm-service_core!
+  scalarm-service_core (~> 0.2.1)!
   sdoc
   therubyracer
   uglifier (>= 1.3.0)

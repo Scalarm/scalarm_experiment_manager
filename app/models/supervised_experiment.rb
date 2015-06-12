@@ -105,9 +105,8 @@ class SupervisedExperiment < CustomPointsExperiment
       # TODO: this may be slow - cache ES url
       supervisor_url = self.class.get_private_supervisor_url
       raise 'No supervisor url can be obtained from IS' if supervisor_url.blank?
-      res = Scalarm::ServiceCore::TokenUtils.post(
+      res = scalarm_user.post_with_token(
           "https://#{supervisor_url}/supervisor_runs",
-          scalarm_user,
           {
               supervisor_id: supervisor_script_id,
               config: script_params.to_json

@@ -1035,11 +1035,7 @@ class ExperimentsController < ApplicationController
     else
       begin
         Rails.logger.error('[supervisor_options] Using Experiment Supervisor:' + es_url)
-        supervisors_resp = Scalarm::ServiceCore::TokenUtils.get(
-            "https://#{es_url}/supervisors",
-            @current_user,
-            {}
-        )
+        supervisors_resp = @current_user.get_with_token("https://#{es_url}/supervisors")
         supervisors = JSON.parse(supervisors_resp)
       rescue RestClient::Exception, StandardError => e
         Rails.logger.error "Unable to connect with Supervisor: #{e.to_s}"
