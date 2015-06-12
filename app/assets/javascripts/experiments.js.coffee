@@ -220,7 +220,13 @@ class window.ExperimentMonitor
         if $("#running_simulations_table tr[sim_index=#{updateInfo.index}]").length
           # here we are updating the row
           $resultsCell = $("#running_simulations_table tr[sim_index=#{updateInfo.index}] td.results")
-          $resultsCell.text(JSON.stringify(updateInfo.results))
+
+          $ul = $("<ul></ul>").addClass("last-element")
+          for p of updateInfo.results
+            $li = $("<li></li>").html("<b>#{p}</b>: #{updateInfo.results[p]}")
+            $ul.append($li)
+
+          $resultsCell.html($ul)
 
         lastTimestamp = updateInfo.timestamp
 
@@ -239,8 +245,16 @@ class window.ExperimentMonitor
         $row = $("<tr></tr>").attr("sim_index", updateInfo.index)
         $indexCell = $("<td></td>").addClass("index").text(updateInfo.index)
         $timeCell = $("<td></td>").addClass("time").text(updateInfo.time)
-        $resulCell = $("<td></td>").addClass("results").text(JSON.stringify(updateInfo.results))
-        $row.append($indexCell).append($timeCell).append($resulCell)
+        $resultsCell = $("<td></td>").addClass("results")
+
+        $ul = $("<ul></ul>").addClass("last-element")
+        for p of updateInfo.results
+          $li = $("<li></li>").html("<b>#{p}</b>: #{updateInfo.results[p]}")
+          $ul.append($li)
+
+        $resultsCell.html($ul)
+
+        $row.append($indexCell).append($timeCell).append($resultsCell)
 
         $("#completed_simulations_table").append($row)
 

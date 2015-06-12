@@ -14,4 +14,12 @@
       %tr(sim_index="#{sim_run.index}")
         %td.index= sim_run.index
         %td.time= sim_run.sent_at.nil? ? 'N/A' : sim_run.sent_at.strftime('%Y-%m-%d %H:%M')
-        %td.results= sim_run.tmp_result.nil? ? 'N/A' : sim_run.tmp_result.to_json.to_s
+        %td.results
+          - if sim_run.tmp_result.nil?
+            'N/A'
+          - else
+            %ul.last-element
+              - sim_run.tmp_result.each do |moe_name, moe_value|
+                %li
+                  %b= moe_name + ':'
+                  = moe_value
