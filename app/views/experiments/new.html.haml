@@ -107,7 +107,7 @@
         } else {
           // supervised
           var builder = {};
-          $('#supervisor_params *').filter(':input').each(function(key, value){
+          $('#supervisor_fields *').filter(':input').each(function(key, value){
               if (value.name != "utf8" && value.name != "authenticity_token") {
                 if (value.type == 'number') {
                   builder[value.name] = Number(value.value)
