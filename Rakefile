@@ -462,7 +462,7 @@ def copy_example_config_if_not_exists(base_name, prefix='example')
 end
 
 def load_config
-  YAML.load(ERB.new(File.read("#{Rails.root}/config/secrets.yml")).result)[ENV['RAILS_ENV']]
+  YAML.load(ERB.new(File.read("#{Rails.root}/config/secrets.yml")).result)[ENV['RAILS_ENV'] || 'development']
 end
 
 def create_information_service(config)
