@@ -169,7 +169,7 @@ class SupervisedExperiment < CustomPointsExperiment
       res = scalarm_user.send("#{method}_with_token", "https://#{supervisor_url}/#{path}.json", payload)
       res = Utils::parse_json_if_string res
     rescue RestClient::Exception, StandardError => e
-      Rails.logger.debug "Exception on executing query #{path} to supervisor: #{e.to_s}\n#{e.backtrace.join("\n")}"
+      Rails.logger.error "Exception on executing query #{path} to supervisor: #{e.to_s}\n#{e.backtrace.join("\n")}"
       res = nil
     end
     return res
