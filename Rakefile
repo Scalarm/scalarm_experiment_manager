@@ -136,18 +136,21 @@ end
 
 namespace :db_router do
   desc 'Start MongoDB router'
-  task :start, [:debug] => [:environment, :setup] do |t, args|
-    information_service = InformationService.instance
+  task :start, [:debug] => [:setup] do |t, args|
+    config = load_config
+    information_service = create_information_service(config)
 
     config_services = information_service.get_list_of('db_config_services')
     puts "Config services: #{config_services.inspect}"
-    unless config_services.blank?
+    if config_services.blank?
+      puts 'There are no config services available - will not start router'
+    else
       config_service_url = config_services.sample
       start_router(config_service_url) if config_service_url
     end
   end
 
-  task :stop, [:debug] => [:environment] do |t, args|
+  task :stop, [:debug] => [] do |t, args|
     stop_router
   end
 
@@ -456,4 +459,17 @@ def copy_example_config_if_not_exists(base_name, prefix='example')
     puts "Copying #{example_config} to #{config}"
     FileUtils.cp(example_config, config)
   end
+end
+
+def load_config
+  YAML.load(ERB.new(File.read("#{Rails.root}/config/secrets.yml")).result)[ENV['RAILS_ENV']]
+end
+
+def create_information_service(config)
+  Scalarm::ServiceCore::InformationService.new(
+    config['information_service_url'],
+    config['information_service_user'],
+    config['information_service_pass'],
+    !!config['information_service_development']
+  )
 end

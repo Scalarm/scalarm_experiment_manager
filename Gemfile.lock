@@ -11,9 +11,9 @@ GIT
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: f1451d67ebe818f59dd2800e8ff2bea485e6a2f2
+  revision: 7bc9fa8692464df28ffefcc924857cc386ba35c6
   specs:
-    scalarm-service_core (0.2.1)
+    scalarm-service_core (0.3.3)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       rest-client (~> 1.8)
@@ -465,7 +465,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.2)!
-  scalarm-service_core (~> 0.2.1)!
+  scalarm-service_core (~> 0.3.3)!
   sdoc
   therubyracer
   uglifier (>= 1.3.0)
