@@ -148,7 +148,7 @@ class window.ExperimentMonitor
     monitor = this
 
 #    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
-    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
+#    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
 
   handleUpdates: ->
     lastTimestamp = new Date().getTime();
@@ -265,6 +265,34 @@ class window.ExperimentMonitor
 
       if lastTimestamp <= updateInfo.timestamp
         @simsUpdater.update(updateInfo)
+
+    source.addEventListener 'moes', (e) =>
+      updateInfo = JSON.parse(e.data)
+      console.log "MoEs"
+      console.log updateInfo
+
+      if lastTimestamp <= updateInfo.timestamp
+        $(".moe_list").each (i, select_element) ->
+          selected_option = $(select_element).find(":selected").val()
+          $(select_element).empty()
+
+          updateInfo.moes.forEach (moe) ->
+            $(select_element).append("<option value='#{moe[1]}'>#{moe[0]}</option>")
+
+          $(select_element).find("option").filter(() ->
+            return $(this).val() == selected_option
+          ).attr('selected', true)
+
+        $(".moes_and_params_list").each (i, select_element) ->
+          selected_option = $(select_element).find(":selected").val()
+          $(select_element).empty()
+          updateInfo.moes_and_params.forEach (moe) ->
+            $(select_element).append("<option value='#{moe[1]}'>#{moe[0]}</option>")
+
+          $(select_element).find("option").filter(() ->
+            return $(this).val() == selected_option
+          ).attr('selected', true)
+
 
 
   progress_bar_listener: (event) =>

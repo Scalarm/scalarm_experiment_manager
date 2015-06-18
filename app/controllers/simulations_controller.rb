@@ -204,6 +204,20 @@ class SimulationsController < ApplicationController
 
             Notification.new(event: 'simulation-completed', experiment_id: @experiment.id.to_s,
               index: @simulation_run.index, time: sim_duration, results: @simulation_run.result || 'N\A').save
+
+            # notification about moes
+            result_set = if @simulation_run.result.blank?
+                           [t('experiments.analysis.no_results')]
+                         else
+                           @simulation_run.result.keys.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+                          end
+
+            moes_and_params = @simulation_run.arguments.split(',').map{ |x|
+                                              [ @experiment.input_parameter_label_for(x), x, "input_parameter"] } +
+                                              [%w(----------- nil)] + result_set
+
+            Notification.new(event: 'moes', experiment_id: @experiment.id.to_s,
+              moes: result_set, moes_and_params: moes_and_params || 'N\A').save
           end
 
         end
