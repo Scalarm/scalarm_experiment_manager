@@ -141,6 +141,8 @@ class window.ExperimentMonitor
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
 
+    @simsUpdater = new window.SimulationManagerUpdateHandler(@experiment_id)
+    @simsUpdater.fullUpdate()
 
   update: ->
     monitor = this
@@ -257,6 +259,13 @@ class window.ExperimentMonitor
         $row.append($indexCell).append($timeCell).append($resultsCell)
 
         $("#completed_simulations_table").append($row)
+
+    source.addEventListener 'simulation-manager-update', (e) =>
+      updateInfo = JSON.parse(e.data)
+
+      if lastTimestamp <= updateInfo.timestamp
+        @simsUpdater.update(updateInfo)
+
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)

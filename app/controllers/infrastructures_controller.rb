@@ -282,9 +282,25 @@ class InfrastructuresController < ApplicationController
       command = params[:command]
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
+          experiment_id = sm.record.experiment_id
           # destroy temp password and stop a started simulation run if any
           sm.record.destroy_temp_password if %w(stop destroy_record).include? command
           sm.send(params[:command])
+
+          new_state = if command == 'destroy_record'
+                        'destroyed'
+                      else
+                        sm.record.state
+                      end
+
+          notification = Notification.new(event: 'simulation-manager-update',
+                                     experiment_id: experiment_id,
+                                     sim_id: params[:record_id],
+                                     state: new_state)
+
+          Rails.logger.info "Creating new notification #{notification.to_s}"
+
+          notification.save
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else

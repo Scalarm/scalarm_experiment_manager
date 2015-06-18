@@ -118,6 +118,11 @@ class SimulationManagersController < ApplicationController
       end
 
       if sm_record.save_if_exists
+        Notification.new(event: 'simulation-manager-update',
+                         experiment_id: sm_record.experiment_id,
+                         _id: sm_record._id,
+                         state: sm_record.state).save
+
         render inline: 'SM updated'
       else
         render inline: 'SM not updated', status: 404

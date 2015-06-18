@@ -711,7 +711,7 @@ class ExperimentsController < ApplicationController
 
           if doc['experiment_id'].to_s == @experiment.id.to_s and
               %w(progress-bar-update progress-bar-refresh simulation-started simulation-progress-update
-                 simulation-stopped simulation-completed).include?(doc['event'])
+                 simulation-stopped simulation-completed simulation-manager-update).include?(doc['event'])
             sse.write(doc, event: doc['event'])
           end
         end
