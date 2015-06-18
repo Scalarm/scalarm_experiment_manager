@@ -8,33 +8,33 @@ class SimulationsController < ApplicationController
   before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
-    @simulations = @current_user.get_simulation_scenarios
+    @simulations = current_user.get_simulation_scenarios
     @simulation_scenarios = @simulations
-    @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id)
-    @executors = SimulationExecutor.find_all_by_user_id(@current_user.id)
-    @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id)
-    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id)
+    @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id)
+    @executors = SimulationExecutor.find_all_by_user_id(current_user.id)
+    @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id)
+    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id)
   end
 
   def registration
-    @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
-    @executors = SimulationExecutor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
-    @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
-    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
+    @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
+    @executors = SimulationExecutor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
+    @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
+    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
   end
 
   def upload_component
     if params['component_type'] == 'input_writer'
-      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       input_writer.save
     elsif params['component_type'] == 'executor'
-      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       executor.save
     elsif params['component_type'] == 'output_reader'
-      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       output_reader.save
     elsif params['component_type'] == 'progress_monitor'
-      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       progress_monitor.save
     end
 
@@ -66,7 +66,7 @@ class SimulationsController < ApplicationController
       when (params[:simulation_name].blank?)
         flash[:error] = t('simulations.create.no_simulation_name')
 
-      when (not Simulation.where(name: params[:simulation_name], user_id: @current_user.id).to_a.blank?)
+      when (not Simulation.where(name: params[:simulation_name], user_id: current_user.id).to_a.blank?)
         flash[:error] = t('simulations.create.simulation_invalid_name')
 
       when (simulation_input.blank?)
@@ -87,15 +87,15 @@ class SimulationsController < ApplicationController
         'name' => params[:simulation_name],
         'description' => params[:simulation_description],
         'input_specification' => simulation_input,
-        'user_id' => @current_user.id,
+        'user_id' => current_user.id,
         'created_at' => Time.now
       })
 
       begin
-        set_up_adapter_checked(simulation, 'input_writer', @current_user, params, false)
-        set_up_adapter_checked(simulation, 'executor', @current_user, params)
-        set_up_adapter_checked(simulation, 'output_reader', @current_user, params, false)
-        set_up_adapter_checked(simulation, 'progress_monitor', @current_user, params, false)
+        set_up_adapter_checked(simulation, 'input_writer', current_user, params, false)
+        set_up_adapter_checked(simulation, 'executor', current_user, params)
+        set_up_adapter_checked(simulation, 'output_reader', current_user, params, false)
+        set_up_adapter_checked(simulation, 'progress_monitor', current_user, params, false)
 
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 
@@ -145,9 +145,9 @@ class SimulationsController < ApplicationController
           Rails.logger.error(msg)
           response = { status: 'error', reason: msg }
         else
-          unless @sm_user.nil?
-            if @simulation_run.sm_uuid != @sm_user.sm_uuid
-              Rails.logger.warn("SimulationRun is completed be #{@sm_user.sm_uuid} but it should be #{@simulation_run.sm_uuid}")
+          unless sm_user.nil?
+            if @simulation_run.sm_uuid != sm_user.sm_uuid
+              Rails.logger.warn("SimulationRun is completed be #{sm_user.sm_uuid} but it should be #{@simulation_run.sm_uuid}")
             end
           end
 
@@ -179,7 +179,7 @@ class SimulationsController < ApplicationController
             @simulation_run.cpu_info = cpu_info
           end
 
-          unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
+          unless sm_user.nil? or (sm_record = sm_user.simulation_manager_record).nil?
             unless sm_record.infrastructure.blank?
               @simulation_run.infrastructure = sm_record.infrastructure
             end
@@ -249,7 +249,7 @@ class SimulationsController < ApplicationController
   end
 
   def simulation_scenarios
-    @simulations = @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
+    @simulations = current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
 
     render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
@@ -304,10 +304,10 @@ class SimulationsController < ApplicationController
     experiment_id = BSON::ObjectId(params[:experiment_id])
     Rails.logger.debug("Experiment id : #{experiment_id}")
 
-    @experiment = if not @current_user.nil?
-                    @current_user.experiments.where(id: experiment_id).first
-                  elsif not @sm_user.nil?
-                    user = @sm_user.scalarm_user
+    @experiment = if not current_user.nil?
+                    current_user.experiments.where(id: experiment_id).first
+                  elsif not sm_user.nil?
+                    user = sm_user.scalarm_user
 
                     user.experiments.where(id: experiment_id).first
                   end

@@ -7,6 +7,6 @@
     - else
       - @completed_experiments.each do |experiment|
         %a.button.expand.radius.last-element{ href: experiment_path(experiment.id) }
-          - unless @current_user.owns?(experiment)
+          - unless current_user.owns?(experiment)
             %i.fi-share
           = t('.link_text', { name: experiment.name, start_time: experiment.start_at.strftime('%Y-%m-%d %H:%M') })

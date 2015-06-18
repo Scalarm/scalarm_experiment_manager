@@ -45,12 +45,12 @@ class ApplicationController < ActionController::Base
 
   ##
   # Override authenticate to use SclarmUser class from ExperimentManager
-  # @current_user and @user_session should be initialized in Scalarm::ServiceCore::ScalarmAuthentication
+  # current_user and user_session should be initialized in Scalarm::ServiceCore::ScalarmAuthentication
   def authenticate
     super
-    @current_user = @current_user.convert_to(ScalarmUser) if @current_user
-    @sm_user = @sm_user.convert_to(SimulationManagerTempPassword) if @sm_user
-    @user_session = @user_session.convert_to(UserSession) if @user_session
+    @current_user = current_user.convert_to(ScalarmUser) if current_user
+    @sm_user = sm_user.convert_to(SimulationManagerTempPassword) if sm_user
+    @user_session = user_session.convert_to(UserSession) if user_session
   end
 
   def generic_exception_handler(exception)
@@ -91,7 +91,7 @@ class ApplicationController < ActionController::Base
           reset_session
         end
 
-        @user_session.destroy unless @user_session.nil?
+        user_session.destroy unless user_session.nil?
 
         flash[:error] = t('login.required')
 

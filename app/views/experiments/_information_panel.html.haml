@@ -1,10 +1,10 @@
 %div.right
-  - is_disabled = @experiment.user_id != @current_user.id
+  - is_disabled = @experiment.user_id != current_user.id
 
   = experiment_info_button('experiments.edit', 'edit-dialog', 'fi-page-edit', is_disabled)
   = experiment_info_button('experiments.monitoring_actions.share_dialog', 'share-dialog', 'fi-share', is_disabled)
 
-  - if @experiment.user_id == @current_user.id
+  - if @experiment.user_id == current_user.id
     - if @experiment.is_running
       %span.button.tiny.radius.alert#stopExperimentButton
         %i.fi-stop
@@ -29,7 +29,7 @@
     .small-9.columns
       %h5.subheader= @experiment.description
   .row
-    - if @current_user.owns?(@experiment)
+    - if current_user.owns?(@experiment)
       .small-3.columns
         %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_with') + ':'
       .small-9.columns
@@ -89,7 +89,7 @@
         .small-2.small-centered.columns
           = submit_tag t('experiments.edit.submit_btn'), class: 'button radius expanded'
 
-- if @experiment.user_id == @current_user.id
+- if @experiment.user_id == current_user.id
   #share-dialog.reveal-modal(data-reveal)
     %a.close-reveal-modal &#215;
     %h2= t('experiments.monitoring_actions.share_dialog.tooltip')

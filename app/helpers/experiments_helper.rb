@@ -26,7 +26,7 @@ module ExperimentsHelper
 
   def share_with_users
     ScalarmUser.all.select{|u|
-      u.id != @current_user.id and (@experiment.shared_with.blank? or (not @experiment.shared_with.include?(u.id)))
+      u.id != current_user.id and (@experiment.shared_with.blank? or (not @experiment.shared_with.include?(u.id)))
     }.map{ |u|
       u.login.nil? ? u.email : u.login
     }

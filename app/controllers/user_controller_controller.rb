@@ -18,12 +18,12 @@ class UserControllerController < ApplicationController
   # Render trivial json if Accept: application/json specified,
   # for testing and authentication tests purposes
   def index
-    Rails.logger.info "index #{@current_user}"
+    Rails.logger.info "index #{current_user}"
     respond_to do |format|
       format.html
       format.json { render json: {status: 'ok',
                                   message: 'Welcome to Scalarm',
-                                  user_id: @current_user.id.to_s } }
+                                  user_id: current_user.id.to_s } }
     end
   end
 
@@ -88,8 +88,8 @@ class UserControllerController < ApplicationController
     keep_session_params(:server_name) do
       reset_session
     end
-    @user_session.destroy unless @user_session.blank?
-    @current_user.destroy_unused_credentials unless @current_user.nil?
+    user_session.destroy unless user_session.blank?
+    current_user.destroy_unused_credentials unless current_user.nil?
 
     flash[:notice] = t('logout_success')
 
@@ -105,10 +105,10 @@ class UserControllerController < ApplicationController
 
       flash[:error] = t('password_too_weak')
 
-    elsif (not @current_user.password_hash.nil?)
+    elsif (not current_user.password_hash.nil?)
 
       begin
-        ScalarmUser.authenticate_with_password(@current_user.login, params[:current_password])
+        ScalarmUser.authenticate_with_password(current_user.login, params[:current_password])
       rescue Exception => e
         flash[:error] = t('password_wrong')
       end
@@ -116,8 +116,8 @@ class UserControllerController < ApplicationController
     end
 
     if flash[:error].blank?
-      @current_user.password = params[:password]
-      @current_user.save
+      current_user.password = params[:password]
+      current_user.save
 
       flash[:notice] = t('password_changed')
     end

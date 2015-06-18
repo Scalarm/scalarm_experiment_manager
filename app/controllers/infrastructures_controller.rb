@@ -16,7 +16,7 @@ class InfrastructuresController < ApplicationController
   end
 
   def list
-    render json: InfrastructureFacadeFactory.list_infrastructures(@current_user.id)
+    render json: InfrastructureFacadeFactory.list_infrastructures(current_user.id)
   end
 
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name
@@ -28,7 +28,7 @@ class InfrastructuresController < ApplicationController
   def simulation_manager_records
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
-      hash = facade.sm_record_hashes(@current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
+      hash = facade.sm_record_hashes(current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
       render json: hash
     rescue NoSuchInfrastructureError => e
       Rails.logger.error "Try to fetch SM nodes, but requested infrastructure does not exist: #{e.to_s}"
@@ -44,7 +44,7 @@ class InfrastructuresController < ApplicationController
 
     InfrastructureFacadeFactory.get_registered_infrastructure_names.each do |infrastructure_id|
       facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_id)
-      infrastructure_info[infrastructure_id] = facade.current_state(@current_user.id)
+      infrastructure_info[infrastructure_id] = facade.current_state(current_user.id)
     end
 
     render json: infrastructure_info
@@ -80,7 +80,7 @@ class InfrastructuresController < ApplicationController
         # add proxy from ApplicationController (if available) if not explicitly passed specified in params
         params[:proxy] = @proxy_s if @proxy_s
         records = infrastructure.start_simulation_managers(
-            @current_user.id, params[:job_counter].to_i, experiment_id, params
+            current_user.id, params[:job_counter].to_i, experiment_id, params
         )
         render json: { status: 'ok', records_ids: (records.map {|r| r.id.to_s}), infrastructure: infrastructure_name,
                        msg: I18n.t('infrastructures_controller.scheduled_info', count: records.count.to_s, name: infrastructure.long_name) }
@@ -119,18 +119,18 @@ class InfrastructuresController < ApplicationController
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
 
-      if @current_user.banned_infrastructure?(infrastructure_name)
+      if current_user.banned_infrastructure?(infrastructure_name)
         return render json: {
             status: 'error',
             error_code: 'banned',
             msg: t('infrastructures_controller.credentials.banned',
                    infrastructure_name: infrastructure.long_name,
-                   time: @current_user.ban_expire_time(infrastructure_name)
+                   time: current_user.ban_expire_time(infrastructure_name)
             )
         }
       end
 
-      credentials = infrastructure.add_credentials(@current_user, stripped_params_values(params), session)
+      credentials = infrastructure.add_credentials(current_user, stripped_params_values(params), session)
       if credentials
         if credentials.valid?
           mark_credentials_valid(credentials, infrastructure_name)
@@ -185,7 +185,7 @@ class InfrastructuresController < ApplicationController
     infrastructure_name = params[:infrastructure]
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-      records = infrastructure.get_credentials(@current_user.id, query_params)
+      records = infrastructure.get_credentials(current_user.id, query_params)
 
       # modify records to contain only non-secret fields
       hashes = records.collect do |r|
@@ -217,20 +217,20 @@ class InfrastructuresController < ApplicationController
 
   def mark_credentials_valid(credentials, infrastructure_name)
     credentials.invalid = false
-    if @current_user.credentials_failed and @current_user.credentials_failed.include?(infrastructure_name)
-      @current_user.credentials_failed[infrastructure_name] = []
-      @current_user.save
+    if current_user.credentials_failed and current_user.credentials_failed.include?(infrastructure_name)
+      current_user.credentials_failed[infrastructure_name] = []
+      current_user.save
     end
     credentials.save
   end
 
   def mark_credentials_invalid(credentials, infrastructure_name)
     credentials.invalid = true
-    @current_user.credentials_failed = {} unless @current_user.credentials_failed
-    @current_user.credentials_failed[infrastructure_name] = [] unless @current_user.credentials_failed.include?(infrastructure_name)
-    @current_user.credentials_failed[infrastructure_name] << Time.now
+    current_user.credentials_failed = {} unless current_user.credentials_failed
+    current_user.credentials_failed[infrastructure_name] = [] unless current_user.credentials_failed.include?(infrastructure_name)
+    current_user.credentials_failed[infrastructure_name] << Time.now
     # TODO: trim to 2 invalid attempts?
-    @current_user.save
+    current_user.save
     credentials.save
   end
 
@@ -247,7 +247,7 @@ class InfrastructuresController < ApplicationController
 
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
-      facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
+      facade.remove_credentials(params[:record_id], current_user.id, params[:credential_type])
       render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
     rescue Exception => e
       Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -271,7 +271,7 @@ class InfrastructuresController < ApplicationController
                long_name: facade.long_name,
                partial_name: (group or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
-               simulation_managers: facade.get_sm_records(@current_user.id).to_a
+               simulation_managers: facade.get_sm_records(current_user.id).to_a
            }
   end
 
@@ -380,7 +380,7 @@ class InfrastructuresController < ApplicationController
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
           infrastructure_name: infrastructure_name,
-          other_params: facade.other_params_for_booster(@current_user.id)
+          other_params: facade.other_params_for_booster(current_user.id)
       }
     rescue ActionView::MissingTemplate
       render nothing: true
@@ -443,7 +443,7 @@ class InfrastructuresController < ApplicationController
   def get_sm_record(record_id, facade)
     record = facade.get_sm_record_by_id(record_id)
     raise NoSuchSimulationManagerError if record.nil?
-    raise AccessDeniedError if record.user_id.to_s != @current_user.id.to_s
+    raise AccessDeniedError if record.user_id.to_s != current_user.id.to_s
     record
   end
 
@@ -457,7 +457,7 @@ class InfrastructuresController < ApplicationController
   def validate_experiment(experiment_id)
     experiment = Experiment.find_by_id(experiment_id)
     if experiment
-      unless experiment.user_id == @current_user.id or experiment.shared_with.include? @current_user.id
+      unless experiment.user_id == current_user.id or experiment.shared_with.include? current_user.id
         raise InfrastructureErrors::AccessDeniedError
       end
     else

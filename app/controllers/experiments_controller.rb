@@ -11,13 +11,7 @@ class ExperimentsController < ApplicationController
                                           :start_custom_points_experiment, :start_supervised_experiment]
 
   def index
-    @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-    @simulations = @current_user.get_simulation_scenarios
-
-    @running_experiments.map! {|e| transform_experiment e}
-    @completed_experiments = @running_experiments.select {|e| e.completed?} # running and not completed
-    @running_experiments.select! {|e| not e.completed?} # running and completed
+    load_simulations_and_experiments_for_current_user
 
     respond_to do |format|
       format.html
@@ -30,6 +24,49 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  ##
+  # Sets instance variables:
+  # - @running_experiments
+  # - @historical_experiments
+  # - @completed_experiments
+  # - @simulations
+  # Containing models for current user
+  def load_simulations_and_experiments_for_current_user
+    @non_historical_experiments = load_non_historical_experiments
+    @running_experiments = load_running_experiments
+    @completed_experiments = load_completed_experiments
+    @historical_experiments = load_historical_experiments
+    @simulations = load_simulations
+  end
+
+  def load_non_historical_experiments
+    (current_user.get_running_experiments.sort do |e1, e2|
+      e2.start_at <=> e1.start_at
+    end).map do |e|
+      transform_experiment e
+    end
+  end
+
+  def load_running_experiments
+    @non_historical_experiments ||= load_non_historical_experiments
+
+    @non_historical_experiments.select {|e| not e.completed?} # running and completed
+  end
+
+  def load_historical_experiments
+    current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
+  end
+
+  def load_completed_experiments
+    @non_historical_experiments ||= load_non_historical_experiments
+
+    @non_historical_experiments.select {|e| e.completed?} # running and not completed
+  end
+
+  def load_simulations
+    current_user.get_simulation_scenarios
+  end
+
   def show
     information_service = InformationService.instance
     @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
@@ -40,7 +77,7 @@ class ExperimentsController < ApplicationController
     begin
       start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
-      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
+      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: current_user.login })
       respond_to do |format|
         format.html { redirect_to action: :index }
         format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
@@ -61,7 +98,7 @@ class ExperimentsController < ApplicationController
   end
 
   def running_experiments
-    @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @running_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @running_experiments.map! {|e| transform_experiment e}
     @running_experiments.select! {|e| not e.completed?} # running and not completed
 
@@ -69,7 +106,7 @@ class ExperimentsController < ApplicationController
   end
 
   def completed_experiments
-    @completed_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @completed_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
     @completed_experiments.map! {|e| transform_experiment e}
     @completed_experiments.select! {|e| e.completed?} # running and completed
 
@@ -77,7 +114,7 @@ class ExperimentsController < ApplicationController
   end
 
   def historical_experiments
-    @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @historical_experiments = current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
     render partial: 'historical_experiments', locals: { show_close_button: true }
   end
@@ -99,7 +136,7 @@ class ExperimentsController < ApplicationController
   end
 
   def current_user_owns_experiment?
-    @experiment.user_id == @current_user.id
+    @experiment.user_id == current_user.id
   end
 
 =begin
@@ -169,7 +206,7 @@ class ExperimentsController < ApplicationController
 
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
                                    :description, :parameter_constraints)
-      experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
+      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
@@ -231,7 +268,7 @@ class ExperimentsController < ApplicationController
         simulation_id: :security_default
     )
 
-    experiment = ExperimentFactory.create_custom_points_experiment(@current_user.id, @simulation)
+    experiment = ExperimentFactory.create_custom_points_experiment(current_user.id, @simulation)
     experiment.save
 
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
@@ -296,14 +333,14 @@ class ExperimentsController < ApplicationController
     # TODO: other experiment parameters
     # TODO: handle errors
 
-    experiment = ExperimentFactory.create_supervised_experiment(@current_user.id, @simulation)
+    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation)
     experiment.save
     response = {'status' => 'ok'}
     if params.has_key?(:supervisor_script_id)
       response = experiment.start_supervisor_script(params[:simulation_id],
                                                     params[:supervisor_script_id],
                                                     Utils::parse_json_if_string(params[:supervisor_script_params]),
-                                                    @current_user
+                                                    current_user
       )
       Rails.logger.debug("Start supervisor script request to supervisor, response: #{response}")
     end
@@ -661,7 +698,7 @@ class ExperimentsController < ApplicationController
 
   def destroy
     unless @experiment.nil?
-      raise SecurityError.new(t('experiments.destroy.failure')) unless @experiment.user_id == @current_user.id
+      raise SecurityError.new(t('experiments.destroy.failure')) unless @experiment.user_id == current_user.id
       @experiment.destroy
       flash[:notice] = 'Your experiment has been destroyed.'
     else
@@ -686,8 +723,8 @@ class ExperimentsController < ApplicationController
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
         simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
-        unless @sm_user.nil? or simulation_to_send.nil?
-          simulation_to_send.sm_uuid = @sm_user.sm_uuid
+        unless sm_user.nil? or simulation_to_send.nil?
+          simulation_to_send.sm_uuid = sm_user.sm_uuid
           simulation_to_send.save
         end
       end
@@ -843,7 +880,7 @@ class ExperimentsController < ApplicationController
   def simulation_manager
     sm_uuid = SecureRandom.uuid
     # prepare locally code of a simulation manager to download with a configuration file
-    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, @current_user.id, @experiment.id.to_s) do |path|
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, current_user.id, @experiment.id.to_s) do |path|
       contents = File.open(path) {|f| f.read}
       send_data contents,
                 filename: File.basename(path),
@@ -865,7 +902,7 @@ class ExperimentsController < ApplicationController
 
     experiment_id = BSON::ObjectId(params[:id])
 
-    if (@experiment = Experiment.find_by_query({ '$and' => [{ _id: experiment_id }, { user_id: @current_user.id } ]})).blank?
+    if (@experiment = Experiment.find_by_query({ '$and' => [{ _id: experiment_id }, { user_id: current_user.id } ]})).blank?
       flash[:error] = t('experiments.not_found', { id: params[:id], user: params[:sharing_with_login] })
     end
 
@@ -892,7 +929,7 @@ class ExperimentsController < ApplicationController
   end
 
   def update
-    if @experiment.user_id != @current_user.id
+    if @experiment.user_id != current_user.id
       flash[:error] = t('experiments.edit.failure')
     else
       @experiment.name = params[:experiment][:name]
@@ -911,10 +948,10 @@ class ExperimentsController < ApplicationController
 
   # getting id of a random running experiment
   def random_experiment
-    @running_experiments = if not @current_user.nil?
-      @current_user.get_running_experiments
-    elsif not @sm_user.nil?
-      @sm_user.scalarm_user.get_running_experiments
+    @running_experiments = if not current_user.nil?
+      current_user.get_running_experiments
+    elsif not sm_user.nil?
+      sm_user.scalarm_user.get_running_experiments
     else
       []
     end
@@ -929,7 +966,7 @@ class ExperimentsController < ApplicationController
   def results_binaries
     storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
     redirect_to LogBankUtils::experiment_url(storage_manager_url,
-                                             @experiment.id, @current_user)
+                                             @experiment.id, current_user)
   end
 
   # POST params:
@@ -1036,7 +1073,7 @@ class ExperimentsController < ApplicationController
     else
       begin
         Rails.logger.error('[supervisor_options] Using Experiment Supervisor:' + es_url)
-        supervisors_resp = @current_user.get_with_token("https://#{es_url}/supervisors")
+        supervisors_resp = current_user.get_with_token("https://#{es_url}/supervisors")
         supervisors = JSON.parse(supervisors_resp)
       rescue RestClient::Exception, StandardError => e
         Rails.logger.error "Unable to connect with Supervisor: #{e.to_s}"
@@ -1070,18 +1107,18 @@ class ExperimentsController < ApplicationController
     if params.include?(:id)
       experiment_id = BSON::ObjectId(params[:id].to_s)
 
-      if not @current_user.nil?
-        @experiment = @current_user.experiments.where(id: experiment_id).first
+      if not current_user.nil?
+        @experiment = current_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('experiments.not_found', { id: experiment_id, user: @current_user.login })
+          flash[:error] = t('experiments.not_found', { id: experiment_id, user: current_user.login })
         end
 
-      elsif (not @sm_user.nil?)
-        @experiment = @sm_user.scalarm_user.experiments.where(id: experiment_id).first
+      elsif (not sm_user.nil?)
+        @experiment = sm_user.scalarm_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])
+          flash[:error] = t('security.sim_authorization_error', sm_uuid: sm_user.sm_uuid, experiment_id: params[:id])
           Rails.logger.error(flash[:error])
         end
       end
@@ -1104,16 +1141,16 @@ class ExperimentsController < ApplicationController
     )
 
     @simulation = if params['simulation_id']
-                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
+                    current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
                   elsif params['simulation_name']
-                    @current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
+                    current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
                   else
                     nil
                   end
 
     if @simulation.nil?
       flash[:error] = t('simulation_scenarios.not_found', { id: (params['simulation_id'] or params['simulation_name']),
-                        user: @current_user.login })
+                        user: current_user.login })
 
       respond_to do |format|
         format.html { redirect_to action: :index }

@@ -75,7 +75,7 @@
         .small-2.small-centered.columns
           = submit_tag t('.update_btn'), class: 'button expand radius last-element'
 
-- if @simulation_scenario.user_id == @current_user.id
+- if @simulation_scenario.user_id == current_user.id
   #share-dialog.reveal-modal(data-reveal)
     %a.close-reveal-modal &#215;
     %h2= t ".share.tooltip"
@@ -93,7 +93,7 @@
         .small-1.columns
 
     .row
-      - if @simulation_scenario.user_id == @current_user.id
+      - if @simulation_scenario.user_id == current_user.id
         .small-4.columns
           %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_with') + ':'
         .small-8.columns
@@ -112,7 +112,7 @@
     .row
       .small-3.columns.small-centered
         = form_tag share_simulation_scenario_path(@simulation_scenario.id), class: 'custom' do
-          = hidden_field_tag 'sharing_with_login', @current_user.login
+          = hidden_field_tag 'sharing_with_login', current_user.login
 
           - if @simulation_scenario.is_public
             = hidden_field_tag 'mode', 'unshare_with_all'
