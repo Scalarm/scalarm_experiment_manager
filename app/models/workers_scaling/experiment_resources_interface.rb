@@ -7,8 +7,8 @@ class ExperimentResourcesInterface
 
   def initialize(experiment_id, user_id)
     # TODO list if disallowed infrastructures
-    @experiment_id = experiment_id
-    @user_id = user_id
+    @experiment_id = experiment_id.to_s
+    @user_id = BSON::ObjectId(user_id.to_s)
     @facades_cache = {}
   end
   
@@ -23,6 +23,7 @@ class ExperimentResourcesInterface
     begin
       #TODO to_s, to_sym
       params['time_limit'] = 60 if params['time_limit'].nil?
+      params.merge! onsite_monitoring: true
       get_facade_for(infrastructure_name)
         .start_simulation_managers(@user_id, amount, @experiment_id, params)
         .map &:id
