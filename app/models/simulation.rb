@@ -119,15 +119,15 @@ class Simulation < MongoActiveRecord
 
       # uploading new file
     elsif params.include?(adapter_type)
-      unless Utils::get_validation_regexp(:filename).match(params[adapter_type].original_filename)
-        raise SecurityError.new(t('errors.insecure_filename', param_name: adapter_type))
-      end
-
       adapter_name = if params["#{adapter_type}_name"].blank?
                        params[adapter_type].original_filename
                      else
                        params["#{adapter_type}_name"]
                      end
+
+      unless Utils::get_validation_regexp(:filename).match(adapter_name)
+        raise SecurityError.new(t('errors.insecure_filename', param_name: adapter_type))
+      end
 
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
                                                                                name: adapter_name,
