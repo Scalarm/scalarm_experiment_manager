@@ -284,7 +284,7 @@ class MongoActiveRecord
       Rails.logger.debug("MongoActiveRecord initialized with URL '#{storage_manager_url}' and DB '#{db_name}'")
 
       @@client = MongoClient.new(storage_manager_url.split(':')[0], storage_manager_url.split(':')[1], {
-          connect_timeout: 5.0, pool_size: 4, pool_timeout: 10.0
+          connect_timeout: 5.0, pool_size: 10, pool_timeout: 10.0
       })
       @@db = @@client[db_name]
       @@grid = Mongo::Grid.new(@@db)
