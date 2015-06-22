@@ -43,7 +43,7 @@ unless Rails.env.test?
       slog('init', "Fetched db_routers list: #{storage_manager_list}")
       db_router_url = storage_manager_list.sample
       slog('mongo_active_record', "Connecting to '#{db_router_url}'")
-      Scalarm::Database::MongoActiveRecord.connection_init('localhost', config['db_name'],
+      Scalarm::Database::MongoActiveRecord.connection_init(db_router_url, config['db_name'],
                                                            username: config['auth_username'],
                                                            password: config['auth_password'])
     end
