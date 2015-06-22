@@ -107,7 +107,7 @@
       window.toggle_panels_on_title_click();
 
       if (!!chart_service_url) {
-        var base_url = encodeURIComponent(chart_service_url);
+        var base_url = encodeURIComponent('https://' + chart_service_url);
 
 
         var panel_url = "https://" + chart_service_url + "/panels/" + experiment_id + "?base_url=" + base_url;
