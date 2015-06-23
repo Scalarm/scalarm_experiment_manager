@@ -21,6 +21,7 @@
     .row
       - if single_user
         = form_tag login_path do
+          = hidden_field_tag 'username', config.anonymous_user['login']
           .small-6.columns.small-centered
             .row
               .small-3.columns
@@ -30,7 +31,7 @@
 
             .row
               .small-12.small-centered.columns(style="text-align: center;")
-                = submit_tag 'Login with username', class: 'button radius'
+                = submit_tag 'Login', class: 'button radius'
       - else
         .small-6.columns
           = form_tag login_path do
