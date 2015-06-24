@@ -50,12 +50,12 @@
   %section.row.panel.radius
     = render 'information_panel'
 
-  - if @experiment.is_running
-    %section.panel.radius
-      %h3.subheader
-        Computational resources summary
-        = image_tag('loading.gif', id: 'actions-loading-workers')
-      = render 'workers_info'
+  -#- if @experiment.is_running
+  -#  %section.panel.radius
+  -#    %h3.subheader
+  -#      Computational resources summary
+  -#      = image_tag('loading.gif', id: 'actions-loading-workers')
+  -#    = render 'workers_info'
 
   %section.row.panel.radius.last-element#monitoring_section
     %h3.subheader= t('experiments.show.stats_header')
