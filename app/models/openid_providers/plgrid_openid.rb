@@ -8,6 +8,8 @@ module PlGridOpenID
   PLGRID_OID_URI = 'https://openid.plgrid.pl/gateway'
 
   # Invoke PL-Grid OpenID login procedure.
+  # Optional parameters:
+  # - generate_temp_pass - boolean - should temp password be generated
   def login_openid_plgrid
     begin
       oidreq = consumer.begin(PLGRID_OID_URI)
@@ -21,7 +23,7 @@ module PlGridOpenID
     # -- Attribute Exchange support --
     OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn, :POSTresponse])
 
-    return_to = openid_callback_plgrid_url
+    return_to = openid_callback_plgrid_url((params[:generate_temp_pass] ? SecureRandom.hex(4) : nil))
 
     # remove following "/" from url (to match PL-Grid OpenID realm)
     realm = root_url.match(/(.*)\//)[1]
@@ -37,9 +39,13 @@ module PlGridOpenID
   # Optional parameters:
   # - temp_pass
   def openid_callback_plgrid
-    validate_params(:openid_id, "openid.claimed_id", "openid.identity")
+    validate(
+        'openid.claimed_id'.to_sym => :security_openid_id,
+        'openid.identity'.to_sym => :security_openid_id
+    )
 
-    Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")
+    # disabled for security reasons
+    #Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")
 
     parameters = params.reject{|k,v|request.path_parameters[k]}
     parameters.reject!{|k,v|%w{action controller}.include? k.to_s}
@@ -88,18 +94,21 @@ module PlGridOpenID
         Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
     update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
 
-    pl_cloud_secret = PLCloudUtil::certs_to_pl_cloud_secret_proxy(ax_attrs[:proxy], ax_attrs[:user_cert])
+    pl_cloud_secret = PLCloudUtil::openid_proxy_to_cloud_proxy(x509_proxy_cert)
     update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
     session[:user] = scalarm_user.id.to_s
+    session[:uuid] = SecureRandom.uuid
     successful_login
   end
 
   def self.get_or_create_user(dn, plgrid_login, password=nil)
     OpenIDUtils::get_user_with(dn: dn, login: plgrid_login) or
         OpenIDUtils::get_user_with(dn: dn) or OpenIDUtils::get_user_with(login: plgrid_login) or
-        OpenIDUtils::create_user_with(plgrid_login, password, dn: dn, login: plgrid_login)
+        OpenIDUtils::create_user_with(plgrid_login, password,
+                                      dn: plgoid_dn_to_browser_dn(dn),
+                                      login: plgrid_login)
   end
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)
@@ -112,7 +121,7 @@ module PlGridOpenID
   end
 
   def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
-    pl_cloud_credentials = (CloudSecrets.find_by_query(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud') or
+    pl_cloud_credentials = (CloudSecrets.where(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud').first ||
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
     pl_cloud_credentials.secret_proxy = proxy_secret
@@ -135,7 +144,7 @@ module PlGridOpenID
   end
 
   def self.strip_identity(identity_uri)
-    m = identity_uri.match(/^https:\/\/openid\.plgrid\.pl\/(\w+)$/)
+    m = identity_uri.match(/\Ahttps:\/\/openid\.plgrid\.pl\/(\w+)\z/)
     m ? m[1] : nil
   end
 end

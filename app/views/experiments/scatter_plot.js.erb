@@ -1,40 +1,85 @@
-i = bivariate_chart_tab.length;
+//TODO: translate
 
-$("#bivariate_charts").prepend("<div id='bivariate_chart_" + i + "'></div>");
-$("#bivariate_chart_"+i).html("<%= escape_javascript(render partial: 'bivariate_chart') %>")
+$("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
+$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>");
 
-$(document).ready(function() {
-    bivariate_chart_tab[i] = new Highcharts.Chart({
-  	chart: {
-  		renderTo: 'bivariate_chart_container_<%= @chart.x_axis %>_<%= @chart.y_axis %>',
-        type: 'scatter'
-  	},
-  	title: { text: '\'<%= @chart.x_axis_label %>\' versus \'<%= @chart.y_axis_label %>\'' },
-  	xAxis: {
-  		title: { text: '<%= @chart.x_axis_label %>' }
-  	},
-  	yAxis: {
-  		title: { text: '<%= @chart.y_axis_label %>' }
-  	},
-  	tooltip: {
-  	},
-  	plotOptions: {
-  	},
-  	credits: { enabled: false },
-  	series: [{
-        name: 'Data',
-        color: 'rgba(223, 83, 83, .5)',
-        data: [
-            <% @chart.chart_data.each do |x_value, y_values|
-                 y_values.each do |y_value| %>
-                  [ <%= x_value %>, <%= y_value %> ],
-                <% end
-            end %>
-        ]
-    }]
-	});
-});
-$('#busy_bivariate').hide();
-// scroll to
-var targetOffset =  $('#bivariate_chart_' + i).offset().top;
-$('html,body').animate({scrollTop: targetOffset}, 1000);
+try {
+    $(document).ready(function() {
+        new Highcharts.Chart({
+        chart: {
+            renderTo: '<%= @container_id %>',
+            type: 'scatter'
+        },
+        title: { text: '\'<%= @chart.x_axis_label %>\' versus \'<%= @chart.y_axis_label %>\'' },
+        xAxis: {
+            title: { text: '<%= @chart.x_axis_label %>' },
+            type: '<%= @chart.x_axis_type or 'linear' %>'
+        },
+        yAxis: {
+            title: { text: '<%= @chart.y_axis_label %>' },
+            type: '<%= @chart.y_axis_type or 'linear' %>'
+        },
+        tooltip: {
+            formatter: function () {
+                return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b><br /><b><%= t '.click_for_details' %></b>';
+            }
+        },
+        plotOptions: {
+        },
+        credits: { enabled: false },
+        series: [
+        <% if @chart.linear_regression_possible? %>
+          {
+              type: 'line',
+              name: "<%= t '.regression_line' %>",
+              data: <%= @chart.linear_regression_data %>,
+              marker: {
+                  enabled: false
+              },
+              enableMouseTracking: false
+          },
+        <% end %>
+        {
+            name: '<%= @chart.x_axis_label.split(" - ")[-1]%>',
+            color: 'rgba(223, 83, 83, .5)',
+            data: [
+                <% @chart.chart_data.each do |x_value, y_values_simulation_ids|
+                     y_values_simulation_ids.each do |y_value, simulation_id| %>
+                      { x: <%= x_value %>, y: <%= y_value %>, simulation_id: '<%= simulation_id %>' },
+                    <% end
+                end %>
+            ],
+            cursor: 'pointer',
+            point: {
+                events: {
+                    click: function () {
+                        var extension_dialog = $('#extension-dialog');
+                        extension_dialog.html(window.loaderHTML);
+                        extension_dialog.load("/experiments/" + "<%= @experiment.id %>" + "/simulations/" + this.simulation_id);
+                        window.reopeningModals = {
+                          id: "experiment-analysis-modal",
+                          isActive: true
+                        };
+                        extension_dialog.foundation('reveal', 'open');
+                    }
+                }
+            }
+        }]
+      });
+    });
+
+    // scroll to
+    var targetOffset =  $('#wrapper_<%= @container_id %>').offset().top;
+    $('html,body').animate({scrollTop: targetOffset}, 1000);
+
+} catch(e) {
+    $('#wrapper_<%= @container_id %>').hide();
+    var msg = e;
+    if (e.match(/Highcharts error #10/)) {
+        msg = "Can't plot zero or subzero values on a logarithmic axis";
+    }
+    toastr.error("An error occured: " + msg);
+} finally {
+    $('#busy_bivariate').hide();
+}
+

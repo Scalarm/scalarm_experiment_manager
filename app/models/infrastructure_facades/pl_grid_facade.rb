@@ -2,6 +2,7 @@ require 'securerandom'
 require 'fileutils'
 require 'net/ssh'
 require 'net/scp_ext'
+require 'scalarm/service_core/grid_proxy'
 
 require_relative 'plgrid/pl_grid_simulation_manager'
 
@@ -11,7 +12,10 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PlGridFacade < InfrastructureFacade
+  include SSHAccessedInfrastructure
   include SharedSSH
+  include ShellCommands
+  extend ShellCommands
 
   attr_reader :ssh_sessions
   attr_reader :long_name
@@ -35,21 +39,42 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
-    sm_uuid = SecureRandom.uuid
+    # 1. checking if the user can schedule SiM
+    credentials = if PlGridFacade.using_temp_credentials?(additional_params)
+                    PlGridFacade.create_temp_credentials(additional_params)
+                  else
+                    PlGridFacade.get_credentials_from_db(user_id)
+                  end
 
-    # prepare locally code of a simulation manager to upload with a configuration file
-    unless additional_params[:onsite_monitoring]
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, additional_params['start_at'])
+    if credentials.nil?
+      raise InfrastructureErrors::NoCredentialsError.new
     end
 
-    credentials =
-        using_temp_credentials?(additional_params) ? create_temp_credentials(additional_params) : get_credentials_from_db(user_id)
+    if credentials.invalid or (credentials.password.blank? and credentials.secret_proxy.blank?)
+      raise InfrastructureErrors::InvalidCredentialsError.new
+    end
 
-    raise InfrastructureErrors::NoCredentialsError.new if credentials.nil?
-    raise InfrastructureErrors::InvalidCredentialsError.new if credentials.invalid or (credentials.password.blank? and credentials.secret_proxy.blank?)
+    # 2. create instances_count SiMs
+    records = (1..instances_count).map do
+      # 2.a create temp pass for SiM
+      sm_uuid = SecureRandom.uuid
+      if SimulationManagerTempPassword.find_by_sm_uuid(sm_uuid).nil?
+        SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
+      end
 
-    records = create_records(instances_count, user_id, experiment_id, sm_uuid, additional_params)
-    send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, additional_params) if additional_params[:onsite_monitoring]
+      # 2.c create record for SiM and save it
+      record = create_record(user_id, experiment_id, sm_uuid, additional_params)
+      record.save
+
+      record
+    end
+
+    if additional_params[:onsite_monitoring]
+      sm_uuid = SecureRandom.uuid
+      self.class.handle_monitoring_send_errors(records) do
+        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler.short_name, additional_params)
+      end
+    end
 
     records
   end
@@ -62,64 +87,106 @@ class PlGridFacade < InfrastructureFacade
     end
   end
 
-  def send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, params)
-    InfrastructureFacade.prepare_monitoring_package(sm_uuid, user_id, scheduler.short_name)
-    bin_base_name = 'scalarm_monitoring_linux_x86_64'
+  def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler_name, params={})
+    # TODO: implement multiple architectures support
+    arch = 'linux_386'
 
-    remote_proxy_path = '~/.scalarm_proxy'
-    key_passphrase = params[:key_passphrase]
-    credentials.generate_proxy(key_passphrase) if not credentials.secret_proxy and key_passphrase
-    credentials.clone_proxy(remote_proxy_path)
+    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
 
     credentials.ssh_session do |ssh|
-      ssh.exec! 'rm -f config.json' # TODO: change name!
-      ssh.exec! "rm -f #{bin_base_name}.xz"
-      ssh.exec! "rm -f #{bin_base_name}"
-    end
-
-    credentials.scp_session do |scp|
-      scp.upload_multiple! [
-                               File.join('/tmp', InfrastructureFacade.monitoring_package_dir(sm_uuid), 'config.json'),
-                               File.join(Rails.root, 'public', 'scalarm_monitoring', "#{bin_base_name}.xz")
-                           ], '.'
-    end
-
-    credentials.ssh_session do |ssh|
-      ssh.exec! "mv #{bin_base_name} #{}"
-    end
-
-    if Rails.application.secrets.certificate_path
-      credentials.ssh_session do |ssh|
-        ssh.exec! 'rm -f ~/.scalarm_certificate'
-      end
-
+      # TODO: implement ssh.scp method for gsissh and use here
       credentials.scp_session do |scp|
-        scp.upload! Rails.application.secrets.certificate_path, '~/.scalarm_certificate'
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
+
+        key_passphrase = params[:key_passphrase]
+        PlGridFacade.generate_proxy(ssh, key_passphrase) if not credentials.secret_proxy and key_passphrase
+        PlGridFacade.clone_proxy(ssh, RemoteAbsolutePath::remote_monitoring_proxy)
+
+        PlGridFacade.remove_remote_monitoring_files(ssh)
+        PlGridFacade.upload_monitoring_files(scp, sm_uuid, arch)
+        PlGridFacade.remove_local_monitoring_config(sm_uuid)
+
+        cmd = PlGridFacade.start_monitoring_cmd
+        Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
       end
     end
+  end
 
-    credentials.ssh_session do |ssh|
-      cmd = ShellCommands.chain(
-          "unxz -f #{bin_base_name}.xz",
-          "chmod a+x #{bin_base_name}",
-          "X509_USER_PROXY=#{remote_proxy_path} #{ShellCommands.
-              run_in_background("./#{bin_base_name}", "#{bin_base_name}-`date +%H-%M_%d-%m-%y`.log")}"
-      )
-      Rails.logger.debug("Executing scalarm_monitoring: #{ssh.exec!(cmd)}")
+  def self.remove_remote_monitoring_files(ssh)
+    [
+        RemoteHomePath::monitoring_config,
+        RemoteHomePath::monitoring_package,
+        RemoteHomePath::monitoring_binary,
+        RemoteHomePath::remote_monitoring_certificate,
+        RemoteAbsolutePath::remote_monitoring_proxy
+    ].each do |path|
+      ssh.exec! rm(path, true)
     end
   end
 
-  def using_temp_credentials?(params)
-    params.include?(:plgrid_login)
+  # TODO: can be moved to base class or util class
+  def self.upload_monitoring_files(scp, sm_uuid, arch)
+    local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+    local_package = LocalAbsolutePath::monitoring_package(arch)
+    scp.upload_multiple! [local_config, local_package], RemoteDir::scalarm_root
+
+    if LocalAbsolutePath::certificate
+      scp.upload! LocalAbsolutePath::certificate, RemoteHomePath::remote_monitoring_certificate
+    end
   end
 
-  def create_temp_credentials(params)
-    creds = GridCredentials.new({login: params[:plgrid_login]})
-    creds.password = params[:plgrid_password]
+  # TODO: can be moved to base class or util class
+  def self.remove_local_monitoring_config(sm_uuid)
+    FileUtils.rm_rf(LocalAbsoluteDir::tmp_monitoring_package(sm_uuid))
+  end
+
+  def self.start_monitoring_cmd
+    chain(
+        cd(RemoteDir::scalarm_root),
+        "unxz -f #{ScalarmFileName::monitoring_package}",
+        "chmod a+x #{ScalarmFileName::monitoring_binary}",
+        "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
+        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                                           "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
+`.log")}"
+    )
+  end
+
+  def self.clone_proxy(ssh, remote_path)
+    # TODO: checking if proxy file exists?
+    ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
+  end
+
+  # TODO: NOTE: without voms extension!
+  def self.generate_proxy(ssh, key_passphrase)
+    output = ''
+    Timeout::timeout 30 do
+      output = ssh.exec! "echo #{key_passphrase} | grid-proxy-init -rfc -hours 24"
+    end
+    Rails.logger.debug("grid-proxy-init output: #{output}")
+    output
+  end
+
+  def self.using_temp_credentials?(params)
+    params.include?(:plgrid_login) or params.include?(:proxy)
+  end
+
+  # Params is a Hash, it should contain :
+  # - login:
+  def self.create_temp_credentials(params)
+    # if proxy provided, use user name from proxy
+    login = ((params[:proxy] and Scalarm::ServiceCore::GridProxy::Proxy.new(params[:proxy]).username) or
+        params[:plgrid_login])
+    raise StandardError.new('Neither plgrid_login nor proxy provided to create temporary credentials') unless login
+
+    creds = GridCredentials.new({login: login})
+
+    creds.password = params[:plgrid_password] if params.include? :plgrid_password
+    creds.secret_proxy = params[:proxy] if params.include? :proxy
     creds
   end
 
-  def get_credentials_from_db(user_id)
+  def self.get_credentials_from_db(user_id)
     GridCredentials.find_by_user_id(user_id)
   end
 
@@ -130,9 +197,10 @@ class PlGridFacade < InfrastructureFacade
         scheduler_type: scheduler.short_name,
         sm_uuid: sm_uuid,
         time_limit: params['time_limit'].to_i,
-        infrastructure: short_name
+        infrastructure: short_name,
     )
 
+    job.start_at = params['start_at']
     job.grant_id = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
@@ -141,7 +209,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.infrastructure_side_monitoring = params.include?(:onsite_monitoring)
+    job.onsite_monitoring = params.include?(:onsite_monitoring)
 
     job
   end
@@ -170,10 +238,8 @@ class PlGridFacade < InfrastructureFacade
     record.destroy
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {scheduler_type: scheduler.short_name}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
+  def _get_sm_records(query, params={})
+    query.merge!({scheduler_type: scheduler.short_name})
     PlGridJob.find_all_by_query(query)
   end
 
@@ -221,11 +287,13 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_stop(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
-        sm_record.cmd_to_execute = [ scheduler.cancel_sm_cmd(sm_record),
-                                     scheduler.clean_after_sm_cmd(sm_record) ].join(';')
+        sm_record.cmd_to_execute = chain(scheduler.cancel_sm_cmd(sm_record),
+                                     scheduler.clean_after_sm_cmd(sm_record))
+        sm_record.cmd_delegated_at = Time.now
+        sm_record.save
       end
 
     else
@@ -236,8 +304,11 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_restart(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
+      sm_record.cmd_to_execute_code = 'restart'
       sm_record.cmd_to_execute = scheduler.restart_sm_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
+      sm_record.save
     else
       ssh = shared_ssh_session(sm_record.credentials)
       scheduler.restart(ssh, sm_record)
@@ -284,10 +355,11 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_get_log(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
       nil
@@ -300,41 +372,50 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_prepare_resource(sm_record)
-    if sm_record.infrastructure_side_monitoring
+    if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else
-
-      sm_uuid = sm_record.sm_uuid
-
       sm_record.validate
-
-      scheduler.prepare_job_files(sm_uuid, sm_record.to_h)
 
       #  upload the code to the Grid user interface machine
       begin
-        sm_record.credentials.scp_session do |scp|
-          scheduler.send_job_files(sm_uuid, scp)
+        ssh = shared_ssh_session(sm_record.credentials)
+        create_and_upload_simulation_manager(ssh, sm_record)
+
+        begin
+          sm_record.job_id = scheduler.submit_job(ssh, sm_record)
+          sm_record.save
+        rescue JobSubmissionFailed => job_failed
+          logger.warn "Scheduling job failed: #{job_failed.to_s}"
+          sm_record.store_error('install_failed', job_failed.to_s)
         end
 
-        ssh = shared_ssh_session(sm_record.credentials)
-        if scheduler.submit_job(ssh, sm_record)
-          sm_record.save
-        else
-          logger.warn 'Scheduling job failed!'
-          sm_record.store_error('install_failed') # TODO: get output from .submit_job and save as error_log
-        end
       rescue Net::SSH::AuthenticationFailed => auth_exception
-        logger.error "Authentication failed when starting simulation managers for user #{user_id}: #{auth_exception.to_s}"
+        logger.error "Authentication failed when starting simulation managers for user #{sm_record.user_id}: #{auth_exception.to_s}"
         sm_record.store_error('ssh')
       rescue Exception => ex
         logger.error "Exception when starting simulation managers for user #{sm_record.user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
         sm_record.store_error('install_failed', "#{ex.to_s}\n#{ex.backtrace.join("\n")}")
       end
 
+    end
+  end
+
+  def create_and_upload_simulation_manager(ssh, sm_record)
+    sm_uuid = sm_record.sm_uuid
+    SSHAccessedInfrastructure::create_remote_directories(ssh)
+
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, sm_record.user_id, sm_record.experiment_id, sm_record.start_at) do
+      scheduler.create_tmp_job_files(sm_uuid, sm_record.to_h) do
+        ssh.scp do |scp|
+          scheduler.send_job_files(sm_uuid, scp)
+        end
+      end
     end
   end
 
@@ -371,34 +452,48 @@ class PlGridFacade < InfrastructureFacade
   # --
 
   def simulation_manager_code(sm_record)
-    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+    sm_uuid = sm_record.sm_uuid
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at) do
+      code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
+      FileUtils.remove_dir(code_dir, true)
+      FileUtils.mkdir(code_dir)
+      scheduler.create_tmp_job_files(sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h}) do
 
-    Dir.chdir('/tmp')
-    FileUtils.remove_dir(code_dir, true)
-    FileUtils.mkdir(code_dir)
-    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
 
-    scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h})
+        FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
-    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+        Dir.chdir(LocalAbsoluteDir::tmp) do
+          %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
+        end
+        FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
-    Dir.chdir(Rails.root)
+        zip_path = LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)
 
-    File.join('/', 'tmp', code_dir + ".zip")
+        if block_given?
+          begin
+            yield zip_path
+          ensure
+            FileUtils.rm_rf(zip_path)
+          end
+        else
+          return zip_path
+        end
+      end
+      FileUtils.remove_dir(code_dir, true)
+    end
+
   end
 
   def destroy_unused_credentials(authentication_mode, user)
   	if authentication_mode == :x509_proxy
-  		if UserSession.where(session_id: user.id).size > 0
-  			return
-  		end
+      user_sessions = UserSession.where(session_id: user.id)
+      return unless user_sessions.select(&:valid?).empty?
 
   		monitored_jobs = PlGridJob.where(user_id: user.id, scheduler_type: {'$in' => ['qsub', 'qcg']},
-  										 state: {'$ne' => :error}, infrastructure_side_monitoring: {'$ne' => true})
+  										 state: {'$ne' => :error}, onsite_monitoring: {'$ne' => true})
   		if monitored_jobs.size > 0
   			return
   		end

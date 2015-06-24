@@ -1,4 +1,5 @@
 require 'yaml'
+require 'fileutils'
 
 require_relative 'infrastructure_task_logger'
 require_relative 'infrastructure_errors'
@@ -20,7 +21,7 @@ require 'mongo_lock'
 # - enabled_for_user?(user_id) -> true/false - if user with user_id can use this infrastructure
 #
 # Database support methods:
-# - get_sm_records(user_id=nil, experiment_id=nil, params={}) -> Array of SimulationManagerRecord subclass instances
+# - _get_sm_records(query, params={}) -> Array of SimulationManagerRecord subclass instances
 # - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
 #
 # SimulationManager delegate methods to implement
@@ -50,6 +51,7 @@ require 'mongo_lock'
 
 class InfrastructureFacade
   include InfrastructureErrors
+  include SSHAccessedInfrastructure
 
   attr_reader :logger
 
@@ -57,16 +59,20 @@ class InfrastructureFacade
     @logger = InfrastructureTaskLogger.new short_name
   end
 
-  def self.prepare_configuration_for_simulation_manager(sm_uuid, user_id, experiment_id, start_at = '')
+  # Write tmp file: ZIP with SimulationManager application and config
+  def self.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, start_at = '')
     Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
 
-    Dir.chdir('/tmp')
     # using simulation manager implementation based on application config
-    if Rails.configuration.simulation_manager_version == :go
-      # TODO checking somehow the destination server architecture
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager_v2', 'bin', 'linux_amd64'), "scalarm_simulation_manager_#{sm_uuid}")
-    elsif Rails.configuration.simulation_manager_version == :ruby
-      FileUtils.cp_r(File.join(Rails.root, 'public', 'scalarm_simulation_manager'), "scalarm_simulation_manager_#{sm_uuid}")
+    case Rails.configuration.simulation_manager_version
+      when :go
+        # TODO checking somehow the destination server architecture
+        arch = 'linux_386'
+        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_go(arch), LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
+      when :ruby
+        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_ruby, LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
+      else
+        raise StandardError "Unsupported simulation manager version (#{Rails.configuration.simulation_manager_version})"
     end
 
     # prepare sm configuration
@@ -75,10 +81,10 @@ class InfrastructureFacade
 
     sm_config = {
         experiment_id: experiment_id,
-        #user_id: user_id,
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
+        insecure_ssl: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true) # TODO insecure SSL by default
     }
 
     unless start_at.blank?
@@ -95,16 +101,43 @@ class InfrastructureFacade
       sm_config['development'] = true
     end
 
-    IO.write("/tmp/scalarm_simulation_manager_#{sm_uuid}/config.json", sm_config.to_json)
+    # copy certificate to SimulationManager package
+    if LocalAbsolutePath::certificate
+      FileUtils.cp(LocalAbsolutePath::certificate, LocalAbsolutePath::tmp_sim_certificate(sm_uuid))
+      sm_config[:scalarm_certificate_path] = ScalarmFileName::remote_certificate
+    end
+
+    IO.write(LocalAbsolutePath::tmp_sim_config(sm_uuid), sm_config.to_json)
     # zip all files
-    %x[zip /tmp/scalarm_simulation_manager_#{sm_uuid}.zip scalarm_simulation_manager_#{sm_uuid}/*]
-    Dir.chdir(Rails.root)
+
+    zip_path = LocalAbsolutePath::tmp_sim_zip(sm_uuid)
+    Dir.chdir(LocalAbsoluteDir::tmp) do
+      %x[zip #{zip_path} #{ScalarmDirName::tmp_simulation_manager(sm_uuid)}/*]
+      FileUtils.rm_rf(ScalarmDirName::tmp_simulation_manager(sm_uuid))
+    end
+
+    if block_given?
+      begin
+        yield zip_path
+      ensure
+        FileUtils.rm_rf(zip_path)
+      end
+    else
+      return zip_path
+    end
   end
 
-  def self.prepare_monitoring_package(sm_uuid, user_id, infrastructure_name)
-    Rails.logger.debug "Preparing monitoring package for Simulation Manager with id: #{sm_uuid}"
+  # Write tmp file: WorkersMonitor config in unique directory
+  # infrastructure - array of hashes
+  #   name - name of infrastructure
+  #   host - private machine host
+  #   port - private machine port
+  def self.prepare_monitoring_config(sm_uuid, user_id, infrastructures)
+    Rails.logger.debug "Preparing monitoring configuration for Simulation Manager with id: #{sm_uuid}"
 
-    Dir.mkdir(File.join('/tmp', monitoring_package_dir(sm_uuid))) unless Dir.exist?(File.join('/tmp', monitoring_package_dir(sm_uuid)))
+    # This temporary directory hold now only config file, rest of files are sent via scp
+    # from their original locations (package, certificate)
+    FileUtils.mkdir_p(LocalAbsoluteDir::tmp_monitoring_package(sm_uuid))
     # prepare sm configuration
     temp_password = SimulationManagerTempPassword.where(user_id: user_id).first
 
@@ -123,23 +156,26 @@ class InfrastructureFacade
             Rails.application.secrets.information_service_url),
         Login: temp_password.sm_uuid,
         Password: temp_password.password,
-        Infrastructures: [ infrastructure_name ],
+        InsecureSSL: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true), # TODO insecure SSL by default
+        Infrastructures: infrastructures
     }
 
-    if Rails.application.secrets.include? :certificate_path
-      sm_config[:ScalarmCertificatePath] = '~/.scalarm_certificate'
+    # Only add information about remote location of certificate (it will be sent later)
+    if LocalAbsolutePath::certificate
+      sm_config[:ScalarmCertificatePath] = RemoteAbsolutePath::remote_monitoring_certificate
     end
 
     if Rails.application.secrets.include?(:sm_information_service_url)
       sm_config[:InformationServiceAddress] = Rails.application.secrets.sm_information_service_url
     end
 
-    IO.write(File.join('/tmp', monitoring_package_dir(sm_uuid), 'config.json'), sm_config.to_json)
-    # zip all files
-    Dir.chdir(Rails.root)
+    # Only one generated file - config
+    path = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+    IO.write(path, sm_config.to_json)
+    path
   end
 
-  # TODO: for bakckward compatibility
+  # TODO: DEPRECATED, for bakckward compatibility
   def current_state(user_id)
     "You have #{count_sm_records} Simulation Managers scheduled"
   end
@@ -286,6 +322,50 @@ class InfrastructureFacade
   end
 
   def destroy_unused_credentials(authentication_mode, user); end
+
+  def get_sm_records(user_id=nil, experiment_id=nil, params={})
+    query = {}
+    params ||= {}
+
+    if params.include? 'states_not'
+      if params['states_not'].kind_of? String
+        query.merge!({state: {'$ne' => params['states_not'].to_sym}})
+      elsif params['states_not'].kind_of? Array
+        query.merge!({state: {'$nin' => params['states_not'].map{|i| i.to_sym}}})
+      end
+    elsif params.include? 'states'
+      if params['states'].kind_of? String
+        query.merge!({state: {'$eq' => params['states'].to_sym}})
+      elsif params['states'].kind_of? Array
+        query.merge!({state: {'$in' => params['states'].map{|i| i.to_sym}}})
+      end
+    end
+    if params.include? 'onsite_monitoring'
+      if params['onsite_monitoring'].downcase == 'true'
+        query.merge!({onsite_monitoring: {'$eq' => true}})
+      else
+        query.merge!({onsite_monitoring: {'$ne' => true}})
+      end
+    end
+    query.merge!({user_id: user_id}) if user_id
+    query.merge!({experiment_id: experiment_id}) if experiment_id
+    _get_sm_records(query, params)
+  end
+
+  def self.handle_monitoring_send_errors(records)
+    begin
+      yield
+    rescue Net::SSH::AuthenticationFailed => e
+      records.each { |record| record.store_error('ssh', e.to_s) }
+      raise InfrastructureErrors::InvalidCredentialsError.new
+    rescue Errno::ECONNREFUSED => e
+      records.each { |record| record.store_error('ssh', e.to_s) }
+      raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
+    rescue Exception => e
+      records.each { |record| record.store_error('onsite_monitoring', e.to_s) }
+      raise
+    end
+  end
 
   private :create_simulation_manager, :init_resources, :clean_up_resources
 end

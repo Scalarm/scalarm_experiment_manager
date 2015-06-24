@@ -30,7 +30,10 @@ module GoogleOpenID
 
   # Action for callback from Google OpenID.
   def openid_callback_google
-    validate_params(:openid_id, "openid.claimed_id", "openid.identity")
+    validate(
+        "openid.claimed_id".to_sym => :security_openid_id,
+        "openid.identity".to_sym => :security_openid_id
+    )
     Rails.logger.debug("Google OpenID callback with parameters: #{params}")
 
     parameters = params.reject{|k,v|request.path_parameters[k]}
@@ -69,6 +72,7 @@ module GoogleOpenID
 
       flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
       session[:user] = user.id.to_s
+      session[:uuid] = SecureRandom.uuid
       successful_login
 
     else

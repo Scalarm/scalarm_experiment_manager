@@ -15,24 +15,42 @@ To run the services you need to fulfill the following requirements:
 Ruby version
 ------------
 
-Currently we use and test Scalarm against MRI 2.1.2 but the Rubinius version of Ruby should be good as well.
+Currently we use and test Scalarm against MRI 2.1.x but the Rubinius version of Ruby should be good as well.
 
+Please install Ruby with RVM as described on http://rvm.io/
 ```
-curl -L https://get.rvm.io | bash
-```
-
-Agree on anything they ask :)
-
-```
-source $HOME/.rvm/scripts/rvm
-rvm install 2.1.2
+\curl -sSL https://get.rvm.io | bash -s stable --ruby=2.1
 ```
 
-Also agree on anything. After the last command, a valid ruby version will be downloaded and installed from sources.
+Follow installation instructrions and reload shell on the end if necessary.
 
 
 System dependencies
 -------------------
+
+* curl
+* R
+* gsissh
+* sysstat (mpstat/iostat)
+* any dependency required by native gems
+
+Optionally you will need also mongos, but it will be fetched automatically if it's not found and if you use "rake db_router:setup".
+
+Some requirements will be installed by rvm also during ruby installation.
+
+
+### Specific distributions
+
+#### Ubuntu
+
+Add Globus Toolkit repository to enable grid support: http://toolkit.globus.org/ftppub/gt6/installers/repo/globus-toolkit-repo_latest_all.deb
+
+Then use this one-liner to install dependencies:
+```
+sudo apt-get update && sudo apt-get install curl r-base-core sysstat gsi-openssh-clients
+```
+
+#### RedHat/Fedora/ScientificLinux
 
 For SL 6.4 you need to add nginx repo and then install:
 
@@ -40,9 +58,6 @@ For SL 6.4 you need to add nginx repo and then install:
 yum install git vim nginx wget man libxml2 sqlite sqlite-devel R curl sysstat
 ```
 
-Some requirements will be installed by rvm also during ruby installation.
-
-Any dependency required by native gems.
 
 Installation
 ------------
@@ -62,10 +77,18 @@ bundle install
 
 if any dependency is missing you will be noticed :)
 
+To check if all dependencies are meet, and install Scalarm external modules please use:
+
+```
+rake db_router:setup
+rake service:setup
+```
+
+
 Configuration
 -------------
 
-There are three files with configuration: config/secrets.yml, config/scalarm.yml and config/puma.rb.
+There are two files with configuration: config/secrets.yml and config/puma.rb.
 
 The "secrets.yml" file is a standard configuration file added in Rails 4 to have a single place for all secrets in
 an application. We used this approach in our Scalarm platform. Experiment Manager stores access data to
@@ -73,26 +96,67 @@ Information Service in this file:
 
 ```
 default: &DEFAULT
-  information_service_url: "localhost:11300"
+  ## cookies enctyption key - set the same in each ExperimentManager to allow cooperation
   secret_key_base: "<you need to change this - with $rake secret>"
+
+  ## InformationService - a service locator
+  information_service_url: "localhost:11300"
   information_service_user: "<set to custom name describing your Scalarm instance>"
   information_service_pass: "<generate strong password instead of this>"
-  # if you want to communicate through HTTP with Scalarm Information Service
-  information_service_development: true
-  # if you want to communicate through HTTP with Scalarm Storage Manager
-  storage_manager_development: true
-  # if you installed and want to use scalarm custom load balancer set to false
-  disable_load_balancer_registration: true
-  # if you use load balancer you need to specify multicast address (to receive load balancer address)
-  #multicast_address: "224.1.2.3:8000"
-  # if you use load balancer on http you need to specify this
-  #load_balancer_development: true
-  # if you want to run and register service in load balancer on other port than default
-  #port: "3000"
-  # if you want to communicate with Storage Manager using a different URL than the one stored in Information Service
+  ## uncomment, if you want to communicate through HTTP with Scalarm Information Service
+  # information_service_development: true
+
+  ## Database configuration
+  ## name of MongoDB database, it is scalarm_db by default
+  db_name: 'scalarm_db'
+  ## key for symmetric encryption of secret database data - please change it in production installations!
+  ## NOTICE: this key should be set ONLY ONCE BEFORE first run - if you change or lost it, you will be UNABLE to read encrypted data!
+  db_secret_key: "QjqjFK}7|Xw8DDMUP-O$yp"
+
+  ## Uncomment, if you want to communicate through HTTP with Scalarm Storage Manager
+  # storage_manager_development: true
+
+  ## Configuration of optional Scalarm LoadBalancer (https://github.com/Scalarm/scalarm_load_balancer)
+  load_balancer:
+      # if you installed and want to use scalarm custom load balancer set to false
+      disable_registration: true
+      # if you use load balancer you need to specify multicast address (to receive load balancer address)
+      #multicast_address: "224.1.2.3:8000"
+      # if you use load balancer on http you need to specify this
+      #development: true
+      # if you want to run and register service in load balancer on other port than default
+      #port: "3000"
+
+  ## Uncomment "anonymous_user" block to create and use default user
+  #anonymous_user:
+  #    login: 'anonymous'
+  #    password: 'anonymous'
+
+  ## Configuration of ExperimentManager machine monitoring, uncomment to enable
+  #monitoring:
+  #  db_name: 'scalarm_monitoring'
+  #  interval: 30
+  #  metrics: 'cpu'
+
+  ## CA/certificate path of ExperimentManager server to allow secure communication to it
+  ## from other services
+  #certificate_path: "/path/to/ca_for_information_service.pem"
+  ## If you use HTTPS connections but don't have valid certificates (eg. self-signed)
+  #insecure_ssl: true
+
+  ## if you want to communicate with Storage Manager using a different URL than the one stored in Information Service
   #storage_manager_url: "localhost:20000"
-  # if you want to pass to Simulation Manager a different URL of Information Service than the one mentioned above
+  ## if you want to pass to Simulation Manager a different URL of Information Service than the one mentioned above
   #sm_information_service_url: "localhost:37128"
+
+production:
+  ## In production environments some settings should not be stored in configuration file
+  ## for security reasons.
+
+  secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
+  information_service_url: "<%= ENV["INFORMATION_SERVICE_URL"] %>"
+  information_service_user: "<%= ENV["INFORMATION_SERVICE_LOGIN"] %>"
+  information_service_pass: "<%= ENV["INFORMATION_SERVICE_PASSWORD"] %>"
 
 development:
   <<: *DEFAULT
@@ -100,26 +164,12 @@ development:
 test:
   <<: *DEFAULT
 
-production:
-  secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
-  information_service_url: "<%= ENV["INFORMATION_SERVICE_URL"] %>"
-  information_service_user: "<%= ENV["INFORMATION_SERVICE_LOGIN"] %>"
-  information_service_pass: "<%= ENV["INFORMATION_SERVICE_PASSWORD"] %>"
-  # if you installed and want to use scalarm custom load balancer set to false
-  disable_load_balancer_registration: true
+
 ```
+
+The example file is placed in config/secrets.yml.example and will be copied to config/secrets.yml if there is no configuration.
 
 In this "config/scalarm.yml" file we have various information Scalarm configuration - typically there is no need to change them:
-
-```
-# mongo_activerecord config
-db_name: 'scalarm_db'
-
-monitoring:
-  db_name: 'scalarm_monitoring'
-  metrics: 'cpu:memory:storage'
-  interval: 60
-```
 
 In the "config/puma.rb" configuration of the PUMA web server is stored:
 
@@ -212,6 +262,28 @@ To check if Experiment Manager has been installed correctly just start the servi
 ```sh
 firefox https://172.16.67.77
 ```
+
+Updating
+----
+Every time you want to update this service, please shut down service with ```rake service:stop``` update git repository with ```git pull``` and get new Scalarm external packages with ```rake service:update```. Then You can start service with ```git service:start```.
+
+Building Scalarm external modules manually (optional)
+----
+Instead of using precompiled binaries, you can build Scalarm Simulation Manager and Scalarm Monitoring packages.
+
+Needed dependencies:
+
+* git
+* go (https://golang.org/dl/)
+ * you should build cross compilers for linux 386 and linux amd64: http://stackoverflow.com/questions/12168873/cross-compile-go-on-osx
+
+
+To fetch codes from git and start build, use:
+
+```
+rake build:all
+```
+
 
 License
 ----

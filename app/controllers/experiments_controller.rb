@@ -4,33 +4,80 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
+  include SSHAccessedInfrastructure
+
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
-  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size ]
+  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
+                                          :start_custom_points_experiment, :start_supervised_experiment]
 
   def index
-    @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
-    @simulations = @current_user.get_simulation_scenarios
+    load_simulations_and_experiments_for_current_user
 
     respond_to do |format|
       format.html
       format.json { render json: {
           status: 'ok',
           running: @running_experiments.collect { |e| e.id.to_s },
+          completed: @completed_experiments.collect {|e| e.id.to_s},
           historical: @historical_experiments.collect { |e| e.id.to_s }
       }}
     end
   end
 
+  ##
+  # Sets instance variables:
+  # - @running_experiments
+  # - @historical_experiments
+  # - @completed_experiments
+  # - @simulations
+  # Containing models for current user
+  def load_simulations_and_experiments_for_current_user
+    @non_historical_experiments = load_non_historical_experiments
+    @running_experiments = load_running_experiments
+    @completed_experiments = load_completed_experiments
+    @historical_experiments = load_historical_experiments
+    @simulations = load_simulations
+  end
+
+  def load_non_historical_experiments
+    (current_user.get_running_experiments.sort do |e1, e2|
+      e2.start_at <=> e1.start_at
+    end).map do |e|
+      transform_experiment e
+    end
+  end
+
+  def load_running_experiments
+    @non_historical_experiments ||= load_non_historical_experiments
+
+    @non_historical_experiments.select {|e| not e.completed?} # running and completed
+  end
+
+  def load_historical_experiments
+    current_user.get_historical_experiments.sort { |e1, e2| e2.end_at <=> e1.end_at }
+  end
+
+  def load_completed_experiments
+    @non_historical_experiments ||= load_non_historical_experiments
+
+    @non_historical_experiments.select {|e| e.completed?} # running and not completed
+  end
+
+  def load_simulations
+    current_user.get_simulation_scenarios
+  end
+
   def show
-    @public_storage_manager_url = InformationService.new.sample_public_storage_manager
+    information_service = InformationService.instance
+    @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
+    @public_chart_service_url = information_service.sample_public_url 'chart_services'
 
     @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
 
     begin
       start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
-      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: @current_user.login })
+      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: current_user.login })
       respond_to do |format|
         format.html { redirect_to action: :index }
         format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
@@ -51,13 +98,23 @@ class ExperimentsController < ApplicationController
   end
 
   def running_experiments
-    @running_experiments = @current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @running_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @running_experiments.map! {|e| transform_experiment e}
+    @running_experiments.select! {|e| not e.completed?} # running and not completed
 
     render partial: 'running_experiments', locals: { show_close_button: true }
   end
 
+  def completed_experiments
+    @completed_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @completed_experiments.map! {|e| transform_experiment e}
+    @completed_experiments.select! {|e| e.completed?} # running and completed
+
+    render partial: 'completed_experiments', locals: { show_close_button: true }
+  end
+
   def historical_experiments
-    @historical_experiments = @current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
+    @historical_experiments = current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
     render partial: 'historical_experiments', locals: { show_close_button: true }
   end
@@ -68,14 +125,9 @@ class ExperimentsController < ApplicationController
 
   # stops the currently running DF experiment (if any)
   def stop
-    @experiment.is_running = false
-    @experiment.end_at = Time.now
+    raise SecurityError.new(t('experiments.stop.failure')) unless current_user_owns_experiment?
 
-    @experiment.save_and_cache
-
-    SimulationManagerTempPassword.where(experiment_id: @experiment.id).each do |tmp_pass|
-      tmp_pass.destroy
-    end
+    @experiment.stop!
 
     respond_to do |format|
       format.html { redirect_to action: :index }
@@ -83,16 +135,78 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  def file_with_configurations
-    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+  def current_user_owns_experiment?
+    @experiment.user_id == current_user.id
   end
 
-  def create
-    validate_params(:default, :replication_level, :execution_time_constraint)
+=begin
+  @apiDefine ConfigurationsParams
+
+  @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
+  @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
+  @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
+=end
+
+=begin
+  @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
+  @apiName GetFileWithConfigurations
+  @apiGroup Experiments
+
+  @apiUse ConfigurationsParams
+=end
+  def file_with_configurations
+    send_data(_configurations_csv,
+              type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+  end
+
+=begin
+  @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
+  @apiName GetConfigurations
+  @apiGroup Experiments
+
+  @apiUse ConfigurationsParams
+=end
+  def configurations
+    respond_to do |format|
+      format.html { render text: _configurations_csv.gsub("\n", '<br/>') }
+      format.json { render json: {status: 'ok', data: _configurations_csv} }
+    end
+  end
+
+  # NOT a controller method, only helper
+  def _configurations_csv
+    validate(
+        with_index: [:optional, :security_default],
+        with_params: [:optional, :security_default],
+        with_moes: [:optional, :security_default]
+    )
+
+    w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
+    w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
+    w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
+
+    @experiment.create_result_csv(w_index, w_params, w_moes)
+  end
+
+  def create_experiment
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
-      experiment = prepare_new_experiment
+      parse = lambda do |id, parse_method|
+        if params[id].blank?
+          params.delete id
+        else
+          params[id] = parse_method.call(params[id])
+        end
+      end
+
+      parse.call :replication_level, lambda {|x| x.to_i}
+      parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
+      parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
+
+      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
+                                   :description, :parameter_constraints)
+      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
@@ -107,8 +221,8 @@ class ExperimentsController < ApplicationController
         begin
           experiment.experiment_size(true)
         rescue Exception => e
-          Rails.logger.warn("An exception occured: #{t(e.message)}\n#{e.backtrace}")
-          flash[:error] = t(e.message)
+          Rails.logger.warn("An exception occured: #{e.message}\n#{e.backtrace.join("\n")}")
+          flash[:error] = t(e.message, default: e.message)
           experiment.size = 0
         end
 
@@ -119,7 +233,7 @@ class ExperimentsController < ApplicationController
           experiment.save
           # create progress bar
           experiment.insert_initial_bar
-          experiment.simulation_runs.create_table_for_experiment(experiment.id)
+          experiment.simulation_runs.create_table
         end
       end
 
@@ -135,7 +249,7 @@ class ExperimentsController < ApplicationController
         end
       end
     rescue Exception => e
-      Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace}"
+      Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace.join("\n")}"
       flash[:error] = e.to_s
 
       respond_to do |format|
@@ -145,14 +259,133 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  # POST params:
+  # - simulation_id
+  # TODO: other experiment parameters
+  # TODO: handle errors
+  def create_custom_points_experiment
+    validate(
+        simulation_id: :security_default
+    )
+
+    experiment = ExperimentFactory.create_custom_points_experiment(current_user.id, @simulation)
+    experiment.save
+
+    render json: {status: 'ok', experiment_id: experiment.id.to_s}
+  end
+
+=begin
+  @api {post} /experiments/ Create SupervisedExperiment
+  @apiName start_supervised_experiment
+  @apiGroup Experiments
+  @apiDescription This action allows user to start new supervised experiment with given parameters.
+  Action supports two possible result formats:
+  * .json - json with info about performed action
+  * .html - redirection to experiment view page
+
+  @apiParam {String} type experiment type. must be 'supervised'
+  @apiParam {String} simulation_id  ID of simulation used to perform experiment
+  @apiParam {String} [supervisor_script_id] ID of supervisor script used to manage experiment, without this
+                      param supervisor script will not be started
+  @apiParam {json} [supervisor_script_params] Parameters passed to supervisor script, mandatory when
+                      supervisor_script_id is present
+
+  @apiParamExample Params-Example
+    type: 'supervised'
+    simulation_id: '551fca1f2ab4f259fc000002'
+    supervisor_script_id: 'simulated annealing'
+    supervisor_script_params:
+      {
+        "maxiter": 2,
+        "dwell": 1,
+        "schedule": "boltzmann"
+      }
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+  @apiSuccess {String} info.experiment_id id of created experiment
+  @apiSuccess {Number} [info.pid] pid of supervisor script managing experiment, only when
+                      supervisor_script_id param is present
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+      'experiment_id': '551fc1932ab4f259fc000001'
+      'pid': 1234
+    }
+
+  @apiError {Object} info json object with information about performed action
+  @apiError {String} info.status status of performed action, on failure always 'error'
+  @apiError {String} info.reason reason of failure to start experiment
+
+  @apiErrorExample {json} Failure-Response
+    {
+      'status': 'error'
+      'reason': 'Unable to connect with Experiment Supervisor'
+    }
+=end
+  def create_supervised_experiment
+    validate(
+        simulation_id: :security_default,
+        supervisor_script_id: [:optional, :security_default]
+        #supervisor_script_params: [:optional, :json_or_hash]
+    )
+    # TODO: other experiment parameters
+    # TODO: handle errors
+
+    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation)
+    experiment.save
+    response = {'status' => 'ok'}
+    if params.has_key?(:supervisor_script_id)
+      response = experiment.start_supervisor_script(params[:simulation_id],
+                                                    params[:supervisor_script_id],
+                                                    Utils::parse_json_if_string(params[:supervisor_script_params]),
+                                                    current_user
+      )
+      Rails.logger.debug("Start supervisor script request to supervisor, response: #{response}")
+    end
+
+    response.merge!({experiment_id: experiment.id.to_s}) if response['status'] == 'ok'
+    if response['status'] == 'error'
+      experiment.destroy
+      flash['error'] = "There has been an error while creating new supervised experiment: #{response['reason']}"
+    end
+
+    respond_to do |format|
+      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
+      format.json { render json: response }
+    end
+  end
+
+  CONSTRUCTORS = {
+      'experiment' => :create_experiment,
+      'custom_points' => :create_custom_points_experiment,
+      'supervised' => :create_supervised_experiment
+  }
+
+  def create
+    validate(
+        replication_level: [:optional, :security_default, :integer, :positive],
+        execution_time_constraint: [:optional, :security_default, :integer, :positive],
+        parameter_constraints: [:optional, :security_json],
+        type: [:optional, :security_default]
+    )
+    type = params[:type] || 'experiment'
+    raise ValidationError.new('type', type, 'Not a correct experiment type') unless CONSTRUCTORS.has_key? type
+    send(CONSTRUCTORS[type])
+  end
+
   def calculate_experiment_size
-    validate_params(:default, :replication_level, :execution_time_constraint)
     #validate_params(:json, :parameters_constraints, :doe) # TODO :experiment_input
+    validate(
+        replication_level: [:security_default, :integer, :positive]
+    )
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameter_list| parameter_list.first.nil? }
 
     @experiment_input = Experiment.prepare_experiment_input(@simulation, Utils.parse_json_if_string(params['experiment_input']), doe_info)
 
+    # TODO: use ExperimentsFactory
     # create the new type of experiment object
     experiment = Experiment.new({ simulation_id: @simulation.id,
                                   experiment_input: @experiment_input,
@@ -174,7 +407,9 @@ class ExperimentsController < ApplicationController
   end
 
   def calculate_imported_experiment_size
-    validate_params(:default, :replication_level, :execution_time_constraint)
+    validate(
+        replication_level: [:optional, :security_default]
+    )
 
     parameters_to_include = params.keys.select{ |parameter|
       parameter.start_with?('param_') and params[parameter] == '1'
@@ -264,7 +499,7 @@ class ExperimentsController < ApplicationController
     result_set = if result_set.blank?
       [t('experiments.analysis.no_results')]
     else
-      result_set.map{|x| [Experiment.output_parameter_label_for(x), x]}
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
 
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
@@ -272,17 +507,27 @@ class ExperimentsController < ApplicationController
                  {limit: 1, fields: %w(arguments)}).first
 
     moes_and_params = if done_run.nil?
-                        [ [t('experiments.analysis.no_completed_runs'), nil] ]
+                        [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
                       else
-                        result_set + [%w(----------- nil)] +
-                          done_run.arguments.split(',').map{|x|
-                            [ @experiment.input_parameter_label_for(x), x ]}
+                        done_run.arguments.split(',').map{|x|
+                          [ @experiment.input_parameter_label_for(x), x, "input_parameter"]} +
+                          [%w(----------- nil)] + result_set
                       end
+
+    # params = if done_run.nil?
+    #           [ [t('experiments.analysis.no_completed_runs'), nil] ]
+    #         else
+    #           done_run.arguments.split(',').map{|x|
+    #             [@experiment.input_parameter_label_for(x), x]}
+    #         end
 
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
-    moes_info[:moes_and_params] = moes_and_params.map{ |label, id|
+    moes_info[:moes_and_params] = moes_and_params.map{ |label, id, type|
+      "<option data-type='#{type}' value='#{id}'>#{label}</option>" }.join
+
+    moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
     render json: moes_info
@@ -310,10 +555,32 @@ class ExperimentsController < ApplicationController
   end
 
   def extend_input_values
-    validate_params(:default, :param_name )#, :range_min, :range_max, :range_step)
+    validate(
+        param_name: :security_default,
+    )
 
     parameter_uid = params[:param_name]
-    @range_min, @range_max, @range_step = params[:range_min].to_f, params[:range_max].to_f, params[:range_step].to_f
+    param_doc = @experiment.get_parameter_doc(parameter_uid)
+    if param_doc.nil?
+      raise ValidationError.
+                new(:param_name, parameter_uid, 'No such parameter in experiment')
+    end
+
+    param_type = param_doc['type'].to_sym
+
+    validate(
+        range_min: [param_type],
+        range_max: [param_type],
+        range_step: [param_type, :positive]
+    )
+
+    convert_fun = (param_type == :integer ? :to_i : :to_f)
+    @range_min = params[:range_min].send(convert_fun)
+    @range_max = params[:range_max].send(convert_fun)
+    @range_step = params[:range_step].send(convert_fun)
+
+    validate_input_extension(@range_min, @range_max, @range_step)
+
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
     new_parameter_values = @range_min.step(@range_max, @range_step).to_a
     #@priority = params[:priority].to_i
@@ -324,16 +591,7 @@ class ExperimentsController < ApplicationController
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
         @num_of_new_simulations = @experiment.add_parameter_values(parameter_uid, new_parameter_values)
         @experiment.save
-        if @num_of_new_simulations > 0
-          @experiment.create_progress_bar_table.drop
-          @experiment.insert_initial_bar
-
-          # 4. update progress bar
-          Thread.new do
-            Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-            @experiment.update_all_bars
-          end
-        end
+        @experiment.extend_progress_bar if @num_of_new_simulations > 0
 
         File.delete(@experiment.file_with_ids_path) if File.exist?(@experiment.file_with_ids_path)
       end
@@ -344,6 +602,18 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  def validate_input_extension(range_min, range_max, range_step)
+    unless range_min <= range_max
+      raise ValidationError.
+                new('range_min', range_min, "Range minimum is greater than maximum")
+    end
+
+    unless range_step <= (range_max-range_min)
+      raise ValidationError.
+                new('range_max', range_min, "Range step is too large")
+    end
+  end
+
   def running_simulations_table
   end
 
@@ -351,7 +621,9 @@ class ExperimentsController < ApplicationController
   end
 
   def intermediate_results
-    validate_params(:default, :simulations)
+    validate(
+        simulations: :security_default
+    )
 
     unless @experiment.parameters.blank?
       arguments = @experiment.parameters.flatten
@@ -400,7 +672,9 @@ class ExperimentsController < ApplicationController
   end
 
   def change_scheduling_policy
-    validate_params(:default, :scheduling_policy)
+    validate(
+        scheduling_policy: :security_default
+    )
 
     new_scheduling_policy = params[:scheduling_policy]
 
@@ -424,6 +698,7 @@ class ExperimentsController < ApplicationController
 
   def destroy
     unless @experiment.nil?
+      raise SecurityError.new(t('experiments.destroy.failure')) unless @experiment.user_id == current_user.id
       @experiment.destroy
       flash[:notice] = 'Your experiment has been destroyed.'
     else
@@ -447,24 +722,30 @@ class ExperimentsController < ApplicationController
       simulation_to_send = nil
 
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.get_next_instance
-        unless @sm_user.nil? or simulation_to_send.nil?
-          simulation_to_send.sm_uuid = @sm_user.sm_uuid
+        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
+        unless sm_user.nil? or simulation_to_send.nil?
+          simulation_to_send.sm_uuid = sm_user.sm_uuid
+          simulation_to_send.save
         end
       end
 
-      Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
-        Rails.logger.info("Next simulation run is : #{simulation_to_send.index}")
+        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                   'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
+                   'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
-        simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+        Rails.logger.debug('next_simulation: Simulation to send is nil!')
+        if @experiment.supervised and not @experiment.completed?
+          simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
+                                 'duration_in_seconds' => 2})
+        else
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+        end
       end
 
     rescue Exception => e
@@ -506,28 +787,67 @@ class ExperimentsController < ApplicationController
   end
 
   def histogram
-    validate_params(:default, :moe_name)
+    validate(
+        moe_name: [:optional, :security_default]
+    )
 
-    if params[:moe_name].blank?
+    resolution = params[:resolution].to_i
+    if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], params[:resolution].to_i)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
+      @visible_threshold_resolution = 15
     end
   end
 
+  ##
+  # GET Params:
+  # - x_axis
+  # - y_axis
+  # - container_id
+  # - x_axis_type
+  # - y_axis_type
   def scatter_plot
-    validate_params(:default, :x_axis, :y_axis)
+    validate(
+        x_axis: [:optional, :security_default],
+        y_axis: [:optional, :security_default],
+        x_axis_type: [:optional, :security_default],
+        y_axis_type: [:optional, :security_default],
+        container_id: [:optional, :security_default]
+    )
 
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+      @chart = ScatterPlotChart.new(
+          @experiment,
+          params[:x_axis].to_s,
+          params[:y_axis].to_s,
+          x_axis_type: params[:x_axis_type].to_s,
+          y_axis_type: params[:y_axis_type].to_s
+      )
+      Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
+      @uuid = SecureRandom.uuid
+      @container_id = params[:container_id] || "bivariate_chart_#{@uuid}"
+    end
+  end
+
+  def scatter_plot_series
+    if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
+      render inline: ""
+    else
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
+      @chart.prepare_chart_data
+      render json: @chart.chart_data
     end
   end
 
   def regression_tree
-    validate_params(:default, :moe_name)
+    validate(
+        moe_name: [:optional, :security_default]
+    )
 
     if params[:moe_name].blank?
       render inline: ""
@@ -538,7 +858,10 @@ class ExperimentsController < ApplicationController
   end
 
   def parameter_values
-    validate_params(:default, :param_name)
+    validate(
+        param_name: :security_default
+    )
+
 
     @parameter_uid = params[:param_name]
 
@@ -549,16 +872,27 @@ class ExperimentsController < ApplicationController
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
   end
 
+=begin
+@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+@apiName GetSimulationManager
+@apiGroup Experiments
+=end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
-    # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
-
-    send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
+    # prepare locally code of a simulation manager to download with a configuration file
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, current_user.id, @experiment.id.to_s) do |path|
+      contents = File.open(path) {|f| f.read}
+      send_data contents,
+                filename: File.basename(path),
+                type: 'application/zip'
+    end
   end
 
   def share
-    validate_params(:default, :mode, :id)
+    validate(
+        mode: :security_default,
+        id: :security_default
+    )
 
     @experiment, @user = nil, nil
 
@@ -568,7 +902,7 @@ class ExperimentsController < ApplicationController
 
     experiment_id = BSON::ObjectId(params[:id])
 
-    if (@experiment = Experiment.find_by_query({ '$and' => [{ _id: experiment_id }, { user_id: @current_user.id } ]})).blank?
+    if (@experiment = Experiment.find_by_query({ '$and' => [{ _id: experiment_id }, { user_id: current_user.id } ]})).blank?
       flash[:error] = t('experiments.not_found', { id: params[:id], user: params[:sharing_with_login] })
     end
 
@@ -595,7 +929,7 @@ class ExperimentsController < ApplicationController
   end
 
   def update
-    if @experiment.user_id != @current_user.id
+    if @experiment.user_id != current_user.id
       flash[:error] = t('experiments.edit.failure')
     else
       @experiment.name = params[:experiment][:name]
@@ -614,10 +948,10 @@ class ExperimentsController < ApplicationController
 
   # getting id of a random running experiment
   def random_experiment
-    @running_experiments = if not @current_user.nil?
-      @current_user.get_running_experiments
-    elsif not @sm_user.nil?
-      @sm_user.scalarm_user.get_running_experiments
+    @running_experiments = if not current_user.nil?
+      current_user.get_running_experiments
+    elsif not sm_user.nil?
+      sm_user.scalarm_user.get_running_experiments
     else
       []
     end
@@ -630,36 +964,164 @@ class ExperimentsController < ApplicationController
   end
 
   def results_binaries
-    storage_manager_url = InformationService.new.sample_public_storage_manager
+    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
     url = LogBankUtils::experiment_url(storage_manager_url,
-                                             @experiment.id, @user_session)
+                                             @experiment.id, current_user)
 
     response = RestClient.get(url)
     send_data response.body, filename: "experiment_results.zip", disposition: "attachment", :content_type => 'application/zip'
   end
 
+  # POST params:
+  # - point - JSON Hash with parameter space point
+  def schedule_point
+    validate(
+        point: :security_json
+    )
+
+    custom_experiment = (@experiment.type == 'manual_points')
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+
+    @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json { render json: {status: 'ok'}, status: :ok }
+    end
+  end
+
+  # GET params:
+  # - point - JSON Hash with parameter space point
+  def get_result
+    validate(
+        point: :security_json
+    )
+    
+    result = @experiment.get_result_for(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json do
+        if result
+          render json: {status: 'ok', result: result}
+        else
+          render json: {status: 'error', message: 'Point not found'}
+        end
+      end
+    end
+  end
+
+=begin
+  @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
+  @apiName mark_as_complete
+  @apiGroup Experiments
+  @apiDescription This action allows user to mark experiment as complete and upload its results
+
+  @apiParam {String} id Unique id of experiment on which action will be performed
+  @apiParam {json} [results] Results of experiment
+  @apiParam {string} [results.values] CSV representation of input space final coordinates of result
+  @apiParam {String} [status] Status of experiment; allowed values: ['error', 'ok']
+  @apiParam {String} [reason] Description of error
+
+  @apiParamExample Params-with-result
+    results:
+      {
+        "key": "value"
+        "foo": "bar"
+        "baz": 42
+      }
+
+  @apiParamExample Params-with-error
+    status: 'error'
+    reason: 'Supervisor script has died'
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+    }
+=end
+  def mark_as_complete
+    validate(
+        results: [:optional, :security_json],
+        status: [:optional, :security_default],
+        reason: [:optional, :string]
+    )
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a supervised experiment') unless @experiment.supervised
+
+    if params.include?(:status) and params[:status] == 'error'
+      @experiment.is_error = true
+      @experiment.error_reason = params[:reason] if params.include?(:reason)
+    elsif params.include?(:results)
+      @experiment.mark_as_complete! Utils::parse_json_if_string(params[:results])
+    end
+    @experiment.save
+    render json: {status: 'ok'}
+  end
+
+  require 'scalarm/service_core/token_utils'
+
+  ##
+  # Search avaliable supervisors (scripts) using InformationService
+  # and available ExperimentSupervisors
+  def get_supervisor_ids(es_url)
+    # TODO SCAL-770 there can be many ES instances - get all supervisors from them
+    # TODO ES development (http)?
+    supervisors = []
+
+    if es_url.blank?
+      Rails.logger.error('There are no Experiment Supervisors available')
+    else
+      begin
+        Rails.logger.error('[supervisor_options] Using Experiment Supervisor:' + es_url)
+        supervisors_resp = current_user.get_with_token("https://#{es_url}/supervisors")
+        supervisors = JSON.parse(supervisors_resp)
+      rescue RestClient::Exception, StandardError => e
+        Rails.logger.error "Unable to connect with Supervisor: #{e.to_s}"
+      end
+    end
+
+    supervisors
+  end
+
+  helper_method :get_supervisor_ids
+
   private
 
+  def transform_experiment(experiment)
+    if experiment.supervised
+      SupervisedExperiment.from_experiment(experiment)
+    elsif experiment.type == 'manual_points'
+      CustomPointsExperiment.from_experiment(experiment)
+    else
+      experiment
+    end
+  end
+
   def load_experiment
-    validate_params(:default, :id)
+    validate(
+        id: [:optional, :security_default]
+    )
 
     @experiment = nil
 
     if params.include?(:id)
       experiment_id = BSON::ObjectId(params[:id].to_s)
 
-      if not @current_user.nil?
-        @experiment = @current_user.experiments.where(id: experiment_id).first
+      if not current_user.nil?
+        @experiment = current_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('experiments.not_found', { id: experiment_id, user: @current_user.login })
+          flash[:error] = t('experiments.not_found', { id: experiment_id, user: current_user.login })
         end
 
-      elsif (not @sm_user.nil?)
-        @experiment = @sm_user.scalarm_user.experiments.where(id: experiment_id).first
+      elsif (not sm_user.nil?)
+        @experiment = sm_user.scalarm_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('security.sim_authorization_error', sm_uuid: @sm_user.sm_uuid, experiment_id: params[:id])
+          flash[:error] = t('security.sim_authorization_error', sm_uuid: sm_user.sm_uuid, experiment_id: params[:id])
           Rails.logger.error(flash[:error])
         end
       end
@@ -669,24 +1131,29 @@ class ExperimentsController < ApplicationController
           format.html { redirect_to action: :index }
           format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
         end
+      else
+        @experiment = transform_experiment @experiment
       end
     end
   end
 
   def load_simulation
-    validate_params(:default, :simulation_id, :simulation_name)
+    validate(
+        simulation_id: [:optional, :security_default],
+        simulation_name: [:optional, :security_default]
+    )
 
     @simulation = if params['simulation_id']
-                    @current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
+                    current_user.simulation_scenarios.where(id: BSON::ObjectId(params['simulation_id'].to_s)).first
                   elsif params['simulation_name']
-                    @current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
+                    current_user.simulation_scenarios.where(name: params['simulation_name'].to_s).first
                   else
                     nil
                   end
 
     if @simulation.nil?
       flash[:error] = t('simulation_scenarios.not_found', { id: (params['simulation_id'] or params['simulation_name']),
-                        user: @current_user.login })
+                        user: current_user.login })
 
       respond_to do |format|
         format.html { redirect_to action: :index }
@@ -696,7 +1163,10 @@ class ExperimentsController < ApplicationController
   end
 
   def input_space_manual_specification(experiment)
-    #validate_params(:json, :doe) # TODO , :experiment_input
+    # TODO , :experiment_input
+    validate(
+        doe: :security_json
+    )
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }
 
@@ -730,30 +1200,6 @@ class ExperimentsController < ApplicationController
       experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
     end
-  end
-
-  def prepare_new_experiment
-    validate_params(:default, :replication_level, :execution_time_constraint)
-    #validate_params(:json, :parameters_constraints)
-
-    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
-    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
-    parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
-
-    # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'is_running' => true,
-                                 'replication_level' => replication_level,
-                                 'time_constraint_in_sec' => time_constraint,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-    experiment.parameters_constraints = parameters_constraints
-
-    experiment
   end
 
 end

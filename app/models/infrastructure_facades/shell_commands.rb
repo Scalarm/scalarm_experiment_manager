@@ -4,7 +4,11 @@ module ShellCommands
   end
 
   def mute(command)
-    "#{command} >/dev/null 2>&1"
+    log(command, '/dev/null')
+  end
+
+  def log(command, stdout, stderr='&1')
+    "#{command} >#{stdout} 2>#{stderr}"
   end
 
   def cd(dir)
@@ -27,8 +31,12 @@ module ShellCommands
     "tail -#{num_lines} #{path}"
   end
 
+  def mkdir(dir_name, parents=true)
+    "mkdir #{parents ? '-p' : ''} #{dir_name}"
+  end
+
   def run_and_get_pid(command, stdout='/dev/null', stderr='&1')
-    "#{command} >#{stdout} 2>#{stderr} & echo $!"
+    "sh -c '#{command} >#{stdout} 2>#{stderr} & echo $! 2>/dev/null '"
   end
 
   def run_in_background(command, stdout='/dev/null', stderr='&1')

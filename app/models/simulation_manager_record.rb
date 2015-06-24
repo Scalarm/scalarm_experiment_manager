@@ -8,7 +8,7 @@
 # - sm_uuid => string - uuid of configuration files
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
 # - is_terminating => boolean - whether this SM with its resource should be terminated (stop action was invoked)
-# - infrastructure_side_monitoring => boolean - whether this record should be supported by onsite-monitoring
+# - onsite_monitoring => boolean - whether this record should be supported by onsite-monitoring
 #
 # Fields with * can be initialized with initialize_fields method after creation.
 #
@@ -16,10 +16,15 @@
 # - resource_id() -> returns short description of resource, e.g. VM id
 # - has_valid_credentials? -> returns false if corresponding credentials have invalid flag
 #   - please do not check credentials here
+# - infrastructure_name -> String, short name of infrastructure
 
+require 'mongo_lock'
 
+require 'scalarm/database/core'
+
+# TODO: move to scalarm-database?
 module SimulationManagerRecord
-  include MongoActiveRecordUtils
+  include Scalarm::Database::MongoActiveRecordUtils
 
   POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
 
@@ -72,9 +77,16 @@ module SimulationManagerRecord
     self.time_limit.to_i.minutes > 72.hours ? 40.minutes : 20.minutes
   end
 
+  def infrastructure
+    attributes['infrastructure'] || self.infrastructure_name
+  end
+
   def to_h
     h = super.merge(name: (self.resource_id or '...'))
-    h.has_key?('state') and h or h.merge(state: self.state.to_s)
+    h['state'] = self.state.to_s unless h.has_key?('state')
+    h['infrastructure'] = infrastructure unless h.has_key?('infrastructure')
+
+    h
   end
 
   def to_json
@@ -97,6 +109,17 @@ module SimulationManagerRecord
     Time.now > self.stopped_at + 2.minutes
   end
 
+  ##
+  # If cmd_delegated_at has been set, check if it exceeded limit.
+  # If cmd_delegated_at has not been set, return false.
+  def cmd_delegation_time_exceeded?
+    self.cmd_delegated_at.nil? or self.cmd_delegated_at + 3.minutes < Time.now
+  end
+
+  def on_site_creation_time_exceeded?
+    self.created_at + 3.minutes < Time.now
+  end
+
   def should_destroy?
     (time_limit_exceeded? or experiment_end?) and record.state != :error
   end
@@ -109,10 +132,41 @@ module SimulationManagerRecord
   def store_error(error, error_log=nil)
     set_attribute('state', :error)
     self.error = error
-    self.error_log = error_log if error_log
+    if error_log
+      self.error_log =
+          (self.error_log ? "#{self.error_log}\n\n#{error_log}" : error_log)
+    end
     self.save_if_exists
+    self.clean_up_database!
 
     user.destroy_unused_credentials
+  end
+
+  # Destroy temp password and rollback current simulation run
+  def clean_up_database!
+    Scalarm::MongoLock.mutex("experiment-#{self.experiment_id}-simulation-complete") do
+      destroy_temp_password!
+      rollback_current_simulation_run!
+    end
+  end
+
+  def destroy_temp_password!
+    get_temp_password.try :destroy
+  end
+
+  def rollback_current_simulation_run!
+    get_current_simulation_run.try :rollback!
+  end
+
+  def get_temp_password
+    SimulationManagerTempPassword.find_by_sm_uuid(self.sm_uuid)
+  end
+
+  def get_current_simulation_run
+    if not experiment.nil? and self.sm_uuid.nil?
+      experiment.simulation_runs.
+          where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+    end
   end
 
   def store_no_credentials
@@ -127,6 +181,14 @@ module SimulationManagerRecord
       self.set_attribute('no_credentials', nil)
       self.save_if_exists
     end
+  end
+
+  def log_file_name
+    SSHAccessedInfrastructure::ScalarmFileName.sim_log(sm_uuid)
+  end
+
+  def absolute_log_path
+    File.join(SSHAccessedInfrastructure::RemoteDir.scalarm_root, log_file_name)
   end
 
 end

@@ -12,35 +12,22 @@
 # - public_ssh_port => port of public machine redirecting to ssh private port
 
 require 'infrastructure_facades/infrastructure_errors'
+require 'scalarm/database/model'
 
-class CloudVmRecord < MongoActiveRecord
+class CloudVmRecord < Scalarm::Database::Model::CloudVmRecord
   include SimulationManagerRecord
   include SSHEnabledRecord
 
-  SSH_AUTH_METHODS = %w(password)
-
   attr_join :image_secrets, CloudImageSecrets
+
+  SSH_AUTH_METHODS = %w(password)
 
   def resource_id
     self.vm_id
   end
 
-  def self.ids_auto_convert
-    false
-  end
-
-  def self.collection_name
-    'vm_records'
-  end
-
-  def cloud_secrets
-    @cloud_secrets ||= CloudSecrets.find_by_query(cloud_name: cloud_name.to_s, user_id: user_id.to_s)
-  end
-
-  # additional info for specific cloud should be provided by CloudClient
-  def to_s
-    "Id: #{vm_id}, Launched at: #{created_at}, Time limit: #{time_limit}, "
-    "SSH address: #{public_host}:#{public_ssh_port}"
+  def infrastructure_name
+    cloud_name
   end
 
   def ssh_params
@@ -62,7 +49,7 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def log_path
-    "/tmp/log_sm_#{sm_uuid}"
+    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
   end
 
   def monitoring_group

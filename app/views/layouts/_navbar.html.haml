@@ -37,7 +37,7 @@
         %li.divider
         %li
           %a(href="#{user_controller_account_path}")
-            %i.fi-torso.link{title: t('.account_link', login: @current_user.login)}
+            %i.fi-torso.link{title: t('.account_link', login: current_user.login)}
         %li.divider    
         %li
           %a(href="#{logout_path}" data-method="post")

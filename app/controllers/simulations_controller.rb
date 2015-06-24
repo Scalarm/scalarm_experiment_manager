@@ -4,36 +4,37 @@ require 'csv'
 require 'rest_client'
 
 class SimulationsController < ApplicationController
+  include AdaptersSetup
   before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
-    @simulations = @current_user.get_simulation_scenarios
+    @simulations = current_user.get_simulation_scenarios
     @simulation_scenarios = @simulations
-    @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id)
-    @executors = SimulationExecutor.find_all_by_user_id(@current_user.id)
-    @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id)
-    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id)
+    @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id)
+    @executors = SimulationExecutor.find_all_by_user_id(current_user.id)
+    @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id)
+    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id)
   end
 
   def registration
-    @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
-    @executors = SimulationExecutor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
-    @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
-    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}
+    @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
+    @executors = SimulationExecutor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
+    @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
+    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}
   end
 
   def upload_component
     if params['component_type'] == 'input_writer'
-      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       input_writer.save
     elsif params['component_type'] == 'executor'
-      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       executor.save
     elsif params['component_type'] == 'output_reader'
-      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       output_reader.save
     elsif params['component_type'] == 'progress_monitor'
-      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: @current_user.id})
+      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
       progress_monitor.save
     end
 
@@ -62,16 +63,23 @@ class SimulationsController < ApplicationController
     simulation_input = Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input]))
     # input validation
     case true
-      when (params[:simulation_name].blank? or simulation_input.blank? or params[:simulation_binaries].blank?)
-        flash[:error] = t('simulations.create.bad_params')
+      when (params[:simulation_name].blank?)
+        flash[:error] = t('simulations.create.no_simulation_name')
 
-      when (not Simulation.where(name: params[:simulation_name], user_id: @current_user.id).to_a.blank?)
+      when (not Simulation.where(name: params[:simulation_name], user_id: current_user.id).to_a.blank?)
         flash[:error] = t('simulations.create.simulation_invalid_name')
 
+      when (simulation_input.blank?)
+        flash[:error] = t('simulations.create.no_simulation_input_description')
+
+      when (params[:simulation_binaries].blank?)
+        flash[:error] = t('simulations.create.no_simulation_binaries')
     end
 
-    unless flash[:error].blank? or (begin Utils.parse_json_if_string(simulation_input) and true rescue false end)
-      flash[:error] = t('simulations.create.bad_simulation_input')
+    unless simulation_input.blank?
+      unless flash[:error].blank? or (begin Utils.parse_json_if_string(simulation_input) and true rescue false end)
+        flash[:error] = t('simulations.create.bad_simulation_input')
+      end
     end
     # simulation creation
     if flash[:error].nil?
@@ -79,21 +87,22 @@ class SimulationsController < ApplicationController
         'name' => params[:simulation_name],
         'description' => params[:simulation_description],
         'input_specification' => simulation_input,
-        'user_id' => @current_user.id,
+        'user_id' => current_user.id,
         'created_at' => Time.now
       })
 
       begin
-        set_up_adapter('input_writer', simulation, false)
-        set_up_adapter('executor', simulation)
-        set_up_adapter('output_reader', simulation, false)
-        set_up_adapter('progress_monitor', simulation, false)
+        set_up_adapter_checked(simulation, 'input_writer', current_user, params, false)
+        set_up_adapter_checked(simulation, 'executor', current_user, params)
+        set_up_adapter_checked(simulation, 'output_reader', current_user, params, false)
+        set_up_adapter_checked(simulation, 'progress_monitor', current_user, params, false)
 
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 
         simulation.save
       rescue Exception => e
-        Rails.logger.error("Exception occurred : #{e}")
+        flash[:error] = t('simulations.create.internal_error') unless flash[:error]
+        Rails.logger.error("Exception occurred when setting up adapters or binaries: #{e}\n#{e.backtrace.join("\n")}")
       end
     end
 
@@ -136,9 +145,9 @@ class SimulationsController < ApplicationController
           Rails.logger.error(msg)
           response = { status: 'error', reason: msg }
         else
-          unless @sm_user.nil?
-            if @simulation_run.sm_uuid != @sm_user.sm_uuid
-              Rails.logger.warn("SimulationRun is completed be #{@sm_user.sm_uuid} but it should be #{@simulation_run.sm_uuid}")
+          unless sm_user.nil?
+            if @simulation_run.sm_uuid != sm_user.sm_uuid
+              Rails.logger.warn("SimulationRun is completed be #{sm_user.sm_uuid} but it should be #{@simulation_run.sm_uuid}")
             end
           end
 
@@ -151,9 +160,10 @@ class SimulationsController < ApplicationController
             begin
               @simulation_run.result = Utils.parse_json_if_string(params[:result])
             rescue Exception => e
+              Rails.logger.warn("Got invalid result for #{@simulation_run.id} simulation:\n#{params[:result].to_s}")
               @simulation_run.result = {}
               @simulation_run.is_error = true
-              @simulation_run.error_reason = t('simulations.error.invalid_result_format')
+              @simulation_run.error_reason = t('simulations.error.invalid_result_format') + "\n\n" + params[:result].to_s
             end
           end
 
@@ -169,7 +179,7 @@ class SimulationsController < ApplicationController
             @simulation_run.cpu_info = cpu_info
           end
 
-          unless @sm_user.nil? or (sm_record = @sm_user.simulation_manager_record).nil?
+          unless sm_user.nil? or (sm_record = sm_user.simulation_manager_record).nil?
             unless sm_record.infrastructure.blank?
               @simulation_run.infrastructure = sm_record.infrastructure
             end
@@ -217,7 +227,7 @@ class SimulationsController < ApplicationController
   end
 
   def show
-    information_service = InformationService.new
+    information_service = InformationService.instance
 
     if Rails.application.secrets.include?(:storage_manager_url)
       @storage_manager_url = Rails.application.secrets.storage_manager_url
@@ -239,7 +249,7 @@ class SimulationsController < ApplicationController
   end
 
   def simulation_scenarios
-    @simulations = @current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
+    @simulations = current_user.get_simulation_scenarios.sort { |s1, s2| s2.created_at <=> s1.created_at }
 
     render partial: 'simulation_scenarios', locals: { show_close_button: true }
   end
@@ -274,18 +284,18 @@ class SimulationsController < ApplicationController
   end
 
   def results_binaries
-    storage_manager_url = InformationService.new.sample_public_storage_manager
+    storage_manager_url = InformationService.instance.sample_public_storage_manager
     url = LogBankUtils::simulation_run_binaries_url(storage_manager_url,
-                                             @experiment.id, @simulation_run.index, @user_session)
+                                             @experiment.id, @simulation_run.index, @current_user)
 
     response = RestClient.get(url)
     send_data response.body, filename: "simulation_results.tar.gz", disposition: "attachment", :content_type => 'application/x-compressed'
   end
 
   def results_stdout
-    storage_manager_url = InformationService.new.sample_public_storage_manager
+    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
     url = LogBankUtils::simulation_run_stdout_url(storage_manager_url,
-                                                                   @experiment.id, @simulation_run.index, @user_session)
+                                                                   @experiment.id, @simulation_run.index, @current_user)
 
     response = RestClient.get(url)
     send_data response.body, filename: "simulation_stdout.txt", disposition: "attachment", :content_type => 'text/plain'
@@ -300,10 +310,10 @@ class SimulationsController < ApplicationController
     experiment_id = BSON::ObjectId(params[:experiment_id])
     Rails.logger.debug("Experiment id : #{experiment_id}")
 
-    @experiment = if not @current_user.nil?
-                    @current_user.experiments.where(id: experiment_id).first
-                  elsif not @sm_user.nil?
-                    user = @sm_user.scalarm_user
+    @experiment = if not current_user.nil?
+                    current_user.experiments.where(id: experiment_id).first
+                  elsif not sm_user.nil?
+                    user = sm_user.scalarm_user
 
                     user.experiments.where(id: experiment_id).first
                   end
@@ -320,44 +330,6 @@ class SimulationsController < ApplicationController
       @simulation_run.to_sent = false
       @simulation_run.sent_at = Time.now
     end
-  end
-
-  def set_up_adapter(adapter_type, simulation, mandatory = true)
-
-    if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id'].to_s
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
-
-      if not adapter.nil? and adapter.user_id == @current_user.id
-        simulation.send(adapter_type + '_id=', adapter.id)
-      else
-        if mandatory
-          flash[:error] = t('simulations.create.adapter_not_found', { adapter: adapter_type.camelize, id: adapter_id })
-          raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory")
-        end
-      end
-
-    elsif params.include?(adapter_type)
-      adapter_name = if params["#{adapter_type}_name"].blank?
-                       params[adapter_type].original_filename
-                     else
-                       params["#{adapter_type}_name"]
-                     end
-
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
-                                           name: adapter_name,
-                                           code: Utils.read_if_file(params[adapter_type]),
-                                           user_id: @current_user.id})
-      adapter.save
-      Rails.logger.debug(adapter)
-      simulation.send(adapter_type + '_id=', adapter.id)
-    else
-      if mandatory
-        flash[:error] = t('simulations.create.mandatory_adapter', { adapter: adapter_type.camelize, id: adapter_id })
-        raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory")
-      end
-    end
-
   end
 
   def simulation_output_size

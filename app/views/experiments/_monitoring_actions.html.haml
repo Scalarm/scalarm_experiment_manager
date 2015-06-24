@@ -1,41 +1,34 @@
 %article#monitoring-actions
   .row
-    -# actions on the left column
-    .small-6.columns
-      .row
-        .small-12.columns
-          %h4.subheader
-            = t('.left_column_header')
-            = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
-
-      - if @experiment.is_running
-        -#.row
-        -#  .small-8.columns.small-centered
-        -#    %span#boostButton{class: button_classes}
-        -#      %i.fi-plus
-        -#      = t('.boost_button')
+    - if @experiment.is_running
+      -# actions on the left column
+      .small-6.columns
+        .row
+          .small-12.columns
+            %h4.subheader(style="margin-bottom: 20px;")
+              = t('.left_column_header') +":"
+              = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
         .row
           .small-8.columns.small-centered
-            %a{class: button_classes, href: simulation_manager_experiment_path}
-              %i.fi-download
-              = t('.get_sm_button')
+            %span#progressButton{class: button_classes}
+              %i.fi-results
+              = t('.progress_information_button')
 
-      .row
-        .small-8.columns.small-centered
-          %span#progressButton{class: button_classes}
-            %i.fi-results
-            = t('.progress_information_button')
+        .row
+          .small-8.columns.small-centered
+            %a{href: '#', 'data-dropdown' => 'download-dropdown', class: button_classes}
+              %i.fa.fa-cloud-download
+              = t('.download_results_button')
 
-    -# actions on the right column
-    .small-6.columns
-      .row
-        .small-12.columns
-          %h4.subheader
-            = t('.right_column_header')
-            = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
+      -# actions on the right column
+      .small-6.columns
+        .row
+          .small-12.columns
+            %h4.subheader(style="margin-bottom: 20px;")
+              = t('.right_column_header') + ":"
+              = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
-      - if @experiment.is_running
         .row
           .small-8.columns.small-centered
             %span#extensionDialogOpenButton{class: button_classes}
@@ -48,15 +41,29 @@
               %i.fa.fa-barcode
               = t('.scheduling_button')
 
-      .row
-        .small-8.columns.small-centered
-          %a{href: '#', 'data-dropdown' => 'download-dropdown', class: button_classes}
-            %i.fa.fa-cloud-download
-            = t('.download_results_button')
+    - else
+      .small-12.columns
+        %h4.subheader(style="margin-bottom: 20px;")
+          = t('.left_column_header')
+          = image_tag('loading.gif', id: 'actions-loading', style: 'display: none;')
 
-          %ul#download-dropdown.f-dropdown(data-dropdown-content)
-            %li= link_to t('.binaries_results_button'), results_binaries_experiment_path(@experiment.id)
-            %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
+      .small-offset-1.small-5.columns
+        .row
+          .small-11.columns.small-centered
+            %span#progressButton{class: button_classes}
+              %i.fi-results
+              = t('.progress_information_button')
+
+      .small-5.columns.end
+        .row
+          .small-11.columns.small-centered
+            %a{href: '#', 'data-dropdown' => 'download-dropdown', class: button_classes}
+              %i.fa.fa-cloud-download
+              = t('.download_results_button')
+
+    %ul#download-dropdown.f-dropdown(data-dropdown-content)
+      %li= link_to t('.binaries_results_button'), results_binaries_experiment_path(@experiment.id)
+      %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
 
 #extension-dialog.reveal-modal(data-reveal="")
 #dialog.reveal-modal(data-reveal="")
@@ -83,6 +90,13 @@
 - content_for :javascript do
   :javascript
     $(function() {
+      window.reopeningModals = {};
       new window.MonitoringActionButtons("#{extension_dialog_experiment_path(@experiment.id)}",
                                          "#{get_booster_dialog_infrastructure_path(experiment_id: @experiment.id)}")
+      $("#extension-dialog").on("closed", function() {
+        if (window.reopeningModals && window.reopeningModals.isActive) {
+          $("#" + window.reopeningModals.id).foundation("reveal", "open");
+          window.reopeningModals.isActive = false;
+        }
+      })
     });

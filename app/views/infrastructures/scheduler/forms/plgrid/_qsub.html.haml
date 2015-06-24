@@ -1,4 +1,4 @@
-- credentials = GridCredentials.find_by_user_id(@current_user.id)
+- credentials = GridCredentials.find_by_user_id(current_user.id)
 - grants = PlGridFacade.retrieve_grants(credentials)
 
 - if other_params[:force_onsite_monitoring]
@@ -34,10 +34,10 @@
   .small-4.columns
     = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
   .small-4.columns.end
-    - checked = !!other_params[:force_onsite_monitoring]
-    - if checked
+    - forced = !!other_params[:force_onsite_monitoring]
+    - if forced
       = hidden_field_tag :onsite_monitoring, true
-    = check_box_tag :onsite_monitoring, '', checked, disabled: checked
+    = check_box_tag :onsite_monitoring, '', true, disabled: forced
 .row
   .large-4.columns
     = label_tag :queue, t('infrastructure.information.queue') + ':', class: 'inline right'

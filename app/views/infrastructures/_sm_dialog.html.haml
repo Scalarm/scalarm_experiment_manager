@@ -27,7 +27,7 @@
 
   .row.small-12.columns
     %ul
-      - unless record.infrastructure_side_monitoring
+      - unless record.onsite_monitoring
         %li
           %strong= t('.resource_state') + ': '
           #resource-state{style: 'display: inline;'}
@@ -54,7 +54,7 @@
             - unless record.error_log.nil?
               %li
                 %strong= t('infrastructure.information.sm_info.error_log') + ': '
-                .panel{style: "max-height: 350px; overflow-y: scroll; font-size: 12px; font-family: monospace"}
+                .panel.log-box
                   - record.error_log.split("\n").each do |line|
                     = line
                     %br
@@ -70,7 +70,10 @@
         =record.created_at.since(record.time_limit.to_i.minutes).to_s + ' ' + "(#{record.time_limit.to_s} minutes)"
       %li
         %strong= t('infrastructures.sm_dialog.experiment') + ': '
-        = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+        - if record.experiment
+          = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
+        - else
+          = t('infrastructure.information.sm_record_error', error: t('infrastructure.information.experiment_not_found'))
 
 
 

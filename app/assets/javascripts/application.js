@@ -16,20 +16,32 @@
 //= require jquery-tmpl
 //= require custom.modernizr
 //= require foundation
-//= require_tree .
 //= require highcharts/highcharts
 //= require highcharts/highcharts-more
+//= require highcharts/highcharts-3d
 //= require highcharts/modules/exporting
 //= require dataTables/jquery.dataTables
 //= require jit-yc
-//= require toastr
+//= require toastr.min
 //= require jquery.remotipart
+//= require jquery.doubleScroll
 //= require d3
+//= require jstree
+//= require jquery.nanoscroller.min
+//= require_tree .
 
 
 $(function() {
     $(document).foundation();
+    if(!navigator.userAgent.match(/Firefox|SeaMonkey/i)) 
+        $(".nano").nanoScroller();
+
 });
+
+$(document).on("resize", function() {
+    if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+        $(".nano").nanoScroller();
+})
 
 toastr.options = {
     "closeButton": true,
@@ -38,7 +50,7 @@ toastr.options = {
     "onclick": null,
     "showDuration": "3000",
     "hideDuration": "1000",
-    "timeOut": "5000",
+    "timeOut": "18000",
     "extendedTimeOut": "1000",
     "showEasing": "swing",
     "hideEasing": "linear",
@@ -59,6 +71,29 @@ function string_with_delimeters() {
 
     return string_copy.split("").reverse().join("");
 }
+
+// Used to listen to invoke events for object only if it does not have 'disabled' class
+function ignore_if_disabled(obj, fun) {
+    if (obj.is('.disabled')) {
+        return false;
+    } else {
+        return fun();
+    }
+}
+
+$.prototype.enable = function () {
+    $.each(this, function (index, el) {
+        $(el).removeClass('disabled');
+        $(el).removeAttr('disabled');
+    });
+};
+
+$.prototype.disable = function () {
+    $.each(this, function (index, el) {
+        $(el).addClass('disabled');
+        $(el).attr('disabled', 'disabled');
+    });
+};
 
 String.prototype.with_delimeters = string_with_delimeters;
 

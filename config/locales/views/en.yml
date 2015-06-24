@@ -15,3 +15,5 @@ en:
   errors:
     invalid_objectid: "You sent an invalid ObjectId - %{message}"
     insecure_parameter: "Insecure parameter given - %{param_name}"
+    insecure_filename: "Insecure filename given for %{param_name}, please do not use non-latin or other special characters other than: . _ -"
+    loading_chart: "An error occured on chart loading"

@@ -11,15 +11,39 @@
  *= require_self
  *= require foundation
  *= require foundation_and_overrides
- *= require_tree .
  *= require dataTables/jquery.dataTables
  *= require toastr
  *= require font-awesome
+ *= require jstree-themes/default/style
+ *= require nanoscroller
+ *= require_tree .
  * require jquery-ui
+ * require_tree jstree-themes
  */
 
  @import 'foundation-icons';
 
 .hidden {
   display: none;
+}
+
+.unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.log-box {
+  max-height: 350px;
+  overflow-y: scroll;
+  font-size: 12px;
+  font-family: monospace
+}
+
+.toast-top-right {
+  top: 100px;
+  right: 12px;
 }

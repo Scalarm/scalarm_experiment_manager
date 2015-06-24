@@ -9,16 +9,37 @@ class SimulationManagersController < ApplicationController
   rescue_from InfrastructureErrors::NoSuchInfrastructureError, with: :handle_no_such_infrastructure_error
   rescue_from Exception, with: :handle_exception
 
-  # Get Simulation Manager nodes in JSON
-  # GET params:
-  # - infrastructure_name: name of Infrastructure
-  # - experiment_id: (optional) experiment_id
-  # - infrastructure_params: (optional) hash with special params for infrastructure (e.g. filtering options)
+=begin
+  @apiDefine PrivateMachineOnly Private machine parameters
+=end
+
+  #TODO: describe basic sm_record elements, eg. sm_record.id...
+=begin
+  @api {get} /simulation_managers Get list of Simulation Manager objects (records) for authenticated user in JSON
+  @apiName GetAllSimulationManagers
+  @apiGroup SimulationManagers
+
+  @apiParam {String} [infrastructure] Get objects only for specified infrastructure
+  @apiParam {String} [experiment_id] Get objects only for specified experiment
+  @apiParam {String[]/String="created","initializing","running","terminating","error"} [states] Get only objects in specified states.
+                                Also single String is supported if filtering by one state
+  @apiParam {String[]/String="created","initializing","running","terminating","error"} [states_not] Get only objects that are __not__
+                                    in specified states.
+                                    Also single String is supported if filtering by one state
+  @apiParam {String=true,false} [onsite_monitoring] Get only objects which are onsite monitored or not
+
+  @apiParam (PrivateMachineOnly) {String} [host] Filter private machines by host name
+  @apiParam (PrivateMachineOnly) {String} [port] Filter private machines by SSH port number
+
+  @apiSuccess {Object[]} [sm_records] List of SimulationManagerRecords if request was success
+  @apiSuccess {String} status "ok" if success, "error" otherwise
+=end
   def index
     sm_records = (if @infrastructure_facade.blank?
-                    get_all_sm_records(params[:experiment_id], params[:infrastructure_params])
+                    get_all_sm_records(params[:experiment_id], params)
                   else
-                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id], params[:infrastructure_params])
+                    @infrastructure_facade.get_sm_records(@user_id, params[:experiment_id],
+                                                          (Utils.parse_json_if_string(params) or {}) )
                   end)
 
     render json: {
@@ -73,8 +94,12 @@ class SimulationManagersController < ApplicationController
         render inline: t('simulation_managers.not_found', id: params[:id]), status: 400
       else
         code_path = @infrastructure_facade.simulation_manager_code(sm_record)
+        contents = File.open(code_path) do |file|
+          file.read
+        end
+        FileUtils::rm_rf(code_path)
 
-        send_file code_path, type: 'application/zip'
+        send_data contents, filename: File.basename(code_path), type: 'application/zip'
       end
     end
 
@@ -126,7 +151,7 @@ class SimulationManagersController < ApplicationController
   # -- filters --
 
   def set_user_id
-    @user_id = @sm_user.blank? ? @current_user.id : @sm_user.user_id
+    @user_id = sm_user.blank? ? current_user.id : sm_user.user_id
   end
 
   def load_infrastructure

@@ -9,12 +9,15 @@
 # Note that some attributes are used only by some queuing system facades
 
 require 'infrastructure_facades/infrastructure_errors'
+require 'scalarm/database/model/pl_grid_job'
 
-class PlGridJob < MongoActiveRecord
+class PlGridJob < Scalarm::Database::Model::PlGridJob
   include SimulationManagerRecord
 
-  def self.collection_name
-    'grid_jobs'
+  attr_join :experiment, Experiment
+
+  def infrastructure_name
+    scheduler_type
   end
 
   def self.ids_auto_convert
@@ -77,12 +80,12 @@ class PlGridJob < MongoActiveRecord
     @credentials ||= GridCredentials.find_by_user_id(user_id)
   end
 
-  def log_path
-    PlGridJob.log_path(sm_uuid)
+  def log_file_name
+    PlGridJob.log_file_name(sm_uuid)
   end
 
-  def self.log_path(uuid)
-    "scalarm_job_#{uuid}.log"
+  def self.log_file_name(sm_uuid)
+    SSHAccessedInfrastructure::ScalarmFileName::sim_log(sm_uuid)
   end
 
   def validate
@@ -90,7 +93,7 @@ class PlGridJob < MongoActiveRecord
   end
 
   def validate_credentials
-    unless infrastructure_side_monitoring
+    unless onsite_monitoring
       raise InfrastructureErrors::NoCredentialsError if credentials.nil?
       raise InfrastructureErrors::InvalidCredentialsError if credentials.invalid or not has_usable_credentials?
     end
@@ -118,7 +121,7 @@ class PlGridJob < MongoActiveRecord
   def valid_proxy?(proxy)
     true
 
-    # TODO
+    # TODO - use Scalarm::ServiceCore::GP::Proxy validation
     # begin
     #   GP::Proxy.new(proxy).verify!(ca_cert)
     # rescue GP::ProxyValidationError => validation_error

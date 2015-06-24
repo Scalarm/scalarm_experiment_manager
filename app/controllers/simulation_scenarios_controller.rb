@@ -1,6 +1,7 @@
 require 'zip'
 
 class SimulationScenariosController < ApplicationController
+  include AdaptersSetup
   before_filter :load_simulation_scenario, except: [ :index, :create ]
 
   def index
@@ -8,22 +9,22 @@ class SimulationScenariosController < ApplicationController
   end
 
   def edit
-    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
-      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: current_user.login)
       redirect_to simulations_path
     else
-      @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-      @executors = SimulationExecutor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-      @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-      @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @executors = SimulationExecutor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
     end
   end
 
   def update
     # TODO if necessary - validate simulation_input and simulation_binaries somehow
 
-    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
-      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: current_user.login)
     else
       simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input])) : nil
       simulation_scenario_params_validation(simulation_input)
@@ -36,10 +37,10 @@ class SimulationScenariosController < ApplicationController
         @simulation_scenario.created_at = Time.now
 
         begin
-          set_up_adapter('input_writer', @simulation_scenario, false)
-          set_up_adapter('executor', @simulation_scenario)
-          set_up_adapter('output_reader', @simulation_scenario, false)
-          set_up_adapter('progress_monitor', @simulation_scenario, false)
+          set_up_adapter_checked(@simulation_scenario, 'input_writer', current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'executor', current_user, params)
+          set_up_adapter_checked(@simulation_scenario, 'output_reader', current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'progress_monitor', current_user, params, false)
 
           unless (binaries = params[:simulation_binaries]).blank?
             @simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
@@ -48,8 +49,11 @@ class SimulationScenariosController < ApplicationController
           @simulation_scenario.save
 
           flash[:notice] = t('simulation_scenarios.update.success', name: @simulation_scenario.name) if flash[:error].nil?
+        rescue SecurityError => e
+          raise e
         rescue Exception => e
-          Rails.logger.error("Exception occurred : #{e}")
+          flash[:error] = t('simulations.create.internal_error') unless flash[:error]
+          Rails.logger.error("Exception occurred when setting up adapters or binaries: #{e}\n#{e.backtrace.join("\n")}")
         end
       end
     end
@@ -121,7 +125,9 @@ class SimulationScenariosController < ApplicationController
   end
 
   def share
-    validate_params(:default, :mode)
+    validate(
+        mode: :security_default
+    )
     # TODO validate sharing with login params - it should denote scalarm user login
 
     @user = nil
@@ -130,7 +136,7 @@ class SimulationScenariosController < ApplicationController
       flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
-    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', { id: params[:id], user: params[:sharing_with_login] })
     end
 
@@ -164,44 +170,6 @@ class SimulationScenariosController < ApplicationController
 
   private
 
-  def set_up_adapter(adapter_type, simulation, mandatory = true)
-    validate_params(:default, adapter_type, "#{adapter_type}_id", "#{adapter_type}_name")
-
-    if params.include?(adapter_type + '_id')
-      adapter_id = params[adapter_type + '_id'].to_s
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").find_by_id(adapter_id)
-
-      if not adapter.nil? and adapter.user_id == @current_user.id
-        simulation.send(adapter_type + '_id=', adapter.id)
-      else
-        if mandatory
-          flash[:error] = t('simulations.create.adapter_not_found', {adapter: adapter_type.camelize, id: adapter_id})
-          raise Exception.new("Setting up Simulation#{adapter_type.camelize} is mandatory")
-        end
-      end
-
-    elsif params.include?(adapter_type)
-      adapter_name = if params["#{adapter_type}_name"].blank?
-                       params[adapter_type].original_filename
-                     else
-                       params["#{adapter_type}_name"]
-                     end
-
-      adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
-                                                                               name: adapter_name,
-                                                                               code: Utils.read_if_file(params[adapter_type]),
-                                                                               user_id: @current_user.id})
-      adapter.save
-      Rails.logger.debug(adapter)
-      simulation.send(adapter_type + '_id=', adapter.id)
-    else
-      if mandatory
-        flash[:error] = t('simulations.create.mandatory_adapter', {adapter: adapter_type.camelize, id: adapter_id})
-        raise Exception("Setting up Simulation#{adapter_type.camelize} is mandatory")
-      end
-    end
-  end
-
   def simulation_scenario_params_validation(simulation_input)
     case true
       when (not simulation_input.blank?)
@@ -211,7 +179,7 @@ class SimulationScenariosController < ApplicationController
           flash[:error] = t('simulations.create.bad_simulation_input')
         end
 
-      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: @current_user.id})).blank?)
+      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: current_user.id})).blank?)
         unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end
@@ -221,9 +189,12 @@ class SimulationScenariosController < ApplicationController
   private
 
   def load_simulation_scenario
-    validate_params(:default, :id, :name)
+    validate(
+        id: [:optional, :security_default],
+        name: [:optional, :security_default]
+    )
 
-    users_scenarios = @current_user.get_simulation_scenarios
+    users_scenarios = current_user.get_simulation_scenarios
 
     @simulation_scenario = if params[:id]
                              users_scenarios.find{|scenario| scenario.id.to_s == params[:id]}

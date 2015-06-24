@@ -42,7 +42,7 @@ class window.TableCredentialsManager
       .bind('ajax:before', => row_loading.show())
       .bind('ajax:success', (status, data, xhr) =>
         switch data.status
-          when 'removed-ok'
+          when 'ok'
             toastr.success(data.msg)
             $("##{row_id}").remove()
           when 'error'

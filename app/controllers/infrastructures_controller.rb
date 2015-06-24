@@ -5,12 +5,18 @@ class InfrastructuresController < ApplicationController
   include InfrastructureErrors
   include GenericErrors
 
+  # GET params:
+  # - experiment_id: (optional) experiment_id
   def index
-    render 'infrastructure/index'
+    validate(
+        experiment_id: [:optional, :security_default]
+    )
+
+    render 'infrastructure/index', locals: { experiment_id: params[:experiment_id].to_s }
   end
 
   def list
-    render json: InfrastructureFacadeFactory.list_infrastructures(@current_user.id)
+    render json: InfrastructureFacadeFactory.list_infrastructures(current_user.id)
   end
 
   # Get Simulation Manager nodes for Infrastructure Tree for given containter name
@@ -22,7 +28,7 @@ class InfrastructuresController < ApplicationController
   def simulation_manager_records
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
-      hash = facade.sm_record_hashes(@current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
+      hash = facade.sm_record_hashes(current_user.id, params[:experiment_id], (params[:infrastructure_params] or {}))
       render json: hash
     rescue NoSuchInfrastructureError => e
       Rails.logger.error "Try to fetch SM nodes, but requested infrastructure does not exist: #{e.to_s}"
@@ -38,7 +44,7 @@ class InfrastructuresController < ApplicationController
 
     InfrastructureFacadeFactory.get_registered_infrastructure_names.each do |infrastructure_id|
       facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_id)
-      infrastructure_info[infrastructure_id] = facade.current_state(@current_user.id)
+      infrastructure_info[infrastructure_id] = facade.current_state(current_user.id)
     end
 
     render json: infrastructure_info
@@ -49,20 +55,18 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name - short name of infrastructure
   # - job_counter
   def schedule_simulation_managers
-    validate_params(:default, :infrastructure_name, :job_counter) #:queue
+    validate(
+        infrastructure_name: [:security_default],
+        experiment_id: [:security_default],
+        job_counter: [:security_default, :integer, :positive],
+        time_limit: [:optional, :integer, :positive]
+    ) #:queue
     infrastructure = nil
     infrastructure_name = '?'
 
-    # TODO
-    if !params[:time_limit] or params[:time_limit].to_i <= 0
-      params['time_limit'] = params[:time_limit] = 60
-    end
+    params['time_limit'] = params[:time_limit] = 60 if params[:time_limit].nil?
 
     begin
-      unless validate_schedule_simulation_managers(params)
-        return render json: { status: 'error', error_code: 'missing-parameters', msg: I18n.t('infrastructures_controller.missing_parameters') }
-      end
-
       experiment_id = params[:experiment_id]
       begin
         validate_experiment(experiment_id)
@@ -73,8 +77,10 @@ class InfrastructuresController < ApplicationController
       infrastructure_name = params[:infrastructure_name]
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
       begin
+        # add proxy from ApplicationController (if available) if not explicitly passed specified in params
+        params[:proxy] = @proxy_s if @proxy_s
         records = infrastructure.start_simulation_managers(
-            @current_user.id, params[:job_counter].to_i, experiment_id, params
+            current_user.id, params[:job_counter].to_i, experiment_id, params
         )
         render json: { status: 'ok', records_ids: (records.map {|r| r.id.to_s}), infrastructure: infrastructure_name,
                        msg: I18n.t('infrastructures_controller.scheduled_info', count: records.count.to_s, name: infrastructure.long_name) }
@@ -96,18 +102,13 @@ class InfrastructuresController < ApplicationController
       render json: { status: 'error', error_code: error.error_code, msg: I18n.t('infrastructures_controller.schedule_error',
                          name: infrastructure ? infrastructure.long_name : infrastructure_name,
                          error: error.to_s) }
-      Rails.logger.error "#{exc.class.to_s} #{exc.to_s}\n#{exc.backtrace.join("\n")}"
+      Rails.logger.error "#{error.class.to_s} #{error.to_s}\n#{error.backtrace.join("\n")}"
     rescue Exception => exc
       render json: { status: 'error', error_code: 'scheduling-failed', msg: I18n.t('infrastructures_controller.schedule_error',
                         name: infrastructure ? infrastructure.long_name : infrastructure_name,
                         error: exc.to_s) }
       Rails.logger.error "#{exc.class.to_s} #{exc.to_s}\n#{exc.backtrace.join("\n")}"
     end
-  end
-
-  def validate_schedule_simulation_managers(params)
-    %w(experiment_id job_counter infrastructure_name).all? {|p| params.include? p} and
-      params[:job_counter].to_i > 0
   end
 
   # POST params (in JSON):
@@ -118,18 +119,18 @@ class InfrastructuresController < ApplicationController
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
 
-      if @current_user.banned_infrastructure?(infrastructure_name)
+      if current_user.banned_infrastructure?(infrastructure_name)
         return render json: {
             status: 'error',
             error_code: 'banned',
             msg: t('infrastructures_controller.credentials.banned',
                    infrastructure_name: infrastructure.long_name,
-                   time: @current_user.ban_expire_time(infrastructure_name)
+                   time: current_user.ban_expire_time(infrastructure_name)
             )
         }
       end
 
-      credentials = infrastructure.add_credentials(@current_user, stripped_params_values(params), session)
+      credentials = infrastructure.add_credentials(current_user, stripped_params_values(params), session)
       if credentials
         if credentials.valid?
           mark_credentials_valid(credentials, infrastructure_name)
@@ -169,7 +170,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure - name of infrastructure
   # - query_params - Hash of additional filtering options
   def get_infrastructure_credentials
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure: :security_default
+    )
+
     query_params = (params.include?(:query_params) ? JSON.parse(params[:query_params]) : {})
     raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
     raise SecurityError.new('All additional params should be strings') unless query_params.all? do |k, v|
@@ -181,7 +185,7 @@ class InfrastructuresController < ApplicationController
     infrastructure_name = params[:infrastructure]
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-      records = infrastructure.get_credentials(@current_user.id, query_params)
+      records = infrastructure.get_credentials(current_user.id, query_params)
 
       # modify records to contain only non-secret fields
       hashes = records.collect do |r|
@@ -213,20 +217,20 @@ class InfrastructuresController < ApplicationController
 
   def mark_credentials_valid(credentials, infrastructure_name)
     credentials.invalid = false
-    if @current_user.credentials_failed and @current_user.credentials_failed.include?(infrastructure_name)
-      @current_user.credentials_failed[infrastructure_name] = []
-      @current_user.save
+    if current_user.credentials_failed and current_user.credentials_failed.include?(infrastructure_name)
+      current_user.credentials_failed[infrastructure_name] = []
+      current_user.save
     end
     credentials.save
   end
 
   def mark_credentials_invalid(credentials, infrastructure_name)
     credentials.invalid = true
-    @current_user.credentials_failed = {} unless @current_user.credentials_failed
-    @current_user.credentials_failed[infrastructure_name] = [] unless @current_user.credentials_failed.include?(infrastructure_name)
-    @current_user.credentials_failed[infrastructure_name] << Time.now
+    current_user.credentials_failed = {} unless current_user.credentials_failed
+    current_user.credentials_failed[infrastructure_name] = [] unless current_user.credentials_failed.include?(infrastructure_name)
+    current_user.credentials_failed[infrastructure_name] << Time.now
     # TODO: trim to 2 invalid attempts?
-    @current_user.save
+    current_user.save
     credentials.save
   end
 
@@ -235,9 +239,15 @@ class InfrastructuresController < ApplicationController
   # - record_id
   # - credential_type (optional)
   def remove_credentials
+    validate(
+        infrastructure_name: :security_default,
+        record_id: :security_default,
+        credential_type: [:optional, :security_default]
+    )
+
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
-      facade.remove_credentials(params[:record_id], @current_user.id, params[:credential_type])
+      facade.remove_credentials(params[:record_id], current_user.id, params[:credential_type])
       render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
     rescue Exception => e
       Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -249,6 +259,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # All params will be passed to simulation_managers_info in view
   def simulation_managers_summary
+    validate(
+        infrastructure_name: :security_default
+    )
+
     infrastructure_name = params[:infrastructure_name]
     facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
     group = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -257,21 +271,37 @@ class InfrastructuresController < ApplicationController
                long_name: facade.long_name,
                partial_name: (group or params[:infrastructure_name]),
                infrastructure_name: params[:infrastructure_name],
-               simulation_managers: facade.get_sm_records(@current_user.id).to_a
+               simulation_managers: facade.get_sm_records(current_user.id).to_a
            }
   end
 
-  # GET params:
-  # - command - one of: stop, restart; command name that will be executed on simulation manager
-  # - record_id - record id of simulation manager which will execute command
-  # - infrastructure_name - infrastructure id to which simulation manager belongs to
+=begin
+  @api {post} /infrastructure/simulation_manager_command Invoke command on this Infrastructure's SimulationManager
+  @apiName SimulationManagerCommand
+  @apiGroup Infrastructures
+
+  @apiParam {String=stop,restart,destroy_record} command
+  @apiParam {String} record_id SimulationManager ID
+  @apiParam {String} infrastructure_name Name of infrastructure
+
+  @apiSuccess {String=ok,error} status
+  @apiSuccess {String} msg Message
+  @apiSuccess {String=stop,restart,destroy_record} [command] Name of command which was tried to be invoked
+
+  @apiSuccess {String=wrong-command,no-such-simulation-manager,access-denied,no-such-infrastructure,unknown} [error_code]
+    Error code in case of command invocation failure
+=end
   def simulation_manager_command
+    validate(
+        command: :security_default,
+        record_id: :security_default,
+        infrastructure_name: :security_default
+    )
+
     begin
       command = params[:command]
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-          # destroy temp password and stop a started simulation run if any
-          destroy_temp_password(sm.record) if %w(stop destroy_record).include? command
           sm.send(params[:command])
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
@@ -286,24 +316,6 @@ class InfrastructuresController < ApplicationController
       render json: { status: 'error', error_code: 'no-such-infrastructure', msg: t('infrastructures_controller.no_such_infrastructure', name: e.to_s)}
     rescue Exception => e
       render json: { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
-    end
-  end
-
-  def destroy_temp_password(record)
-    unless (temp_pass = SimulationManagerTempPassword.find_by_sm_uuid(record.sm_uuid)).blank?
-
-      unless temp_pass.experiment_id.nil? or record.sm_uuid.nil?
-        started_simulation_run = Experiment.find_by_id(temp_pass.experiment_id).simulation_runs.
-            where(sm_uuid: record.sm_uuid, to_sent: false, is_done: false).first
-
-        unless started_simulation_run.nil?
-          started_simulation_run.to_sent = true
-          started_simulation_run.save
-        end
-
-      end
-
-      temp_pass.destroy
     end
   end
 
@@ -337,7 +349,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name (optional)
   # - infrastructure_params (optional) - Hash with additional parameters, e.g. PLGrid scheduler
   def get_booster_dialog
-    validate_params(:default, :infrastructure_name, :experiment_id)
+    validate(
+        experiment_id: [:optional, :security_default],
+        infrastructure_name: [:optional, :security_default]
+    )
 
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -354,7 +369,9 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - other_params - Hash
   def get_booster_partial
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure_name: :security_default
+    )
 
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -363,7 +380,7 @@ class InfrastructuresController < ApplicationController
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
           infrastructure_name: infrastructure_name,
-          other_params: facade.other_params_for_booster(@current_user.id)
+          other_params: facade.other_params_for_booster(current_user.id)
       }
     rescue ActionView::MissingTemplate
       render nothing: true
@@ -373,7 +390,9 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_partial
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure_name: :security_default
+    )
 
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/#{params[:infrastructure_name]}")
@@ -386,7 +405,9 @@ class InfrastructuresController < ApplicationController
   # GET params
   # - infrastructure_name
   def get_credentials_table_partial
-    validate_params(:default, :infrastructure_name)
+    validate(
+        infrastructure_name: :security_default
+    )
 
     begin
       render inline: render_to_string(partial: "infrastructure/credentials/tables/#{params[:infrastructure_name]}")
@@ -400,7 +421,10 @@ class InfrastructuresController < ApplicationController
   # - infrastructure_name
   # - record_id
   def get_resource_status
-    validate_params(:default, :infrastructure_name, :record_id)
+    validate(
+        infrastructure_name: :security_default,
+        record_id: :security_default
+    )
 
     begin
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
@@ -419,7 +443,7 @@ class InfrastructuresController < ApplicationController
   def get_sm_record(record_id, facade)
     record = facade.get_sm_record_by_id(record_id)
     raise NoSuchSimulationManagerError if record.nil?
-    raise AccessDeniedError if record.user_id.to_s != @current_user.id.to_s
+    raise AccessDeniedError if record.user_id.to_s != current_user.id.to_s
     record
   end
 
@@ -433,7 +457,7 @@ class InfrastructuresController < ApplicationController
   def validate_experiment(experiment_id)
     experiment = Experiment.find_by_id(experiment_id)
     if experiment
-      unless experiment.user_id == @current_user.id or experiment.shared_with.include? @current_user.id
+      unless experiment.user_id == current_user.id or experiment.shared_with.include? current_user.id
         raise InfrastructureErrors::AccessDeniedError
       end
     else

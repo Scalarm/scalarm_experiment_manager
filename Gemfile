@@ -40,11 +40,10 @@ gem 'jquery-ui-rails'
 gem 'jquery-tmpl-rails'
 gem 'haml'
 gem 'foundation-rails'
-gem 'highcharts-rails'
 gem 'jit-rails'
 gem 'foundation-icons-sass-rails'
 gem 'jquery-datatables-rails', git: 'git://github.com/rweng/jquery-datatables-rails.git'
-gem 'font-awesome-sass'
+gem 'font-awesome-sass', '4.1'
 
 # Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
 # gem 'turbolinks'
@@ -70,7 +69,7 @@ platforms :rbx do
 end
 
 gem 'ruby-openid'
-gem 'rest-client', '~> 1.6.7'
+gem 'rest-client', '~> 1.8'
 gem 'xml-simple'
 gem 'vmstat'
 
@@ -79,3 +78,11 @@ gem 'mocha', group: :test
 gem 'remotipart', '~> 1.0'
 
 gem 'newrelic_rpm'
+
+## for local development - set path to scalarm-database
+# gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
+gem 'scalarm-database', '>= 0.3.1', git: 'git://github.com/Scalarm/scalarm-database.git'
+
+## for local development - set path to scalarm-core
+# gem 'scalarm-service_core', path: '/home/jliput/Scalarm/scalarm-service_core'
+gem 'scalarm-service_core', '~> 0.4.1', git: 'git://github.com/Scalarm/scalarm-service_core.git'

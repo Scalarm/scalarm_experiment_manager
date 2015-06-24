@@ -13,3 +13,56 @@
     text-align: center;
   }
 }
+
+#completed_simulations_table, #running_simulations_table{
+  tbody tr {
+    cursor: pointer;
+    &:hover {
+      background: #99ccff;
+    }
+  }
+}
+.w-created {
+  color: black !important;
+}
+
+.w-initializing {
+  color: goldenrod !important;
+}
+
+.w-running {
+  color: forestgreen !important;
+}
+
+.w-terminating {
+  color: #444 !important;
+}
+
+.w-failed {
+  color: firebrick !important;
+}
+
+//analyses-panel
+.analysis-panel {
+  background-color: white;
+  position: absolute;
+  width: 200px;
+  height: 500px;
+  top: 0px;
+  // left: 0px;
+  right: -210px;
+  overflow: hidden;
+  box-sizing: border-box;
+  text-align: center;
+  &:hover {
+    overflow-y: scroll;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+  }
+}
+
+#searchList {
+  min-width: 117px;
+}

@@ -1,5 +1,9 @@
 en:
   experiments:
+    optimization_method:
+      title: Optimization method
+      choose: Set optimization method
+
     click_to_expand: "(click to expand)"
 
     information_panel:
@@ -11,7 +15,8 @@ en:
 
     experiment_links:
       navigation_link: Experiments
-      running_experiments: Running experiments
+      running_experiments: Experiments in progress
+      completed_experiments: Completed experiments
       simulation_scenarios: Simulation scenarios
       historical_experiments: Historical experiments
       data_exploration_link: Data exploration methods
@@ -25,12 +30,17 @@ en:
     running_experiments:
       link_text: "%{name}, started at: %{start_time}"
       no_experiments: "There is no experiment running currently"
+    completed_experiments:
+      link_text: "%{name}, started at: %{start_time}"
+      no_experiments: "There is no completed experiment currently"
     monitoring_actions:
-      get_sm_button: "Download Simulation Manager"
       blank_shared_with_list: "none"
       stop_experiment:
         link: Stop
         tooltip: Stop this experiment. All running Simulation Managers will be stopped.
+
+    computational_resources:
+      get_sm_button: "Download Simulation Manager"
 
     sharing:
       link: "Share"
@@ -46,6 +56,8 @@ en:
       too_few_parameters: 
          one: Selected DoE method requires more than 1 parameter.
          other: "Selected DoE method requires more than %{count} parameters."
+      invalid_resolution: Number of bars should be an integer between 1 and 100
+      incorrect_parameter: Incorrect parameter chosen!
 
     edit:
       link: "Edit"
@@ -54,6 +66,12 @@ en:
       submit_btn: "Update"
       success: "The experiment has been updated"
       failure: "You cannot edit this experiment because you are not its owner"
+
+    stop:
+      failure: "You cannot stop this experiment because you are not its owner"
+
+    destroy:
+      failure: "You cannot destroy this experiment because you are not its owner"
 
     new:
       parameter_label: "Parameter '%{label}' - Value constraints: [ %{min}, %{max} ]"
@@ -139,3 +157,21 @@ en:
        caption: "Started simulation runs"
        started_at: "Started at"
        results_header: "Intermediate results"
+
+    simulated_annealing:
+      title: Simulated annealing
+      maxiter: Maximum number of iterations
+      dwell: dwell
+      schedule: Scheduling method
+
+    scatter_plot:
+      click_for_details: "Click for details"
+      regression_line: "Regression line"
+
+    menu_panel:
+      experiment_tools: "Management"
+      analysis:
+        header: "Analysis"
+        histogram: "Histogram"
+        regression_tree: "Regression tree"
+        scatter_plot: "Scatter plot"

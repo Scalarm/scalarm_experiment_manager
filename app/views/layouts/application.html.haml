@@ -9,36 +9,71 @@
     -#%link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css')
 
   %body
-    = render 'layouts/navbar' unless @current_user.nil?
+    = render 'layouts/navbar' unless current_user.nil?
 
-    #wrapper
-      .notice.alert-box.radius.success(style="display: none;")
-
-      .panel.radius.callout.help(style="display: none;")
-        = content_for?(:help) ? yield(:help) : t('help.no_help')
-
-      = yield
-
-    %footer
-      .row
-        .small-7.columns
-          = raw t('copyright')
-        .small-3.columns(style="padding-top: 7px;")
-          = link_to image_tag('scalarm-blue-small.png'), 
-            'http://www.scalarm.com'
-        .small-2.columns
-          = link_to image_tag('cyfronet_logo.png', size: "92x64"), 
-            'http://www.cyfronet.pl'
+    .row
+      - if content_for?(:panel)
+        #panel.small-3.columns
+          = yield :panel
+      - content_for?(:panel) ? container='div.small-9.columns' : container="div"
+      - haml_tag container do
+        #wrapper
+          .notice.alert-box.radius.success(style="display: none;")
+          .panel.radius.callout.help(style="display: none;")
+            = content_for?(:help) ? yield(:help) : t('help.no_help')
+          = yield
+        %footer
+          .row
+            .small-7.columns
+              = raw t('copyright')
+            .small-3.columns(style="padding-top: 7px;")
+              = link_to image_tag('scalarm-blue-small.png'),
+                'http://www.scalarm.com'
+            .small-2.columns
+              = link_to image_tag('cyfronet_logo.png', size: "92x64"),
+                'http://www.cyfronet.pl'
 
 
     = javascript_include_tag 'application'
     :javascript
       $(function() {
-        if(#{not flash[:notice].nil?}) {
-          toastr['success']("#{flash[:notice]}");
+        if (#{not flash[:notice].nil?}) {
+          toastr['success']("#{flash[:notice] and h(flash[:notice])}");
         }
-        if(#{not flash[:error].nil?}) {
-          toastr['error']("#{flash[:error]}");
+        if (#{not flash[:error].nil?}) {
+          toastr['error']("#{flash[:error] and h(flash[:error])}");
         }
+
+        var pagePosition, scrollHandler = function() {
+          $(window).scrollTop(pagePosition);
+        };
+        $("#panel .panel").hover(function() {
+          pagePosition = parseInt($(document).scrollTop());
+          $(window).scroll(scrollHandler);
+        }, function() {
+          $(window).off("scroll", scrollHandler);
+        });
+
+        var footer = $("footer").outerHeight(),
+            wrapper = $("#wrapper").outerHeight(),
+            max_height = footer + wrapper,
+            panel_margin_top = parseInt($("#panel").css("margin-top")),
+            footer_margin_bottom = parseInt($("footer").css("margin-bottom")),
+            new_height = window.innerHeight - (panel_margin_top + footer_margin_bottom);
+        $("#panel").height(new_height);
+        window.onresize = function() {
+          footer = $("footer").outerHeight();
+          wrapper = $("#wrapper").outerHeight();
+          max_height = footer + wrapper;
+          if(window.innerHeight>max_height) {
+            $("#panel").height(max_height+parseInt($("footer").css("margin-bottom"))-30);
+          }
+          else {
+            panel_margin_top = parseInt($("#panel").css("margin-top"));
+            footer_margin_bottom = parseInt($("footer").css("margin-bottom"));
+            new_height = window.innerHeight - (panel_margin_top + footer_margin_bottom);
+            $("#panel").height(new_height-30);
+          }
+        };
       });
     = yield :javascript

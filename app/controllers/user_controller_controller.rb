@@ -6,32 +6,50 @@ require 'openid_providers/plgrid_openid'
 
 require 'utils'
 
+require 'scalarm/database/core/mongo_active_record'
+
 class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
   include PlGridOpenID
 
+  ##
+  # Normally render welcome page
+  # Render trivial json if Accept: application/json specified,
+  # for testing and authentication tests purposes
+  def index
+    Rails.logger.info "index #{current_user}"
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok',
+                                  message: 'Welcome to Scalarm',
+                                  user_id: current_user.id.to_s } }
+    end
+  end
+
   def successful_login
-    #unless session.has_key?(:intended_action) and session.has_key?(:intended_controller)
-    session[:intended_controller] = :experiments
-    session[:intended_action] = :index
-    #end
+    original_url = session[:original_url]
+    session[:original_url] = nil
 
     flash[:notice] = t('login_success')
     Rails.logger.debug('[authentication] successful')
 
-    @user_session = UserSession.create_and_update_session(session[:user].to_s)
+    @user_session = UserSession.create_and_update_session(session[:user].to_s,
+                                                          session[:uuid])
 
-    #redirect_to url_for :controller => session[:intended_controller], :action => session[:intended_action]
-    redirect_to root_path
+    redirect_to (original_url or root_path)
   end
 
   def login
     if request.post?
       begin
-        config = Utils::load_config
-        anonymous_login = config['anonymous_login']
-        username = params.include?(:username) ? params[:username].to_s : anonymous_login.to_s
+        anonymous_config = Utils::load_config.anonymous_user
+
+        username = if anonymous_config and not params.include?(:username)
+                     config['login'].to_s
+                   else
+                     params[:username].to_s
+                   end
 
         requested_user = ScalarmUser.find_by_login(username)
         raise t('user_controller.login.user_not_found') if requested_user.nil?
@@ -41,6 +59,7 @@ class UserControllerController < ApplicationController
         end
 
         session[:user] = ScalarmUser.authenticate_with_password(username, params[:password]).id.to_s
+        session[:uuid] = SecureRandom.uuid
 
         if requested_user.credentials_failed and requested_user.credentials_failed.include?('scalarm')
           requested_user.credentials_failed['scalarm'] = []
@@ -48,7 +67,7 @@ class UserControllerController < ApplicationController
         end
 
         successful_login
-      rescue Exception => e
+      rescue => e
         Rails.logger.debug("Exception on login: #{e}\n#{e.backtrace.join("\n")}")
         reset_session
         flash[:error] = e.to_s
@@ -66,9 +85,11 @@ class UserControllerController < ApplicationController
   end
 
   def logout
-    reset_session
-    @user_session.destroy unless @user_session.blank?
-    @current_user.destroy_unused_credentials unless @current_user.nil?
+    keep_session_params(:server_name) do
+      reset_session
+    end
+    user_session.destroy unless user_session.blank?
+    current_user.destroy_unused_credentials unless current_user.nil?
 
     flash[:notice] = t('logout_success')
 
@@ -80,14 +101,14 @@ class UserControllerController < ApplicationController
 
       flash[:error] = t('password_repeat_error')
 
-    elsif params[:password].length < 6 or (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
+    elsif params[:password].length < 8 or (/\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.match(params[:password]).nil?)
 
       flash[:error] = t('password_too_weak')
 
-    elsif (not @current_user.password_hash.nil?)
+    elsif (not current_user.password_hash.nil?)
 
       begin
-        ScalarmUser.authenticate_with_password(@current_user.login, params[:current_password])
+        ScalarmUser.authenticate_with_password(current_user.login, params[:current_password])
       rescue Exception => e
         flash[:error] = t('password_wrong')
       end
@@ -95,8 +116,8 @@ class UserControllerController < ApplicationController
     end
 
     if flash[:error].blank?
-      @current_user.password = params[:password]
-      @current_user.save
+      current_user.password = params[:password]
+      current_user.save
 
       flash[:notice] = t('password_changed')
     end
@@ -105,16 +126,45 @@ class UserControllerController < ApplicationController
   end
 
   def status
-    render inline: "Hello world from Scalarm Experiment Manager, it's #{Time.now} at the server!\n"
+    tests = Utils.parse_json_if_string(params[:tests])
+
+    status = 'ok'
+    message = ''
+
+    unless tests.nil?
+      failed_tests = tests.select { |t_name| not send("status_test_#{t_name}") }
+
+      unless failed_tests.empty?
+        status = 'failed'
+        message = "Failed tests: #{failed_tests.join(', ')}"
+      end
+    end
+
+    http_status = (status == 'ok' ? :ok : :internal_server_error)
+
+    respond_to do |format|
+      format.html do
+        render text: message, status: http_status
+      end
+      format.json do
+        render json: {status: status, message: message}, status: http_status
+      end
+    end
   end
 
-  # --- OpenID support ---
-
   private
+
+  # --- OpenID support ---
 
   # Get stateless mode OpenID::Consumer instance for this controller.
   def consumer
     @consumer ||= OpenID::Consumer.new(session, nil) # 'nil' for stateless mode
+  end
+
+  # --- Status tests ---
+
+  def status_test_database
+    Scalarm::Database::MongoActiveRecord.available?
   end
 
 end

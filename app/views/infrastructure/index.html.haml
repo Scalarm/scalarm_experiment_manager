@@ -5,6 +5,15 @@
     .small-1.columns
       %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
         %i.fi-refresh
+  .row
+    .small-3.columns
+      = label_tag :experiment_filter_id, t('infrastructure.tree_filter.label'), class: 'inline right'
+    .small-5.columns
+      = select_tag :experiment_filter_id, options_for_select([[t('infrastructure.tree_filter.all_experiments'), '']] + experiments_select_data(current_user), experiment_id)
+    .small-2.columns
+    .small-1.columns
+      %span#stop-all-button{class: 'button alert radius expand action-button', title: t('infrastructure.stop_all_button')}
+        %i.fi-stop
 
   .row
     .small-12.columns
@@ -17,6 +26,7 @@
     %h2.dialog-header.hidden#stop-header= t('infrastructures.destroy_dialog.stop_header')
     %h2.dialog-header.hidden#restart-header= t('infrastructures.destroy_dialog.restart_header')
     %h2.dialog-header.hidden#destroy_record-header= t('infrastructures.destroy_dialog.destroy_record_header')
+    %h2.dialog-header.hidden#stop_all-header= t('infrastructures.destroy_dialog.stop_all_header')
     .row
       .small-6.columns.centered
         %span{id: 'destroy-yes', class: button_classes}= t('yes')
@@ -28,7 +38,7 @@
     $(function() {
       window.infrastructuresTree = new window.InfrastructuresTree("#{get_sm_dialog_infrastructure_path}", 'dialog',
         "#{list_infrastructure_path}", "#{simulation_manager_records_infrastructure_path}",
-        "#{simulation_manager_command_infrastructure_path}");
+        "#{simulation_manager_command_infrastructure_path}", "#{experiment_id}");
     });
 
 

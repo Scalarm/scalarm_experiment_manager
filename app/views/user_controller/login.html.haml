@@ -9,46 +9,64 @@
     .small-12.small-centered.columns(style="text-align: center;")
       %h2= t('login-title')
 
-%section.panel.radius
-  .row
-    - if single_user
-      = form_tag login_path do
-        .small-6.columns.small-centered
-          .row
-            .small-3.columns
-              %label.right.inline(for='password')= t('user_controller.account.password')
-            .small-9.columns
-              = password_field_tag 'password', '', class: 'inline', autocomplete: :off
-          .row
-            .small-12.small-centered.columns(style="text-align: center;")
-              = submit_tag 'Submit', class: 'button radius'
-    - else
-      .small-6.columns
+- if session.include? :server_name and Rails.configuration.plgrid_domains.include? session[:server_name]
+  %section.panel.radius
+    .row
+      .small-6.columns.small-centered
+        %a.button.expand.radius{ href: login_openid_plgrid_url }
+          %i.fa.fa-openid.fa-fw.small-link
+          = t('openid.login', provider: 'PL-Grid')
+- else
+  %section.panel.radius
+    .row
+      - if single_user
         = form_tag login_path do
-          .row
-            .small-5.columns
-              %label.right.inline(for='username')= t('user_controller.account.login')
-            .small-7.columns
-              = text_field_tag 'username', '', class: 'inline'
+          = hidden_field_tag 'username', config.anonymous_user['login']
+          .small-6.columns.small-centered
+            .row
+              .small-3.columns
+                %label.right.inline(for='password')= t('user_controller.account.password')
+              .small-9.columns
+                = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
-          .row
-            .small-5.columns
-              %label.right.inline(for='password')= t('user_controller.account.password')
-            .small-7.columns
-              = password_field_tag 'password', '', class: 'inline', autocomplete: :off
+            .row
+              .small-12.small-centered.columns(style="text-align: center;")
+                = submit_tag 'Login', class: 'button radius'
+      - else
+        .small-6.columns
+          = form_tag login_path do
+            .row
+              .small-5.columns
+                %label.right.inline(for='username')= t('user_controller.account.login')
+              .small-7.columns
+                = text_field_tag 'username', '', class: 'inline'
 
-          .row
-            .small-12.small-centered.columns(style="text-align: center;")
-              = submit_tag 'Submit', class: 'button radius'
+            .row
+              .small-5.columns
+                %label.right.inline(for='password')= t('user_controller.account.password')
+              .small-7.columns
+                = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
-      .small-6.columns
-        .row
-          .small-12.small-centered.columns(style="text-align:center;")
-            %a.button.radius{ href: login_openid_google_url }
-              %i.fi-social-google-plus.small-link
-              = t('openid.login', provider: 'Google')
-        .row
-          .small-12.small-centered.columns(style="text-align:center;")
-            %a.button.radius{ href: login_openid_plgrid_url }
-              %i.fi-key.small-link
-              = t('openid.login', provider: 'PL-Grid')
+            .row
+              .small-12.small-centered.columns(style="text-align: center;")
+                = submit_tag 'Submit', class: 'button radius'
+
+        .small-6.columns
+          .row
+            .small-9.small-centered.columns
+              %a.button.expand.radius{ href: login_openid_google_url }
+                %i.fa.fa-google-plus.fa-fw.small-link
+                = t('openid.login', provider: 'Google')
+          .row
+            .small-9.small-centered.columns
+              %a.button.expand.radius{ href: login_openid_plgrid_url }
+                %i.fa.fa-openid.fa-fw.small-link
+                = t('openid.login', provider: 'PL-Grid')
+
+
+%section.panel.radius
+  .row    
+    .small-9.small-centered.columns
+      %a.button.expand.radius.success{ href: 'https://docs.cyfronet.pl/pages/viewpage.action?pageId=16023704' }
+        %i.fa.fa-book.fa-fw.small-link
+        = "New to Scalarm? Read a user guide! (Polish)"

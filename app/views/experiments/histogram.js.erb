@@ -16,17 +16,22 @@ $(document).ready(function() {
   		<% @chart.bucket_names.each do |bucket_name| %>
   		  '<%= bucket_name %>',
   		<% end %>
-  		]
+  		],
+        <% if @chart.resolution >= @visible_threshold_resolution %>
+        labels: {
+            enabled: false
+        }
+        <% end %>
   	},
   	yAxis: {
   		title: {
-  			text: '#Configurations',
-  			align: 'high'
+  			text: 'Num. of simulations'
   		}
   	},
   	tooltip: {
   		formatter: function() {
-  			return '#Configurations: ' + this.y;
+  			return 'Num. of simulations: ' + this.y + '<br>'+
+                    'Range: ' + this.x;
   		}
   	},
   	plotOptions: {

@@ -6,16 +6,31 @@
     = image_tag 'loading.gif', size: '16x16', style: 'display: none', id: "busy_basic_#{experiment.id}_#{moe_name}_#{resolution}"
   .row
     %span.button= t('charts.hide_button')
+    %input{id: "checkbox_#{experiment.id}_#{moe_name}_#{resolution}",type: "checkbox", checked: "", style: "margin-left: 20px;"}
+    %label{id: "label_#{experiment.id}_#{moe_name}_#{resolution}"}
+      = t('charts.histogram.toggle_x_labels')
     -# TODO handle the refresh option
     -#= button_to_function 'Refresh',
     -#    "refresh_chart('#{experiment.id}', '#{moe_name}', #{resolution}, '#{experiments_update_basic_statistics_chart_path}')", class: 'nice_button'
 
-  .basic_chart_container{ id: chart_container_id }
-
-  = render partial: 'statistics_box', locals: { stats: stats, experiment: experiment, moe_name: moe_name }
+  .row
+    .small-9.columns.basic_chart_container{ id: chart_container_id }
+    .small-3.columns
+      = render partial: 'statistics_box', locals: { stats: stats, experiment: experiment, moe_name: moe_name }
 
   :javascript
     $(function() {
+      var visible = parseInt("#{resolution}")<"#{@visible_threshold_resolution}";
+      $("#checkbox_#{experiment.id}_#{moe_name}_#{resolution}").attr("checked", visible);
+      $("#checkbox_#{experiment.id}_#{moe_name}_#{resolution}").on('click', function() {
+
+        var chart = $(this).parent().parent().find("#basic_chart_container_#{experiment.id}_#{moe_name}_#{resolution}").highcharts();
+        visible = !visible;
+        chart.xAxis[0].update({labels: {enabled: visible}});
+      })
+      $("#label_#{experiment.id}_#{moe_name}_#{resolution}").on("click", function() {
+        $(this).siblings("input").click();
+      })
       $('.plot .button').on('click', function() {
         $(this).parent().parent().remove()
       });

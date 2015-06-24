@@ -174,8 +174,3 @@ en:
       </p>
 
       "
-  infrastructure:
-    information:
-      pl_grid_login: "PL-Grid UI login"
-      pl_grid_password: "PL-Grid UI password"
-      private_key_password: "Password to the certificate private key stored in PL-Grid LDAP"

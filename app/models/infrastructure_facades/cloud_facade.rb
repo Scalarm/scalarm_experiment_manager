@@ -8,6 +8,7 @@ class CloudFacade < InfrastructureFacade
   include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
+  include SSHAccessedInfrastructure
 
   # prefix for all created and managed VMs
   VM_NAME_PREFIX = 'scalarm_'
@@ -53,10 +54,10 @@ class CloudFacade < InfrastructureFacade
                               find_stored_params(params))
     rescue CloudErrors::ImageValidationError => ive
       logger.error "Error validating image secrets: #{ive.to_s}"
-      raise InfrastructureErrors::ScheduleError(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
+      raise InfrastructureErrors::ScheduleError.new(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
     rescue Exception => e
       logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
-      raise InfrastructureErrors::ScheduleError(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
+      raise InfrastructureErrors::ScheduleError.new(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
     end
   end
 
@@ -118,11 +119,8 @@ class CloudFacade < InfrastructureFacade
     record.destroy
   end
 
-  def get_sm_records(user_id=nil, experiment_id=nil, params={})
-    query = {cloud_name: @short_name}
-    query.merge!({user_id: user_id}) if user_id
-    query.merge!({experiment_id: experiment_id}) if experiment_id
-
+  def _get_sm_records(query, params={})
+    query.merge!({cloud_name: @short_name})
     CloudVmRecord.find_all_by_query(query)
   end
 
@@ -144,9 +142,10 @@ class CloudFacade < InfrastructureFacade
   end
 
   def _simulation_manager_stop(record)
-    handle_proxy_error(record.secrets) do
-      cloud_client_instance(record.user_id).terminate(record.vm_id)
-    end
+    Rails.logger.warn("stop disabled")
+    # handle_proxy_error(record.secrets) do
+    #   cloud_client_instance(record.user_id).terminate(record.vm_id)
+    # end
   end
 
   def _simulation_manager_restart(record)
@@ -216,27 +215,30 @@ class CloudFacade < InfrastructureFacade
       record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
       logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
 
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(record.sm_uuid, record.user_id,
-                                                                        record.experiment_id, record.start_at)
-      error_counter = 0
-      while true
-        begin
-          ssh = shared_ssh_session(record)
-          break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
-        rescue Exception => e
-          logger.warn "Exception #{e} occured while communication with "\
-  "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
-          error_counter += 1
-          if error_counter > 10
-            logger.error 'Exceeded number of SimulationManager installation attempts'
-            record.store_error('install_failed', e.to_s)
-            _simulation_manager_stop(record)
-            break
+      InfrastructureFacade.prepare_simulation_manager_package(record.sm_uuid, record.user_id,
+                                                                        record.experiment_id, record.start_at) do
+        error_counter = 0
+        while true
+          begin
+            ssh = shared_ssh_session(record)
+            break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
+          rescue Exception => e
+            logger.warn "Exception #{e} occured while communication with "\
+    "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
+            error_counter += 1
+            if error_counter > 10
+              logger.error 'Exceeded number of SimulationManager installation attempts'
+              record.store_error('install_failed', e.to_s)
+              _simulation_manager_stop(record)
+              break
+            end
           end
+
+          sleep(20)
         end
 
-        sleep(20)
       end
+
     end
   end
 
@@ -334,9 +336,8 @@ class CloudFacade < InfrastructureFacade
 
   def destroy_unused_credentials(authentication_mode, user)
   	if authentication_mode == :x509_proxy
-  		if UserSession.where(session_id: user.id).size > 0
-  			return
-  		end
+      user_sessions = UserSession.where(session_id: user.id)
+      return unless user_sessions.select(&:valid?).empty?
 
   		monitored_jobs = CloudVmRecord.where(user_id: user.id, cloud_name: 'pl_cloud', state: {'$ne' => :error})
   		if monitored_jobs.size > 0

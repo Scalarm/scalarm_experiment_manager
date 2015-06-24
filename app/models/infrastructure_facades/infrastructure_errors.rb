@@ -1,9 +1,11 @@
 module InfrastructureErrors
-  class NoCredentialsError < StandardError; end
-  class InvalidCredentialsError < StandardError; end
-  class CloudError < StandardError; end
-  class NoSuchInfrastructureError < StandardError; end
-  class NoSuchSimulationManagerError < StandardError; end
-  class AccessDeniedError < StandardError; end
-  class ScheduleError < StandardError; end
+  class InfrastructureError < StandardError; end
+
+  class NoCredentialsError < InfrastructureError; end
+  class InvalidCredentialsError < InfrastructureError; end
+  class CloudError < InfrastructureError; end
+  class NoSuchInfrastructureError < InfrastructureError; end
+  class NoSuchSimulationManagerError < InfrastructureError; end
+  class AccessDeniedError < InfrastructureError; end
+  class ScheduleError < InfrastructureError; end
 end

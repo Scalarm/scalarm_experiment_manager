@@ -10,7 +10,7 @@ require 'gsi'
 class PLCloudError < StandardError; end
 
 class PLCloudUtil
-  PLCLOUD_URL = 'https://cloud.plgrid.pl:3443'
+  PLCLOUD_URL = 'https://onecloud.plgrid.pl:3443'
   DNAT_URL = "#{PLCLOUD_URL}/dnat"
 
   RE_ID = /ID: (\d+)/
@@ -155,15 +155,13 @@ CONTEXT = [
     begin
       parsed_resp = JSON.parse(exec_post(command, args))
       status, data = parsed_resp['status'], parsed_resp['data']
-    rescue
-      Rails.logger.error "Exception on executing ONE command: #{$!}\n#{url}, #{str_args}"
+      raise PLCloudError.new data if status != 0
+      raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
+      data
+    rescue Exception => e
+      Rails.logger.error "Exception on executing ONE command #{command}(#{args.join(', ')}): #{e}\n#{e.backtrace.join("\n")}"
       nil
     end
-
-    raise PLCloudError.new data if status != 0
-    raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
-
-    data
   end
 
   def exec_post(command, args)
@@ -211,6 +209,9 @@ CONTEXT = [
   def redirections_for(vm_ip)
     resp = RestClient.get "#{DNAT_URL}/#{vm_ip}",
                           content_type: :json, accept: :json
+
+    Rails.logger.info "RESPONSE: #{resp}"
+
     raise PLCloudError if resp =~ /400 Bad Request/
 
     data = JSON.parse resp
@@ -246,9 +247,13 @@ CONTEXT = [
 
   # -- Proxy utils --
 
-  # Arguments for proxy from PL-Grid OpenID: proxy cert, user cert
-  def self.certs_to_pl_cloud_secret_proxy(*certs)
-    (certs.map {|cert_txt| Base64.encode64(cert_txt.gsub('<br>', "\n")).gsub("\n", '\n')}).join('|')
+  def self.openid_proxy_to_cloud_proxy(proxy)
+    Base64.encode64(proxy).split("\n").join('\n')
   end
+
+  # Arguments for proxy from PL-Grid OpenID: proxy cert, user cert
+  # def self.certs_to_pl_cloud_secret_proxy(*certs)
+  #   (certs.map {|cert_txt| Base64.encode64(cert_txt.gsub('<br>', "\n")).gsub("\n", '\n')}).join('|')
+  # end
 
 end

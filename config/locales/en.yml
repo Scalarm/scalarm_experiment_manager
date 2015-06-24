@@ -21,7 +21,7 @@
 
 en:
   title: Scalarm Experiment Manager
-  copyright: "Copyright © 2010-2014<br/>Academic Computer Centre Cyfronet AGH<br/>All rights reserved."
+  copyright: "Copyright © 2010-2015<br/>Academic Computer Centre Cyfronet AGH<br/>All rights reserved."
   login-title: Scalarm - platform for data farming experiments
   account-title: Account management panel
 
@@ -35,13 +35,15 @@ en:
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
     label: Running experiments
+  completed_experiments:
+    label: Completed experiments
   historical_experiments:
       label: Historical experiments
-  login_success: "You have log in successfully"
-  logout_success: "You have log out successfully"
+  login_success: "You have logged in successfully"
+  logout_success: "You have logged out successfully"
   password_changed: "You have changed your password."
   password_repeat_error: "'Password' and 'Repeat password' must be equal!"
-  password_too_weak: "Password should have at least 6 characters and must include at least one lowercase letter, one uppercase letter, and one digit!"
+  password_too_weak: "Password should have at least 8 characters and must include at least one lowercase letter, one uppercase letter, and one digit!"
   password_wrong: "You didn't provide your current password!"
 
 
@@ -84,18 +86,17 @@ en:
 
     # buttons from the monitoring view
     monitoring_actions:
-      left_column_header: Computations-related actions
-      right_column_header: Experiment management actions
+      left_column_header: Browse results
+      right_column_header: Manage experiment
       actions_header: Actions
       stop_button: Stop experiment
       extend_button: Extend input space
-      boost_button: Add computing power
       scheduling_button: Set scheduling method
       destroy_button: Destroy
       download_results_button: Download results
       binaries_results_button: Simulations output (binaries)
       get_configurations_button: Configurations (CSV)
-      progress_information_button: Show progress      
+      progress_information_button: Show progress
 
       booster:
         header: Increase computational power
@@ -109,6 +110,11 @@ en:
       unshare: Unshare
       share_with_all: Make it public
       make_private: Make it private
+
+    computational_resources:
+      boost_button: Add computing power
+      show_details_link: Show details...
+      no_workers_alert: "No resources in use. Please add them with 'Add computing power' button."
 
     monitoring_table:
       show_completed: Show/Hide completed
@@ -128,10 +134,15 @@ en:
     registration:
       title: Simulation registration
       experiments_label: Simulation scenario registration
+      basic_information: Basic information
+      files: Files
+
       simulation_name: Simulation name
       simulation_description: Simulation description
       simulation_input: Input definition
+      simulation_input_desc: Input definition file (JSON)
       simulation_binaries: Simulation binaries
+      simulation_binaries_desc: Simulation binaries package (ZIP)
       input_writer: Input writer
       output_reader: Output reader
       executor: Executor
@@ -142,6 +153,14 @@ en:
       component_code: Adapter code
       component_type: Adapter type
       component_header: "%{component} registration"
+      optional: optional
+
+      select_registered_name: "Select a registered name"
+      provide_name: "and provide a name"
+
+    edit:
+      current_bin: Current file
+      change_bin: Upload new file
 
     conduct_experiment:
       title: Scalarm - prepare new experiment
@@ -167,8 +186,10 @@ en:
 
       parametrization_tab:
         header: Specify parametrization for each input parameter below
-        entity_group_header: "Group - '%{label}'"
-        entity_header: "'%{label}'"
+        entity_group_header: "Group: %{label}"
+        default_group: "Default group"
+        entity_header: "Entity: %{label}"
+        default_entity: "Default entity"
         parameter_header: "Set parameter '%{label}' to:"
 
       parameters_values_tab:
@@ -209,12 +230,15 @@ en:
   charts:
     hide_button: Hide chart
     load_button: Load chart
+    axis_x: Axis X
+    axis_y: Axis Y
 
     histogram:
       section_header: Basic statistics about Measures of Effectiveness
       header: "Basic statistics about '%{moe}'"
       select_moe: Select MoE
       resolution: Number of bars
+      toggle_x_labels: Show X axis labels
 
     regression:
       section_header: Regression trees
@@ -226,9 +250,24 @@ en:
       header: "Scatter plot: '%{x_axis}' versus '%{y_axis}'"
       select_x: Select values for the X axis (MoE or input)
       select_y: Select values for the Y axis (MoE or input)
+      axis_scale: Scale
+      linear_scale: Linear
+      logarithmic_scale: Logarithmic
+      add_new_series: "Add new series: "
+      add_series: "Add series"
+      select_axis_to_add: "Select axis to add series: "
+
+    interaction:
+      section_header: Interaction analysis
+      header: Interaction plot
+      select_first: Select first parameter
+      select_second: Select second parameter
 
 
   security:
     sim_authorization_error: "Simulation Manager '%{sm_uuid}' is not authorized to execute experiment '%{experiment_id}'"
 
   experiment_not_found: "Experiment '%{experiment_id}' for user '%{user}' not found"
+
+  js_error_message: "An error occured: %{error}"
+  js_error_unknown: "An unknown error occured. Please contact administrators."

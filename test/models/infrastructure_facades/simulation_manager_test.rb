@@ -184,7 +184,7 @@ class SimulationManagerTest < MiniTest::Test
 
   def test_initializing_init_time_exceeded
     @sm.stubs(:state).returns(:initializing)
-    @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:resource_status).returns(:initializing)
     @sm.stubs(:init_time_exceeded?).returns(true)
 
     @sm.expects(:restart).once
@@ -312,7 +312,7 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_monitoring_onsite
-    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.stubs(:onsite_monitoring).returns(true)
     @record.expects(:store_no_credentials).never
     @sm.stubs(:state).returns(:created)
     @sm.stubs(:try_all_monitoring_cases)
@@ -321,7 +321,7 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_infrastructure_action_general
-    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.stubs(:onsite_monitoring).returns(true)
     @sm.stubs(:general_action).with('action').returns('something')
     @sm.expects(:delegate_to_infrastructure).with('action').never
 
@@ -329,12 +329,112 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   def test_infrastructure_action_delegated
-    @record.stubs(:infrastructure_side_monitoring).returns(true)
+    @record.stubs(:onsite_monitoring).returns(true)
     @sm.stubs(:general_action).with('action').returns(nil)
     @sm.stubs(:delegate_to_infrastructure).with('action').returns('something')
     @sm.expects(:delegate_to_infrastructure).with('action').never
 
     assert_equal 'something', @sm.infrastructure_action('action')
+  end
+
+  ##
+  # When SiM is INITIALIZING and resource is back to AVAILABLE
+  # there should be error reported
+  def test_available_and_initializing
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @sm.expects(:set_state).with(:error)
+
+    @sm.monitor
+  end
+
+  ##
+  # When SiM is TERIMNATING and resource is back between NOT_AVAILABLE and READY
+  # there should be error reported
+  def test_ready_and_terminating
+    [:not_available, :available, :initializing, :ready].each do |rstate|
+      @sm.stubs(:state).returns(:terminating)
+      @sm.stubs(:resource_status).returns(rstate)
+
+      @sm.expects(:set_state).with(:error)
+
+      @sm.monitor
+    end
+  end
+
+  ##
+  # When SiM is initializing (or later) and there
+  # is no resource id yet, it should be error
+  def test_initializing_without_resource_id
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:initializing)
+
+    @sm.expects(:set_state).with(:error)
+
+    @sm.monitor
+  end
+
+  def test_monitoring_created_available_wo_cmd
+    cmd_code = 'some'
+    cmd_cmd = 'some_exec'
+
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @sm.expects(:effect_pass).never
+    @sm.expects(:prepare_resource)
+
+    @sm.monitor
+  end
+
+  def test_monitoring_on_command_delegation_pass
+    cmd_code = 'some'
+    cmd_cmd = 'some_exec'
+
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:available)
+
+    @record.stubs(:cmd_to_execute_code).returns(cmd_code)
+    @record.stubs(:cmd_to_execute).returns(cmd_cmd)
+
+    @sm.expects(:effect_pass)
+    @sm.expects(:prepare_resource).never
+
+    @sm.monitor
+  end
+
+  def test_monitoring_cmd_delegation_timeout
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:cmd_delegated_on_site?).returns(true)
+    @record.stubs(:cmd_delegation_time_exceeded?).returns(true)
+
+    @sm.expects(:effect_pass).never
+    @sm.expects(:error_cmd_delegation_timed_out)
+
+    @sm.monitor
+  end
+
+  def test_created_timeout_not_on_site
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:not_available)
+    @sm.stubs(:on_site_creation_timed_out?).returns(false)
+
+    @sm.expects(:error_created_on_site_timed_out).never
+
+    @sm.monitor
+  end
+
+  def test_created_on_site_timeout
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:not_available)
+    @sm.stubs(:cmd_delegated_on_site?).returns(false)
+    @sm.stubs(:on_site_creation_timed_out?).returns(true)
+
+    @sm.expects(:error_created_on_site_timed_out)
+
+    @sm.monitor
   end
 
 end

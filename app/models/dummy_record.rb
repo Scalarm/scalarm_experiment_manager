@@ -1,14 +1,16 @@
 # Class used for various tests
 # Specific attributes:
 # - res_id
-class DummyRecord < MongoActiveRecord
-  include SimulationManagerRecord
+require 'scalarm/database/model'
 
-  def self.collection_name
-    'dummy_records'
-  end
+class DummyRecord < Scalarm::Database::Model::DummyRecord
+  include SimulationManagerRecord
 
   def resource_id
     res_id
+  end
+
+  def infrastructure_name
+    'dummy'
   end
 end
