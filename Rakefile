@@ -72,9 +72,9 @@ namespace :service do
   desc 'Downloading and installing dependencies'
   task :setup, [:debug] => [:environment] do
     puts 'Setup started'
-    get_monitoring unless check_monitoring
-    get_simulation_managers_go unless check_sim_go
-    get_simulation_manager_ruby unless check_sim_ruby
+    #get_monitoring unless check_monitoring
+    #get_simulation_managers_go unless check_sim_go
+    #get_simulation_manager_ruby unless check_sim_ruby
     install_r_libraries
 
     _validate_service
@@ -352,17 +352,17 @@ def _validate_db_router
 end
 
 def _validate_service
-  print 'Checking Go monitoring packages...'
-  raise "No Scalarm Monitoring packages found" unless check_monitoring
-  puts 'OK'
-  print 'Checking Go Simulation Manager...'
-  raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
-  puts 'OK'
-  print 'Checking Ruby Simulation Manager...'
-  raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
-  puts 'OK'
+  #print 'Checking Go monitoring packages...'
+  #raise "No Scalarm Monitoring packages found" unless check_monitoring
+  #puts 'OK'
+  #print 'Checking Go Simulation Manager...'
+  #raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
+  #puts 'OK'
+  #print 'Checking Ruby Simulation Manager...'
+  #raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
+  #puts 'OK'
 
-  %w(gsissh R zip).each do |cmd|
+  %w(R zip).each do |cmd|
     check_for_command(cmd)
   end
 
