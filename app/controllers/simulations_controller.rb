@@ -288,7 +288,7 @@ class SimulationsController < ApplicationController
     url = LogBankUtils::simulation_run_binaries_url(storage_manager_url,
                                              @experiment.id, @simulation_run.index, @current_user)
 
-    response = RestClient.get(url)
+    response = RestClient::Request.execute(url: url, method: :get, verify_ssl: false)
     send_data response.body, filename: "simulation_results.tar.gz", disposition: "attachment", :content_type => 'application/x-compressed'
   end
 
@@ -297,7 +297,7 @@ class SimulationsController < ApplicationController
     url = LogBankUtils::simulation_run_stdout_url(storage_manager_url,
                                                                    @experiment.id, @simulation_run.index, @current_user)
 
-    response = RestClient.get(url)
+    response = RestClient::Request.execute(url: url, method: :get, verify_ssl: false)
     send_data response.body, filename: "simulation_stdout.txt", disposition: "attachment", :content_type => 'text/plain'
   end
 
@@ -337,9 +337,10 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get LogBankUtils::simulation_binaries_size_url(@storage_manager_url,
+        size_response = RestClient::Request.execute(url: LogBankUtils::simulation_binaries_size_url(@storage_manager_url,
                                                                                   @experiment.id,
-                                                                                  @simulation_run.index)
+                                                                                  @simulation_run.index),
+                                                    method: :get, verify_ssl: false)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
@@ -359,9 +360,11 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get LogBankUtils::simulation_run_stdout_size_url(@storage_manager_url,
+        size_response = RestClient::Request.execute(url: LogBankUtils::simulation_run_stdout_size_url(@storage_manager_url,
                                                                                     @experiment.id,
-                                                                                    @simulation_run.index)
+                                                                                    @simulation_run.index),
+                                                    method: get, verify_ssl: false)
+
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']

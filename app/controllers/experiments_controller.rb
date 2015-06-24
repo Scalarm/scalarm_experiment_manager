@@ -968,7 +968,7 @@ class ExperimentsController < ApplicationController
     url = LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, current_user)
 
-    response = RestClient.get(url)
+    response = RestClient::Request.execute(url: url, method: :get, verify_ssl: false)
     send_data response.body, filename: "experiment_results.zip", disposition: "attachment", :content_type => 'application/zip'
   end
 
