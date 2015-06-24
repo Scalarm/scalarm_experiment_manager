@@ -77,7 +77,7 @@ class GridCredentials < EncryptedMongoActiveRecord
     end
 
     if password
-      Net::SSH.start(host, login, password: password)
+      Net::SSH.start(host, login, password: password, auth_methods: %w(keyboard-interactive password))
     else
       raise (gsi_error or InfrastructureErrors::NoCredentialsError)
     end
@@ -87,25 +87,6 @@ class GridCredentials < EncryptedMongoActiveRecord
     get_attribute('host') or 'ui.cyfronet.pl'
   end
 
-  def clone_proxy(remote_path='.scalarm_proxy')
-    ssh_session do |ssh|
-      # TODO: checking if proxy file exists?
-      ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
-    end
-  end
-
-  # TODO: NOTE: without voms extension!
-  def generate_proxy(key_passphrase)
-    output = ''
-    ssh_session do |ssh|
-      Timeout::timeout 30 do
-        output = ssh.exec! "echo #{key_passphrase} | grid-proxy-init -rfc -hours 24"
-      end
-    end
-    Rails.logger.debug("grid-proxy-init for #{login} output: #{output}")
-    output
-  end
-
   # -----------
   private
 
@@ -113,7 +94,7 @@ class GridCredentials < EncryptedMongoActiveRecord
     if secret_proxy
       Gsi::SCP.start(host, login, secret_proxy)
     elsif password
-      Net::SCP.start(host, login, password: password)
+      Net::SCP.start(host, login, password: password, auth_methods: %w(keyboard-interactive password))
     else
       raise InfrastructureErrors::NoCredentialsError
     end

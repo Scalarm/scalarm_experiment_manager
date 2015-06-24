@@ -54,7 +54,7 @@ ruby/2.1.1' load complete. 9871
     DummyShellBasedInfrastructure.any_instance.stubs(:logger).returns(stub_everything)
 
     ssh = stub_everything 'ssh' do
-      expects(:exec!).with(command).returns(output)
+      expects(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(command)).returns(output)
     end
 
     infrastructure = DummyShellBasedInfrastructure.new
@@ -62,6 +62,21 @@ ruby/2.1.1' load complete. 9871
     launch_output = infrastructure.send_and_launch_sm(record, ssh)
 
     assert_equal pid, launch_output
+  end
+
+  # check if sim start cmd for :go is not empty and does not raise anything
+  def test_start_simulation_manager_cmd_pass
+    record = mock 'record' do
+      stubs(:sm_uuid).returns('sm_uuid')
+      stubs(:log_file_name).returns('some.log')
+    end
+
+    configuration = mock 'configuration' do
+      stubs(:simulation_manager_version).returns(:go)
+    end
+    Rails.stubs(:configuration).returns(configuration)
+
+    refute_empty ShellBasedInfrastructure.start_simulation_manager_cmd(record)
   end
 
 end

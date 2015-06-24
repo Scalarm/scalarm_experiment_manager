@@ -3,6 +3,7 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PrivateMachineFacade < InfrastructureFacade
+  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
 
@@ -45,7 +46,7 @@ class PrivateMachineFacade < InfrastructureFacade
     ppn = shared_ssh_session(machine_creds).exec!("cat /proc/cpuinfo | grep MHz | wc -l").strip
     ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
-    (1..instances_count).map do
+    records = (1..instances_count).map do
       record = PrivateMachineRecord.new(
           user_id: user_id,
           experiment_id: experiment_id,
@@ -64,6 +65,75 @@ class PrivateMachineFacade < InfrastructureFacade
 
       record
     end
+
+    if params[:onsite_monitoring]
+      sm_uuid = SecureRandom.uuid
+      self.class.handle_monitoring_send_errors(records) do
+        self.class.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id, short_name, params)
+      end
+    end
+
+    records
+  end
+
+  def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, infrastructure_name, params={})
+    # TODO: implement multiple architectures support
+    arch = 'linux_386'
+
+    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id,
+                                                   [{name: infrastructure_name, credentials_id: credentials.id.to_s}])
+
+    credentials.ssh_session do |ssh|
+      # TODO: implement ssh.scp method for gsissh and use here
+      credentials.scp_session do |scp|
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
+
+        PrivateMachineFacade.remove_remote_monitoring_files(ssh)
+        PrivateMachineFacade.upload_monitoring_files(scp, sm_uuid, arch)
+        PrivateMachineFacade.remove_local_monitoring_config(sm_uuid)
+
+        cmd = PrivateMachineFacade.start_monitoring_cmd
+        Rails.logger.debug("Executing scalarm_monitoring for user #{user_id}: #{cmd}\n#{ssh.exec!(cmd)}")
+      end
+    end
+  end
+
+  def self.remove_remote_monitoring_files(ssh)
+    [
+        RemoteHomePath::monitoring_config,
+        RemoteHomePath::monitoring_package,
+        RemoteHomePath::monitoring_binary,
+        RemoteHomePath::remote_monitoring_certificate
+    ].each do |path|
+      ssh.exec! rm(path, true)
+    end
+  end
+
+  # TODO: can be moved to base class or util class
+  def self.upload_monitoring_files(scp, sm_uuid, arch)
+    local_config = LocalAbsolutePath::tmp_monitoring_config(sm_uuid)
+    local_package = LocalAbsolutePath::monitoring_package(arch)
+    scp.upload_multiple! [local_config, local_package], RemoteDir::scalarm_root
+
+    if LocalAbsolutePath::certificate
+      scp.upload! LocalAbsolutePath::certificate, RemoteHomePath::remote_monitoring_certificate
+    end
+  end
+
+  # TODO: can be moved to base class or util class
+  def self.remove_local_monitoring_config(sm_uuid)
+    FileUtils.rm_rf(LocalAbsoluteDir::tmp_monitoring_package(sm_uuid))
+  end
+
+  def self.start_monitoring_cmd
+    chain(
+        cd(RemoteDir::scalarm_root),
+        "unxz -f #{ScalarmFileName::monitoring_package}",
+        "chmod a+x #{ScalarmFileName::monitoring_binary}",
+        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                             "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
+`.log")}"
+    )
   end
 
   def add_credentials(user, params, session)
@@ -99,6 +169,9 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def _get_sm_records(query, params={})
+    if params and params.include? 'credentials_id'
+      query.merge!({credentials_id: BSON::ObjectId(params['credentials_id'].to_s)})
+    end
     PrivateMachineRecord.find_all_by_query(query)
   end
 
@@ -112,6 +185,8 @@ class PrivateMachineFacade < InfrastructureFacade
     if record.onsite_monitoring
       record.cmd_to_execute_code = "stop"
       record.cmd_to_execute = "kill -9 #{record.pid}"
+      sm_record.cmd_delegated_at = Time.now
+      record.save
     else
       shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
     end
@@ -147,6 +222,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
       sm_record.cmd_to_execute_code = "get_log"
       sm_record.cmd_to_execute = "tail -80 #{sm_record.log_path}"
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else
@@ -168,44 +244,46 @@ class PrivateMachineFacade < InfrastructureFacade
 
       sm_record.cmd_to_execute_code = "prepare_resource"
       sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record).to_s
+      sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else
       logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
 
-      InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, sm_record.user_id,
-                                                                        sm_record.experiment_id, sm_record.start_at)
+      InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, sm_record.user_id,
+                                                                        sm_record.experiment_id, sm_record.start_at) do
 
-      error_counter = 0
-      ssh = nil
+        error_counter = 0
+        ssh = nil
 
-      # trying to connect via SSH multiple times
-      while true
-        begin
-          ssh = shared_ssh_session(sm_record.credentials)
-          break
-        rescue StandardError => e
-          logger.warn "Exception #{e} occured while communication with "\
-  "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
-          error_counter += 1
-          if error_counter >= self.class.sim_installation_retry_count
-            sm_record.store_error('install_failed', e.to_s)
-            raise
+        # trying to connect via SSH multiple times
+        while true
+          begin
+            ssh = shared_ssh_session(sm_record.credentials)
+            break
+          rescue StandardError => e
+            logger.warn "Exception #{e} occured while communication with "\
+    "#{sm_record.public_host}:#{sm_record.public_ssh_port} - #{error_counter} tries"
+            error_counter += 1
+            if error_counter >= self.class.sim_installation_retry_count
+              sm_record.store_error('install_failed', e.to_s)
+              raise
+            end
           end
+
+          sleep(self.class.sim_installation_retry_delay)
         end
 
-        sleep(self.class.sim_installation_retry_delay)
-      end
-
-      if log_exists?(sm_record, ssh)
-        logger.warn("Log file for #{sm_record.id} already exists - not sending SiM")
-      else
-        pid = send_and_launch_sm(sm_record, ssh)
-        if pid.blank?
-          logger.error("PID is blank after SiM (#{sm_record.id}) send and launch - it may be caused by not-supported shell")
-          sm_record.store_error('install_failed', 'Cannot get PID')
+        if log_exists?(sm_record, ssh)
+          logger.warn("Log file for #{sm_record.id} already exists - not sending SiM")
         else
-          pid
+          pid = send_and_launch_sm(sm_record, ssh)
+          if pid.blank?
+            logger.error("PID is blank after SiM (#{sm_record.id}) send and launch - it may be caused by not-supported shell")
+            sm_record.store_error('install_failed', 'Cannot get PID')
+          else
+            return pid
+          end
         end
       end
     end
@@ -215,7 +293,7 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    true
+    PrivateMachineCredentials.where(user_id: user_id).count > 0
   end
 
   # -- Monitoring utils --
@@ -227,23 +305,36 @@ class PrivateMachineFacade < InfrastructureFacade
   # --
 
   def simulation_manager_code(sm_record)
-    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_record.sm_uuid}"
+    sm_uuid = sm_record.sm_uuid
 
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_record.sm_uuid, nil, sm_record.experiment_id, sm_record.start_at)
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
 
-    code_dir = "scalarm_simulation_manager_code_#{sm_record.sm_uuid}"
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at) do
+      code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
 
-    Dir.chdir('/tmp')
-    FileUtils.remove_dir(code_dir, true)
-    FileUtils.mkdir(code_dir)
-    FileUtils.mv("scalarm_simulation_manager_#{sm_record.sm_uuid}.zip", code_dir)
+      FileUtils.remove_dir(code_dir, true)
+      FileUtils.mkdir(code_dir)
+      FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
-    #scheduler.prepare_job_files(sm_record.sm_uuid, {dest_dir: code_dir}.merge(sm_record.to_h))
-    %x[zip /tmp/#{code_dir}.zip #{code_dir}/*]
+      Dir.chdir(LocalAbsoluteDir::tmp) do
+        %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
+      end
+      FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
 
-    Dir.chdir(Rails.root)
+      zip_path = LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)
 
-    File.join('/', 'tmp', code_dir + ".zip")
+      if block_given?
+        begin
+          yield zip_path
+        ensure
+          FileUtils.rm_rf(zip_path)
+        end
+      else
+        return zip_path
+      end
+      FileUtils.remove_dir(code_dir, true)
+    end
+
   end
 
 end

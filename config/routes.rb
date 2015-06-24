@@ -26,6 +26,7 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'login/login_openid_plgrid' => 'user_controller#login_openid_plgrid'
   post 'login/openid_callback_plgrid' => 'user_controller#openid_callback_plgrid'
 
+  get 'simulation_scenarios' => 'simulations#index'
   get 'simulations' => 'simulations#index'
   get 'simulations/index'
   get 'simulations/registration'
@@ -50,6 +51,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :next_simulation
       get   :parameter_values
       get   :file_with_configurations
+      get   :configurations
       get   :results_binaries
 
       post  :stop
@@ -63,6 +65,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :histogram
       post :scatter_plot
       post :regression_tree
+      get :scatter_plot_series
 
       get :running_simulations_table
       get :completed_simulations_table

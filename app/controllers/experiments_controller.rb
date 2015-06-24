@@ -4,6 +4,7 @@ require 'csv'
 
 
 class ExperimentsController < ApplicationController
+  include SSHAccessedInfrastructure
   include ActionController::Live
 
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
@@ -70,6 +71,7 @@ class ExperimentsController < ApplicationController
 
   # stops the currently running DF experiment (if any)
   def stop
+    raise SecurityError.new(t('experiments.stop.failure')) unless @experiment.user_id == @current_user.id
     @experiment.is_running = false
     @experiment.end_at = Time.now
 
@@ -85,8 +87,53 @@ class ExperimentsController < ApplicationController
     end
   end
 
+=begin
+  @apiDefine ConfigurationsParams
+
+  @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
+  @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
+  @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
+=end
+
+=begin
+  @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
+  @apiName GetFileWithConfigurations
+  @apiGroup Experiments
+
+  @apiUse ConfigurationsParams
+=end
   def file_with_configurations
-    send_data(@experiment.create_result_csv, type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+    send_data(_configurations_csv,
+              type: 'text/plain', filename: "configurations_#{@experiment.id}.txt")
+  end
+
+=begin
+  @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
+  @apiName GetConfigurations
+  @apiGroup Experiments
+
+  @apiUse ConfigurationsParams
+=end
+  def configurations
+    respond_to do |format|
+      format.html { render text: _configurations_csv.gsub("\n", '<br/>') }
+      format.json { render json: {status: 'ok', data: _configurations_csv} }
+    end
+  end
+
+  # NOT a controller method, only helper
+  def _configurations_csv
+    validate(
+        with_index: [:optional, :security_default],
+        with_params: [:optional, :security_default],
+        with_moes: [:optional, :security_default]
+    )
+
+    w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
+    w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
+    w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
+
+    @experiment.create_result_csv(w_index, w_params, w_moes)
   end
 
   def create
@@ -99,7 +146,21 @@ class ExperimentsController < ApplicationController
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
-      experiment = prepare_new_experiment
+      parse = lambda do |id, parse_method|
+        if params[id].blank?
+          params.delete id
+        else
+          params[id] = parse_method.call(params[id])
+        end
+      end
+
+      parse.call :replication_level, lambda {|x| x.to_i}
+      parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
+      parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
+
+      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
+                                   :description, :parameter_constraints)
+      experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
@@ -468,6 +529,7 @@ class ExperimentsController < ApplicationController
 
   def destroy
     unless @experiment.nil?
+      raise SecurityError.new(t('experiments.destroy.failure')) unless @experiment.user_id == @current_user.id
       @experiment.destroy
       flash[:notice] = 'Your experiment has been destroyed.'
     else
@@ -498,9 +560,8 @@ class ExperimentsController < ApplicationController
         end
       end
 
-      Rails.logger.debug("Is simulation nil? #{simulation_to_send}")
       if simulation_to_send
-        Rails.logger.info("Next simulation run is : #{simulation_to_send.index}")
+        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
         # TODO adding caching capability to the experiment object
         #simulation_to_send.put_in_cache
         @experiment.progress_bar_update(simulation_to_send.index, 'sent')
@@ -509,9 +570,10 @@ class ExperimentsController < ApplicationController
           index: simulation_to_send.index, time: simulation_to_send.started_at, results: 'N/A').save
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                   'execution_constraints' => { 'time_contraint_in_sec' => @experiment.time_constraint_in_sec },
+                   'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
                    'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
       else
+        Rails.logger.debug('next_simulation: Simulation to send is nil!')
         simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
       end
 
@@ -570,14 +632,29 @@ class ExperimentsController < ApplicationController
   def scatter_plot
     validate(
         x_axis: [:optional, :security_default],
-        y_axis: [:optional, :security_default]
+        y_axis: [:optional, :security_default],
+        container_id: [:optional, :security_default]
     )
 
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis], params[:y_axis])
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
+      @uuid = SecureRandom.uuid
+      @container_id = params[:container_id] || "bivariate_chart_#{@uuid}"
+    end
+  end
+
+  def scatter_plot_series
+    if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
+      render inline: ""
+    else
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
+      @chart.prepare_chart_data
+      render json: @chart.chart_data
     end
   end
 
@@ -607,14 +684,22 @@ class ExperimentsController < ApplicationController
     @param_type = {}
     @param_type['type'] = @parametrization_type
     @param_values = @experiment.generated_parameter_values_for(@parameter_uid)
-  end
+    end
 
+=begin
+@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+@apiName GetSimulationManager
+@apiGroup Experiments
+=end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
-    # prepare locally code of a simulation manager to upload with a configuration file
-    InfrastructureFacade.prepare_configuration_for_simulation_manager(sm_uuid, @current_user.id, @experiment.id.to_s)
-
-    send_file "/tmp/scalarm_simulation_manager_#{sm_uuid}.zip", type: 'application/zip'
+    # prepare locally code of a simulation manager to download with a configuration file
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, @current_user.id, @experiment.id.to_s) do |path|
+      contents = File.open(path) {|f| f.read}
+      send_data contents,
+                filename: File.basename(path),
+                type: 'application/zip'
+    end
   end
 
   def share
@@ -830,29 +915,6 @@ class ExperimentsController < ApplicationController
       experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
     end
-  end
-
-  def prepare_new_experiment
-
-    replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
-    time_constraint = params['execution_time_constraint'].blank? ? 3600 : params['execution_time_constraint'].to_i * 60
-    parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
-
-    # TODO: use ExperimentsFactory
-    # create the new type of experiment object
-    experiment = Experiment.new({'simulation_id' => @simulation.id,
-                                 'is_running' => true,
-                                 'replication_level' => replication_level,
-                                 'time_constraint_in_sec' => time_constraint,
-                                 'start_at' => Time.now,
-                                 'user_id' => @current_user.id,
-                                 'scheduling_policy' => 'monte_carlo'
-                                })
-    experiment.name = params['experiment_name'].blank? ? @simulation.name : params['experiment_name']
-    experiment.description = params['experiment_description'].blank? ? @simulation.description : params['experiment_description']
-    experiment.parameters_constraints = parameters_constraints
-
-    experiment
   end
 
 end

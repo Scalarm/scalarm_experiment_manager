@@ -1,6 +1,7 @@
-require 'minitest/autorun'
 require 'test_helper'
-require 'mocha'
+require 'minitest/autorun'
+require 'mocha/mini_test'
+
 
 require 'infrastructure_facades/plgrid/grid_schedulers/qsub'
 
@@ -25,7 +26,7 @@ argument-check: Setting grant ID to default grant ID (plgjliput2014b).
     out
 
     @qsub.stubs(:submit_job_cmd).with(@record).returns(cmd)
-    @ssh.stubs(:exec!).with(cmd).returns(output)
+    @ssh.stubs(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(cmd)).returns(output)
 
     parsed_id = @qsub.submit_job(@ssh, @record)
 
@@ -75,11 +76,27 @@ qsub: submit filter returned an error code, aborting job submission.
     out
 
     @qsub.stubs(:submit_job_cmd).with(@record).returns(cmd)
-    @ssh.stubs(:exec!).with(cmd).returns(output)
+    @ssh.stubs(:exec!).with(SSHAccessedInfrastructure::Command::cd_to_simulation_managers(cmd)).returns(output)
 
     assert_raises JobSubmissionFailed, output do
       @qsub.submit_job(@ssh, @record)
     end
+  end
+
+  ##
+  # Queue name should be used if provided in record
+  def test_prepare_job_descriptor_queue
+    sm_uuid = 'sm_uuid'
+    time_limit = 1000
+
+    PlGridJob.expects(:queue_for_minutes).never
+
+    desc = @qsub.prepare_job_descriptor('sm_uuid',
+                                 'queue_name' => 'some_queue',
+                                 'time_limit' => time_limit
+    )
+
+    assert_match /#PBS -q some_queue\s*\n/, desc
   end
 
 end

@@ -103,8 +103,10 @@ en:
         error_log: "Error details"
         no_ssh_address: "not available"
         errors:
+          unknown: 'Simulation Manager failed for unknown reason - read error details if available'
           install_failed: 'Simulation Manager installation failed'
           monitoring: 'Resource monitoring cannot be completed'
+          onsite_monitoring: 'Could not initialize on-site workers monitoring'
           resource_action: 'Computational resource cannot complete operation'
           initialization_time_exceeded: "Simulation Manager initialization time exceeded"
           terminated: "Simulation Manager terminated"
@@ -114,6 +116,7 @@ en:
           validation: "Database record for Simulation Manager is invalid"
           credentials: "Credentials for host infrastructure are invalid or missing"
           resource_error: "There was a problem reading resource state, please check it manually"
+          on_site_not_responding: "On-site monitoring communication timed out"
       sm_record_no_view: "Sorry, details are not available"
       table_label: "Manage submitted credentials"
       machine_submission_label: "Add credentials"
@@ -124,6 +127,7 @@ en:
       qsub:
         credentials_needed: "No PL-Grid credentials were configured. We need them to submit jobs on your behalf. Provided credentials will not be stored in Scalarm."
     refresh_button: "Refresh tree"
+    stop_all_button: "Stop all"
   infrastructures_controller:
     tree:
       clouds: "Clouds"
@@ -183,6 +187,7 @@ en:
       stop_header: "Are you sure you want to stop this Simulation Manager and its resource?"
       restart_header: "Are you sure you want to restart this Simulation Manager?"
       destroy_record_header: "Are you sure you want to destroy this Simulation Manager record? Note, that you should check manually if its resource will be terminated."
+      stop_all_header: "Are you sure you want to stop all Simulation Managers?"
     resource_id: "Resource"
     state_tooltip: "State of Simulation Manager application"
     error_details_dialog:

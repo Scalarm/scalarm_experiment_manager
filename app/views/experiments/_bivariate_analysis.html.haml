@@ -1,28 +1,25 @@
 %section.panel.radius.analysis-chart#bivariate_charts_form
   %h3.subheader= t('charts.scatter.section_header')
 
-  = form_tag '', class: '' do
-    .row
-      .small-5.columns
-        = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
-      .small-7.columns
-        = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
-    .row
-      .small-5.columns
-        = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
-      .small-7.columns
-        = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
-    .row
-      %ul.inline-list
-        %li= submit_tag t('charts.load_button'), class: 'button radius'
-        %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
+  .row
+    .small-5.columns
+      = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
+    .small-7.columns
+      = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
+  .row
+    .small-5.columns
+      = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
+    .small-7.columns
+      = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
+  .row
+    %ul.inline-list
+      %li= submit_tag t('charts.load_button'), class: 'button radius'
+      %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
 
 #bivariate_charts
 
 - content_for :javascript do
   :javascript
-    var bivariate_chart_tab = new Array();
-
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if(mutation.addedNodes.length > 1) {
@@ -42,9 +39,9 @@
     observer.observe(target, {childList: true});
 
     // 'Load chart' button handler
-    $('#bivariate_charts_form input[type=submit]').bind('click', function() {
-      var x_axis = $('#bivariate_charts_form select[name=\'x_axis\'] option:selected').val();
-      var y_axis = $('#bivariate_charts_form select[name=\'y_axis\'] option:selected').val();
+    $('#bivariate_charts_form').find('input[type=submit]').bind('click', function() {
+      var x_axis = $('#bivariate_charts_form').find('select[name=\'x_axis\'] option:selected').val();
+      var y_axis = $('#bivariate_charts_form').find('select[name=\'y_axis\'] option:selected').val();
 
       if (x_axis==="nil" || y_axis==="nil") {
         toastr.error("#{t('experiments.errors.incorrect_parameter')}");
@@ -56,5 +53,4 @@
           function(data) { $('#busy_scatter_plot').hide(); }
         );
       }
-      return false;
     });

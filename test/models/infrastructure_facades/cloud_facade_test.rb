@@ -27,7 +27,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:init_time_exceeded?).returns(false)
     end
 
-    InfrastructureFacade.expects(:prepare_configuration_for_simulation_manager).once
+    InfrastructureFacade.stubs(:prepare_simulation_manager_package).yields
 
     cloud_client = mock 'cloud_client' do
       stubs(:vm_instance).returns(stub_everything)
@@ -35,10 +35,12 @@ class CloudFacadeTest < MiniTest::Test
 
     facade = CloudFacade.new(cloud_client)
 
+    ssh = stub_everything 'ssh'
+    facade.stubs(:shared_ssh_session).with(record).returns(ssh)
     facade.stubs(:logger).returns(stub_everything)
     facade.expects(:cloud_client_instance).returns(cloud_client).once
-    facade.expects(:log_exists?).returns(false).once
-    facade.expects(:send_and_launch_sm).returns(10).once
+    facade.expects(:log_exists?).with(record, ssh).returns(false).once
+    facade.expects(:send_and_launch_sm).with(record, ssh).returns(true).once
     facade.expects(:simulation_manager_stop).never
 
     # EXECUTE

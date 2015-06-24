@@ -15,6 +15,10 @@ class PrivateMachineRecord < MongoActiveRecord
     'private_machine_records'
   end
 
+  def infrastructure_name
+    'private_machine'
+  end
+
   def self.ids_auto_convert
     false
   end
@@ -36,7 +40,7 @@ class PrivateMachineRecord < MongoActiveRecord
   end
 
   def log_path
-    "/tmp/log_sm_#{sm_uuid}"
+    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
   end
 
   def monitoring_group

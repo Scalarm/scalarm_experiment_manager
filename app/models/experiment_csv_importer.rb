@@ -34,9 +34,9 @@ class ExperimentCsvImporter
 
           begin
             parsed_cell = JSON.parse(cell)
-            row_values << parsed_cell.map(&:to_f)
-          rescue Exception => e
-            row_values << [ cell.to_f ]
+            row_values << parsed_cell.map {|v| self.class.convert_type(v)}
+          rescue JSON::ParserError
+            row_values << [ self.class.convert_type(cell) ]
           end
         end
 
@@ -51,6 +51,22 @@ class ExperimentCsvImporter
     end
 
     @parameter_values.uniq!
+  end
+
+  # TODO move to utils
+  def self.convert_type(value)
+    cval = nil
+    begin
+      cval = Integer(value)
+    rescue ArgumentError
+      begin
+        cval = Float(value)
+      rescue ArgumentError
+        cval = value.to_s
+      end
+    end
+
+    cval
   end
 
 end

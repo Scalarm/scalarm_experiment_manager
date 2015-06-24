@@ -33,6 +33,10 @@ class CloudVmRecord < MongoActiveRecord
     'vm_records'
   end
 
+  def infrastructure_name
+    cloud_name
+  end
+
   def cloud_secrets
     @cloud_secrets ||= CloudSecrets.find_by_query(cloud_name: cloud_name.to_s, user_id: user_id.to_s)
   end
@@ -62,7 +66,7 @@ class CloudVmRecord < MongoActiveRecord
   end
 
   def log_path
-    "/tmp/log_sm_#{sm_uuid}"
+    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
   end
 
   def monitoring_group

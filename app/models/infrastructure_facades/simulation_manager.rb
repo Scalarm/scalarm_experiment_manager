@@ -63,6 +63,49 @@ class SimulationManager
 
   def generate_monitoring_cases
     {
+        ## handle command delegation cases
+        command_delegation_timeout: {
+            source_states: SimulationManagerRecord::POSSIBLE_STATES,
+            target_state: :error,
+            condition: :on_site_cmd_timed_out?,
+            effect: :error_cmd_delegation_timed_out,
+            message: "Waiting for command execution in onsite monitoring timed out: #{@record.cmd_to_execute_code} -> #{@record.cmd_to_execute}"
+        },
+        created_on_site_timeout: {
+            source_states: [:created],
+            target_state: :error,
+            condition: :on_site_creation_timed_out?,
+            effect: :error_created_on_site_timed_out,
+            message: 'Timeout on SiM initialization after creation with on-site monitoring'
+        },
+        waiting_for_command_delegation: {
+            source_states: SimulationManagerRecord::POSSIBLE_STATES,
+            condition: :cmd_delegated_on_site?,
+            effect: :effect_pass,
+            message: "Waiting for command to execute in WorkersManager: #{@record.cmd_to_execute_code}"
+        },
+
+        ## handling invalid states combinations
+        resource_invalid_state_on_initializing: {
+            source_states: [:initializing],
+            target_state: :error,
+            resource_status: [:not_available, :available],
+            message: 'Resource status came back to too early state when SiM state is initializing'
+        },
+        resource_invalid_state_on_terminating: {
+            source_states: [:terminating],
+            target_state: :error,
+            resource_status: [:not_available, :available, :initializing, :ready],
+            message: 'Resource status came back to too early state when SiM state is terminating'
+        },
+        resource_reports_work_without_resource_id: {
+            source_states: [:created],
+            target_state: :error,
+            resource_status: [:initializing, :ready, :running_sm, :released],
+            message: 'Resource status is later than available, but state is created'
+        },
+
+        ## general cases
         error_resource_status: {
             source_states: SimulationManagerRecord::POSSIBLE_STATES - [:error],
             target_state: :error,
@@ -142,11 +185,25 @@ class SimulationManager
             message: 'Resource has been terminated successfully - removing record'
         }
     }
-
   end
 
-  def should_not_be_already_terminated?
-    @record.experiment.has_simulations_to_run? and not should_destroy?
+  ##
+  # True if it is monitored by on-site monitoring
+  def cmd_delegated_on_site?
+    !!@record.onsite_monitoring and
+        not @record.cmd_to_execute_code.blank? or not @record.cmd_to_execute.blank?
+  end
+
+  def on_site_creation_timed_out?
+    !!@record.onsite_monitoring and @record.on_site_creation_time_exceeded?
+  end
+
+  def on_site_cmd_timed_out?
+    cmd_delegated_on_site? and @record.cmd_delegation_time_exceeded?
+  end
+
+  def effect_pass
+    # just passes - for testing purposes
   end
 
   def store_terminated_error
@@ -164,9 +221,17 @@ class SimulationManager
     record.store_error('resource_error')
   end
 
+  def error_created_on_site_timed_out
+    record.store_error('on_site_not_responding', 'Simulation Manager start timeout')
+  end
+
+  def error_cmd_delegation_timed_out
+    record.store_error('on_site_not_responding', "Execution timed out: #{@record.cmd_to_execute}")
+  end
+
   def destroy_record
     user = ScalarmUser.where(user_id: record.user_id).first
-
+    record.clean_up_database!
     record.destroy
 
     unless user.nil?
@@ -215,7 +280,7 @@ class SimulationManager
           change_state_for(monitoring_case)
           break # at most one action from all actions should be taken
         end
-      rescue Exception => e
+      rescue => e
         logger.error "Exception on monitoring case #{case_name.to_s}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         begin
           if record.should_destroy?
@@ -223,7 +288,7 @@ class SimulationManager
             record.store_error('monitoring', "Exception on monitoring (#{case_name.to_s}): #{e.to_s}\n#{record.error_log}")
             stop
           end
-        rescue Exception => de
+        rescue => de
           logger.error "Simulation manager cannot be terminated due to error: #{de.to_s}\n#{de.backtrace.join("\n")}"
           logger.error 'Please check if corresponding resource is terminated!'
         end
@@ -284,10 +349,8 @@ class SimulationManager
         logger.warn "Simulation Manager action #{action_name} executed with invalid credentials - it will have no effect"
         ERROR_DELEGATES[action_name.to_sym]
       else
-        result = (general_action(action_name) or delegate_to_infrastructure(action_name))
-        # NOTICE: terminating state is set twice if stop was invoked from monitoring case
-        set_state(:terminating) if action_name == 'stop'
-        result
+        general_result = general_action(action_name)
+        general_result.nil? ? delegate_to_infrastructure(action_name) : general_result
       end
     rescue InfrastructureErrors::NoCredentialsError => e
       logger.warn "No credentials exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -296,13 +359,22 @@ class SimulationManager
     end
   end
 
-  # NOTE: all actions invoked here must be != false/nil
+  # Executes additional action before delegate_to_infrastructure for action_name
+  # return nil to continue and delegate action to infrastructure
+  # or return other value to stop execution
   def general_action(action_name)
-    if action_name == 'resource_status' and record.onsite_monitoring
-      stat = record.resource_status
-      stat.nil? ? :not_available : stat
-    else
-      nil
+    case action_name
+      when 'resource_status' && record.onsite_monitoring
+        record.resource_status || :not_available
+      when 'stop'
+        set_state(:terminating)
+        @record.clean_up_database!
+        nil
+      when 'restart'
+        @record.clean_up_database!
+        nil
+      else
+        nil
     end
   end
 

@@ -1,11 +1,13 @@
 require 'minitest/autorun'
 require 'test_helper'
 require 'mocha/test_unit'
+require 'db_helper'
 
 require_dependency 'plgrid/pl_grid_facade_factory'
 require_dependency 'clouds/cloud_facade_factory'
 
 class RemovingUnusedX509ProxyTest < MiniTest::Test
+  include DBHelper
 
   def setup
     MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')

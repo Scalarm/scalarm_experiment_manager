@@ -44,8 +44,8 @@ module Gsi
       end
     end
 
-    def self.start(host, user, proxy_cert_path, options={}, &block)
-      session = Gsi::SCP::Session.new(host, user, proxy_cert_path)
+    def self.start(host, user, proxy, options={}, &block)
+      session = Gsi::SCP::Session.new(host, user, proxy)
       if block_given?
         begin
           yield session

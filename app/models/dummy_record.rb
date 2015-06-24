@@ -11,4 +11,8 @@ class DummyRecord < MongoActiveRecord
   def resource_id
     res_id
   end
+
+  def infrastructure_name
+    'dummy'
+  end
 end

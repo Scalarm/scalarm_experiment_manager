@@ -10,6 +10,7 @@ class MongoActiveRecord
 
   @conditions = {}
   @options = {}
+  @@client = nil
 
   def self.ids_auto_convert
     true
@@ -113,6 +114,11 @@ class MongoActiveRecord
     @attributes.delete('_id')
   end
 
+  def reload
+    @attributes = self.class.find_by_query(id: self.id).attributes
+    self
+  end
+
   def to_s
     if self.nil?
       'Nil'
@@ -135,6 +141,10 @@ class MongoActiveRecord
   end
 
   #### Class Methods ####
+
+  def self.connected?
+    !@@client.nil?
+  end
 
   def self.collection_name
     raise 'This is an abstract method, which must be implemented by all subclasses'
@@ -186,41 +196,12 @@ class MongoActiveRecord
 
   def self.find_by(parameter, value)
     value = value.first if value.is_a? Enumerable
-
-    if parameter == 'id'
-      begin
-        value = BSON::ObjectId(value.to_s)
-        parameter = '_id'
-      rescue BSON::InvalidObjectId
-        return nil
-      end
-    end
-
-    attributes = self.collection.find_one({ parameter => value })
-
-    if attributes.nil?
-      nil
-    else
-      self.new(attributes)
-    end
+    self.find_by_query(parameter => value)
   end
 
   def self.find_all_by(parameter, value)
     value = value.first if value.is_a? Enumerable
-
-    if parameter == 'id'
-      begin
-        value = BSON::ObjectId(value.to_s)
-        parameter = '_id'
-      rescue BSON::InvalidObjectId
-        return nil
-      end
-    end
-
-    self.collection.find({parameter => value}).map do |attributes|
-      self.new(attributes)
-    end
-
+    self.find_all_by_query(parameter => value)
   end
 
   def self.get_database(db_name)
@@ -244,7 +225,20 @@ class MongoActiveRecord
       if key == :_id
         value = BSON::ObjectId(value.to_s)
       elsif key.to_s.ends_with?('_id') and self.ids_auto_convert
-        value = Utils::to_bson_if_string(value)
+        # some ugly hack - if ID can be converted to BSON (or is BSON) use both String and BSON in query
+        # otherwise, use only stringified value
+        bson_value = begin
+          Utils::to_bson_if_string(value)
+        rescue BSON::InvalidObjectId
+          nil
+        end
+
+        str_value = value.to_s
+        if bson_value
+          value = {'$in' => [str_value, bson_value]}
+        else
+          value = str_value
+        end
       end
 
       mongo_class.conditions[key] = value

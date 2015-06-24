@@ -41,10 +41,6 @@
               %i.fa.fa-barcode
               = t('.scheduling_button')
 
-          %ul#download-dropdown.f-dropdown(data-dropdown-content)
-            %li= link_to t('.binaries_results_button'), results_binaries_experiment_path(@experiment.id)
-            %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
-
     - else
       .small-12.columns
         %h4.subheader(style="margin-bottom: 20px;")
@@ -64,6 +60,10 @@
             %a{href: '#', 'data-dropdown' => 'download-dropdown', class: button_classes}
               %i.fa.fa-cloud-download
               = t('.download_results_button')
+
+    %ul#download-dropdown.f-dropdown(data-dropdown-content)
+      %li= link_to t('.binaries_results_button'), results_binaries_experiment_path(@experiment.id)
+      %li= link_to t('.get_configurations_button'), file_with_configurations_experiment_path(@experiment.id)
 
 #extension-dialog.reveal-modal(data-reveal="")
 #dialog.reveal-modal(data-reveal="")
@@ -93,9 +93,9 @@
       new window.MonitoringActionButtons("#{extension_dialog_experiment_path(@experiment.id)}",
                                          "#{get_booster_dialog_infrastructure_path(experiment_id: @experiment.id)}")
       $("#extension-dialog").on("closed", function() {
-        if(window.reopenCharts){
-          $("#experiment-analysis-modal").foundation("reveal", "open");
-          window.reopenCharts = false;
+        if (window.reopeningModals && window.reopeningModals.isActive) {
+          $("#" + window.reopeningModals.id).foundation("reveal", "open");
+          window.reopeningModals.isActive = false;
         }
       })
     });

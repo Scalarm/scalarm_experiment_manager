@@ -1,3 +1,6 @@
+require 'net/ssh'
+require 'net/scp'
+
 require 'ostruct'
 
 class Net::SSH::Connection::Session
@@ -43,4 +46,21 @@ class Net::SSH::Connection::Session
     )
 
   end
+
+  alias_method :_scp, :scp
+
+  ##
+  # Block version of ssh.scp
+  def scp
+    scp_session = _scp
+
+    # closing is not needed - underlying ssh should be managed instead
+    if block_given?
+      yield scp_session
+    else
+      scp_session
+    end
+
+  end
+
 end

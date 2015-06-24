@@ -94,7 +94,7 @@ module PlGridOpenID
         Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
     update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
 
-    pl_cloud_secret = PLCloudUtil::certs_to_pl_cloud_secret_proxy(ax_attrs[:proxy], ax_attrs[:user_cert])
+    pl_cloud_secret = PLCloudUtil::openid_proxy_to_cloud_proxy(x509_proxy_cert)
     update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)

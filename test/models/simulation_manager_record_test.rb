@@ -113,4 +113,17 @@ class SimulationManagerRecordTest < MiniTest::Test
     assert_equal :running, @record.state
   end
 
+  def test_get_current_simulation_run_no_experiment
+    @record.stubs(:experiment).returns(nil)
+    @record.stubs(:sm_uuid).returns('aaa')
+
+    @record.get_current_simulation_run
+  end
+
+  def test_cmd_delegation_time_exceeded_true
+    @record.stubs(:cmd_delegated_at).returns(Time.now - 10.minutes)
+
+    assert @record.cmd_delegation_time_exceeded?
+  end
+
 end
