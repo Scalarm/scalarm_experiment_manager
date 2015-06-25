@@ -54,10 +54,16 @@ class InformationService
 
   def send_request(request, data = nil, opts = {})
     @host, @port = @service_url.split(':')
-    @port, @prefix = @port.split('/')
+
+    if @port.nil?
+      @host, @prefix = @host.split('/')
+    else
+      @port, @prefix = @port.split('/')
+    end
+
     @prefix = @prefix.nil? ? '/' : "/#{@prefix}/"
 
-    slog('IS', "sending #{request} request to the Information Service at '#{@host}:#{@port}'")
+    slog('IS', "requesting '#{request}' from '#{@host}#{@prefix}#{@port.nil? ? '' : ":#{@port}" }'")
 
     req = if data.nil?
             Net::HTTP::Get.new(@prefix + request)
