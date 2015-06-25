@@ -4,7 +4,7 @@
   .row
     .small-10.columns
       .small-3.columns
-        = label_tag :moe_name, "hello" + t('charts.histogram.select_moe') + ':', class: 'inline'
+        = label_tag :moe_name, t('charts.histogram.select_moe') + ':', class: 'inline'
       .small-9.columns
         = select_tag 'moe_name', '', { class: 'moe_list' }
   .row
