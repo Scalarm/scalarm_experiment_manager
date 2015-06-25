@@ -349,6 +349,8 @@ class ExperimentsController < ApplicationController
     if response['status'] == 'error'
       experiment.destroy
       flash['error'] = "There has been an error while creating new supervised experiment: #{response['reason']}"
+    else
+      experiment.save
     end
 
     respond_to do |format|
