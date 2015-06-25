@@ -284,7 +284,7 @@ class SimulationsController < ApplicationController
   end
 
   def results_binaries
-    storage_manager_url = InformationService.instance.sample_public_storage_manager
+    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
     url = LogBankUtils::simulation_run_binaries_url(storage_manager_url,
                                              @experiment.id, @simulation_run.index, @current_user)
 
