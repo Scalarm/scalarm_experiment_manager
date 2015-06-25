@@ -10,7 +10,8 @@ class ApplicationController < ActionController::Base
 
   before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
-                                           :login_openid_plgrid, :openid_callback_plgrid]
+                                           :login_openid_plgrid, :openid_callback_plgrid,
+                                           :login_oauth_google, :oauth2_google_callback]
   before_filter :start_monitoring, except: [:status]
   after_filter :stop_monitoring, except: [:status]
 

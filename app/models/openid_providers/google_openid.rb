@@ -1,8 +1,21 @@
+require 'google/api_client'
+
 module GoogleOpenID
   require 'openid_providers/openid_utils'
 
   GOOGLE_OID_URI = 'https://www.google.com/accounts/o8/id'
   GOOGLE_ENDPOINT_URI = 'https://www.google.com/accounts/o8/ud'
+
+  def login_oauth_google
+    client_secrets = Google::APIClient::ClientSecrets.load((Rails.root + 'config' + 'google_client_secrets.json').to_s)
+
+    auth_client = client_secrets.to_authorization
+    auth_client.update!(scope: 'email')
+    
+    Rails.logger.debug("Authorization URI: #{auth_client.authorization_uri.to_s}")
+
+    redirect_to auth_client.authorization_uri.to_s
+  end
 
   # Invoke Google OpenID login procedure.
   def login_openid_google
@@ -47,6 +60,58 @@ module GoogleOpenID
       redirect_to login_path
     end
 
+  end
+
+  def oauth2_google_callback
+    if params.include? 'code'
+      client_secrets = Google::APIClient::ClientSecrets.load (Rails.root + 'config' + 'google_client_secrets.json').to_s
+
+      auth_client = client_secrets.to_authorization
+
+      auth_client.code = params['code']
+      auth_client.fetch_access_token!
+      auth_client.client_secret = nil
+
+      begin
+        api_client = Google::APIClient.new
+        api_client.authorization = auth_client
+        oauth2 = api_client.discovered_api('oauth2', 'v2')
+        result = api_client.execute!(:api_method => oauth2.userinfo.get)
+
+        if result.status == 200
+          user_info = result.data
+
+          if user_info != nil && user_info.id != nil
+            user = OpenIDUtils::get_or_create_user_with(:email, user_info["email"])
+
+            flash[:notice] = t('openid.verification_success', identity: user_info["email"])
+            session[:user] = user.id.to_s
+            session[:uuid] = SecureRandom.uuid
+
+            successful_login
+          else
+
+            Rails.logger.debug(t 'oauth.no_email_provided')
+            flash[:error] = t 'oauth.no_email_provided'
+          end
+        else
+          Rails.logger.debug(t('oauth.error_occured', error: result.data['error']['message']))
+          flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
+        end
+      rescue Exception => e
+        Rails.logger.error(t('oauth.error_occured', error: e.message))
+        flash[:error] = t('oauth.error_occured', error: e.message)
+      end
+
+    elsif params.include? 'error'
+      Rails.logger.debug(t('oauth.error_occured', error: params["error"]))
+      flash[:error] = t('oauth.error_occured', error: params["error"])
+    else
+      Rails.logger.debug(t('oauth.no_code_or_error_set'))
+      flash[:error] = t('oauth.no_code_or_error_set')
+    end
+
+    redirect_to login_path if not session.include? :user
   end
 
   private

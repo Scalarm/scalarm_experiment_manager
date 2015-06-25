@@ -436,7 +436,11 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   sdoc
+  signet
   therubyracer
   uglifier (>= 1.3.0)
   vmstat
   xml-simple
+
+BUNDLED WITH
+   1.10.0.pre.2
