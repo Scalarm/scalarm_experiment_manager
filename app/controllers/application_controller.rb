@@ -13,7 +13,8 @@ class ApplicationController < ActionController::Base
 
   before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
-                                           :login_openid_plgrid, :openid_callback_plgrid]
+                                           :login_openid_plgrid, :openid_callback_plgrid,
+                                           :login_oauth_google, :oauth2_google_callback]
 
   # due to security reasons (DISABLED)
   # after_filter :set_cache_buster
