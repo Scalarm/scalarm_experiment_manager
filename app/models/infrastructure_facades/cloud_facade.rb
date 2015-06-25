@@ -5,7 +5,6 @@ require_relative 'clouds/cloud_errors'
 require 'gsi'
 
 class CloudFacade < InfrastructureFacade
-  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
   include SSHAccessedInfrastructure
