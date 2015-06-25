@@ -41,22 +41,7 @@ class SimulationRun < MongoActiveRecord
     end
 
     # sharding collection
-    cmd = BSON::OrderedHash.new
-    cmd['enableSharding'] = collection.db.name
-    begin
-      MongoActiveRecord.execute_raw_command_on('admin', cmd)
-    rescue Exception => e
-      Rails.logger.error(e)
-    end
-
-    cmd = BSON::OrderedHash.new
-    cmd['shardcollection'] = "#{collection.db.name}.#{collection_name}"
-    cmd['key'] = {'index' => 1}
-    begin
-      MongoActiveRecord.execute_raw_command_on('admin', cmd)
-    rescue Exception => e
-      Rails.logger.error(e)
-    end
+    MongoActiveRecord.shard_collection collection_name
   end
 
   def save

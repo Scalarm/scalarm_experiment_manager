@@ -49,6 +49,27 @@ class MongoActiveRecord
     @@db.collection(collection_name)
   end
 
+  def self.shard_collection(collection_name)
+    if @@client.mongos?
+      cmd = BSON::OrderedHash.new
+      cmd['enableSharding'] = @@db.name
+      begin
+        MongoActiveRecord.execute_raw_command_on('admin', cmd)
+      rescue Exception => e
+        Rails.logger.error(e)
+      end
+
+      cmd = BSON::OrderedHash.new
+      cmd['shardcollection'] = "#{@@db.name}.#{collection_name}"
+      cmd['key'] = {'index' => 1}
+      begin
+        MongoActiveRecord.execute_raw_command_on('admin', cmd)
+      rescue Exception => e
+        Rails.logger.error(e)
+      end
+    end
+  end
+
   # object instance constructor based on map of attributes (json document is good example)
   def initialize(attributes)
     @attributes = {}
@@ -270,6 +291,7 @@ class MongoActiveRecord
 
     results
   end
+
 
   # INITIALIZATION STUFF
 
