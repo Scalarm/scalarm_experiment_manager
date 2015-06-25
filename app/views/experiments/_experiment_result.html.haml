@@ -1,8 +1,8 @@
 %h3.subheader= "Experiment result"
 
 - unless @experiment.results.nil?
-  %p
+  %p#results
     #{@experiment.results}
 - unless @experiment.error_reason.nil?
-  %p
+  %p#error_reason
     #{@experiment.error_reason}

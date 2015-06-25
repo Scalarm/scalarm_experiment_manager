@@ -496,6 +496,10 @@ class ExperimentsController < ApplicationController
     render json: moes_info
   end
 
+  def experiment_results
+    render json: {results: @experiment.results, error_reason: @experiment.error_reason}
+  end
+
   #  getting parametrization and generated values of every input parameter without default value
   def extension_dialog
     @parameters = {}

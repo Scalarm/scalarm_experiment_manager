@@ -140,6 +140,7 @@ class window.ExperimentMonitor
 
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_results", (data) -> monitor.update_results(data)
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)
@@ -277,6 +278,17 @@ class window.ExperimentMonitor
     #    return $(this).val() == selected_option
     #  ).attr('selected', true)
 
+
+  update_results: (results_info) =>
+    # space (third argument) is restricted to 10 characters
+    results = JSON.stringify(results_info['results'], null, "&nbsp;")
+    results = results.replace(/&nbsp;/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+    results = results.replace(/\n/g, "<br/>")
+
+    error_reason = results_info['error_reason']
+
+    $("#results").html(results)
+    $("#error_reason").text(error_reason)
 
 class window.ExperimentBooster
   constructor: (@dialog_element_id) ->
