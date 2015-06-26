@@ -53,14 +53,21 @@
         .small-6.columns
           .row
             .small-9.small-centered.columns
-              %a.button.expand.radius{ href: login_login_oauth_google_url }
-                %i.fa.fa-google-plus.fa-fw.small-link
-                = t('openid.login', provider: 'Google')
-          .row
-            .small-9.small-centered.columns
               %a.button.expand.radius{ href: login_openid_plgrid_url }
                 %i.fa.fa-openid.fa-fw.small-link
                 = t('openid.login', provider: 'PL-Grid')
+          .row
+            .small-9.small-centered.columns
+              %a.button.expand.radius{ href: login_login_oauth_google_url }
+                %i.fa.fa-google-plus.fa-fw.small-link
+                = t('openid.login', provider: 'Google')
+
+          - if github_configured?
+            .row
+              .small-9.small-centered.columns
+                %a.button.expand.radius{ href: login_login_oauth_github_url }
+                  %i.fi-social-github.small-link
+                  = t('openid.login', provider: 'GitHub')
 
 
 %section.panel.radius
