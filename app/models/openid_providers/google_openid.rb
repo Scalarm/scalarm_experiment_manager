@@ -64,24 +64,11 @@ module GoogleOpenID
 
   def oauth2_google_callback
     if params.include? 'code'
-      client_secrets = Google::APIClient::ClientSecrets.load (Rails.root + 'config' + 'google_client_secrets.json').to_s
-
-      auth_client = client_secrets.to_authorization
-
-      auth_client.code = params['code']
-      auth_client.fetch_access_token!
-      auth_client.client_secret = nil
-
       begin
-        api_client = Google::APIClient.new
-        api_client.authorization = auth_client
-        oauth2 = api_client.discovered_api('oauth2', 'v2')
-        result = api_client.execute!(:api_method => oauth2.userinfo.get)
+        user_info = get_user_info_from_google params['code']
 
-        if result.status == 200
-          user_info = result.data
-
-          if user_info != nil && user_info.id != nil
+        if not user_info.nil?
+          if not user_info.id.nil? and not user_info['email'].nil?
             user = OpenIDUtils::get_or_create_user_with(:email, user_info["email"])
 
             flash[:notice] = t('openid.verification_success', identity: user_info["email"])
@@ -90,31 +77,69 @@ module GoogleOpenID
 
             successful_login
           else
-
-            Rails.logger.debug(t 'oauth.no_email_provided')
-            flash[:error] = t 'oauth.no_email_provided'
+            Rails.logger.debug(t('oauth.error_occured', error: result.data['error']['message']))
+            flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
           end
-        else
-          Rails.logger.debug(t('oauth.error_occured', error: result.data['error']['message']))
-          flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
         end
       rescue Exception => e
         Rails.logger.error(t('oauth.error_occured', error: e.message))
         flash[:error] = t('oauth.error_occured', error: e.message)
       end
-
-    elsif params.include? 'error'
-      Rails.logger.debug(t('oauth.error_occured', error: params["error"]))
-      flash[:error] = t('oauth.error_occured', error: params["error"])
     else
-      Rails.logger.debug(t('oauth.no_code_or_error_set'))
-      flash[:error] = t('oauth.no_code_or_error_set')
+      handle_google_oauth_error( params.include?('error') ? params['error'] : nil)
     end
 
     redirect_to login_path if not session.include? :user
   end
 
   private
+
+  def handle_google_oauth_error(error_msg)
+    if error_msg.nil?
+      Rails.logger.debug(t('oauth.no_code_or_error_set'))
+      flash[:error] = t('oauth.no_code_or_error_set')
+    else
+      if error_msg.include? 'access_denied'
+        Rails.logger.info("#{t('oauth.access_denied')} : #{error_msg}")
+        flash[:error] = t('oauth.access_denied')
+      else
+        Rails.logger.info(t('oauth.error_occured', error: error_msg))
+        flash[:error] = t('oauth.error_occured', error: error_msg)
+      end
+    end
+  end
+
+  # returns a hash with user info, a nil or throws an exception
+  def get_user_info_from_google(auth_code)
+    return nil if not File.exist? google_secrets_file
+
+    client_secrets = Google::APIClient::ClientSecrets.load google_secrets_file
+    auth_client = client_secrets.to_authorization
+
+    auth_client.code = auth_code
+    # here an exception can be thrown
+    # TODO maybe we could catch it and return something better ?
+    auth_client.fetch_access_token!
+    auth_client.client_secret = nil
+
+    api_client = Google::APIClient.new
+    api_client.authorization = auth_client
+
+    oauth2 = api_client.discovered_api('oauth2', 'v2')
+    result = api_client.execute!(api_method: oauth2.userinfo.get)
+
+    if result.status == 200
+      result.data
+    else
+      Rails.logger.debug(t('oauth.error_occured', error: result.data['error']['message']))
+      flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
+      nil
+    end
+  end
+
+  def google_secrets_file
+    (Rails.root + 'config' + 'google_client_secrets.json').to_s
+  end
 
   def openid_callback_google_success(oidresp, params)
 # check if response is from appropriate endpoint
