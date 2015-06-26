@@ -60,8 +60,9 @@ en:
 
   oauth:
     error_occured: "An error occurred during OAuth authentication: %{error}"
-    no_code_or_error_set: "Neither code nor error has been set"
+    no_code_or_error_set: "Invalid response. Please contact an administrator."
     no_email_provided: "Unable to retrieve the e-mail address."
+    access_denied: "You denied access to your profile. We can't login you without knowing your email address."
 
   registered_executors_list:
     label: "Registered simulation executors"
