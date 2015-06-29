@@ -21,6 +21,13 @@ class SimulationRun < MongoActiveRecord
     self
   end
 
+  def self.completed
+    where(
+        {is_done: true, is_error: {'$exists' => false}},
+        {fields: %w(index arguments values result __hash_attributes)}
+    )
+  end
+
   def self.collection_name
     "experiment_instances_#{@experiment_id}"
   end
