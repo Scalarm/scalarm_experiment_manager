@@ -298,7 +298,7 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + [moe_name]
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result __hash_attributes)}).each do |simulation_run|
         next if not simulation_run.result.has_key?(moe_name)
 
         values = simulation_run.values.split(',')
@@ -312,7 +312,7 @@ class Experiment < MongoActiveRecord
   def moe_names
     moe_name_set = []
     limit = self.experiment_size > 1000 ? self.experiment_size / 2 : self.experiment_size
-    simulation_runs.where({ is_done: true }, { fields: %w(result), limit: limit }).each do |simulation_run|
+    simulation_runs.where({ is_done: true }, { fields: %w(result __hash_attributes), limit: limit }).each do |simulation_run|
       moe_name_set += simulation_run.result.keys.to_a
     end
 
@@ -323,7 +323,7 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments __hash_attributes)}).each do |simulation_run|
         simulation_run_ind = simulation_run.index.to_s
         simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
@@ -362,7 +362,7 @@ class Experiment < MongoActiveRecord
     find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
     find_exp = /#{find_exp}#{param_value}/
 
-    param_values = simulation_runs.where({ values: { '$not' => find_exp } }, { fields: %w(values) }).
+    param_values = simulation_runs.where({ values: { '$not' => find_exp } }, { fields: %w(values __hash_attributes) }).
         map { |x| x.values.split(',')[param_index] }.uniq + [param_value]
 
     param_values.map { |x| x.to_f }.uniq.sort
@@ -425,6 +425,7 @@ class Experiment < MongoActiveRecord
       query_fields[:index] = 1 if with_index
       query_fields[:values] = 1 if with_params
       query_fields[:result] = 1 if with_moes
+      query_fields[:__hash_attributes] = 1
 
       simulation_runs.where(
           {is_done: true, is_error: {'$exists' => false}},
@@ -478,7 +479,7 @@ class Experiment < MongoActiveRecord
     moe_name_set = Set.new
     result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
 
-    query_opts = {fields: {_id: 0, result: 1, is_error: 1}, limit: result_limit}
+    query_opts = {fields: {_id: 0, result: 1, is_error: 1, __hash_attributes: 1}, limit: result_limit}
     simulation_runs.where({is_done: true}, query_opts).each do |simulation_run|
       unless simulation_run.is_error == true
         moe_name_set += simulation_run.result.keys
@@ -597,7 +598,7 @@ class Experiment < MongoActiveRecord
 
     sim_run = self.simulation_runs.where(
         {is_done: true, values: values},
-        {fields: {_id: 0, result: 1}}
+        {fields: {_id: 0, result: 1, __hash_attributes: 1}}
     ).first
 
     sim_run and sim_run.result

@@ -73,10 +73,16 @@ class MongoActiveRecord
   # object instance constructor based on map of attributes (json document is good example)
   def initialize(attributes)
     @attributes = {}
+    # here we store all hash-like parameters to use them like hash but store them as strings
+    @__hash_attributes = attributes['__hash_attributes'] || []
 
     attributes.each do |parameter_name, parameter_value|
       #parameter_value = BSON::ObjectId(parameter_value) if parameter_name.end_with?("_id")
-      @attributes[parameter_name.to_s] = parameter_value
+      if @__hash_attributes.include? parameter_name.to_s
+        @attributes[parameter_name.to_s] = JSON.parse parameter_value
+      else
+        @attributes[parameter_name.to_s] = parameter_value
+      end
     end
   end
 
@@ -102,6 +108,10 @@ class MongoActiveRecord
   end
 
   def set_attribute(attribute, value)
+    if value.is_a? Hash
+      @__hash_attributes << attribute
+    end
+
     @attributes[attribute] = value
   end
 
@@ -110,12 +120,19 @@ class MongoActiveRecord
   end
 
   def _delete_attribute(attribute)
+    @__hash_attributes.delete attribute
+
     @attributes.delete(attribute)
   end
 
   # save/update json document in db based on attributes
   # if this is new object instance - _id attribute will be added to attributes
   def save
+    @__hash_attributes.each do |hash_attr|
+      @attributes[hash_attr] = @attributes[hash_attr].to_json
+    end
+    @attributes['__hash_attributes'] = @__hash_attributes
+
     if @attributes.include? '_id'
       self.class.collection.update({'_id' => @attributes['_id']}, @attributes, {upsert: true})
     else

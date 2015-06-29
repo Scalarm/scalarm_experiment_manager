@@ -96,7 +96,7 @@ module ExperimentProgressBar
     first_id = [bar_index*parts_per_slot + 1, experiment_size].min
     last_id = [(bar_index+1)*parts_per_slot, experiment_size].min
     query_hash = {'index' => {'$in' => (first_id..last_id).to_a}}
-    option_hash = {fields: %w(to_sent is_done is_error)}
+    option_hash = {fields: %w(to_sent is_done is_error __hash_attributes)}
 
     #Rails.logger.debug("Query hash => #{query_hash} --- Option hash => #{option_hash}")
     new_bar_state = 0

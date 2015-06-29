@@ -186,7 +186,7 @@ module SimulationScheduler
 
     if partition_end_id - partition_start_id < 200 # conquer
       query_hash = { index: { '$gt' => partition_start_id, '$lte' => partition_end_id } }
-      options_hash = { fields: { 'index' => 1, '_id' => 0 }, sort: [ [ 'index', :asc ] ] }
+      options_hash = { fields: { 'index' => 1, '_id' => 0, '__hash_attributes' => 1 }, sort: [ [ 'index', :asc ] ] }
 
       # getting simulation_run ids from the partition
       simulations_ids = simulation_runs.where(query_hash, options_hash).to_a
