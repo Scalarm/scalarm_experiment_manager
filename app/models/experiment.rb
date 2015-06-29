@@ -298,7 +298,7 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << self.parameters.flatten + [moe_name]
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result __hash_attributes)}).each do |simulation_run|
+      simulation_runs.completed.each do |simulation_run|
         next if not simulation_run.result.has_key?(moe_name)
 
         values = simulation_run.values.split(',')
@@ -310,10 +310,10 @@ class Experiment < MongoActiveRecord
   end
 
   def moe_names
-    moe_name_set = []
     limit = self.experiment_size > 1000 ? self.experiment_size / 2 : self.experiment_size
-    simulation_runs.where({ is_done: true }, { fields: %w(result __hash_attributes), limit: limit }).each do |simulation_run|
-      moe_name_set += simulation_run.result.keys.to_a
+
+    moe_name_set = simulation_runs.completed.limit(limit).reduce([]) do |acc, sim_run|
+      acc + sim_run.result.keys.to_a
     end
 
     moe_name_set.uniq
@@ -323,7 +323,7 @@ class Experiment < MongoActiveRecord
     CSV.generate do |csv|
       csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments __hash_attributes)}).each do |simulation_run|
+      simulation_runs.completed.each do |simulation_run|
         simulation_run_ind = simulation_run.index.to_s
         simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
@@ -476,14 +476,10 @@ class Experiment < MongoActiveRecord
   end
 
   def result_names
-    moe_name_set = Set.new
     result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
 
-    query_opts = {fields: {_id: 0, result: 1, is_error: 1, __hash_attributes: 1}, limit: result_limit}
-    simulation_runs.where({is_done: true}, query_opts).each do |simulation_run|
-      unless simulation_run.is_error == true
-        moe_name_set += simulation_run.result.keys
-      end
+    moe_name_set = simulation_runs.completed.limit(result_limit).reduce(Set.new) do |acc, simulation_run|
+      acc + simulation_run.result.keys
     end
 
     moe_name_set.empty? ? nil : moe_name_set.to_a

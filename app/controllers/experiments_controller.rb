@@ -339,9 +339,7 @@ class ExperimentsController < ApplicationController
       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
 
-    done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
-    done_run = @experiment.simulation_runs.where(done_run_query_condition,
-                 {limit: 1, fields: %w(arguments)}).first
+    done_run = @experiment.simulation_runs.completed.limit(1).first
 
     moes_and_params = if done_run.nil?
                         [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
