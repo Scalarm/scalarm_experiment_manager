@@ -302,7 +302,7 @@ class MongoActiveRecord
   end
 
   def self.count
-    results = self.collection.count(query: @conditions || {})
+    results = self.collection.count query: @conditions || {}, limit: (@options && @options[:limit]) || nil
 
     @conditions = {}; @options = {}
 
