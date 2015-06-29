@@ -309,6 +309,10 @@ class MongoActiveRecord
     results
   end
 
+  def self.limit(limit)
+    where({}, {limit: limit})
+  end
+
 
   # INITIALIZATION STUFF
 
