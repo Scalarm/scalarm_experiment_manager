@@ -1,6 +1,7 @@
 require 'bson'
 require 'mongo'
 require 'json'
+require 'yaml'
 
 class MongoActiveRecord
   include Mongo
@@ -79,7 +80,7 @@ class MongoActiveRecord
     attributes.each do |parameter_name, parameter_value|
       #parameter_value = BSON::ObjectId(parameter_value) if parameter_name.end_with?("_id")
       if @__hash_attributes.include? parameter_name.to_s
-        @attributes[parameter_name.to_s] = JSON.parse parameter_value
+        @attributes[parameter_name.to_s] = YAML.load parameter_value
       else
         @attributes[parameter_name.to_s] = parameter_value
       end
@@ -108,7 +109,7 @@ class MongoActiveRecord
   end
 
   def set_attribute(attribute, value)
-    if value.is_a? Hash
+    if value.is_a? Hash and not @__hash_attributes.include? attribute
       @__hash_attributes << attribute
     end
 
@@ -129,7 +130,7 @@ class MongoActiveRecord
   # if this is new object instance - _id attribute will be added to attributes
   def save
     @__hash_attributes.each do |hash_attr|
-      @attributes[hash_attr] = @attributes[hash_attr].to_json
+      @attributes[hash_attr] = @attributes[hash_attr].to_yaml
     end
     @attributes['__hash_attributes'] = @__hash_attributes
 
