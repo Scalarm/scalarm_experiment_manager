@@ -316,8 +316,8 @@ class SimulationsController < ApplicationController
       @simulation_run = @experiment.simulation_runs.where(index: params[:id].to_i).first
     end
 
-    Rails.logger.info("Experiment is nil ? #{@experiment.nil?} #{@experiment.nil? ? '' : @experiment.id}")
-    Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.inspect}")
+    # Rails.logger.info("Experiment is nil ? #{@experiment.nil?} #{@experiment.nil? ? '' : @experiment.id}")
+    # Rails.logger.info("SimulationRun is nil ? #{@simulation_run.nil?} #{@simulation_run.nil? ? '' : @simulation_run.inspect}")
 
     if @simulation_run.nil?
       @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)

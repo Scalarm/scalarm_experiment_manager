@@ -74,7 +74,7 @@ class SimulationRun < MongoActiveRecord
   end
 
   def rollback!
-    Rails.logger.debug("Rolling back SimulationRun: #{id}")
+    Rails.logger.warn("Rolling back SimulationRun: #{id}")
 
     self.to_sent = true
     experiment.progress_bar_update(self.index, 'rollback')

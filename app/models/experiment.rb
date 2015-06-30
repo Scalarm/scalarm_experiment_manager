@@ -562,6 +562,7 @@ class Experiment < MongoActiveRecord
   end
 
   def simulation_rollback(simulation_run)
+    Rails.logger.warn("Rolling back SimulationRun: #{simulation_run.index} from experiment #{self.id}")
     simulation_run.to_sent = true
     simulation_run.save    
 
