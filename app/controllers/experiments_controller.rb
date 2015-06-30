@@ -157,6 +157,8 @@ class ExperimentsController < ApplicationController
       parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
       parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
 
+      params[:time_constraint_in_sec] = params[:execution_time_constraint]
+
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
                                    :description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
