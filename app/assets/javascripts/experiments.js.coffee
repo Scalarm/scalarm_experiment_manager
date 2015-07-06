@@ -281,14 +281,22 @@ class window.ExperimentMonitor
 
   update_results: (results_info) =>
     # space (third argument) is restricted to 10 characters
-    results = JSON.stringify(results_info['results'], null, "&nbsp;")
-    results = results.replace(/&nbsp;/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-    results = results.replace(/\n/g, "<br/>")
+    results = results_info['results']
+    if results != null
+      results = JSON.stringify(results, null, "&nbsp;")
+      results = results.replace(/&nbsp;/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+      results = results.replace(/\n/g, "<br/>")
+      $("#results").html(results)
+    else
+      $("#results").html("")
+
 
     error_reason = results_info['error_reason']
+    if error_reason != null
+      $("#error_reason").text(error_reason)
+    else
+      $("#error_reason").text("")
 
-    $("#results").html(results)
-    $("#error_reason").text(error_reason)
 
 class window.ExperimentBooster
   constructor: (@dialog_element_id) ->
