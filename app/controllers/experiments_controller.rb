@@ -204,8 +204,8 @@ class ExperimentsController < ApplicationController
       parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
       parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
 
-      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
-                                   :description, :parameter_constraints)
+      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
+                                   :experiment_description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
@@ -995,7 +995,7 @@ class ExperimentsController < ApplicationController
     validate(
         point: :security_json
     )
-    
+
     result = @experiment.get_result_for(Utils::parse_json_if_string(params[:point]))
 
     respond_to do |format|

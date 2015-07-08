@@ -32,8 +32,8 @@ class ExperimentFactory
     replication_level = params.delete(:replication_level) || DEFAULT_REPLICATION_LEVEL
     time_constraint_in_sec = params.delete(:time_constraint_in_sec) || DEFAULT_TIME_CONSTRAINT_IN_SECS
     scheduling_policy = params.delete(:scheduling_policy) || DEFAULT_SCHEDULING_POLICY
-    name = params.delete(:name) || simulation.name
-    description = params.delete(:description) || simulation.description
+    name = params.delete(:experiment_name) || simulation.name
+    description = params.delete(:experiment_description) || simulation.description
     parameter_constraints = params.delete(:parameter_constraints) || DEFAULT_PARAMETER_CONSTRAINTS
 
     record_class.new(
