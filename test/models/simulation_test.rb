@@ -94,7 +94,7 @@ class SimulationTest < MiniTest::Test
       expects(:id).returns(user_id)
     end
     adapter_file = mock do
-      expects(:original_filename).twice.returns(secure_name)
+      expects(:original_filename).returns(secure_name)
     end
     adapter = mock do
       expects(:save)
@@ -127,7 +127,7 @@ class SimulationTest < MiniTest::Test
       expects(:id).returns(user_id)
     end
     adapter_file = mock do
-      expects(:original_filename).twice.returns(secure_name)
+      expects(:original_filename).returns(secure_name)
     end
     adapter = mock do
       expects(:save)
