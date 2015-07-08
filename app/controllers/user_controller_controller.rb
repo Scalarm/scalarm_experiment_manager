@@ -3,6 +3,7 @@ require 'openid/extensions/ax'
 
 require 'openid_providers/google_openid'
 require 'openid_providers/plgrid_openid'
+require 'openid_providers/github_oauth'
 
 require 'utils'
 
@@ -12,6 +13,7 @@ class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
   include PlGridOpenID
+  include GithubOauth
 
   ##
   # Normally render welcome page

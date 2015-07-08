@@ -1,8 +1,21 @@
+require 'google/api_client'
+
 module GoogleOpenID
   require 'openid_providers/openid_utils'
 
   GOOGLE_OID_URI = 'https://www.google.com/accounts/o8/id'
   GOOGLE_ENDPOINT_URI = 'https://www.google.com/accounts/o8/ud'
+
+  def login_oauth_google
+    client_secrets = Google::APIClient::ClientSecrets.load((Rails.root + 'config' + 'google_client_secrets.json').to_s)
+
+    auth_client = client_secrets.to_authorization
+    auth_client.update!(scope: 'email')
+    
+    Rails.logger.debug("Authorization URI: #{auth_client.authorization_uri.to_s}")
+
+    redirect_to auth_client.authorization_uri.to_s
+  end
 
   # Invoke Google OpenID login procedure.
   def login_openid_google
@@ -49,7 +62,84 @@ module GoogleOpenID
 
   end
 
+  def oauth2_google_callback
+    if params.include? 'code'
+      begin
+        user_info = get_user_info_from_google params['code']
+
+        if not user_info.nil?
+          if not user_info.id.nil? and not user_info['email'].nil?
+            user = OpenIDUtils::get_or_create_user_with(:email, user_info["email"])
+
+            flash[:notice] = t('openid.verification_success', identity: user_info["email"])
+            session[:user] = user.id.to_s
+            session[:uuid] = SecureRandom.uuid
+
+            successful_login
+          else
+            Rails.logger.debug(t('oauth.error_occured', error: result.data['error']['message']))
+            flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
+          end
+        end
+      rescue Exception => e
+        Rails.logger.error(t('oauth.error_occured', error: e.message))
+        flash[:error] = t('oauth.error_occured', error: e.message)
+      end
+    else
+      handle_google_oauth_error( params.include?('error') ? params['error'] : nil)
+    end
+
+    redirect_to login_path if not session.include? :user
+  end
+
   private
+
+  def handle_google_oauth_error(error_msg)
+    if error_msg.nil?
+      Rails.logger.debug(t('oauth.no_code_or_error_set'))
+      flash[:error] = t('oauth.no_code_or_error_set')
+    else
+      if error_msg.include? 'access_denied'
+        Rails.logger.info("#{t('oauth.access_denied')} : #{error_msg}")
+        flash[:error] = t('oauth.access_denied')
+      else
+        Rails.logger.info(t('oauth.error_occured', error: error_msg))
+        flash[:error] = t('oauth.error_occured', error: error_msg)
+      end
+    end
+  end
+
+  # returns a hash with user info, a nil or throws an exception
+  def get_user_info_from_google(auth_code)
+    return nil if not File.exist? google_secrets_file
+
+    client_secrets = Google::APIClient::ClientSecrets.load google_secrets_file
+    auth_client = client_secrets.to_authorization
+
+    auth_client.code = auth_code
+    # here an exception can be thrown
+    # TODO maybe we could catch it and return something better ?
+    auth_client.fetch_access_token!
+    auth_client.client_secret = nil
+
+    api_client = Google::APIClient.new
+    api_client.authorization = auth_client
+
+    oauth2 = api_client.discovered_api('oauth2', 'v2')
+    result = api_client.execute!(api_method: oauth2.userinfo.get)
+
+    if result.status == 200
+      result.data
+    else
+      Rails.logger.debug(t('oauth.error_occured', error: result.data['error']['message']))
+      flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
+      nil
+    end
+  end
+
+  def google_secrets_file
+    (Rails.root + 'config' + 'google_client_secrets.json').to_s
+  end
 
   def openid_callback_google_success(oidresp, params)
 # check if response is from appropriate endpoint
