@@ -158,7 +158,7 @@ class ExperimentsController < ApplicationController
       parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
 
       parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
-                                   :description, :parameter_constraints)
+                                   :experiment_description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(@current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
