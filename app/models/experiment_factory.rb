@@ -28,7 +28,7 @@ class ExperimentFactory
              start_at: Time.now,
              scheduling_policy: params[:scheduling_policy] || DEFAULT_SCHEDULING_POLICY,
              name: params[:experiment_name] || simulation.name,
-             description: params[:description] || simulation.description,
+             description: params[:experiment_description] || simulation.description,
              parameter_constraints: params[:parameter_constraints] || DEFAULT_PARAMETER_CONSTRAINTS
         }
     )
