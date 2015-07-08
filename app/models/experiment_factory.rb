@@ -27,8 +27,8 @@ class ExperimentFactory
              time_constraint_in_sec: params[:time_constraint_in_sec] || DEFAULT_TIME_CONSTRAINT_IN_SECS,
              start_at: Time.now,
              scheduling_policy: params[:scheduling_policy] || DEFAULT_SCHEDULING_POLICY,
-             name: params[:name] || simulation.name,
-             description: params[:description] || simulation.description,
+             name: params[:experiment_name] || simulation.name,
+             description: params[:experiment_description] || simulation.description,
              parameter_constraints: params[:parameter_constraints] || DEFAULT_PARAMETER_CONSTRAINTS
         }
     )
