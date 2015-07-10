@@ -297,7 +297,7 @@ class window.ExperimentMonitor
 
     error_reason = results_info['error_reason']
     if error_reason != null
-      $("#error_reason_contents").text(error_reason)
+      $("#error_reason_contents").html(error_reason.replace(/\n/g, "<br/>"))
       $("#error_reason").show()
       $("#error_reason_box").show()
     else
