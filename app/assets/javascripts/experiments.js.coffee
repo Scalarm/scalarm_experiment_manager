@@ -278,25 +278,31 @@ class window.ExperimentMonitor
     #    return $(this).val() == selected_option
     #  ).attr('selected', true)
 
+  jsonToHtml = (json) ->
+    # space (third argument in JSON.stringify) is limited to 10 characters
+    json = JSON.stringify(json, null, "&nbsp;")
+    json = json.replace(/&nbsp;/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+    json = json.replace(/\n/g, "<br/>")
+    return json;
 
   update_results: (results_info) =>
-    # space (third argument) is restricted to 10 characters
     results = results_info['results']
     if results != null
-      results = JSON.stringify(results, null, "&nbsp;")
-      results = results.replace(/&nbsp;/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-      results = results.replace(/\n/g, "<br/>")
-      $("#results").html(results)
+      $("#results_contents").html(jsonToHtml(results))
+      $("#results").show()
+      $("#results_box").show()
     else
-      $("#results").html("")
-
+      $("#results").hide()
+      $("#results_box").hide()
 
     error_reason = results_info['error_reason']
     if error_reason != null
-      $("#error_reason").text(error_reason)
+      $("#error_reason_contents").text(error_reason)
+      $("#error_reason").show()
+      $("#error_reason_box").show()
     else
-      $("#error_reason").text("")
-
+      $("#error_reason").hide()
+      $("#error_reason_box").hide()
 
 class window.ExperimentBooster
   constructor: (@dialog_element_id) ->

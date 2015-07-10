@@ -1,5 +1,10 @@
-%h3.subheader= "Experiment result"
+%h3.subheader= 'Experiment results'
 %p#results
-  //#{@experiment.results}
+  %strong= 'Results: '
+  .panel.log-box#results_box
+    #results_contents
+
 %p#error_reason
-  //#{@experiment.error_reason}
+  %strong= 'Error reason: '
+  .panel.log-box#error_reason_box
+    #error_reason_contents
