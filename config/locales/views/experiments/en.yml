@@ -176,7 +176,8 @@ en:
         regression_tree: "Regression tree"
         scatter_plot: "Scatter plot"
 
-    results:
-      header: "Experiment results"
-      results_header: "Results"
+    result:
+      header: "Experiment result"
+      result_header: "Result"
+      result_header_none: "No result available"
       error_reason_header: "Error reason"

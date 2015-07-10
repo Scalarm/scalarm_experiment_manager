@@ -1,10 +1,10 @@
-%h3.subheader= t('experiments.results.header')
-%p#results
-  %strong= t('experiments.results.results_header') + ': '
-  .panel.log-box#results_box
-    #results_contents
+%h3.subheader= t('experiments.result.header')
+%strong#result_header= t('experiments.result.result_header_none')
+#result.hidden
+  .panel.log-box
+    #result_contents
 
-%p#error_reason
-  %strong= t('experiments.results.error_reason_header') + ': '
-  .panel.log-box#error_reason_box
+#error_reason.hidden
+  %strong= t('experiments.result.error_reason_header') + ': '
+  .panel.log-box
     #error_reason_contents

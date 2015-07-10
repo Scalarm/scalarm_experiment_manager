@@ -438,7 +438,7 @@ class ExperimentsController < ApplicationController
     render json: {count: simulation_counter}
   end
 
-  def experiment_stats
+  def stats
     sims_generated, sims_sent, sims_done = @experiment.get_statistics
 
     if sims_generated > @experiment.experiment_size
@@ -494,7 +494,7 @@ class ExperimentsController < ApplicationController
     render json: stats
   end
 
-  def experiment_moes
+  def moes
     moes_info = {}
 
     result_set = @experiment.result_names
@@ -535,7 +535,7 @@ class ExperimentsController < ApplicationController
     render json: moes_info
   end
 
-  def experiment_results
+  def results_info
     render json: {results: @experiment.results, error_reason: @experiment.error_reason}
   end
 
