@@ -84,8 +84,11 @@ ScalarmExperimentManager::Application.routes.draw do
 
       # Progress monitoring API
       get :completed_simulations_count
-      get :experiment_stats
-      get :experiment_moes
+      get :experiment_stats, to: 'experiments#stats'
+      get :stats
+      get :experiment_moes, to: 'experiments#moes'
+      get :moes
+      get :results_info
 
       get :simulation_manager
 

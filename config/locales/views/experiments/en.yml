@@ -175,3 +175,9 @@ en:
         histogram: "Histogram"
         regression_tree: "Regression tree"
         scatter_plot: "Scatter plot"
+
+    result:
+      header: "Experiment result"
+      result_header: "Result"
+      result_header_none: "No result available"
+      error_reason_header: "Error reason"
