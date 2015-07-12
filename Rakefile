@@ -209,31 +209,40 @@ def monitoring_probe(action)
     when 'start'
       Process.daemon(true)
       monitoring_job_pid = fork do
-        # requiring all class from the model
-        Dir[File.join(Rails.root, 'app', 'models', '**/*.rb')].each do |f|
-          require f
-        end
+        begin
+          # requiring all class from the model
+          Dir[File.join(Rails.root, 'app', 'models', '**/*.rb')].each do |f|
+            require f
+          end
 
-        # start machine monitoring only if there is configuration
-        if Rails.application.secrets.monitoring
-          probe = MonitoringProbe.new
-          probe.start_monitoring
-        else
-          puts 'Monitoring probe disabled due to lack of configuration'
-        end
+          # start machine monitoring only if there is configuration
+          if Rails.application.secrets.monitoring
+            Rails.logger.info('Starting monitoring probe')
+            probe = MonitoringProbe.new
+            probe.start_monitoring
+          else
+            Rails.logger.info('Monitoring probe disabled due to lack of configuration')
+          end
 
-        ExperimentWatcher.watch_experiments
-        InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
+          Rails.logger.info('Starting experiment watcher')
+          ExperimentWatcher.watch_experiments
+
+          Rails.logger.info('Starting monitoring threads for all infrastructures')
+          InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
+        rescue Exception => e
+          Rails.logger.error("Error occured in monitoring process (application may be unusable): #{e.to_s}\n#{e.backtrace().join("\n")}")
+          raise
+        end
       end
 
       IO.write(probe_pid_path, monitoring_job_pid)
 
       Process.detach(monitoring_job_pid)
-    when action == 'stop'
-    if File.exist?(probe_pid_path)
-      monitoring_job_pid = IO.read(probe_pid_path)
-      Process.kill('TERM', monitoring_job_pid.to_i)
-    end
+    when 'stop'
+      if File.exist?(probe_pid_path)
+        monitoring_job_pid = IO.read(probe_pid_path)
+        Process.kill('TERM', monitoring_job_pid.to_i)
+      end
   end
 end
 
