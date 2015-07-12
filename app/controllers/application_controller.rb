@@ -73,7 +73,8 @@ class ApplicationController < ActionController::Base
       format.json do
         Rails.logger.debug('[authentication] 403')
 
-        headers['WWW-Authenticate'] = %(Basic realm="Scalarm")
+        # Commented out because of SCAL-774 - popular browsers show annoying basic auth popup
+        #headers['WWW-Authenticate'] = %(Basic realm="Scalarm")
         render json: {status: 'error', reason: 'Authentication failed'}, status: :unauthorized
       end
     end
