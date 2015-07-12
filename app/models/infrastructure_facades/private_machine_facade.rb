@@ -185,7 +185,7 @@ class PrivateMachineFacade < InfrastructureFacade
     if record.onsite_monitoring
       record.cmd_to_execute_code = "stop"
       record.cmd_to_execute = "kill -9 #{record.pid}"
-      sm_record.cmd_delegated_at = Time.now
+      record.cmd_delegated_at = Time.now
       record.save
     else
       shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
