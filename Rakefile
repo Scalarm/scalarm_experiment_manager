@@ -21,12 +21,7 @@ namespace :service do
     load_balancer_registration
     create_anonymous_user
 
-    # start monitoring only if there is configuration
-    if Rails.application.secrets.monitoring
-      monitoring_probe('start')
-    else
-      puts 'Monitoring probe disabled due to lack of configuration'
-    end
+    monitoring_probe('start')
   end
 
   desc 'Stop the service'
@@ -34,11 +29,7 @@ namespace :service do
     puts 'pumactl -F config/puma.rb -T scalarm stop'
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
-    if Rails.application.secrets.monitoring
-      monitoring_probe('stop')
-    else
-      puts 'Monitoring probe will not be stopped due to lack of configuration'
-    end
+    monitoring_probe('stop')
 
     load_balancer_deregistration
   end
@@ -205,6 +196,12 @@ def stop_router
   end
 end
 
+##
+# Starts or stops process with threads monitoring:
+# - MonitoringProbe - monitor server machine resources
+# - ExperimentWatcher - check periodically if some SimulationRuns does not
+#   exceeded their time limit (probably they are faulty)
+# - InfrastructureFacade monitoring - multiple threads for SimulationManagers status monitoring
 def monitoring_probe(action)
   probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
 
@@ -217,8 +214,13 @@ def monitoring_probe(action)
           require f
         end
 
-        probe = MonitoringProbe.new
-        probe.start_monitoring
+        # start machine monitoring only if there is configuration
+        if Rails.application.secrets.monitoring
+          probe = MonitoringProbe.new
+          probe.start_monitoring
+        else
+          puts 'Monitoring probe disabled due to lack of configuration'
+        end
 
         ExperimentWatcher.watch_experiments
         InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
@@ -227,7 +229,7 @@ def monitoring_probe(action)
       IO.write(probe_pid_path, monitoring_job_pid)
 
       Process.detach(monitoring_job_pid)
-    when
+    when action == 'stop'
     if File.exist?(probe_pid_path)
       monitoring_job_pid = IO.read(probe_pid_path)
       Process.kill('TERM', monitoring_job_pid.to_i)
