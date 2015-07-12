@@ -116,6 +116,8 @@ class SimulationScenariosController < ApplicationController
   def destroy
     if @simulation_scenario.blank?
       render inline: t('simulation_scenarios.not_found', id: params[:id]), status: 404
+    elsif @simulation_scenario.user_id != @current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
     else
       flash[:notice] = t('simulations.destroy', name: @simulation_scenario.name)
       @simulation_scenario.destroy
