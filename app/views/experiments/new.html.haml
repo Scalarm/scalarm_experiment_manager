@@ -4,8 +4,6 @@
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
 
-= render 'experiments/new/basic_information'
-
 -#:coffeescript
 -#  window.alert("supervisors_ids: #{supervisor_ids.to_s}")
 
@@ -28,6 +26,8 @@
   = hidden_field_tag 'doe'
   = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
   = hidden_field_tag 'parameters_constraints'
+
+  = render 'experiments/new/basic_information'
 
   #supervisor_fields
 

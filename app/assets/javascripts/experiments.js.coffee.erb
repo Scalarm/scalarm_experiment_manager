@@ -138,8 +138,9 @@ class window.ExperimentMonitor
   update: ->
     monitor = this
 
-    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
-    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_moes", (data) -> monitor.update_moes(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/stats", (data) -> monitor.update_statistics(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/moes", (data) -> monitor.update_moes(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/results_info", (data) -> monitor.update_results(data)
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)
@@ -246,7 +247,7 @@ class window.ExperimentMonitor
 
     monitor = this
 
-    $.getJSON "/experiments/#{monitor.experiment_id}/experiment_stats", (data) -> monitor.update_statistics(data)
+    $.getJSON "/experiments/#{monitor.experiment_id}/stats", (data) -> monitor.update_statistics(data)
 
   schedule_update: ->
     setTimeout("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", 1000)
@@ -277,6 +278,27 @@ class window.ExperimentMonitor
     #    return $(this).val() == selected_option
     #  ).attr('selected', true)
 
+  textToHtml = (text) ->
+    # space (third argument in JSON.stringify) is limited to 10 characters
+    text.replace(/[ ]/g, "&nbsp;").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\n/g, "<br/>")
+
+  update_results: (results_info) =>
+    results = results_info['results']
+    if results != null
+      results = JSON.stringify(results, null, "\t")
+      $("#result_contents").html(textToHtml(results))
+      $("#result_header").text("<%= I18n.t('experiments.result.result_header') %>: ")
+      $("#result").show()
+    else
+      $("#result_header").text("<%= I18n.t('experiments.result.result_header_none') %>")
+      $("#result").hide()
+
+    error_reason = results_info['error_reason']
+    if error_reason != null
+      $("#error_reason_contents").html(textToHtml(error_reason))
+      $("#error_reason").show()
+    else
+      $("#error_reason").hide()
 
 class window.ExperimentBooster
   constructor: (@dialog_element_id) ->

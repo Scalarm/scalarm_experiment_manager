@@ -204,8 +204,8 @@ class ExperimentsController < ApplicationController
       parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
       parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
 
-      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :name,
-                                   :description, :parameter_constraints)
+      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
+                                   :experiment_description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
@@ -438,7 +438,7 @@ class ExperimentsController < ApplicationController
     render json: {count: simulation_counter}
   end
 
-  def experiment_stats
+  def stats
     sims_generated, sims_sent, sims_done = @experiment.get_statistics
 
     if sims_generated > @experiment.experiment_size
@@ -494,7 +494,7 @@ class ExperimentsController < ApplicationController
     render json: stats
   end
 
-  def experiment_moes
+  def moes
     moes_info = {}
 
     result_set = @experiment.result_names
@@ -533,6 +533,10 @@ class ExperimentsController < ApplicationController
       "<option value='#{id}'>#{label}</option>" }.join
 
     render json: moes_info
+  end
+
+  def results_info
+    render json: {results: @experiment.results, error_reason: @experiment.error_reason}
   end
 
   #  getting parametrization and generated values of every input parameter without default value
@@ -995,7 +999,7 @@ class ExperimentsController < ApplicationController
     validate(
         point: :security_json
     )
-    
+
     result = @experiment.get_result_for(Utils::parse_json_if_string(params[:point]))
 
     respond_to do |format|

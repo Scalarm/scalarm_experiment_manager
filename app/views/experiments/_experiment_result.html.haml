@@ -1,8 +1,10 @@
-%h3.subheader= "Experiment result"
+%h3.subheader= t('experiments.result.header')
+%strong#result_header= t('experiments.result.result_header_none')
+#result.hidden
+  .panel.log-box
+    #result_contents
 
-- unless @experiment.results.nil?
-  %p
-    #{@experiment.results}
-- unless @experiment.error_reason.nil?
-  %p
-    #{@experiment.error_reason}
+#error_reason.hidden
+  %strong= t('experiments.result.error_reason_header') + ': '
+  .panel.log-box
+    #error_reason_contents

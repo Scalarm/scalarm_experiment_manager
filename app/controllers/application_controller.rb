@@ -13,7 +13,9 @@ class ApplicationController < ActionController::Base
 
   before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
-                                           :login_openid_plgrid, :openid_callback_plgrid]
+                                           :login_openid_plgrid, :openid_callback_plgrid,
+                                           :login_oauth_google, :oauth2_google_callback,
+                                           :login_oauth_github, :oauth2_github_callback]
 
   # due to security reasons (DISABLED)
   # after_filter :set_cache_buster
@@ -101,7 +103,8 @@ class ApplicationController < ActionController::Base
       format.json do
         Rails.logger.debug('[authentication] 403')
 
-        headers['WWW-Authenticate'] = %(Basic realm="Scalarm")
+        # Commented out because of SCAL-774 - popular browsers show annoying basic auth popup
+        #headers['WWW-Authenticate'] = %(Basic realm="Scalarm")
         render json: {status: 'error', reason: 'Authentication failed'}, status: :unauthorized
       end
     end
