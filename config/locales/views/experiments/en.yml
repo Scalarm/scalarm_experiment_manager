@@ -175,6 +175,18 @@ en:
         histogram: "Histogram"
         regression_tree: "Regression tree"
         scatter_plot: "Scatter plot"
+      experiment: "Experiment"
+      experiment_management:
+        header: "Management"
+        extend_input_space: "Extend input space"
+        set_scheduling_method: "Set scheduling method"
+      experiment_result:
+        header: "Browse result"
+        show_progress: "Show progress"
+        download_result:
+          header: "Download result"
+          binaries: "Simulations output (binaries)"
+          configurations: "Configurations (CSV)"
 
     result:
       header: "Experiment result"
