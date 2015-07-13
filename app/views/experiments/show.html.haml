@@ -1,46 +1,164 @@
+-#- require "erb"
+-# include ERB::Util
+
 - content_for :title, 'Scalarm - monitoring'
 - content_for :help, raw(t('help.experiments.monitoring'))
 
 = render 'experiment_links'
 = render 'analysis_charts'
 
-%section.panel.radius
-  = render 'information_panel'
+-#.row(data-equalizer="")
+= content_for :panel do
+  .nano(style="overflow: hidden;")
+    %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
+      %h3.text-center.subheader
+        = t('experiments.menu_panel.experiment_tools')
+      .action-button(style="margin-left: 4px; margin-top: 10px;")
+        %a.experiment_menu_icon.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}" style="display: block")
+          = image_tag "material_design/simulation_scenarios_icon.png"
+          = t('experiments.experiment_links.simulation_scenarios')
+        %a.experiment_menu_icon.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}" style="display: block")
+          = image_tag "material_design/running_experiments_icon.png"
+          = t('experiments.experiment_links.running_experiments')
+        %a.experiment_menu_icon.completed_experiments_link(href="#" data-action-url="#{completed_experiments_experiments_path}" style="display: block")
+          = image_tag "material_design/completed_experiments_icon.png"
+          = t('experiments.experiment_links.completed_experiments')
+        %a.experiment_menu_icon.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}" style="display: block")
+          = image_tag "material_design/historical_experiments_icon.png"
+          = t('experiments.experiment_links.historical_experiments')
+      %hr
+      %h3.text-center.subheader
+        = t('experiments.menu_panel.analysis.header')
+      %ul.analyses-panel{style: "text-align: center; list-style: none;"}
+        %li.histogram-analysis{style: "padding-bottom: 10px;"}
+          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
+            = image_tag "material_design/histogram_icon.png"
+            %hr
+            %span= t('experiments.menu_panel.analysis.histogram')
+        %li.rtree-analysis{style: "padding-bottom: 10px;"}
+          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
+            = image_tag "material_design/regression_icon.png"
+            %hr
+            %span= t('experiments.menu_panel.analysis.regression_tree')
+        %li.bivariate-analysis{style: "padding-bottom: 10px;"}
+          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
+            = image_tag "material_design/scatter_icon.png"
+            %hr
+            %span= t('experiments.menu_panel.analysis.scatter_plot')
 
-- if @experiment.is_running
-  %section.panel.radius
-    %h3.subheader
-      Computational resources summary
-      = image_tag('loading.gif', id: 'actions-loading-workers')
-    = render 'workers_info'
+%section
+  %section.row.panel.radius
+    = render 'information_panel'
 
-%section.panel.radius.last-element#monitoring_section
-  %h3.subheader= t('experiments.show.stats_header')
+  - if @experiment.is_running
+    %section.panel.radius
+      %h3.subheader
+        Computational resources summary
+        = image_tag('loading.gif', id: 'actions-loading-workers')
+      = render 'workers_info'
 
-  .content(style="padding-top: 30px; position: relative;" )
+  %section.row.panel.radius.last-element#monitoring_section
+    %h3.subheader= t('experiments.show.stats_header')
 
-    = render 'monitoring_stats'
-    .speedometer{id: "speedometer_#{@experiment.id}"}
+    .content(style="padding-top: 30px; position: relative;" )
 
-    %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
-      %h4.subheader= t('.progress_bar_header')
 
-    = render 'monitoring_actions'
+      = render 'monitoring_stats'
+      .speedometer{id: "speedometer_#{@experiment.id}"}
 
-%section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
-  = render 'monitoring_table'
+      %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
+        %h4.subheader= t('.progress_bar_header')
 
-= render 'scheduling_policy_dialog'
+      = render 'monitoring_actions'
+
+  %section.row.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
+    = render 'monitoring_table'
+
+  = render 'scheduling_policy_dialog'
+
+- unless @experiment.supervised.nil?
+  %section.panel.radius(style="margin-top: 20px;")
+    = render 'experiment_result'
 
 - content_for :javascript do
   :javascript
     $(function() {
       var booster = new window.ExperimentBooster('booster_dialog');
 
-      new window.ExperimentSpeedometer('#{@experiment.id}').show();
+      var experiment_id = "#{@experiment.id}";
+      var chart_service_url = "#{@public_chart_service_url}";
 
-      var monitor = new window.ExperimentMonitor('#{@experiment.id}');
+      if (!chart_service_url) {
+        console.log("There are no chart services available.");
+      }
+
+      $("ul.analyses-panel li a").mouseenter(function() {
+        $(this).css("background-color", "#EEE");
+      });
+      $("ul.analyses-panel li a").mouseleave(function() {
+        $(this).css("background-color", "#f5f5f5");
+      });
+
+      new window.ExperimentSpeedometer(experiment_id).show();
+
+      var monitor = new window.ExperimentMonitor(experiment_id);
       monitor.generate_html('experiment_stats');
-      
+
       window.toggle_panels_on_title_click();
+
+      if (!!chart_service_url) {
+        var base_url = encodeURIComponent('https://' + chart_service_url);
+
+
+        var panel_url = "https://" + chart_service_url + "/panels/" + experiment_id + "?base_url=" + base_url;
+        $.ajax({
+          url: panel_url,
+          xhrFields: {
+            withCredentials: true
+          },
+          success: function(data, textStatus, jqXHR) {
+            $("#panel .analyses-panel").html(data);
+
+            // disable nanoscroller in Firefox and SeaMonkey, TODO - repair nanoscroller
+            if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+              $(".nano").nanoScroller();
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.log("Error fetching panel: " + textStatus + " " + errorThrown);
+          }
+        });
+      }
+
+      $(document).foundation();
+
+      // websockets disabled due to lack of WS support in scalarm_data_explorer
+      /*
+      window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+      if (chart_service_url) {
+        try {
+          var ws = new WebSocket("wss://" + chart_service_url + "/experiment_progress/" + experiment_id);
+          window.onbeforeunload = function() {
+            //Connection closed on Download simulation manager!!
+            ws.onclose = function () {}; // disable onclose handler first
+            ws.close()
+          };
+
+          ws.onmessage = function(message) {
+            console.log("refreshing progress bar...");
+            console.log(message.data);
+            monitor.update_bar(message.data);
+          };
+
+          ws.onerror = function(message) {
+            console.log(message);
+          }
+        }
+        catch (e) {
+          console.log(e);
+          console.log("Unable to establish WebSocket connection.");
+        }
+      }
+      */
+
     });

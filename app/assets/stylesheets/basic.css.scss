@@ -18,7 +18,7 @@ input[type=submit].button {
 $wrapper-margin-top: 50px;
 #wrapper {
   position: relative;
-  max-width: 960px;
+  max-width: 960px; //1260
   background: url(image_path('bg03.jpg')) repeat;
   margin-top: $wrapper-margin-top;
   margin-right: auto;
@@ -32,6 +32,56 @@ $wrapper-margin-top: 50px;
   -webkit-border-radius: 5px;
 }
 
+#panel {
+  background: url(image_path('bg03.jpg')) repeat;
+  position: fixed;
+  margin-top: 50px;
+  padding: 10px 10px 20px;
+  width: (960/12)*3px; //1260
+  /* curved border radius */
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+
+}
+
+#panel .panel {
+  //overflow: hidden;
+  height: 100%;
+  & dl {
+    list-style-type: none;
+  }
+// &:hover {
+  // overflow-y: scroll;
+//}
+  & dd {
+    text-align: center;
+    & a {
+      padding: 6px;
+//      text-align: center;
+    }
+    & div {
+//      text-align: center;
+    }
+  }
+
+}
+
+#searchList {
+  margin: 0px;
+  & div li {
+    padding-top: 10px;
+  }
+}
+.panel {
+  margin: 5px !important;
+  padding: 30 40 40px;
+}
+
+.analyses-panel img {
+  width: 117px;
+
+}
 header {
   padding: 5px;
   margin-bottom: 17px;
@@ -66,9 +116,9 @@ header {
 footer {
   padding: 0 20px;
   clear: both;
-  margin: 10px 10px 0 10px;
+  margin: 10px 10px 10px 10px;
   background: url(image_path('bg03.jpg')) repeat;
-  max-width: 960px;
+//  max-width: 960px;
   margin-right: auto;
   margin-left: auto;
   padding: 5px;
@@ -76,6 +126,10 @@ footer {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+}
+
+.row {
+  max-width: 960px; //1260
 }
 
 i {
@@ -328,48 +382,28 @@ select {
     border: medium solid;
 }
 
-div.histogram-analysis {
-    position: absolute;
-    top: 0px;
-    right: -110px;
-    cursor: pointer;
-}
+//div.histogram-analysis {
+//    position: absolute;
+//    top: 0px;
+//    right: -110px;
+//}
+//
+//div.rtree-analysis {
+//    position: absolute;
+//    top: 170px;
+//    right: -110px;
+//}
+//
+//div.bivariate-analysis {
+//    position: absolute;
+//    top: 340px;
+//    right: -110px;
+//}
 
-div.rtree-analysis {
-    position: absolute;
-    top: 170px;
-    right: -110px;
+p {
+  &.histogram-analysis, &.rtree-analysis, &.bivariate-analysis {
     cursor: pointer;
-}
-
-div.bivariate-analysis {
-    position: absolute;
-    top: 340px;
-    right: -110px;
-    cursor: pointer;
-}
-
-/* Experiment links */
-
-div.running_experiments_link {
-    position: absolute;
-    top: 0px;
-    left: -110px;
-    cursor: pointer;
-}
-
-div.available_experiments_link {
-    position: absolute;
-    top: 170px;
-    left: -110px;
-    cursor: pointer;
-}
-
-div.historical_experiments_link {
-    position: absolute;
-    top: 340px;
-    left: -110px;
-    cursor: pointer;
+  }
 }
 
 /* Login */
@@ -595,6 +629,50 @@ textarea {
   max-width: 500px;
 }
 
+@media screen and (min-width: 1366px) {
+  #wrapper {
+   max-width: 1260px;
+  }
+  #panel {
+    position: fixed;
+    width: calc(3*(1260px/12));
+  }
+  .row {
+    max-width: 1260px;
+  }
+}
+@media screen and (max-width: 1366px) {
+  //#panel {
+    //width: calc(3*(100%/12));
+//    & .panel {
+//      background-color: red;
+//    };
+    //& .action-button span {
+     // display: none;
+   // }
+  //}
+
+  div.action-button .row {
+    text-align: center;
+  }
+
+
+  #panel {
+    position: fixed;
+    width: calc(3*(95%/12));
+  }
+  .row {
+    max-width: 95%;
+  }
+  #wrapper {
+    max-width: 100%;
+  }
+}
+
 span.tooltip {
   margin-top: -$wrapper-margin-top;
+}
+
+.action-button a {
+  margin-bottom: 2px;
 }

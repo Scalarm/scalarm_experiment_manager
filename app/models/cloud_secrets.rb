@@ -5,14 +5,10 @@
 # other fields are user defined and should be of String class to enable encryption!
 
 require 'infrastructure_facades/infrastructure_errors'
+require 'scalarm/database/model'
 
-class CloudSecrets < EncryptedMongoActiveRecord
-
+class CloudSecrets < Scalarm::Database::Model::CloudSecrets
   attr_join :user, ScalarmUser
-
-  def self.collection_name
-    'cloud_secrets'
-  end
 
   def valid?
     begin
@@ -29,5 +25,4 @@ class CloudSecrets < EncryptedMongoActiveRecord
       false
     end
   end
-
 end

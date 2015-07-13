@@ -50,4 +50,8 @@ module UserControllerHelper
     url_for action: 'openid_callback_plgrid', only_path: false, params: (temp_pass ? {temp_pass: temp_pass} : {})
   end
 
+  def github_configured?
+    Rails.application.secrets.include?(:github_client_id) and Rails.application.secrets.include?(:github_client_secret)
+  end
+
 end

@@ -9,22 +9,22 @@ class SimulationScenariosController < ApplicationController
   end
 
   def edit
-    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
-      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: current_user.login)
       redirect_to simulations_path
     else
-      @input_writers = SimulationInputWriter.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-      @executors = SimulationExecutor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-      @output_readers = SimulationOutputReader.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
-      @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(@current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @executors = SimulationExecutor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
+      @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id).map{|ex| [ex.name, ex._id]}.unshift(["None", nil])
     end
   end
 
   def update
     # TODO if necessary - validate simulation_input and simulation_binaries somehow
 
-    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
-      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: @current_user.login)
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != current_user.id
+      flash[:error] = t('simulation_scenarios.not_owned_by', id: params[:id], user: current_user.login)
     else
       simulation_input =  params.include?(:simulation_input) ? Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input])) : nil
       simulation_scenario_params_validation(simulation_input)
@@ -37,10 +37,10 @@ class SimulationScenariosController < ApplicationController
         @simulation_scenario.created_at = Time.now
 
         begin
-          set_up_adapter_checked(@simulation_scenario, 'input_writer', @current_user, params, false)
-          set_up_adapter_checked(@simulation_scenario, 'executor', @current_user, params)
-          set_up_adapter_checked(@simulation_scenario, 'output_reader', @current_user, params, false)
-          set_up_adapter_checked(@simulation_scenario, 'progress_monitor', @current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'input_writer', current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'executor', current_user, params)
+          set_up_adapter_checked(@simulation_scenario, 'output_reader', current_user, params, false)
+          set_up_adapter_checked(@simulation_scenario, 'progress_monitor', current_user, params, false)
 
           unless (binaries = params[:simulation_binaries]).blank?
             @simulation_scenario.set_simulation_binaries(binaries.original_filename, binaries.read)
@@ -138,7 +138,7 @@ class SimulationScenariosController < ApplicationController
       flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
     end
 
-    if @simulation_scenario.blank? or @simulation_scenario.user_id != @current_user.id
+    if @simulation_scenario.blank? or @simulation_scenario.user_id != current_user.id
       flash[:error] = t('simulation_scenarios.not_owned_by', { id: params[:id], user: params[:sharing_with_login] })
     end
 
@@ -181,7 +181,7 @@ class SimulationScenariosController < ApplicationController
           flash[:error] = t('simulations.create.bad_simulation_input')
         end
 
-      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: @current_user.id})).blank?)
+      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: current_user.id})).blank?)
         unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end
@@ -196,7 +196,7 @@ class SimulationScenariosController < ApplicationController
         name: [:optional, :security_default]
     )
 
-    users_scenarios = @current_user.get_simulation_scenarios
+    users_scenarios = current_user.get_simulation_scenarios
 
     @simulation_scenario = if params[:id]
                              users_scenarios.find{|scenario| scenario.id.to_s == params[:id]}

@@ -14,12 +14,13 @@ REQUIRED_ARCHS = ['linux_386']
 
 namespace :service do
   desc 'Start the service'
-  task :start, [:debug] => [:environment, :setup] do |t, args|
+  task :start, [:debug] => [:ensure_config, :setup, :environment] do |t, args|
     puts 'puma -C config/puma.rb'
     %x[puma -C config/puma.rb]
 
     load_balancer_registration
     create_anonymous_user
+
     monitoring_probe('start')
   end
 
@@ -29,6 +30,7 @@ namespace :service do
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_probe('stop')
+
     load_balancer_deregistration
   end
 
@@ -50,6 +52,12 @@ namespace :service do
       non_digested = File.join(source)
       FileUtils.cp(file, non_digested)
     end
+  end
+
+  desc 'Create default configuration files if these do not exist'
+  task :ensure_config do
+    copy_example_config_if_not_exists('config/secrets.yml')
+    copy_example_config_if_not_exists('config/puma.rb')
   end
 
   desc 'Downloading and installing dependencies'
@@ -119,18 +127,21 @@ end
 
 namespace :db_router do
   desc 'Start MongoDB router'
-  task :start, [:debug] => [:environment, :setup] do |t, args|
-    information_service = InformationService.new
+  task :start, [:debug] => [:setup] do |t, args|
+    config = load_config
+    information_service = create_information_service(config)
 
     config_services = information_service.get_list_of('db_config_services')
     puts "Config services: #{config_services.inspect}"
-    unless config_services.blank?
+    if config_services.blank?
+      puts 'There are no config services available - will not start router'
+    else
       config_service_url = config_services.sample
       start_router(config_service_url) if config_service_url
     end
   end
 
-  task :stop, [:debug] => [:environment] do |t, args|
+  task :stop, [:debug] => [] do |t, args|
     stop_router
   end
 
@@ -185,51 +196,74 @@ def stop_router
   end
 end
 
+##
+# Starts or stops process with threads monitoring:
+# - MonitoringProbe - monitor server machine resources
+# - ExperimentWatcher - check periodically if some SimulationRuns does not
+#   exceeded their time limit (probably they are faulty)
+# - InfrastructureFacade monitoring - multiple threads for SimulationManagers status monitoring
 def monitoring_probe(action)
   probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
 
-  if action == 'start'
-    Process.daemon(true)
-    monitoring_job_pid = fork {
-      # requiring all class from the model
-      Dir[File.join(Rails.root, 'app', 'models', "**/*.rb")].each do |f|
-        require f
+  case action
+    when 'start'
+      Process.daemon(true)
+      monitoring_job_pid = fork do
+        begin
+          # requiring all class from the model
+          Dir[File.join(Rails.root, 'app', 'models', '**/*.rb')].each do |f|
+            require f
+          end
+
+          # start machine monitoring only if there is configuration
+          if Rails.application.secrets.monitoring
+            Rails.logger.info('Starting monitoring probe')
+            probe = MonitoringProbe.new
+            probe.start_monitoring
+          else
+            Rails.logger.info('Monitoring probe disabled due to lack of configuration')
+          end
+
+          Rails.logger.info('Starting experiment watcher')
+          ExperimentWatcher.watch_experiments
+
+          Rails.logger.info('Starting monitoring threads for all infrastructures')
+          InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
+        rescue Exception => e
+          Rails.logger.error("Error occured in monitoring process (application may be unusable): #{e.to_s}\n#{e.backtrace().join("\n")}")
+          raise
+        end
       end
 
-      probe = MonitoringProbe.new
-      probe.start_monitoring
+      IO.write(probe_pid_path, monitoring_job_pid)
 
-      ExperimentWatcher.watch_experiments
-      InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
-    }
-
-    IO.write(probe_pid_path, monitoring_job_pid)
-
-    Process.detach(monitoring_job_pid)
-
-  elsif action == 'stop'
-    if File.exist?(probe_pid_path)
-      monitoring_job_pid = IO.read(probe_pid_path)
-      Process.kill('TERM', monitoring_job_pid.to_i)
-    end
+      Process.detach(monitoring_job_pid)
+    when 'stop'
+      if File.exist?(probe_pid_path)
+        monitoring_job_pid = IO.read(probe_pid_path)
+        Process.kill('TERM', monitoring_job_pid.to_i)
+      end
   end
-
 end
 
 def create_anonymous_user
   unless Rails.env.test?
     require 'utils'
 
-    config = Utils::load_config
+    # anonymous_login and anonymous_password moved to secrets.yml
+    #config = Utils::load_config
+    config = Rails.application.secrets.anonymous_user
 
-    anonymous_login = config['anonymous_login']
-    anonymous_password = config['anonymous_password']
+    if config
+      anonymous_login = config['login']
+      anonymous_password = config['password']
 
-    if anonymous_login and anonymous_password and not ScalarmUser.find_by_login(anonymous_login)
-      Rails.logger.debug "Creating anonymous user with login: #{anonymous_login}"
-      user = ScalarmUser.new(login: anonymous_login)
-      user.password = anonymous_password
-      user.save
+      if anonymous_login and anonymous_password and not ScalarmUser.find_by_login(anonymous_login)
+        Rails.logger.debug "Creating anonymous user with login: #{anonymous_login}"
+        user = ScalarmUser.new(login: anonymous_login)
+        user.password = anonymous_password
+        user.save
+      end
     end
   end
 end
@@ -426,4 +460,27 @@ def load_balancer_deregistration
   else
     puts 'load_balancer.disable_registration option is active'
   end
+end
+
+def copy_example_config_if_not_exists(base_name, prefix='example')
+  config = base_name
+  example_config = "#{base_name}.example"
+
+  unless File.exists?(config)
+    puts "Copying #{example_config} to #{config}"
+    FileUtils.cp(example_config, config)
+  end
+end
+
+def load_config
+  YAML.load(ERB.new(File.read("#{Rails.root}/config/secrets.yml")).result)[ENV['RAILS_ENV'] || 'development']
+end
+
+def create_information_service(config)
+  Scalarm::ServiceCore::InformationService.new(
+    config['information_service_url'],
+    config['information_service_user'],
+    config['information_service_pass'],
+    !!config['information_service_development']
+  )
 end

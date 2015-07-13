@@ -19,6 +19,14 @@ ScalarmExperimentManager::Application.routes.draw do
   post 'user_controller/change_password'
   get 'status' => 'user_controller#status'
 
+  # OAuth
+  get 'login/login_oauth_google' => 'user_controller#login_oauth_google'
+  get 'login/oauth2_google_callback' => 'user_controller#oauth2_google_callback'
+
+  get 'login/login_oauth_github' => 'user_controller#login_oauth_github'
+  get 'login/oauth2_github_callback' => 'user_controller#oauth2_github_callback'
+
+
   # OpenID
   get 'login/login_openid_google' => 'user_controller#login_openid_google'
   get 'login/openid_callback_google' => 'user_controller#openid_callback_google'
@@ -42,6 +50,7 @@ ScalarmExperimentManager::Application.routes.draw do
       post :calculate_experiment_size
       post :calculate_imported_experiment_size
       get :running_experiments
+      get :completed_experiments
       get :historical_experiments
       get :random_experiment
     end
@@ -60,6 +69,8 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :intermediate_results
       get   :extension_dialog
       post  :change_scheduling_policy
+      post  :schedule_point
+      get   :get_result
 
       # experiment charts
       post :histogram
@@ -73,12 +84,18 @@ ScalarmExperimentManager::Application.routes.draw do
 
       # Progress monitoring API
       get :completed_simulations_count
-      get :experiment_stats
-      get :experiment_moes
+      get :experiment_stats, to: 'experiments#stats'
+      get :stats
+      get :experiment_moes, to: 'experiments#moes'
+      get :moes
+      get :results_info
 
       get :simulation_manager
 
       post :share
+
+      # Optimization experiment
+      post :mark_as_complete
     end
 
     resources :simulations do

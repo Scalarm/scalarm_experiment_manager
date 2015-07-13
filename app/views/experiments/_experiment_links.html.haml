@@ -1,38 +1,3 @@
-= content_for :navbar do
-  %ul
-    %li.has-dropdown.not-click
-      %a(href="#")= t('.navigation_link')
-      %ul.dropdown
-        %li
-          %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}")
-            = t('.running_experiments')
-        %li
-          %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}")
-            = t('.simulation_scenarios')
-        %li
-          %a.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}")
-            = t('.historical_experiments')
-
-    %li.has-dropdown.not-click
-      %a(href="#")= t('.data_exploration_link')
-      %ul.dropdown
-        %li
-          %a.histogram-analysis(href="#")= t('.histograms')
-        %li
-          %a.rtree-analysis(href="#")= t('.regression_trees')
-        %li
-          %a.bivariate-analysis(href="#")= t('.scatter_plots')
-
-.running_experiments_link(data-action-url="#{running_experiments_experiments_path}")
-  = image_tag('running_experiments.png', :size => '100x150')
-
-.available_experiments_link(data-action-url="#{simulations_simulation_scenarios_path}")
-  = image_tag('available_experiments.png', :size => '100x150')
-
-.historical_experiments_link(data-action-url="#{historical_experiments_experiments_path}")
-  = image_tag('historical_experiments.png', :size => '100x150')
-
-
 #experiment-list-modal.reveal-modal(data-reveal="")
   %a.close-reveal-modal &#215;
   = image_tag 'loading.gif', class: 'busy', style: 'display: none;'

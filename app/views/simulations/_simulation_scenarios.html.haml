@@ -10,6 +10,6 @@
         %a.button.expand.radius.last-element(href="#{new_experiment_path(simulation_id: simulation.id)}")
           - if simulation.is_public
             %i.fa.fa-globe(style="font-size: 20px;")
-          - elsif simulation.user_id != @current_user.id
+          - elsif simulation.user_id != current_user.id
             %i.fi-share(style="font-size: 20px;")
           = simulation.name

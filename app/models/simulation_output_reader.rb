@@ -1,7 +1,4 @@
-class SimulationOutputReader < MongoActiveRecord
+require 'scalarm/database/model/simulation_output_reader'
 
-  def self.collection_name
-    'simulation_output_readers'
-  end
-
+class SimulationOutputReader < Scalarm::Database::Model::SimulationOutputReader
 end

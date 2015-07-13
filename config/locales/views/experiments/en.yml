@@ -1,5 +1,9 @@
 en:
   experiments:
+    optimization_method:
+      title: Optimization method
+      choose: Set optimization method
+
     click_to_expand: "(click to expand)"
 
     information_panel:
@@ -11,7 +15,8 @@ en:
 
     experiment_links:
       navigation_link: Experiments
-      running_experiments: Running experiments
+      running_experiments: Experiments in progress
+      completed_experiments: Completed experiments
       simulation_scenarios: Simulation scenarios
       historical_experiments: Historical experiments
       data_exploration_link: Data exploration methods
@@ -25,6 +30,9 @@ en:
     running_experiments:
       link_text: "%{name}, started at: %{start_time}"
       no_experiments: "There is no experiment running currently"
+    completed_experiments:
+      link_text: "%{name}, started at: %{start_time}"
+      no_experiments: "There is no completed experiment currently"
     monitoring_actions:
       blank_shared_with_list: "none"
       stop_experiment:
@@ -149,3 +157,27 @@ en:
        caption: "Started simulation runs"
        started_at: "Started at"
        results_header: "Intermediate results"
+
+    simulated_annealing:
+      title: Simulated annealing
+      maxiter: Maximum number of iterations
+      dwell: dwell
+      schedule: Scheduling method
+
+    scatter_plot:
+      click_for_details: "Click for details"
+      regression_line: "Regression line"
+
+    menu_panel:
+      experiment_tools: "Management"
+      analysis:
+        header: "Analysis"
+        histogram: "Histogram"
+        regression_tree: "Regression tree"
+        scatter_plot: "Scatter plot"
+
+    result:
+      header: "Experiment result"
+      result_header: "Result"
+      result_header_none: "No result available"
+      error_reason_header: "Error reason"

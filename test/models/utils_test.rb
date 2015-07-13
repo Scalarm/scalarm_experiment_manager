@@ -35,4 +35,11 @@ class UtilsTest < MiniTest::Test
     assert_match regexp, json_object
   end
 
+  def test_header_newlines
+    content_orig = 'hello\r\nworld'
+    content_converted = "hello\nworld"
+
+    assert_equal content_converted, Utils::header_newlines_deserialize(content_orig)
+  end
+
 end

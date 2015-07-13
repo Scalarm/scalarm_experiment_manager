@@ -26,7 +26,7 @@ module ExperimentsHelper
 
   def share_with_users
     ScalarmUser.all.select{|u|
-      u.id != @current_user.id and (@experiment.shared_with.blank? or (not @experiment.shared_with.include?(u.id)))
+      u.id != current_user.id and (@experiment.shared_with.blank? or (not @experiment.shared_with.include?(u.id)))
     }.map{ |u|
       u.login.nil? ? u.email : u.login
     }
@@ -43,6 +43,20 @@ module ExperimentsHelper
 
   def constraints_conditions
     [">", ">="]
+  end
+
+  def supervisor_options(supervisors)
+    none = ['None', 'none']
+    options = [none]
+    supervisors.each do |supervisor|
+      if supervisor.has_key? 'name'
+        options.append [supervisor['name'], supervisor['id']]
+      else
+        options.append [supervisor['id'], supervisor['id']]
+      end
+    end
+    options_for_select options, selected: none
+
   end
 
 end
