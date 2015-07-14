@@ -7,6 +7,8 @@
 = render 'experiment_links'
 = render 'analysis_charts'
 
+- description = Hash["histogram" => "A histogram analysis shows results frequency distributions", "scatter" => "Analysis of two variables relationship creates a scatter plot", "regression" => "The classification of objects by dividing the found set of conditions"]
+
 -#.row(data-equalizer="")
 = content_for :panel do
   .nano(style="overflow: hidden;")
@@ -28,22 +30,36 @@
           = t('experiments.experiment_links.historical_experiments')
       %hr
       %h3.text-center.subheader
+        = t('experiments.menu_panel.experiment')
+      %h5.text-center.subheader
+        = t('experiments.menu_panel.experiment_management.header')
+      .action-button(style="margin-left: 4px; margin-top: 10px;")
+        %a.extend_input_space_link(href="#" id="extendinputspace" data-action-url="#" style="display: block; padding-top: 10px;")
+          = t('experiments.menu_panel.experiment_management.extend_input_space')
+        %a.set_scheduling_method_link(href="#" id="setschedulingmethod" data-action-url="#" style="display: block; padding-top: 10px;")
+          %span= t('experiments.menu_panel.experiment_management.set_scheduling_method')
+      %h5.text-center.subheader(style="margin-left: 4px; margin-top: 10px; padding-top: 10px;")
+        = t('experiments.menu_panel.experiment_result.header')
+      .action-button(style="margin-left: 4px; margin-top: 10px; padding-top: 10px;")
+        %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding-top: 5px;")
+          = t('experiments.menu_panel.experiment_result.show_progress')
+        %a.download_result_link(href="#" id = "downloadresult" data-action-url="#" style="display: block; padding-top: 2px;")
+          = t('experiments.menu_panel.experiment_result.download_result.header')
+          %ul#download-options(style='display: none')
+            %li= link_to t('experiments.menu_panel.experiment_result.download_result.binaries'), results_binaries_experiment_path(@experiment.id)
+            %li= link_to t('experiments.menu_panel.experiment_result.download_result.configurations'), file_with_configurations_experiment_path(@experiment.id)
+
+      %h3.text-center.subheader
         = t('experiments.menu_panel.analysis.header')
-      %ul.analyses-panel{style: "text-align: center; list-style: none;"}
+      %ul.analyses-panel{style: "text-align: left; list-style: none;"}
         %li.histogram-analysis{style: "padding-bottom: 10px;"}
-          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
-            = image_tag "material_design/histogram_icon.png"
-            %hr
+          %a.tip-right.text-left{href:"#method"+t('experiments.menu_panel.analysis.histogram'), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{description['histogram']}</div><div style=width:35%;float:right;><img src=/assets/material_design/histogram_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
             %span= t('experiments.menu_panel.analysis.histogram')
         %li.rtree-analysis{style: "padding-bottom: 10px;"}
-          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
-            = image_tag "material_design/regression_icon.png"
-            %hr
+          %a.tip-right.text-left{href:"#method"+t('experiments.menu_panel.analysis.regression_tree'), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{description['regression']}</div><div style=width:35%;float:right;><img src=/assets/material_design/regression_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
             %span= t('experiments.menu_panel.analysis.regression_tree')
         %li.bivariate-analysis{style: "padding-bottom: 10px;"}
-          %a.small-9.columns.small-centered.tip-right.text-center{style: "padding-left: 0px; padding-right: 0px; display: block; padding-top: 10px; border: 1px solid rgb(213,213,213); border-radius: 6px; padding-bottom: 7px;background-color: #F5F5F5;"}
-            = image_tag "material_design/scatter_icon.png"
-            %hr
+          %a.tip-right.text-left{href:"#method"+t('experiments.menu_panel.analysis.scatter_plot'), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{description['scatter']}</div><div style=width:35%;float:right;><img src=/assets/material_design/scatter_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
             %span= t('experiments.menu_panel.analysis.scatter_plot')
 
 %section
@@ -161,4 +177,27 @@
       }
       */
 
+    $("#setschedulingmethod").bind("click", function() {
+        $('#scheduling_policy_dialog').foundation('reveal', 'open');
+        $('#scheduling-ajax-response').html('');
+      });
+
+      $("#showprogress").bind("click", function() {
+        $('#progressInformationWrapper').slideToggle();
+        $('html, body').animate({ scrollTop: $('#progressInformationWrapper').offset().top }, 1000);
+      });
+
+      $("#extendinputspace").bind("click", function() {
+        $('#actions-loading').show();
+        $('#extension-dialog').load("#{extension_dialog_experiment_path(@experiment.id)}", function() {
+          $('#actions-loading').hide();
+          $('#extension-dialog').foundation('reveal', 'open');
+        })
+      });
+
+      $("#downloadresult").bind("click", function() {
+        if ($('#download-options').is(":visible"))
+          $('#download-options').hide();
+        else $('#download-options').show();
+      });
     });
