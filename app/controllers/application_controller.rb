@@ -124,10 +124,6 @@ class ApplicationController < ActionController::Base
     @@probe.send_measurement(controller_name, action_name, processing_time)
   end
 
-  def validate(validators)
-    validate_params(params, validators)
-  end
-
   def read_server_name
     session[:server_name] = params[:server_name] if params.include? :server_name
   end
