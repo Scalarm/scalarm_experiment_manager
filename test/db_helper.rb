@@ -17,7 +17,7 @@ module DBHelper
   def teardown(database_name=DATABASE_NAME)
     db = Scalarm::Database::MongoActiveRecord.get_database(database_name)
     db.collections.each do |collection|
-      collection.remove unless collection.name.start_with? 'system.'
+      collection.remove unless collection.name.start_with? 'system.' or collection.capped?
     end
   end
 end
