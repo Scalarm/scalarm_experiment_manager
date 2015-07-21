@@ -4,26 +4,36 @@
   - scales_options = options_for_select([[t('charts.scatter.linear_scale'), 'linear'],
         [t('charts.scatter.logarithmic_scale'), 'logarithmic']],
         'linear')
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']])
 
   .row
-    .small-5.columns
-      = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
-    .small-4.columns
+    .small-3.columns
+      = label_tag :x_axis, "Select values for the X axis (MoE or input)"   + ':', class: 'inline'
+    .small-2.columns
       = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
     .small-1.columns
       = label_tag :x_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline'
     .small-2.columns
       = select_tag 'x_axis_type', scales_options
+    .small-1.columns
+      = label_tag :x_axis_notation, "Notation" + ':', class: 'inline'
+    .small-3.columns
+      = select_tag 'x_axis_notation', notation_options
 
   .row
-    .small-5.columns
+    .small-3.columns
       = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
-    .small-4.columns
+    .small-2.columns
       = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
     .small-1.columns
       = label_tag :y_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline'
     .small-2.columns
       = select_tag 'y_axis_type', scales_options
+    .small-1.columns
+      = label_tag :y_axis_notation, "Notation" + ':', class: 'inline'
+    .small-3.columns
+      = select_tag 'y_axis_notation', notation_options
+
 
   .row
     %ul.inline-list
@@ -33,6 +43,7 @@
 #bivariate_charts
 
 - content_for :javascript do
+
   :javascript
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -60,6 +71,8 @@
       var x_axis_type = $('#bivariate_charts_form').find('select[name=\'x_axis_type\'] option:selected').val();
       var y_axis_type = $('#bivariate_charts_form').find('select[name=\'y_axis_type\'] option:selected').val();
 
+      var x_axis_notation = $('#bivariate_charts_form').find('select[name=\'x_axis_notation\'] option:selected').val();
+      var y_axis_notation = $('#bivariate_charts_form').find('select[name=\'y_axis_notation\'] option:selected').val();
       if (x_axis==="nil" || y_axis==="nil") {
         toastr.error("#{t('experiments.errors.incorrect_parameter')}");
       }
@@ -67,7 +80,8 @@
         $('#busy_scatter_plot').show();
         $.post("#{scatter_plot_experiment_path(@experiment.id)}",
           { 'x_axis': x_axis, 'y_axis': y_axis,
-          'x_axis_type': x_axis_type, 'y_axis_type': y_axis_type },
+          'x_axis_type': x_axis_type, 'y_axis_type': y_axis_type,
+          'x_axis_notation': x_axis_notation, 'y_axis_notation' : y_axis_notation },
           function(data) { $('#busy_scatter_plot').hide(); }
         );
       }

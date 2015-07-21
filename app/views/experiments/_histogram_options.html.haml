@@ -1,6 +1,8 @@
 %section.panel.radius.list.analysis-chart#basic_charts_form
   %h3.subheader= t('charts.histogram.section_header')
 
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']])
+
   .row
     .small-10.columns
       .small-3.columns
@@ -11,8 +13,18 @@
     .small-10.columns
       .small-3.columns
         = label_tag :resolution, t('charts.histogram.resolution') + ':', class: 'inline'
-      .small-9.columns
+      .small-9.columns.ends
         = text_field_tag 'resolution', 10
+  .row
+    .small-10.columns
+      .small-3.columns
+        = label_tag :x_axis_notation, "Notation on axis X" + ':', class: 'inline'
+      .small-3.columns
+        = select_tag 'x_axis_notation', notation_options
+      .small-3.columns
+        = label_tag :y_axis_notation, "Notation on axis Y" + ':', class: 'inline'
+      .small-3.columns.end
+        = select_tag 'y_axis_notation', notation_options
   .row
     %ul.inline-list
       %li= submit_tag t('charts.load_button'), class: 'button radius'
@@ -30,6 +42,8 @@
         $('#busy_basic').show();
         var moe_name = $('#basic_charts_form select[name=\'moe_name\'] option:selected').val();
         var resolution = $('#basic_charts_form input[name=\'resolution\']').val();
+        var x_axis_notation = $('#basic_charts_form select[name=\'x_axis_notation\']').val();
+        var y_axis_notation = $('#basic_charts_form select[name=\'y_axis_notation\']').val();
         resolution = parseInt(resolution);
         if(isNaN(resolution) || resolution < 1 || resolution > 100){
           toastr.error("#{t('experiments.errors.invalid_resolution')}");
@@ -37,7 +51,8 @@
         }
         else {
           $.post("#{histogram_experiment_path(@experiment.id)}",
-            { 'moe_name': moe_name, 'resolution': resolution },
+            { 'moe_name': moe_name, 'resolution': resolution,
+                'x_axis_notation': x_axis_notation, 'y_axis_notation': y_axis_notation},
             function(data) { $('#busy_basic').hide(); }
           );
         }

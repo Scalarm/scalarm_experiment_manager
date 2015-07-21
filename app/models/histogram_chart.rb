@@ -3,14 +3,15 @@ require 'rinruby'
 require 'tempfile'
 
 class HistogramChart
-  attr_accessor :experiment, :resolution, :moe_name, :bucket_name, :buckets, :stats
+  attr_accessor :experiment, :resolution, :moe_name, :bucket_name, :buckets, :stats, :x_axis_notation, :y_axis_notation
 
-  def initialize(experiment, moe_name, resolution)
+  def initialize(experiment, moe_name, resolution, additional =nil)
     @experiment = experiment
     @moe_name = moe_name
     @resolution = resolution
     @stats = { ex_min: 0 }
-
+    @x_axis_notation = additional[:x_axis_notation]
+    @y_axis_notation = additional[:y_axis_notation]
     prepare_chart_data
   end
 
@@ -54,8 +55,12 @@ class HistogramChart
       #if ind == resolution - 1
       #  "[#{ '%.1f' % (min_value + slice_width * ind) }-#{ '%.1f' % (min_value + slice_width * (ind + 1)) }]"
       #else
+
+      if x_axis_notation==="scientific"
+        "[#{ "%.#{leading_nums}E" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}E" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
+      else
         "[#{ "%.#{leading_nums}f" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}f" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
-      #end
+      end
     }
   end
 

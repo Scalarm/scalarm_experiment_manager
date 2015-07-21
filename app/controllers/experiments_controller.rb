@@ -801,7 +801,7 @@ class ExperimentsController < ApplicationController
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, x_axis_notation: params[:x_axis_notation].to_s, y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -819,6 +819,8 @@ class ExperimentsController < ApplicationController
         y_axis: [:optional, :security_default],
         x_axis_type: [:optional, :security_default],
         y_axis_type: [:optional, :security_default],
+        x_axis_notation:  [:optional, :security_default],
+        y_axis_notation: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
 
@@ -830,7 +832,9 @@ class ExperimentsController < ApplicationController
           params[:x_axis].to_s,
           params[:y_axis].to_s,
           x_axis_type: params[:x_axis_type].to_s,
-          y_axis_type: params[:y_axis_type].to_s
+          y_axis_type: params[:y_axis_type].to_s,
+          x_axis_notation: params[:x_axis_notation].to_s,
+          y_axis_notation: params[:y_axis_notation].to_s
       )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data

@@ -1,7 +1,8 @@
 i = basic_chart_tab.length;
 
 $("#basic_charts").prepend("<div id='basic_chart_" + i + "'></div>");
-$("#basic_chart_"+i).html("<%= escape_javascript(render :partial => 'basic_statistics_chart', :locals => { experiment: @experiment, moe_name: @chart.moe_name, resolution: @chart.resolution, stats: @chart.stats }) %>")
+$("#basic_chart_"+i).html("<%= escape_javascript(render :partial => 'histogram_chart', :locals => { experiment: @experiment, moe_name: @chart.moe_name, resolution: @chart.resolution, stats: @chart.stats }) %>")
+
 
 $(document).ready(function() {
   basic_chart_tab[i] = new Highcharts.Chart({
@@ -26,7 +27,14 @@ $(document).ready(function() {
   	yAxis: {
   		title: {
   			text: 'Num. of simulations'
-  		}
+  		},
+        <% if @chart.y_axis_notation === 'scientific'%>
+        labels:{
+            formatter: function(){
+                return this.value.toExponential(2);
+            }
+        }
+        <% end %>
   	},
   	tooltip: {
   		formatter: function() {

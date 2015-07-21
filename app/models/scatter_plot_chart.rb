@@ -2,6 +2,7 @@ class ScatterPlotChart
   attr_accessor :experiment, :x_axis, :y_axis,
                 :x_axis_label, :y_axis_label,
                 :x_axis_type, :y_axis_type,
+                :x_axis_notation, :y_axis_notation,
                 :chart_data, :linear_regression_data
 
   def initialize(experiment, x_axis, y_axis, additional=nil)
@@ -16,6 +17,9 @@ class ScatterPlotChart
 
     @x_axis_type = additional[:x_axis_type]
     @y_axis_type = additional[:y_axis_type]
+
+    @x_axis_notation = additional[:x_axis_notation]
+    @y_axis_notation = additional[:y_axis_notation]
   end
 
   def prepare_chart_data
