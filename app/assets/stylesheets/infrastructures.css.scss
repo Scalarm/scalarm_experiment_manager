@@ -3,11 +3,18 @@
     fill: #fff;
     stroke: steelblue;
     stroke-width: 1.5px;
+
+}
+
+.node circle.highlighted {
+  fill: orange;
 }
 
 .node text {
-    font-size: 13px;
+    font-size: 15px;
 }
+
+
 
 //.root-node text {
 //    text-anchor: end;
@@ -19,6 +26,7 @@
 .node text {
     text-anchor: end;
     transform: translate(-15px,-3px);
+
 }
 
 circle.children-collapsed {

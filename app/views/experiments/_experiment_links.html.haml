@@ -1,3 +1,24 @@
+= content_for :navbar do
+  %ul
+    %li.has-dropdown.not-click
+      %a(href="#")= t('.navigation_link')
+      %ul.dropdown
+        %li
+          %a.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}")
+            = t('.simulation_scenarios')
+        %li
+          %a.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}")
+            = t('.running_experiments')
+        %li
+          %a.historical_experiments_link(href="#" data-action-url="#{completed_experiments_experiments_path}")
+            = t('.completed_experiments')
+        %li
+          %a.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}")
+            = t('.historical_experiments')
+
+
+
+
 #experiment-list-modal.reveal-modal(data-reveal="")
   %a.close-reveal-modal &#215;
   = image_tag 'loading.gif', class: 'busy', style: 'display: none;'
