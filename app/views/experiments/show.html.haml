@@ -41,6 +41,9 @@
         %li{style: "text-align: left; list-style: none;"}
           %a.set_scheduling_method_link(href="#" id="setschedulingmethod" data-action-url="#" style="display: block; padding-top: 10px;")
             %span= t('experiments.menu_panel.experiment_management.set_scheduling_method')
+        %li{style: "text-align: left; list-style: none;"}
+          %a.set_scheduling_method_link(href= "#{infrastructures_path}?experiment_id=#{@experiment.id}" id="setschedulingmethod" data-action-url="#" style="display: block; padding-top: 10px;")
+            %span= "Show details"
       %h5.text-center.subheader(style="margin-left: 4px; margin-top: 10px; padding-top: 10px;")
         = t('experiments.menu_panel.experiment_result.header')
       %ul.experiments-result-panel
@@ -92,7 +95,7 @@
 
       = render 'monitoring_actions'
 
-  %section.row.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
+  %section.row.panel.radius.last-element#progressInformationWrapper(style="margin-top: 50px;")
     = render 'monitoring_table'
 
   = render 'scheduling_policy_dialog'
@@ -188,7 +191,7 @@
       });
 
       $("#showprogress").bind("click", function() {
-        $('#progressInformationWrapper').slideToggle();
+        //$('#progressInformationWrapper').slideToggle();
         $('html, body').animate({ scrollTop: $('#progressInformationWrapper').offset().top }, 1000);
       });
 
