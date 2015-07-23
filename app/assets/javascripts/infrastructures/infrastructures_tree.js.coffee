@@ -243,6 +243,8 @@ class window.InfrastructuresTree
       .attr("class", (d) => d._children and 'children-collapsed' or '')
       .on("click", (d) => @toggle(d); @updateTree(d))
     gMetaNodes.append("svg:text")
+      .attr("text-anchor", "end")
+      .attr("transform", "translate(-15px,-3px)")
       .text((d) => @cutText(d.name, 18))
       .style("fill-opacity", 1e-6)
       .attr("title", (d) => d.name)

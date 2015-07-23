@@ -32,30 +32,39 @@
 
       %h3.text-center.subheader
         = t('experiments.menu_panel.experiment')
-      %h5.text-center.subheader
-        = t('experiments.menu_panel.experiment_management.header')
-      %ul.experiments-panel
-        %li{style: "text-align: left; list-style: none;"}
-          %a.extend_input_space_link(href="#" id="extendinputspace" data-action-url="#" style="display: block; padding-top: 10px;")
-            %span= t('experiments.menu_panel.experiment_management.extend_input_space')
-        %li{style: "text-align: left; list-style: none;"}
-          %a.set_scheduling_method_link(href="#" id="setschedulingmethod" data-action-url="#" style="display: block; padding-top: 10px;")
-            %span= t('experiments.menu_panel.experiment_management.set_scheduling_method')
-        %li{style: "text-align: left; list-style: none;"}
-          %a.set_scheduling_method_link(href= "#{infrastructures_path}?experiment_id=#{@experiment.id}" id="setschedulingmethod" data-action-url="#" style="display: block; padding-top: 10px;")
-            %span= "Show details"
-      %h5.text-center.subheader(style="margin-left: 4px; margin-top: 10px; padding-top: 10px;")
-        = t('experiments.menu_panel.experiment_result.header')
-      %ul.experiments-result-panel
-        %li{style: "text-align: left; list-style: none;"}
-          %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding-top: 10px;")
-            %span= t('experiments.menu_panel.experiment_result.show_progress')
-        %li{style: "text-align: left; list-style: none;"}
-          %a.download_result_link(href="#" id = "downloadresult" data-action-url="#" style="display: block; padding-top: 10px;")
-            %span= t('experiments.menu_panel.experiment_result.download_result.header')
-            %ul#download-options(style='display: none')
-              %li= link_to t('experiments.menu_panel.experiment_result.download_result.binaries'), results_binaries_experiment_path(@experiment.id)
-              %li= link_to t('experiments.menu_panel.experiment_result.download_result.configurations'), file_with_configurations_experiment_path(@experiment.id)
+      %ul{id: "meanu-panel", style:"list-style-type: circle;"}
+        %dl.accordion{"data-accordion" => "myAccordionGroup1", id: "accordion1", style: "text-align: left;" }
+          %dd.accordion-navigation
+            %a.group_title{:href => "#experiments-panel", style: "text-align: left;"}
+              %i.fa.fa-plus-circle{style: "color: 333"}
+              = t('experiments.menu_panel.experiment_management.header')
+            %ul.content{"id" => "experiments-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
+              %li
+                %a.extend_input_space_link(href="#" id="extendinputspace" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_management.extend_input_space')
+              %li
+                %a.set_scheduling_method_link(href="#" id="setschedulingmethod" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_management.set_scheduling_method')
+              %li
+                %a.set_scheduling_method_link(href= "#{infrastructures_path}?experiment_id=#{@experiment.id}" id="setschedulingmethod" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= "Computational resources"
+
+        %dl.accordion{"data-accordion" => "myAccordionGroup2", style: "text-align: left;"}
+          %dd.accordion-navigation
+            %a.group_title{:href => "#experiments-result-panel", style: "text-align: left;"}
+              %i.fa.fa-plus-circle{style: "color: 333"}
+              = t('experiments.menu_panel.experiment_result.header')
+            %ul.content{"id" => "experiments-result-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
+              %li
+                %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_result.show_progress')
+              %li
+                %a.download_result_link(href="#{results_binaries_experiment_path(@experiment.id)}" id = "downloadbinaries" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_result.download_result.binaries')
+              %li
+                %a.download_result_link(href="#{file_with_configurations_experiment_path(@experiment.id)}" id = "downloadcsv" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_result.download_result.configurations')
+
       %hr
       %h3.text-center.subheader
         = t('experiments.menu_panel.analysis.header')
@@ -95,7 +104,7 @@
 
       = render 'monitoring_actions'
 
-  %section.row.panel.radius.last-element#progressInformationWrapper(style="margin-top: 50px;")
+  %section.row.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
     = render 'monitoring_table'
 
   = render 'scheduling_policy_dialog'
@@ -191,7 +200,7 @@
       });
 
       $("#showprogress").bind("click", function() {
-        //$('#progressInformationWrapper').slideToggle();
+        $('#progressInformationWrapper').slideToggle();
         $('html, body').animate({ scrollTop: $('#progressInformationWrapper').offset().top }, 1000);
       });
 
