@@ -14,11 +14,35 @@
       .row
         .small-5.columns
           %label.inline.right
-            = t('experiments.optimization_method.choose')
+            = t('experiments.optimization_method.selector')
         .small-5.columns
-          = select_tag 'supervisor_select', supervisor_options(supervisor_ids)
-        .small-2.columns
-          #supervisor_form_loader
+          = select_tag 'experiment_type_select', options_for_select([t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')], t('experiments.optimization_method.manual'))
+        .small-2.-columns
+
+  #manual-experiment-panel
+    %section.panel.radius
+      %h3.subheader= t('experiments.manual_experiment.title')
+      .content
+        .row
+          .small-5.columns
+            %label.inline.right
+              = t('experiments.manual_experiment.selector')
+          .small-5.columns
+            = select_tag 'input_space_select', options_for_select([t('experiments.manual_experiment.manual_designed'), t('experiments.manual_experiment.csv_imported')], t('experiments.manual_experiment.manual_designed'))
+          .small-2.-columns
+
+  #automatic-experiment-panel{:style => 'display: none'}
+    %section.panel.radius
+      %h3.subheader= t('experiments.automatic_experiment.title')
+      .content
+        .row
+          .small-5.columns
+            %label.inline.right
+              = t('experiments.automatic_experiment.selector')
+          .small-5.columns
+            = select_tag 'supervisor_select', supervisor_options_without_none(supervisor_ids)
+          .small-2.columns
+            #supervisor_form_loader
 
 = form_tag experiments_path, id: 'experiment_submit_form' do
   = hidden_field_tag 'simulation_id', @simulation.id
@@ -33,12 +57,6 @@
 
 #input-space-parameters
   %section.panel.radius.simulation_input
-    %ul.button-group.right.round
-      %li
-        %a#manual-off.tiny.button.secondary.clicked(href="#") On
-      %li
-        %a#manual-on.tiny.button.secondary(href="#") Off
-
     %h3.subheader#manual-header= t('.input_header')
 
     .content
@@ -58,7 +76,8 @@
         #constraints.content
           = render 'experiments/new/parameter_constraints'
 
-  %section#import.panel.radius.last-element
+#import{:style => 'display: none'}
+  %section.panel.radius
     = render 'experiments/new/import_tab'
 
 .row.submit-section
@@ -130,42 +149,62 @@
         }
       });
 
-      $("#manual-on").on("click", window.InputParameterSpaceSwitcher.manualSwitchOff);
-      $("#manual-off").on("click", window.InputParameterSpaceSwitcher.manualSwitchOn);
-      $("#import-on").on("click", window.InputParameterSpaceSwitcher.importSwitchOff);
-      $("#import-off").on("click", window.InputParameterSpaceSwitcher.importSwitchOn);
+      $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
 
-      $("#import-on").click();
 
-      $("#manual-header").on("click", function(event) {
-        if(event.originalEvent) {
-          if($("#manual-off").hasClass("clicked")) {
-            $("#manual-off").removeClass("clicked");
-            $("#manual-on").addClass("clicked");
-            $("#import-off").click();
+      $("#experiment_type_select").on("change", function() {
+        if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}")) {
+          $("#automatic-experiment-panel").hide();
+          $("#supervisor_fields").hide();
+          $("#manual-experiment-panel").show();
+          if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
+            $("#import").hide();
+            $("#input-space-parameters").show();
           }
-          else {
-            $("#manual-off").addClass("clicked");
-            $("#manual-on").removeClass("clicked");
-            $("#import-on").click();
+          else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
+            $("#input-space-parameters").hide();
+            $("#import").show();
           }
+        }
+        else if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.automatic')}")) {
+          $("#manual-experiment-panel").hide();
+          $("#input-space-parameters").hide();
+          $("#import").hide();
+          $("#automatic-experiment-panel").show();
+          $("#supervisor_fields").show();
         }
       });
 
-      $("#import-header").on("click", function(event) {
-        if(event.originalEvent) {
-          if($("#import-off").hasClass("clicked")) {
-            $("#import-off").removeClass("clicked");
-            $("#import-on").addClass("clicked");
-            $("#manual-off").click();
-          }
-          else {
-            $("#import-off").addClass("clicked");
-            $("#import-on").removeClass("clicked");
-            $("#manual-on").click();
-          }
+      $("#input_space_select").on("change", function() {
+        if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
+          $("#input-space-parameters").show();
+          $("#import").hide();
         }
-      })
+        else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
+          $("#import").show();
+          $("#input-space-parameters").hide();
+        }
+      });
 
-      $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
+      if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}")) {
+        $("#automatic-experiment-panel").hide();
+        $("#supervisor_fields").hide();
+        $("#manual-experiment-panel").show();
+        if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
+          $("#import").hide();
+          $("#input-space-parameters").show();
+        }
+        else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
+          $("#input-space-parameters").hide();
+          $("#import").show();
+        }
+        }
+        else if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.automatic')}")) {
+          $("#manual-experiment-panel").hide();
+          $("#input-space-parameters").hide();
+          $("#import").hide();
+          $("#automatic-experiment-panel").show();
+          $("#supervisor_fields").show();
+        }
+
     });

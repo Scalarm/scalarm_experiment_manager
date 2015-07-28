@@ -4,6 +4,19 @@ en:
       title: Optimization method
       choose: Set optimization method
 
+      selector: Experiment type
+      manual: Manual
+      automatic: Automatic
+    manual_experiment:
+      title: Manual experiment
+      selector: Input space
+      manual_designed: Manual designed
+      csv_imported: CSV imported
+    automatic_experiment:
+      title: Automatic experiment
+      selector: Algorithm
+
+
     click_to_expand: "(click to expand)"
 
     information_panel:
