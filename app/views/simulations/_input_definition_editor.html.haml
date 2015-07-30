@@ -68,14 +68,14 @@
                 .small-3.columns
                   %label.right.inline{for: 'param_min'}= 'Min:'
                 .small-9.columns
-                  %input#param_min{type: 'text', name: 'param_min', required: true, pattern: "^[-+]?[0-9]*\\.?[0-9]+$"}
+                  %input#param_min{type: 'text', name: 'param_min', required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"}
                   %small(class="error") Parameter is required
             .small-6.columns
               .row
                 .small-3.columns
                   %label.right.inline{for: 'param_max'}= 'Max:'
                 .small-9.columns
-                  %input#param_max{type: 'text', name: 'param_max', required: true, pattern: "^[-+]?[0-9]*\\.?[0-9]+$"}
+                  %input#param_max{type: 'text', name: 'param_max', required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"}
                   %small(class="error") Parameter is required
           .row#param-allowed.hidden
             .small-3.columns
