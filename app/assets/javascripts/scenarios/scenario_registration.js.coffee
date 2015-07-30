@@ -103,13 +103,18 @@ class window.ScenarioRegistration
       parameter.allowed_values = allowed
       delete parameter.min
       delete parameter.max
+      $('#param-config #param_min').removeAttr('required')
+      $('#param-config #param_max').removeAttr('required')
+      $('#param-config #param_allowed_area').attr('required','required')
 
     else if (param_type == 'integer' || param_type == 'float')
       param_min = $('#param-config #param_min').val()
       parameter.min = (param_type == 'integer' && parseInt(param_min) || parseFloat(param_min))
       param_max = $('#param-config #param_max').val()
       parameter.max = (param_type == 'integer' && parseInt(param_max) || parseFloat(param_max))
-
+      $('#param-config #param_min').attr('required','required')
+      $('#param-config #param_max').attr('required','required')
+      $('#param-config #param_allowed_area').removeAttr('required')
 
     @updateTree()
     @loadParamToEditor(null)
