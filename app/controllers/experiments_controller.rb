@@ -630,7 +630,7 @@ class ExperimentsController < ApplicationController
     #when range_step == 0 create one point (range_min)
     unless range_step >= 0
       raise ValidationError.
-                new('range_step', range_step, "Range step need to positive or equal to 0")
+                new('range_step', range_step, "Range step cannot be negative")
     end
 
   end
