@@ -253,11 +253,16 @@ class window.ExperimentMonitor
     setTimeout("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", 1000)
     setInterval("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", @update_interval*1000)
 
+
+
   update_moes: (moes_info) ->
+    window.moes_info = moes_info
+    #alert(moes_info.moes_names_with_first_blank)
+
     $(".moe_list").each (i, select_element) ->
       selected_option = $(select_element).find(":selected").val()
-      $(select_element).html(moes_info.moes)
 
+      $(select_element).html(moes_info.moes)
       $(select_element).find("option").filter(() ->
         return $(this).val() == selected_option
       ).attr('selected', true)

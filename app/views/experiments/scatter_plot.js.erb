@@ -13,11 +13,21 @@ try {
         title: { text: '\'<%= @chart.x_axis_label %>\' versus \'<%= @chart.y_axis_label %>\'' },
         xAxis: {
             title: { text: '<%= @chart.x_axis_label %>' },
-            type: '<%= @chart.x_axis_type or 'linear' %>'
+            <% if @chart.type_of_x === 'string' %>
+                categories: <%= raw @chart.categories_for_x %>,
+            <% else %>
+                type: '<%= @chart.x_axis_type or 'linear' %>',
+            <% end %>
+
         },
         yAxis: {
             title: { text: '<%= @chart.y_axis_label %>' },
-            type: '<%= @chart.y_axis_type or 'linear' %>'
+            <% if @chart.type_of_y === 'string' %>
+                categories: <%= raw @chart.categories_for_y %>,
+            <% else %>
+                type: '<%= @chart.y_axis_type or 'linear' %>',
+            <% end %>
+
         },
         tooltip: {
             formatter: function () {
@@ -28,26 +38,28 @@ try {
         },
         credits: { enabled: false },
         series: [
-        <% if @chart.linear_regression_possible? %>
-          {
-              type: 'line',
-              name: "<%= t '.regression_line' %>",
-              data: <%= @chart.linear_regression_data %>,
-              marker: {
-                  enabled: false
-              },
-              enableMouseTracking: false
-          },
-        <% end %>
+            <%if  @chart.type_of_x != "string" && @chart.type_of_y != "string"%>
+                <% if @chart.linear_regression_possible? %>
+                  {
+                      type: 'line',
+                      name: "<%= t '.regression_line' %>",
+                      data: <%= @chart.linear_regression_data %>,
+                      marker: {
+                          enabled: false
+                      },
+                      enableMouseTracking: false
+                  },
+                <% end %>
+            <% end %>
         {
             name: '<%= @chart.x_axis_label.split(" - ")[-1]%>',
             color: 'rgba(223, 83, 83, .5)',
             data: [
                 <% @chart.chart_data.each do |x_value, y_values_simulation_ids|
                      y_values_simulation_ids.each do |y_value, simulation_id| %>
-                      { x: <%= x_value %>, y: <%= y_value %>, simulation_id: '<%= simulation_id %>' },
-                    <% end
-                end %>
+                { x: <%= raw x_value %>, y: <%= raw y_value %>, simulation_id: '<%= simulation_id %>' },
+                <% end
+            end %>
             ],
             cursor: 'pointer',
             point: {

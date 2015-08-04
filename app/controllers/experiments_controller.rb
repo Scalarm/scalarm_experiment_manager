@@ -523,6 +523,8 @@ class ExperimentsController < ApplicationController
     #             [@experiment.input_parameter_label_for(x), x]}
     #         end
 
+
+    #TODO Unsafety behaviour, inject code
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
@@ -532,7 +534,48 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
+    first_line_result = @experiment.simulation_runs.first.result
+    first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+    array_for_moes_types = []
+    array_for_inputs_types = []
+
+    first_line_result.each{|x|
+      item = x[1]
+      if item.is_a? Integer
+        array_for_moes_types.push("integer")
+      elsif item.is_a? Float
+        array_for_moes_types.push("float")
+      else
+        array_for_moes_types.push("string")
+      end
+    }
+
+    #TODO Remove to new function
+    first_line_inputs.each{|x|
+      item = x
+      a = item.to_i
+      b = item.to_f
+
+      if x.eql?a.to_s
+        array_for_inputs_types.push("integer")
+      elsif x.eql?b.to_s
+        array_for_inputs_types.push("float")
+      else
+        array_for_inputs_types.push("string")
+      end
+
+    }
+
+    moes_info[:moes_types] = array_for_moes_types
+    moes_info[:moes_names] = @experiment.result_names
+    moes_info[:inputs_types] = array_for_inputs_types
+    moes_info[:inputs_names] = @experiment.simulation_runs.first.arguments.split(",")
+
+    #TODO add new map for histogram to improve selector
+    #array_for_moes_types.insert(0,'---')
+
     render json: moes_info
+
   end
 
   def results_info
@@ -798,10 +841,11 @@ class ExperimentsController < ApplicationController
     )
 
     resolution = params[:resolution].to_i
+    moe_type= params[:type]
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, moe_type)
       @visible_threshold_resolution = 15
     end
   end
@@ -821,7 +865,6 @@ class ExperimentsController < ApplicationController
         y_axis_type: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
-
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
@@ -829,8 +872,11 @@ class ExperimentsController < ApplicationController
           @experiment,
           params[:x_axis].to_s,
           params[:y_axis].to_s,
+          params[:type_of_x],
+          params[:type_of_y],
           x_axis_type: params[:x_axis_type].to_s,
-          y_axis_type: params[:y_axis_type].to_s
+          y_axis_type: params[:y_axis_type].to_s,
+
       )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
@@ -843,7 +889,7 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s, params[:type_of_x].to_s, params[:type_of_y].to_s)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data

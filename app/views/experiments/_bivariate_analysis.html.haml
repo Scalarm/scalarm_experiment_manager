@@ -9,27 +9,25 @@
     .small-5.columns
       = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
     .small-4.columns
-      = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
+      = select_tag 'x_axis', '', { class: 'moes_and_params_list', id: "x_axis_select_parameter" }
     .small-1.columns
-      = label_tag :x_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline'
+      = label_tag :x_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline',  id: "label_tag_scale_x"
     .small-2.columns
-      = select_tag 'x_axis_type', scales_options
+      = select_tag 'x_axis_type', scales_options, id: "x_axis_scale"
 
   .row
     .small-5.columns
       = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
     .small-4.columns
-      = select_tag 'y_axis', '', { class: 'moes_and_params_list' }
+      = select_tag 'y_axis', '', { class: 'moes_and_params_list', id: "y_axis_select_parameter" }
     .small-1.columns
-      = label_tag :y_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline'
+      = label_tag :y_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline', id: "label_tag_scale_y"
     .small-2.columns
-      = select_tag 'y_axis_type', scales_options
-
+      = select_tag 'y_axis_type', scales_options, id: "y_axis_scale"
   .row
     %ul.inline-list
-      %li= submit_tag t('charts.load_button'), class: 'button radius'
-      %li= image_tag 'loading.gif', :id => 'busy_scatter_plot', size: '16x16', style: 'display: none'
-
+      %li= submit_tag t('charts.load_button'), class: 'button radius', id: "load_chart_button"
+      %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
 #bivariate_charts
 
 - content_for :javascript do
@@ -60,6 +58,22 @@
       var x_axis_type = $('#bivariate_charts_form').find('select[name=\'x_axis_type\'] option:selected').val();
       var y_axis_type = $('#bivariate_charts_form').find('select[name=\'y_axis_type\'] option:selected').val();
 
+      if (window.moes_info.moes_names.indexOf(x_axis) != -1) {
+        var index_of_x = window.moes_info.moes_names.indexOf(x_axis)
+        var type_of_x = window.moes_info.moes_types[index_of_x]
+      } else {
+        var index_of_x = window.moes_info.inputs_names.indexOf(x_axis)
+        var type_of_x = window.moes_info.inputs_types[index_of_x]
+      }
+
+      if (window.moes_info.moes_names.indexOf(y_axis) != -1) {
+        var index_of_y = window.moes_info.moes_names.indexOf(y_axis)
+        var type_of_y = window.moes_info.moes_types[index_of_y]
+      } else {
+        var index_of_y = window.moes_info.inputs_names.indexOf(y_axis)
+        var type_of_y = window.moes_info.inputs_types[index_of_y]
+      }
+
       if (x_axis==="nil" || y_axis==="nil") {
         toastr.error("#{t('experiments.errors.incorrect_parameter')}");
       }
@@ -67,8 +81,58 @@
         $('#busy_scatter_plot').show();
         $.post("#{scatter_plot_experiment_path(@experiment.id)}",
           { 'x_axis': x_axis, 'y_axis': y_axis,
-          'x_axis_type': x_axis_type, 'y_axis_type': y_axis_type },
+          'x_axis_type': x_axis_type, 'y_axis_type': y_axis_type, 'type_of_y' : type_of_y, 'type_of_x' : type_of_x },
           function(data) { $('#busy_scatter_plot').hide(); }
         );
+      }
+    });
+
+    $('#bivariate_charts_form').find('#x_axis_select_parameter').change( function() {
+      try {
+        var x_axis = $('#bivariate_charts_form').find('select[name=\'x_axis\'] option:selected').val();
+        if (window.moes_info.moes_names.indexOf(x_axis) != -1) {
+          var index_of_x = window.moes_info.moes_names.indexOf(x_axis)
+          var type_of_x = window.moes_info.moes_types[index_of_x]
+        } else {
+          var index_of_x = window.moes_info.inputs_names.indexOf(x_axis)
+          var type_of_x = window.moes_info.inputs_types[index_of_x]
+        }
+        if (type_of_x === "string") {
+          $('#bivariate_charts_form').find('#label_tag_scale_x').hide();
+          $('#bivariate_charts_form').find('#x_axis_scale').hide();
+        }
+        else {
+          $('#bivariate_charts_form').find('#label_tag_scale_x').show();
+          $('#bivariate_charts_form').find('#x_axis_scale').show();
+        }
+
+      } catch (e) {
+        $('#busy_basic').hide();
+        toastr.error("#{t('errors.loading_chart')}" + ": " + e);
+      }
+    });
+
+    $('#bivariate_charts_form').find('#y_axis_select_parameter').change( function() {
+      try {
+        var y_axis = $('#bivariate_charts_form').find('select[name=\'y_axis\'] option:selected').val();
+        if (window.moes_info.moes_names.indexOf(y_axis) != -1) {
+          var index_of_y = window.moes_info.moes_names.indexOf(y_axis)
+          var type_of_y = window.moes_info.moes_types[index_of_y]
+        } else {
+          var index_of_y = window.moes_info.inputs_names.indexOf(y_axis)
+          var type_of_y = window.moes_info.inputs_types[index_of_y]
+        }
+        if (type_of_y === "string") {
+          $('#bivariate_charts_form').find('#label_tag_scale_y').hide();
+          $('#bivariate_charts_form').find('#y_axis_scale').hide();
+        }
+        else {
+          $('#bivariate_charts_form').find('#label_tag_scale_y').show();
+          $('#bivariate_charts_form').find('#y_axis_scale').show();
+        }
+
+      } catch (e) {
+        $('#busy_basic').hide();
+        toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });
