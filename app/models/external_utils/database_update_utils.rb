@@ -2,7 +2,7 @@ module DatabaseUpdateUtils
   def self.convert_strings_to_json
     # Experiment: experiment_input, doe_info,  parameters_constraints
     # Simulation: input_specification
-    # SimulationRun: result, cpu_info, tmp_results_list
+    # SimulationRun: result, cpu_info, tmp_result
 
     Experiment.all.each do |experiment|
       begin
@@ -18,7 +18,7 @@ module DatabaseUpdateUtils
               begin
                 simulation_run.result = Utils.parse_json_if_string(simulation_run.result)
                 simulation_run.cpu_info = Utils.parse_json_if_string(simulation_run.cpu_info)
-                simulation_run.tmp_results_list = Utils.parse_json_if_string(simulation_run.tmp_results_list)
+                simulation_run.tmp_result = Utils.parse_json_if_string(simulation_run.tmp_result)
 
                 simulation_run.save
               rescue Exception => e
