@@ -20,7 +20,7 @@
         .small-2.columns
           #supervisor_form_loader
 
-= form_tag experiments_path, id: 'experiment_submit_form' do
+= form_tag experiments_path, id: 'experiment_submit_form', "data-abide" => ''  do
   = hidden_field_tag 'simulation_id', @simulation.id
   = hidden_field_tag 'experiment_input'
   = hidden_field_tag 'doe'
@@ -57,7 +57,13 @@
           = render 'experiments/new/design_of_experiment'
         #constraints.content
           = render 'experiments/new/parameter_constraints'
-
+      #invalid-form.reveal-modal.small{'data-reveal' => true}
+        .row{style: "margin-bottom: 25px;"}
+          .small-12.columns
+            = 'Some errors when checking form'
+        .row
+          .small-12.columns.text-center
+            %a#invalid-ok.button.radius.medium= 'OK'
   %section#import.panel.radius.last-element
     = render 'experiments/new/import_tab'
 
@@ -93,32 +99,49 @@
                                                                "#{calculate_imported_experiment_size_experiments_path}");
 
       var doe_manager = new window.ExperimentDesigner(input_space);
+      $("#invalid-ok").bind("click", function() {
+        $('#invalid-form').foundation('reveal', 'close');
+        $('html, body').animate({
+          scrollTop: $("#experiment_submit_form").offset().top
+      }, 2000);});
+
 
       $("#new_experiment_submit").on("click", function() {
-        if($('#input-space-parameters').is(":visible")) {
-          // standart experiment
-          if($("#manual-off").hasClass("clicked")) {
-            input_space.updateAllInputParameterValues();
+
+        $("#wrapper").find(':input[required]:visible').blur();
+      //  $("experiment_submit_form").find(':input[required]:visible').blur();
+        if ($("#wrapper").find(':input[data-invalid]:visible').length==0){
+     //   if($("experiment_submit_form").on('invalid.fndtn.abide', function(){}))
+          if($('#input-space-parameters').is(":visible")) {
+            // standard experiment
+            if($("#manual-off").hasClass("clicked")) {
+              input_space.updateAllInputParameterValues();
+              $("#experiment_submit_form").submit();
+            }
+            else {
+              $("#import-form").submit();
+            }
+          } else {
+            // supervised
+            var builder = {};
+            $('#supervisor_fields *').filter(':input').each(function(key, value){
+                if (value.name != "utf8" && value.name != "authenticity_token") {
+                  if (value.type == 'number') {
+                    builder[value.name] = Number(value.value)
+                  } else {
+                    builder[value.name] = value.value
+                  }
+                }
+            });
+            $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
             $("#experiment_submit_form").submit();
           }
-          else {
-            $("#import-form").submit();
-          }
-        } else {
-          // supervised
-          var builder = {};
-          $('#supervisor_fields *').filter(':input').each(function(key, value){
-              if (value.name != "utf8" && value.name != "authenticity_token") {
-                if (value.type == 'number') {
-                  builder[value.name] = Number(value.value)
-                } else {
-                  builder[value.name] = value.value
-                }
-              }
-          });
-          $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
-          $("#experiment_submit_form").submit();
         }
+        else
+        {
+          $('#invalid-form').foundation('reveal', 'open');
+        }
+
       });
 
       $("#check-experiment-size").on("click", function() {

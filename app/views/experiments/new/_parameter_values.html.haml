@@ -6,8 +6,8 @@
           = t('experiments.new.attr_value')
       .small-7.columns
         - default_value = parameter['value'] || parameter['min'] || parameter['allowed_values'].first
-        = text_field_tag "parameter_value_#{parameter['index']}", default_value
-
+        = text_field_tag "parameter_value_#{parameter['index']}", default_value, required: true
+        %small(class="error") Parameter is required
 - elsif type == 'range'
   %div(parametrization-type="range" class="hidden")
     .row
@@ -15,22 +15,26 @@
         %label.inline.right
           = t('experiments.new.attr_min')
       .small-7.columns
-        = text_field_tag "parameter_min_#{parameter['index']}", parameter['min']
+        = text_field_tag "parameter_min_#{parameter['index']}", parameter['min'], required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"
+        %small(class="error") Wrong minimum value
     .row
       .small-5.columns
         %label.inline.right
           = t('experiments.new.attr_max')
       .small-7.columns
-        = text_field_tag "parameter_max_#{parameter['index']}", parameter['max']
+        = text_field_tag "parameter_max_#{parameter['index']}", parameter['max'], required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"
+        %small(class="error")  Wrong maximum value
     .row
       .small-5.columns
         %label.inline.right
           = t('experiments.new.attr_step')
       .small-7.columns
         - if parameter['type'] == 'float'
-          = text_field_tag "parameter_step_#{parameter['index']}", (parameter['min'] + parameter['max']) / 5.0
+          = text_field_tag "parameter_step_#{parameter['index']}", (parameter['min'] + parameter['max']) / 5.0, required: true, pattern: "^[0-9]*\\.?[0-9]+$"
+          %small(class="error") Invalid value - only positive numbers
         - elsif parameter['type'] == 'integer'
-          = text_field_tag "parameter_step_#{parameter['index']}", [(parameter['min'] + parameter['max']) / 5, 1].max
+          = text_field_tag "parameter_step_#{parameter['index']}", [(parameter['min'] + parameter['max']) / 5, 1].max, required: true, pattern: "^\\d+$"
+          %small(class="error") Invalid value - only positive integer
 
 - elsif type == 'gauss'
   %div(parametrization-type="gauss" class="hidden")
@@ -39,13 +43,15 @@
         %label.inline.right
           = t('experiments.new.attr_mean')
       .small-7.columns
-        = text_field_tag "parameter_mean_#{parameter['index']}", (parameter['min'] + parameter['max']) / 2.0
+        = text_field_tag "parameter_mean_#{parameter['index']}", (parameter['min'] + parameter['max']) / 2.0, required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"
+        %small(class="error") Invalid value - only numbers
     .row
       .small-5.columns
         %label.inline.right
           = t('experiments.new.attr_variance')
       .small-7.columns
-        = text_field_tag "parameter_variance_#{parameter['index']}", (parameter['min'] + parameter['max']) / 2.0
+        = text_field_tag "parameter_variance_#{parameter['index']}", (parameter['min'] + parameter['max']) / 2.0, required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"
+        %small(class="error") Invalid value - only numbers
 
 - elsif type == 'uniform'
   %div(parametrization-type="uniform" class="hidden")
@@ -54,13 +60,15 @@
         %label.inline.right
           = t('experiments.new.attr_uniform_min')
       .small-7.columns
-        = text_field_tag "parameter_min_#{parameter['index']}", parameter['min']
+        = text_field_tag "parameter_min_#{parameter['index']}", parameter['min'], required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"
+        %small(class="error")  Wrong minimum value - only numbers
     .row
       .small-5.columns
         %label.inline.right
           = t('experiments.new.attr_uniform_max')
       .small-7.columns
-        = text_field_tag "parameter_max_#{parameter['index']}", parameter['max']
+        = text_field_tag "parameter_max_#{parameter['index']}", parameter['max'], required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"
+        %small(class="error")  Wrong maximum value - only numbers
 
 - elsif type == 'custom'
   %div(parametrization-type="custom" class="hidden")
@@ -70,4 +78,4 @@
           = t('experiments.new.attr_values')
       .small-7.columns
         - default_value = parameter['value'] || parameter['min'] || parameter['allowed_values'].first
-        = text_area_tag "parameter_custom_values_#{parameter['index']}", default_value, rows: 3
+        = text_area_tag "parameter_custom_values_#{parameter['index']}", default_value, rows: 3, required: true

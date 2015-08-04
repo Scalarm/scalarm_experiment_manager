@@ -13,8 +13,8 @@
             .small-3.columns
               %label.right.inline{for: 'simulation_name'}= t("simulations.registration.simulation_name")
             .small-9.columns
-              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;' , required: 'true' , pattern:"^[\\w-]+$"
-              %small(class="error") Simulation name is required
+              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;' , required: 'true', pattern:"^[\\w-]+$"
+              %small(class="error") Invalid simulation name - only letters, digits, '-' and '_'
           .row
             .small-3.columns
               %label.right.inline{for: 'simulation_description'}= t("simulations.registration.simulation_description")
@@ -55,7 +55,7 @@
       #invalid-form.reveal-modal.small{'data-reveal' => true}
         .row{style: "margin-bottom: 25px;"}
           .small-12.columns
-            = 'There are some errors on form'
+            = 'Some fields has invalid values '
         .row
           .small-12.columns.text-center
             %a#invalid-ok.button.radius.medium= 'OK'
