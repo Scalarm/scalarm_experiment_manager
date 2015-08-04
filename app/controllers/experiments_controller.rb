@@ -577,7 +577,7 @@ class ExperimentsController < ApplicationController
     validate(
         range_min: [param_type],
         range_max: [param_type],
-        range_step: [param_type, :positive]
+        range_step: [param_type] #, :positive] #this validation was moved to validate_input_extension function
     )
 
     convert_fun = (param_type == :integer ? :to_i : :to_f)
@@ -588,7 +588,12 @@ class ExperimentsController < ApplicationController
     validate_input_extension(@range_min, @range_max, @range_step)
 
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
-    new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    #One value extend, take range_min
+    if (@range_step == 0)
+      new_parameter_values = Array.wrap(@range_min)
+    else
+      new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    end
     #@priority = params[:priority].to_i
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
@@ -614,10 +619,20 @@ class ExperimentsController < ApplicationController
                 new('range_min', range_min, "Range minimum is greater than maximum")
     end
 
+  #to add one point (example => min: 2, max: 3, step: 5 gives [2] as single point) need to remove this, it works the same in creation of experiment
+=begin
     unless range_step <= (range_max-range_min)
       raise ValidationError.
                 new('range_max', range_min, "Range step is too large")
     end
+=end
+
+    #when range_step == 0 create one point (range_min)
+    unless range_step >= 0
+      raise ValidationError.
+                new('range_step', range_step, "Range step need to positive or equal to 0")
+    end
+
   end
 
   def running_simulations_table
