@@ -295,9 +295,15 @@ class ExperimentsController < ApplicationController
     #  @experiment.save
     #end
 
+
+    if @experiment.experiment_size!=0
+      percentage = (sims_done.to_f / @experiment.experiment_size) * 100
+    else
+      percentage=0
+    end
     stats = {
         all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
-        done_percentage: "'%.2f'" % ((sims_done.to_f / @experiment.experiment_size) * 100),
+        done_percentage: "'%.2f'" % (percentage),
         generated: [sims_generated, @experiment.experiment_size].min,
         progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
     }
