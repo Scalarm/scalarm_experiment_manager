@@ -13,7 +13,7 @@ module SimulationRunExtensions
 
   def tmp_result
     if self.tmp_results_list.blank?
-      attributes[:tmp_result]
+      attributes['tmp_result']
     else
       self.tmp_results_list.last['result']
     end
