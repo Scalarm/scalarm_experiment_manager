@@ -97,7 +97,7 @@
           var index_of_x = window.moes_info.inputs_names.indexOf(x_axis)
           var type_of_x = window.moes_info.inputs_types[index_of_x]
         }
-        if (type_of_x === "string") {
+        if (type_of_x == "string") {
           $('#bivariate_charts_form').find('#label_tag_scale_x').hide();
           $('#bivariate_charts_form').find('#x_axis_scale').hide();
         }
@@ -122,7 +122,7 @@
           var index_of_y = window.moes_info.inputs_names.indexOf(y_axis)
           var type_of_y = window.moes_info.inputs_types[index_of_y]
         }
-        if (type_of_y === "string") {
+        if (type_of_y == "string") {
           $('#bivariate_charts_form').find('#label_tag_scale_y').hide();
           $('#bivariate_charts_form').find('#y_axis_scale').hide();
         }

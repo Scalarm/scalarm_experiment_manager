@@ -12,7 +12,7 @@ class HistogramChart
     @stats = { ex_min: 0 }
     @type = type
 
-    if type === "string"
+    if type == "string"
       prepare_chart_data_for_string_type
     else
       prepare_chart_data
@@ -82,7 +82,7 @@ class HistogramChart
 
 
   def bucket_names
-    if type === 'string'
+    if type == 'string'
       results = multi_dim_array_with_results
 
       array_with_uniq_and_sort_result = results.uniq(&:last)
@@ -104,7 +104,7 @@ class HistogramChart
 
   def buckets
     buckets = Array.new(@resolution) { 0 }
-    if type === 'string'
+    if type == 'string'
 
       array_with_result = multi_dim_array_with_results
 

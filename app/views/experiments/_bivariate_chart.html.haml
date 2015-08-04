@@ -53,7 +53,7 @@
         type_of_y = window.moes_info.inputs_types[index_of_y]
       }
 
-      if (type_of_x === "string" || type_of_y === "string") {
+      if (type_of_x == "string" || type_of_y == "string") {
         $('#select_axis_row_#{@uuid}').hide();
         $('#add_new_series_row_#{@uuid}').hide();
       } else {
@@ -81,7 +81,7 @@
           var type = window.moes_info.inputs_types[index]
         }
 
-        if (type === "string") {
+        if (type == "string") {
           toastr.error("#{t('experiments.errors.incorrect_add_parameter_scater')}");
         }
         else {

@@ -524,7 +524,7 @@ class ExperimentsController < ApplicationController
     #         end
 
 
-    #TODO Unsafety behaviour, inject code
+    #TODO Unsafety behaviour, inject code???
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
@@ -545,12 +545,13 @@ class ExperimentsController < ApplicationController
         array_for_moes_types.push("integer")
       elsif item.is_a? Float
         array_for_moes_types.push("float")
-      else
+      elsif item.is_a? String
         array_for_moes_types.push("string")
+      else
+        array_for_moes_types.push("undefined")
       end
     }
 
-    #TODO Remove to new function
     first_line_inputs.each{|x|
       item = x
       a = item.to_i
@@ -560,8 +561,10 @@ class ExperimentsController < ApplicationController
         array_for_inputs_types.push("integer")
       elsif x.eql?b.to_s
         array_for_inputs_types.push("float")
-      else
+      elsif x.is_a? String
         array_for_inputs_types.push("string")
+      else
+        array_for_inputs_types.push("undefined")
       end
 
     }

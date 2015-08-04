@@ -38,19 +38,19 @@ class ScatterPlotChart
         column_y_idx = row.index(@y_axis)
         simulation_ind_idx = row.index('simulation_run_ind')
       else
-        if type_of_x === "string" && type_of_y === "string"
+        if type_of_x == "string" && type_of_y === "string"
           if @chart_data.has_key? array_for_single_x.index(row[column_x_idx])
             @chart_data[array_for_single_x.index(row[column_x_idx])] << [array_for_single_y.index(row[column_y_idx]), row[simulation_ind_idx]]
           else
             @chart_data[array_for_single_x.index(row[column_x_idx])] = [[array_for_single_y.index(row[column_y_idx]), row[simulation_ind_idx]]]
           end
-        elsif type_of_x === "string"
+        elsif type_of_x == "string"
           if @chart_data.has_key? array_for_single_x.index(row[column_x_idx])
               @chart_data[array_for_single_x.index(row[column_x_idx])] << [row[column_y_idx], row[simulation_ind_idx]]
           else
               @chart_data[array_for_single_x.index(row[column_x_idx])] = [[row[column_y_idx], row[simulation_ind_idx]]]
           end
-        elsif type_of_y === "string"
+        elsif type_of_y == "string"
           if @chart_data.has_key? row[column_x_idx]
             @chart_data[row[column_x_idx]] << [array_for_single_y.index(row[column_y_idx]), row[simulation_ind_idx]]
           else
@@ -71,13 +71,13 @@ class ScatterPlotChart
       y_values = []
       @chart_data.each do |x_value, y_values_simulation_ids|
         y_values_simulation_ids.each do |y_value, simulation_id|
-          if type_of_x === 'string'
+          if type_of_x == 'string'
             x_values.push(x_value)
           else
             x_values.push(x_value.to_f)
           end
 
-          if type_of_y === 'string'
+          if type_of_y == 'string'
             y_values.push(y_value)
           else
             y_values.push(y_value.to_f)
@@ -101,11 +101,11 @@ class ScatterPlotChart
       @linear_regression_data = [[x1, y1],[x2, y2]]
     end
 
-    if type_of_x === "string"
+    if type_of_x == "string"
       @categories_for_x = array_for_single_x
     end
 
-    if type_of_y === "string"
+    if type_of_y == "string"
       @categories_for_y = array_for_single_y
     end
 

@@ -29,7 +29,7 @@
       var index_of_moe = window.moes_info.moes_names.indexOf(moe_name)
       var type_of_moe = window.moes_info.moes_types[index_of_moe]
 
-      if (type_of_moe === "string") {
+      if (type_of_moe == "string") {
         $('#statistics_box_#{experiment.id}_#{moe_name}').hide();
       }
       else {
