@@ -180,9 +180,6 @@ class window.ExperimentMonitor
         context.fillStyle = "rgb(255, 255, 255)"
         context.fillRect(0, 10, canvas.width, canvas.height - 10)
 
-    context.fillStyle = "rgb(255, 255, 255)"
-    context.fillRect(0, 10, canvas.width, canvas.height - 10)
-
     @bar_cells = []
     @cellCounter = bar_colors.length
     @simsPerCell = Math.floor(statistics.all / bar_colors.length)
