@@ -38,7 +38,7 @@ class ScatterPlotChart
         column_y_idx = row.index(@y_axis)
         simulation_ind_idx = row.index('simulation_run_ind')
       else
-        if type_of_x == "string" && type_of_y === "string"
+        if type_of_x == "string" && type_of_y == "string"
           if @chart_data.has_key? array_for_single_x.index(row[column_x_idx])
             @chart_data[array_for_single_x.index(row[column_x_idx])] << [array_for_single_y.index(row[column_y_idx]), row[simulation_ind_idx]]
           else
