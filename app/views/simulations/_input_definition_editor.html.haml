@@ -47,7 +47,7 @@
               %label.right.inline{for: 'param_id'}= 'Parameter ID:'
             .small-9.columns
               %input#param_id{type: 'text', name: 'param_id', required: true,  pattern: "^[\\w-]+$"}
-              %small(class="error") Parameter id is required
+              %small(class="error") Id is required -type only letters, digits, '-' and '_'
           .row
             .small-3.columns
               %label.right.inline{for: 'param_label'}= 'Label:'
@@ -69,19 +69,19 @@
                   %label.right.inline{for: 'param_min'}= 'Min:'
                 .small-9.columns
                   %input#param_min{type: 'text', name: 'param_min', required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"}
-                  %small(class="error") Parameter is required
+                  %small(class="error") Invalid minimum value
             .small-6.columns
               .row
                 .small-3.columns
                   %label.right.inline{for: 'param_max'}= 'Max:'
                 .small-9.columns
                   %input#param_max{type: 'text', name: 'param_max', required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"}
-                  %small(class="error") Parameter is required
+                  %small(class="error") Invalid maximum value
           .row#param-allowed.hidden
             .small-3.columns
               %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
             .small-9.columns
-              %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4, required: true}
+              %textarea#param_allowed_area{name: 'param_allowed_area', rows: 4}
               %small(class="error") Parameter is required
           .row#editor-buttons
             %ul.stack-for-small.button-group
