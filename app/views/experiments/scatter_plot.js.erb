@@ -30,8 +30,15 @@ try {
 
         },
         tooltip: {
+            //need to this way, because yAxis has small support for this.y with string type
             formatter: function () {
-                return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' + this.y + '</b><br /><b><%= t '.click_for_details' %></b>';
+                return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' +
+                        <% if @chart.type_of_y === 'string' %>
+                            <%= raw @chart.categories_for_y%>[this.y]
+                        <% else %>
+                            this.y
+                        <% end %>
+                        + '</b><br /><b><%= t '.click_for_details' %></b>';
             }
         },
         plotOptions: {
