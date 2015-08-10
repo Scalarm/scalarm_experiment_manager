@@ -17,4 +17,16 @@ class StatisticsInterface
     @simulation_run.where(query, opts).to_a
   end
 
+  def worker_throughput(worker_id)
+
+  end
+
+  def system_throughput
+
+  end
+
+  def makespan
+
+  end
+
 end
