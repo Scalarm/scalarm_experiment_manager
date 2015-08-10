@@ -1,19 +1,22 @@
 require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
+require 'db_helper'
 
 class SimulationRunTest < MiniTest::Test
+  include DBHelper
 
   RESULT1 = {result: 1}
   RESULT2 = {result: 2}
 
   def setup
-    Rails.stubs(:logger).returns(stub_everything)
-
-    Scalarm::Database::MongoActiveRecord.connection_init('localhost', 'scalarm_db_test')
-    Scalarm::Database::MongoActiveRecord.get_database('scalarm_db_test').collections.each{|coll| coll.drop}
+    super
 
     @simulation_run = Experiment.new({}).simulation_runs.new({})
+  end
+
+  def teardown
+    super
   end
 
   def test_tmp_result_old_records
