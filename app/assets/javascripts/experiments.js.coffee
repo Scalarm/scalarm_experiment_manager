@@ -175,14 +175,14 @@ class window.ExperimentMonitor
     canvas = document.getElementById("exp_progress_bar_2")
     context = canvas.getContext("2d")
     parth_width=0
-    if bar_colors.length != 0
+    if bar_colors.length != 0 && statistics.all >0
         part_width = canvas.width / bar_colors.length
         context.fillStyle = "rgb(255, 255, 255)"
         context.fillRect(0, 10, canvas.width, canvas.height - 10)
 
-    @bar_cells = []
-    @cellCounter = bar_colors.length
-    @simsPerCell = Math.floor(statistics.all / bar_colors.length)
+        @bar_cells = []
+        @cellCounter = bar_colors.length
+        @simsPerCell = Math.floor(statistics.all / bar_colors.length)
 
     if bar_colors.length > 0
         for i in [0..bar_colors.length-1]
