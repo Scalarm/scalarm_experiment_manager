@@ -42,7 +42,7 @@
             %label.inline.right
               = t('experiments.automatic_experiment.selector')
           .small-5.columns
-            = select_tag 'supervisor_select', supervisor_options_without_none(supervisor_ids)
+            = select_tag 'supervisor_select', supervisor_options(supervisor_ids)
           .small-2.-columns
             #supervisor_form_loader
 
