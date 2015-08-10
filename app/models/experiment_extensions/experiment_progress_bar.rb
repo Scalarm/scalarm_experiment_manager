@@ -125,11 +125,9 @@ module ExperimentProgressBar
 
   def is_update_free_time(bar_index)
     cache_key = "progress_bar_#{self.experiment_id}_#{bar_index}"
-
     bar_last_update = Rails.cache.read(cache_key)
     Rails.logger.debug("Bar last update - #{bar_last_update}")
     Rails.cache.write(cache_key, Time.now, :expires_in => 30) if bar_last_update.nil?
-
     not bar_last_update.nil?
   end
 
@@ -157,7 +155,8 @@ module ExperimentProgressBar
     nil
   end
 
-  def insert_initial_bar
+  def
+  insert_initial_bar
     progress_bar_data = []
     parts_per_slot, number_of_bars = basic_progress_bar_info(self.experiment_size)
 

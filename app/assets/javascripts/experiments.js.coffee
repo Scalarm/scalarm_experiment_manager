@@ -171,6 +171,8 @@ class window.ExperimentMonitor
     $("#exp_done_counter").html(statistics.done_num.toString().with_delimeters())
     $("#exp_done_percentage_counter").html(statistics.done_percentage)
 
+    if (statistics.all!=0)
+      $("#header_progress_bar").show()
     bar_colors = eval(statistics.progress_bar)
     canvas = document.getElementById("exp_progress_bar_2")
     context = canvas.getContext("2d")
