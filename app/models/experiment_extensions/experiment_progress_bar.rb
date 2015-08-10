@@ -155,8 +155,7 @@ module ExperimentProgressBar
     nil
   end
 
-  def
-  insert_initial_bar
+  def insert_initial_bar
     progress_bar_data = []
     parts_per_slot, number_of_bars = basic_progress_bar_info(self.experiment_size)
 

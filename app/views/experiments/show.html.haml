@@ -23,7 +23,7 @@
     .speedometer{id: "speedometer_#{@experiment.id}"}
 
     %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
-      %h4#header_progress_bar.hidden.subheader= "Execution progress bar"
+      %h4#header_progress_bar.hidden.subheader=  t('.progress_bar_header')
     = render 'monitoring_actions'
 
 %section.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
