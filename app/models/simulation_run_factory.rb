@@ -10,6 +10,14 @@ module SimulationRunExtensions
     self.save
     self
   end
+
+  def tmp_result
+    if self.tmp_results_list.blank?
+      attributes['tmp_result']
+    else
+      self.tmp_results_list.last['result']
+    end
+  end
 end
 
 class SimulationRunFactory < Scalarm::Database::SimulationRunFactory
