@@ -2,6 +2,7 @@
 config/secrets.yml
 config/scalarm.yml
 config/puma.rb
+config/google_client_secrets.json
 
 # IDE settings
 .idea/
@@ -12,8 +13,8 @@ bin/mongos
 # temporary files
 puma.pid
 tmp/
+log/
 
 # OSX specific
 .DS_Store
 config/DS_Store
-

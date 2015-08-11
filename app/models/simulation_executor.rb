@@ -1,7 +1,4 @@
-class SimulationExecutor < MongoActiveRecord
+require 'scalarm/database/model/simulation_executor'
 
-  def self.collection_name
-    "simulation_executors"
-  end
-
+class SimulationExecutor < Scalarm::Database::Model::SimulationExecutor
 end

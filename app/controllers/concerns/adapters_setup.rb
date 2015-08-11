@@ -1,5 +1,7 @@
+require 'scalarm/service_core/parameter_validation'
+
 module AdaptersSetup
-  include ParameterValidation
+  include Scalarm::ServiceCore::ParameterValidation
   extend ActiveSupport::Concern
 
   def set_up_adapter_checked(simulation, adapter_type, current_user, params, mandatory = true)

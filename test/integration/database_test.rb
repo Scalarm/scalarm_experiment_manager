@@ -3,6 +3,8 @@ require 'minitest/autorun'
 require 'test_helper'
 require 'db_helper'
 
+require 'db_helper'
+
 class DatabaseTest < MiniTest::Test
   include DBHelper
 
@@ -14,10 +16,8 @@ class DatabaseTest < MiniTest::Test
     super
   end
 
-  class SomeRecord < MongoActiveRecord
-    def self.collection_name
-      'some_records'
-    end
+  class SomeRecord < Scalarm::Database::MongoActiveRecord
+    use_collection 'some_records'
   end
 
   def test_mixed_attrs

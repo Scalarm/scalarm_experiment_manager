@@ -44,6 +44,11 @@ en:
         no_ami: "You have to provide Amazon AMI information first!"
         could_not_create_vms: "Exception occured during creating virtual machines"
   infrastructure:
+    information:
+      pl_grid_login: "PL-Grid UI login"
+      pl_grid_password: "PL-Grid UI password"
+      private_key_password: "Password to the certificate private key stored in PL-Grid LDAP"
+
     credentials:
       images_manager:
         info: "You can add image credentials for Clouds with valid secrets provided, which can be set in %{account_link} page."

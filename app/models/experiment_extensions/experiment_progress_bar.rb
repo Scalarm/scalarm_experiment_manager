@@ -1,3 +1,7 @@
+require 'scalarm/database/core'
+
+require 'scalarm/database/model'
+
 module ExperimentProgressBar
   CANVAS_WIDTH = 960.0
   MINIMUM_SLOT_WIDTH = 2.0
@@ -5,7 +9,7 @@ module ExperimentProgressBar
 
   def progress_bar_table
       table_name = "experiment_progress_bar_#{self.experiment_id}"
-      MongoActiveRecord.get_collection(table_name)
+      Scalarm::Database::MongoActiveRecord.get_collection(table_name)
   end
 
   def parts_per_progress_bar_slot
@@ -32,7 +36,20 @@ module ExperimentProgressBar
                       end
 
     begin
-      progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
+      result = progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
+      bar = progress_bar_table.find_one({bar_num: bar_index})
+      table_length = progress_bar_table.count
+      color = compute_bar_color(bar)
+      Scalarm::Database::Model::ExperimentProgressNotification.
+          new(experiment_id: self.experiment_id,
+               date: Time.now.to_i,
+               bar_info: {
+                   bar_num: bar["bar_num"],
+                   tab_len: table_length,
+                   color: color
+               }
+          ).save
+     result
     rescue Exception => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end
@@ -147,7 +164,9 @@ module ExperimentProgressBar
         bar_created = true
 
         return progress_bar
-      rescue Exception => e
+
+      # experimental - rescuing only StandardError
+      rescue => e
         Rails.logger.error("Couldn't create progress bar table")
       end
     end

@@ -1,8 +1,4 @@
+require 'scalarm/database/model/system_event'
 
-class SystemEvent < MongoActiveRecord
-
-  def self.collection_name
-    'events'
-  end
-
+class SystemEvent < Scalarm::Database::Model::SystemEvent
 end

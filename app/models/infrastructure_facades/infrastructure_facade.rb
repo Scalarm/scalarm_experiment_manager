@@ -223,8 +223,8 @@ class InfrastructureFacade
   end
 
   def configure_polling_interval
-    config = YAML.load_file(File.join(Rails.root, 'config', 'scalarm.yml'))
-    @polling_interval_sec = config.has_key?('monitoring') ? config['monitoring']['interval'].to_i : 60
+    config = Rails.application.secrets.monitoring
+    @polling_interval_sec = config ? config['interval'].to_i : 60
     logger.debug "Setting polling interval to #{@polling_interval_sec} seconds"
   end
 

@@ -35,6 +35,8 @@ en:
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
     label: Running experiments
+  completed_experiments:
+    label: Completed experiments
   historical_experiments:
       label: Historical experiments
   login_success: "You have logged in successfully"
@@ -46,17 +48,24 @@ en:
 
 
   openid:
-      provider_discovery_failed: "OpenID discovery failed for %{provider_url}: %{error}"
-      verification_success: "Verification of %{identity} succeeded."
-      cancelled: "OpenID transaction cancelled."
-      unknown_status: "OpenID unknown status: %{status}"
-      verification_failed_identity: "Verification of %{identity} failed: %{message}"
-      verification_failed: "Verification failed: %{message}"
-      login: "Login with %{provider} OpenID"
-      wrong_endpoint: "Got response from wrong OpenID endpoint: %{endpoint}"
-      google:
-        no_openid_user: "There is no Scalarm user registered with Google OpenID E-Mail: %{email}"
-        no_email_provided: "Error authenticating with OpenID: no email attribute provided by server."
+    provider_discovery_failed: "OpenID discovery failed for %{provider_url}: %{error}"
+    verification_success: "Verification of %{identity} succeeded."
+    cancelled: "OpenID transaction cancelled."
+    unknown_status: "OpenID unknown status: %{status}"
+    verification_failed_identity: "Verification of %{identity} failed: %{message}"
+    verification_failed: "Verification failed: %{message}"
+    login: "Login with %{provider}"
+    wrong_endpoint: "Got response from wrong OpenID endpoint: %{endpoint}"
+    google:
+      no_openid_user: "There is no Scalarm user registered with Google OpenID E-Mail: %{email}"
+      no_email_provided: "Error authenticating with OpenID: no email attribute provided by server."
+
+  oauth:
+    error_occured: "An error occurred during OAuth authentication: %{error}"
+    no_code_or_error_set: "Invalid response. Please contact an administrator."
+    no_email_provided: "Unable to retrieve the e-mail address."
+    access_denied: "You denied access to your profile. We can't login you without knowing your email address."
+    no_github_secrets: "This application is not configured to support GitHub-based authentication."
 
   registered_executors_list:
     label: "Registered simulation executors"
@@ -248,9 +257,19 @@ en:
       header: "Scatter plot: '%{x_axis}' versus '%{y_axis}'"
       select_x: Select values for the X axis (MoE or input)
       select_y: Select values for the Y axis (MoE or input)
+      axis_scale: Scale
+      linear_scale: Linear
+      logarithmic_scale: Logarithmic
       add_new_series: "Add new series: "
       add_series: "Add series"
       select_axis_to_add: "Select axis to add series: "
+
+    interaction:
+      section_header: Interaction analysis
+      header: Interaction plot
+      select_first: Select first parameter
+      select_second: Select second parameter
+
 
   security:
     sim_authorization_error: "Simulation Manager '%{sm_uuid}' is not authorized to execute experiment '%{experiment_id}'"
