@@ -153,14 +153,18 @@ class window.ExperimentMonitor
 
     x -= canvas.offset().left
 
-    cellWidth = canvas.width() / @cellCounter
-    cellId = Math.floor((x / cellWidth) + 1) * @simsPerCell
+    if @cellCounter!=0
+      cellWidth = canvas.width() / @cellCounter
+      cellId = Math.floor((x / cellWidth) + 1) * @simsPerCell
+    else
+      cellWidth=0
+      cellId=0
     if @simsPerCell > 0
       randomNumber = Math.floor((Math.random()*@simsPerCell)) # 0..@simsPerCell - 1
       cellId -= randomNumber
-
-    $('#extension-dialog').load("/experiments/#{@experiment_id}/simulations/#{cellId}")
-    $('#extension-dialog').foundation('reveal', 'open')
+    if @cellCounter > 0
+        $('#extension-dialog').load("/experiments/#{@experiment_id}/simulations/#{cellId}")
+        $('#extension-dialog').foundation('reveal', 'open')
 
   update_statistics: (statistics) =>
     $("#exp_all_counter").html(statistics.all.toString().with_delimeters())
@@ -168,29 +172,33 @@ class window.ExperimentMonitor
     $("#exp_done_counter").html(statistics.done_num.toString().with_delimeters())
     $("#exp_done_percentage_counter").html(statistics.done_percentage)
 
+    if (statistics.all!=0)
+      $("#header_progress_bar").show()
     bar_colors = eval(statistics.progress_bar)
     canvas = document.getElementById("exp_progress_bar_2")
     context = canvas.getContext("2d")
-    part_width = canvas.width / bar_colors.length
+    parth_width=0
+    if bar_colors.length != 0 && statistics.all >0
+        part_width = canvas.width / bar_colors.length
+        context.fillStyle = "rgb(255, 255, 255)"
+        context.fillRect(0, 10, canvas.width, canvas.height - 10)
 
-    context.fillStyle = "rgb(255, 255, 255)"
-    context.fillRect(0, 10, canvas.width, canvas.height - 10)
+        @bar_cells = []
+        @cellCounter = bar_colors.length
+        @simsPerCell = Math.floor(statistics.all / bar_colors.length)
 
-    @bar_cells = []
-    @cellCounter = bar_colors.length
-    @simsPerCell = Math.floor(statistics.all / bar_colors.length)
+    if bar_colors.length > 0
+        for i in [0..bar_colors.length-1]
+          context.fillStyle = if(bar_colors[i] == 0) then "#BDBDBD" else "rgb(0, #{bar_colors[i]}, 0)"
+          if(bar_colors[i] < 0)
+            context.fillStyle = "#F62217"
 
-    for i in [0..bar_colors.length]
-      context.fillStyle = if(bar_colors[i] == 0) then "#BDBDBD" else "rgb(0, #{bar_colors[i]}, 0)"
-      if(bar_colors[i] < 0)
-        context.fillStyle = "#F62217"
-
-      if i == bar_colors.length - 1
-        context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
-        @bar_cells.push([part_width * i, part_width * i + part_width])
-      else
-        context.fillRect(part_width * i, 10, part_width*0.95, canvas.height - 10)
-        @bar_cells.push([part_width * i, part_width * i + part_width*0.95])
+          if i == bar_colors.length - 1
+            context.fillRect(part_width * i, 10, part_width, canvas.height - 10)
+            @bar_cells.push([part_width * i, part_width * i + part_width])
+          else
+            context.fillRect(part_width * i, 10, part_width*0.95, canvas.height - 10)
+            @bar_cells.push([part_width * i, part_width * i + part_width*0.95])
 
 #   formating avg execution time
     if(statistics.avg_execution_time != undefined)

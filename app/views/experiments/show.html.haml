@@ -83,7 +83,7 @@
       .speedometer{id: "speedometer_#{@experiment.id}"}
 
       %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
-        %h4.subheader= t('.progress_bar_header')
+        %h4#header_progress_bar.hidden.subheader= t('.progress_bar_header')
 
       = render 'monitoring_actions'
 
@@ -119,7 +119,7 @@
 
       var monitor = new window.ExperimentMonitor(experiment_id);
       monitor.generate_html('experiment_stats');
-
+      
       window.toggle_panels_on_title_click();
 
       if (!!chart_service_url) {
