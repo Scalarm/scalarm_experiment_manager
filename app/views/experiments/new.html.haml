@@ -7,21 +7,26 @@
 -#:coffeescript
 -#  window.alert("supervisors_ids: #{supervisor_ids.to_s}")
 
-- unless supervisor_ids.empty?
-  %section.panel.radius
-    %h3.subheader= t('experiments.optimization_method.title')
-    %h3
+= form_tag experiments_path, id: 'experiment_submit_form' do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'experiment_input'
+  = hidden_field_tag 'doe'
+  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+  = hidden_field_tag 'parameters_constraints'
+  = render 'experiments/new/basic_information'
 
-    .content
-      .row
-        .small-5.columns
-          %label.inline.right
-            = t('experiments.optimization_method.selector')
-        .small-5.columns
-          %h3
-          - options = supervisor_options(supervisor_ids) == '' ? [t('experiments.optimization_method.manual')] : [t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')]
-          = select_tag 'experiment_type_select', options_for_select(options, t('experiments.optimization_method.manual'))
-        .small-2.-columns
+  #experiment-type-panel-manual
+    %section.panel.radius
+      %h3.subheader= t('experiments.optimization_method.title')
+      .content
+        .row
+          .small-5.columns
+            %label.inline.right
+              = t('experiments.optimization_method.selector')
+          .small-5.columns
+            - options = supervisor_options(supervisor_ids) == '' ? [t('experiments.optimization_method.manual')] : [t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')]
+            = select_tag 'experiment_type_select', options_for_select(options, t('experiments.optimization_method.manual'))
+          .small-2.-columns
 
   #manual-experiment-panel
     %section.panel.radius
@@ -35,7 +40,28 @@
             = select_tag 'input_space_select', options_for_select([t('experiments.manual_experiment.manual_designed'), t('experiments.manual_experiment.csv_imported')], t('experiments.manual_experiment.manual_designed'))
           .small-2.-columns
 
-  #automatic-experiment-panel{:style => 'display: none'}
+= form_tag experiments_path, id: 'supervised_experiment_submit_form' , style: 'display: none' do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'experiment_input'
+  = hidden_field_tag 'doe'
+  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
+  = hidden_field_tag 'parameters_constraints'
+  = render 'experiments/new/basic_information'
+
+  #experiment-type-panel-supervised
+    %section.panel.radius
+      %h3.subheader= t('experiments.optimization_method.title')
+      .content
+        .row
+          .small-5.columns
+            %label.inline.right
+              = t('experiments.optimization_method.selector')
+          .small-5.columns
+            - options = supervisor_options(supervisor_ids) == '' ? [t('experiments.optimization_method.manual')] : [t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')]
+            = select_tag 'experiment_type_select_supervised', options_for_select(options, t('experiments.optimization_method.manual'))
+          .small-2.-columns
+
+  #automatic-experiment-panel
     %section.panel.radius
       %h3.subheader= t('experiments.automatic_experiment.title')
       .content
@@ -48,22 +74,6 @@
           .small-2.-columns
             #supervisor_form_loader
 
-
-= form_tag experiments_path, id: 'experiment_submit_form' do
-  = hidden_field_tag 'simulation_id', @simulation.id
-  = hidden_field_tag 'experiment_input'
-  = hidden_field_tag 'doe'
-  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
-  = hidden_field_tag 'parameters_constraints'
-  = render 'experiments/new/basic_information'
-
-= form_tag experiments_path, id: 'supervised_experiment_submit_form' , style: 'display: none' do
-  = hidden_field_tag 'simulation_id', @simulation.id
-  = hidden_field_tag 'experiment_input'
-  = hidden_field_tag 'doe'
-  = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
-  = hidden_field_tag 'parameters_constraints'
-  = render 'experiments/new/basic_information'
   #supervisor_fields
 
 
@@ -111,7 +121,6 @@
   :javascript
     $(function() {
       var es_url = "#{es_url}";
-
       if (es_url) {
         new window.SupervisorBooster(es_url);
       } else {
@@ -147,6 +156,8 @@
           });
           $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
           $("#supervised_experiment_submit_form").submit();
+          $("#supervised_experiment_submit_form2").submit();
+
         }
       });
 
@@ -166,10 +177,9 @@
         set_visible_panels();
       });
 
-      function set_visible_panels() {
+      function set_visible_panels2() {
         if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}")) {
           $("#automatic-experiment-panel").hide();
-          $("#supervisor_fields").hide();
           $("#supervised_experiment_submit_form").hide();
           $("#manual-experiment-panel").show();
           $("#experiment_submit_form").show();
@@ -193,9 +203,37 @@
         }
       }
 
+      function set_visible_panels() {
+        if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}" )) {
+          $("#experiment_submit_form").show();
+          $("#supervised_experiment_submit_form").hide();
+          if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
+            $("#import").hide();
+            $("#input-space-parameters").show();
+          }
+          else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
+            $("#input-space-parameters").hide();
+            $("#import").show();
+          }
+        }
+        else if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.automatic')}") ) {
+          $("#supervised_experiment_submit_form").show();
+          $("#experiment_submit_form").hide();
+          $("#import").hide();
+          $("#input-space-parameters").hide();
+        }
+      }
+
       $("#experiment_type_select").on("change", function() {
+        $( "#experiment_type_select_supervised" ).val($("#experiment_type_select").find(":selected").val());
         set_visible_panels();
       });
+
+      $("#experiment_type_select_supervised").on("change", function() {
+        $( "#experiment_type_select" ).val($("#experiment_type_select_supervised").find(":selected").val());
+        set_visible_panels();
+      });
+
 
       $("#input_space_select").on("change", function() {
         if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
