@@ -342,11 +342,9 @@ class ExperimentsController < ApplicationController
     experiment.save
     response = {'status' => 'ok'}
 
-    if params[:supervisor_script_params] == ""
-      supervisor_script_params_tmp = {}
-    else
-      supervisor_script_params_tmp = params[:supervisor_script_params]
-    end
+
+
+    supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
 
     if params.has_key?(:supervisor_script_id)
       response = experiment.start_supervisor_script(params[:simulation_id],
