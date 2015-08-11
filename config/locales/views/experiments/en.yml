@@ -58,6 +58,7 @@ en:
          other: "Selected DoE method requires more than %{count} parameters."
       invalid_resolution: Number of bars should be an integer between 1 and 100
       incorrect_parameter: Incorrect parameter chosen!
+      incorrect_add_parameter_scater: Can't add series with parameter of string type!
 
     edit:
       link: "Edit"
