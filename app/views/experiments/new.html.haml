@@ -18,7 +18,9 @@
           %label.inline.right
             = t('experiments.optimization_method.selector')
         .small-5.columns
-          = select_tag 'experiment_type_select', options_for_select([t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')], t('experiments.optimization_method.manual'))
+          %h3
+          - options = supervisor_options(supervisor_ids) == '' ? [t('experiments.optimization_method.manual')] : [t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')]
+          = select_tag 'experiment_type_select', options_for_select(options, t('experiments.optimization_method.manual'))
         .small-2.-columns
 
   #manual-experiment-panel
