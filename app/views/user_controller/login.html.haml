@@ -21,6 +21,7 @@
     .row
       - if single_user
         = form_tag login_path do
+          = hidden_field_tag 'username', config.anonymous_user['login']
           .small-6.columns.small-centered
             .row
               .small-3.columns
@@ -30,7 +31,7 @@
 
             .row
               .small-12.small-centered.columns(style="text-align: center;")
-                = submit_tag 'Login with username', class: 'button radius'
+                = submit_tag 'Login', class: 'button radius'
       - else
         .small-6.columns
           = form_tag login_path do
@@ -53,14 +54,21 @@
         .small-6.columns
           .row
             .small-9.small-centered.columns
-              %a.button.expand.radius{ href: login_openid_google_url }
-                %i.fa.fa-google-plus.fa-fw.small-link
-                = t('openid.login', provider: 'Google')
-          .row
-            .small-9.small-centered.columns
               %a.button.expand.radius{ href: login_openid_plgrid_url }
                 %i.fa.fa-openid.fa-fw.small-link
                 = t('openid.login', provider: 'PL-Grid')
+          .row
+            .small-9.small-centered.columns
+              %a.button.expand.radius{ href: login_login_oauth_google_url }
+                %i.fa.fa-google-plus.fa-fw.small-link
+                = t('openid.login', provider: 'Google')
+
+          - if github_configured?
+            .row
+              .small-9.small-centered.columns
+                %a.button.expand.radius{ href: login_login_oauth_github_url }
+                  %i.fi-social-github.small-link
+                  = t('openid.login', provider: 'GitHub')
 
 
 %section.panel.radius

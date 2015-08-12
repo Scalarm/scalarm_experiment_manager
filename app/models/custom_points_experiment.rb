@@ -8,6 +8,10 @@ class CustomPointsExperiment < Experiment
     self.size = 0
   end
 
+  def self.from_experiment(experiment)
+    self.new(experiment.attributes)
+  end
+
   def add_point!(point)
     add_points!([point])
   end
@@ -62,6 +66,15 @@ class CustomPointsExperiment < Experiment
   def single_point_hash_to_tuple(point)
     csv_parameter_ids.collect do |pid|
       point[pid.to_s] or point[pid.to_sym]
+    end
+  end
+
+  # If experiment is not empty (uninitialized with points yet), are all scheduled simulation points done?
+  def completed?
+    if self.experiment_size == 0
+      false
+    else
+      super
     end
   end
 end

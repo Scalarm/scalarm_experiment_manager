@@ -20,7 +20,7 @@
             %td(colspan="2" style="text-align: left; font-size: 16px;")
               - if simulation.is_public
                 %strong= t 'simulation_scenarios.state.public'
-              - elsif simulation.user_id != @current_user.id
+              - elsif simulation.user_id != current_user.id
                 %strong= t('simulations.conduct_experiment.simulation_overview_shared_by')
                 \:
                 = ScalarmUser.find_by_id(simulation.user_id).login
@@ -62,7 +62,7 @@
                     code_base_simulation_scenario_path(simulation.id), class: 'button tiny radius',
                     title: t('simulation_scenarios.show.code_base')
 
-                - if simulation.user_id == @current_user.id
+                - if simulation.user_id == current_user.id
                   %li
                     = link_to content_tag(:i, '', class: 'fi-page-edit', style: font_size),
                       edit_simulation_scenario_path(simulation.id), class: 'button tiny radius',

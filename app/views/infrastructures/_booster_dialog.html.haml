@@ -1,5 +1,5 @@
 - infrastructure_name = InfrastructureFacadeFactory.get_registered_infrastructure_names.first if infrastructure_name.blank?
-- infrastructures_list = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(@current_user.id))
+- infrastructures_list = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(current_user.id))
 - infrastructures_select_data = infrastructures_list[:data]
 - disabled_infrastructures = infrastructures_list[:disabled]
 
@@ -18,7 +18,7 @@
             .large-4.columns
               = label_tag :experiment_id, t('infrastructure.information.experiment') + ':', class: 'inline right'
             .large-4.columns
-              = select_tag :experiment_id, options_for_select(experiments_select_data(@current_user), experiment_id.to_s)
+              = select_tag :experiment_id, options_for_select(experiments_select_data(current_user), experiment_id.to_s)
             .large-1.columns
           .row
             .large-4.columns

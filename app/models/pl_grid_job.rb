@@ -9,13 +9,12 @@
 # Note that some attributes are used only by some queuing system facades
 
 require 'infrastructure_facades/infrastructure_errors'
+require 'scalarm/database/model/pl_grid_job'
 
-class PlGridJob < MongoActiveRecord
+class PlGridJob < Scalarm::Database::Model::PlGridJob
   include SimulationManagerRecord
 
-  def self.collection_name
-    'grid_jobs'
-  end
+  attr_join :experiment, Experiment
 
   def infrastructure_name
     scheduler_type
@@ -122,7 +121,7 @@ class PlGridJob < MongoActiveRecord
   def valid_proxy?(proxy)
     true
 
-    # TODO
+    # TODO - use Scalarm::ServiceCore::GP::Proxy validation
     # begin
     #   GP::Proxy.new(proxy).verify!(ca_cert)
     # rescue GP::ProxyValidationError => validation_error

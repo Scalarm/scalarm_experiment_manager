@@ -1,0 +1,39 @@
+= form_tag experiments_path, id: 'simulated_annealing_form' do
+  = hidden_field_tag 'simulation_id', @simulation.id
+  = hidden_field_tag 'experiment_input'
+  = render 'experiments/new/basic_information'
+  = hidden_field_tag 'supervisor_script_id', 'simulated_annealing'
+  = hidden_field_tag 'type', 'supervised'
+  = hidden_field_tag 'supervisor_script_params'
+= form_tag experiments_path, id: 'simulated_annealing_form_hidden' do
+  = render 'experiments/new/simulated_annealing_form'
+
+.row.submit-section
+  = submit_tag t('experiments.new.submit_button'), id: 'new_simulated_annealing_submit', class: 'button radius last-element'
+  = image_tag 'loading.gif', id: 'conduct-loading', style: 'display: none;'
+
+#error-dialog.reveal-modal.hidden(data-reveal="")
+  %h2.subheader= t("new.error_dialog_header")
+  %a.close-reveal-modal &#215;
+
+  .alert-box.alert.radius.hidden(data-alert="")
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      var sa_input_space = new window.InputSpace(#{raw @simulation.input_specification.to_json});
+
+      $("#simulated_annealing_form").on("submit", function() {
+        var builder = {};
+        builder.maxiter = parseInt($("input[name='maxiter']").val());
+        builder.dwell = parseInt($("input[name='dwell']").val());
+        builder.schedule = $("input[name='schedule']").val();
+        $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
+
+        sa_input_space.updateAllInputParameterValues();
+      });
+
+      $("#new_simulated_annealing_submit").on("click", function() {
+        $("#simulated_annealing_form").submit();
+      });
+    });

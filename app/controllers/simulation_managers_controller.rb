@@ -151,7 +151,7 @@ class SimulationManagersController < ApplicationController
   # -- filters --
 
   def set_user_id
-    @user_id = @sm_user.blank? ? @current_user.id : @sm_user.user_id
+    @user_id = sm_user.blank? ? current_user.id : sm_user.user_id
   end
 
   def load_infrastructure

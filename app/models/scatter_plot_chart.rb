@@ -1,13 +1,21 @@
 class ScatterPlotChart
-  attr_accessor :experiment, :x_axis, :y_axis, :x_axis_label, :y_axis_label, :chart_data, :linear_regression_data
+  attr_accessor :experiment, :x_axis, :y_axis,
+                :x_axis_label, :y_axis_label,
+                :x_axis_type, :y_axis_type,
+                :chart_data, :linear_regression_data
 
-  def initialize(experiment, x_axis, y_axis)
+  def initialize(experiment, x_axis, y_axis, additional=nil)
     @experiment = experiment
     @x_axis = x_axis
     @y_axis = y_axis
 
     @x_axis_label = experiment.input_parameter_label_for(x_axis) || x_axis
     @y_axis_label = experiment.input_parameter_label_for(y_axis) || y_axis
+
+    additional ||= {}
+
+    @x_axis_type = additional[:x_axis_type]
+    @y_axis_type = additional[:y_axis_type]
   end
 
   def prepare_chart_data
@@ -53,7 +61,7 @@ class ScatterPlotChart
 
     @linear_regression_data = [[x1, y1],[x2, y2]]
   end
-
+  
   def linear_regression_possible?
     @linear_regression_data.flatten.all? { |item| !item.nan? }
   end

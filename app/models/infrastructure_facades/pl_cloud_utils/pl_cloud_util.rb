@@ -209,6 +209,9 @@ CONTEXT = [
   def redirections_for(vm_ip)
     resp = RestClient.get "#{DNAT_URL}/#{vm_ip}",
                           content_type: :json, accept: :json
+
+    Rails.logger.info "RESPONSE: #{resp}"
+
     raise PLCloudError if resp =~ /400 Bad Request/
 
     data = JSON.parse resp

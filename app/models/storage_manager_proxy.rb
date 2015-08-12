@@ -13,7 +13,8 @@ class StorageManagerProxy
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
-    http.ssl_version = :SSLv3
+    # TODO: check if requests are working
+    # http.ssl_version = :SSLv3
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     request = Net::HTTP::Delete.new(uri.request_uri)
@@ -23,8 +24,8 @@ class StorageManagerProxy
       response = http.request(request)
 
       response.code == '200'
-    rescue Exception => e
-      Rails.logger.debug("Exception during communication with Storage manager")
+    rescue => e
+      Rails.logger.debug("Exception during communication with Storage manager: #{e.to_s}")
 
       false
     end
@@ -36,7 +37,8 @@ class StorageManagerProxy
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
-    http.ssl_version = :SSLv3
+    # TODO: check if requests are working
+    # http.ssl_version = :SSLv3
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     request = Net::HTTP::Delete.new(uri.request_uri)
@@ -46,8 +48,8 @@ class StorageManagerProxy
       response = http.request(request)
 
       response.code == '200'
-    rescue Exception => e
-      Rails.logger.debug("Exception during communication with Storage manager: #{e}")
+    rescue => e
+      Rails.logger.debug("Exception during communication with Storage manager: #{e.to_s}")
 
       false
     end

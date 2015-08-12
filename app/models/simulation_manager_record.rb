@@ -20,8 +20,11 @@
 
 require 'mongo_lock'
 
+require 'scalarm/database/core'
+
+# TODO: move to scalarm-database?
 module SimulationManagerRecord
-  include MongoActiveRecordUtils
+  include Scalarm::Database::MongoActiveRecordUtils
 
   POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
 

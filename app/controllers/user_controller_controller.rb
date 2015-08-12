@@ -3,13 +3,31 @@ require 'openid/extensions/ax'
 
 require 'openid_providers/google_openid'
 require 'openid_providers/plgrid_openid'
+require 'openid_providers/github_oauth'
 
 require 'utils'
+
+require 'scalarm/database/core/mongo_active_record'
 
 class UserControllerController < ApplicationController
   include UserControllerHelper
   include GoogleOpenID
   include PlGridOpenID
+  include GithubOauth
+
+  ##
+  # Normally render welcome page
+  # Render trivial json if Accept: application/json specified,
+  # for testing and authentication tests purposes
+  def index
+    Rails.logger.info "index #{current_user}"
+    respond_to do |format|
+      format.html
+      format.json { render json: {status: 'ok',
+                                  message: 'Welcome to Scalarm',
+                                  user_id: current_user.id.to_s } }
+    end
+  end
 
   def successful_login
     original_url = session[:original_url]
@@ -27,9 +45,13 @@ class UserControllerController < ApplicationController
   def login
     if request.post?
       begin
-        config = Utils::load_config
-        anonymous_login = config['anonymous_login']
-        username = params.include?(:username) ? params[:username].to_s : anonymous_login.to_s
+        anonymous_config = Utils::load_config.anonymous_user
+
+        username = if anonymous_config and not params.include?(:username)
+                     config['login'].to_s
+                   else
+                     params[:username].to_s
+                   end
 
         requested_user = ScalarmUser.find_by_login(username)
         raise t('user_controller.login.user_not_found') if requested_user.nil?
@@ -47,7 +69,7 @@ class UserControllerController < ApplicationController
         end
 
         successful_login
-      rescue Exception => e
+      rescue => e
         Rails.logger.debug("Exception on login: #{e}\n#{e.backtrace.join("\n")}")
         reset_session
         flash[:error] = e.to_s
@@ -68,8 +90,8 @@ class UserControllerController < ApplicationController
     keep_session_params(:server_name) do
       reset_session
     end
-    @user_session.destroy unless @user_session.blank?
-    @current_user.destroy_unused_credentials unless @current_user.nil?
+    user_session.destroy unless user_session.blank?
+    current_user.destroy_unused_credentials unless current_user.nil?
 
     flash[:notice] = t('logout_success')
 
@@ -85,10 +107,10 @@ class UserControllerController < ApplicationController
 
       flash[:error] = t('password_too_weak')
 
-    elsif (not @current_user.password_hash.nil?)
+    elsif (not current_user.password_hash.nil?)
 
       begin
-        ScalarmUser.authenticate_with_password(@current_user.login, params[:current_password])
+        ScalarmUser.authenticate_with_password(current_user.login, params[:current_password])
       rescue Exception => e
         flash[:error] = t('password_wrong')
       end
@@ -96,8 +118,8 @@ class UserControllerController < ApplicationController
     end
 
     if flash[:error].blank?
-      @current_user.password = params[:password]
-      @current_user.save
+      current_user.password = params[:password]
+      current_user.save
 
       flash[:notice] = t('password_changed')
     end
@@ -144,7 +166,7 @@ class UserControllerController < ApplicationController
   # --- Status tests ---
 
   def status_test_database
-    MongoActiveRecord.available?
+    Scalarm::Database::MongoActiveRecord.available?
   end
 
 end

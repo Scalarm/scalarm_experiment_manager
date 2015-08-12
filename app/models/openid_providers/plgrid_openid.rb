@@ -106,7 +106,9 @@ module PlGridOpenID
   def self.get_or_create_user(dn, plgrid_login, password=nil)
     OpenIDUtils::get_user_with(dn: dn, login: plgrid_login) or
         OpenIDUtils::get_user_with(dn: dn) or OpenIDUtils::get_user_with(login: plgrid_login) or
-        OpenIDUtils::create_user_with(plgrid_login, password, dn: dn, login: plgrid_login)
+        OpenIDUtils::create_user_with(plgrid_login, password,
+                                      dn: plgoid_dn_to_browser_dn(dn),
+                                      login: plgrid_login)
   end
 
   def update_grid_credentials(scalarm_user_id, plgrid_login, proxy_cert)

@@ -43,7 +43,7 @@ class PrivateMachineFacade < InfrastructureFacade
                              name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
     end
 
-    ppn = shared_ssh_session(machine_creds).exec!("cat /proc/cpuinfo | grep MHz | wc -l").strip
+    ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
     ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
     records = (1..instances_count).map do
@@ -74,6 +74,10 @@ class PrivateMachineFacade < InfrastructureFacade
     end
 
     records
+  end
+
+  def get_number_of_cores_command
+    'cat /proc/cpuinfo | grep MHz | wc -l'
   end
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, infrastructure_name, params={})
