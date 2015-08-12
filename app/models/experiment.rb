@@ -635,16 +635,25 @@ class Experiment < Scalarm::Database::Model::Experiment
     when 'value'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       if /\A((\w)|(-)|(\.))+\z/.match(parameter['value']).nil?
-        raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+        if parameter['value'] == ''
+          raise SecurityError.new("Insecure empty parameter given for Single value")
+        else
+          raise SecurityError.new("Insecure parameter given [#{parameter['value']}] for Single value" ) #parameter.to_s gives whole json
+        end
       end
 
       parameter_values << parameter['value']
 
     when 'range'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter['type'], parameter['step'], parameter['min'], parameter['max'] ].each do |some_value|
-        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
-          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+      ['type', 'step', 'min', 'max'].each do |input_type|
+        value_of_input = parameter[input_type]
+        if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
+          if value_of_input == ''
+            raise SecurityError.new("Insecure empty parameter given for Range " + input_type + " value")
+          else
+            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Range " + input_type + " value") #parameter.to_s gives whole json
+          end
         end
       end
 
@@ -663,9 +672,14 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'gauss'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter['mean'], parameter['variance'] ].each do |some_value|
-        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
-          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+      ['mean', 'variance'].each do |input_type|
+        value_of_input = parameter[input_type]
+        if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
+          if value_of_input == ''
+            raise SecurityError.new("Insecure empty parameter given for Gauss " + input_type + " value")
+          else
+            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Gauss " + input_type + " value") #parameter.to_s gives whole json
+          end
         end
       end
 
@@ -675,9 +689,14 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'uniform'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter['min'], parameter['max'] ].each do |some_value|
-        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
-          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
+      ['min', 'max'].each do |input_type|
+        value_of_input = parameter[input_type]
+        if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
+          if value_of_input == ''
+            raise SecurityError.new("Insecure empty parameter given for Uniform " + input_type + " value")
+          else
+            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Uniform " + input_type + " value") #parameter.to_s gives whole json
+          end
         end
       end
 
