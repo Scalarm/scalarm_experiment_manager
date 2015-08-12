@@ -35,7 +35,6 @@
 
   :javascript
     $(function() {
-
       var setAxis = "x";
 
       var x_axis = $('#bivariate_charts_form').find('select[name=\'x_axis\'] option:selected').val();
@@ -44,7 +43,9 @@
       var type_of_x
       var index_of_y
       var type_of_y
-      var notation = $('#bivariate_charts_form').find('select[name=\'notation\'] option:selected').val();
+      $("#notation_#{@uuid}").change(function() {
+        notation = $(this).find(":selected").val();
+      });
       if (window.moes_info.moes_names.indexOf(x_axis) != -1) {
         index_of_x = window.moes_info.moes_names.indexOf(x_axis)
         type_of_x = window.moes_info.moes_types[index_of_x]
