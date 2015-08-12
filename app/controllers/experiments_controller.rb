@@ -338,7 +338,21 @@ class ExperimentsController < ApplicationController
     # TODO: other experiment parameters
     # TODO: handle errors
 
-    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation)
+    parse = lambda do |id, parse_method|
+      if params[id].blank?
+        params.delete id
+      else
+        params[id] = parse_method.call(params[id])
+      end
+    end
+
+    parse.call :replication_level, lambda {|x| x.to_i}
+    parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
+
+    parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
+                                  :experiment_description)
+    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation, parsed_params)
+
     experiment.save
     response = {'status' => 'ok'}
 
