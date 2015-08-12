@@ -460,9 +460,15 @@ class ExperimentsController < ApplicationController
     #  @experiment.save
     #end
 
+
+    if @experiment.experiment_size!=0
+      percentage = (sims_done.to_f / @experiment.experiment_size) * 100
+    else
+      percentage=0
+    end
     stats = {
         all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
-        done_percentage: "'%.2f'" % ((sims_done.to_f / @experiment.experiment_size) * 100),
+        done_percentage: "'%.2f'" % (percentage),
         generated: [sims_generated, @experiment.experiment_size].min,
         progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
     }
@@ -523,6 +529,8 @@ class ExperimentsController < ApplicationController
     #             [@experiment.input_parameter_label_for(x), x]}
     #         end
 
+
+    #TODO Unsafety behaviour, inject code???
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
@@ -532,7 +540,51 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
+    first_line_result = @experiment.simulation_runs.first.result
+    first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+    array_for_moes_types = []
+    array_for_inputs_types = []
+
+    first_line_result.each{|x|
+      item = x[1]
+      if item.is_a? Integer
+        array_for_moes_types.push("integer")
+      elsif item.is_a? Float
+        array_for_moes_types.push("float")
+      elsif item.is_a? String
+        array_for_moes_types.push("string")
+      else
+        array_for_moes_types.push("undefined")
+      end
+    }
+
+    first_line_inputs.each{|x|
+      item = x
+      a = item.to_i
+      b = item.to_f
+
+      if x.eql?a.to_s
+        array_for_inputs_types.push("integer")
+      elsif x.eql?b.to_s
+        array_for_inputs_types.push("float")
+      elsif x.is_a? String
+        array_for_inputs_types.push("string")
+      else
+        array_for_inputs_types.push("undefined")
+      end
+
+    }
+
+    moes_info[:moes_types] = array_for_moes_types
+    moes_info[:moes_names] = @experiment.result_names
+    moes_info[:inputs_types] = array_for_inputs_types
+    moes_info[:inputs_names] = @experiment.simulation_runs.first.arguments.split(",")
+
+    #TODO add new map for histogram to improve selector
+    #array_for_moes_types.insert(0,'---')
+
     render json: moes_info
+
   end
 
   def results_info
@@ -577,7 +629,7 @@ class ExperimentsController < ApplicationController
     validate(
         range_min: [param_type],
         range_max: [param_type],
-        range_step: [param_type, :positive]
+        range_step: [param_type] #, :positive] #this validation was moved to validate_input_extension function
     )
 
     convert_fun = (param_type == :integer ? :to_i : :to_f)
@@ -588,7 +640,12 @@ class ExperimentsController < ApplicationController
     validate_input_extension(@range_min, @range_max, @range_step)
 
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
-    new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    #One value extend, take range_min
+    if (@range_step == 0)
+      new_parameter_values = Array.wrap(@range_min)
+    else
+      new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    end
     #@priority = params[:priority].to_i
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
@@ -614,10 +671,20 @@ class ExperimentsController < ApplicationController
                 new('range_min', range_min, "Range minimum is greater than maximum")
     end
 
+  #to add one point (example => min: 2, max: 3, step: 5 gives [2] as single point) need to remove this, it works the same in creation of experiment
+=begin
     unless range_step <= (range_max-range_min)
       raise ValidationError.
                 new('range_max', range_min, "Range step is too large")
     end
+=end
+
+    #when range_step == 0 create one point (range_min)
+    unless range_step >= 0
+      raise ValidationError.
+                new('range_step', range_step, "Range step cannot be negative")
+    end
+
   end
 
   def running_simulations_table
@@ -798,10 +865,11 @@ class ExperimentsController < ApplicationController
     )
 
     resolution = params[:resolution].to_i
+    moe_type= params[:type]
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, x_axis_notation: params[:x_axis_notation].to_s, y_axis_notation: params[:y_axis_notation].to_s)
+      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, moe_type, x_axis_notation: params[:x_axis_notation].to_s, y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -823,7 +891,6 @@ class ExperimentsController < ApplicationController
         y_axis_notation: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
-
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
@@ -831,6 +898,8 @@ class ExperimentsController < ApplicationController
           @experiment,
           params[:x_axis].to_s,
           params[:y_axis].to_s,
+          params[:type_of_x],
+          params[:type_of_y],
           x_axis_type: params[:x_axis_type].to_s,
           y_axis_type: params[:y_axis_type].to_s,
           x_axis_notation: params[:x_axis_notation].to_s,
@@ -847,7 +916,7 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s, params[:type_of_x].to_s, params[:type_of_y].to_s)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data

@@ -16,11 +16,28 @@
   .row
     .small-9.columns.basic_chart_container{ id: chart_container_id }
     .small-3.columns
-      = render partial: 'statistics_box', locals: { stats: stats, experiment: experiment, moe_name: moe_name }
+      = render partial: 'statistics_box', locals: { stats: stats, experiment: experiment, moe_name: moe_name}
+
+
 
   :javascript
+
+
+
     $(function() {
+      var moe_name = $('#basic_charts_form select[name=\'moe_name\'] option:selected').val();
+      var index_of_moe = window.moes_info.moes_names.indexOf(moe_name)
+      var type_of_moe = window.moes_info.moes_types[index_of_moe]
+
+      if (type_of_moe == "string") {
+        $('#statistics_box_#{experiment.id}_#{moe_name}').hide();
+      }
+      else {
+        $('#statistics_box_#{experiment.id}_#{moe_name}').show();
+      }
+
       var visible = parseInt("#{resolution}")<"#{@visible_threshold_resolution}";
+
       $("#checkbox_#{experiment.id}_#{moe_name}_#{resolution}").attr("checked", visible);
       $("#checkbox_#{experiment.id}_#{moe_name}_#{resolution}").on('click', function() {
 
@@ -31,6 +48,7 @@
       $("#label_#{experiment.id}_#{moe_name}_#{resolution}").on("click", function() {
         $(this).siblings("input").click();
       })
+
       $('.plot .button').on('click', function() {
         $(this).parent().parent().remove()
       });
