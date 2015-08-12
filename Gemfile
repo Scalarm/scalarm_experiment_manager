@@ -74,6 +74,7 @@ gem 'xml-simple'
 gem 'vmstat'
 
 gem 'mocha', group: :test
+gem 'ci_reporter_minitest', group: :test
 
 gem 'remotipart', '~> 1.0'
 
