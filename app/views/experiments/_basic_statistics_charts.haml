@@ -58,8 +58,10 @@
           $('#basic_charts_form').find('#label_number_of_bars').hide();
 
           $.post("#{histogram_experiment_path(@experiment.id)}",
-            { 'moe_name': moe_name, 'resolution': resolution, 'type' : type_of_moe,
-              'x_axis_notation': x_axis_notation, 'y_axis_notation': y_axis_notation },
+            { 'moe_name': moe_name, 'resolution': resolution,
+              'type' : type_of_moe,
+              'x_axis_notation': x_axis_notation,
+              'y_axis_notation': y_axis_notation },
             function(data) { $('#busy_basic').hide(); }
           );
         }
@@ -69,7 +71,10 @@
         }
         else {
           $.post("#{histogram_experiment_path(@experiment.id)}",
-            { 'moe_name': moe_name, 'resolution': resolution },
+            { 'moe_name': moe_name, 'resolution': resolution,
+             'type' : type_of_moe,
+              'x_axis_notation': x_axis_notation,
+              'y_axis_notation': y_axis_notation},
             function(data) { $('#busy_basic').hide(); }
           );
         }

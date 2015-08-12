@@ -869,7 +869,10 @@ class ExperimentsController < ApplicationController
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, moe_type, x_axis_notation: params[:x_axis_notation].to_s, y_axis_notation: params[:y_axis_notation].to_s)
+      @chart = HistogramChart.new(@experiment, params[:moe_name],
+                                  resolution, moe_type,
+                                  x_axis_notation: params[:x_axis_notation].to_s,
+                                  y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -916,7 +919,13 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s, params[:type_of_x].to_s, params[:type_of_y].to_s)
+      @chart = ScatterPlotChart.new(@experiment,
+                                    params[:x_axis].to_s,
+                                    params[:y_axis].to_s,
+                                    params[:type_of_x].to_s,
+                                    params[:type_of_y].to_s,
+                                    x_axis_notation: params[:x_axis_notation].to_s,
+                                    y_axis_notation: params[:y_axis_notation].to_s)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data

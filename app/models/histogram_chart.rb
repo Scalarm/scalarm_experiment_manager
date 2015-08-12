@@ -3,7 +3,9 @@ require 'rinruby'
 require 'tempfile'
 
 class HistogramChart
-  attr_accessor :experiment, :resolution, :moe_name, :bucket_name, :buckets, :stats, :type,  :x_axis_notation, :y_axis_notation
+  attr_accessor :experiment, :resolution, :moe_name,
+                :bucket_name, :buckets, :stats, :type,
+                :x_axis_notation, :y_axis_notation
 
   def initialize(experiment, moe_name, resolution, type,  additional =nil)
     @experiment = experiment

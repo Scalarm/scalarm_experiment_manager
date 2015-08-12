@@ -10,7 +10,7 @@
     .small-3.columns
       = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
     .small-2.columns
-      = select_tag 'x_axis', '', { class: 'moes_and_params_list' }
+      = select_tag 'x_axis', '', { class: 'moes_and_params_list', id: "x_axis_select_parameter" }
     .small-1.columns
       = label_tag :x_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline',  id: "label_tag_scale_x"
     .small-2.columns
@@ -19,7 +19,7 @@
       = label_tag :x_axis_notation, "Notation" + ':', class: 'inline'
     .small-3.columns
       = select_tag 'x_axis_notation', notation_options
-      
+
   .row
     .small-3.columns
       = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'

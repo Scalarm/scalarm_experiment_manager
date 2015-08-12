@@ -1,7 +1,7 @@
 //TODO: translate
 
 $("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
-$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'scatter_plot_chart') %>");
+$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>");
 try {
     $(document).ready(function() {
         new Highcharts.Chart({
@@ -13,11 +13,11 @@ try {
         xAxis: {
             title: { text: '<%= @chart.x_axis_label %>' },
             <% if @chart.type_of_x === 'string' %>
-                categories: <%= raw @chart.categories_for_x %>,
+            categories: <%= raw @chart.categories_for_x %>,
             <% else %>
-                type: '<%= @chart.x_axis_type or 'linear' %>',
+            type: '<%= @chart.x_axis_type or 'linear' %>',
                 <% if @chart.x_axis_notation === 'scientific'%>
-                labels:{
+            labels:{
                     formatter: function(){
                         return this.value.toExponential(2);
                     }
@@ -31,7 +31,7 @@ try {
             <% if @chart.type_of_y === 'string' %>
                 categories: <%= raw @chart.categories_for_y %>,
             <% else %>
-                type: '<%= @chart.x_axis_type or 'linear' %>',
+                type: '<%= @chart.y_axis_type or 'linear' %>',
                 <% if @chart.y_axis_notation === 'scientific'%>
                 labels:{
                     formatter: function(){
