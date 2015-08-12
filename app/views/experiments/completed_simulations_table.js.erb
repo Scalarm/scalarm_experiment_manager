@@ -30,3 +30,32 @@ completed_sim_table.on('click', 'tr', function(event) {
 
 completed_sim_table.wrap("<div id='completed_simulations_table_scroll'></div>");
 $('#completed_simulations_table_scroll').doubleScroll();
+
+$.fn.dataTableExt.sErrMode = "console";
+
+$.fn.dataTableExt.oApi._fnLog = function (oSettings, iLevel, sMesg, tn) {
+    var sAlert = (oSettings === null)
+                    ? "DataTables warning: "+sMesg
+                    : "DataTables warning (table id = '"+oSettings.sTableId+"'): "+sMesg
+            ;
+
+    if (tn) {
+        sAlert += ". For more information about this error, please see "+
+                "http://datatables.net/tn/"+tn
+        ;
+    }
+
+    if (iLevel === 0) {
+        if ($.fn.dataTableExt.sErrMode == "alert") {
+            alert(sAlert);
+        } else if ($.fn.dataTableExt.sErrMode == "throw") {
+            throw sAlert;
+        } else  if ($.fn.dataTableExt.sErrMode == "console") {
+            console.log(sAlert);
+        } else  if ($.fn.dataTableExt.sErrMode == "mute") {}
+
+        return;
+    } else if (console !== undefined && console.log) {
+        console.log(sAlert);
+    }
+}
