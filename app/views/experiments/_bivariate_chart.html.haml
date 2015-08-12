@@ -3,7 +3,7 @@
   %h3.subheader
     = t('charts.scatter.header', x_axis: @chart.x_axis_label, y_axis: @chart.y_axis_label)
 
-  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']])
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']], 'default')
 
   .row
     -#= button_to_function "Refresh" ,
@@ -22,9 +22,9 @@
         = select_tag "new_series_#{@uuid}", '', { class: 'moes_and_params_list' }
     .row
       .small-offset-1.small-3.columns
-        = label_tag "notation_#{@uuid}", "Notation" + ':', class: 'inline'
+        = label_tag "label_notation_#{@uuid}", "Notation" + ':', class: 'inline', id: "label_notation"
       .small-5.columns
-        = select_tag "notation_#{@uuid}", notation_options
+        = select_tag "notation_#{@uuid}", notation_options, id: "notation"
       .small-2.columns.end
         %span.add_series.button.radius.tiny= t('charts.scatter.add_series')
         = image_tag 'loading.gif', id: "busy_bivariate_#{@uuid}", size: '16x16', style: 'display: none;'
@@ -36,16 +36,13 @@
   :javascript
     $(function() {
       var setAxis = "x";
-
+      var notation ="default"
       var x_axis = $('#bivariate_charts_form').find('select[name=\'x_axis\'] option:selected').val();
       var y_axis = $('#bivariate_charts_form').find('select[name=\'y_axis\'] option:selected').val();
       var index_of_x
       var type_of_x
       var index_of_y
       var type_of_y
-      $("#notation_#{@uuid}").change(function() {
-        notation = $(this).find(":selected").val();
-      });
       if (window.moes_info.moes_names.indexOf(x_axis) != -1) {
         index_of_x = window.moes_info.moes_names.indexOf(x_axis)
         type_of_x = window.moes_info.moes_types[index_of_x]
@@ -65,9 +62,17 @@
       if (type_of_x == "string" || type_of_y == "string") {
         $('#select_axis_row_#{@uuid}').hide();
         $('#add_new_series_row_#{@uuid}').hide();
+        $('#label_notation_#{@uuid}').hide();
+        $('#notation_#{@uuid}').hide();
+        $("#busy_bivariate_#{@uuid}").hide();
+
       } else {
         $('#select_axis_row_#{@uuid}').show();
         $('#add_new_series_row_#{@uuid}').show();
+        $('#notation_#{@uuid}').show();
+        $('#label_notation_#{@uuid}').show();
+        $("#busy_bivariate_#{@uuid}").show();
+
       }
 
       $("#choose_axis_#{@uuid}").change(function() {
@@ -81,7 +86,7 @@
       $("#wrapper_#{@container_id} .add_series").bind("click", function() {
         var axis_label = $('#new_series_#{@uuid} option:selected').html();
         var axis = $('#new_series_#{@uuid} option:selected').val();
-
+        var notation = $('#notation_#{@uuid} option:selected').val();
         if (window.moes_info.moes_names.indexOf(axis) != -1) {
           var index = window.moes_info.moes_names.indexOf(axis)
           var type = window.moes_info.moes_types[index]
@@ -90,40 +95,36 @@
           var type = window.moes_info.inputs_types[index]
         }
 
-        if (type == "string") {
+        if (type == "string" ) {
           toastr.error("#{t('experiments.errors.incorrect_add_parameter_scater')}");
         }
         else {
           $("#choose_axis_#{@uuid}").prop("disabled", true);
           $("#busy_bivariate_#{@uuid}").show();
 
-
-        if(setAxis==="x"){
-          var yaxis = "#{@chart.y_axis}"
-          var xaxis = axis
-          var type = true;
-        }
-        else if(setAxis==="y") {
-          yaxis = axis
-          xaxis = "#{@chart.x_axis}"
-          type = false;
-        }
-
+          if(setAxis==="x"){
+            var yaxis = "#{@chart.y_axis}"
+            var xaxis = axis
+            var type = true;
+          }
+          else if(setAxis==="y") {
+            yaxis = axis
+            xaxis = "#{@chart.x_axis}"
+            type = false;
+          }
           $.getJSON("#{scatter_plot_series_experiment_path(@experiment.id)}",
-          {"x_axis": xaxis, "y_axis":  yaxis},
+          {"x_axis": axis, "y_axis": "#{@chart.y_axis}"},
           function(data) {
             var series = []
             for (key in data) {
-               for(ind in data[key])
-                 series.push([parseFloat(key), parseFloat(data[key][ind])])
+              for(ind in data[key])
+                series.push([parseFloat(key), parseFloat(data[key][ind])])
             }
-
-             $("##{@container_id}").highcharts().addAxis({
-               id: axis,
-               title: {
-                 text: axis_label
-                 },
-
+            $("##{@container_id}").highcharts().addAxis({
+                id: axis,
+                title: {
+                  text: axis_label
+                },
                labels:{
                  formatter: function(){
                  if(notation==='scientific')
@@ -132,17 +133,15 @@
                    return this.value;
                  }
                }
-             }, type);
-
-          $("##{@container_id}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], data: series});
-
+            }, type);
+            $("##{@container_id}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], data: series});
              if(setAxis==="x") {
                $("##{@container_id}").highcharts().series[1].update({ xAxis: axis });
              } else {
                $("##{@container_id}").highcharts().series[1].update({ yAxis: axis });
              }
-
              $("#busy_bivariate_#{@uuid}").hide();
           });
+        }
       })
     });

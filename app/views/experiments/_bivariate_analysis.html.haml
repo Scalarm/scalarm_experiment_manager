@@ -4,7 +4,7 @@
   - scales_options = options_for_select([[t('charts.scatter.linear_scale'), 'linear'],
         [t('charts.scatter.logarithmic_scale'), 'logarithmic']],
         'linear')
-  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']])
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']], 'default')
 
   .row
     .small-3.columns
@@ -16,9 +16,9 @@
     .small-2.columns
       = select_tag 'x_axis_type', scales_options, id: "x_axis_scale"
     .small-1.columns
-      = label_tag :x_axis_notation, "Notation" + ':', class: 'inline'
+      = label_tag :x_axis_notation, "Notation" + ':', class: 'inline',  id: "label_x_notation"
     .small-3.columns
-      = select_tag 'x_axis_notation', notation_options
+      = select_tag 'x_axis_notation', notation_options, id: "x_notation"
 
   .row
     .small-3.columns
@@ -30,9 +30,9 @@
     .small-2.columns
       = select_tag 'y_axis_type', scales_options, id: "y_axis_scale"
     .small-1.columns
-      = label_tag :x_axis_notation, "Notation" + ':', class: 'inline'
+      = label_tag :y_axis_notation, "Notation" + ':', class: 'inline', id: "label_y_notation"
     .small-3.columns
-      = select_tag 'x_axis_notation', notation_options
+      = select_tag 'y_axis_notation', notation_options, id: "y_notation"
   .row
     %ul.inline-list
       %li= submit_tag t('charts.load_button'), class: 'button radius', id: "load_chart_button"
@@ -114,10 +114,14 @@
         if (type_of_x == "string") {
           $('#bivariate_charts_form').find('#label_tag_scale_x').hide();
           $('#bivariate_charts_form').find('#x_axis_scale').hide();
+          $('#bivariate_charts_form').find('#label_x_notation').hide();
+          $('#bivariate_charts_form').find('#x_notation').hide();
         }
         else {
           $('#bivariate_charts_form').find('#label_tag_scale_x').show();
           $('#bivariate_charts_form').find('#x_axis_scale').show();
+          $('#bivariate_charts_form').find('#label_ x_notation').show();
+          $('#bivariate_charts_form').find('#x_notation').show();
         }
 
       } catch (e) {
@@ -139,10 +143,14 @@
         if (type_of_y == "string") {
           $('#bivariate_charts_form').find('#label_tag_scale_y').hide();
           $('#bivariate_charts_form').find('#y_axis_scale').hide();
+          $('#bivariate_charts_form').find('#label_ y_notation').hide();
+          $('#bivariate_charts_form').find('#y_notation').hide();
         }
         else {
           $('#bivariate_charts_form').find('#label_tag_scale_y').show();
           $('#bivariate_charts_form').find('#y_axis_scale').show();
+          $('#bivariate_charts_form').find('#label_ y_notation').show();
+          $('#bivariate_charts_form').find('#y_notation').show();
         }
 
       } catch (e) {

@@ -16,6 +16,7 @@ try {
             <% if @chart.type_of_x === 'string' %>
                 categories: <%= raw @chart.categories_for_x %>,
             <% else %>
+                type: '<%= @chart.x_axis_type or 'linear' %>',
                  <% if @chart.x_axis_notation === 'scientific'%>
                      labels:{
                         formatter: function(){
@@ -33,11 +34,11 @@ try {
             <% else %>
                 type: '<%= @chart.y_axis_type or 'linear' %>',
                 <% if @chart.y_axis_notation === 'scientific'%>
-                     labels:{
-                     formatter: function(){
-                         return this.value.toExponential(2);
-                     }
-                   }
+                    labels:{
+                        formatter: function(){
+                            return this.value.toExponential(2);
+                        }
+                    }
                 <% end %>
             <% end %>
 

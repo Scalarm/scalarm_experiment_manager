@@ -20,9 +20,9 @@
   .row
     .small-10.columns
       .small-3.columns
-        = label_tag :x_axis_notation, "Notation on axis X" + ':', class: 'inline'
+        = label_tag :x_axis_notation, "Notation on axis X" + ':', class: 'inline',  id: 'x_notation_label'
       .small-3.columns
-        = select_tag 'x_axis_notation', notation_options
+        = select_tag 'x_axis_notation', notation_options,  id: 'x_notation_tag'
       .small-3.columns
         = label_tag :y_axis_notation, "Notation on axis Y" + ':', class: 'inline'
       .small-3.columns.end
@@ -56,6 +56,8 @@
         if (type_of_moe == "string") {
           $('#basic_charts_form').find('#number_of_bars').hide();
           $('#basic_charts_form').find('#label_number_of_bars').hide();
+          $('#basic_charts_form').find('#x_notation_label').hide();
+          $('#basic_charts_form').find('#x_notation_tag').hide();
 
           $.post("#{histogram_experiment_path(@experiment.id)}",
             { 'moe_name': moe_name, 'resolution': resolution,
@@ -93,10 +95,14 @@
         if (type_of_moe == "string") {
           $('#basic_charts_form').find('#number_of_bars').hide();
           $('#basic_charts_form').find('#label_number_of_bars').hide();
+          $('#basic_charts_form').find('#x_notation_label').hide();
+          $('#basic_charts_form').find('#x_notation_tag').hide();
 
         } else {
           $('#basic_charts_form').find('#number_of_bars').show();
           $('#basic_charts_form').find('#label_number_of_bars').show();
+          $('#basic_charts_form').find('#y_notation_label').show();
+          $('#basic_charts_form').find('#x_notation_tag').show();
         }
         $.post("#{histogram_experiment_path(@experiment.id)}",
             { 'type' : type_of_moe },
