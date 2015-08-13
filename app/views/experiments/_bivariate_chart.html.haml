@@ -3,7 +3,7 @@
   %h3.subheader
     = t('charts.scatter.header', x_axis: @chart.x_axis_label, y_axis: @chart.y_axis_label)
 
-  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']], 'default')
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']])
 
   .row
     -#= button_to_function "Refresh" ,
@@ -36,7 +36,6 @@
   :javascript
     $(function() {
       var setAxis = "x";
-      var notation ="default"
       var x_axis = $('#bivariate_charts_form').find('select[name=\'x_axis\'] option:selected').val();
       var y_axis = $('#bivariate_charts_form').find('select[name=\'y_axis\'] option:selected').val();
       var index_of_x
@@ -62,16 +61,16 @@
       if (type_of_x == "string" || type_of_y == "string") {
         $('#select_axis_row_#{@uuid}').hide();
         $('#add_new_series_row_#{@uuid}').hide();
-        $('#label_notation_#{@uuid}').hide();
-        $('#notation_#{@uuid}').hide();
-        $("#busy_bivariate_#{@uuid}").hide();
+        $('#label_notation').hide();
+        $('#notation').hide();
+        $("#wrapper_#{@container_id} .add_series").hide();
 
       } else {
         $('#select_axis_row_#{@uuid}').show();
         $('#add_new_series_row_#{@uuid}').show();
-        $('#notation_#{@uuid}').show();
-        $('#label_notation_#{@uuid}').show();
-        $("#busy_bivariate_#{@uuid}").show();
+        $('#notation').show();
+        $('#label_notation').show();
+        $("#wrapper_#{@container_id} .add_series").show();
 
       }
 
@@ -86,7 +85,7 @@
       $("#wrapper_#{@container_id} .add_series").bind("click", function() {
         var axis_label = $('#new_series_#{@uuid} option:selected').html();
         var axis = $('#new_series_#{@uuid} option:selected').val();
-        var notation = $('#notation_#{@uuid} option:selected').val();
+        var notation = $('#notation option:selected').val();
         if (window.moes_info.moes_names.indexOf(axis) != -1) {
           var index = window.moes_info.moes_names.indexOf(axis)
           var type = window.moes_info.moes_types[index]
@@ -101,8 +100,7 @@
         else {
           $("#choose_axis_#{@uuid}").prop("disabled", true);
           $("#busy_bivariate_#{@uuid}").show();
-
-          if(setAxis==="x"){
+             if(setAxis==="x"){
             var yaxis = "#{@chart.y_axis}"
             var xaxis = axis
             var type = true;
@@ -134,14 +132,14 @@
                  }
                }
             }, type);
-            $("##{@container_id}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], data: series});
+                   $("##{@container_id}").highcharts().addSeries({name: axis_label.split(" - ").slice(-1)[0], data: series});
              if(setAxis==="x") {
                $("##{@container_id}").highcharts().series[1].update({ xAxis: axis });
              } else {
                $("##{@container_id}").highcharts().series[1].update({ yAxis: axis });
              }
              $("#busy_bivariate_#{@uuid}").hide();
-          });
+            });
         }
       })
     });

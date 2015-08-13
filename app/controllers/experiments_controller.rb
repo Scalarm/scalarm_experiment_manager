@@ -923,9 +923,7 @@ class ExperimentsController < ApplicationController
                                     params[:x_axis].to_s,
                                     params[:y_axis].to_s,
                                     params[:type_of_x].to_s,
-                                    params[:type_of_y].to_s,
-                                    x_axis_notation: params[:x_axis_notation].to_s,
-                                    y_axis_notation: params[:y_axis_notation].to_s)
+                                    params[:type_of_y].to_s,)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data

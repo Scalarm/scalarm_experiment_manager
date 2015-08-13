@@ -56,6 +56,9 @@ try {
             }
         },
         plotOptions: {
+            series: {
+                turboThreshold: 0
+            }
         },
         credits: { enabled: false },
         series: [
@@ -100,7 +103,6 @@ try {
         }]
       });
     });
-
     // scroll to
     var targetOffset =  $('#wrapper_<%= @container_id %>').offset().top;
     $('html,body').animate({scrollTop: targetOffset}, 1000);
