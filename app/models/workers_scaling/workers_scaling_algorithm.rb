@@ -8,7 +8,7 @@ class WorkersScalingAlgorithm
 
   ##
   # Method called when algorithm is starting, before first execution of
-  # #experiment_status_check. Should contains actions performed in the
+  # #experiment_status_check. Should contain actions performed in the
   # beginning of algorithm e.g. sending first workers on infrastructure.
   def initial_deployment
     raise NOT_IMPLEMENTED
@@ -16,7 +16,7 @@ class WorkersScalingAlgorithm
 
   ##
   # Main algorithm loop, executed on specified event (e.g. finished simulation) or
-  # when given time since last execution passed. Should contains main algorithm logic.
+  # when given time since last execution passed. Should contain main algorithm logic.
   def experiment_status_check
     raise NOT_IMPLEMENTED
   end
