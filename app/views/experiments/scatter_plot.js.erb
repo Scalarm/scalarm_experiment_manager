@@ -55,6 +55,8 @@ try {
                         + '</b><br /><b><%= t '.click_for_details' %></b>';
             }
         },
+        // above 1000 points that cointatins strings chart is not displayed without TurboThreshold
+        // TODO decide if it is necessary
         plotOptions: {
             series: {
                 turboThreshold: 0
