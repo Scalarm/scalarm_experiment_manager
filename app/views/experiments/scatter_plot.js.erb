@@ -1,7 +1,14 @@
 //TODO: translate
 
 $("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
-$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>");
+$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'scatter_plot_chart') %>");
+
+turboThresholdCounter=0
+<% @chart.chart_data.each do |x_value, y_values_simulation_ids|
+     y_values_simulation_ids.each do%>
+    turboThresholdCounter++
+<%end
+end %>
 
 try {
     $(document).ready(function() {
@@ -59,7 +66,7 @@ try {
         // TODO decide if it is necessary
         plotOptions: {
             series: {
-                turboThreshold: 0
+                turboThreshold: turboThresholdCounter +1
             }
         },
         credits: { enabled: false },
