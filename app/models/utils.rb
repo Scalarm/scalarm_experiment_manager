@@ -17,4 +17,12 @@ module Utils
     Rails.application.secrets
   end
 
+  def self.parse_param(params, id, parse_method)
+    if params[id].blank?
+      params.delete id
+    else
+      params[id] = parse_method.call(params[id])
+    end
+  end
+
 end

@@ -1,24 +1,66 @@
+.dendrogram-node circle {
+  cursor: pointer;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+
+}
+
+.dendrogram-node circle.unlight {
+  fill: #b1b1b1;
+  stroke: #b1b1b1;
+}
+
+.dendrogram-node circle.highlighted {
+  fill: orange;
+  stroke: grey;
+  stroke-width: 2px;
+}
+
+.dendrogram-node circle.simulation {
+  fill: #a8d3f0
+}
+
+.dendrogram-node circle.root {
+  fill: #1F77B4
+}
+
+.dendrogram-node circle.cluster {
+  fill: #fff
+}
+
+.dendrogram-node text {
+  font-size: 15px;
+  cursor: pointer;
+  dy: 31em;
+}
+
+.dendrogram-node text.highlighted {
+  font-size: 15px;
+  cursor: pointer;
+  dy: 31em;
+  stroke: orange;
+}
+
 .node circle {
     cursor: pointer;
     fill: #fff;
     stroke: steelblue;
     stroke-width: 1.5px;
+
+}
+
+.node circle.highlighted {
+  fill: orange;
 }
 
 .node text {
-    font-size: 13px;
+    font-size: 15px;
 }
 
-//.root-node text {
-//    text-anchor: end;
-//    transform: translate(-20px,.3em);
-//}
-
-// meta-node text
-//.sm-container text,
 .node text {
-    text-anchor: end;
-    transform: translate(-15px,-3px);
+  text-anchor: end;
+  transform: translate(-15px,-3px);
+
 }
 
 circle.children-collapsed {

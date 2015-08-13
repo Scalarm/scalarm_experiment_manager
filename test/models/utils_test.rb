@@ -42,4 +42,11 @@ class UtilsTest < MiniTest::Test
     assert_equal content_converted, Utils::header_newlines_deserialize(content_orig)
   end
 
+  def test_parse_param_success_return
+    params={}
+    params[:hello]=1
+    Utils::parse_param(params, :hello, lambda{|x| x+1})
+    assert_equal 2, params[:hello]
+  end
+
 end

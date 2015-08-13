@@ -1,7 +1,12 @@
 %section.panel.radius
-  %h3.subheader= t('experiments.information_panel.experiment_info_title')
+  %h3.subheader
+    Simulation: #{@simulation.name}&nbsp;
+    - if @simulation.description != ''
+      %i.fa.fa-question-circle.has-tip.tip-bottom{"aria-haspopup" => "true", "data-tooltip" => "", style: "color: 333", title: "Simulation description: #{@simulation.description}", cursor: "pointer"}
 
+  %h3.subheader= t('experiments.information_panel.experiment_info_title')
   .content
+
     .row
       .small-3.columns
         %label.right.inline(for="experiment_name")
@@ -14,19 +19,6 @@
           = t('experiments.information_panel.experiment_description') + ':'
       .small-6.columns.end
         %h5.subheader= text_area_tag :experiment_description
-
-    %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
-
-    .row
-      .small-3.columns
-        %label.right.inline= t('simulations.conduct_experiment.simulation_overview_name') + ':'
-      .small-9.columns.end
-        %h5.subheader= @simulation.name
-    .row
-      .small-3.columns
-        %label.right.inline= t('simulations.conduct_experiment.simulation_overview_description') + ':'
-      .small-9.columns.end
-        %h5.subheader= @simulation.description
 
     %h4.subheader= t('experiments.new.simulation_run_attrs')
 

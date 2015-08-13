@@ -324,6 +324,11 @@ class ExperimentsController < ApplicationController
       'reason': 'Unable to connect with Experiment Supervisor'
     }
 =end
+
+  def parse_json_if_string2(value)
+    value.kind_of?(String) and JSON.parse(value) or value
+  end
+
   def create_supervised_experiment
     validate(
         simulation_id: :security_default,
@@ -333,13 +338,32 @@ class ExperimentsController < ApplicationController
     # TODO: other experiment parameters
     # TODO: handle errors
 
-    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation)
+    parse = lambda do |id, parse_method|
+      if params[id].blank?
+        params.delete id
+      else
+        params[id] = parse_method.call(params[id])
+      end
+    end
+
+    parse.call :replication_level, lambda {|x| x.to_i}
+    parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
+
+    parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
+                                  :experiment_description)
+    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation, parsed_params)
+
     experiment.save
     response = {'status' => 'ok'}
+
+
+
+    supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
+
     if params.has_key?(:supervisor_script_id)
       response = experiment.start_supervisor_script(params[:simulation_id],
                                                     params[:supervisor_script_id],
-                                                    Utils::parse_json_if_string(params[:supervisor_script_params]),
+                                                    Utils::parse_json_if_string(supervisor_script_params_tmp),
                                                     current_user
       )
       Rails.logger.debug("Start supervisor script request to supervisor, response: #{response}")
