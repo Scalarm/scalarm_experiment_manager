@@ -108,13 +108,20 @@ class SimulationsController < ApplicationController
 
     flash[:notice] = t('simulations.create.registered') if flash[:error].nil?
 
+    error_occured = (not flash[:error].nil?)
+
+    if error_occured
+      Rails.logger.error("An error occured on simulation registering: #{flash[:error]}")
+    end
+
     respond_to do |format|
-      format.json { render json: {
-          status: (flash[:error].nil? ? 'ok' : 'error'),
-          msg: (flash[:error] or 'ok'),
-          simulation_id: (simulation.nil? ? nil : simulation.id.to_s)
-      }
-      }
+      format.json do
+        render json: {
+                   status: (error_occured ? 'error' : 'ok'),
+                   msg: (flash[:error] or 'ok'),
+                   simulation_id: (simulation.nil? ? nil : simulation.id.to_s)
+               }, status: error_occured ? :internal_server_error : :success
+      end
       format.html { redirect_to action: :index }
     end
   end
