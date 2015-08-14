@@ -95,8 +95,6 @@ class ApplicationController < ActionController::Base
           reset_session
         end
 
-        user_session.destroy unless user_session.nil?
-
         flash[:error] = t('login.required')
 
         redirect_to :login

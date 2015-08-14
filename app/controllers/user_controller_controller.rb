@@ -98,7 +98,7 @@ class UserControllerController < ApplicationController
     keep_session_params(:server_name) do
       reset_session
     end
-    user_session.destroy unless user_session.blank?
+
     current_user.destroy_unused_credentials unless current_user.nil?
 
     flash[:notice] = t('logout_success')
