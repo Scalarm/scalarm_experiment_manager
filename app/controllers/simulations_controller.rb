@@ -112,7 +112,7 @@ class SimulationsController < ApplicationController
       format.json { render json: {
           status: (flash[:error].nil? ? 'ok' : 'error'),
           msg: (flash[:error] or 'ok'),
-          simulation_id: simulation.id.to_s
+          simulation_id: (simulation.nil? ? nil : simulation.id.to_s)
       }
       }
       format.html { redirect_to action: :index }
