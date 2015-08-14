@@ -56,6 +56,7 @@ function init_<%= "#{@chart.experiment.experiment_id}_#{@chart.moe_name}" %>(exp
             " \" /> ";
       }
 
+
       label.innerHTML += node.name.substring(0, separation_index) + "<br/>" + node.name.substring(separation_index + 1);
       label.onclick = function(e) {
         st_<%= "#{@chart.experiment.experiment_id}_#{@chart.moe_name}" %>.onClick(node.id)

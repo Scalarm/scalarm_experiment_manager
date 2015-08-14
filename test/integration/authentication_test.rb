@@ -1,6 +1,7 @@
 require 'csv'
 require 'minitest/autorun'
 require 'mocha/test_unit'
+require 'test_helper'
 
 require 'scalarm/service_core'
 require 'scalarm/service_core/logger'
