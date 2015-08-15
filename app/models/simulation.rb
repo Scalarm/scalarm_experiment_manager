@@ -36,7 +36,8 @@ class Simulation < Scalarm::Database::Model::Simulation
       # uploading new file
     elsif params.include?(adapter_type)
       adapter_name = if params["#{adapter_type}_name"].blank?
-                       params[adapter_type].original_filename
+                       params[adapter_type].try(:original_filename) or
+                           "unnamed-script-#{Time.now.strftime('%Y-%m-%d-%M-%H')}"
                      else
                        params["#{adapter_type}_name"]
                      end
