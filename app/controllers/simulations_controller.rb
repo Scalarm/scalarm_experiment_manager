@@ -120,7 +120,7 @@ class SimulationsController < ApplicationController
                    status: (error_occured ? 'error' : 'ok'),
                    msg: (flash[:error] or 'ok'),
                    simulation_id: (simulation.nil? ? nil : simulation.id.to_s)
-               }, status: error_occured ? :internal_server_error : :success
+               }, status: (error_occured ? :internal_server_error : :ok)
       end
       format.html { redirect_to action: :index }
     end
