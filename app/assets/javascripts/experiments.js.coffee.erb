@@ -138,6 +138,11 @@ class window.ExperimentMonitor
   update: ->
     monitor = this
 
+    # As global functions to use (Dynamic reloading parameters)
+    window.update_statistics = monitor.update_statistics
+    window.update_moes = monitor.update_moes
+    window.update_results = monitor.update_results
+
     $.getJSON "/experiments/#{monitor.experiment_id}/stats", (data) -> monitor.update_statistics(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/moes", (data) -> monitor.update_moes(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/results_info", (data) -> monitor.update_results(data)
