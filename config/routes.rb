@@ -88,6 +88,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get :stats
       get :experiment_moes, to: 'experiments#moes'
       get :moes
+      get :moes_json
       get :results_info
 
       get :simulation_manager

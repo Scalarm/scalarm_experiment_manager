@@ -1,7 +1,7 @@
 require 'zip'
 require 'infrastructure_facades/infrastructure_facade'
 require 'csv'
-
+require 'json'
 
 class ExperimentsController < ApplicationController
   include SSHAccessedInfrastructure
@@ -523,7 +523,26 @@ class ExperimentsController < ApplicationController
 
     render json: stats
   end
+  ##
+  # new function return array of json with paramaeter id label and type
+  def moes_json
+    result_set = @experiment.result_names
+    result_set = if result_set.blank?
+       [t('experiments.analysis.no_results')]
+     else
+       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+     end
+    moes_and_params = get_moes_and_params(result_set)
+    array = []
+    moes_and_params.map do |label, id, type|
+      parameter_infos= {:label => label, :id => id, :type => type}.to_json
+      array.push(parameter_infos)
+    end
+    render json: array
+  end
 
+  ##
+  # deprecated someday
   def moes
     moes_info = {}
 
@@ -534,17 +553,7 @@ class ExperimentsController < ApplicationController
       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
 
-    done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
-    done_run = @experiment.simulation_runs.where(done_run_query_condition,
-                 {limit: 1, fields: %w(arguments)}).first
-
-    moes_and_params = if done_run.nil?
-                        [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
-                      else
-                        done_run.arguments.split(',').map{|x|
-                          [ @experiment.input_parameter_label_for(x), x, "input_parameter"]} +
-                          [%w(----------- nil)] + result_set
-                      end
+    moes_and_params = get_moes_and_params(result_set)
 
     # params = if done_run.nil?
     #           [ [t('experiments.analysis.no_completed_runs'), nil] ]
@@ -609,6 +618,20 @@ class ExperimentsController < ApplicationController
 
     render json: moes_info
 
+  end
+
+  def get_moes_and_params(result_set)
+    done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
+    done_run = @experiment.simulation_runs.where(done_run_query_condition,
+                                                 {limit: 1, fields: %w(arguments)}).first
+
+    moes_and_params = if done_run.nil?
+                        [[t('experiments.analysis.no_completed_runs'), "nil"]]
+                      else
+                        done_run.arguments.split(',').map { |x|
+                          [@experiment.input_parameter_label_for(x), x, "input_parameter"] } +
+                            [%w(----------- nil)] + result_set
+                      end
   end
 
   def results_info
