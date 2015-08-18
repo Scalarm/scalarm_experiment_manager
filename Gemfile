@@ -8,7 +8,7 @@ gem 'racc'
 gem 'rinruby'
 
 gem 'bson'
-# gem 'bson_ext'
+gem 'bson_ext'
 gem 'mongo', '~> 1.12'
 gem 'mongo_session_store-rails4', '~> 5.1'
 

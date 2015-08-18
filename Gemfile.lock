@@ -431,6 +431,7 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk
   bson
+  bson_ext
   coffee-rails (~> 4.0.0)
   encryptor
   font-awesome-sass (= 4.1)
