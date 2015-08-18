@@ -20,7 +20,23 @@ class TestsController < ApplicationController
   def get_variables
     params[:variables] ||= []
 
-    render json: session.to_hash.slice(*params[:variables])
+    render json: session.to_hash.slice(*params[:variables].collect(&:to_s))
+  end
+
+  def set_flash_variables
+    params[:variables] ||= {}
+
+    params[:variables].to_hash.each do |k, v|
+      flash[k.to_sym] = v
+    end
+
+    render nothing: true
+  end
+
+  def get_flash_variables
+    params[:variables] ||= []
+
+    render json: flash.to_hash.slice(*params[:variables].collect(&:to_s))
   end
 
   def delete_variables
@@ -45,7 +61,7 @@ end
 
 # Tests is session objects (session, flash) are working properly
 # as session-persistent hashes
-class SessionStorageTest < ActionDispatch::IntegrationTest
+class SessionStoreTest < ActionDispatch::IntegrationTest
   include DBHelper
   include ControllerIntegrationTestHelper
 
@@ -61,6 +77,9 @@ class SessionStorageTest < ActionDispatch::IntegrationTest
       get 'reset' => 'tests#reset'
       get 'ping' => 'tests#ping'
 
+      get 'set_flash_variables' => 'tests#set_flash_variables'
+      get 'get_flash_variables' => 'tests#get_flash_variables'
+
       # add original some original routes
       root 'user_controller#index'
       post 'login' => 'user_controller#login'
@@ -73,9 +92,9 @@ class SessionStorageTest < ActionDispatch::IntegrationTest
   end
 
   test 'session variables can be set and read between requests' do
-    get '/set_variables', {variables: {a: 'one', b: 'two'}}
+    get '/set_variables', variables: {a: 'one', b: 'two'}, format: :json
 
-    get '/get_variables', {variables: %w(a b)}
+    get '/get_variables', variables: %w(a b), format: :json
     body = JSON.parse(response.body)
 
     assert_equal 'one', body['a']
@@ -93,7 +112,7 @@ class SessionStorageTest < ActionDispatch::IntegrationTest
   end
 
   test 'session variables can be deleted' do
-    get 'set_variables', {one: 1}
+    get 'set_variables', {one: 1}, format: :json
     get 'delete_variables', {variables: ['one']}
 
     get 'get_variables', {variables: ['one']}
@@ -104,7 +123,7 @@ class SessionStorageTest < ActionDispatch::IntegrationTest
   test 'after resetting session, authentication should fail' do
     # make request with session - it should succeed
     # reset session on that request
-    get 'reset'
+    get 'reset', format: :json
     assert_response :success
 
     # next request with session should fail
@@ -132,6 +151,18 @@ class SessionStorageTest < ActionDispatch::IntegrationTest
 
     # UserSession collection should be empty now
     assert_empty UserSession.all
+  end
+
+  test 'flash variables should be available only in one following requet' do
+    get 'set_flash_variables', variables: {foo: 'bar'}
+
+    get 'get_flash_variables', variables: [:foo]
+    body = JSON.parse(response.body)
+    assert_equal 'bar', body['foo']
+
+    get 'get_flash_variables', variables: [:foo]
+    body = JSON.parse(response.body)
+    assert_nil body['foo']
   end
 
 end

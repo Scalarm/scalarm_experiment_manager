@@ -1,8 +1,8 @@
 GIT
   remote: git://github.com/Scalarm/scalarm-database.git
-  revision: 8f1d229ca7f4a53e6fe8adde6272ca6365360962
+  revision: e1b2c4e5ca028a88796f62b18a409aa3081a9027
   specs:
-    scalarm-database (0.3.2)
+    scalarm-database (0.3.3)
       activesupport
       bson
       bson_ext
@@ -66,9 +66,9 @@ GEM
     aws-sdk-v1 (1.58.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
-    bson (1.12.2)
-    bson_ext (1.12.2)
-      bson (~> 1.12.2)
+    bson (1.12.3)
+    bson_ext (1.12.3)
+      bson (~> 1.12.3)
     builder (3.2.2)
     coffee-rails (4.0.1)
       coffee-script (>= 2.2.0)
@@ -136,8 +136,10 @@ GEM
     minitest (5.7.0)
     mocha (1.1.0)
       metaclass (~> 0.0.1)
-    mongo (1.12.2)
-      bson (= 1.12.2)
+    mongo (1.12.3)
+      bson (= 1.12.3)
+    mongo_session_store-rails4 (5.1.0)
+      actionpack (>= 3.1)
     multi_json (1.11.2)
     multipart-post (2.0.0)
     net-scp (1.2.1)
@@ -429,7 +431,6 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk
   bson
-  bson_ext
   coffee-rails (~> 4.0.0)
   encryptor
   font-awesome-sass (= 4.1)
@@ -444,7 +445,8 @@ DEPENDENCIES
   jquery-tmpl-rails
   jquery-ui-rails
   mocha
-  mongo
+  mongo (~> 1.12)
+  mongo_session_store-rails4 (~> 5.1)
   net-scp
   net-ssh
   newrelic_rpm
@@ -459,7 +461,7 @@ DEPENDENCIES
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
-  scalarm-database (>= 0.3.2)!
+  scalarm-database (>= 0.3.3)!
   scalarm-service_core (~> 0.6)!
   sdoc
   signet

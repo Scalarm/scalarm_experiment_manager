@@ -9,6 +9,7 @@ module DBHelper
     unless Scalarm::Database::MongoActiveRecord.connected?
       connection_init = Scalarm::Database::MongoActiveRecord.connection_init('localhost', database_name)
       raise StandardError.new('Connection to database failed') unless connection_init
+      MongoStore::Session.database = Scalarm::Database::MongoActiveRecord.get_database(DATABASE_NAME)
       puts "Connecting to database #{database_name}"
     end
   end

@@ -8,8 +8,9 @@ gem 'racc'
 gem 'rinruby'
 
 gem 'bson'
-gem 'bson_ext'
-gem 'mongo'
+# gem 'bson_ext'
+gem 'mongo', '~> 1.12'
+gem 'mongo_session_store-rails4', '~> 5.1'
 
 # Amazon EC2 connector
 gem 'aws-sdk'
@@ -80,8 +81,10 @@ gem 'remotipart', '~> 1.0'
 gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
+#
+#
 # gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
-gem 'scalarm-database', '>= 0.3.2', git: 'git://github.com/Scalarm/scalarm-database.git'
+gem 'scalarm-database', '>= 0.3.3', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
 # gem 'scalarm-service_core', path: '/home/jliput/Scalarm/scalarm-service_core'
