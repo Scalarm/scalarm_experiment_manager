@@ -7,7 +7,7 @@
 -#:coffeescript
 -#  window.alert("supervisors_ids: #{supervisor_ids.to_s}")
 
-= form_tag experiments_path, id: 'experiment_submit_form' do
+= form_tag experiments_path, id: 'experiment_submit_form', "data-abide" => '' do
   = hidden_field_tag 'simulation_id', @simulation.id
   = hidden_field_tag 'experiment_input'
   = hidden_field_tag 'doe'
@@ -53,7 +53,7 @@
         .small-2.-columns
           #supervisor_form_loader
 
-= form_tag experiments_path, id: 'experiment_submit_form', "data-abide" => ''  do
+= form_tag experiments_path, id: 'supervised_experiment_submit_form', "data-abide" => ''  do
   = hidden_field_tag 'simulation_id', @simulation.id
   = hidden_field_tag 'replication_level', 1
   = hidden_field_tag 'execution_time_constraint', 60
@@ -81,14 +81,11 @@
           = render 'experiments/new/design_of_experiment'
         #constraints.content
           = render 'experiments/new/parameter_constraints'
-          
-      #invalid-form.reveal-modal.small{'data-reveal' => true}
-        .row{style: "margin-bottom: 25px;"}
-          .small-12.columns
-            = 'Some errors when checking form'
-        .row
-          .small-12.columns.text-center
-            %a#invalid-ok.button.radius.medium= 'OK'
+
+      #invalid-form.reveal-modal(data-reveal="true")
+        %h2.subheader.text-center Form has some invalid fields
+        .small-12.columns.text-center
+          %a#invalid-ok.button.radius.medium= 'OK'
 
 #import{:style => 'display: none'}
   %section.panel.radius
@@ -135,7 +132,8 @@
       $("#new_experiment_submit").on("click", function() {
         if($('#import').is(":visible"))
           $("#import-form").submit();
-        else
+        else{
+          console.debug($("#wrapper").find(':input[data-invalid]:visible'));
           if ($("#wrapper").find(':input[data-invalid]:visible').length==0){
             if($('#input-space-parameters').is(":visible")) {
               // standart experiment
@@ -159,13 +157,14 @@
             $("#supervised_experiment_submit_form #experiment_name").val($("#experiment_submit_form #experiment_name").val())
             $("#supervised_experiment_submit_form #experiment_description").val($("#experiment_submit_form #experiment_description").val())
             $("#supervised_experiment_submit_form").submit();
-            }
           }
-          else
-          {
-            $('#invalid-form').foundation('reveal', 'open');
-          }
-
+        }
+        else
+        {
+          console.debug("ALA");
+          $('#invalid-form').foundation('reveal', 'open');
+        }
+      }
       });
 
       $("#check-experiment-size").on("click", function() {
@@ -182,19 +181,6 @@
       $(document).ready(function (){
         set_visible_panels();
 
-      $("#manual-header").on("click", function(event) {
-        if(event.originalEvent) {
-          if($("#manual-off").hasClass("clicked")) {
-            $("#manual-off").removeClass("clicked");
-            $("#manual-on").addClass("clicked");
-            $("#import-off").click();
-          }
-          else {
-            $("#manual-off").addClass("clicked");
-            $("#manual-on").removeClass("clicked");
-            $("#import-on").click();
-          }
-        }
       });
 
       function set_visible_panels() {
