@@ -14,41 +14,41 @@
   .nano(style="overflow: hidden;")
     %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
       %h3.text-center.subheader
-        = t('experiments.menu_panel.experiment_tools')
-      .action-button(style="margin-left: 4px; margin-top: 10px;")
-        %a.experiment_menu_icon.available_experiments_link(href="#" data-action-url="#{simulations_simulation_scenarios_path}" style="display: block")
-          = image_tag "material_design/simulation_scenarios_icon.png"
-          = t('experiments.experiment_links.simulation_scenarios')
-        %a.experiment_menu_icon.running_experiments_link(href="#" data-action-url="#{running_experiments_experiments_path}" style="display: block")
-          = image_tag "material_design/running_experiments_icon.png"
-          = t('experiments.experiment_links.running_experiments')
-        %a.experiment_menu_icon.completed_experiments_link(href="#" data-action-url="#{completed_experiments_experiments_path}" style="display: block")
-          = image_tag "material_design/completed_experiments_icon.png"
-          = t('experiments.experiment_links.completed_experiments')
-        %a.experiment_menu_icon.historical_experiments_link(href="#" data-action-url="#{historical_experiments_experiments_path}" style="display: block")
-          = image_tag "material_design/historical_experiments_icon.png"
-          = t('experiments.experiment_links.historical_experiments')
-      %hr
-      %h3.text-center.subheader
         = t('experiments.menu_panel.experiment')
-      %h5.text-center.subheader
-        = t('experiments.menu_panel.experiment_management.header')
-      .action-button(style="margin-left: 4px; margin-top: 10px;")
-        %a.extend_input_space_link(href="#" id="extendinputspace" data-action-url="#" style="display: block; padding-top: 10px;")
-          = t('experiments.menu_panel.experiment_management.extend_input_space')
-        %a.set_scheduling_method_link(href="#" id="setschedulingmethod" data-action-url="#" style="display: block; padding-top: 10px;")
-          %span= t('experiments.menu_panel.experiment_management.set_scheduling_method')
-      %h5.text-center.subheader(style="margin-left: 4px; margin-top: 10px; padding-top: 10px;")
-        = t('experiments.menu_panel.experiment_result.header')
-      .action-button(style="margin-left: 4px; margin-top: 10px; padding-top: 10px;")
-        %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding-top: 5px;")
-          = t('experiments.menu_panel.experiment_result.show_progress')
-        %a.download_result_link(href="#" id = "downloadresult" data-action-url="#" style="display: block; padding-top: 2px;")
-          = t('experiments.menu_panel.experiment_result.download_result.header')
-          %ul#download-options(style='display: none')
-            %li= link_to t('experiments.menu_panel.experiment_result.download_result.binaries'), results_binaries_experiment_path(@experiment.id)
-            %li= link_to t('experiments.menu_panel.experiment_result.download_result.configurations'), file_with_configurations_experiment_path(@experiment.id)
+      %ul{id: "menu-panel", style:"list-style-type: circle;"}
+        %dl.accordion{"data-accordion" => "accordion_management", style: "text-align: left;" }
+          %dd.accordion-navigation{id: "accordionmanagement"}
+            %a.group_title{:href => "#experiments-panel", style: "text-align: left;"}
+              %i.fa.fa-plus-circle{style: "color: 333"}
+              = t('experiments.menu_panel.experiment_management.header')
+            %ul.content{"id" => "experiments-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
+              %li
+                %a.extend_input_space_link(href="#" id="extendinputspace" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_management.extend_input_space')
+              %li
+                %a.set_scheduling_method_link(href="#" id="setschedulingmethod" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_management.set_scheduling_method')
+              %li
+                %a.set_scheduling_method_link(href= "#{infrastructures_path}?experiment_id=#{@experiment.id}" id="setschedulingmethod" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= "Computational resources"
 
+        %dl.accordion{"data-accordion" => "accordion_results", style: "text-align: left;"}
+          %dd.accordion-navigation{id: "accordionbrowseresult"}
+            %a.group_title{:href => "#experiments-result-panel", style: "text-align: left;"}
+              %i.fa.fa-plus-circle{style: "color: 333"}
+              = t('experiments.menu_panel.experiment_result.header')
+            %ul.content{"id" => "experiments-result-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
+              %li
+                %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_result.show_progress')
+              %li
+                %a.download_result_link(href="#{results_binaries_experiment_path(@experiment.id)}" id = "downloadbinaries" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_result.download_result.binaries')
+              %li
+                %a.download_result_link(href="#{file_with_configurations_experiment_path(@experiment.id)}" id = "downloadcsv" data-action-url="#" style="display: block; padding: 0px;")
+                  %span= t('experiments.menu_panel.experiment_result.download_result.configurations')
+
+      %hr
       %h3.text-center.subheader
         = t('experiments.menu_panel.analysis.header')
       %ul.analyses-panel{style: "text-align: left; list-style: none;"}
@@ -83,7 +83,7 @@
       .speedometer{id: "speedometer_#{@experiment.id}"}
 
       %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
-        %h4.subheader= t('.progress_bar_header')
+        %h4#header_progress_bar.hidden.subheader= t('.progress_bar_header')
 
       = render 'monitoring_actions'
 
@@ -119,7 +119,7 @@
 
       var monitor = new window.ExperimentMonitor(experiment_id);
       monitor.generate_html('experiment_stats');
-
+      
       window.toggle_panels_on_title_click();
 
       if (!!chart_service_url) {
@@ -200,4 +200,18 @@
           $('#download-options').hide();
         else $('#download-options').show();
       });
+
+      $("#menu-panel").on("click", "a.group_title", function (){
+        var accordion_id = "#accordion" + $(this).text().toLowerCase().replace(/\s/g, '');
+        if(!$(accordion_id).hasClass("active")) {
+          $(accordion_id).find('i').addClass('fa fa-minus-circle');
+        }
+        else {
+          $(accordion_id).find('i').removeClass('fa fa-minus-circle').addClass('fa fa-plus-circle');
+        }
+
+      });
+
+
     });
+

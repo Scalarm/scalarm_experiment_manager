@@ -11,9 +11,9 @@ GIT
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: bec82b6d04b8cd5c6c4d40ba1b1188491629f75a
+  revision: 5470c8f01968fcde9c873c6ef69158b446c7528c
   specs:
-    scalarm-service_core (0.4.2)
+    scalarm-service_core (0.5.1)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       rest-client (~> 1.8)
@@ -70,6 +70,11 @@ GEM
     bson_ext (1.12.2)
       bson (~> 1.12.2)
     builder (3.2.2)
+    ci_reporter (2.0.0)
+      builder (>= 2.1.2)
+    ci_reporter_minitest (1.0.0)
+      ci_reporter (~> 2.0)
+      minitest (~> 5.0)
     coffee-rails (4.0.1)
       coffee-script (>= 2.2.0)
       railties (>= 4.0.0, < 5.0)
@@ -435,6 +440,7 @@ DEPENDENCIES
   aws-sdk
   bson
   bson_ext
+  ci_reporter_minitest
   coffee-rails (~> 4.0.0)
   encryptor
   font-awesome-sass (= 4.1)
@@ -465,7 +471,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.3.2)!
-  scalarm-service_core (~> 0.4.2)!
+  scalarm-service_core (~> 0.5.1)!
   sdoc
   signet
   therubyracer

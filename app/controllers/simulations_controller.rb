@@ -5,7 +5,7 @@ require 'rest_client'
 
 class SimulationsController < ApplicationController
   include AdaptersSetup
-  before_filter :load_simulation, only: [:show, :progress_info, :mark_as_complete, :results_binaries, :results_stdout]
+  before_filter :load_simulation, only: [:show, :progress_info, :progress_info_history, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
     @simulations = current_user.get_simulation_scenarios
@@ -108,13 +108,20 @@ class SimulationsController < ApplicationController
 
     flash[:notice] = t('simulations.create.registered') if flash[:error].nil?
 
+    error_occured = (not flash[:error].nil?)
+
+    if error_occured
+      Rails.logger.error("An error occured on simulation registering: #{flash[:error]}")
+    end
+
     respond_to do |format|
-      format.json { render json: {
-          status: (flash[:error].nil? ? 'ok' : 'error'),
-          msg: (flash[:error] or 'ok'),
-          simulation_id: simulation.id.to_s
-      }
-      }
+      format.json do
+        render json: {
+                   status: (error_occured ? 'error' : 'ok'),
+                   msg: (flash[:error] or 'ok'),
+                   simulation_id: (simulation.nil? ? nil : simulation.id.to_s)
+               }, status: (error_occured ? :internal_server_error : :ok)
+      end
       format.html { redirect_to action: :index }
     end
   end
@@ -215,7 +222,8 @@ class SimulationsController < ApplicationController
       if @simulation_run.nil? or @simulation_run.is_done
         logger.debug("Simulation #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}")
       else
-        @simulation_run.tmp_result = Utils.parse_json_if_string(params[:result])
+        @simulation_run.tmp_results_list ||= []
+        @simulation_run.tmp_results_list << {time: Time.now, result: Utils.parse_json_if_string(params[:result])}
         @simulation_run.save
       end
     rescue Exception => e
@@ -224,6 +232,10 @@ class SimulationsController < ApplicationController
     end
 
     render json: response
+  end
+
+  def progress_info_history
+    render json: @simulation_run.tmp_results_list
   end
 
   def show

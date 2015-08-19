@@ -40,7 +40,7 @@ module SupervisedExperimentHelper
               'start_value' => 0.5
           },
           {
-              'type' => 'int',
+              'type' => 'integer',
               'id' => 'c___g___y',
               'min' => 0,
               'max' => 1,
@@ -78,7 +78,7 @@ module SupervisedExperimentHelper
                               {
                                   'id' => 'y',
                                   'label' => 'y',
-                                  'type' => 'int',
+                                  'type' => 'integer',
                                   'min' => 0,
                                   'max' => 1,
                                   'index' => 2,

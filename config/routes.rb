@@ -102,6 +102,7 @@ ScalarmExperimentManager::Application.routes.draw do
       member do
         post :mark_as_complete
         post :progress_info
+        get  :progress_info_history
         get  :get_simulation_data
         get  :results_binaries
         get  :results_stdout
