@@ -14,7 +14,7 @@
       .small-6.columns.end
         %h5.subheader
         = text_field_tag :experiment_name, @simulation.name + '  ' + DateTime.now.strftime("%d-%m-%Y %H:%M:%S"),  required: true
-        %small(class="error") Wrong experiment name - only letters, digits, '-' and '_'
+        %small(class="error") Experiment name is required
     .row
       .small-3.columns
         %label.right.inline(for="experiment_description")
