@@ -2,6 +2,7 @@ require 'zip'
 require 'infrastructure_facades/infrastructure_facade'
 require 'csv'
 require 'json'
+require 'erb'
 
 class ExperimentsController < ApplicationController
   include SSHAccessedInfrastructure
@@ -535,7 +536,7 @@ class ExperimentsController < ApplicationController
     moes_and_params = get_moes_and_params(result_set)
     array = []
     moes_and_params.map do |label, id, type|
-      parameter_infos= {:label => label, :id => id, :type => type}.to_json
+      parameter_infos= {:label => ERB::Util.h(label), :id => ERB::Util.h(id), :type => ERB::Util.h(type)}
       array.push(parameter_infos)
     end
     render json: array
