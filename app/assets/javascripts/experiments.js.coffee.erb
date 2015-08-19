@@ -142,10 +142,12 @@ class window.ExperimentMonitor
     window.update_statistics = monitor.update_statistics
     window.update_moes = monitor.update_moes
     window.update_results = monitor.update_results
-
+    window.update_moes_json = monitor.update_moes_json
     $.getJSON "/experiments/#{monitor.experiment_id}/stats", (data) -> monitor.update_statistics(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/moes", (data) -> monitor.update_moes(data)
     $.getJSON "/experiments/#{monitor.experiment_id}/results_info", (data) -> monitor.update_results(data)
+    # for dynamically reloading modal
+    $.getJSON "/experiments/#{monitor.experiment_id}/moes_json", (data) -> monitor.update_moes_json(data)
 
   progress_bar_listener: (event) =>
     $('#extension-dialog').html(window.loaderHTML)
@@ -266,7 +268,10 @@ class window.ExperimentMonitor
     setTimeout("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", 1000)
     setInterval("window.scalarm_objects['#{"experiment_monitor_#{@experiment_id}"}'].update()", @update_interval*1000)
 
-
+  ##
+  # Automatically refresh moes information and store in session
+  update_moes_json: (moes_info_json) ->
+    window.moes_info_json = moes_info_json
 
   update_moes: (moes_info) ->
     window.moes_info = moes_info
