@@ -187,6 +187,10 @@ class SimulationManager
     }
   end
 
+  def should_not_be_already_terminated?
+    @record.experiment.has_simulations_to_run? and not should_destroy?
+  end
+
   ##
   # True if it is monitored by on-site monitoring
   def cmd_delegated_on_site?
