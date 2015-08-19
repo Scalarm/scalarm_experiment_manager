@@ -40,13 +40,13 @@
                   = 'Remove'
           .row#params-tree.hidden
       .small-7.columns
-        %fieldset#param-config.hidden
+        %fieldset{id: "param-config", class:"hidden", "data_abide" =>''}
           %legend= "Parameter specification"
           .row
             .small-3.columns
               %label.right.inline{for: 'param_id'}= 'Parameter ID:'
             .small-9.columns
-              %input#param_id{type: 'text', name: 'param_id', required: true,  pattern: "^[\\w-]+$"}
+              %input#param_id{type: 'text', name: 'param_id',  pattern: "^[\\w-]+$"}
               %small(class="error") Id is required -type only letters, digits, '-' and '_'
           .row
             .small-3.columns
@@ -68,14 +68,14 @@
                 .small-3.columns
                   %label.right.inline{for: 'param_min'}= 'Min:'
                 .small-9.columns
-                  %input#param_min{type: 'text', name: 'param_min', required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"}
+                  %input#param_min{type: 'text', name: 'param_min', pattern: "^-?[0-9]*\\.?[0-9]+$"}
                   %small(class="error") Invalid minimum value
             .small-6.columns
               .row
                 .small-3.columns
                   %label.right.inline{for: 'param_max'}= 'Max:'
                 .small-9.columns
-                  %input#param_max{type: 'text', name: 'param_max', required: true, pattern: "^-?[0-9]*\\.?[0-9]+$"}
+                  %input#param_max{type: 'text', name: 'param_max', pattern: "^-?[0-9]*\\.?[0-9]+$"}
                   %small(class="error") Invalid maximum value
           .row#param-allowed.hidden
             .small-3.columns
@@ -92,6 +92,7 @@
                 %a.tiny.button.radius#editor-discard.disabled.unselectable
                   %i.fa.fa-undo.fa-fw
                   = 'Discard changes'
+
           #unsaved-modal.reveal-modal.small{'data-reveal' => true}
             .row{style: "margin-bottom: 25px;"}
               .small-12.columns
@@ -99,3 +100,11 @@
             .row
               .small-12.columns.text-center
                 %a#unsaved-ok.button.radius.medium= 'OK'
+
+          #invalid-modal.reveal-modal.small{'data-reveal' => true}
+            .row{style: "margin-bottom: 25px;"}
+              .small-12.columns
+                = 'There are invalid values in parameter editor. Please correct them or discard changes.'
+            .row
+              .small-12.columns.text-center
+                %a#invalid-modal-ok.button.radius.medium= 'OK'

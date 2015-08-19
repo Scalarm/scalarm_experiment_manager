@@ -29,7 +29,7 @@ class window.ScenarioRegistration
     $('#add-param').click(@handleAddParam)
     $('#remove-param').click(@handleRemoveParam)
 
-    $('#editor-save').click(=> ignore_if_disabled($('#editor-save'), @saveParameterChanges))
+    $('#editor-save').click(=>ignore_if_disabled($('#editor-save'), @saveParameterChanges))
     $('#editor-discard').click(=> ignore_if_disabled($('#editor-discard'), @discardParameterChanges))
 
     $('#unsaved-ok').click(->
@@ -38,7 +38,12 @@ class window.ScenarioRegistration
         scrollTop: $("#input-designer").offset().top
       }, 2000);
     )
-
+    $('#invalid-modal-ok').click(->
+      $('#invalid-modal').foundation('reveal', 'close')
+      $('html, body').animate({
+        scrollTop: $("#input-designer").offset().top
+      }, 2000);
+    )
     $('#scenario_form').submit(@formSubmit)
 
     @editorSaveOnEnter($("#param_id"))
@@ -77,9 +82,18 @@ class window.ScenarioRegistration
     $('#editor-save').addClass('disabled')
     $('#editor-discard').addClass('disabled')
 
+
   saveParameterChanges: =>
-    @saveEditorToParam()
-    @setSaved()
+
+    if $("#param-config").find(':input[data-invalid]:visible').length==0
+      @saveEditorToParam()
+      @setSaved()
+    else
+      $("#param-config").find('[data-invalid]').blur()
+      $('#invalid-modal').foundation('reveal', 'open')
+
+
+
 
   discardParameterChanges: =>
     @activateParam(@selectedNodeId)
@@ -132,10 +146,12 @@ class window.ScenarioRegistration
 
   handleAddParam: =>
     @simpleAddParam()
+    @simpleValidation()
     @activateNodeById(@selectedNodeId) if @selectedNodeId
 
   handleRemoveParam: =>
     @setSaved()
+    @removingValidation()
     @simpleRemoveParam()
 
   createEmptyGroup: =>
@@ -148,6 +164,16 @@ class window.ScenarioRegistration
     @input_model = [] unless @input_model
     @input_model.push(@createEmptyGroup()) unless @input_model[0]
     @input_model[0].entities.push(@createEmptyEntity()) unless @input_model[0].entities[0]
+
+  simpleValidation: =>
+    $('#param-config #param_min').attr('required','required')
+    $('#param-config #param_max').attr('required','required')
+    $('#param-config #param_id').attr('required','required')
+
+  removingValidation: =>
+    $('#param-config #param_id').removeAttr('required')
+    $('#param-config #param_min').removeAttr('required')
+    $('#param-config #param_max').removeAttr('required')
 
   simpleAddParam: =>
     @global_param_n = 0 unless @global_param_n

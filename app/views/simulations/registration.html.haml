@@ -13,8 +13,8 @@
             .small-3.columns
               %label.right.inline{for: 'simulation_name'}= t("simulations.registration.simulation_name")
             .small-9.columns
-              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;' , required: 'true', pattern:"^[\\w-]+$"
-              %small(class="error") Invalid simulation name - only letters, digits, '-' and '_'
+              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;' , required: 'true'
+              %small(class="error") Simulation name is required
           .row
             .small-3.columns
               %label.right.inline{for: 'simulation_description'}= t("simulations.registration.simulation_description")
@@ -35,8 +35,8 @@
                     .small-5.columns
                       %label.right.inline{for: 'simulation_binaries'}= t("simulations.registration.simulation_binaries_desc") + ':'
                     .small-7.columns
-                      = file_field_tag 'simulation_binaries'
-
+                      = file_field_tag 'simulation_binaries', required: 'true'
+                      %small(class="error") Simulation binaries file is required
             .row
               = render partial: 'form_row', object: 'input_writer',
                 locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers.unshift(["None", nil])), class: 'medium') }
@@ -52,13 +52,10 @@
             .small-2.small-centered.columns
               = submit_tag t('.upload'), class: 'button expand radius last-element'
 
-      #invalid-form.reveal-modal.small{'data-reveal' => true}
-        .row{style: "margin-bottom: 25px;"}
-          .small-12.columns
-            = 'Some fields has invalid values '
-        .row
-          .small-12.columns.text-center
-            %a#invalid-ok.button.radius.medium= 'OK'
+      #invalid-form.reveal-modal(data-reveal="true")
+        %h2.subheader.text-center Form has some invalid fields
+        .small-12.columns.text-center
+          %a#invalid-ok.button.radius.medium= 'OK'
 
 %section.panel.radius.last-element
   %h3.subheader= t('.component_registration_title')
