@@ -11,12 +11,20 @@ GIT
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 704a425c70cd80fb8576441a052678b3b64d0daf
+  revision: 5ea9c70d8acab8073562b12101e46142ebb7dc23
   specs:
-    scalarm-service_core (0.6.2)
+    scalarm-service_core (0.7)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       rest-client (~> 1.8)
+
+GIT
+  remote: git://github.com/kliput/mongo_session_store.git
+  revision: 5416ecf60275909dda0bfb99b77bc7504ee1fc1b
+  branch: issue-31-mongo_store-deserialization
+  specs:
+    mongo_session_store-rails4 (5.1.0)
+      actionpack (>= 3.1)
 
 GIT
   remote: git://github.com/rweng/jquery-datatables-rails.git
@@ -29,27 +37,27 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionmailer (4.1.1)
-      actionpack (= 4.1.1)
-      actionview (= 4.1.1)
-      mail (~> 2.5.4)
-    actionpack (4.1.1)
-      actionview (= 4.1.1)
-      activesupport (= 4.1.1)
+    actionmailer (4.1.12)
+      actionpack (= 4.1.12)
+      actionview (= 4.1.12)
+      mail (~> 2.5, >= 2.5.4)
+    actionpack (4.1.12)
+      actionview (= 4.1.12)
+      activesupport (= 4.1.12)
       rack (~> 1.5.2)
       rack-test (~> 0.6.2)
-    actionview (4.1.1)
-      activesupport (= 4.1.1)
+    actionview (4.1.12)
+      activesupport (= 4.1.12)
       builder (~> 3.1)
       erubis (~> 2.7.0)
-    activemodel (4.1.1)
-      activesupport (= 4.1.1)
+    activemodel (4.1.12)
+      activesupport (= 4.1.12)
       builder (~> 3.1)
-    activerecord (4.1.1)
-      activemodel (= 4.1.1)
-      activesupport (= 4.1.1)
+    activerecord (4.1.12)
+      activemodel (= 4.1.12)
+      activesupport (= 4.1.12)
       arel (~> 5.0.0)
-    activesupport (4.1.1)
+    activesupport (4.1.12)
       i18n (~> 0.6, >= 0.6.9)
       json (~> 1.7, >= 1.7.7)
       minitest (~> 5.1)
@@ -66,15 +74,10 @@ GEM
     aws-sdk-v1 (1.58.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
-    bson (1.12.2)
-    bson_ext (1.12.2)
-      bson (~> 1.12.2)
+    bson (1.12.3)
+    bson_ext (1.12.3)
+      bson (~> 1.12.3)
     builder (3.2.2)
-    ci_reporter (2.0.0)
-      builder (>= 2.1.2)
-    ci_reporter_minitest (1.0.0)
-      ci_reporter (~> 2.0)
-      minitest (~> 5.0)
     coffee-rails (4.0.1)
       coffee-script (>= 2.2.0)
       railties (>= 4.0.0, < 5.0)
@@ -128,54 +131,52 @@ GEM
       rails (>= 3.1.0)
     jquery-ui-rails (5.0.2)
       railties (>= 3.2.16)
-    json (1.8.2)
+    json (1.8.3)
     jwt (1.0.0)
     launchy (2.4.3)
       addressable (~> 2.3)
     libv8 (3.16.14.7)
-    mail (2.5.4)
-      mime-types (~> 1.16)
-      treetop (~> 1.4.8)
+    mail (2.6.3)
+      mime-types (>= 1.16, < 3)
     metaclass (0.0.4)
-    mime-types (1.25.1)
-    mini_portile (0.6.1)
-    minitest (5.6.1)
+    mime-types (2.6.1)
+    mini_portile (0.6.2)
+    minitest (5.7.0)
     mocha (1.1.0)
       metaclass (~> 0.0.1)
-    mongo (1.12.2)
-      bson (= 1.12.2)
-    multi_json (1.10.1)
+    mongo (1.12.3)
+      bson (= 1.12.3)
+    multi_json (1.11.2)
     multipart-post (2.0.0)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (2.9.1)
     netrc (0.10.3)
     newrelic_rpm (3.9.6.257)
-    nokogiri (1.6.4.1)
+    nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
-    polyglot (0.3.5)
     puma (2.9.2)
       rack (>= 1.1, < 2.0)
     racc (1.4.12)
-    rack (1.5.2)
-    rack-test (0.6.2)
+    rack (1.5.5)
+    rack-test (0.6.3)
       rack (>= 1.0)
-    rails (4.1.1)
-      actionmailer (= 4.1.1)
-      actionpack (= 4.1.1)
-      actionview (= 4.1.1)
-      activemodel (= 4.1.1)
-      activerecord (= 4.1.1)
-      activesupport (= 4.1.1)
+    rails (4.1.12)
+      actionmailer (= 4.1.12)
+      actionpack (= 4.1.12)
+      actionview (= 4.1.12)
+      activemodel (= 4.1.12)
+      activerecord (= 4.1.12)
+      activesupport (= 4.1.12)
       bundler (>= 1.3.0, < 2.0)
-      railties (= 4.1.1)
+      railties (= 4.1.12)
       sprockets-rails (~> 2.0)
-    railties (4.1.1)
-      actionpack (= 4.1.1)
-      activesupport (= 4.1.1)
+    railties (4.1.12)
+      actionpack (= 4.1.12)
+      activesupport (= 4.1.12)
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
-    rake (10.3.2)
+    rake (10.4.2)
     rb-readline (0.5.1)
     rdoc (4.1.2)
       json (~> 1.4)
@@ -408,7 +409,7 @@ GEM
       multi_json (~> 1.0)
       rack (~> 1.0)
       tilt (~> 1.1, != 1.3.0)
-    sprockets-rails (2.2.0)
+    sprockets-rails (2.3.2)
       actionpack (>= 3.0)
       activesupport (>= 3.0)
       sprockets (>= 2.8, < 4.0)
@@ -418,9 +419,6 @@ GEM
     thor (0.19.1)
     thread_safe (0.3.5)
     tilt (1.4.1)
-    treetop (1.4.15)
-      polyglot
-      polyglot (>= 0.3.1)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     uglifier (2.5.3)
@@ -440,7 +438,6 @@ DEPENDENCIES
   aws-sdk
   bson
   bson_ext
-  ci_reporter_minitest
   coffee-rails (~> 4.0.0)
   encryptor
   font-awesome-sass (= 4.1)
@@ -455,13 +452,14 @@ DEPENDENCIES
   jquery-tmpl-rails
   jquery-ui-rails
   mocha
-  mongo
+  mongo (~> 1.12)
+  mongo_session_store-rails4!
   net-scp
   net-ssh
   newrelic_rpm
   puma
   racc
-  rails (= 4.1.1)
+  rails (~> 4.1.12)
   remotipart (~> 1.0)
   rest-client (~> 1.8)
   rinruby
@@ -471,7 +469,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.3.3)!
-  scalarm-service_core (~> 0.6.2)!
+  scalarm-service_core (~> 0.7)!
   sdoc
   signet
   therubyracer

@@ -166,21 +166,41 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  ALLOWED_CREDENTIALS_SEARCH_KEYS = [
+      :host,
+      :login,
+      :port,
+      :image_id,
+      :cloud_name
+  ]
+
   # GET params (in JSON):
   # - infrastructure - name of infrastructure
   # - query_params - Hash of additional filtering options
+  # Successful result:
+  # {"status": "ok", "data": [<array of credentials objects>]}
   def get_infrastructure_credentials
     validate(
         infrastructure: :security_default
     )
 
-    query_params = (params.include?(:query_params) ? JSON.parse(params[:query_params]) : {})
+    query_params =
+        (params.include?(:query_params) ? Scalarm::ServiceCore::Utils.parse_json_if_string(params[:query_params]).to_h : {})
     raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
-    raise SecurityError.new('All additional params should be strings') unless query_params.all? do |k, v|
-      k.kind_of?(String) and v.kind_of?(String)
+
+    raise SecurityError.new('All additional params values should be strings or integers') unless query_params.all? do |k, v|
+      (k.kind_of?(String) || k.kind_of?(Symbol)) and (v.kind_of?(String) || v.kind_of?(Fixnum))
     end
-    raise SecurityError.new('Using user_id in query is forbidden') if query_params.include?('user_id')
-    raise SecurityError.new('Using secrets_* in query is forbidden') if query_params.any? {|k, v| k =~ /secret_.*/}
+
+    query_params.symbolize_keys!
+
+    unless query_params.keys.all? {|k| ALLOWED_CREDENTIALS_SEARCH_KEYS.include?(k)}
+      raise SecurityError.new("The only allowed credentials search keys are: #{ALLOWED_CREDENTIALS_SEARCH_KEYS.join(', ')}")
+    end
+
+    ## old code for blacklisting, now using whitelisting
+    # raise SecurityError.new('Using user_id in query is forbidden') if query_params.include?('user_id')
+    # raise SecurityError.new('Using secrets_* in query is forbidden') if query_params.any? {|k, v| k =~ /secret_.*/}
 
     infrastructure_name = params[:infrastructure]
     begin

@@ -2,10 +2,12 @@ require 'openid'
 
 require 'scalarm/service_core/scalarm_authentication'
 require 'scalarm/service_core/parameter_validation'
+require 'erb'
 
 class ApplicationController < ActionController::Base
   include Scalarm::ServiceCore::ScalarmAuthentication
   include Scalarm::ServiceCore::ParameterValidation
+  include ERB::Util
 
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
@@ -92,8 +94,6 @@ class ApplicationController < ActionController::Base
         keep_session_params(:server_name, :original_url) do
           reset_session
         end
-
-        user_session.destroy unless user_session.nil?
 
         flash[:error] = t('login.required')
 
