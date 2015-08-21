@@ -10,7 +10,10 @@ gem 'rinruby'
 gem 'bson'
 gem 'bson_ext'
 gem 'mongo', '~> 1.12'
-gem 'mongo_session_store-rails4', '~> 5.1'
+gem 'mongo_session_store-rails4',
+    git: 'git://github.com/kliput/mongo_session_store.git',
+    branch: 'issue-31-mongo_store-deserialization'
+
 
 # Amazon EC2 connector
 gem 'aws-sdk'
@@ -88,7 +91,7 @@ gem 'scalarm-database', '>= 0.3.3', git: 'git://github.com/Scalarm/scalarm-datab
 
 ## for local development - set path to scalarm-core
 # gem 'scalarm-service_core', path: '/Users/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 0.6.1', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', '~> 0.7', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'
