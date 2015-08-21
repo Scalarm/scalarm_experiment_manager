@@ -316,41 +316,46 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def _simulation_manager_resource_status(sm_record)
-    ssh = nil
+    if sm_record.onsite_monitoring
+      sm_record.resource_status || :not_available
+    else
 
-    begin
-      ssh = shared_ssh_session(sm_record.credentials)
-    rescue Gsi::ProxyError
-      raise
-    rescue Exception => e
-      # remember this error in case of unable to initialize
-      sm_record.error_log = e.to_s
-      sm_record.save
-      return :not_available
-    end
+      ssh = nil
 
-    begin
-      job_id = sm_record.job_id
-      if job_id
-        status = scheduler.status(ssh, sm_record)
-        case status
-          when :initializing then
-            :initializing
-          when :running then
-            :running_sm
-          when :deactivated then
-            :released
-          when :error then
-            :error
-          else
-            logger.warn "Unknown state from PL-Grid scheduler: #{status}"
-            :error
-        end
-      else
-        :available
+      begin
+        ssh = shared_ssh_session(sm_record.credentials)
+      rescue Gsi::ProxyError
+        raise
+      rescue Exception => e
+        # remember this error in case of unable to initialize
+        sm_record.error_log = e.to_s
+        sm_record.save
+        return :not_available
       end
-    rescue Exception
-      :error
+
+      begin
+        job_id = sm_record.job_id
+        if job_id
+          status = scheduler.status(ssh, sm_record)
+          case status
+            when :initializing then
+              :initializing
+            when :running then
+              :running_sm
+            when :deactivated then
+              :released
+            when :error then
+              :error
+            else
+              logger.warn "Unknown state from PL-Grid scheduler: #{status}"
+              :error
+          end
+        else
+          :available
+        end
+      rescue Exception
+        :error
+      end
     end
   end
 
