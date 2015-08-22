@@ -119,7 +119,8 @@ class PrivateMachineFacadeTest < MiniTest::Test
 
   def test_get_credentials
     user_id = mock 'user_id'
-    records = stub_everything 'records'
+    record = stub_everything 'record'
+    records = [record]
 
     PrivateMachineCredentials.stubs(:where).with(user_id: user_id, host: 'localhost').returns(records)
 

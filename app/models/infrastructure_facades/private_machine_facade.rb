@@ -155,7 +155,8 @@ class PrivateMachineFacade < InfrastructureFacade
   # params - hash of additional query conditions, e.g. {host: 'localhost'}
   # returns: array of PrivateMachineCredentials
   def get_credentials(user_id, params)
-    PrivateMachineCredentials.where({user_id: user_id}.merge(params)).to_a
+    query = {user_id: user_id}.merge(params)
+    PrivateMachineCredentials.where(query).to_a
   end
 
   def remove_credentials(record_id, user_id, type)
