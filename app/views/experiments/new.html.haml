@@ -20,37 +20,26 @@
     %h3.subheader= t('experiments.optimization_method.title')
     .content
       .row
-        .small-5.columns
-          %label.inline.right
-            = t('experiments.optimization_method.selector')
-        .small-5.columns
+        .small-6.small-centered.columns
           - options = supervisor_options(supervisor_ids) == '' ? [t('experiments.optimization_method.manual')] : [t('experiments.optimization_method.manual'), t('experiments.optimization_method.automatic')]
           = select_tag 'experiment_type_select', options_for_select(options, t('experiments.optimization_method.manual'))
-        .small-2.-columns
 
 #manual-experiment-panel
   %section.panel.radius
     %h3.subheader= t('experiments.manual_experiment.title')
     .content
       .row
-        .small-5.columns
-          %label.inline.right
-            = t('experiments.manual_experiment.selector')
-        .small-5.columns
+        .small-6.small-centered.columns
           = select_tag 'input_space_select', options_for_select([t('experiments.manual_experiment.manual_designed'), t('experiments.manual_experiment.csv_imported')], t('experiments.manual_experiment.manual_designed'))
-        .small-2.-columns
 
 #automatic-experiment-panel
   %section.panel.radius
     %h3.subheader= t('experiments.automatic_experiment.title')
     .content
       .row
-        .small-5.columns
-          %label.inline.right
-            = t('experiments.automatic_experiment.selector')
-        .small-5.columns
+        .small-6.small-centered.columns
           = select_tag 'supervisor_select', supervisor_options(supervisor_ids)
-        .small-2.-columns
+        .small-2.columns
           #supervisor_form_loader
 
 = form_tag experiments_path, id: 'supervised_experiment_submit_form' do
