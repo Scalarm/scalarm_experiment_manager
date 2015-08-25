@@ -514,10 +514,10 @@ class ExperimentsController < ApplicationController
   def moes_json
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-       [t('experiments.analysis.no_results'),'',"moes_parameter"]
-     else
-       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
-                 end
+      [t('experiments.analysis.no_results'),'',"moes_parameter"]
+    else
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+    end
     moes_and_params = get_moes_and_params(result_set)
     array = []
     moes_and_params.map do |label, id, type|
@@ -583,7 +583,6 @@ class ExperimentsController < ApplicationController
         item = x
         a = item.to_i
         b = item.to_f
-
         if x.eql?a.to_s
           array_for_inputs_types.push("integer")
         elsif x.eql?b.to_s
@@ -616,12 +615,12 @@ class ExperimentsController < ApplicationController
     moes_and_params = if done_run.nil?
                         (@experiment.parameters.flatten).map { |x|
                           #@experiment.input_parameter_label_for(x) for label
-                            [x, x, "input_parameter"] } +
-                         [%w(----------- delimiter)] + [result_set]
+                          [x, x, "input_parameter"] } +
+                          [%w(----------- delimiter)] + [result_set]
                       else
                         done_run.arguments.split(',').map { |x|
                           [@experiment.input_parameter_label_for(x), x, "input_parameter"] } +
-                            [%w(----------- delimiter)] + result_set
+                          [%w(----------- delimiter)] + result_set
                       end
   end
 
