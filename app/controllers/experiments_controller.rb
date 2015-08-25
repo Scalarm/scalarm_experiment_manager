@@ -576,8 +576,7 @@ class ExperimentsController < ApplicationController
           array_for_moes_types.push("undefined")
         end
       }
-    end
-    unless @experiment.simulation_runs.empty?
+
       first_line_inputs = @experiment.simulation_runs.first.values.split(",")
       first_line_inputs.each{|x|
         item = x
