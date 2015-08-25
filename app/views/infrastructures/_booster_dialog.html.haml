@@ -50,8 +50,7 @@
             .large-4.columns
               = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
             .large-4.columns
-              = text_field_tag :start_at, '', required: true
-              %small(class="error") Data is required
+              = text_field_tag :start_at, ''
             .large-1.columns
 
           .row#submit-button
