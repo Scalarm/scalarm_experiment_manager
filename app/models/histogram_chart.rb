@@ -1,20 +1,21 @@
 require 'csv'
 require 'rinruby'
 require 'tempfile'
+require 'uri'
 
 class HistogramChart
   attr_accessor :experiment, :resolution, :moe_name,
                 :bucket_name, :buckets, :stats, :type,
                 :x_axis_notation, :y_axis_notation
-
+  include URI::Escape
   def initialize(experiment, moe_name, resolution, type,  additional =nil)
     @experiment = experiment
-    @moe_name = moe_name
+    @moe_name = URI.escape(moe_name)
     @resolution = resolution
     @stats = { ex_min: 0 }
     @type = type
-    @x_axis_notation = additional[:x_axis_notation]
-    @y_axis_notation = additional[:y_axis_notation]
+    @x_axis_notation = URI.escape(additional[:x_axis_notation])
+    @y_axis_notation = URI.escape(additional[:y_axis_notation])
     if type == "string"
       prepare_chart_data_for_string_type
     else
