@@ -638,7 +638,7 @@ class Experiment < Scalarm::Database::Model::Experiment
         if parameter['value'] == ''
           raise SecurityError.new("Insecure empty parameter given for Single value")
         else
-          raise SecurityError.new("Insecure parameter given [#{parameter['value']}] for Single value" ) #parameter.to_s gives whole json
+          raise SecurityError.new("Insecure parameter given [#{parameter['value']}] for Single value" )
         end
       end
 
@@ -652,7 +652,7 @@ class Experiment < Scalarm::Database::Model::Experiment
           if value_of_input == ''
             raise SecurityError.new("Insecure empty parameter given for Range " + input_type + " value")
           else
-            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Range " + input_type + " value") #parameter.to_s gives whole json
+            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Range " + input_type + " value")
           end
         end
       end
@@ -678,7 +678,7 @@ class Experiment < Scalarm::Database::Model::Experiment
           if value_of_input == ''
             raise SecurityError.new("Insecure empty parameter given for Gauss " + input_type + " value")
           else
-            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Gauss " + input_type + " value") #parameter.to_s gives whole json
+            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Gauss " + input_type + " value")
           end
         end
       end
@@ -695,7 +695,7 @@ class Experiment < Scalarm::Database::Model::Experiment
           if value_of_input == ''
             raise SecurityError.new("Insecure empty parameter given for Uniform " + input_type + " value")
           else
-            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Uniform " + input_type + " value") #parameter.to_s gives whole json
+            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Uniform " + input_type + " value")
           end
         end
       end
