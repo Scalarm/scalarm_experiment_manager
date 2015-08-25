@@ -574,46 +574,48 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
-    first_line_result = @experiment.simulation_runs.first.result
-    first_line_inputs = @experiment.simulation_runs.first.values.split(",")
-    array_for_moes_types = []
-    array_for_inputs_types = []
 
-    first_line_result.each{|x|
-      item = x[1]
-      if item.is_a? Integer
-        array_for_moes_types.push("integer")
-      elsif item.is_a? Float
-        array_for_moes_types.push("float")
-      elsif item.is_a? String
-        array_for_moes_types.push("string")
-      else
-        array_for_moes_types.push("undefined")
-      end
-    }
+    if (@experiment.simulation_runs.first != nil)
+      first_line_result = @experiment.simulation_runs.first.result
+      first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+      array_for_moes_types = []
+      array_for_inputs_types = []
 
-    first_line_inputs.each{|x|
-      item = x
-      a = item.to_i
-      b = item.to_f
+      first_line_result.each{|x|
+        item = x[1]
+        if item.is_a? Integer
+          array_for_moes_types.push("integer")
+        elsif item.is_a? Float
+          array_for_moes_types.push("float")
+        elsif item.is_a? String
+          array_for_moes_types.push("string")
+        else
+          array_for_moes_types.push("undefined")
+        end
+      }
 
-      if x.eql?a.to_s
-        array_for_inputs_types.push("integer")
-      elsif x.eql?b.to_s
-        array_for_inputs_types.push("float")
-      elsif x.is_a? String
-        array_for_inputs_types.push("string")
-      else
-        array_for_inputs_types.push("undefined")
-      end
+      first_line_inputs.each{|x|
+        item = x
+        a = item.to_i
+        b = item.to_f
 
-    }
+        if x.eql?a.to_s
+          array_for_inputs_types.push("integer")
+        elsif x.eql?b.to_s
+          array_for_inputs_types.push("float")
+        elsif x.is_a? String
+          array_for_inputs_types.push("string")
+        else
+          array_for_inputs_types.push("undefined")
+        end
 
-    moes_info[:moes_types] = array_for_moes_types
-    moes_info[:moes_names] = @experiment.result_names
-    moes_info[:inputs_types] = array_for_inputs_types
-    moes_info[:inputs_names] = @experiment.simulation_runs.first.arguments.split(",")
+      }
 
+      moes_info[:moes_types] = array_for_moes_types
+      moes_info[:inputs_types] = array_for_inputs_types
+      moes_info[:moes_names] = @experiment.result_names
+      moes_info[:inputs_names] = @experiment.simulation_runs.first.arguments.split(",")
+    end
     #TODO add new map for histogram to improve selector
     #array_for_moes_types.insert(0,'---')
 

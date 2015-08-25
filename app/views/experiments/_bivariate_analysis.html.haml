@@ -52,6 +52,9 @@
 
     // 'Load chart' button handler
     $('#bivariate_charts_form').find('input[type=submit]').bind('click', function() {
+      if (check_if_no_results_to_plot() == true){
+        return;
+      }
       var x_axis = $('#bivariate_charts_form').find('select[name=\'x_axis\'] option:selected').val();
       var y_axis = $('#bivariate_charts_form').find('select[name=\'y_axis\'] option:selected').val();
 
@@ -136,3 +139,10 @@
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });
+
+    function check_if_no_results_to_plot() {
+      if ( typeof(window.moes_info.moes_names) == 'undefined') {
+        toastr.error("No results to plot on chart");
+        return true;
+      }
+    }

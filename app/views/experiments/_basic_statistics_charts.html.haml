@@ -30,6 +30,9 @@
     // 'Load chart' button handler
     //$('#basic_charts_form').find('input[type=submit]').bind('click', function() { //was earlier
     $('#basic_charts_form').find('#load_chart_button').bind('click', function() {
+      if (check_if_no_results_to_plot() == true) {
+        return;
+      }
       try {
         $('#busy_basic').show();
         var moe_name = $('#basic_charts_form select[name=\'moe_name\'] option:selected').val();
@@ -87,3 +90,10 @@
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });
+
+    function check_if_no_results_to_plot() {
+      if ( typeof(window.moes_info.moes_names) == 'undefined') {
+        toastr.error("No results to plot on chart");
+        return true;
+      }
+    }
