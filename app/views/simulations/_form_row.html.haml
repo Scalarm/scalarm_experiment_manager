@@ -36,7 +36,6 @@
             $("##{form_row}").attr('required','required');
             $("##{form_row}_name").enable();
             $("##{form_row}_name_row").show();
-            $("##{form_row}_name").attr('required','required');
             $("##{form_row}_error_msg").removeAttr("style");
           } else {
             $("##{form_row}_id").enable();
@@ -44,8 +43,7 @@
             $("##{form_row}").removeAttr('required');
             $("##{form_row}_name").disable();
             $("##{form_row}_name_row").hide();
-            $("##{form_row}_name").removeAttr('required');
-          //  console.debug("AS");
+
             document.getElementById("#{form_row}_error_msg").style.display="none"
           }
         }

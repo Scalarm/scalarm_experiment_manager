@@ -316,9 +316,7 @@ class window.ScenarioRegistration
     $("#input-designer #param-config").enable()
     $("#input-upload").hide()
     $("#input-upload #simulation_input_file").disable()
-    $('#param-config #param_id').attr('required','required')
-    $('#param-config #param_min').attr('required','required')
-    $('#param-config #param_max').attr('required','required')
+
 
   inputDesignerOff: (event) =>
     @inputDesignerOnDiv.removeClass("clicked")

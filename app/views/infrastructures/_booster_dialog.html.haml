@@ -57,13 +57,10 @@
             .large-12.columns.text-center
               = submit_tag t('infrastructure.information.submit'), class: 'button radius' , id: "submit-button"
 
-          #invalid-form.reveal-modal.small{'data-reveal' => true}
-            .row{style: "margin-bottom: 25px;"}
-              .small-12.columns
-                = 'Some fields has invalid values '
-            .row
-              .small-12.columns.text-center
-                %a#invalid-ok.button.radius.medium= 'OK'
+          #invalid-form.reveal-modal(data-reveal="true")
+            %h2.subheader.text-center Form has some invalid fields
+            .small-12.columns.text-center
+              %a#invalid-ok.button.radius.medium= 'OK'
 
   %dd
     %a(href="#simulation-managers-panel")= t('infrastructure.information.scheduled_label')

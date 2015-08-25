@@ -16,7 +16,7 @@
             .small-3.columns
               %label.right.inline{for: 'simulation_name'}= t("simulations.registration.simulation_name")
             .small-9.columns
-              = text_field_tag 'simulation_name', @simulation_scenario.name, style: 'max-width: 100%;', required: true, pattern:"^[\\w-]+$"
+              = text_field_tag 'simulation_name', @simulation_scenario.name, style: 'max-width: 100%;', required: true
               %small(class="error") Invalid simulation name - only letters, digits, '-' and '_'
           .row
             .small-3.columns
@@ -43,7 +43,8 @@
                           %input(type="checkbox" id="binaries_box" style="display: inline;")
                             = t("simulations.edit.change_bin") + ':'
                       .small-7.columns
-                        = file_field_tag 'simulation_binaries'
+                        = file_field_tag 'simulation_binaries', required: 'true'
+                        %small(class="error") Simulation binaries file is required
 
                 = content_for :javascript do
                   :javascript
@@ -76,13 +77,10 @@
         .small-2.small-centered.columns
           = submit_tag t('.update_btn'), class: 'button expand radius last-element'
 
-      #invalid-form.reveal-modal.small{'data-reveal' => true}
-        .row{style: "margin-bottom: 25px;"}
-          .small-12.columns
-            = 'Some fields has invalid values '
-        .row
-          .small-12.columns.text-center
-            %a#invalid-ok.button.radius.medium= 'OK'
+      #invalid-form.reveal-modal(data-reveal="true")
+        %h2.subheader.text-center Form has some invalid fields
+        .small-12.columns.text-center
+          %a#invalid-ok.button.radius.medium= 'OK'
 
 - if @simulation_scenario.user_id == current_user.id
   #share-dialog.reveal-modal(data-reveal)
