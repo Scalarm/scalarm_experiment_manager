@@ -110,6 +110,8 @@
       var input_space_importer = new window.InputSpaceImporter("#{simulations_upload_parameter_space_path}",
                                                                "#{calculate_imported_experiment_size_experiments_path}");
 
+      var parameter_constraints_manager = new window.ParameterConstraintsManager();
+
       var doe_manager = new window.ExperimentDesigner(input_space);
       $("#invalid-ok").bind("click", function() {
         $('#invalid-form').foundation('reveal', 'close');
@@ -126,6 +128,7 @@
           if ($("#wrapper").find(':input[data-invalid]:visible').length==0){
             if($('#input-space-parameters').is(":visible")) {
               // standart experiment
+              parameter_constraints_manager.getParametersConstraints();
               input_space.updateAllInputParameterValues();
               $("#experiment_submit_form").submit();
             } else {

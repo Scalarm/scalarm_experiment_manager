@@ -197,10 +197,10 @@ class ExperimentsController < ApplicationController
       Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
       Utils::parse_param(params, :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)})
 
-      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
-                                   :experiment_description, :parameter_constraints)
+      parsed_params = params.permit(:replication_level, :execution_time_constraint, :scheduling_policy, :experiment_name,
+                                   :experiment_description, :parameters_constraints)
 
-      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
+      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
