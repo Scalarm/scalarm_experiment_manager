@@ -15,7 +15,7 @@ class ExperimentCsvImporter
   def parse
     i = 0
 
-    CSV.parse(@content) do |row|
+    CSV.parse(@content.strip) do |row|
       if i == 0
         @parameters = row
         @parameters_to_include = @parameters if @parameters_to_include.nil?
