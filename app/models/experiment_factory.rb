@@ -34,7 +34,7 @@ class ExperimentFactory
     scheduling_policy = params.delete(:scheduling_policy) || DEFAULT_SCHEDULING_POLICY
     name = params.delete(:experiment_name) || simulation.name
     description = params.delete(:experiment_description) || simulation.description
-    parameter_constraints = params.delete(:parameter_constraints) || DEFAULT_PARAMETER_CONSTRAINTS
+    parameters_constraints = params.delete(:parameters_constraints) || DEFAULT_PARAMETER_CONSTRAINTS
 
     record_class.new(
         params.merge({
@@ -47,7 +47,7 @@ class ExperimentFactory
              scheduling_policy: scheduling_policy,
              name: name,
              description: description,
-             parameter_constraints: parameter_constraints
+             parameters_constraints: parameters_constraints
         })
     )
   end
