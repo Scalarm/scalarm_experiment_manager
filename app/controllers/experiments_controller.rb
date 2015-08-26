@@ -193,21 +193,14 @@ class ExperimentsController < ApplicationController
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
-      parse = lambda do |id, parse_method|
-        if params[id].blank?
-          params.delete id
-        else
-          params[id] = parse_method.call(params[id])
-        end
-      end
+      Utils::parse_param(params, :replication_level, lambda {|x| x.to_i})
+      Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
+      Utils::parse_param(params, :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)})
 
-      parse.call :replication_level, lambda {|x| x.to_i}
-      parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
-      parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
+      parsed_params = params.slice(:replication_level, :execution_time_constraint, :scheduling_policy, :experiment_name,
+                                   :experiment_description, :parameters_constraints).symbolize_keys
 
-      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
-                                   :experiment_description, :parameter_constraints)
-      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
+      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
@@ -339,16 +332,8 @@ class ExperimentsController < ApplicationController
     # TODO: other experiment parameters
     # TODO: handle errors
 
-    parse = lambda do |id, parse_method|
-      if params[id].blank?
-        params.delete id
-      else
-        params[id] = parse_method.call(params[id])
-      end
-    end
-
-    parse.call :replication_level, lambda {|x| x.to_i}
-    parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
+    Utils::parse_param(params, :replication_level, lambda {|x| x.to_i})
+    Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
 
     parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
                                   :experiment_description)

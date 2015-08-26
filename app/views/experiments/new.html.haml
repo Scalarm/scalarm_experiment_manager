@@ -110,6 +110,8 @@
       var input_space_importer = new window.InputSpaceImporter("#{simulations_upload_parameter_space_path}",
                                                                "#{calculate_imported_experiment_size_experiments_path}");
 
+      var parameter_constraints_manager = new window.ParameterConstraintsManager();
+
       var doe_manager = new window.ExperimentDesigner(input_space);
       $("#invalid-ok").bind("click", function() {
         $('#invalid-form').foundation('reveal', 'close');
@@ -126,6 +128,7 @@
           if ($("#wrapper").find(':input[data-invalid]:visible').length==0){
             if($('#input-space-parameters').is(":visible")) {
               // standart experiment
+              parameter_constraints_manager.getParametersConstraints();
               input_space.updateAllInputParameterValues();
               $("#experiment_submit_form").submit();
             } else {
@@ -175,7 +178,9 @@
       function set_visible_panels() {
         if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}" )) {
           $("#manual-experiment-panel").show();
+          $('#check-experiment-size').show()
           $("#automatic-experiment-panel").hide();
+          $('#supervisor_fields').empty()
           $("#supervised_experiment_submit_form").hide();
           if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
             $("#import").hide();
@@ -192,6 +197,7 @@
           $("#manual-experiment-panel").hide();
           $("#import").hide();
           $("#input-space-parameters").hide();
+          $('#check-experiment-size').hide()
         }
       }
 
