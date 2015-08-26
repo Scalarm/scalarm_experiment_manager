@@ -178,7 +178,9 @@
       function set_visible_panels() {
         if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}" )) {
           $("#manual-experiment-panel").show();
+          $('#check-experiment-size').show()
           $("#automatic-experiment-panel").hide();
+          $('#supervisor_fields').empty()
           $("#supervised_experiment_submit_form").hide();
           if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
             $("#import").hide();
@@ -195,6 +197,7 @@
           $("#manual-experiment-panel").hide();
           $("#import").hide();
           $("#input-space-parameters").hide();
+          $('#check-experiment-size').hide()
         }
       }
 
