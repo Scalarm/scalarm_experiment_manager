@@ -33,11 +33,13 @@ class Experiment < Scalarm::Database::Model::Experiment
   require 'experiment_extensions/experiment_progress_bar'
   require 'experiment_extensions/simulation_run_module'
   require 'experiment_extensions/simulation_scheduler'
+  require 'scalarm/service_core/parameter_validation'
 
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
   include SimulationRunModule
+  include Scalarm::ServiceCore::ParameterValidation
 
   # attr_joins are overriden to get proper classes (not basic models)
   attr_join :simulation, Simulation
@@ -634,13 +636,7 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'value'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      if /\A((\w)|(-)|(\.))+\z/.match(parameter['value']).nil?
-        if parameter['value'] == ''
-          raise SecurityError.new("Insecure empty parameter given for Single value")
-        else
-          raise SecurityError.new("Insecure parameter given [#{parameter['value']}] for Single value" )
-        end
-      end
+      evaluate_given_input_parameter_value(parameter['label'], parameter['value'])
 
       parameter_values << parameter['value']
 
@@ -648,13 +644,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       ['type', 'step', 'min', 'max'].each do |input_type|
         value_of_input = parameter[input_type]
-        if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
-          if value_of_input == ''
-            raise SecurityError.new("Insecure empty parameter given for Range " + input_type + " value")
-          else
-            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Range " + input_type + " value")
-          end
-        end
+        evaluate_given_input_parameter_value(parameter['label'], value_of_input)
       end
 
       step = if parameter['type'] == 'float'
@@ -674,13 +664,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       ['mean', 'variance'].each do |input_type|
         value_of_input = parameter[input_type]
-        if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
-          if value_of_input == ''
-            raise SecurityError.new("Insecure empty parameter given for Gauss " + input_type + " value")
-          else
-            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Gauss " + input_type + " value")
-          end
-        end
+        evaluate_given_input_parameter_value(parameter['label'], value_of_input)
       end
 
       r_interpreter = Rails.configuration.r_interpreter
@@ -691,13 +675,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       ['min', 'max'].each do |input_type|
         value_of_input = parameter[input_type]
-        if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
-          if value_of_input == ''
-            raise SecurityError.new("Insecure empty parameter given for Uniform " + input_type + " value")
-          else
-            raise SecurityError.new("Insecure parameter given [#{value_of_input}] for Uniform " + input_type + " value")
-          end
-        end
+        evaluate_given_input_parameter_value(parameter['label'], value_of_input)
       end
 
       r_interpreter = Rails.configuration.r_interpreter
@@ -733,6 +711,16 @@ class Experiment < Scalarm::Database::Model::Experiment
     end
 
     parameter_values
+  end
+
+  def evaluate_given_input_parameter_value(name_of_input_parameter, value_of_input)
+    if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
+      if value_of_input == ''
+        raise ValidationError.new("'#{name_of_input_parameter}'", "[#{value_of_input}]", "Empty value for parameter given" )
+      else
+        raise ValidationError.new("'#{name_of_input_parameter}'", "[#{value_of_input}]", "Wrong value for parameter given" )
+      end
+    end
   end
 
   def execute_doe_method(doe_method_name, parameters_for_doe)
