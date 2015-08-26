@@ -65,6 +65,13 @@
         $('#busy_basic').hide();
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
+
+      function check_if_no_results_to_plot() {
+        if ( typeof(window.moes_info.moes_names) == 'undefined') {
+          toastr.error("No results to plot on chart");
+          return true;
+      }
+    }
     });
 
     $('#basic_charts_form').find('#select_moe').change( function() {
@@ -91,9 +98,3 @@
       }
     });
 
-    function check_if_no_results_to_plot() {
-      if ( typeof(window.moes_info.moes_names) == 'undefined') {
-        toastr.error("No results to plot on chart");
-        return true;
-      }
-    }

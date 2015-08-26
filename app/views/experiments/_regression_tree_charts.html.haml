@@ -35,11 +35,12 @@
         { 'moe_name': moe_name },
         function(data) { $('#busy_rt').hide(); }
       );
+
+      function check_if_no_results_to_plot() {
+        if ( typeof(window.moes_info.moes_names) == 'undefined') {
+          toastr.error("No results to plot on chart");
+          return true;
+        }
+      }
     });
 
-    function check_if_no_results_to_plot() {
-      if ( typeof(window.moes_info.moes_names) == 'undefined') {
-        toastr.error("No results to plot on chart");
-        return true;
-      }
-    }
