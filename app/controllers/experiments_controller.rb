@@ -200,7 +200,7 @@ class ExperimentsController < ApplicationController
       parsed_params = params.slice(:replication_level, :execution_time_constraint, :scheduling_policy, :experiment_name,
                                    :experiment_description, :parameters_constraints).symbolize_keys
 
-      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, params)
+      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
         input_space_imported_specification(experiment)
