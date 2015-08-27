@@ -23,6 +23,10 @@
 
     // 'Load chart' button handler
     $('#regression_charts_form').find('input[type=submit]').bind('click', function() {
+      if (check_if_no_results_to_plot() == true){
+        return;
+      }
+
       $('#busy_rt').show();
 
       var moe_name = $('#regression_charts_form select[name=\'moe_name\'] option:selected').val();
@@ -31,4 +35,11 @@
         { 'moe_name': moe_name },
         function(data) { $('#busy_rt').hide(); }
       );
+
+      function check_if_no_results_to_plot() {
+        if (window.moes_info.moes_types.length <= 0 || typeof window.moes_info.moes_types == 'undefined') {
+          toastr.error("No results to plot on chart");
+          return true;
+        }
+      }
     });
