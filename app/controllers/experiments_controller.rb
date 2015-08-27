@@ -558,25 +558,24 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
+    moes_info[:moes_types] = extract_types_for_moes
+    moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
+    moes_info[:inputs_types] = extract_types_for_parameters
+    moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
 
-    array_for_moes_types = []
+    #TODO add new map for histogram to improve selector
+    #array_for_moes_types.insert(0,'---')
+
+    render json: moes_info
+
+  end
+
+  #TODO Move this method to gem utils
+  #Extract types for moes from string
+  def extract_types_for_parameters
     array_for_inputs_types = []
 
     unless @experiment.simulation_runs.empty?
-      first_line_result = @experiment.simulation_runs.first.result
-      first_line_result.each{|x|
-        item = x[1]
-        if item.is_a? Integer
-          array_for_moes_types.push("integer")
-        elsif item.is_a? Float
-          array_for_moes_types.push("float")
-        elsif item.is_a? String
-          array_for_moes_types.push("string")
-        else
-          array_for_moes_types.push("undefined")
-        end
-      }
-
       first_line_inputs = @experiment.simulation_runs.first.values.split(",")
       first_line_inputs.each{|x|
         item = x
@@ -594,17 +593,34 @@ class ExperimentsController < ApplicationController
 
       }
     end
-    moes_info[:moes_types] = array_for_moes_types
-    moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
-    moes_info[:inputs_types] = array_for_inputs_types
-    moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
 
-    #TODO add new map for histogram to improve selector
-    #array_for_moes_types.insert(0,'---')
-
-    render json: moes_info
-
+    array_for_inputs_types
   end
+
+  #TODO Move this method to gem util
+  def extract_types_for_moes
+    array_for_moes_types = []
+
+    unless @experiment.simulation_runs.empty?
+      first_line_result = @experiment.simulation_runs.first.result
+      first_line_result.each{|x|
+        item = x[1]
+        if item.is_a? Integer
+          array_for_moes_types.push("integer")
+        elsif item.is_a? Float
+          array_for_moes_types.push("float")
+        elsif item.is_a? String
+          array_for_moes_types.push("string")
+        else
+          array_for_moes_types.push("undefined")
+        end
+      }
+    end
+
+    array_for_moes_types
+  end
+
+
 
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
