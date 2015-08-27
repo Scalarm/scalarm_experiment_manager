@@ -514,10 +514,10 @@ class ExperimentsController < ApplicationController
   def moes_json
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-       [t('experiments.analysis.no_results')]
-     else
-       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
-     end
+      [t('experiments.analysis.no_results'),'',"moes_parameter"]
+    else
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+    end
     moes_and_params = get_moes_and_params(result_set)
     array = []
     moes_and_params.map do |label, id, type|
@@ -534,11 +534,10 @@ class ExperimentsController < ApplicationController
 
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-      [t('experiments.analysis.no_results')]
+      [t('experiments.analysis.no_results'),'',"moes_parameter"]
     else
       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
-
     moes_and_params = get_moes_and_params(result_set)
 
     # params = if done_run.nil?
@@ -559,45 +558,46 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
-    first_line_result = @experiment.simulation_runs.first.result
-    first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+
     array_for_moes_types = []
     array_for_inputs_types = []
 
-    first_line_result.each{|x|
-      item = x[1]
-      if item.is_a? Integer
-        array_for_moes_types.push("integer")
-      elsif item.is_a? Float
-        array_for_moes_types.push("float")
-      elsif item.is_a? String
-        array_for_moes_types.push("string")
-      else
-        array_for_moes_types.push("undefined")
-      end
-    }
+    unless @experiment.simulation_runs.empty?
+      first_line_result = @experiment.simulation_runs.first.result
+      first_line_result.each{|x|
+        item = x[1]
+        if item.is_a? Integer
+          array_for_moes_types.push("integer")
+        elsif item.is_a? Float
+          array_for_moes_types.push("float")
+        elsif item.is_a? String
+          array_for_moes_types.push("string")
+        else
+          array_for_moes_types.push("undefined")
+        end
+      }
 
-    first_line_inputs.each{|x|
-      item = x
-      a = item.to_i
-      b = item.to_f
+      first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+      first_line_inputs.each{|x|
+        item = x
+        a = item.to_i
+        b = item.to_f
+        if x.eql?a.to_s
+          array_for_inputs_types.push("integer")
+        elsif x.eql?b.to_s
+          array_for_inputs_types.push("float")
+        elsif x.is_a? String
+          array_for_inputs_types.push("string")
+        else
+          array_for_inputs_types.push("undefined")
+        end
 
-      if x.eql?a.to_s
-        array_for_inputs_types.push("integer")
-      elsif x.eql?b.to_s
-        array_for_inputs_types.push("float")
-      elsif x.is_a? String
-        array_for_inputs_types.push("string")
-      else
-        array_for_inputs_types.push("undefined")
-      end
-
-    }
-
+      }
+    end
     moes_info[:moes_types] = array_for_moes_types
-    moes_info[:moes_names] = @experiment.result_names
+    moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
     moes_info[:inputs_types] = array_for_inputs_types
-    moes_info[:inputs_names] = @experiment.simulation_runs.first.arguments.split(",")
+    moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
 
     #TODO add new map for histogram to improve selector
     #array_for_moes_types.insert(0,'---')
@@ -612,11 +612,14 @@ class ExperimentsController < ApplicationController
                                                  {limit: 1, fields: %w(arguments)}).first
 
     moes_and_params = if done_run.nil?
-                        [[t('experiments.analysis.no_completed_runs'), "nil"]]
+                        (@experiment.parameters.flatten).map { |x|
+                          #@experiment.input_parameter_label_for(x) for label
+                          [x, x, "input_parameter"] } +
+                          [%w(----------- delimiter)] + [result_set]
                       else
                         done_run.arguments.split(',').map { |x|
                           [@experiment.input_parameter_label_for(x), x, "input_parameter"] } +
-                            [%w(----------- nil)] + result_set
+                          [%w(----------- delimiter)] + result_set
                       end
   end
 
