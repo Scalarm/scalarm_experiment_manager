@@ -3,6 +3,14 @@
 $("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
 $("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>");
 
+var number_of_points = 0
+
+<% @chart.chart_data.each_value do |values|
+    values.each do%>
+        number_of_points++
+    <%end
+end %>
+
 try {
     $(document).ready(function() {
         new Highcharts.Chart({
@@ -42,6 +50,12 @@ try {
             }
         },
         plotOptions: {
+            series: {
+                //enable to plot more than 1000 points (default),
+                // with 0 it check every point format,
+                // with specific value only the first point is tested and the rest are assumed to be at the same format
+                turboThreshold: number_of_points,
+            },
         },
         credits: { enabled: false },
         series: [
