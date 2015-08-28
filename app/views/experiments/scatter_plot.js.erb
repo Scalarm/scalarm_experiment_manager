@@ -1,7 +1,14 @@
 //TODO: translate
 
 $("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
-$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>");
+$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'scatter_plot_chart') %>");
+
+turboThresholdCounter=0
+<% @chart.chart_data.each do |x_value, y_values_simulation_ids|
+     y_values_simulation_ids.each do%>
+    turboThresholdCounter++
+<%end
+end %>
 
 try {
     $(document).ready(function() {
@@ -17,6 +24,13 @@ try {
                 categories: <%= raw @chart.categories_for_x %>,
             <% else %>
                 type: '<%= @chart.x_axis_type or 'linear' %>',
+                 <% if @chart.x_axis_notation === 'scientific'%>
+                     labels:{
+                        formatter: function(){
+                            return this.value.toExponential(2);
+                       }
+                   }
+                 <% end %>
             <% end %>
 
         },
@@ -26,6 +40,13 @@ try {
                 categories: <%= raw @chart.categories_for_y %>,
             <% else %>
                 type: '<%= @chart.y_axis_type or 'linear' %>',
+                <% if @chart.y_axis_notation === 'scientific'%>
+                    labels:{
+                        formatter: function(){
+                            return this.value.toExponential(2);
+                        }
+                    }
+                <% end %>
             <% end %>
 
         },
@@ -41,7 +62,12 @@ try {
                         + '</b><br /><b><%= t '.click_for_details' %></b>';
             }
         },
+        // above 1000 points that cointatins strings chart is not displayed without TurboThreshold
+        // TODO decide if it is necessary
         plotOptions: {
+            series: {
+                turboThreshold: turboThresholdCounter +1
+            }
         },
         credits: { enabled: false },
         series: [
@@ -86,7 +112,6 @@ try {
         }]
       });
     });
-
     // scroll to
     var targetOffset =  $('#wrapper_<%= @container_id %>').offset().top;
     $('html,body').animate({scrollTop: targetOffset}, 1000);

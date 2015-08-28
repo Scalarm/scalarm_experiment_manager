@@ -921,7 +921,10 @@ class ExperimentsController < ApplicationController
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, moe_type)
+      @chart = HistogramChart.new(@experiment, params[:moe_name],
+                                  resolution, moe_type,
+                                  x_axis_notation: params[:x_axis_notation].to_s,
+                                  y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -939,6 +942,8 @@ class ExperimentsController < ApplicationController
         y_axis: [:optional, :security_default],
         x_axis_type: [:optional, :security_default],
         y_axis_type: [:optional, :security_default],
+        x_axis_notation:  [:optional, :security_default],
+        y_axis_notation: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
     if params[:x_axis].blank? or params[:y_axis].blank?
@@ -952,7 +957,8 @@ class ExperimentsController < ApplicationController
           params[:type_of_y],
           x_axis_type: params[:x_axis_type].to_s,
           y_axis_type: params[:y_axis_type].to_s,
-
+          x_axis_notation: params[:x_axis_notation].to_s,
+          y_axis_notation: params[:y_axis_notation].to_s
       )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
@@ -965,7 +971,11 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s, params[:type_of_x].to_s, params[:type_of_y].to_s)
+      @chart = ScatterPlotChart.new(@experiment,
+                                    params[:x_axis].to_s,
+                                    params[:y_axis].to_s,
+                                    params[:type_of_x].to_s,
+                                    params[:type_of_y].to_s,)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data

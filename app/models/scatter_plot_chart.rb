@@ -1,18 +1,23 @@
 require 'json'
+require 'uri'
 class ScatterPlotChart
+
   attr_accessor :experiment, :x_axis, :y_axis,
                 :x_axis_label, :y_axis_label,
                 :x_axis_type, :y_axis_type,
                 :chart_data, :linear_regression_data,
                 :type_of_x, :type_of_y,
-                :categories_for_x, :categories_for_y
+                :categories_for_x, :categories_for_y,
+                :x_axis_notation, :y_axis_notation
+
+  include URI::Escape
 
   def initialize(experiment, x_axis, y_axis, type_of_x, type_of_y, additional=nil)
     @experiment = experiment
-    @x_axis = x_axis
-    @y_axis = y_axis
-    @type_of_x = type_of_x
-    @type_of_y = type_of_y
+    @x_axis = URI.escape(x_axis)
+    @y_axis = URI.escape(y_axis)
+    @type_of_x = URI.escape(type_of_x)
+    @type_of_y = URI.escape(type_of_y)
     @x_axis_label = experiment.input_parameter_label_for(x_axis) || x_axis
     @y_axis_label = experiment.input_parameter_label_for(y_axis) || y_axis
     @categories_for_x  = []
@@ -21,7 +26,10 @@ class ScatterPlotChart
 
     @x_axis_type = additional[:x_axis_type]
     @y_axis_type = additional[:y_axis_type]
-
+    unescaped_x_notation = additional[:x_axis_notation]
+    @x_axis_notation = URI.escape(unescaped_y_notation)
+    unescaped_y_notation = additional[:x_axis_notation]
+    @x_axis_notation = URI.escape(unescaped_y_notation)
   end
 
   def prepare_chart_data

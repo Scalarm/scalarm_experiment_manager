@@ -1,6 +1,8 @@
 %section.panel.radius.list.analysis-chart#basic_charts_form
   %h3.subheader= t('charts.histogram.section_header')
 
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']], 'default')
+
   .row
     .small-10.columns
       .small-3.columns
@@ -15,6 +17,16 @@
       .small-9.columns
         = text_field_tag 'resolution', 10, id: "number_of_bars"
 
+  .row
+    .small-10.columns
+      .small-3.columns
+        = label_tag :x_axis_notation, "Notation on axis X" + ':', class: 'inline',  id: 'x_notation_label'
+      .small-3.columns
+        = select_tag 'x_axis_notation', notation_options,  id: 'x_notation_tag'
+      .small-3.columns
+        = label_tag :y_axis_notation, "Notation on axis Y" + ':', class: 'inline'
+      .small-3.columns.end
+        = select_tag 'y_axis_notation', notation_options
   .row
     %ul.inline-list
       %li= submit_tag t('charts.load_button'), class: 'button radius', id: "load_chart_button"
@@ -37,6 +49,8 @@
         $('#busy_basic').show();
         var moe_name = $('#basic_charts_form select[name=\'moe_name\'] option:selected').val();
         var resolution = $('#basic_charts_form input[name=\'resolution\']').val();
+        var x_axis_notation = $('#basic_charts_form select[name=\'x_axis_notation\']').val();
+        var y_axis_notation = $('#basic_charts_form select[name=\'y_axis_notation\']').val();
         resolution = parseInt(resolution);
 
         var index_of_moe = window.moes_info.moes_names.indexOf(moe_name)
@@ -45,9 +59,14 @@
         if (type_of_moe == "string") {
           $('#basic_charts_form').find('#number_of_bars').hide();
           $('#basic_charts_form').find('#label_number_of_bars').hide();
+          $('#basic_charts_form').find('#x_notation_label').hide();
+          $('#basic_charts_form').find('#x_notation_tag').hide();
 
           $.post("#{histogram_experiment_path(@experiment.id)}",
-            { 'moe_name': moe_name, 'resolution': resolution, 'type' : type_of_moe },
+            { 'moe_name': moe_name, 'resolution': resolution,
+              'type' : type_of_moe,
+              'x_axis_notation': x_axis_notation,
+              'y_axis_notation': y_axis_notation },
             function(data) { $('#busy_basic').hide(); }
           );
         }
@@ -57,7 +76,10 @@
         }
         else {
           $.post("#{histogram_experiment_path(@experiment.id)}",
-            { 'moe_name': moe_name, 'resolution': resolution, 'type' : type_of_moe },
+            { 'moe_name': moe_name, 'resolution': resolution,
+             'type' : type_of_moe,
+              'x_axis_notation': x_axis_notation,
+              'y_axis_notation': y_axis_notation},
             function(data) { $('#busy_basic').hide(); }
           );
         }
@@ -83,10 +105,14 @@
         if (type_of_moe == "string") {
           $('#basic_charts_form').find('#number_of_bars').hide();
           $('#basic_charts_form').find('#label_number_of_bars').hide();
+          $('#basic_charts_form').find('#x_notation_label').hide();
+          $('#basic_charts_form').find('#x_notation_tag').hide();
 
         } else {
           $('#basic_charts_form').find('#number_of_bars').show();
           $('#basic_charts_form').find('#label_number_of_bars').show();
+          $('#basic_charts_form').find('#y_notation_label').show();
+          $('#basic_charts_form').find('#x_notation_tag').show();
         }
         $.post("#{histogram_experiment_path(@experiment.id)}",
             { 'type' : type_of_moe },
