@@ -230,6 +230,7 @@ class PrivateMachineFacade < InfrastructureFacade
       sm_record.cmd_to_execute = "tail -80 #{sm_record.absolute_log_path}"
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
+      nil
 
     else
       shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.absolute_log_path}"
