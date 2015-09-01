@@ -48,10 +48,6 @@ class CloudVmRecord < Scalarm::Database::Model::CloudVmRecord
     self.save
   end
 
-  def log_path
-    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
-  end
-
   def monitoring_group
     self.image_secrets_id
   end
