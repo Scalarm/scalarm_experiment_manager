@@ -11,23 +11,24 @@ class WorkersScalingAlgorithmRunner
     @experiment = experiment
     @algorithm = algorithm
     @interval = interval
-    @next_execution_time = Time.now + interval
   end
 
   ##
   # Initializes WorkersScalingAlgorithm, then starts its decision loop
   # Stops when there is no next execution time set
   def start
-    @algorithm.initial_deployment
+    Thread.new do
+      @algorithm.initial_deployment
+      @next_execution_time = Time.now + interval
 
-    loop do
-      return if @next_execution_time.nil?
+      until @next_execution_time.nil?
 
-      while @next_execution_time > Time.now do
-        sleep @next_execution_time - Time.now
+        while @next_execution_time > Time.now do
+          sleep @next_execution_time - Time.now
+        end
+
+        execute_and_schedule
       end
-
-      execute_and_schedule
     end
   end
 
