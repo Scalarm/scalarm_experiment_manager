@@ -638,7 +638,7 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'value'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      evaluate_given_input_parameter_value(parameter['label'], parameter['value'])
+      validate_parameter_value(parameter['label'], parameter['value'])
 
       parameter_values << parameter['value']
 
@@ -646,7 +646,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       ['type', 'step', 'min', 'max'].each do |input_type|
         value_of_input = parameter[input_type]
-        evaluate_given_input_parameter_value(parameter['label'], value_of_input)
+        validate_parameter_value(parameter['label'], value_of_input)
       end
 
       step = if parameter['type'] == 'float'
@@ -666,7 +666,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       ['mean', 'variance'].each do |input_type|
         value_of_input = parameter[input_type]
-        evaluate_given_input_parameter_value(parameter['label'], value_of_input)
+        validate_parameter_value(parameter['label'], value_of_input)
       end
 
       r_interpreter = Rails.configuration.r_interpreter
@@ -677,7 +677,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
       ['min', 'max'].each do |input_type|
         value_of_input = parameter[input_type]
-        evaluate_given_input_parameter_value(parameter['label'], value_of_input)
+        validate_parameter_value(parameter['label'], value_of_input)
       end
 
       r_interpreter = Rails.configuration.r_interpreter
@@ -715,12 +715,12 @@ class Experiment < Scalarm::Database::Model::Experiment
     parameter_values
   end
 
-  def evaluate_given_input_parameter_value(name_of_input_parameter, value_of_input)
+  def validate_parameter_value(name_of_input_parameter, value_of_input)
     if /\A((\w)|(-)|(\.))+\z/.match(value_of_input).nil?
       if value_of_input == ''
-        raise ValidationError.new("'#{name_of_input_parameter}'", "[#{value_of_input}]", "Empty value for parameter given" )
+        raise ValidationError.new(name_of_input_parameter, value_of_input, "Empty value for parameter given" )
       else
-        raise ValidationError.new("'#{name_of_input_parameter}'", "[#{value_of_input}]", "Wrong value for parameter given" )
+        raise ValidationError.new(name_of_input_parameter, value_of_input, "Wrong value for parameter given" )
       end
     end
   end
