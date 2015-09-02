@@ -187,6 +187,10 @@ module SimulationManagerRecord
     SSHAccessedInfrastructure::ScalarmFileName.sim_log(sm_uuid)
   end
 
+  def log_path
+    absolute_log_path
+  end
+
   def absolute_log_path
     SSHAccessedInfrastructure::RemoteAbsolutePath.sim_log(sm_uuid)
   end

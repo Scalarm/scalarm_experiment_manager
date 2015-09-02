@@ -26,10 +26,6 @@ class PrivateMachineRecord < Scalarm::Database::Model::PrivateMachineRecord
     "#{credentials.nil? ? '[credentials missing!]' : credentials.machine_desc} (#{pid.nil? ? 'init' : pid})"
   end
 
-  def log_path
-    SSHAccessedInfrastructure::RemoteAbsolutePath::sim_log(sm_uuid)
-  end
-
   def monitoring_group
     self.credentials_id
   end
