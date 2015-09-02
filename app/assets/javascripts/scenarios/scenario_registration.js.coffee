@@ -29,7 +29,7 @@ class window.ScenarioRegistration
     $('#add-param').click(@handleAddParam)
     $('#remove-param').click(@handleRemoveParam)
 
-    $('#editor-save').click(=> ignore_if_disabled($('#editor-save'), @saveParameterChanges))
+    $('#editor-save').click(=>ignore_if_disabled($('#editor-save'), @saveParameterChanges))
     $('#editor-discard').click(=> ignore_if_disabled($('#editor-discard'), @discardParameterChanges))
 
     $('#unsaved-ok').click(->
@@ -38,7 +38,12 @@ class window.ScenarioRegistration
         scrollTop: $("#input-designer").offset().top
       }, 2000);
     )
-
+    $('#invalid-modal-ok').click(->
+      $('#invalid-modal').foundation('reveal', 'close')
+      $('html, body').animate({
+        scrollTop: $("#input-designer").offset().top
+      }, 2000);
+    )
     $('#scenario_form').submit(@formSubmit)
 
     @editorSaveOnEnter($("#param_id"))
@@ -77,9 +82,18 @@ class window.ScenarioRegistration
     $('#editor-save').addClass('disabled')
     $('#editor-discard').addClass('disabled')
 
+
   saveParameterChanges: =>
-    @saveEditorToParam()
-    @setSaved()
+
+    if $("#param-config").find(':input[data-invalid]:visible').length==0
+      @saveEditorToParam()
+      @setSaved()
+    else
+      $("#param-config").find('[data-invalid]').blur()
+      $('#invalid-modal').foundation('reveal', 'open')
+
+
+
 
   discardParameterChanges: =>
     @activateParam(@selectedNodeId)
@@ -103,6 +117,7 @@ class window.ScenarioRegistration
       parameter.allowed_values = allowed
       delete parameter.min
       delete parameter.max
+
 
     else if (param_type == 'integer' || param_type == 'float')
       param_min = $('#param-config #param_min').val()
@@ -131,10 +146,12 @@ class window.ScenarioRegistration
 
   handleAddParam: =>
     @simpleAddParam()
+    @simpleValidation()
     @activateNodeById(@selectedNodeId) if @selectedNodeId
 
   handleRemoveParam: =>
     @setSaved()
+    @removingValidation()
     @simpleRemoveParam()
 
   createEmptyGroup: =>
@@ -147,6 +164,16 @@ class window.ScenarioRegistration
     @input_model = [] unless @input_model
     @input_model.push(@createEmptyGroup()) unless @input_model[0]
     @input_model[0].entities.push(@createEmptyEntity()) unless @input_model[0].entities[0]
+
+  simpleValidation: =>
+    $('#param-config #param_min').attr('required','required')
+    $('#param-config #param_max').attr('required','required')
+    $('#param-config #param_id').attr('required','required')
+
+  removingValidation: =>
+    $('#param-config #param_id').removeAttr('required')
+    $('#param-config #param_min').removeAttr('required')
+    $('#param-config #param_max').removeAttr('required')
 
   simpleAddParam: =>
     @global_param_n = 0 unless @global_param_n
@@ -182,12 +209,22 @@ class window.ScenarioRegistration
     if type == 'string'
       $('#param-allowed').show()
       $('#param-range').hide()
+      $('#param-config #param_min').removeAttr('required')
+      $('#param-config #param_max').removeAttr('required')
+      $('#param-config #param_allowed_area').attr('required','required')
     else if (type == 'integer' || type == 'float')
+
       $('#param-allowed').hide()
       $('#param-range').show()
+      $('#param-config #param_min').attr('required','required')
+      $('#param-config #param_max').attr('required','required')
+      $('#param-config #param_allowed_area').removeAttr('required')
     else
       $('#param-allowed').hide()
       $('#param-range').hide()
+      $('#param-config #param_min').removeAttr('required')
+      $('#param-config #param_max').removeAttr('required')
+      $('#param-config #param_allowed_area').removeAttr('required')
 
   loadParamToEditor: (p) =>
     if p
@@ -280,10 +317,14 @@ class window.ScenarioRegistration
     $("#input-upload").hide()
     $("#input-upload #simulation_input_file").disable()
 
+
   inputDesignerOff: (event) =>
     @inputDesignerOnDiv.removeClass("clicked")
     @inputDesignerOffDiv.addClass("clicked")
-
+    $('#param-config #param_id').removeAttr('required')
+    $('#param-config #param_min').removeAttr('required')
+    $('#param-config #param_max').removeAttr('required')
+    $('#param-config #param_allowed_area').removeAttr('required')
     $("#input-designer").hide()
     $("#input-designer #param-config").disable()
     $("#input-upload").show()

@@ -1,6 +1,8 @@
 # Add your own tasks in files placed in lib/tasks ending in .rake,
 # for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
 
+require 'ci/reporter/rake/minitest'
+
 require File.expand_path('../config/application', __FILE__)
 require File.expand_path('../app/models/load_balancer_registration.rb', __FILE__)
 
@@ -11,6 +13,9 @@ LOCAL_MONGOS_PATH = 'bin/mongos'
 # there is also amd64 by default build, but it is not required
 REQUIRED_ARCHS = ['linux_386']
 
+namespace :ci do
+  task :all => ['ci:setup:minitest', 'test']
+end
 
 namespace :service do
   desc 'Start the service'

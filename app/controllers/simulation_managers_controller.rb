@@ -86,12 +86,13 @@ class SimulationManagersController < ApplicationController
 
   def code
     if @infrastructure_facade.blank?
-      render inline: t('simulation_managers.infrastructure_not_found', infrastructure: params[:infrastructure]), status: 400
+      render plain: t('simulation_managers.infrastructure_not_found', infrastructure: ERB::Util.h(params[:infrastructure])),
+             status: 400
     else
       sm_record = @infrastructure_facade.get_sm_records(@user_id, nil).select{|sm| sm.id.to_s == params[:id]}.first
 
       if sm_record.blank? or sm_record.sm_uuid.blank?
-        render inline: t('simulation_managers.not_found', id: params[:id]), status: 400
+        render plain: t('simulation_managers.not_found', id: ERB::Util.h(params[:id])), status: 400
       else
         code_path = @infrastructure_facade.simulation_manager_code(sm_record)
         contents = File.open(code_path) do |file|
@@ -139,12 +140,12 @@ class SimulationManagersController < ApplicationController
       end
 
       if sm_record.save_if_exists
-        render inline: 'SM updated'
+        render plain: 'SM updated'
       else
-        render inline: 'SM not updated', status: 404
+        render plain: 'SM not updated', status: 404
       end
     else
-      render inline: 'SM not found', status: 404
+      render plain: 'SM not found', status: 404
     end
   end
 

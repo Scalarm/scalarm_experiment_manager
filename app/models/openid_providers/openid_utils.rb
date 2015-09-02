@@ -52,7 +52,8 @@ module OpenIDUtils
   end
 
   def self.get_user_with(query)
-    ScalarmUser.find_by_query(query)
+    query.delete_if {|k,v| v.nil? }
+    query.empty? ? nil : ScalarmUser.find_by_query(query)
   end
 
   def self.create_user_with(login, password, query)

@@ -1,7 +1,8 @@
 require 'zip'
 require 'infrastructure_facades/infrastructure_facade'
 require 'csv'
-
+require 'json'
+require 'erb'
 
 class ExperimentsController < ApplicationController
   include SSHAccessedInfrastructure
@@ -192,20 +193,13 @@ class ExperimentsController < ApplicationController
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
     begin
-      parse = lambda do |id, parse_method|
-        if params[id].blank?
-          params.delete id
-        else
-          params[id] = parse_method.call(params[id])
-        end
-      end
+      Utils::parse_param(params, :replication_level, lambda {|x| x.to_i})
+      Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
+      Utils::parse_param(params, :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)})
 
-      parse.call :replication_level, lambda {|x| x.to_i}
-      parse.call :execution_time_constraint, lambda {|x| x.to_i * 60}
-      parse.call :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)}
+      parsed_params = params.slice(:replication_level, :execution_time_constraint, :scheduling_policy, :experiment_name,
+                                   :experiment_description, :parameters_constraints).symbolize_keys
 
-      parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
-                                   :experiment_description, :parameter_constraints)
       experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
 
       if request.fullpath.include?("start_import_based_experiment")
@@ -324,6 +318,11 @@ class ExperimentsController < ApplicationController
       'reason': 'Unable to connect with Experiment Supervisor'
     }
 =end
+
+  def parse_json_if_string2(value)
+    value.kind_of?(String) and JSON.parse(value) or value
+  end
+
   def create_supervised_experiment
     validate(
         simulation_id: :security_default,
@@ -333,13 +332,24 @@ class ExperimentsController < ApplicationController
     # TODO: other experiment parameters
     # TODO: handle errors
 
-    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation)
+    Utils::parse_param(params, :replication_level, lambda {|x| x.to_i})
+    Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
+
+    parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
+                                  :experiment_description)
+    experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation, parsed_params)
+
     experiment.save
     response = {'status' => 'ok'}
+
+
+
+    supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
+
     if params.has_key?(:supervisor_script_id)
       response = experiment.start_supervisor_script(params[:simulation_id],
                                                     params[:supervisor_script_id],
-                                                    Utils::parse_json_if_string(params[:supervisor_script_params]),
+                                                    Utils::parse_json_if_string(supervisor_script_params_tmp),
                                                     current_user
       )
       Rails.logger.debug("Start supervisor script request to supervisor, response: #{response}")
@@ -460,9 +470,15 @@ class ExperimentsController < ApplicationController
     #  @experiment.save
     #end
 
+
+    if @experiment.experiment_size!=0
+      percentage = (sims_done.to_f / @experiment.experiment_size) * 100
+    else
+      percentage=0
+    end
     stats = {
         all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
-        done_percentage: "'%.2f'" % ((sims_done.to_f / @experiment.experiment_size) * 100),
+        done_percentage: "'%.2f'" % (percentage),
         generated: [sims_generated, @experiment.experiment_size].min,
         progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
     }
@@ -493,28 +509,36 @@ class ExperimentsController < ApplicationController
 
     render json: stats
   end
+  ##
+  # new function return array of json with paramaeter id label and type
+  def moes_json
+    result_set = @experiment.result_names
+    result_set = if result_set.blank?
+      [t('experiments.analysis.no_results'),'',"moes_parameter"]
+    else
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+    end
+    moes_and_params = get_moes_and_params(result_set)
+    array = []
+    moes_and_params.map do |label, id, type|
+      parameter_infos= {:label => ERB::Util.h(label), :id => ERB::Util.h(id), :type => ERB::Util.h(type)}
+      array.push(parameter_infos)
+    end
+    render json: array
+  end
 
+  ##
+  # deprecated someday
   def moes
     moes_info = {}
 
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-      [t('experiments.analysis.no_results')]
+      [t('experiments.analysis.no_results'),'',"moes_parameter"]
     else
       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
-
-    done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
-    done_run = @experiment.simulation_runs.where(done_run_query_condition,
-                 {limit: 1, fields: %w(arguments)}).first
-
-    moes_and_params = if done_run.nil?
-                        [ [t('experiments.analysis.no_completed_runs'), "nil"] ]
-                      else
-                        done_run.arguments.split(',').map{|x|
-                          [ @experiment.input_parameter_label_for(x), x, "input_parameter"]} +
-                          [%w(----------- nil)] + result_set
-                      end
+    moes_and_params = get_moes_and_params(result_set)
 
     # params = if done_run.nil?
     #           [ [t('experiments.analysis.no_completed_runs'), nil] ]
@@ -523,6 +547,8 @@ class ExperimentsController < ApplicationController
     #             [@experiment.input_parameter_label_for(x), x]}
     #         end
 
+
+    #TODO Unsafety behaviour, inject code???
     moes_info[:moes] = result_set.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
@@ -532,7 +558,85 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
+    moes_info[:moes_types] = extract_types_for_moes
+    moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
+    moes_info[:inputs_types] = extract_types_for_parameters
+    moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
+
+    #TODO add new map for histogram to improve selector
+    #array_for_moes_types.insert(0,'---')
+
     render json: moes_info
+
+  end
+
+  #TODO Move this method to gem utils
+  #Extract types for moes from string
+  def extract_types_for_parameters
+    array_for_inputs_types = []
+
+    unless @experiment.simulation_runs.empty?
+      first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+      first_line_inputs.each{|x|
+        item = x
+        a = item.to_i
+        b = item.to_f
+        if x.eql?a.to_s
+          array_for_inputs_types.push("integer")
+        elsif x.eql?b.to_s
+          array_for_inputs_types.push("float")
+        elsif x.is_a? String
+          array_for_inputs_types.push("string")
+        else
+          array_for_inputs_types.push("undefined")
+        end
+
+      }
+    end
+
+    array_for_inputs_types
+  end
+
+  #TODO Move this method to gem util
+  def extract_types_for_moes
+    array_for_moes_types = []
+
+    unless @experiment.simulation_runs.empty?
+      first_line_result = @experiment.simulation_runs.first.result
+      first_line_result.each{|x|
+        item = x[1]
+        if item.is_a? Integer
+          array_for_moes_types.push("integer")
+        elsif item.is_a? Float
+          array_for_moes_types.push("float")
+        elsif item.is_a? String
+          array_for_moes_types.push("string")
+        else
+          array_for_moes_types.push("undefined")
+        end
+      }
+    end
+
+    array_for_moes_types
+  end
+
+
+
+  def get_moes_and_params(result_set)
+    done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
+    done_run = @experiment.simulation_runs.where(done_run_query_condition,
+                                                 {limit: 1, fields: %w(arguments)}).first
+
+    moes_and_params = if done_run.nil?
+                        (@experiment.parameters.flatten).map { |x|
+                          #@experiment.input_parameter_label_for(x) for label
+                          [x, x, "input_parameter"] } +
+                          [%w(----------- delimiter)] + [result_set]
+                      else
+                        done_run.arguments.split(',').map { |x|
+                          [@experiment.input_parameter_label_for(x), x, "input_parameter"] } +
+                          [%w(----------- delimiter)] + result_set
+                      end
   end
 
   def results_info
@@ -577,7 +681,7 @@ class ExperimentsController < ApplicationController
     validate(
         range_min: [param_type],
         range_max: [param_type],
-        range_step: [param_type, :positive]
+        range_step: [param_type] #, :positive] #this validation was moved to validate_input_extension function
     )
 
     convert_fun = (param_type == :integer ? :to_i : :to_f)
@@ -588,7 +692,12 @@ class ExperimentsController < ApplicationController
     validate_input_extension(@range_min, @range_max, @range_step)
 
     Rails.logger.debug("New range values: #{@range_min} --- #{@range_max} --- #{@range_step}")
-    new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    #One value extend, take range_min
+    if (@range_step == 0)
+      new_parameter_values = Array.wrap(@range_min)
+    else
+      new_parameter_values = @range_min.step(@range_max, @range_step).to_a
+    end
     #@priority = params[:priority].to_i
     Rails.logger.debug("New parameter values: #{new_parameter_values}")
 
@@ -614,10 +723,20 @@ class ExperimentsController < ApplicationController
                 new('range_min', range_min, "Range minimum is greater than maximum")
     end
 
+  #to add one point (example => min: 2, max: 3, step: 5 gives [2] as single point) need to remove this, it works the same in creation of experiment
+=begin
     unless range_step <= (range_max-range_min)
       raise ValidationError.
                 new('range_max', range_min, "Range step is too large")
     end
+=end
+
+    #when range_step == 0 create one point (range_min)
+    unless range_step >= 0
+      raise ValidationError.
+                new('range_step', range_step, "Range step cannot be negative")
+    end
+
   end
 
   def running_simulations_table
@@ -798,10 +917,14 @@ class ExperimentsController < ApplicationController
     )
 
     resolution = params[:resolution].to_i
+    moe_type= params[:type]
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution)
+      @chart = HistogramChart.new(@experiment, params[:moe_name],
+                                  resolution, moe_type,
+                                  x_axis_notation: params[:x_axis_notation].to_s,
+                                  y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -819,9 +942,10 @@ class ExperimentsController < ApplicationController
         y_axis: [:optional, :security_default],
         x_axis_type: [:optional, :security_default],
         y_axis_type: [:optional, :security_default],
+        x_axis_notation:  [:optional, :security_default],
+        y_axis_notation: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
-
     if params[:x_axis].blank? or params[:y_axis].blank?
       render inline: ""
     else
@@ -829,8 +953,12 @@ class ExperimentsController < ApplicationController
           @experiment,
           params[:x_axis].to_s,
           params[:y_axis].to_s,
+          params[:type_of_x],
+          params[:type_of_y],
           x_axis_type: params[:x_axis_type].to_s,
-          y_axis_type: params[:y_axis_type].to_s
+          y_axis_type: params[:y_axis_type].to_s,
+          x_axis_notation: params[:x_axis_notation].to_s,
+          y_axis_notation: params[:y_axis_notation].to_s
       )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
@@ -843,7 +971,11 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s)
+      @chart = ScatterPlotChart.new(@experiment,
+                                    params[:x_axis].to_s,
+                                    params[:y_axis].to_s,
+                                    params[:type_of_x].to_s,
+                                    params[:type_of_y].to_s,)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data

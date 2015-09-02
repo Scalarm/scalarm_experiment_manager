@@ -5,7 +5,7 @@
   %h3.subheader= t('.experiments_label')
 
   .content
-    = form_tag(simulations_path, id: 'scenario_form', multipart: true, class: 'custom') do
+    = form_tag(simulations_path, id: 'scenario_form', multipart: true, class: 'custom', "data-abide" => '')  do
       .row
         %fieldset
           %legend= t("simulations.registration.basic_information")
@@ -13,7 +13,8 @@
             .small-3.columns
               %label.right.inline{for: 'simulation_name'}= t("simulations.registration.simulation_name")
             .small-9.columns
-              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;'
+              = text_field_tag 'simulation_name', '', style: 'max-width: 100%;' , required: 'true'
+              %small(class="error") Simulation name is required
           .row
             .small-3.columns
               %label.right.inline{for: 'simulation_description'}= t("simulations.registration.simulation_description")
@@ -34,8 +35,8 @@
                     .small-5.columns
                       %label.right.inline{for: 'simulation_binaries'}= t("simulations.registration.simulation_binaries_desc") + ':'
                     .small-7.columns
-                      = file_field_tag 'simulation_binaries'
-
+                      = file_field_tag 'simulation_binaries', required: 'true'
+                      %small(class="error") Simulation binaries file is required
             .row
               = render partial: 'form_row', object: 'input_writer',
                 locals: { input_element: select_tag('input_writer_id', options_for_select(@input_writers.unshift(["None", nil])), class: 'medium') }
@@ -51,6 +52,10 @@
             .small-2.small-centered.columns
               = submit_tag t('.upload'), class: 'button expand radius last-element'
 
+      #invalid-form.reveal-modal(data-reveal="true")
+        %h2.subheader.text-center Form has some invalid fields
+        .small-12.columns.text-center
+          %a#invalid-ok.button.radius.medium= 'OK'
 
 %section.panel.radius.last-element
   %h3.subheader= t('.component_registration_title')
@@ -81,7 +86,22 @@
   :javascript
     $(function() {
       window.toggle_panels_on_title_click();
-      $('.last-element h3:first').click();
+
+      $("#scenario_form")
+        .on('valid.fndtn.abide', function(){
+
+          $('.last-element h3:first').click();
+        })
+        .on('invalid.fndtn.abide', function(){
+          $(this).find('[data-invalid]').blur();
+          $('#invalid-form').foundation('reveal', 'open');
+        });
+      $("#invalid-ok").bind("click", function() {
+        $('#invalid-form').foundation('reveal', 'close');
+        $('html, body').animate({
+          scrollTop: $("#scenario_form").offset().top
+        }, 2000);});
 
       window.scenario_registration = new window.ScenarioRegistration();
+
     });

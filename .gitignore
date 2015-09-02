@@ -18,3 +18,6 @@ log/
 # OSX specific
 .DS_Store
 config/DS_Store
+
+# Test outputs
+test/reports

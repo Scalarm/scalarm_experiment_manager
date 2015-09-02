@@ -4,10 +4,16 @@ require 'mocha'
 
 require 'openid_providers/plgrid_openid'
 
+require 'scalarm/service_core/parameter_validation'
+
 class PlGridOpenIDTest < MiniTest::Test
 
   def setup
     Rails.stubs(:logger).returns(stub_everything)
+  end
+
+  class DummyController
+    include PlGridOpenID
   end
 
   def test_get_or_create_user_both
@@ -78,6 +84,22 @@ class PlGridOpenIDTest < MiniTest::Test
 
   def test_strip_identity
     assert_equal 'plguser', PlGridOpenID.strip_identity('https://openid.plgrid.pl/plguser')
+  end
+
+  def test_validate_plgrid_identity_ok
+    DummyController.new.validate_plgrid_identity('openid.claimed.id', 'https://openid.plgrid.pl/plguser')
+  end
+
+  def test_validate_plgrid_identity_fail1
+    assert_raises Scalarm::ServiceCore::ParameterValidation::ValidationError do
+      DummyController.new.validate_plgrid_identity('openid.claimed.id', 'http://bad.site')
+    end
+  end
+
+  def test_validate_plgrid_identity_fail2
+    assert_raises Scalarm::ServiceCore::ParameterValidation::ValidationError do
+      DummyController.new.validate_plgrid_identity('openid.claimed.id', 'https://openid.plgrid.pl/plguser/1')
+    end
   end
 
 end

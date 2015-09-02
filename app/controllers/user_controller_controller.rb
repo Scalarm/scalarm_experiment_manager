@@ -9,7 +9,11 @@ require 'utils'
 
 require 'scalarm/database/core/mongo_active_record'
 
+require 'scalarm/service_core/utils'
+require 'scalarm/service_core/status_controller'
+
 class UserControllerController < ApplicationController
+  include Scalarm::ServiceCore::StatusController
   include UserControllerHelper
   include GoogleOpenID
   include PlGridOpenID
@@ -27,6 +31,10 @@ class UserControllerController < ApplicationController
                                   message: 'Welcome to Scalarm',
                                   user_id: current_user.id.to_s } }
     end
+  end
+
+  def status
+    super
   end
 
   def successful_login
@@ -90,7 +98,7 @@ class UserControllerController < ApplicationController
     keep_session_params(:server_name) do
       reset_session
     end
-    user_session.destroy unless user_session.blank?
+
     current_user.destroy_unused_credentials unless current_user.nil?
 
     flash[:notice] = t('logout_success')
@@ -127,33 +135,6 @@ class UserControllerController < ApplicationController
     redirect_to :action => 'account'
   end
 
-  def status
-    tests = Utils.parse_json_if_string(params[:tests])
-
-    status = 'ok'
-    message = ''
-
-    unless tests.nil?
-      failed_tests = tests.select { |t_name| not send("status_test_#{t_name}") }
-
-      unless failed_tests.empty?
-        status = 'failed'
-        message = "Failed tests: #{failed_tests.join(', ')}"
-      end
-    end
-
-    http_status = (status == 'ok' ? :ok : :internal_server_error)
-
-    respond_to do |format|
-      format.html do
-        render text: message, status: http_status
-      end
-      format.json do
-        render json: {status: status, message: message}, status: http_status
-      end
-    end
-  end
-
   private
 
   # --- OpenID support ---
@@ -163,10 +144,5 @@ class UserControllerController < ApplicationController
     @consumer ||= OpenID::Consumer.new(session, nil) # 'nil' for stateless mode
   end
 
-  # --- Status tests ---
-
-  def status_test_database
-    Scalarm::Database::MongoActiveRecord.available?
-  end
 
 end

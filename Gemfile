@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.1.1'
+gem 'rails', '~> 4.1.12'
 gem 'racc'
 
 # wrapper for R interpreter
@@ -9,7 +9,10 @@ gem 'rinruby'
 
 gem 'bson'
 gem 'bson_ext'
-gem 'mongo'
+gem 'mongo', '~> 1.12'
+gem 'mongo_session_store-rails4',
+    git: 'git://github.com/kliput/mongo_session_store.git',
+    branch: 'issue-31-mongo_store-deserialization'
 
 # Amazon EC2 connector
 gem 'aws-sdk'
@@ -74,6 +77,7 @@ gem 'xml-simple'
 gem 'vmstat'
 
 gem 'mocha', group: :test
+gem 'ci_reporter_minitest', group: :test
 
 gem 'remotipart', '~> 1.0'
 
@@ -81,11 +85,11 @@ gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
 # gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
-gem 'scalarm-database', '>= 0.3.2', git: 'git://github.com/Scalarm/scalarm-database.git'
+gem 'scalarm-database', '>= 0.3.3', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
-# gem 'scalarm-service_core', path: '/home/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 0.4.2', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+# gem 'scalarm-service_core', path: '/Users/jliput/Scalarm/scalarm-service_core'
+gem 'scalarm-service_core', '~> 0.7', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'

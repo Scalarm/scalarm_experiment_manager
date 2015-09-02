@@ -8,6 +8,7 @@ require 'scalarm/service_core/scalarm_user'
 ##
 # Scalarm::ServiceCore::User extended with experiment management methods.
 class ScalarmUser < Scalarm::ServiceCore::ScalarmUser
+  include PlGridUser
 
   def grid_credentials
     GridCredentials.find_by_user_id(id)

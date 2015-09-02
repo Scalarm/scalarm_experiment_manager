@@ -1,54 +1,65 @@
 i = basic_chart_tab.length;
 
 $("#basic_charts").prepend("<div id='basic_chart_" + i + "'></div>");
-$("#basic_chart_"+i).html("<%= escape_javascript(render :partial => 'basic_statistics_chart', :locals => { experiment: @experiment, moe_name: @chart.moe_name, resolution: @chart.resolution, stats: @chart.stats }) %>")
+$("#basic_chart_"+i).html("<%= escape_javascript(render :partial => 'histogram_chart', :locals => { experiment: @experiment, moe_name: @chart.moe_name, resolution: @chart.resolution, stats: @chart.stats, type: @chart.type, y_axis_notation: @chart.y_axis_notation }) %>")
+
 
 $(document).ready(function() {
-  basic_chart_tab[i] = new Highcharts.Chart({
-  	chart: {
-  		renderTo: 'basic_chart_container_<%= @experiment.id %>_<%= @chart.moe_name %>_<%= @chart.resolution %>',
-  		defaultSeriesType: 'column'
-  	},
-  	title: { text: '<%= @chart.moe_name %>' },
-  	xAxis: {
-  		title: { text: 'Value of MoE' },
-  		categories: [
-  		<% @chart.bucket_names.each do |bucket_name| %>
-  		  '<%= bucket_name %>',
-  		<% end %>
-  		],
-        <% if @chart.resolution >= @visible_threshold_resolution %>
-        labels: {
-            enabled: false
-        }
-        <% end %>
-  	},
-  	yAxis: {
-  		title: {
-  			text: 'Num. of simulations'
-  		}
-  	},
-  	tooltip: {
-  		formatter: function() {
-  			return 'Num. of simulations: ' + this.y + '<br>'+
-                    'Range: ' + this.x;
-  		}
-  	},
-  	plotOptions: {
-  		bar: {
-  			dataLabels: { enabled: true }
-  		}
-  	},
-  	credits: { enabled: false },
-  	series: [{
-  	  name: "<%= @chart.moe_name %>",
-      data: [
-      <% @chart.buckets.each do |value| %>
-  		  <%= value %>,
-  		<% end %>
-      ]
-    }]
-  });
+    basic_chart_tab[i] = new Highcharts.Chart({
+        chart: {
+            renderTo: 'basic_chart_container_<%= @experiment.id %>_<%= @chart.moe_name %>_<%= @chart.resolution %>',
+            defaultSeriesType: 'column'
+        },
+        title: { text: '<%= @chart.moe_name %>' },
+        xAxis: {
+            categories: [
+                <% @chart.bucket_names.each do |bucket_name| %>
+                '<%= bucket_name %>',
+                <% end %>
+            ],
+            title: { text: 'Value of MoE' },
+            <% if @chart.resolution >= @visible_threshold_resolution %>
+            labels: {
+                enabled: false
+            }
+            <% end %>
+            
+        },
+        yAxis: {
+            title: {
+                text: 'Num. of simulations'
+            },
+            <% if @chart.y_axis_notation === 'scientific'%>
+            labels:{
+                formatter: function(){
+                    return this.value.toExponential(2);
+                }
+            }
+            <% end %>
+        },
+        tooltip: {
+            formatter: function() {
+                return 'Num. of simulations: ' + this.y + '<br>'+
+                        'Range: ' + this.x;
+            }
+        },
+        plotOptions: {
+            bar: {
+                dataLabels: { enabled: true }
+            }
+        },
+
+
+        credits: { enabled: false },
+        series: [{
+            name: "<%= @chart.moe_name %>",
+            data: [
+                <% @chart.buckets.each do |value| %>
+                <%= value %>,
+                <% end %>
+            ]
+        }]
+    });
 });
 
 $chartElement = $('#basic_chart_' + i);

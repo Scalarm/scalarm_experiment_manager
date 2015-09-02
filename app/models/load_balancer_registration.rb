@@ -60,7 +60,8 @@ class LoadBalancerRegistration
     address = address || self.get_load_balancer_address
     if address != 'error'
       puts "Using Load Balancer at #{address} to #{query_type}"
-      port = (Rails.application.secrets.load_balancer["port"] or '3000')
+      host = Rails.application.secrets.load_balancer["host"] || 'localhost'
+      port = Rails.application.secrets.load_balancer["port"] || '3000'
       scheme = 'https'
       if Rails.application.secrets.load_balancer["development"]
         scheme = 'http'
@@ -71,7 +72,7 @@ class LoadBalancerRegistration
         uri = URI(URI.encode(load_balancer_address))
 
         req = Net::HTTP::Post.new(uri)
-        req.set_form_data(address: "localhost:#{port}", name: 'ExperimentManager')
+        req.set_form_data(address: "#{host}:#{port}", name: 'ExperimentManager')
 
         if scheme == 'https'
           ssl_options = {use_ssl: true, ssl_version: :SSLv3, verify_mode: OpenSSL::SSL::VERIFY_NONE}

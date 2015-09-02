@@ -1,8 +1,16 @@
 en:
   experiments:
     optimization_method:
-      title: Optimization method
-      choose: Set optimization method
+      title: Experiment type
+      manual: Manual
+      automatic: Automatic
+    manual_experiment:
+      title:  Input space
+      manual_designed: Manual designed
+      csv_imported: CSV imported
+    automatic_experiment:
+      title: Automatic experiment algorithm
+
 
     click_to_expand: "(click to expand)"
 
@@ -58,6 +66,7 @@ en:
          other: "Selected DoE method requires more than %{count} parameters."
       invalid_resolution: Number of bars should be an integer between 1 and 100
       incorrect_parameter: Incorrect parameter chosen!
+      incorrect_add_parameter_scater: Can't add series with parameter of string type!
 
     edit:
       link: "Edit"

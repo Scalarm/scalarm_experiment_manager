@@ -187,8 +187,12 @@ module SimulationManagerRecord
     SSHAccessedInfrastructure::ScalarmFileName.sim_log(sm_uuid)
   end
 
+  def log_path
+    absolute_log_path
+  end
+
   def absolute_log_path
-    File.join(SSHAccessedInfrastructure::RemoteDir.scalarm_root, log_file_name)
+    SSHAccessedInfrastructure::RemoteAbsolutePath.sim_log(sm_uuid)
   end
 
 end

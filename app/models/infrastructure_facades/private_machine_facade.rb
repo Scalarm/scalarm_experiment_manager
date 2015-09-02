@@ -153,8 +153,10 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   # params - hash of additional query conditions, e.g. {host: 'localhost'}
+  # returns: array of PrivateMachineCredentials
   def get_credentials(user_id, params)
-    PrivateMachineCredentials.where({user_id: user_id}.merge(params))
+    query = {user_id: user_id}.merge(params)
+    PrivateMachineCredentials.where(query).to_a
   end
 
   def remove_credentials(record_id, user_id, type)
@@ -225,12 +227,13 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = "tail -80 #{sm_record.log_path}"
+      sm_record.cmd_to_execute = "tail -80 #{sm_record.absolute_log_path}"
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
+      nil
 
     else
-      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.log_path}"
+      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.absolute_log_path}"
     end
   end
 

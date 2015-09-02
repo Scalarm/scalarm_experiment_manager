@@ -66,7 +66,6 @@ class ExperimentsControllerTest < ActionController::TestCase
     get :index, {}
 
     assert_response :success
-    puts response
 
     body = JSON.parse(response.body)
     puts body

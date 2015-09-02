@@ -40,8 +40,8 @@ module PlGridOpenID
   # - temp_pass
   def openid_callback_plgrid
     validate(
-        'openid.claimed_id'.to_sym => :security_openid_id,
-        'openid.identity'.to_sym => :security_openid_id
+        'openid.claimed_id'.to_sym => :validate_plgrid_identity,
+        'openid.identity'.to_sym => :validate_plgrid_identity
     )
 
     # disabled for security reasons
@@ -58,6 +58,12 @@ module PlGridOpenID
       redirect_to login_path
     end
 
+  end
+
+  def validate_plgrid_identity(name, value)
+    unless /\Ahttps:\/\/openid\.plgrid\.pl\/\w+\Z/.match(value)
+      raise Scalarm::ServiceCore::ParameterValidation::ValidationError.new(name, value, 'Tried to use non-plgrid identity')
+    end
   end
 
   def self.plgoid_dn_to_browser_dn(dn)

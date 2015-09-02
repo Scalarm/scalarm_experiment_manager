@@ -17,13 +17,13 @@
   %a.close-reveal-modal &#215;
 
   .histogram-analysis-content.content(style="display:none;")
-    = render :partial => 'basic_statistics_charts', :object => @experiment
+    = render :partial => 'histogram_options', :object => @experiment
 
   .rtree-analysis-content.content(style="display:none;")
-    = render :partial => 'regression_tree_charts', :object => @experiment
+    = render :partial => 'regression_tree_options', :object => @experiment
 
   .bivariate-analysis-content.content(style="display:none;")
-    = render :partial => 'bivariate_analysis', :object => @experiment
+    = render :partial => 'scatter_plot_options', :object => @experiment
   
   /.interaction-analysis-content.content(style="display:none;")
   /  = render :partial => 'interaction_analysis', :object => @experiment

@@ -12,7 +12,7 @@
     %a(href="#submission-panel")= t 'infrastructure.information.submission_label'
     .content.active#submission-panel
       #scheduler-form
-        = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom' do
+        = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom', "data-abide" => '' do
           = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
           .row
             .large-4.columns
@@ -32,7 +32,8 @@
             .large-4.columns
               = label_tag :job_counter,  t('infrastructure.information.instance_counter') + ':', class: 'inline right'
             .large-4.columns
-              = number_field_tag :job_counter, 1, in: 1..100, step: 1, required: true, class: 'text-right'
+              = number_field_tag :job_counter, 1, in: 1..100, step: 1, required: true, pattern: "^\\d+$", class: 'text-right'
+              %small(class="error") Invalid job counter value
             .large-1.columns
 
           #infrastructure_fields
@@ -41,19 +42,25 @@
             .large-4.columns
               = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
             .large-4.columns
-              = number_field_tag :time_limit, 60, min: 1, step: 1, required: true, class: 'text-right'
+              = number_field_tag :time_limit, 60, min: 1, step: 1, required: true, pattern: "^\\d+$", class: 'text-right'
+              %small(class="error") Invalid time limit value
             .large-1.columns
 
           .row
             .large-4.columns
               = label_tag :start_at, t('infrastructure.information.start_at') + ':', class: 'inline right'
             .large-4.columns
-              = text_field_tag :start_at
+              = text_field_tag :start_at, ''
             .large-1.columns
 
           .row#submit-button
             .large-12.columns.text-center
-              = submit_tag t('infrastructure.information.submit'), class: 'button radius'
+              = submit_tag t('infrastructure.information.submit'), class: 'button radius' , id: "submit-button"
+
+          #invalid-form.reveal-modal(data-reveal="true")
+            %h2.subheader.text-center Form has some invalid fields
+            .small-12.columns.text-center
+              %a#invalid-ok.button.radius.medium= 'OK'
 
   %dd
     %a(href="#simulation-managers-panel")= t('infrastructure.information.scheduled_label')
@@ -63,8 +70,24 @@
 
 
 
+
 :javascript
   $(function() {
+   $("#submission-panel")
+        .on('valid.fndtn.abide', function(){
+
+          $('submit-button').click();
+        })
+        .on('invalid.fndtn.abide', function(){
+          $(this).find('[data-invalid]').blur();
+          $('#invalid-form').foundation('reveal', 'open');
+        });
+      $("#invalid-ok").bind("click", function() {
+        $('#invalid-form').foundation('reveal', 'close');
+        $('#dialog.reveal-modal').foundation('reveal', 'open');
+        $('html, body').animate({
+          scrollTop: $("#submission-panel").offset().top
+        }, 1500);});
     $(document).foundation();
     new window.InfrastructuresBooster("#{infrastructure_name}", #{disabled_infrastructures}, "dialog");
   });

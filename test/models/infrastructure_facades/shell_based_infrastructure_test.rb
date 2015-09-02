@@ -68,7 +68,7 @@ ruby/2.1.1' load complete. 9871
   def test_start_simulation_manager_cmd_pass
     record = mock 'record' do
       stubs(:sm_uuid).returns('sm_uuid')
-      stubs(:log_file_name).returns('some.log')
+      stubs(:absolute_log_path).returns('some.log')
     end
 
     configuration = mock 'configuration' do

@@ -20,16 +20,19 @@ class window.ParameterConstraintsManager
       $("#constraints-list .button").on "click", () -> $(this).closest(".row").remove()
 
     $("#check-experiment-size").on "click", () =>
-      constraints = []
+      @getParametersConstraints()
 
-      $.each $("#constraints-list .row"), (index, rowElement) =>
-        constraints.push(
-          source_parameter: $(rowElement).find("[source-parameter-uid]").attr("source-parameter-uid")
-          target_parameter: $(rowElement).find("[target-parameter-uid]").attr("target-parameter-uid")
-          condition: $(rowElement).find("[condition]").attr("condition")
-        )
 
-      $("#parameters_constraints").val(JSON.stringify(constraints))
+  getParametersConstraints: () =>
+    constraints = []
+    $.each $("#constraints-list .row"), (index, rowElement) =>
+      constraints.push(
+        source_parameter: $(rowElement).find("[source-parameter-uid]").attr("source-parameter-uid")
+        target_parameter: $(rowElement).find("[target-parameter-uid]").attr("target-parameter-uid")
+        condition: $(rowElement).find("[condition]").attr("condition")
+      )
+    $("#parameters_constraints").val(JSON.stringify(constraints))
+
 
 
   parametrizationTypeChangeListener: (event) =>

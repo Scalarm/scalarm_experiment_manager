@@ -11,7 +11,7 @@ module ShellBasedInfrastructure
   def self.start_simulation_manager_cmd(record)
     sm_dir_name = ScalarmDirName::tmp_simulation_manager(record.sm_uuid)
 
-    log_path = record.log_file_name
+    log_path = record.absolute_log_path
 
     if Rails.configuration.simulation_manager_version == :go
       chain(

@@ -206,7 +206,7 @@ class CloudFacade < InfrastructureFacade
 
   def _simulation_manager_get_log(record)
     handle_proxy_error(record.secrets) do
-      shared_ssh_session(record).exec! "tail -80 #{record.log_path}"
+      shared_ssh_session(record).exec! "tail -80 #{record.absolute_log_path}"
     end
   end
 
