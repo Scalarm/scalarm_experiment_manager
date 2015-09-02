@@ -29,7 +29,7 @@ $(document).ready(function() {
             title: {
                 text: 'Num. of simulations'
             },
-            <% if @chart.y_axis_notation === 'scientific'%>
+            <% if @chart.y_axis_notation == 'scientific'%>
             labels:{
                 formatter: function(){
                     return this.value.toExponential(2);

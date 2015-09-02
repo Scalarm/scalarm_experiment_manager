@@ -27,9 +27,9 @@ class ScatterPlotChart
     @x_axis_type = additional[:x_axis_type]
     @y_axis_type = additional[:y_axis_type]
     unescaped_x_notation = additional[:x_axis_notation]
-    @x_axis_notation = URI.escape(unescaped_y_notation)
-    unescaped_y_notation = additional[:x_axis_notation]
-    @x_axis_notation = URI.escape(unescaped_y_notation)
+    if unescaped_x_notation !=nil then @x_axis_notation = URI.escape(unescaped_x_notation) else @x_axis_notation= additional[:x_axis_notation] end
+    unescaped_y_notation = additional[:y_axis_notation]
+    if unescaped_y_notation !=nil then @y_axis_notation = URI.escape(unescaped_y_notation) else @y_axis_notation= additional[:y_axis_notation] end
   end
 
   def prepare_chart_data

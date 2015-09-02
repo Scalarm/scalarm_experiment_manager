@@ -99,11 +99,9 @@ class HistogramChart
         #if ind == resolution - 1
         #  "[#{ '%.1f' % (min_value + slice_width * ind) }-#{ '%.1f' % (min_value + slice_width * (ind + 1)) }]"
         #else
-        if x_axis_notation==="scientific"
-          "[#{ "%.#{leading_nums}E" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}E" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
-        else
-          "[#{ "%.#{leading_nums}f" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}f" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
-        end
+        format_modifier = (x_axis_notation == 'scientific' ? 'E' : 'f')
+        "[#{ "%.#{leading_nums}#{format_modifier}" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}f" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
+
         #end
       }
     end
