@@ -136,7 +136,10 @@ cd $PBS_O_WORKDIR
       if log_path.blank?
         'echo no log_path specified'
       else
-        "tail -80 #{log_path}; rm -f #{log_path}"
+        # A patch to resolve SCAL-954
+        # try invoking tail of log file 10 times with 1 second sleep interval; always try to remove log file
+        # the command will return 0
+        "export NAMEF=#{log_path}; export ITER=0; export EC=1; while [ $ITER -lt 30 -a $EC -ne 0 ]; do tail -80 $NAMEF; EC=$?; ITER=`expr $ITER + 1`; [ $EC -ne 0 ] && sleep 1; done; rm -f #{log_path}"
       end
     end
 
