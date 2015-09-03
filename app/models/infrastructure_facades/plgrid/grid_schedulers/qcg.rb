@@ -168,7 +168,7 @@ module QcgScheduler
     end
 
     def cancel_sm_cmd(sm_record)
-      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_id}"
+      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_id} || true"
     end
 
     def get_log(ssh, job)
