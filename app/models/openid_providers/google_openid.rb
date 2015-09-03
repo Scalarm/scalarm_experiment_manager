@@ -186,4 +186,9 @@ module GoogleOpenID
     flash[:error] = t('openid.cancelled')
     redirect_to login_path
   end
+
+  def self.google_configured?
+    File.exists?(File.join(Rails.root, 'config', 'google_client_secrets.json'))
+  end
+
 end

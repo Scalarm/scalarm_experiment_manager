@@ -1,3 +1,6 @@
+require File.join(Rails.root, 'app/models/openid_providers/google_openid')
+require File.join(Rails.root, 'app/models/openid_providers/github_oauth')
+
 ScalarmExperimentManager::Application.routes.draw do
 
   resources :simulation_managers do
@@ -20,16 +23,23 @@ ScalarmExperimentManager::Application.routes.draw do
   get 'status' => 'user_controller#status'
 
   # OAuth
-  get 'login/login_oauth_google' => 'user_controller#login_oauth_google'
-  get 'login/oauth2_google_callback' => 'user_controller#oauth2_google_callback'
 
-  get 'login/login_oauth_github' => 'user_controller#login_oauth_github'
-  get 'login/oauth2_github_callback' => 'user_controller#oauth2_github_callback'
+  if GoogleOpenID.google_configured?
+    get 'login/login_oauth_google' => 'user_controller#login_oauth_google'
+    get 'login/oauth2_google_callback' => 'user_controller#oauth2_google_callback'
+  end
+
+  if GithubOauth.github_configured?
+    get 'login/login_oauth_github' => 'user_controller#login_oauth_github'
+    get 'login/oauth2_github_callback' => 'user_controller#oauth2_github_callback'
+  end
 
 
   # OpenID
-  get 'login/login_openid_google' => 'user_controller#login_openid_google'
-  get 'login/openid_callback_google' => 'user_controller#openid_callback_google'
+
+  ## Google OpenID - deprecated
+  # get 'login/login_openid_google' => 'user_controller#login_openid_google'
+  # get 'login/openid_callback_google' => 'user_controller#openid_callback_google'
 
   get 'login/login_openid_plgrid' => 'user_controller#login_openid_plgrid'
   post 'login/openid_callback_plgrid' => 'user_controller#openid_callback_plgrid'
