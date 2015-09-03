@@ -190,11 +190,11 @@ class PrivateMachineFacade < InfrastructureFacade
   def _simulation_manager_stop(record)
     if record.onsite_monitoring
       record.cmd_to_execute_code = "stop"
-      record.cmd_to_execute = "kill -9 #{record.pid}"
+      record.cmd_to_execute = "kill -9 #{record.pid} || true"
       record.cmd_delegated_at = Time.now
       record.save
     else
-      shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
+      shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid} || true"
     end
   end
 
