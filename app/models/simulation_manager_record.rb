@@ -170,6 +170,12 @@ module SimulationManagerRecord
     end
   end
 
+  ##
+  # Override standard attribute execution with command append with "#_#" separator
+  # This is because there is some code using cmd_to_execute= method multiple times in one action
+  # cmd_to_execute should not be replaced with new values in this case, but new command should be append
+  # What is more, cmd_to_execute is not normally replaced with new value in EM, but only by onsite monitoring
+  # See more in SCAL-956 issue comments
   def cmd_to_execute=(cmd)
     if cmd.blank?
       attributes[:cmd_to_execute] = ''
@@ -182,6 +188,12 @@ module SimulationManagerRecord
     end
   end
 
+  ##
+  # Override standard attribute execution with command append with "#_#" separator
+  # This is because there is some code using cmd_to_execute_code= method multiple times in one action
+  # cmd_to_execute should not be replaced with new values in this case, but new command should be append
+  # What is more, cmd_to_execute_code is not normally replaced with new value in EM, but only by onsite monitoring
+  # See more in SCAL-956 issue comments
   def cmd_to_execute_code=(code)
     if code.blank?
       attributes[:cmd_to_execute_code] = ''
