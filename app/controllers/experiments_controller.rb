@@ -518,15 +518,12 @@ class ExperimentsController < ApplicationController
      else
        result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
                  end
-    Rails.logger.debug(result_set)
     moes_and_params = get_moes_and_params(result_set)
-    Rails.logger.debug(moes_and_params)
     array = []
     moes_and_params.map do |label, id, type|
       parameter_infos= {:label => ERB::Util.h(label), :id => ERB::Util.h(id), :type => ERB::Util.h(type)}
       array.push(parameter_infos)
     end
-    Rails.logger.debug(array)
     render json: array
   end
 
