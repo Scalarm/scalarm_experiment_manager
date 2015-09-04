@@ -27,6 +27,7 @@ module SimulationManagerRecord
   include Scalarm::Database::MongoActiveRecordUtils
 
   POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
+  CMD_SEPARATOR = '#_#'
 
   attr_join :user, ScalarmUser
   attr_join :experiment, Experiment
@@ -166,6 +167,30 @@ module SimulationManagerRecord
     if not experiment.nil? and not self.sm_uuid.nil?
       experiment.simulation_runs.
           where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+    end
+  end
+
+  def cmd_to_execute=(cmd)
+    if cmd.blank?
+      attributes[:cmd_to_execute] = ''
+    else
+      if attributes[:cmd_to_execute].blank?
+        attributes[:cmd_to_execute] = cmd
+      else
+        attributes[:cmd_to_execute] << "#{CMD_SEPARATOR}#{cmd}"
+      end
+    end
+  end
+
+  def cmd_to_execute_code=(code)
+    if code.blank?
+      attributes[:cmd_to_execute_code] = ''
+    else
+      if attributes[:cmd_to_execute_code].blank?
+        attributes[:cmd_to_execute_code] = code
+      else
+        attributes[:cmd_to_execute_code] << "#{CMD_SEPARATOR}#{code}"
+      end
     end
   end
 
