@@ -578,8 +578,9 @@ class ExperimentsController < ApplicationController
   def extract_types_for_parameters
     array_for_inputs_types = []
 
-    unless @experiment.simulation_runs.empty?
-      first_line_inputs = @experiment.simulation_runs.first.values.split(",")
+    first_run = @experiment.simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    unless first_run.nil?
+      first_line_inputs = first_run.values.split(",")
       first_line_inputs.each{|x|
         item = x
         a = item.to_i
@@ -605,9 +606,10 @@ class ExperimentsController < ApplicationController
   def extract_types_for_moes
     array_for_moes_types = []
 
-    unless @experiment.simulation_runs.empty?
-      first_line_result = @experiment.simulation_runs.first.result
-      first_line_result.each{|x|
+    first_run = @experiment.simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    unless first_run.nil?
+      first_result = first_run.result
+      first_result.each{|x|
         item = x[1]
         if item.is_a? Integer
           array_for_moes_types.push("integer")
