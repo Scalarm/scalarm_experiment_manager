@@ -27,6 +27,7 @@ module SimulationManagerRecord
   include Scalarm::Database::MongoActiveRecordUtils
 
   POSSIBLE_STATES = [:created, :initializing, :running, :terminating, :error]
+  CMD_SEPARATOR = '#_#'
 
   attr_join :user, ScalarmUser
   attr_join :experiment, Experiment
@@ -166,6 +167,42 @@ module SimulationManagerRecord
     if not experiment.nil? and not self.sm_uuid.nil?
       experiment.simulation_runs.
           where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+    end
+  end
+
+  ##
+  # Override standard attribute execution with command append with "#_#" separator
+  # This is because there is some code using cmd_to_execute= method multiple times in one action
+  # cmd_to_execute should not be replaced with new values in this case, but new command should be append
+  # What is more, cmd_to_execute is not normally replaced with new value in EM, but only by onsite monitoring
+  # See more in SCAL-956 issue comments
+  def cmd_to_execute=(cmd)
+    if cmd.blank?
+      attributes[:cmd_to_execute] = ''
+    else
+      if attributes[:cmd_to_execute].blank?
+        attributes[:cmd_to_execute] = cmd
+      else
+        attributes[:cmd_to_execute] << "#{CMD_SEPARATOR}#{cmd}"
+      end
+    end
+  end
+
+  ##
+  # Override standard attribute execution with command append with "#_#" separator
+  # This is because there is some code using cmd_to_execute_code= method multiple times in one action
+  # cmd_to_execute should not be replaced with new values in this case, but new command should be append
+  # What is more, cmd_to_execute_code is not normally replaced with new value in EM, but only by onsite monitoring
+  # See more in SCAL-956 issue comments
+  def cmd_to_execute_code=(code)
+    if code.blank?
+      attributes[:cmd_to_execute_code] = ''
+    else
+      if attributes[:cmd_to_execute_code].blank?
+        attributes[:cmd_to_execute_code] = code
+      else
+        attributes[:cmd_to_execute_code] << "#{CMD_SEPARATOR}#{code}"
+      end
     end
   end
 
