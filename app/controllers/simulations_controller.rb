@@ -201,6 +201,12 @@ class SimulationsController < ApplicationController
             @experiment.progress_bar_update(@simulation_run.index, 'error')
           else
             @experiment.progress_bar_update(@simulation_run.index, 'done')
+            # Increment finished simulation counter in simulation manager record
+            facade = InfrastructureFacadeFactory.get_facade_for(@simulation_run.infrastructure)
+            simulation_manager_record = facade.get_sm_record_by_id(@simulation_run.sm_uuid)
+            simulation_manager_record.finished_simulations = 0 unless simulation_manager_record.finished_simulations
+            simulation_manager_record.finished_simulations += 1
+            simulation_manager_record.save
           end
         end
       end
