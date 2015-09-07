@@ -30,7 +30,7 @@ class ExperimentStatistics
   # Returns throughput for given worker id. Throughout for worker is calculated as:
   #   throughput[sim/s] = (finished_simulations + running_simulation)/(Time.now - start_time)
   def worker_throughput(worker_id)
-    calculate_worker_throughput @resources_interface.get_workers_records(query: {_id: worker_id})
+    calculate_worker_throughput @resources_interface.get_workers_records(cond: {_id: worker_id})
   end
 
   ##
