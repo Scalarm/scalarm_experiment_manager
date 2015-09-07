@@ -10,15 +10,6 @@ GIT
       mongo
 
 GIT
-  remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 6bb466d9f2001f62286afdd68a095d1252ed6cc5
-  specs:
-    scalarm-service_core (0.8)
-      actionpack (~> 4.1)
-      activesupport (~> 4.1)
-      rest-client (~> 1.8)
-
-GIT
   remote: git://github.com/kliput/mongo_session_store.git
   revision: 5416ecf60275909dda0bfb99b77bc7504ee1fc1b
   branch: issue-31-mongo_store-deserialization
@@ -33,6 +24,21 @@ GIT
     jquery-datatables-rails (3.0.0)
       jquery-rails
       sass-rails
+
+GIT
+  remote: https://gitlab.dev.cyfronet.pl/commons/grid-proxy.git
+  revision: 24cca132182129d636232d900259959ed56257e1
+  specs:
+    grid-proxy (0.0.1)
+
+PATH
+  remote: /Users/jliput/Scalarm/scalarm-service_core
+  specs:
+    scalarm-service_core (0.8)
+      actionpack (~> 4.1)
+      activesupport (~> 4.1)
+      grid-proxy
+      rest-client (~> 1.8)
 
 GEM
   remote: https://rubygems.org/
@@ -450,6 +456,7 @@ DEPENDENCIES
   foundation-icons-sass-rails
   foundation-rails
   google-api-client
+  grid-proxy!
   haml
   jbuilder (~> 1.2)
   jit-rails
