@@ -88,8 +88,11 @@ gem 'newrelic_rpm'
 gem 'scalarm-database', '>= 0.3.3', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
-# gem 'scalarm-service_core', path: '/Users/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 0.8', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
+# gem 'scalarm-service_core', '~> 0.8', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+
+# workaround for missing grid-proxy dependency from Scalarm::ServiceCore
+gem 'grid-proxy', git: 'https://gitlab.dev.cyfronet.pl/commons/grid-proxy.git'
 
 #oauth2
 gem 'signet'
