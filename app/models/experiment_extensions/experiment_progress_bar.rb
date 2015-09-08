@@ -12,6 +12,9 @@ module ExperimentProgressBar
       Scalarm::Database::MongoActiveRecord.get_collection(table_name)
   end
 
+  ##
+  #
+  #
   def parts_per_progress_bar_slot
     return 1 if self.experiment_size <= 0
 
@@ -90,7 +93,6 @@ module ExperimentProgressBar
 
   def update_all_bars
     parts_per_slot = parts_per_progress_bar_slot
-
     Rails.logger.debug("UPDATE ALL BARS --- #{parts_per_slot}")
     instance_id = 1
     while instance_id <= self.experiment_size
@@ -152,6 +154,9 @@ module ExperimentProgressBar
     compute_bar_color(progress_bar_table.find_one({bar_num: bar_index}))
   end
 
+
+  ##
+  # creating progress bar in database
   def create_progress_bar_table
     bar_created, counter = false, 0
     while (not bar_created) and counter < 5
@@ -174,10 +179,13 @@ module ExperimentProgressBar
     nil
   end
 
+
+  ##
+  #insert progress bar data for the first time when created
+  #
   def insert_initial_bar
     progress_bar_data = []
     parts_per_slot, number_of_bars = basic_progress_bar_info(self.experiment_size)
-
     0.upto(number_of_bars - 1) do |bar_num|
       bar_doc = {'bar_num' => bar_num, 'bar_parts' => parts_per_slot, 'bar_state' => 0}
       if (bar_num == number_of_bars - 1) and (parts_per_slot > 1) and (self.experiment_size != number_of_bars * parts_per_slot)
@@ -190,7 +198,9 @@ module ExperimentProgressBar
     end
 
     progress_bar_table = create_progress_bar_table
-    progress_bar_table.insert(progress_bar_data)
+    if self.experiment_size > 0
+      progress_bar_table.insert(progress_bar_data)
+    end
   end
 
 end
