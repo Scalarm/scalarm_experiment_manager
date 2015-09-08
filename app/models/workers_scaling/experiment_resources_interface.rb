@@ -13,7 +13,7 @@ class ExperimentResourcesInterface
   end
   
   ##
-  # Schedules given amount of workers onto infrastructure and returns theirs ids
+  # Schedules given amount of workers onto infrastructure and returns theirs sm_uuids
   # In case of error returns nil
   # Additional params:
   # * time_limit
@@ -26,7 +26,7 @@ class ExperimentResourcesInterface
       params.merge! onsite_monitoring: true
       get_facade_for(infrastructure_name)
         .start_simulation_managers(@user_id, amount, @experiment_id, params)
-        .map &:id
+        .map &:sm_uuid
     rescue InvalidCredentialsError, NoCredentialsError
       # TODO inform user about credentials error
       raise
