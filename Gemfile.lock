@@ -10,6 +10,16 @@ GIT
       mongo
 
 GIT
+  remote: git://github.com/Scalarm/scalarm-service_core.git
+  revision: d27641594bd60ad55fc4fb67e63637bf87545e19
+  specs:
+    scalarm-service_core (0.8.1)
+      actionpack (~> 4.1)
+      activesupport (~> 4.1)
+      grid-proxy (~> 0.1)
+      rest-client (~> 1.8)
+
+GIT
   remote: git://github.com/kliput/mongo_session_store.git
   revision: 5416ecf60275909dda0bfb99b77bc7504ee1fc1b
   branch: issue-31-mongo_store-deserialization
@@ -24,21 +34,6 @@ GIT
     jquery-datatables-rails (3.0.0)
       jquery-rails
       sass-rails
-
-GIT
-  remote: https://gitlab.dev.cyfronet.pl/commons/grid-proxy.git
-  revision: 24cca132182129d636232d900259959ed56257e1
-  specs:
-    grid-proxy (0.0.1)
-
-PATH
-  remote: /Users/jliput/Scalarm/scalarm-service_core
-  specs:
-    scalarm-service_core (0.8)
-      actionpack (~> 4.1)
-      activesupport (~> 4.1)
-      grid-proxy
-      rest-client (~> 1.8)
 
 GEM
   remote: https://rubygems.org/
@@ -124,6 +119,7 @@ GEM
       retriable (>= 1.4)
       signet (>= 0.5.0)
       uuidtools (>= 2.1.0)
+    grid-proxy (0.1.0)
     haml (4.0.5)
       tilt
     hike (1.2.3)
@@ -456,7 +452,6 @@ DEPENDENCIES
   foundation-icons-sass-rails
   foundation-rails
   google-api-client
-  grid-proxy!
   haml
   jbuilder (~> 1.2)
   jit-rails
@@ -482,7 +477,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.3.3)!
-  scalarm-service_core (~> 0.8)!
+  scalarm-service_core (~> 0.8.1)!
   sdoc
   signet
   therubyracer
