@@ -49,4 +49,22 @@ class UtilsTest < MiniTest::Test
     assert_equal 2, params[:hello]
   end
 
+  def test_extract_type_from_string
+    assert_equal "integer", Utils::extract_type_from_string("1")
+    assert_equal "integer", Utils::extract_type_from_string("-1")
+    assert_equal "float", Utils::extract_type_from_string("12.2")
+    assert_equal "string", Utils::extract_type_from_string("loveRuby")
+    assert_equal "string", Utils::extract_type_from_string("12.always")
+    assert_equal "undefined", Utils::extract_type_from_string({id: 12})
+  end
+
+  def test_extract_type_from_value
+    assert_equal "integer", Utils::extract_type_from_value(1)
+    assert_equal "integer", Utils::extract_type_from_value(-1)
+    assert_equal "float", Utils::extract_type_from_value(12.2)
+    assert_equal "string", Utils::extract_type_from_value("loveRuby")
+    assert_equal "string", Utils::extract_type_from_value("12.always")
+    assert_equal "undefined", Utils::extract_type_from_value({id: 12})
+  end
+
 end

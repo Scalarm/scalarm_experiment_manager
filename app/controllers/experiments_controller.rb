@@ -558,9 +558,9 @@ class ExperimentsController < ApplicationController
     moes_info[:params] = params.map{ |label, id|
       "<option value='#{id}'>#{label}</option>" }.join
 
-    moes_info[:moes_types] = extract_types_for_moes
+    moes_info[:moes_types] = extract_types_for_moes(@experiment.simulation_runs)
     moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
-    moes_info[:inputs_types] = extract_types_for_parameters
+    moes_info[:inputs_types] = extract_types_for_parameters(@experiment.simulation_runs)
     moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
 
     #TODO add new map for histogram to improve selector
@@ -570,57 +570,41 @@ class ExperimentsController < ApplicationController
 
   end
 
-  #TODO Move this method to gem utils
-  #Extract types for moes from string
-  def extract_types_for_parameters
+  # Extract types of parameters (inputs) from theirs values
+  #
+  # * *Args*:
+  #   - +simulation_runs+ -> Summary of experiment's information extracted by simulation_runs method
+  #
+  # * *Returns*:
+  #   - +array_for_inputs_types+ -> String array with types of parameters
+  def extract_types_for_parameters(simulation_runs)
     array_for_inputs_types = []
 
-    unless @experiment.simulation_runs.empty?
-      first_line_inputs = @experiment.simulation_runs.first.values.split(",")
-      first_line_inputs.each{|x|
-        item = x
-        a = item.to_i
-        b = item.to_f
-        if x.eql?a.to_s
-          array_for_inputs_types.push("integer")
-        elsif x.eql?b.to_s
-          array_for_inputs_types.push("float")
-        elsif x.is_a? String
-          array_for_inputs_types.push("string")
-        else
-          array_for_inputs_types.push("undefined")
-        end
-
-      }
+    unless simulation_runs.empty?
+      first_line_inputs = simulation_runs.first.values.split(",")
+      array_for_inputs_types = first_line_inputs.map{|result| Utils::extract_type_from_string(result)}
     end
 
     array_for_inputs_types
   end
 
-  #TODO Move this method to gem util
-  def extract_types_for_moes
+  # Extract types of moes (outputs) from theirs values
+  #
+  # * *Args*:
+  #   - +simulation_runs+ -> Summary of experiment's information extracted by simulation_runs method
+  #
+  # * *Returns*:
+  #   - +array_for_moes_types+ -> String array with types of moes
+  def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    unless @experiment.simulation_runs.empty?
-      first_line_result = @experiment.simulation_runs.first.result
-      first_line_result.each{|x|
-        item = x[1]
-        if item.is_a? Integer
-          array_for_moes_types.push("integer")
-        elsif item.is_a? Float
-          array_for_moes_types.push("float")
-        elsif item.is_a? String
-          array_for_moes_types.push("string")
-        else
-          array_for_moes_types.push("undefined")
-        end
-      }
+    unless simulation_runs.empty?
+      first_line_result = simulation_runs.first.result
+      array_for_moes_types = first_line_result.map{|result| Utils::extract_type_from_value(result[1])}
     end
 
     array_for_moes_types
   end
-
-
 
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
