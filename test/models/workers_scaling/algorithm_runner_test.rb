@@ -10,17 +10,17 @@ class AlgorithmRunnerTest < MiniTest::Test
 
   def test_proper_runner_cycle
     experiment = mock do
+      stubs(:id).returns('id')
       stubs(:reload).returns(self)
       expects(:completed?).twice.returns(false, true)
     end
-    Experiment.stubs(:where).returns(experiment)
 
     algorithm = mock do
       expects(:initial_deployment)
       expects(:experiment_status_check).twice
     end
 
-    runner = WorkersScaling::AlgorithmRunner.new 'id', algorithm, 0
+    runner = WorkersScaling::AlgorithmRunner.new experiment, algorithm, 0
 
     runner.start
     # sleep to allow new thread in runner.start finish its job

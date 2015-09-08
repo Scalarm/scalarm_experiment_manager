@@ -25,11 +25,11 @@ module WorkersScaling
 
     ##
     # Expects:
-    # * id of Experiment
+    # * instance of Experiment
     # * instance of WorkersScalingAlgorithm for given Experiment
     # * interval between decision loop executions in seconds
-    def initialize(experiment_id, algorithm, interval)
-      @experiment = Experiment.where(id: experiment_id).first
+    def initialize(experiment, algorithm, interval)
+      @experiment = experiment
       @algorithm = algorithm
       @interval = interval
       @mutex = Mutex.new
