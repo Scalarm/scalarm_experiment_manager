@@ -51,7 +51,11 @@ module UserControllerHelper
   end
 
   def github_configured?
-    Rails.application.secrets.include?(:github_client_id) and Rails.application.secrets.include?(:github_client_secret)
+    GithubOauth.github_configured?
+  end
+
+  def google_configured?
+    GoogleOpenID.google_configured?
   end
 
 end

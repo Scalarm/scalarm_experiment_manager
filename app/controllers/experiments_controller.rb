@@ -580,7 +580,8 @@ class ExperimentsController < ApplicationController
   def extract_types_for_parameters(simulation_runs)
     array_for_inputs_types = []
 
-    unless simulation_runs.empty?
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    unless first_run.nil?
       first_line_inputs = simulation_runs.first.values.split(",")
       array_for_inputs_types = first_line_inputs.map{|result| Utils::extract_type_from_string(result)}
     end
@@ -598,7 +599,8 @@ class ExperimentsController < ApplicationController
   def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    unless simulation_runs.empty?
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    unless first_run.nil?
       first_line_result = simulation_runs.first.result
       array_for_moes_types = first_line_result.map{|result| Utils::extract_type_from_value(result[1])}
     end

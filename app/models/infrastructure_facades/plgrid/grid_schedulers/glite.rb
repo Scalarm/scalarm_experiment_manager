@@ -119,7 +119,7 @@ module GliteScheduler
     end
 
     def cancel_sm_cmd(record)
-      "glite-wms-job-cancel --no-int #{record.job_id}"
+      "glite-wms-job-cancel --no-int #{record.job_id} || true"
     end
 
     def clean_after_sm_cmd(sm_record)

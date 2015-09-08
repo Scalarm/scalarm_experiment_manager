@@ -65,4 +65,8 @@ module GithubOauth
     JSON.parse(info)
   end
 
+  def self.github_configured?
+    Rails.application.secrets.include?(:github_client_id) and Rails.application.secrets.include?(:github_client_secret)
+  end
+
 end

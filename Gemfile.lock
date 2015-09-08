@@ -11,11 +11,12 @@ GIT
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 5ea9c70d8acab8073562b12101e46142ebb7dc23
+  revision: d27641594bd60ad55fc4fb67e63637bf87545e19
   specs:
-    scalarm-service_core (0.7)
+    scalarm-service_core (0.8.1)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
+      grid-proxy (~> 0.1)
       rest-client (~> 1.8)
 
 GIT
@@ -118,6 +119,7 @@ GEM
       retriable (>= 1.4)
       signet (>= 0.5.0)
       uuidtools (>= 2.1.0)
+    grid-proxy (0.1.0)
     haml (4.0.5)
       tilt
     hike (1.2.3)
@@ -475,7 +477,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.3.3)!
-  scalarm-service_core (~> 0.7)!
+  scalarm-service_core (~> 0.8.1)!
   sdoc
   signet
   therubyracer

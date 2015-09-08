@@ -126,4 +126,30 @@ class SimulationManagerRecordTest < MiniTest::Test
     assert @record.cmd_delegation_time_exceeded?
   end
 
+  def test_cmd_to_execute
+    cmd1 = 'cmd1'
+    cmd2 = 'cmd2'
+    attributes_mock = {}
+    @record.stubs(:attributes).returns(attributes_mock)
+
+    @record.cmd_to_execute = cmd1
+    assert_equal 'cmd1', attributes_mock[:cmd_to_execute]
+
+    @record.cmd_to_execute = cmd2
+    assert_equal 'cmd1#_#cmd2', attributes_mock[:cmd_to_execute]
+  end
+
+  def test_cmd_to_execute_code
+    code1 = 'code1'
+    code2 = 'code2'
+    attributes_mock = {}
+    @record.stubs(:attributes).returns(attributes_mock)
+
+    @record.cmd_to_execute_code = code1
+    assert_equal 'code1', attributes_mock[:cmd_to_execute_code]
+
+    @record.cmd_to_execute_code = code2
+    assert_equal 'code1#_#code2', "#{attributes_mock[:cmd_to_execute_code]}"
+  end
+
 end
