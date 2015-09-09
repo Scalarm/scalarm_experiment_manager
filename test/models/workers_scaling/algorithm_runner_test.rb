@@ -22,8 +22,6 @@ class AlgorithmRunnerTest < MiniTest::Test
 
     runner = WorkersScaling::AlgorithmRunner.new experiment, algorithm, 0
 
-    runner.start
-    # sleep to allow new thread in runner.start finish its job
-    sleep(1)
+    runner.start.join
   end
 end

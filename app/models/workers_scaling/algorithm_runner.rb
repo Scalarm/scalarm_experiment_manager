@@ -2,6 +2,7 @@
 # Scheduler to run WorkersScalingAlgorithm decision loop periodically
 module WorkersScaling
   class AlgorithmRunner
+    @@cache = {}
 
     ##
     # Returns instance of AlgorithmRunner for experiment_id if registered
@@ -13,7 +14,6 @@ module WorkersScaling
     ##
     # Registers instance of AlgorithmRunner for experiment_id
     def self.put(experiment_id, runner)
-      @@cache ||= {}
       @@cache[experiment_id] = runner
     end
 
@@ -45,13 +45,18 @@ module WorkersScaling
         @algorithm.initial_deployment
         @next_execution_time = Time.now + @interval
 
-        until @next_execution_time.nil?
+        @mutex.synchronize do
+          catch :finished do
+            until @next_execution_time.nil?
 
-          while @next_execution_time > Time.now do
-            sleep @next_execution_time - Time.now
+              while @next_execution_time > Time.now do
+                @mutex.sleep @next_execution_time - Time.now
+                throw :finished if @next_execution_time.nil?
+              end
+
+              execute_and_schedule
+            end
           end
-
-          execute_and_schedule
         end
 
         self.class.delete(@experiment.id)
@@ -62,15 +67,21 @@ module WorkersScaling
     # Executes decision loop of WorkersScalingAlgorithm, then schedules next execution
     # Next execution time is not set when Experiment is completed
     def execute_and_schedule
-      @mutex.synchronize do
-        @algorithm.experiment_status_check
-
-        @next_execution_time = if @experiment.reload.completed?
-                                 nil
-                               else
-                                 Time.now + @interval
-                               end
+      should_unlock = false
+      unless @mutex.owned?
+        @mutex.lock
+        should_unlock = true
       end
+
+      @algorithm.experiment_status_check
+
+      @next_execution_time = if @experiment.reload.completed?
+                               nil
+                             else
+                               Time.now + @interval
+                             end
+
+      @mutex.unlock if should_unlock
     end
 
   end

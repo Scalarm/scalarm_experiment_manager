@@ -243,8 +243,10 @@ class ExperimentsController < ApplicationController
           format.json { render json: {status: 'error', message: flash[:error]} }
         end
       else
-        # TODO: provide proper algorithm once we have any, get interval and algorithm params from form
-        WorkersScaling::AlgorithmRunner.new(experiment.id, nil, 10).start
+        if params[:workers_scaling]
+          # TODO: provide proper algorithm once we have any, get interval and algorithm params from form
+          WorkersScaling::AlgorithmRunner.new(experiment.id, nil, 10).start
+        end
         respond_to do |format|
           format.html { redirect_to experiment_path(experiment.id) }
           format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
