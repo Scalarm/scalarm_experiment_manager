@@ -179,7 +179,7 @@ class SimulationsController < ApplicationController
             @simulation_run.cpu_info = cpu_info
           end
 
-          sm_record = !sm_user.nil? && InfrastructureFacadeFactory.query_sm_records(sm_uuid: sm_user.sm_uuid).first
+          sm_record = !sm_user.nil? && InfrastructureFacadeFactory.get_sm_records_by_query(sm_uuid: sm_user.sm_uuid).first
 
           if sm_record
             unless sm_record.infrastructure.blank?

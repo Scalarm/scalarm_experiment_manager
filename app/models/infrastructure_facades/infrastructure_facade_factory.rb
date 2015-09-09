@@ -49,7 +49,7 @@ class InfrastructureFacadeFactory
   ##
   # Queries all available sm records collections and returns array with results matching arguments.
   # Possible cond and opts can be found in MongoActiveRecord#where.
-  def self.query_sm_records(cond = {}, opts = {})
+  def self.get_sm_records_by_query(cond = {}, opts = {})
     get_all_infrastructures.flat_map {|facade| facade.sm_record_class.where(cond, opts).to_a}
   end
 
