@@ -7,14 +7,17 @@ module ExperimentProgressBar
   MINIMUM_SLOT_WIDTH = 2.0
   PROGRESS_BAR_THRESHOLD = 10000
 
+  ##
+  #bar_num - index of bar
+  #bar_parts - number of simulations that create one bar
+  #bar_state - state of simulations in bar - number depended on bar_parts
   def progress_bar_table
       table_name = "experiment_progress_bar_#{self.experiment_id}"
       Scalarm::Database::MongoActiveRecord.get_collection(table_name)
   end
 
   ##
-  #
-  #
+  # how many simulations are in single bar
   def parts_per_progress_bar_slot
     return 1 if self.experiment_size <= 0
 
@@ -22,6 +25,8 @@ module ExperimentProgressBar
     [(MINIMUM_SLOT_WIDTH / part_width).ceil, 1].max
   end
 
+  ##
+  #update made on changing state of simulation
   def progress_bar_update(simulation_id, update_type)
     return if self.experiment_size > PROGRESS_BAR_THRESHOLD and update_type == 'sent'
 
@@ -77,10 +82,17 @@ module ExperimentProgressBar
     return parts_per_slot, number_of_bars
   end
 
+  ##
+  #returns array of numbers describing how should each bar be colored
+  #
   def progress_bar_color
     progress_bar_table.find({}, {:sort => [%w(bar_num ascending)]}).to_a.map { |bar_doc| compute_bar_color(bar_doc) }
   end
 
+  ##
+  #each bar are colored from gray to light green
+  #0 -gray - none of simulation in this bar are started
+  #255 - light green - all simulations in this bar has ended
   def compute_bar_color(bar_doc)
     color_step = 200.to_f / (2 * bar_doc['bar_parts'])
     bar_state = bar_doc['bar_state']
@@ -91,6 +103,8 @@ module ExperimentProgressBar
     [color, 255].min
   end
 
+  ##
+  # changes made on whole bar
   def update_all_bars
     parts_per_slot = parts_per_progress_bar_slot
     Rails.logger.debug("UPDATE ALL BARS --- #{parts_per_slot}")
@@ -101,6 +115,10 @@ module ExperimentProgressBar
     end
   end
 
+
+  ##
+  #changes in number of simulation in bar or their state
+  #used in update_all_bars
   def update_bar_state(instance_id)
     return if self.nil? or (not self.is_running)
     experiment_id, experiment_size = self.experiment_id, self.experiment_size
@@ -142,6 +160,9 @@ module ExperimentProgressBar
     Rails.logger.debug("Updating bar state took #{Time.now - a}")
   end
 
+  ##
+  # protects form overuse of database
+  # when bar was updated less than 30 sec ago
   def is_update_free_time(bar_index)
     cache_key = "progress_bar_#{self.experiment_id}_#{bar_index}"
     bar_last_update = Rails.cache.read(cache_key)
@@ -149,7 +170,8 @@ module ExperimentProgressBar
     Rails.cache.write(cache_key, Time.now, :expires_in => 30) if bar_last_update.nil?
     not bar_last_update.nil?
   end
-
+  ##
+  # reuurns number describing how should this bar be colored
   def color_of_bar(bar_index)
     compute_bar_color(progress_bar_table.find_one({bar_num: bar_index}))
   end
@@ -157,6 +179,7 @@ module ExperimentProgressBar
 
   ##
   # creating progress bar in database
+  #TODO why are we trying to create bar up to 5 times?
   def create_progress_bar_table
     bar_created, counter = false, 0
     while (not bar_created) and counter < 5
@@ -198,9 +221,7 @@ module ExperimentProgressBar
     end
 
     progress_bar_table = create_progress_bar_table
-    if self.experiment_size > 0
-      progress_bar_table.insert(progress_bar_data)
-    end
+    progress_bar_table.insert(progress_bar_data)
   end
 
 end

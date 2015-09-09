@@ -6,7 +6,7 @@ class CustomPointsExperiment < Experiment
     self.type = 'manual_points'
     self.cached_value_list = [[]]
     self.size = 0
-    self.insert_initial_bar
+    self.create_progress_bar_table
     self.simulation_runs.create_table
 
   end
