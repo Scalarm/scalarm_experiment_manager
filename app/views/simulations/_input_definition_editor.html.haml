@@ -69,14 +69,14 @@
                   %label.right.inline{id: "label_min", for: 'param_min'}= 'Min:'
                 .small-9.columns
                   %input#param_min{type: 'text', name: 'param_min', pattern: "^-?[0-9]*\\.?[0-9]+$", "data-abide-validator" => "validate_ranges"}
-                  %small(id="param_min_error_msg" class="error") Invalid minimum value. It is required and must be lesser or equal than maximum
+                  %small(id="param_min_error_msg" class="error") Invalid minimum value. It is required and must be equal to or less than maximum
             .small-6.columns
               .row
                 .small-3.columns
                   %label.right.inline{id: "label_max", for: 'param_max'}= 'Max:'
                 .small-9.columns
                   %input#param_max{type: 'text', name: 'param_max', pattern: "^-?[0-9]*\\.?[0-9]+$", "data-abide-validator" => "validate_ranges" }
-                  %small(id="param_max_error_msg" class="error") Invalid maximum value. It is required and must be greater or equal than minimum
+                  %small(id="param_max_error_msg" class="error") Invalid maximum value. It is required and must be equal to or greater than minimum
           .row#param-allowed.hidden
             .small-3.columns
               %label.right.inline{for: 'param_allowed_area'}= 'Allowed values (each in new line):'
