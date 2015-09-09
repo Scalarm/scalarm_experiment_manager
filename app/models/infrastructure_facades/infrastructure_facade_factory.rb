@@ -46,6 +46,13 @@ class InfrastructureFacadeFactory
     (get_all_infrastructures.collect { |facade| facade.get_sm_records(*args) }).flatten
   end
 
+  ##
+  # Queries all available sm records collections and returns array with results matching arguments.
+  # Possible cond and opts can be found in MongoActiveRecord#where.
+  def self.get_sm_records_by_query(cond = {}, opts = {})
+    get_all_infrastructures.flat_map {|facade| facade.sm_record_class.where(cond, opts).to_a}
+  end
+
   # Get JSON data for build a base tree for Infrastructure Tree _without_ Simulation Manager
   # nodes. Starting with non-cloud infrastructures and cloud infrastructures, leaf nodes
   # are fetched recursivety with tree_node methods of every concrete facade.
