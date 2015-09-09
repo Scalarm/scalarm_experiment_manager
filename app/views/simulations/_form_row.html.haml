@@ -10,6 +10,7 @@
             = t("simulations.registration.select_registered_name") + ': '
         .small-7.columns
           = input_element
+          %small(id="#{form_row}_validate_msg" class="error") Filename is required
 
       .row
         .small-5.columns
@@ -36,14 +37,22 @@
             $("##{form_row}").attr('required','required');
             $("##{form_row}_name").enable();
             $("##{form_row}_name_row").show();
+            if ("#{form_row}" == "executor"){
+              $("#executor_id").removeAttr('required');
+              document.getElementById("executor_validate_msg").style.display="none"
+            }
             $("##{form_row}_error_msg").removeAttr("style");
+
           } else {
             $("##{form_row}_id").enable();
             $("##{form_row}").disable();
             $("##{form_row}").removeAttr('required');
             $("##{form_row}_name").disable();
             $("##{form_row}_name_row").hide();
-
+            if ("#{form_row}" == "executor"){
+              $("#executor_id").attr('required','required');
+              $("#executor_validate_msg").removeAttr("style");
+            }
             document.getElementById("#{form_row}_error_msg").style.display="none"
           }
         }

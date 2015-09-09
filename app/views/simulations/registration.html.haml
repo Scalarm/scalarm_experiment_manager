@@ -86,22 +86,20 @@
   :javascript
     $(function() {
       window.toggle_panels_on_title_click();
-
+      $("#executor_id").attr('required', 'required');
       $("#scenario_form")
-        .on('valid.fndtn.abide', function(){
-
-          $('.last-element h3:first').click();
-        })
         .on('invalid.fndtn.abide', function(){
           $(this).find('[data-invalid]').blur();
           $('#invalid-form').foundation('reveal', 'open');
         });
+
       $("#invalid-ok").bind("click", function() {
         $('#invalid-form').foundation('reveal', 'close');
         $('html, body').animate({
           scrollTop: $("#scenario_form").offset().top
         }, 2000);});
 
+      $('.last-element h3:first').click();
       window.scenario_registration = new window.ScenarioRegistration();
 
     });
