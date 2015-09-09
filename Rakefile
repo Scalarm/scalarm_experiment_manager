@@ -26,7 +26,7 @@ namespace :service do
     load_balancer_registration
     create_anonymous_user
 
-    monitoring_probe('start')
+    monitoring_process('start')
   end
 
   desc 'Stop the service'
@@ -34,7 +34,7 @@ namespace :service do
     puts 'pumactl -F config/puma.rb -T scalarm stop'
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
-    monitoring_probe('stop')
+    monitoring_process('stop')
 
     load_balancer_deregistration
   end
@@ -207,39 +207,57 @@ end
 # - ExperimentWatcher - check periodically if some SimulationRuns does not
 #   exceeded their time limit (probably they are faulty)
 # - InfrastructureFacade monitoring - multiple threads for SimulationManagers status monitoring
-def monitoring_probe(action)
+def monitoring_process(action)
   probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
 
   case action
     when 'start'
-      Process.daemon(true)
       monitoring_job_pid = fork do
         begin
+          Process.daemon(true)
           # requiring all class from the model
           Dir[File.join(Rails.root, 'app', 'models', '**/*.rb')].each do |f|
             require f
           end
 
+          Scalarm::ServiceCore::Logger.set_logger(Rails.logger)
+
+          # all started threads will be collected here
+          threads = []
+
           # start machine monitoring only if there is configuration
           if Rails.application.secrets.monitoring
             Rails.logger.info('Starting monitoring probe')
             probe = MonitoringProbe.new
-            probe.start_monitoring
+            threads << probe.start_monitoring
           else
             Rails.logger.info('Monitoring probe disabled due to lack of configuration')
           end
 
           Rails.logger.info('Starting experiment watcher')
-          ExperimentWatcher.watch_experiments
+          threads << ExperimentWatcher.watch_experiments
 
           Rails.logger.info('Starting monitoring threads for all infrastructures')
-          InfrastructureFacadeFactory.start_all_monitoring_threads.each &:join
+          threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
+
+          # do not quit this process until all threads are working
+          threads.each &:join
+          Rails.logger.warn('All monitoring threads are terminated - ending monitoring process')
+
+        rescue SignalException => signal_e
+          # check if this is SIGTERM
+          if signal_e == 15
+            Rails.logger.info('Monitoring process got SIGTERM - exiting')
+          else
+            raise
+          end
         rescue Exception => e
           Rails.logger.error("Error occured in monitoring process (application may be unusable): #{e.to_s}\n#{e.backtrace().join("\n")}")
           raise
         end
       end
 
+      Rails.logger.info("Monitoring process started with PID: #{monitoring_job_pid}")
       IO.write(probe_pid_path, monitoring_job_pid)
 
       Process.detach(monitoring_job_pid)
