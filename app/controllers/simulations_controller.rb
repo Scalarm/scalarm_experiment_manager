@@ -204,7 +204,7 @@ class SimulationsController < ApplicationController
           end
 
           algorithm_runner = WorkersScaling::AlgorithmRunner.get(@experiment.id)
-          algorithm_runner.execute_and_schedule if algorithm_runner
+          Thread.new { algorithm_runner.execute_and_schedule } if algorithm_runner
         end
       end
     rescue Exception => e
