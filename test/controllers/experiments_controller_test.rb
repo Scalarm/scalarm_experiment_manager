@@ -68,7 +68,6 @@ class ExperimentsControllerTest < ActionController::TestCase
     assert_response :success
 
     body = JSON.parse(response.body)
-    puts body
 
     assert_equal 1, body['running'].count
     assert_equal 1, body['completed'].count
