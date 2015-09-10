@@ -95,8 +95,9 @@
 
       $("#invalid-ok").bind("click", function() {
         $('#invalid-form').foundation('reveal', 'close');
+        var error = $("#scenario_form").find(':input[data-invalid]:visible')[0].id;
         $('html, body').animate({
-          scrollTop: $("#scenario_form").offset().top
+          scrollTop: $("#"+error).offset().top -100
         }, 2000);});
 
       $('.last-element h3:first').click();
