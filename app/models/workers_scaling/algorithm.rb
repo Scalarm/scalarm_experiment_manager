@@ -1,9 +1,9 @@
 ##
 # Class describing interface of Workers scaling algorithm. Creating new algorithm
 # requires providing class with proper methods implemented, which also should
-# inherit WorkersScalingAlgorithm class.
+# inherit Algorithm class.
 module WorkersScaling
-  class WorkersScalingAlgorithm
+  class Algorithm
 
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
 
