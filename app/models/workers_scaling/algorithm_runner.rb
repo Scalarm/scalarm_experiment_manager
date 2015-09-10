@@ -1,5 +1,5 @@
 ##
-# Scheduler to run WorkersScalingAlgorithm decision loop periodically
+# Scheduler to run Algorithm decision loop periodically
 module WorkersScaling
   class AlgorithmRunner
     @@cache = {}
@@ -26,7 +26,7 @@ module WorkersScaling
     ##
     # Expects:
     # * instance of Experiment
-    # * instance of WorkersScalingAlgorithm for given Experiment
+    # * instance of Algorithm for given Experiment
     # * interval between decision loop executions in seconds
     def initialize(experiment, algorithm, interval)
       @experiment = experiment
@@ -38,7 +38,7 @@ module WorkersScaling
     end
 
     ##
-    # Initializes WorkersScalingAlgorithm, then starts its decision loop
+    # Initializes Algorithm, then starts its decision loop
     # Stops when there is no next execution time set
     def start
       Thread.new do
@@ -64,7 +64,7 @@ module WorkersScaling
     end
 
     ##
-    # Executes decision loop of WorkersScalingAlgorithm, then schedules next execution
+    # Executes decision loop of Algorithm, then schedules next execution
     # Next execution time is not set when Experiment is completed
     def execute_and_schedule
       should_unlock = false
