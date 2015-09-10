@@ -534,7 +534,7 @@ class ExperimentsController < ApplicationController
 
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-      [t('experiments.analysis.no_results'),'',"moes_parameter"]
+      [t('experiments.analysis.no_results')]
     else
       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
@@ -550,13 +550,13 @@ class ExperimentsController < ApplicationController
 
     #TODO Unsafety behaviour, inject code???
     moes_info[:moes] = result_set.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+      "<option value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
     moes_info[:moes_and_params] = moes_and_params.map{ |label, id, type|
-      "<option data-type='#{type}' value='#{id}'>#{label}</option>" }.join
+      "<option data-type='#{ERB::Util.h(type)}' value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
     moes_info[:params] = params.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+      "<option value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
     moes_info[:moes_types] = extract_types_for_moes
     moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
