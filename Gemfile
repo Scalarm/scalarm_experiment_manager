@@ -10,9 +10,10 @@ gem 'rinruby'
 gem 'bson'
 gem 'bson_ext'
 gem 'mongo', '~> 1.12'
-gem 'mongo_session_store-rails4',
-    git: 'git://github.com/kliput/mongo_session_store.git',
-    branch: 'issue-31-mongo_store-deserialization'
+# Once upon a time, a mongo-session was tested but it turned out to be buggy
+# gem 'mongo_session_store-rails4',
+#     git: 'git://github.com/kliput/mongo_session_store.git',
+#     branch: 'issue-31-mongo_store-deserialization'
 
 # Amazon EC2 connector
 gem 'aws-sdk'
