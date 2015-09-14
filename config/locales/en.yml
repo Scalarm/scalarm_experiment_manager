@@ -22,7 +22,7 @@
 en:
   title: Scalarm Experiment Manager
   copyright: "Copyright © 2010-2015<br/>Academic Computer Centre Cyfronet AGH<br/>All rights reserved."
-  login-title: Scalarm - platform for data farming experiments
+  login-title: "platform for data farming experiments"
   account-title: Account management panel
 
   registered_simulation_scenario_list:

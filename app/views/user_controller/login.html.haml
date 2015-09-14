@@ -7,7 +7,7 @@
 %header
   .row
     .small-12.small-centered.columns(style="text-align: center;")
-      %h2= t('login-title')
+      %h2= raw("Scalarm" + " &ndash; " + t('login-title'))
 
 - if session.include? :server_name and Rails.configuration.plgrid_domains.include? session[:server_name]
   %section.panel.radius
