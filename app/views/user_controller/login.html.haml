@@ -26,52 +26,71 @@
             .row
               .small-3.columns
                 %label.right.inline(for='password')= t('user_controller.account.password')
-              .small-9.columns
+              .small-6.columns.left
                 = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
             .row
               .small-12.small-centered.columns(style="text-align: center;")
                 = submit_tag 'Login', class: 'button radius'
       - else
-        .small-6.columns
-          = form_tag login_path do
-            .row
-              .small-5.columns
-                %label.right.inline(for='username')= t('user_controller.account.login')
-              .small-7.columns
-                = text_field_tag 'username', '', class: 'inline'
+        .small-3.columns
+          %a.button.split.custom-split.radius.plgrid{ href: login_openid_plgrid_url }
+            %span
+              =image_tag '/assets/plgridplus.png', width: '36px', style: 'margin-top: -4px;'
+            = t('openid.login', provider: 'PL-Grid')
 
-            .row
-              .small-5.columns
-                %label.right.inline(for='password')= t('user_controller.account.password')
-              .small-7.columns
-                = password_field_tag 'password', '', class: 'inline', autocomplete: :off
+      - if google_configured?
+        .small-3.columns
+          %a.button.split.custom-split.radius.google{ href: login_login_oauth_google_url }
+            %span
+              %i.fa.fa-google-plus.fa-fw.small-link
+            = t('openid.login', provider: 'Google+')
 
-            .row
-              .small-12.small-centered.columns(style="text-align: center;")
-                = submit_tag 'Submit', class: 'button radius'
+      - if github_configured?
+        .small-3.columns
+          %a.button.split.custom-split.radius.github{ href: login_login_oauth_github_url }
+            %span
+              %i.fi-social-github.small-link
+            = t('openid.login', provider: 'GitHub')
 
-        .small-6.columns
-          .row
-            .small-9.small-centered.columns
-              %a.button.expand.radius{ href: login_openid_plgrid_url }
-                %i.fa.fa-openid.fa-fw.small-link
-                = t('openid.login', provider: 'PL-Grid')
 
-          - if google_configured?
-            .row
-              .small-9.small-centered.columns
-                %a.button.expand.radius{ href: login_login_oauth_google_url }
-                  %i.fa.fa-google-plus.fa-fw.small-link
-                  = t('openid.login', provider: 'Google')
+      .small-3.columns
+        %a.button.split.custom-split.radius.username#login_username_button
+          %span
+            %i.fa.fa-key.fa-fw.small-link
+          = t('openid.login', provider: 'BasicAuth')
 
-          - if github_configured?
-            .row
-              .small-9.small-centered.columns
-                %a.button.expand.radius{ href: login_login_oauth_github_url }
-                  %i.fi-social-github.small-link
-                  = t('openid.login', provider: 'GitHub')
 
+  #login_username_fieldset.hidden
+    %section.panel.radius
+      %h3= t('openid.login', provider: 'BasicAuth')
+      = form_tag login_path do
+        .row
+          .small-4.columns
+            %label.right.inline(for='username')= t('user_controller.account.login')
+          .small-6.columns.left
+            = text_field_tag 'username', '', class: 'inline'
+          .small-2-columns
+
+        .row
+          .small-4.columns
+            %label.right.inline(for='password')= t('user_controller.account.password')
+          .small-6.columns.left
+            = password_field_tag 'password', '', class: 'inline', autocomplete: :off
+          .small-2-columns
+
+        .row
+          .small-12.small-centered.columns(style="text-align: center;")
+            = submit_tag 'Login', class: 'button radius'
+
+-content_for :javascript do
+  :coffeescript
+    $( =>
+      $('#login_username_button').click( =>
+        $('#login_username_fieldset').toggle()
+        $('#username').focus()
+      )
+    )
 
 %section.panel.radius
   .row    

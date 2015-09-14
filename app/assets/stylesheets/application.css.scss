@@ -47,3 +47,119 @@
   top: 100px;
   right: 12px;
 }
+
+// for more colors, see: http://lipis.github.io/bootstrap-social/
+$facebook-color: #3b5998;
+$twitter-color: #55acee;
+$google-color: #d50f25;
+$plgrid-color: rgb(10, 115, 148);
+$github-color: #444444;
+$username-color: #F7931E;
+//$text-transform: uppercase;
+$icon-size: 2rem;
+
+@import "foundation/components/buttons";
+@import "foundation/components/split-buttons";
+
+.split.button {
+  width: 100%;
+
+  &.custom-split {
+    //text-transform: $text-transform;
+    text-align: left;
+    padding-left: 64px;
+    padding-right: 6px;
+    span {
+      left: 0;
+      padding-left: 4px;
+      padding-top: 12px;
+      border-left: none;
+      border-right: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 3px;
+      text-align: center;
+      &:after {
+        border: none;
+        font-size: $icon-size;
+      }
+    }
+
+    // TODO: refactor to generate styles only with color variable
+
+    &.google {
+      background: $google-color;
+      span {
+        background: darken($google-color, 10%);
+      }
+      &.custom-split:hover {
+        background: darken($google-color, 10%);
+      }
+    }
+
+    &.plgrid {
+      background: $plgrid-color;
+      span {
+        background: darken($plgrid-color, 10%);
+      }
+      &.custom-split:hover {
+        background: darken($plgrid-color, 10%);
+      }
+    }
+
+    &.github {
+      background: $github-color;
+      span {
+        background: darken($github-color, 10%);
+      }
+      &.custom-split:hover {
+        background: darken($github-color, 10%);
+      }
+    }
+
+    &.username {
+      background: $username-color;
+      span {
+        background: darken($username-color, 10%);
+      }
+      &.custom-split:hover {
+        background: darken($username-color, 10%);
+      }
+    }
+
+  }
+}
+
+
+
+
+
+//&.facebook {
+//  background: $facebook-color;
+//  text-transform: $text-transform;
+//  span {
+//    background: darken( $facebook-color, 10% );
+//    &:after {
+//      border: none;
+//      font-family: "foundation-icons";
+//      content: "\f1c4";
+//      font-size: $icon-size;
+//      line-height: 0.25rem;
+//      margin-left: -0.7rem;
+//    }
+//  }
+//}
+//
+//&.twitter {
+//  background: $twitter-color;
+//  text-transform: $text-transform;
+//  span {
+//    background: darken( $twitter-color, 10% );
+//    &:after {
+//      border: none;
+//      font-family: "foundation-icons";
+//      content: "\f1e4";
+//      font-size: $icon-size;
+//      line-height: 0.25rem;
+//      margin-left: -0.7rem;
+//    }
+//  }
+//}
