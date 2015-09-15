@@ -1,7 +1,7 @@
 # Be sure to restart your server when you modify this file.
 
 # using MongoStore, connection is initialized in 02_mongo_active_record initializer
-ScalarmExperimentManager::Application.config.session_store :mongo_store,
+ScalarmExperimentManager::Application.config.session_store :cookie_store,
                                key: '_scalarm_session' #,
                                #expire_after:  Rails.configuration.session_threshold.seconds
 

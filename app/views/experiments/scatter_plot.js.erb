@@ -3,11 +3,12 @@
 $("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
 $("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'scatter_plot_chart') %>");
 
-turboThresholdCounter=0
-<% @chart.chart_data.each do |x_value, y_values_simulation_ids|
-     y_values_simulation_ids.each do%>
-    turboThresholdCounter++
-<%end
+var number_of_points = 0
+
+<% @chart.chart_data.each_value do |values|
+    values.each do%>
+        number_of_points++
+    <%end
 end %>
 
 try {
@@ -66,8 +67,11 @@ try {
         // TODO decide if it is necessary
         plotOptions: {
             series: {
-                turboThreshold: turboThresholdCounter +1
-            }
+                //enable to plot more than 1000 points (default),
+                // with 0 it check every point format,
+                // with specific value only the first point is tested and the rest are assumed to be at the same format
+                turboThreshold: number_of_points,
+            },
         },
         credits: { enabled: false },
         series: [

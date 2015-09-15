@@ -21,8 +21,9 @@ en:
       step_1: "1. Configure account"
       step_2: "2. Register new simulation scenario"
       step_3: "3. Start an experiment"
-      step_4: "4. Go to running experiments"
-      step_5: "5. Go to historical experiments"
+      step_4: "4. Go to experiments in progress"
+      step_5: "5. Go to completed experiments"
+      step_6: "6. Go to historical experiments"
     login:
       user_not_found: The provided username is invalid
       login_banned: "You need to wait till %{time} to try to login again."

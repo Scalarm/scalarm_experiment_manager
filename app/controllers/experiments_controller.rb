@@ -622,8 +622,6 @@ class ExperimentsController < ApplicationController
     array_for_moes_types
   end
 
-
-
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
     done_run = @experiment.simulation_runs.where(done_run_query_condition,

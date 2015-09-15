@@ -58,4 +58,14 @@ module UserControllerHelper
     GoogleOpenID.google_configured?
   end
 
+  # TODO: SCAL-936 - enable/disable PL-Grid
+  def plgrid_enabled?
+    true
+  end
+
+  # TODO: SCAL-936 - enable/disable PL-Grid
+  def basicauth_enabled?
+    true
+  end
+
 end

@@ -23,16 +23,17 @@
             = content_for?(:help) ? yield(:help) : t('help.no_help')
           = yield
         %footer
-          .row
-            .small-7.columns
+          .row{style: 'padding: 10px 13px;'}
+            .small-5.columns
               = raw t('copyright')
-            .small-3.columns(style="padding-top: 7px;")
-              = link_to image_tag('scalarm-blue-small.png'),
-                'http://www.scalarm.com'
-            .small-2.columns
-              = link_to image_tag('cyfronet_logo.png', size: "92x64"),
-                'http://www.cyfronet.pl'
-
+            .small-5.columns.right(style="padding-top: 7px;")
+              .row
+                .small-8.columns
+                  = link_to image_tag('scalarm-blue-small.png'),
+                    'http://www.scalarm.com'
+                .small-4.columns.right{style: "text-align: right;"}
+                  = link_to image_tag('cyfronet_logo.png', size: "92x64"),
+                      'http://www.cyfronet.pl'
 
     = javascript_include_tag 'application'
     :javascript
