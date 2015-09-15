@@ -124,7 +124,6 @@
         if($('#import').is(":visible"))
           $("#import-form").submit();
         else{
-          console.debug($("#wrapper").find(':input[data-invalid]:visible'));
           if ($("#wrapper").find(':input[data-invalid]:visible').length==0){
             if($('#input-space-parameters').is(":visible")) {
               // standart experiment
@@ -153,7 +152,6 @@
         }
         else
         {
-          console.debug("ALA");
           $('#invalid-form').foundation('reveal', 'open');
         }
       }
