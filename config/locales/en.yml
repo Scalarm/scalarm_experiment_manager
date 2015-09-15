@@ -34,7 +34,7 @@ en:
     empty_list: There is no simulation scenario defined.<br/>Go to <a href='simulations/registration'>registration form</a> and define new simulation scenarios.
     go_to_input_definition_button: "Go to input definition"
   running_experiments:
-    label: Running experiments
+    label: Experiments in progress
   completed_experiments:
     label: Completed experiments
   historical_experiments:
