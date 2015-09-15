@@ -15,18 +15,26 @@ en:
       "
 
       monitoring: "
-      <p>You are on a progress monitoring view of a single experiment. It is divided into sections related to:
+      <p>You are on a progress monitoring view of a single experiment. It is divided into three parts:
       <ul>
-        <li>'Experiment information' - provides basic information about your experiment, also enables to edit this
+        <li>upper bar - provides links to other experiments (both running and historical) and available simulation scenarios based on which
+        you can create new experiments</li>
+        <li>main window - provides information about experiment, progress and resources</li>
+        <li>left sidebar - provides options to management experiment, browse results and analysis methods.</li>
+      </ul>
+
+
+      <ul>
+        Main window is divided into three sections:
+        <li><tt>Experiment information</tt>- provides basic information about your experiment, also enables to edit this
          information, share the experiment with other users or stop the experiment execution
         </li>
-        <li>'Experiment progress' - is the main monitoring view, which provides information about simulation runs included
+        <li><tt>Computational resources summary</tt> - provides a summary of the computing resources used in the experiment
+        </li>
+        <li><tt>Experiment progress</tt> - is the main monitoring view, which provides information about simulation runs included
          in this experiment (how many simulation runs are in the experiment, how many of them are currently executing, and
-         how many of them have been already completed); there are also more elements of this view, e.g. a progress bar
-         and action buttons, which are described below,</li>
-        <li>(the left side) links to other experiments (both running and historical) and available simulation scenarios based on which
-         you can create new experiments </li>
-        <li>(the right side) links to data exploration methods - histograms, regression trees and scatter plots</li>
+         how many of them have been already completed); there are also progress bar.
+        </li>
       </ul>
       </p>
 
@@ -43,7 +51,7 @@ en:
       </p>
 
       <p>
-      Below the progress bar there are several action buttons divided into groups related to computations and experiment
+      <tt>Computational resources summary section</tt> contains several action buttons divided into groups related to computations and experiment
       management. The computations-related actions are as follows:
       <ul>
         <li><tt>Add computing power</tt> - enables you to schedule computations onto one or many of the supported
@@ -52,34 +60,40 @@ en:
         <li><tt>Download Simulation Manager</tt> - enables you to download a module of Scalarm called Simulation Manager
           which is used to execute simulation runs within this experiment. You can use it to run the experiment on your
           own resource, e.g. to debug your simulation code.</li>
-
-        <li><tt>Download Simulation Manager</tt> - enables you to download a module of Scalarm called Simulation Manager
-          which is used to execute simulation runs within this experiment. You can use it to run the experiment on your
-          own resource, e.g. to debug your simulation code.</li>
-
-        <li><tt>Show progress</tt> - shows in separated tables aggregated results of running and completed simulation
-          runs.</li>
       </ul>
 
-      The experiment management actions are as follows:
+      The experiment management menu contains actions as follows:
       <ul>
         <li><tt>Extend input space</tt> - enables you to add more values of selected input parameters.</li>
 
         <li><tt>Set scheduling method</tt> - sets the order in which simulation runs are executed.</li>
 
-        <li><tt>Download results</tt> - downloads results either in structural form (the CSV format) or in a binary form.</li>
+        <li><tt>Computational resources</tt> - link to computational resources tree.</li>
+      </ul>
+
+      The experiment browse result menu contains actions as follows:
+      <ul>
+        <li><tt>Show progress</tt> - shows in separated tables aggregated results of running and completed simulation
+                  runs.</li>
+
+        <li><tt>Simulations output (binaries)</tt> - downloads results in a binary form.</li>
+
+        <li><tt>Configurations (CSV)</tt> - downloads results structural form (the CSV format).</li>
       </ul>
 
       </p>
 
       <p>
-      On the right side are three images clicking which shows windows for different data exploration methods:
+      Below experiment management menu is analysis menu where you can open windows for different data exploration methods:
       <ul>
-        <li>the first image indicates the histogram analysis</li>
-        <li>the second image is related to regression tree-based analysis</li>
-        <li>the third image is related to scatter plots</li>
+        <li>histogram</li>
+        <li>scatter plot</li>
+        <li>linear</li>
+        <li>3D chart</li>
+        <li>regression trees</li>
+        <li>interaction</li>
+        <li>hierarchical clustering.</li>
       </ul>
-      Links for the listed methods are also available at the navigation bar.
       </p>
       "
 
@@ -106,26 +120,42 @@ en:
       list for identification.
       </p>
       <p>
-      In the second section, the parameter space specification takes place. It is divided into 3 steps represented by tabs:
+      In the second section you can choose type of experiment:
         <ul>
-        <li><strong>Parametrization</strong> is where you select parametrization type for each input parameter,</li>
-        <li><strong>Parameter values</strong> is where you provide actual values which will be used for each parameter
+          <li><strong>Manual</strong> is where you specify parametric space by defining parameters ranges,</li>
+          <li><strong>Automatic</strong> is where you chose that searches the parametric space.</li>
+        </ul>
+      When you select first option in the second section you can choose way of specyfication input space:
+        <ul>
+          <li><strong>Manual designed</strong> is where you specify parametric space by form on the site,</li>
+          <li><strong>CSV imported</strong> is where you import specification from CSV file.</li>
+        </ul>
+      For manual designed experiment:
+      in the next section, the parameter space specification takes place. It is divided into 3 steps represented by tabs:
+        <ul>
+        <li><strong>Parametrization</strong> is where you select parametrization type for each input parameter
+        and actual values which will be used for each parameter
         to generate the parameter space. Each parametrization type requires different values.</li>
         <li><strong>Design of Experiment (optional)</strong> is where you can collect parameters into groups and apply DoE
         methods to sample the parameter space in a specific way. In this step only parameters with the 'Range' parametrization type
         can be used. Firstly, select a DoE method you want to use and then add parameters to this group.</li>
+        <li><strong>Parameter constraints (optional)</strong> is where you can specify the relationship between parameters.</li>
         </ul>
       In any time you can check how many parameter space elements will be created with the specified parametrization.
       Besides parametrization you can specify time constraint for a single simulation run. This value will be used by Scalarm
       to detect any failures in simulation runs.
       </p>
       <p>
-      <strong>(optional)</strong> The experiment parameter space can be also specified by providing a CSV file with
+      For CSV imported experiment:
+      the experiment parameter space can be also specified by providing a CSV file with
       information about parameter space elements. In this case, the CSV file should have parameter ids as the header.
       In subsequent rows, there can be either one value or a list of values (a cartesian product will be generated).
       To use this option: choose the CSV file to import -> click the 'Import' button, select columns from the file which
        should be imported -> Click the 'Start experiment' button.
       <br/>In any time you can check how many parameter space elements will be created with the imported file.
+      </p>
+      <p>
+      If you select Automatic type of experiment, you can choose an algorithm and define its parameters.
       </p>
       "
       register: "<p>
