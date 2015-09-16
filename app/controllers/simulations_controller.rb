@@ -59,8 +59,116 @@ class SimulationsController < ApplicationController
     redirect_to :action => :index
   end
 
+  #TODO errors also in Polish
+  def validate_simulation_input(simulation_input)
+    error = []
+
+    if simulation_input.kind_of?(Array)
+      simulation_input.each do |category|
+        if category.key?(:label) && !category[:label].kind_of?(String)
+          error.push("Label for category must be string")
+        end
+        if simulation_input.size() >1 && category[:id].blank?
+          error.push("You need to specify id foreach category")
+        end
+        if category.key?(:id) && !category[:id].kind_of?(String)
+          error.push("Id for category must be string")
+        end
+        unless category[:entities].blank?
+          if category[:entities].kind_of?(Array)
+            category[:entities].each do |entity|
+              if entity.key?(:label) && !entity[:label].kind_of?(String)
+                error.push("Label for entity must be string")
+              end
+              if category[:entities].size() >1 && !entity.key?(:id)
+                error.push("You need to specify id foreach entity")
+              end
+              if entity.key?(:id) && !entity[:id].kind_of?(String)
+                error.push("Id for entity must be string")
+              end
+              unless entity[:parameters].blank?
+                if entity[:parameters].kind_of?(Array)
+                  entity[:parameters].each do |parameter|
+                    error.push(validate_simulation_input_parameter(parameter))
+                  end
+                else
+                  error.push("Array of parameters is required")
+                end
+              end
+
+            end
+          else
+            error.push("Array of entities is required")
+          end
+        end
+      end
+    else
+      error.push("Simulation input must be an array")
+    end
+
+    error.join(',')
+  end
+
+  def validate_simulation_input_parameter(parameter)
+    error =[]
+    if parameter.key?(:label) && !parameter[:label].kind_of?(String)
+      error.push("Label for parameter must be string")
+    end
+    if parameter[:id].blank? || !parameter[:id].kind_of?(String)
+      error.push("You need to specify string id foreach parameter")
+    end
+    if parameter[:type] == 'string'
+      if parameter[:allowed_values].blank?
+        error.push("String values are required")
+      end
+    elsif parameter[:type] == 'integer'
+
+      if parameter[:min].blank?
+        error.push("Minimum value is required")
+      else
+        unless parameter[:min].integer?
+          error.push("Not valid minimum value")
+        end
+      end
+
+      if parameter[:max].blank?
+        error.push("Maximum value is required")
+      else
+        unless parameter[:max].integer?
+          error.push("Not valid maximum value")
+        end
+      end
+
+    elsif parameter[:type] =='float'
+
+      if parameter[:min].blank?
+        error.push("Minimum value is required")
+      else
+        unless parameter[:min].kind_of?(Fixnum) || parameter[:min].kind_of?(Float)
+          error.push("Not valid minimum value")
+        end
+      end
+      if parameter[:max].blank?
+        error.push("Maximum value is required")
+      else
+        unless parameter[:max].kind_of?(Fixnum) || parameter[:min].kind_of?(Float)
+          error.push("Not valid maximum value")
+        end
+      end
+
+    else
+      error.push("Parameter has wrong type. It must be string, integer or float")
+    end
+    error
+  end
+
   def create
     simulation_input = Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input]))
+    #temporary to fail all wrong parsing replace with raise Error
+    validation_error = validate_simulation_input(simulation_input)
+    if validation_error != ""
+      flash[:error] = validation_error
+    end
     # input validation
     case true
       when (params[:simulation_name].blank?)
