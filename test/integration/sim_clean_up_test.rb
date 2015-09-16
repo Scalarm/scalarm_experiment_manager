@@ -10,7 +10,6 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
 
   def setup
     super
-    stub_authentication
     user = ScalarmUser.new({login: USER_NAME})
     user.password = PASSWORD
     user.save
@@ -105,6 +104,7 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
 
   test "no simulation run duplication after getting rolled back simulation run" do
     # given
+    stub_authentication
     @experiment.simulation_input = [{
                                      'entities' => [{
                                        'parameters' => [{
