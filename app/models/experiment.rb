@@ -570,13 +570,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     values.uniq
   end
 
-  def simulation_rollback(simulation_run)
-    simulation_run.to_sent = true
-    simulation_run.save    
-
-    progress_bar_update(simulation_run.index, 'rollback')
-  end
-
   def csv_parameter_ids
     self.doe_info[0][1]
   end
