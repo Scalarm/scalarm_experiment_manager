@@ -89,7 +89,10 @@ class SimulationsController < ApplicationController
               unless entity[:parameters].blank?
                 if entity[:parameters].kind_of?(Array)
                   entity[:parameters].each do |parameter|
-                    error.push(validate_simulation_input_parameter(parameter))
+                    validation_param = validate_simulation_input_parameter(parameter)
+                    unless validation_param.blank?
+                      error.push(validation_param)
+                    end
                   end
                 else
                   error.push("Array of parameters is required")

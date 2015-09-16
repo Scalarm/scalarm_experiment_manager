@@ -271,4 +271,26 @@ class SimulationsControllerTest < ActionController::TestCase
 
     assert_response 500, response.body
   end
+  test 'Succesful registration of simulation with categories and entities' do
+    binaries = Rack::Test::UploadedFile.new(
+        Rails.root.join('test', 'fixtures', 'files', 'simulation_binaries.zip'),
+        'application/zip'
+    )
+    post :create,
+         {
+             simulation_name: 'simulation_one',
+             simulation_description: 'Just testing',
+             simulation_binaries: binaries,
+             executor: '',
+             simulation_input: [{"entities"=>
+        [{"parameters"=>[{"id"=>"x_size", "label"=>"Image X size", "type"=>"integer", "min"=>1, "max"=>1000},
+                         {"id"=>"y_size", "label"=>"Image Y size", "type"=>"integer", "min"=>1, "max"=>1000},
+                         {"id"=>"black_probability", "label"=>"Blackness percentage", "type"=>"float", "min"=>0, "max"=>1},
+                         {"id"=>"temp", "label"=>"Start temperature", "type"=>"integer", "min"=>0, "max"=>1000},
+                         {"id"=>"iter_limit", "label"=>"Iterations limit", "type"=>"integer", "min"=>1, "max"=>1000},
+                         {"id"=>"pair_swaps", "label"=>"Initial number of pair swaps", "type"=>"integer", "min"=>0, "max"=>50}]}]}],
+             format: :json
+         }
+    assert_response 200, response.body
+  end
 end
