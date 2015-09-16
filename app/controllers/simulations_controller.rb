@@ -66,47 +66,55 @@ class SimulationsController < ApplicationController
     if simulation_input.kind_of?(Array)
       simulation_input.each do |category|
         if category.key?(:label) && !category[:label].kind_of?(String)
-          error.push("Label for category must be string")
+          error.push(t('simulations.create.wrong_label_type'))
         end
         if simulation_input.size() >1 && category[:id].blank?
-          error.push("You need to specify id foreach category")
+          error.push(t('simulations.create.required_category_id'))
         end
         if category.key?(:id) && !category[:id].kind_of?(String)
-          error.push("Id for category must be string")
+          error.push(t('simulations.create.wrong_category_id_type'))
         end
         unless category[:entities].blank?
           if category[:entities].kind_of?(Array)
             category[:entities].each do |entity|
-              if entity.key?(:label) && !entity[:label].kind_of?(String)
-                error.push("Label for entity must be string")
-              end
-              if category[:entities].size() >1 && !entity.key?(:id)
-                error.push("You need to specify id foreach entity")
-              end
-              if entity.key?(:id) && !entity[:id].kind_of?(String)
-                error.push("Id for entity must be string")
-              end
-              unless entity[:parameters].blank?
-                if entity[:parameters].kind_of?(Array)
-                  entity[:parameters].each do |parameter|
-                    validation_param = validate_simulation_input_parameter(parameter)
-                    unless validation_param.blank?
-                      error.push(validation_param)
-                    end
-                  end
-                else
-                  error.push("Array of parameters is required")
+              if entity.kind_of?(Hash)
+                if entity.key?(:label) && !entity[:label].kind_of?(String)
+                  error.push(t('simulations.create.wrong_entity_label_type'))
                 end
-              end
+                if category[:entities].size() >1 && !entity.key?(:id)
+                  error.push(t('simulations.create.wrong_entity_id'))
+                end
+                if entity.key?(:id) && !entity[:id].kind_of?(String)
+                  error.push(t('simulations.create.wrong_entity_id_type'))
+                end
+                unless entity[:parameters].blank?
+                  if entity[:parameters].kind_of?(Array)
+                    entity[:parameters].each do |parameter|
+                      if entity.kind_of?(Hash)
+                        validation_param = validate_simulation_input_parameter(parameter)
+                        unless validation_param.blank?
+                          error.push(validation_param)
+                        end
+                      else
+                        error.push(t('simulations.create.wrong_parameter_type'))
+                      end
 
+                    end
+                  else
+                    error.push(t('simulations.create.array_of_parameters_not_found'))
+                  end
+                end
+              else
+                error.push(t('simulations.create.wrong_entity_type'))
+              end
             end
           else
-            error.push("Array of entities is required")
+            error.push(t('simulations.create.array_of_entities_not_found'))
           end
         end
       end
     else
-      error.push("Simulation input must be an array")
+      error.push(t('simulations.create.wrong_simulation_input_type'))
     end
 
     error.join(',')
@@ -115,52 +123,52 @@ class SimulationsController < ApplicationController
   def validate_simulation_input_parameter(parameter)
     error =[]
     if parameter.key?(:label) && !parameter[:label].kind_of?(String)
-      error.push("Label for parameter must be string")
+      error.push(t('simulations.create.wrong_parameter_label_type'))
     end
     if parameter[:id].blank? || !parameter[:id].kind_of?(String)
-      error.push("You need to specify string id foreach parameter")
+      error.push(t('simulations.create.wrong_parameter_id_type'))
     end
     if parameter[:type] == 'string'
       if parameter[:allowed_values].blank?
-        error.push("String values are required")
+        error.push(t('simulations.create.parameter_values_not_found'))
       end
     elsif parameter[:type] == 'integer'
 
       if parameter[:min].blank?
-        error.push("Minimum value is required")
+        error.push(t('simulations.create.parameter_min_not_found'))
       else
         unless parameter[:min].integer?
-          error.push("Not valid minimum value")
+          error.push(t('simulations.create.not_valid_min_value'))
         end
       end
 
       if parameter[:max].blank?
-        error.push("Maximum value is required")
+        error.push(t('simulations.create.parameter_max_not_found'))
       else
         unless parameter[:max].integer?
-          error.push("Not valid maximum value")
+          error.push(t('simulations.create.not_valid_max_value'))
         end
       end
 
     elsif parameter[:type] =='float'
 
       if parameter[:min].blank?
-        error.push("Minimum value is required")
+        error.push(t('simulations.create.parameter_min_not_found'))
       else
         unless parameter[:min].kind_of?(Fixnum) || parameter[:min].kind_of?(Float)
-          error.push("Not valid minimum value")
+          error.push(t('simulations.create.not_valid_min_value'))
         end
       end
       if parameter[:max].blank?
-        error.push("Maximum value is required")
+        error.push(t('simulations.create.parameter_max_not_found'))
       else
         unless parameter[:max].kind_of?(Fixnum) || parameter[:min].kind_of?(Float)
-          error.push("Not valid maximum value")
+          error.push(t('simulations.create.not_valid_max_value'))
         end
       end
 
     else
-      error.push("Parameter has wrong type. It must be string, integer or float")
+      error.push(t('simulations.create.wrong_parameter_type'))
     end
     error
   end
@@ -170,7 +178,7 @@ class SimulationsController < ApplicationController
     #temporary to fail all wrong parsing replace with raise Error
     validation_error = validate_simulation_input(simulation_input)
     if validation_error != ""
-      flash[:error] = validation_error
+      raise ValidationError.new('simulation_input', '<hidden>', validation_error)
     end
     # input validation
     case true

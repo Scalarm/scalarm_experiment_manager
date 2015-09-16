@@ -28,6 +28,26 @@ en:
       adapter_not_found: "Cannot find Simulation%{adapter} with the %{id} id"
       internal_error: "Internal error on registering adapters or simulation files"
       registered: Your simulation scenario has been registered
+      wrong_category_id_type: "Id for category must be string"
+      wrong_entity_label_type: "Label for entity must be string"
+      wrong_entity_id: "You need to specify id foreach entity"
+      wrong_entity_id_type: "Id for entity must be string"
+      array_of_parameters_not_found: "Array of parameters is required"
+      array_of_entities_not_found: "Array of entities is required"
+      wrong_simulation_input_type: "Simulation input must be an array"
+      wrong_parameter_type: "Parameter has wrong type. It must be string, integer or float"
+      parameter_max_not_found: "Maximum value is required"
+      parameter_min_not_found: "Minimum value is required"
+      parameter_values_not_found: "String values are required"
+      not_valid_min_value: "Not valid minimum value"
+      not_valid_max_value: "Not valid maximum value"
+      wrong_parameter_label_type: "Label for parameter must be string"
+      wrong_parameter_id_type: "You need to specify string id foreach parameter"
+      wrong_label_type: "Label for category must be string"
+      required_category_id: "You need to specify id foreach category"
+      wrong_entity_type: "Entity must be a hash"
+      wrong_parameter_type: "Parameter must be a hash"
+
     conduct:
       doe:
         add_parameter: "Add parameter"
