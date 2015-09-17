@@ -6,68 +6,69 @@
 %section.panel.radius.welcome-panel
   .row
     .small-12.columns
-      -#TODO: i18n
-      %h3(style="text-align: center;")= "Start Data Farming experiment"
-      -#t('.header')
+      %h3(style="text-align: center;")
+        =t('.header')
 
+  -# First line of actions
   .row
-    .small-3.columns.left
+    .small-8.columns.small-centered
       .row
-        .small-9.columns
-          = welcome_link(user_controller_account_path, 'user')
-          .icon-caption= t('.step_1')
-        .small-3.columns
-          = icon 'chevron-right', nil, style: 'padding-top: 24px;'
+        .small-4.columns.left
+          .row
+            .small-9.columns
+              = welcome_link(user_controller_account_path, 'user')
+              .icon-caption= t('.step_1')
+            .small-3.columns
+              = icon 'chevron-right', nil, style: 'padding-top: 24px;'
 
-    .small-3.columns.left
-      .row
-        .small-9.columns
-          = welcome_link(simulations_registration_path, 'upload')
-          .icon-caption= t('.step_2')
-        .small-3.columns
-          = icon 'chevron-right', nil, style: 'padding-top: 24px;'
+        .small-4.columns.left
+          .row
+            .small-9.columns
+              = welcome_link(simulations_registration_path, 'upload')
+              .icon-caption= t('.step_2')
+            .small-3.columns
+              = icon 'chevron-right', nil, class: 'welcome-panel-arrow', style: 'padding-top: 24px;'
 
-    .small-3.columns.left
-      .row
-        .small-9.columns
-          %a.available_experiments_link{href: '#', "data-action-url" => simulations_simulation_scenarios_path}
-            %span.button.radius.last-element.secondary
-              = icon 'flask'
-          .icon-caption= t('.step_3')
-        .small-3.-columns
-          = icon 'chevron-right', nil, style: 'padding-top: 24px;'
+        .small-4.columns.left.end
+          .row
+            .small-9.columns.left
+              %a.available_experiments_link{href: '#', "data-action-url" => simulations_simulation_scenarios_path}
+                %span.button.radius.last-element.secondary
+                  = icon 'flask'
+              .icon-caption= t('.step_3')
 
-    .small-3.columns.left
-      .row
-        .small-9.columns.left
-          %a.running_experiments_link{href: '#', "data-action-url" => running_experiments_experiments_path}
-            %span.button.radius.last-element.secondary
-              = icon 'file-text-o'
-          .icon-caption= t('.step_4')
-
+  -#Second line of steps
   .row
-    .small-12.columns
-      -#TODO: i18n
-      %h3(style="text-align: center;")= "After experiments completion"
-
-  .row
-    .small-3.columns.left
+    .small-8.columns.small-centered
       .row
-        .small-9.columns
-          %a.historical_experiments_link{href: '#', "data-action-url" => completed_experiments_experiments_path}
-            %span.button.radius.last-element.secondary
-              = icon 'file-text'
-          .icon-caption= t('.step_5')
-        .small-3.columns
-          = icon 'chevron-right', nil, style: 'padding-top: 24px;'
+        .small-4.columns.left
+          .row
+            .small-9.columns.left
+              %a.running_experiments_link{href: '#', "data-action-url" => running_experiments_experiments_path}
+                %span.button.radius.last-element.secondary
+                  = icon 'hourglass-half'
+              .icon-caption= t('.step_4')
+            .small-3.columns
+              = icon 'chevron-right', nil, style: 'padding-top: 24px;'
 
-    .small-3.columns.left
-      .row
-        .small-9.columns.left
-          %a.historical_experiments_link{href: '#', "data-action-url" => historical_experiments_experiments_path}
-            %span.button.radius.last-element.secondary
-              = icon 'file-archive-o'
-          .icon-caption= t('.step_6')
+
+        .small-4.columns.left
+          .row
+            .small-9.columns
+              %a.historical_experiments_link{href: '#', "data-action-url" => completed_experiments_experiments_path}
+                %span.button.radius.last-element.secondary
+                  = icon 'hourglass-end'
+              .icon-caption= t('.step_5')
+            .small-3.columns
+              = icon 'chevron-right', nil, style: 'padding-top: 24px;'
+
+        .small-4.columns.left.end
+          .row
+            .small-9.columns.left
+              %a.historical_experiments_link{href: '#', "data-action-url" => historical_experiments_experiments_path}
+                %span.button.radius.last-element.secondary
+                  = icon 'archive'
+              .icon-caption= t('.step_6')
 
 
 #experiment-list-modal.reveal-modal(data-reveal="")
