@@ -13,7 +13,6 @@
  *= require foundation_and_overrides
  *= require dataTables/jquery.dataTables
  *= require toastr
- *= require font-awesome
  *= require jstree-themes/default/style
  *= require nanoscroller
  *= require_tree .
@@ -21,7 +20,9 @@
  * require_tree jstree-themes
  */
 
- @import 'foundation-icons';
+@import 'foundation-icons';
+@import 'font-awesome-sprockets';
+@import 'font-awesome';
 
 .hidden {
   display: none;

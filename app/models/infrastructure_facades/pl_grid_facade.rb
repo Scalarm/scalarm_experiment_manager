@@ -96,13 +96,12 @@ class PlGridFacade < InfrastructureFacade
     credentials.ssh_session do |ssh|
       # TODO: implement ssh.scp method for gsissh and use here
       credentials.scp_session do |scp|
-        SSHAccessedInfrastructure::create_remote_directories(ssh)
+        PlGridFacade.remove_remote_monitoring_files(ssh)
 
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
         key_passphrase = params[:key_passphrase]
         PlGridFacade.generate_proxy(ssh, key_passphrase) if not credentials.secret_proxy and key_passphrase
         PlGridFacade.clone_proxy(ssh, RemoteAbsolutePath::remote_monitoring_proxy)
-
-        PlGridFacade.remove_remote_monitoring_files(ssh)
         PlGridFacade.upload_monitoring_files(scp, sm_uuid, arch)
         PlGridFacade.remove_local_monitoring_config(sm_uuid)
 

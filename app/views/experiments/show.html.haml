@@ -17,11 +17,12 @@
         = t('experiments.menu_panel.experiment')
       %ul{id: "menu-panel", style:"list-style-type: circle;"}
         %dl.accordion{"data-accordion" => "accordion_management", style: "text-align: left;" }
-          %dd.accordion-navigation{id: "accordionmanagement"}
+          - id = "accordion#{t('experiments.menu_panel.experiment_management.header').downcase}"
+          %dd.accordion-navigation.active{id: "#{id}"}
             %a.group_title{:href => "#experiments-panel", style: "text-align: left;"}
-              %i.fa.fa-plus-circle{style: "color: 333"}
+              %i.fa.fa-minus-circle.experiment{style: "color: 333"}
               = t('experiments.menu_panel.experiment_management.header')
-            %ul.content{"id" => "experiments-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
+            %ul.content.active{"id" => "experiments-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
               %li
                 %a.extend_input_space_link(href="#" id="extendinputspace" data-action-url="#" style="display: block; padding: 0px;")
                   %span= t('experiments.menu_panel.experiment_management.extend_input_space')
@@ -33,11 +34,12 @@
                   %span= "Computational resources"
 
         %dl.accordion{"data-accordion" => "accordion_results", style: "text-align: left;"}
-          %dd.accordion-navigation{id: "accordionbrowseresult"}
+          - id = "accordion#{t('experiments.menu_panel.experiment_result.header').downcase.gsub!(/\s+/, '')}"
+          %dd.accordion-navigation.active{id: "#{id}"}
             %a.group_title{:href => "#experiments-result-panel", style: "text-align: left;"}
-              %i.fa.fa-plus-circle{style: "color: 333"}
+              %i.fa.fa-minus-circle.experiment{style: "color: 333"}
               = t('experiments.menu_panel.experiment_result.header')
-            %ul.content{"id" => "experiments-result-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
+            %ul.content.active{"id" => "experiments-result-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
               %li
                 %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding: 0px;")
                   %span= t('experiments.menu_panel.experiment_result.show_progress')
@@ -204,14 +206,13 @@
       $("#menu-panel").on("click", "a.group_title", function (){
         var accordion_id = "#accordion" + $(this).text().toLowerCase().replace(/\s/g, '');
         if(!$(accordion_id).hasClass("active")) {
-          $(accordion_id).find('i').addClass('fa fa-minus-circle');
+          $(accordion_id).find('i').addClass('fa fa-minus-circle experiment');
         }
         else {
-          $(accordion_id).find('i').removeClass('fa fa-minus-circle').addClass('fa fa-plus-circle');
+          $(accordion_id).find('i').removeClass('fa fa-minus-circle experiment').addClass('fa fa-plus-circle experiment');
         }
 
       });
-
 
     });
 
