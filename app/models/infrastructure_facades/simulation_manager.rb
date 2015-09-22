@@ -368,8 +368,12 @@ class SimulationManager
   # or return other value to stop execution
   def general_action(action_name)
     case action_name
-      when 'resource_status' && record.onsite_monitoring
-        record.resource_status || :not_available
+      when 'resource_status'
+        if record.onsite_monitoring
+          record.resource_status || :not_available
+        else
+          nil
+        end
       when 'stop'
         set_state(:terminating)
         @record.clean_up_database!
