@@ -143,7 +143,7 @@ class SimulationsController < ApplicationController
   # a life-cycle of a single simulation
   def mark_as_complete
     response = { status: 'ok' }
-
+    sm_record = nil
     begin
       Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
         if @simulation_run.nil? or @simulation_run.is_done
@@ -197,6 +197,7 @@ class SimulationsController < ApplicationController
               @simulation_run.computational_resources = sm_record.computational_resources
             end
 
+            sm_record.simulations_left -= 1 if sm_record.simulations_left
             sm_record.finished_simulations ||= 0
             sm_record.finished_simulations += 1
             sm_record.save
@@ -223,6 +224,13 @@ class SimulationsController < ApplicationController
     rescue Exception => e
       Rails.logger.error("Error in marking a simulation as complete - #{e}")
       response = { status: 'error', reason: e.to_s }
+    end
+
+    if sm_record and sm_record.simulations_left <= 0
+      InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure)
+          .yield_simulation_manager(sm_record) do |sm|
+        sm.stop
+      end
     end
 
     render json: response
