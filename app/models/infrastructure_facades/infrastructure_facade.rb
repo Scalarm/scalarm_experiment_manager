@@ -371,6 +371,10 @@ class InfrastructureFacade
     _get_sm_records(query, params)
   end
 
+  def get_subinfrastructures(user_id)
+    [{name: short_name, params: {}}]
+  end
+
   def self.handle_monitoring_send_errors(records)
     begin
       yield
