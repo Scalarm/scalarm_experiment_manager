@@ -23,7 +23,7 @@ module WorkersScaling
     def schedule_workers(amount, infrastructure_name, params = {})
       begin
         #TODO to_s, to_sym
-        params['time_limit'] = 60 if params['time_limit'].nil?
+        params[:time_limit] = 60 if params[:time_limit].nil?
         params.merge! onsite_monitoring: true
         get_facade_for(infrastructure_name)
           .start_simulation_managers(@user_id, amount, @experiment_id, params)
@@ -32,6 +32,18 @@ module WorkersScaling
         # TODO inform user about credentials error
         raise
       end
+    end
+
+    ##
+    # Marks worker with given sm_uuid to be deleted after finishing given number of simulations
+    # If overwrite is set to false, worker will not be marked if simulations_left field is already set,
+    # otherwise new number will be set in all cases
+    # Using overwrite=true may result in unintentional resetting simulations_left field,
+    # effectively prolonging lifetime of worker, therefore default value is false
+    def limit_worker_simulations(sm_uuid, simulations_left, overwrite=false)
+        worker = get_workers_records(cond: {sm_uuid: sm_uuid}).first
+        worker.simulations_left = simulations_left if worker.simulations_left.blank? or overwrite
+        worker.save
     end
 
     ##
@@ -44,27 +56,6 @@ module WorkersScaling
     end
 
     ##
-    # Returns statistics about available infrastructure:
-    #   * workers_count
-    # params:
-    #   * infrastructure_names
-    # Raises InfrastructureError
-    def get_infrastructures_statistics(params = {})
-      infrastructure_names = params[:infrastructure_names] || get_available_infrastructures
-      infrastructure_names.map {|name| [name, get_infrastructure_statistics(name, params)]}.to_h
-    end
-
-    ##
-    # Returns statistics about given infrastructure, statistics description in #get_infrastructures_statistics
-    # Raises InfrastructureError
-    def get_infrastructure_statistics(infrastructure_name, params = {})
-      {
-          workers_count: get_facade_for(infrastructure_name).sm_record_class
-                             .where({user_id: @user_id, experiment_id: @experiment_id}).count
-      }
-    end
-
-    ##
     # Returns workers records per infrastructure
     # params:
     #   * infrastructure_names
@@ -74,12 +65,29 @@ module WorkersScaling
     # Raises InfrastructureError
     def get_workers_records(params = {})
       cond = {experiment_id: @experiment_id, user_id: @user_id}
-      cond.merge params[:cond] if params.has_key? :cond
+      cond.merge! params[:cond] if params.has_key? :cond
       opts = {}
-      opts.merge params[:opts] if params.has_key? :opts
+      opts.merge! params[:opts] if params.has_key? :opts
       facades = params[:infrastructure_names] || get_available_infrastructures
       facades.map {|name| [name, get_facade_for(name).sm_record_class.where(cond, opts).to_a]}
           .flat_map {|name, records| records.map { |record| record.infrastructure=name; record }}
+    end
+
+    ##
+    # Returns workers records count per infrastructure
+    # params:
+    #   * infrastructure_names
+    #   * opts
+    #   * cond
+    # Possible cond and opts can be found in MongoActiveRecord#where.
+    # Raises InfrastructureError
+    def get_workers_records_count(params = {})
+      cond = {experiment_id: @experiment_id, user_id: @user_id}
+      cond.merge! params[:cond] if params.has_key? :cond
+      opts = {}
+      opts.merge! params[:opts] if params.has_key? :opts
+      facades = params[:infrastructure_names] || get_available_infrastructures
+      facades.map {|name| [name, get_facade_for(name).sm_record_class.where(cond, opts).count]}.to_h
     end
 
     ##

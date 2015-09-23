@@ -21,6 +21,16 @@ module WorkersScaling
     end
 
     ##
+    # Returns average throughput for given infrastructure
+    # Arguments:
+    # * infrastructure name
+    def infrastructure_throughput(infrastructure_name)
+      workers_for_infrastructure = @resources_interface.get_workers_records infrastructure_names: [infrastructure_name]
+      workers_for_infrastructure.map {|worker| calculate_worker_throughput worker}
+        .reduce(0.0, :+) / Float(workers_for_infrastructure.size)
+    end
+
+    ##
     # Returns throughput of experiment(system) associated with ExperimentStatistics instance.
     # System throughput is calculated as sum of all workers throughput [sim/s].
     def system_throughput
@@ -36,6 +46,28 @@ module WorkersScaling
     def makespan
       @experiment.reload
       (@experiment.experiment_size - @experiment.count_done_simulations)/Float(system_throughput)
+    end
+
+    ##
+    # Returns statistics about available infrastructure:
+    #   * workers_count
+    # params:
+    #   * infrastructure_names
+    # Raises InfrastructureError
+    def get_infrastructures_statistics(params = {})
+      infrastructure_names = params[:infrastructure_names] || @resources_interface.get_available_infrastructures
+      infrastructure_names.map {|name| [name, get_infrastructure_statistics(name, params)]}.to_h
+    end
+
+    ##
+    # Returns statistics about given infrastructure, statistics description in #get_infrastructures_statistics
+    # Raises InfrastructureError
+    def get_infrastructure_statistics(name, params = {})
+      params.merge! infrastructure_names: [name]
+      {
+          workers_count: @resources_interface.get_workers_records_count(params)[name],
+          average_throughput: infrastructure_throughput(name)
+      }
     end
 
     private
