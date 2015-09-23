@@ -360,7 +360,7 @@ class InfrastructureFacade
   end
 
   def get_subinfrastructures(user_id)
-    [{name: short_name, params: {}}]
+    [{name: short_name.to_sym, params: {}}]
   end
 
   def self.handle_monitoring_send_errors(records)

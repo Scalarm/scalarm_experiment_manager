@@ -5,6 +5,13 @@
 module WorkersScaling
   class Algorithm
 
+    ##
+    # Variable storing user-defined workers limits for each infrastructure
+    # Format: [{infrastructure: <infrastructure>, limit: <limit>}, ...]
+    # <infrastructure> - hash with infrastructure info
+    # <limit> - integer
+    attr_accessor :infrastructure_limits
+
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
 
     ##
