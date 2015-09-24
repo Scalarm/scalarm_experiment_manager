@@ -41,9 +41,6 @@
               = t('experiments.menu_panel.experiment_result.header')
             %ul.content.active{"id" => "experiments-result-panel", "style" => "background: none;"  "text-align: left;  list-style-type: circle;"}
               %li
-                %a.show_progress_link(href="#" id="showprogress" data-action-url="#" style="display: block; padding: 0px;")
-                  %span= t('experiments.menu_panel.experiment_result.show_progress')
-              %li
                 %a.download_result_link(href="#{results_binaries_experiment_path(@experiment.id)}" id = "downloadbinaries" data-action-url="#" style="display: block; padding: 0px;")
                   %span= t('experiments.menu_panel.experiment_result.download_result.binaries')
               %li
@@ -89,7 +86,7 @@
 
       = render 'monitoring_actions'
 
-  %section.row.panel.radius.last-element#progressInformationWrapper(style="display: none; margin-top: 50px;")
+  %section.row.panel.radius.last-element#progressInformationWrapper(style="margin-top: 50px;")
     = render 'monitoring_table'
 
   = render 'scheduling_policy_dialog'
