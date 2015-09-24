@@ -190,7 +190,7 @@ en:
         extend_input_space: "Extend input space"
         set_scheduling_method: "Set scheduling method"
       experiment_result:
-        header: "Browse result"
+        header: "Download results"
         show_progress: "Show progress"
         download_result:
           header: "Download result"
