@@ -14,29 +14,31 @@ class InformationService
     slog('IS', "Registering #{service} at address '#{host}:#{port}'")
     code, body = send_request(service, {address: "#{host}:#{port}"})
 
-    if code == '200'
-      response = JSON.parse(body)
-      puts response.inspect
-      if response['status'] == 'ok'
-        return nil, response['msg']
-      else
-        return 'error', response['msg']
-      end
+    if code == '201'
+      return nil, "Service has been registered"
+      # response = JSON.parse(body)
+      # puts response.inspect
+      # if response['status'] == 'ok'
+      #   return nil, response['msg']
+      # else
+      #   return 'error', response['msg']
+      # end
     else
       return 'error', code
     end
   end
 
   def deregister_service(service, host, port)
-    code, body = send_request(service, {address: "#{host}:#{port}"}, method: 'DELETE')
+    code, body = send_request(service + "/#{host}:#{port}", {}, method: 'DELETE')
 
     if code == '200'
-      response = JSON.parse(body)
-      if response['status'] == 'ok'
-        return nil, response['msg']
-      else
-        return 'error', response['msg']
-      end
+      return nil, "Service has been deregistered"
+      # response = JSON.parse(body)
+      # if response['status'] == 'ok'
+      #   return nil, response['msg']
+      # else
+      #   return 'error', response['msg']
+      # end
     else
       return 'error', code
     end
