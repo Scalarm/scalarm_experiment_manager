@@ -59,8 +59,136 @@ class SimulationsController < ApplicationController
     redirect_to :action => :index
   end
 
+
+  def validate_simulation_input(simulation_input)
+    #table for all errors
+    error = []
+
+    if simulation_input.kind_of?(Array)
+      simulation_input.each do |category|
+        if category.kind_of?(Hash)
+          if category.key?(:label) && !category[:label].kind_of?(String)
+            error.push(t('simulations.create.wrong_collection_field_type', field: "Label", collection: "category"))
+          end
+          if simulation_input.size() >1 && category[:id].blank?
+            error.push(t('simulations.create.required_collection_id', collection: "category"))
+          end
+          if category.key?(:id) && !category[:id].kind_of?(String)
+            error.push(t('simulations.create.wrong_collection_field_type', field: "Id", collection: "category"))
+          end
+          if category[:entities].blank?
+            error.push(t('simulations.create.required_collection_key', field: "entities" ))
+          else
+            if category[:entities].kind_of?(Array)
+              category[:entities].each do |entity|
+
+                if entity.kind_of?(Hash)
+                  if entity.key?(:label) && !entity[:label].kind_of?(String)
+                    error.push(t('simulations.create.wrong_collection_field_type', field: "Label", collection: "entity"))
+                  end
+                  if category[:entities].size() >1 && !entity.key?(:id)
+                    error.push(t('simulations.create.required_collection_id', collection: "entity"))
+                  end
+                  if entity.key?(:id) && !entity[:id].kind_of?(String)
+                    error.push(t('simulations.create.wrong_collection_field_type', field: "Id", collection: "entity"))
+                  end
+                  unless entity.key?(:parameters)
+                    error.push(t('simulations.create.required_collection_key', field: "parameters"))
+                  end
+                  if entity[:parameters].kind_of?(Array)
+                    entity[:parameters].each do |parameter|
+                      if parameter.kind_of?(Hash)
+                        validation_param = validate_simulation_input_parameter(parameter)
+                        unless validation_param.blank?
+                          error.push(validation_param)
+                        end
+                      else
+                        error.push(t('simulations.create.wrong_collection_type', collection: "parameters"))
+                      end
+                    end
+                  else
+                    error.push(t('simulations.create.wrong_groped_collection_type', field: "parameters" ))
+                  end
+                else
+                  error.push(t('simulations.create.wrong_collection_type', collection: "entities"))
+                end
+              end
+            else
+              error.push(t('simulations.create.wrong_groped_collection_type', field: "entities"))
+            end
+          end
+
+        else
+          error.push(t('simulations.create.wrong_collection_type', collection: "categories"))
+        end
+      end
+    else
+      error.push(t('simulations.create.wrong_groped_collection_type', field: "categories"))
+    end
+
+    error.join(',')
+  end
+
+  def validate_simulation_input_parameter(parameter)
+    error =[]
+    if parameter.key?(:label) && !parameter[:label].kind_of?(String)
+      error.push(t('simulations.create.wrong_collection_field_type', field: "Label", collection: "parameter"))
+    end
+    if parameter[:id].blank? || !parameter[:id].kind_of?(String)
+      error.push(t('simulations.create.required_collection_id', collection: "parameter"))
+    end
+    if parameter[:type] == 'string'
+      if parameter[:allowed_values].blank? || !parameter[:allowed_values].kind_of?(String)
+        error.push(t('simulations.create.parameter_field_not_found', type: "String"))
+      end
+    elsif parameter[:type] == 'integer'
+
+      if parameter[:min].blank?
+        error.push(t('simulations.create.parameter_field_not_found', type: "Minimum"))
+      else
+        unless parameter[:min].integer?
+          error.push(t('simulations.create.not_valid_parameter_value', type: "minimum"))
+        end
+      end
+
+      if parameter[:max].blank?
+        error.push(t('simulations.create.parameter_field_not_found', type: "Maximum"))
+      else
+        unless parameter[:max].integer?
+          error.push(t('simulations.create.not_valid_parameter_value', type: "maximum"))
+        end
+      end
+
+    elsif parameter[:type] =='float'
+
+      if parameter[:min].blank?
+        error.push(t('simulations.create.parameter_field_not_found', type: "Minimum"))
+      else
+        unless parameter[:min].kind_of?(Fixnum) || parameter[:min].kind_of?(Float)
+          error.push(t('simulations.create.not_valid_parameter_value', type: "minimum"))
+        end
+      end
+      if parameter[:max].blank?
+        error.push(t('simulations.create.parameter_field_not_found', type: "Maximum"))
+      else
+        unless parameter[:max].kind_of?(Fixnum) || parameter[:min].kind_of?(Float)
+          error.push(t('simulations.create.not_valid_parameter_value', type: "maximum"))
+        end
+      end
+
+    else
+      error.push(t('simulations.create.wrong_parameter_type'))
+    end
+    error
+  end
+
   def create
     simulation_input = Utils.parse_json_if_string(Utils.read_if_file(params[:simulation_input]))
+    #temporary to fail all wrong parsing replace with raise Error
+    validation_error = validate_simulation_input(simulation_input)
+    if validation_error != ""
+      raise ValidationError.new('simulation_input', '<hidden>', validation_error)
+    end
     # input validation
     case true
       when (params[:simulation_name].blank?)
