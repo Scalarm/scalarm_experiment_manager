@@ -28,13 +28,13 @@
 
       %ul.right
         %li
-          %a(href="#" onclick="$('.help').toggle(400, 'swing'); return false;")
-            %i.fi-info.link{ title: t('.help_button') }
+          %a.has-tip.tip-bottom{"href"=>"#", "onclick"=>"$('.help').toggle(400, 'swing'); return false;", "aria-haspopup" => "true", "data-tooltip" => "", title: "#{t('.help_button')}"}
+            =image_tag "help-icon.png"
         %li.divider
         %li
-          %a(href="#{user_controller_account_path}")
-            %i.fi-torso.link{title: t('.account_link', login: current_user.login)}
-        %li.divider    
+          %a.has-tip.tip-bottom{"href"=>"#{user_controller_account_path}", "aria-haspopup" => "true", "data-tooltip" => "", title: "#{t('.account_link', login: current_user.login)}"}
+            =image_tag "profile-icon.png"
+        %li.divider
         %li
-          %a(href="#{logout_path}" data-method="post")
-            %i.fi-eject.link{ title: t('.logout_link') }
+          %a.has-tip.tip-bottom{"href"=>"#{logout_path}", "data-method"=>"post", "aria-haspopup" => "true", "data-tooltip" => "", title: "#{t('.logout_link')}"}
+            =image_tag "logout-icon.png"
