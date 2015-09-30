@@ -89,8 +89,11 @@
       $("#executor_id").attr('required', 'required');
       $("#scenario_form")
         .on('invalid.fndtn.abide', function(){
-          $(this).find('[data-invalid]').blur();
-          $('#invalid-form').foundation('reveal', 'open');
+          var error_basic = $("#scenario_form").find(':input[data-invalid]:visible')[0];
+          if (typeof error_basic != "undefined") {
+            $(this).find('[data-invalid]').blur();
+            $('#invalid-form').foundation('reveal', 'open');
+          }
         });
 
       $("#invalid-ok").bind("click", function() {
