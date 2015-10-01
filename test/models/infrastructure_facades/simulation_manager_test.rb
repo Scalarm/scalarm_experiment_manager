@@ -338,6 +338,30 @@ class SimulationManagerTest < MiniTest::Test
   end
 
   ##
+  # When onsite_monitoring flag is set
+  # Then resource_status should be read from record attribute
+  def test_onsite_resource_status_read
+    res_status = 'stored_status'
+
+    @record.stubs(:onsite_monitoring).returns(true)
+    @record.stubs(:resource_status).returns(res_status)
+
+    assert_equal res_status, @sm.resource_status
+  end
+
+  ##
+  # When onsite_monitoring flag is false
+  # Then resource_status should be read from infrastructure
+  def test_delegated_resource_status_read
+    res_status = 'some_status'
+
+    @record.stubs(:onsite_monitoring).returns(false)
+    @sm.infrastructure.stubs(:_simulation_manager_resource_status).returns(res_status)
+
+    assert_equal res_status, @sm.resource_status
+  end
+
+  ##
   # When SiM is INITIALIZING and resource is back to AVAILABLE
   # there should be error reported
   def test_available_and_initializing

@@ -5,7 +5,7 @@
   %fieldset#input-definition
     %legend= t('simulations.registration.simulation_input')
 
-    .row{style: 'margin-top: -3rem;'}
+    .row{class: 'menu', style: 'margin-top: -3rem;'}
       %ul.button-group.right.round
         %li
           %a#input-designer-on.tiny.button.secondary(href="#") Design
@@ -115,26 +115,44 @@
       abide: {
         validators: {
           validate_ranges: function(el, required, parent){
-            var from  = parseFloat($("#param_max").val());
-            var to = parseFloat($("#param_min").val());
-            if (el.id == "param_max" && from >= to ){
-              $("#param_min").attr('aria-invalid','false');
-              $("#param_min").removeAttr('data-invalid');
-              document.getElementById("param_min_error_msg").style.display="none";
-              $("#label_min").removeClass("error");
+            if ($("#input-designer-on").hasClass('active')) {
+              var from  = parseFloat($("#param_max").val());
+              var to = parseFloat($("#param_min").val());
+              if (!isNaN(from) && !isNaN(to)) {
+                if (el.id == "param_max" && from >= to ){
+                  $("#param_min").attr('aria-invalid','false');
+                  $("#param_min").removeAttr('data-invalid');
+                  document.getElementById("param_min_error_msg").style.display="none";
+                  $("#label_min").removeClass("error");
+                }
+                if (el.id == "param_min" && from >= to ){
+                  $("#param_max").attr('aria-invalid','false');
+                  $("#param_max").removeAttr('data-invalid');
+                  document.getElementById("param_max_error_msg").style.display="none";
+                  $("#label_max").removeClass("error");
+                }
+                if (from < to){
+                  $("#param_min_error_msg").removeAttr("style");
+                  $("#param_max_error_msg").removeAttr("style");
+                }
+                return (from >= to);
+              } else {
+                return true;
+              }
+            } else {
+              return true;
             }
-            if (el.id == "param_min" && from >= to ){
-              $("#param_max").attr('aria-invalid','false');
-              $("#param_max").removeAttr('data-invalid');
-              document.getElementById("param_max_error_msg").style.display="none";
-              $("#label_max").removeClass("error");
-            }
-            if (from < to){
-              $("#param_min_error_msg").removeAttr("style");
-              $("#param_max_error_msg").removeAttr("style");
-            }
-            return (from >= to);
           }
         }
+      }
+    });
+
+    $('.menu li').click(function () {
+      if ($(this).text().trim() == "Design") {
+        $("#input-designer-on").addClass("active")
+        $("#input-designer-off").removeClass("active")
+      } else {
+        $("#input-designer-on").removeClass("active")
+        $("#input-designer-off").addClass("active")
       }
     });
