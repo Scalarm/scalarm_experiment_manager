@@ -49,7 +49,9 @@ class ScalarmUser < MongoActiveRecord
     user = ScalarmUser.find_by_login(login.to_s)
 
     if user.nil? || user.password_salt.nil? || user.password_hash.nil?  || Digest::SHA256.hexdigest(password + user.password_salt) != user.password_hash
-      raise I18n.t('user_controller.login.bad_login_or_pass')
+      Rails.logger.debug(I18n.t('user_controller.login.bad_login_or_pass'))
+
+      return nil
     end
 
     user

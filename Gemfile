@@ -81,3 +81,5 @@ gem 'newrelic_rpm'
 
 #oauth2
 gem 'signet'
+
+gem 'rails-api'
