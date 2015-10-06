@@ -67,6 +67,7 @@ class SimulationsController < ApplicationController
     if simulation_input.kind_of?(Array)
       simulation_input.each do |category|
         if category.kind_of?(Hash)
+          category = category.with_indifferent_access
           if category.key?(:label) && !category[:label].kind_of?(String)
             error.push(t('simulations.create.wrong_collection_field_type', field: "Label", collection: "category"))
           end
@@ -187,7 +188,7 @@ class SimulationsController < ApplicationController
     #temporary to fail all wrong parsing replace with raise Error
     validation_error = validate_simulation_input(simulation_input)
     if validation_error != ""
-      raise ValidationError.new('simulation_input', '<hidden>', validation_error)
+      raise ValidationError.new('simulation_input', '', validation_error)
     end
     # input validation
     case true

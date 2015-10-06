@@ -308,7 +308,7 @@ class SimulationsControllerTest < ActionController::TestCase
   end
 
   ## Testing labels for various type of parameters and values
-  test 'Successful registration of simulation with label categories and entities' do
+  test 'Successful registration of simulation with label categories and entities as json' do
 
     simulation_input = [{
                             id: "category1",
@@ -359,7 +359,7 @@ class SimulationsControllerTest < ActionController::TestCase
                                        }]
                         }]
 
-    post :create, prepare_request_content(simulation_input)
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response 200, response.body
 
     post :create, prepare_request_content(simulation_input.to_json)
