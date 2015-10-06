@@ -598,6 +598,14 @@ class Experiment < Scalarm::Database::Model::Experiment
     sim_run and sim_run.result
   end
 
+
+  # Narrow the type of experiment
+  # Return object with same data, but narrowed class
+  def auto_convert
+    class_name = ExperimentFactory.resolve_type(self)
+    self.convert_to(class_name.constantize)
+  end
+
   private
 
   def self.nested_json_to_hash(nested_json)
@@ -825,5 +833,6 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     "data.frame(#{data_frame_list.join(',')})"
   end
+
 
 end
