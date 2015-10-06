@@ -34,10 +34,10 @@ en:
       required_collection_id: "You need to specify string id foreach %{collection}"
       wrong_collection_type: "Each value in array %{collection} must be a hash"
       wrong_groped_collection_type: "Value for key: %{field} must be an array"
-      required_collection_key: "Key %{field} is required in hash"
+      required_collection_key: "Key: %{field} is required in hash"
       wrong_parameter_type: "Parameter has wrong type. It must be string, integer or float"
       parameter_field_not_found: "%{type} value is required"
-      not_valid_parameter_value: "Not valid %{type} value"
+      not_valid_parameter_value: "Not valid parameter %{type} value"
 
     conduct:
       doe:
