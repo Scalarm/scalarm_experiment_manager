@@ -74,7 +74,6 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :results_binaries
 
       post  :stop
-      post  :destroy
       post  :extend_input_values
       get   :intermediate_results
       get   :extension_dialog
