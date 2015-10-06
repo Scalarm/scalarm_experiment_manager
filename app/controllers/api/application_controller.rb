@@ -23,4 +23,9 @@ class Api::ApplicationController < ActionController::API
 
     render json: { reason: 'Authentication failed' }, status: :unauthorized
   end
+
+  def validate(validators)
+    validate_params(params, validators)
+  end
+
 end

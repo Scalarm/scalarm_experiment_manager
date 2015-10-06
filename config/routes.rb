@@ -135,7 +135,11 @@ ScalarmExperimentManager::Application.routes.draw do
   end
 
   namespace :api do
-    resources :experiments
+    resources :simulation_scenarios
+
+    resources :experiments do
+      resources :simulations
+    end
   end
 
   # Example of regular route:
