@@ -5,16 +5,25 @@ class Api::ApplicationController < ActionController::API
 
   before_filter :authenticate
 
-  rescue_from ValidationError, MissingParametersError, SecurityError, BSON::InvalidObjectId, with: :generic_exception_handler
+  rescue_from Exception, with: :generic_exception_handler
+  rescue_from ValidationError, MissingParametersError, SecurityError, BSON::InvalidObjectId, with: :precondition_exception_handler
 
   protected
 
-  def generic_exception_handler(exception)
+  def precondition_exception_handler(exception)
     Rails.logger.warn("Exception caught in generic_exception_handler: #{exception.message}")
     Rails.logger.debug("Exception backtrace:\n#{exception.backtrace.join("\n")}")
 
     render json: { reason: exception.to_s }, status: :precondition_failed
   end
+
+  def generic_exception_handler(exception)
+    Rails.logger.warn("Exception caught in generic_exception_handler: #{exception.message}")
+    Rails.logger.debug("Exception backtrace:\n#{exception.backtrace.join("\n")}")
+
+    render json: { reason: exception.message }, status: :internal_server_error
+  end
+
 
   def authentication_failed
     Rails.logger.debug('[authentication] failed - 401')
