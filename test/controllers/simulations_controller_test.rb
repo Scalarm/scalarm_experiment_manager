@@ -40,6 +40,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   ## entity value must be hash
@@ -48,6 +51,9 @@ class SimulationsControllerTest < ActionController::TestCase
     simulation_input =  [{ entities: [1] }]
 
     post :create, prepare_request_content(simulation_input)
+    assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response 412, response.body
   end
 
@@ -61,6 +67,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   test 'Failed registration of simulation with wrong value for parameters' do
@@ -72,6 +81,9 @@ class SimulationsControllerTest < ActionController::TestCase
                             ]
                         }]
     post :create, prepare_request_content(simulation_input)
+    assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response 412, response.body
   end
 
@@ -118,6 +130,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   ## single param, entity and category - in this case id required only for parameter
@@ -137,6 +152,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 200, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 200, response.body
   end
 
   test 'Failed registration of simulation - type: integer but value is float ' do
@@ -154,6 +172,9 @@ class SimulationsControllerTest < ActionController::TestCase
                          }]
 
     post :create, prepare_request_content(simulation_input)
+    assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response 412, response.body
   end
 
@@ -173,6 +194,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   test 'Failed registration of simulation - wrong string param type ' do
@@ -190,6 +214,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   test 'Failed registration of simulation - empty paramaters hash ' do
@@ -205,6 +232,9 @@ class SimulationsControllerTest < ActionController::TestCase
 
     post :create, prepare_request_content(simulation_input)
     assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   # Tests registration of simulation without parameters and without executor name
@@ -217,6 +247,9 @@ class SimulationsControllerTest < ActionController::TestCase
                            ]
                        }]
     post :create, prepare_request_content(simulation_input)
+    assert_response :success, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response :success, response.body
   end
 
@@ -268,6 +301,9 @@ class SimulationsControllerTest < ActionController::TestCase
                        }]
 
     post :create, prepare_request_content(simulation_input)
+    assert_response 200, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response 200, response.body
   end
 
@@ -324,6 +360,9 @@ class SimulationsControllerTest < ActionController::TestCase
                         }]
 
     post :create, prepare_request_content(simulation_input)
+    assert_response 200, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
     assert_response 200, response.body
   end
 
