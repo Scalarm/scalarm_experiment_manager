@@ -1212,13 +1212,7 @@ class ExperimentsController < ApplicationController
   private
 
   def transform_experiment(experiment)
-    if experiment.supervised
-      SupervisedExperiment.from_experiment(experiment)
-    elsif experiment.type == 'manual_points'
-      CustomPointsExperiment.from_experiment(experiment)
-    else
-      experiment
-    end
+    experiment.auto_convert
   end
 
   def load_experiment
