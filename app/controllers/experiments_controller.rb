@@ -41,10 +41,8 @@ class ExperimentsController < ApplicationController
   end
 
   def load_non_historical_experiments
-    (current_user.get_running_experiments.sort do |e1, e2|
+    current_user.get_running_experiments.sort do |e1, e2|
       e2.start_at <=> e1.start_at
-    end).map do |e|
-      transform_experiment e
     end
   end
 
@@ -100,7 +98,6 @@ class ExperimentsController < ApplicationController
 
   def running_experiments
     @running_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @running_experiments.map! {|e| transform_experiment e}
     @running_experiments.select! {|e| not e.completed?} # running and not completed
 
     render partial: 'running_experiments', locals: { show_close_button: true }
@@ -108,7 +105,6 @@ class ExperimentsController < ApplicationController
 
   def completed_experiments
     @completed_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @completed_experiments.map! {|e| transform_experiment e}
     @completed_experiments.select! {|e| e.completed?} # running and completed
 
     render partial: 'completed_experiments', locals: { show_close_button: true }
@@ -1211,10 +1207,6 @@ class ExperimentsController < ApplicationController
 
   private
 
-  def transform_experiment(experiment)
-    experiment.auto_convert
-  end
-
   def load_experiment
     validate(
         id: [:optional, :security_default]
@@ -1247,7 +1239,7 @@ class ExperimentsController < ApplicationController
           format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
         end
       else
-        @experiment = transform_experiment @experiment
+        @experiment
       end
     end
   end

@@ -70,30 +70,62 @@ class ExperimentIntegrationTest < MiniTest::Test
   # Then we should get the object of class Experiment
   define_convert_test(:create_experiment, Experiment)
 
-  ## ExperimentsController#transform_experiment tests ##
+  ## Experiment find_by_* and where automatic conversions ##
 
-  # Check if ExperimentsController#transform_experiment
-  # is compatible with auto_convert method
-  # case: using CustomPointsExperiment
-  def test_transform_vs_auto_convert_with_custom_points
-    original_experiment = self.create_experiment(:create_custom_points_experiment)
-    cont_experiment = ExperimentsController.new.send(:transform_experiment, original_experiment)
-    auto_convert_experiment = original_experiment.auto_convert
+  # Given
+  #   A supervised is created and saved into database
+  # When
+  #   Experiment.where is used to get (single record, list) of experiments
+  # Then
+  #   We can get a single object with narrowed class
+  def test_where_first_with_auto_convert
+    # Given
+    e = create_experiment(:create_supervised_experiment)
+    e.name = 'some_name'
+    e.save
 
-    assert_equal cont_experiment.class, auto_convert_experiment.class
-    assert_equal cont_experiment.id, auto_convert_experiment.id
+    # When
+    fetched_e = Experiment.where(name: 'some_name').first
+    refute_nil fetched_e
+
+    # Then
+    assert_respond_to fetched_e, :mark_as_complete!,
+                      'Fetched experiment should be of type SupervisedExperiment - so at least it should respond to mark_as_complete!'
   end
 
-  # Check if ExperimentsController#transform_experiment
-  # is compatible with auto_convert method
-  # case: using SupervisedExperiment
-  def test_transform_vs_auto_convert_with_supervised
-    original_experiment = self.create_experiment(:create_supervised_experiment)
-    cont_experiment = ExperimentsController.new.send(:transform_experiment, original_experiment)
-    auto_convert_experiment = original_experiment.auto_convert
+  # G: A supervised is created and saved into database
+  # W: Experiment.where is used to get list of experiments
+  # T: We can get a collection of objects with narrowed classes
+  def test_where_with_auto_convert
+    # Given
+    e_normal = create_experiment(:create_experiment)
+    e_normal.name = 'normal'
+    e_normal.save
 
-    assert_equal cont_experiment.class, auto_convert_experiment.class
-    assert_equal cont_experiment.id, auto_convert_experiment.id
+    e_custom = create_experiment(:create_custom_points_experiment)
+    e_custom.name = 'custom_points'
+    e_custom.save
+
+    e_supervised = create_experiment(:create_supervised_experiment)
+    e_supervised.name = 'supervised'
+    e_supervised.save
+
+    # When
+    fetched_exps = Experiment.where({})
+    refute_nil fetched_exps
+
+    # Then
+    normal_e = fetched_exps.where(name: 'normal').first
+    refute_nil normal_e
+    refute_respond_to normal_e, :add_point!
+
+    custom_e = fetched_exps.where(name: 'custom_points').first
+    refute_nil custom_e
+    assert_respond_to custom_e, :add_point!
+
+    supervised_e = fetched_exps.where(name: 'supervised').first
+    refute_nil supervised_e
+    assert_respond_to supervised_e, :mark_as_complete!
   end
 
 end
