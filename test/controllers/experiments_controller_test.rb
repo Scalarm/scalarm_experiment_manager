@@ -57,10 +57,6 @@ class ExperimentsControllerTest < ActionController::TestCase
     experiments = [experiment1, experiment2]
 
     @user.stubs(:get_running_experiments).returns(experiments)
-    ExperimentsController.any_instance.stubs(:transform_experiment)
-        .with(experiment1).returns(experiment1)
-    ExperimentsController.any_instance.stubs(:transform_experiment)
-        .with(experiment2).returns(experiment2)
 
     @request.headers['Accept'] = 'application/json'
     get :index, {}

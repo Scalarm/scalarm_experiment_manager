@@ -45,6 +45,10 @@ class Experiment < Scalarm::Database::Model::Experiment
   attr_join :simulation, Simulation
   attr_join :user, ScalarmUser
 
+  def self.to_a
+    super.map {|e| e.auto_convert}
+  end
+
   def simulation_runs
     SimulationRunFactory.for_experiment(id)
   end
