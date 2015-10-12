@@ -39,9 +39,8 @@ module WorkersScaling
     # Creates instances of ExperimentResourcesInterface and ExperimentStatistics
     def initialize(experiment, user_id, limits, planned_finish_time)
       @experiment = experiment
-      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id)
+      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, limits)
       @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
-      @infrastructure_limits = limits
       @planned_finish_time = planned_finish_time
       @total_time = (planned_finish_time - Time.now).seconds
     end
@@ -52,7 +51,7 @@ module WorkersScaling
     def initial_deployment
       LOGGER.debug 'Initial deployment'
       @resources_interface.get_available_infrastructures
-          .select { |infrastructure| current_infrastructure_limit(infrastructure) > 0 }
+          .select { |infrastructure| @resources_interface.current_infrastructure_limit(infrastructure) > 0 }
           .shuffle[0..@experiment.size-1]
           .each do |infrastructure|
         @resources_interface.schedule_workers(1, infrastructure)
@@ -138,8 +137,8 @@ module WorkersScaling
         else
           # schedule one worker on random unused infrastructure
           random_unused = unused_infrastructures
-                              .select { |entity| current_infrastructure_limit(entity[:infrastructure]) > 0 }
-                              .sample[:infrastructure]
+                    .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
+                    .sample[:infrastructure]
           add_workers(random_unused[:infrastructure], random_unused[:statistics][:average_throughput], throughput_needed)
         end
       end
@@ -201,27 +200,12 @@ module WorkersScaling
     end
 
     ##
-    # Returns amount of Workers that can be yet scheduled on given infrastructure
-    def current_infrastructure_limit(infrastructure)
-      infrastructure_limit = @infrastructure_limits.select { |entry| entry[:infrastructure] == infrastructure } .first
-      current_count = @resources_interface.get_workers_records_count(infrastructure, cond: LIMITED_WORKERS_QUERY)
-      infrastructure_limit.nil? ? 0 : infrastructure_limit[:limit] - current_count
-    end
-
-    ##
     # Adds workers to given infrastructure basing on average throughput of infrastructure and throughput needed
     # Returns predicted throughput growth
     def add_workers(infrastructure, average_throughput, throughput_needed)
-      limit = current_infrastructure_limit(infrastructure)
-      return 0 if limit == 0
-      workers_needed = if average_throughput > 0
-                         [(throughput_needed / average_throughput).ceil, limit].min
-                       else
-                         1
-                       end
-      @resources_interface.schedule_workers(workers_needed, infrastructure)
+      workers_needed = average_throughput > 0 ? (throughput_needed / average_throughput).ceil : 1
       LOGGER.debug "Starting #{workers_needed} Workers on infrastructure: #{infrastructure}"
-      workers_needed * average_throughput
+      @resources_interface.schedule_workers(workers_needed, infrastructure).count * average_throughput
     end
   end
 end
