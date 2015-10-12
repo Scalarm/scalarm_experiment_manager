@@ -6,11 +6,21 @@ include InfrastructureErrors
 module WorkersScaling
   class ExperimentResourcesInterface
 
-    def initialize(experiment_id, user_id)
-      # TODO list if disallowed infrastructures
+    ##
+    # Params:
+    # * experiment_id
+    # * user_id
+    # * allowed_infrastructures
+    #     Variable storing user-defined workers limits for each infrastructure
+    #     Only infrastructures specified here can be used by experiment.
+    #     Format: [{infrastructure: <infrastructure>, limit: <limit>}, ...]
+    #     <infrastructure> - hash with infrastructure info
+    #     <limit> - integer
+    def initialize(experiment_id, user_id, allowed_infrastructures)
       @experiment_id = experiment_id.to_s
       @user_id = BSON::ObjectId(user_id.to_s)
       @facades_cache = {}
+      @allowed_infrastructures = allowed_infrastructures
     end
 
     ##
@@ -22,26 +32,39 @@ module WorkersScaling
           .flat_map {|x| x.has_key?(:children) ? x[:children] : x }
           .select {|x| x[:enabled]}
           .map {|x| x[:infrastructure_name].to_sym}
-          .map do |infrastructure_name|
+          .flat_map do |infrastructure_name|
         InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
-      end.flatten
+      end
+    end
+
+    ##
+    # Returns amount of Workers that can be yet scheduled on given infrastructure
+    def current_infrastructure_limit(infrastructure)
+      infrastructure_limit = @allowed_infrastructures.detect { |entry| entry[:infrastructure] == infrastructure }
+      if infrastructure_limit.nil?
+        0
+      else
+        # TODO change scope when LIMITED_WORKERS_QUERY will be moved
+        [0, infrastructure_limit[:limit] - get_workers_records_count(infrastructure,
+          cond: SampleAlgorithm::LIMITED_WORKERS_QUERY)].max
+      end
     end
 
     ##
     # Schedules given amount of workers onto infrastructure and returns theirs sm_uuids
-    # In case of error returns nil
-    # Additional params:
-    # * time_limit
-    # * proxy
+    # Additional params will be passed to start_simulation_managers facade method.
     # Raises InfrastructureError
     def schedule_workers(amount, infrastructure, params = {})
       begin
+        amount = [amount, current_infrastructure_limit(infrastructure)].min
+        return [] if amount <= 0
+
         params[:time_limit] = 60 if params[:time_limit].nil?
         params.merge! onsite_monitoring: true
         params.merge! infrastructure[:params]
 
         # TODO: SCAL-1024 - facades use both string and symbol keys
-        params = params.symbolize_keys.merge(params.stringify_keys)
+        params.symbolize_keys!.merge!(params.stringify_keys)
 
         get_facade_for(infrastructure[:name])
           .start_simulation_managers(@user_id, amount, @experiment_id, params)
@@ -105,7 +128,6 @@ module WorkersScaling
     # Returns InfrastructureFacade for given infrastructure name
     # Previously accessed facades are cached
     def get_facade_for(infrastructure_name)
-      # TODO throw exception about disallowed infrastructures
       unless @facades_cache.has_key? infrastructure_name
         throw NoSuchInfrastructureError unless get_available_infrastructures.map {|infrastructure| infrastructure[:name]}
                                                                             .include? infrastructure_name
