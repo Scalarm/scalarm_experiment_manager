@@ -233,6 +233,10 @@ class ExperimentsController < ApplicationController
           format.json { render json: {status: 'error', message: flash[:error]} }
         end
       else
+        if params[:workers_scaling]
+          # TODO: provide proper algorithm once we have any, get interval and algorithm params from form
+          WorkersScaling::AlgorithmRunner.new(experiment.id, nil, 10).start
+        end
         respond_to do |format|
           format.html { redirect_to experiment_path(experiment.id) }
           format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
@@ -826,35 +830,50 @@ class ExperimentsController < ApplicationController
     begin
       raise 'Experiment is not running any more' if not @experiment.is_running
 
-      simulation_to_send = nil
+      denied = false
 
-      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
-        unless sm_user.nil? or simulation_to_send.nil?
-          simulation_to_send.sm_uuid = sm_user.sm_uuid
-          simulation_to_send.save
+      # Following block checks if Simulation Manager is in state, in which it should receive no more simulations
+      sm_record = !sm_user.nil? && InfrastructureFacadeFactory.get_sm_records_by_query(sm_uuid: sm_user.sm_uuid).first
+      if sm_record
+        if sm_record.state == :terminating
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'This SiM is terminating'})
+          denied = true
+        elsif not sm_record.simulations_left.nil? and sm_record.simulations_left == 0
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'This SiM has no simulations left'})
+          denied = true
         end
       end
 
-      if simulation_to_send
-        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
-        # TODO adding caching capability to the experiment object
-        #simulation_to_send.put_in_cache
-        @experiment.progress_bar_update(simulation_to_send.index, 'sent')
+      unless denied
+        simulation_to_send = nil
 
-        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                   'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
-                   'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
-      else
-        Rails.logger.debug('next_simulation: Simulation to send is nil!')
-        if @experiment.supervised and not @experiment.completed?
-          simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
-                                 'duration_in_seconds' => 2})
+        Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
+          simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
+          unless sm_user.nil? or simulation_to_send.nil?
+            simulation_to_send.sm_uuid = sm_user.sm_uuid
+            simulation_to_send.save
+          end
+        end
+
+        if simulation_to_send
+          Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
+          # TODO adding caching capability to the experiment object
+          #simulation_to_send.put_in_cache
+          @experiment.progress_bar_update(simulation_to_send.index, 'sent')
+
+          simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
+                     'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
+                     'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
         else
-          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+          Rails.logger.debug('next_simulation: Simulation to send is nil!')
+          if @experiment.supervised and not @experiment.completed?
+            simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
+                                   'duration_in_seconds' => 2})
+          else
+            simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+          end
         end
       end
-
     rescue Exception => e
       Rails.logger.debug("Error while preparing next simulation: #{e}")
       simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
