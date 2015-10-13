@@ -8,12 +8,27 @@ class SimulationsController < ApplicationController
   before_filter :load_simulation, only: [:show, :progress_info, :progress_info_history, :mark_as_complete, :results_binaries, :results_stdout]
 
   def index
-    @simulations = current_user.get_simulation_scenarios
-    @simulation_scenarios = @simulations
-    @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id)
-    @executors = SimulationExecutor.find_all_by_user_id(current_user.id)
-    @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id)
-    @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id)
+    respond_to do |format|
+      format.html{
+        @simulations = current_user.get_simulation_scenarios
+        @simulation_scenarios = @simulations
+        @input_writers = SimulationInputWriter.find_all_by_user_id(current_user.id)
+        @executors = SimulationExecutor.find_all_by_user_id(current_user.id)
+        @output_readers = SimulationOutputReader.find_all_by_user_id(current_user.id)
+        @progress_monitors = SimulationProgressMonitor.find_all_by_user_id(current_user.id)
+      }
+      format.json {
+        simulation_scenarios = current_user.simulation_scenarios.where([],{fields: ["_id"]}).map{|obj| obj.id.to_s}
+        render json: (
+               if simulation_scenarios
+                 {status: 'ok', simulation_scenarios: simulation_scenarios }
+               else
+                 {status: 'error', error_code: 'not_found'}
+               end
+               )
+      }
+    end
+
   end
 
   def registration
