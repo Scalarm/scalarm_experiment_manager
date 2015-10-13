@@ -34,12 +34,12 @@ module WorkersScaling
     # Arguments:
     # * experiment - instance of Experiment
     # * user_id - id of User starting Algorithm
-    # * limits - list of hashes with infrastructure and maximal Workers amount
+    # * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
     # * planned_finish_time - desired time of end of Experiment
     # Creates instances of ExperimentResourcesInterface and ExperimentStatistics
-    def initialize(experiment, user_id, limits, planned_finish_time)
+    def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time)
       @experiment = experiment
-      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, limits)
+      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, allowed_infrastructures)
       @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
       @planned_finish_time = planned_finish_time
       @total_time = (planned_finish_time - Time.now).seconds

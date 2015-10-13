@@ -10,16 +10,17 @@ module WorkersScaling
     # Params:
     # * experiment_id
     # * user_id
-    # * infrastructure_limits
+    # * allowed_infrastructures
     #     Variable storing user-defined workers limits for each infrastructure
+    #     Only infrastructures specified here can be used by experiment.
     #     Format: [{infrastructure: <infrastructure>, limit: <limit>}, ...]
     #     <infrastructure> - hash with infrastructure info
     #     <limit> - integer
-    def initialize(experiment_id, user_id, infrastructure_limits = {})
+    def initialize(experiment_id, user_id, allowed_infrastructures)
       @experiment_id = experiment_id.to_s
       @user_id = BSON::ObjectId(user_id.to_s)
       @facades_cache = {}
-      @infrastructure_limits = infrastructure_limits
+      @allowed_infrastructures = allowed_infrastructures
     end
 
     ##
@@ -39,9 +40,9 @@ module WorkersScaling
     ##
     # Returns amount of Workers that can be yet scheduled on given infrastructure
     def current_infrastructure_limit(infrastructure)
-      infrastructure_limit = @infrastructure_limits.detect { |entry| entry[:infrastructure] == infrastructure }
+      infrastructure_limit = @allowed_infrastructures.detect { |entry| entry[:infrastructure] == infrastructure }
       if infrastructure_limit.nil?
-        Float::INFINITY
+        0
       else
         # TODO change scope when LIMITED_WORKERS_QUERY will be moved
         [0, infrastructure_limit[:limit] - get_workers_records_count(infrastructure,

@@ -20,11 +20,11 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     @resources_interface = WorkersScaling::ExperimentResourcesInterface.new(EXPERIMENT_ID, USER_ID, SAMPLE_LIMITS)
   end
 
-  test 'current_infrastructure_limit should return infinity for infrastructure without limit' do
+  test 'current_infrastructure_limit should return zero for infrastructure without limit' do
     # given
-    resources_interface = WorkersScaling::ExperimentResourcesInterface.new(EXPERIMENT_ID, USER_ID)
+    resources_interface = WorkersScaling::ExperimentResourcesInterface.new(EXPERIMENT_ID, USER_ID, {})
     # when
-    assert_equal Float::INFINITY, resources_interface.current_infrastructure_limit(SAMPLE_INFRASTRUCTURE)
+    assert_equal 0, resources_interface.current_infrastructure_limit(SAMPLE_INFRASTRUCTURE)
     # then
   end
 
