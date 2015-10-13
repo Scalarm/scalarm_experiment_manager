@@ -314,11 +314,6 @@ class ExperimentsController < ApplicationController
       'reason': 'Unable to connect with Experiment Supervisor'
     }
 =end
-
-  def parse_json_if_string2(value)
-    value.kind_of?(String) and JSON.parse(value) or value
-  end
-
   def create_supervised_experiment
     validate(
         simulation_id: :security_default,
@@ -337,9 +332,6 @@ class ExperimentsController < ApplicationController
 
     experiment.save
     response = {'status' => 'ok'}
-
-
-
     supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
 
     if params.has_key?(:supervisor_script_id)
