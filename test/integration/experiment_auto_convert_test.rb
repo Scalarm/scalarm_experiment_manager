@@ -4,15 +4,7 @@ require 'test_helper'
 require 'mocha/test_unit'
 require 'db_helper'
 
-# CSV_FILE = 'experiment_52f257042acf1465af000001.csv'
-# SIMULATIONS_COUNT = 24206
-
-CSV_FILE = 'experiment_2.csv'
-SIMULATIONS_COUNT = 9
-
-
-class ExperimentIntegrationTest < MiniTest::Test
-  # NOTICE: slow test
+class ExperimentAutoConvertTest < MiniTest::Test
   include DBHelper
 
   def create_experiment(factory_method)
