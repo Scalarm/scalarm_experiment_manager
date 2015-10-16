@@ -44,9 +44,8 @@ module WorkersScaling
       if infrastructure_limit.nil?
         0
       else
-        # TODO change scope when LIMITED_WORKERS_QUERY will be moved
         [0, infrastructure_limit[:limit] - get_workers_records_count(infrastructure,
-          cond: SampleAlgorithm::LIMITED_WORKERS_QUERY)].max
+          cond: Query::LIMITED_WORKERS)].max
       end
     end
 
