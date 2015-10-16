@@ -13,6 +13,8 @@
   = hidden_field_tag 'doe'
   = hidden_field_tag 'calculate-experiment-size-url', calculate_experiment_size_experiments_path
   = hidden_field_tag 'parameters_constraints'
+  = hidden_field_tag 'workers_scaling', false
+  = hidden_field_tag 'workers_scaling_params'
   = render 'experiments/new/basic_information'
 
 #experiment-type-panel
@@ -48,6 +50,8 @@
   = hidden_field_tag 'execution_time_constraint', 60
   = hidden_field_tag 'experiment_name'
   = hidden_field_tag 'experiment_description'
+  = hidden_field_tag 'workers_scaling', false
+  = hidden_field_tag 'workers_scaling_params'
   #supervisor_fields
 
 #input-space-parameters
@@ -79,6 +83,42 @@
 #import{:style => 'display: none'}
   %section.panel.radius
     = render 'experiments/new/import_tab'
+
+#workers-scaling-mode
+  %section.panel.radius
+    %h3.subheader= t('experiments.workers_scaling.mode.title')
+    .content
+      .row
+        .small-6.small-centered.columns
+          - ws_algorithm_options = workers_scaling_options
+          - ws_manual = [t('experiments.workers_scaling.mode.manual'), :manual]
+          - ws_automatic = [t('experiments.workers_scaling.mode.automatic'), :automatic ]
+          - workers_scaling_mode = (ws_algorithm_options == ''? [ws_manual] : [ws_manual, ws_automatic])
+          = select_tag 'workers_scaling_mode_select', options_for_select(workers_scaling_mode, workers_scaling_mode.first)
+
+#workers-scaling-algorithm
+  %section.panel.radius
+    %h3.subheader= t('experiments.workers_scaling.algorithm.title')
+    .content
+      .row
+        .small-6.small-centered.columns
+          = select_tag 'workers_scaling_algorithm_select', ws_algorithm_options
+      .row
+        .small-5.columns
+          = label_tag :experiment_execution_time_limit,
+              t('experiments.workers_scaling.algorithm.execution_time_limit') + ':',
+              class: 'right inline'
+        .small-4.columns.end
+          .row.collapse
+            .small-8.columns
+              = number_field_tag :experiment_execution_time_limit, 30, required: true,
+                  class: 'text-right', pattern: "^\\d+$"
+            .small-4.columns
+              %span.postfix.radius
+                = t('experiments.workers_scaling.algorithm.execution_time_unit')
+        .small-2.columns
+          #algorithm_form_loader
+
 
 .row.submit-section
   = submit_tag t('.submit_button'), id: 'new_experiment_submit', class: 'button radius last-element'
@@ -119,8 +159,27 @@
           scrollTop: $("#experiment_submit_form").offset().top
       }, 2000);});
 
+      function fill_workers_scaling_fields() {
+        $("input[name='workers_scaling']").val(true);
+        var builder = {};
+        builder["name"] = $("#workers_scaling_algorithm_select").val();
+        builder["time_limit"] = Number($("#experiment_execution_time_limit").val());
+        builder["allowed_infrastructures"] = {};
+        $("input[name='workers_scaling_params']").val(JSON.stringify(builder));
+      }
+
+      function delete_workers_scaling_fields() {
+        $('input#workers_scaling').remove()
+        $('input#workers_scaling_params').remove()
+      }
 
       $("#new_experiment_submit").on("click", function() {
+        if (!$("#workers_scaling_mode_select").val().localeCompare("automatic")) {
+          fill_workers_scaling_fields();
+        } else {
+          delete_workers_scaling_fields();
+        }
+
         if($('#import').is(":visible"))
           $("#import-form").submit();
         else{
@@ -211,6 +270,18 @@
         else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
           $("#import").show();
           $("#input-space-parameters").hide();
+        }
+      });
+
+      // workers scaling
+      if (!$("#workers_scaling_mode_select").val().localeCompare("manual")) {
+        $("#workers-scaling-algorithm").hide();
+      }
+      $("#workers_scaling_mode_select").on("change", function(){
+        if (!$("#workers_scaling_mode_select").val().localeCompare("manual")) {
+          $("#workers-scaling-algorithm").hide();
+        } else if (!$("#workers_scaling_mode_select").val().localeCompare("automatic")) {
+          $("#workers-scaling-algorithm").show();
         }
       });
     });

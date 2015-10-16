@@ -8,8 +8,7 @@ class ExperimentsController < ApplicationController
   include SSHAccessedInfrastructure
 
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
-  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
-                                          :start_custom_points_experiment, :start_supervised_experiment]
+  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size]
 
   def index
     load_simulations_and_experiments_for_current_user
@@ -233,10 +232,6 @@ class ExperimentsController < ApplicationController
           format.json { render json: {status: 'error', message: flash[:error]} }
         end
       else
-        if params[:workers_scaling]
-          # TODO: provide proper algorithm once we have any, get interval and algorithm params from form
-          WorkersScaling::AlgorithmRunner.new(experiment.id, nil, 10).start
-        end
         respond_to do |format|
           format.html { redirect_to experiment_path(experiment.id) }
           format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
@@ -251,6 +246,7 @@ class ExperimentsController < ApplicationController
         format.json { render json: {status: 'error', message: flash[:error]} }
       end
     end
+    experiment
   end
 
   # POST params:
@@ -266,6 +262,7 @@ class ExperimentsController < ApplicationController
     experiment.save
 
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
+    experiment
   end
 
 =begin
@@ -367,6 +364,7 @@ class ExperimentsController < ApplicationController
       format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
       format.json { render json: response }
     end
+    experiment
   end
 
   CONSTRUCTORS = {
@@ -380,11 +378,32 @@ class ExperimentsController < ApplicationController
         replication_level: [:optional, :security_default, :integer, :positive],
         execution_time_constraint: [:optional, :security_default, :integer, :positive],
         parameter_constraints: [:optional, :security_json],
-        type: [:optional, :security_default]
+        type: [:optional, :security_default],
+        workers_scaling: [:optional] # TODO boolean validator
+        #workers_scaling_params: [:optional, :json_or_hash] TODO uncomment? SCAL-757: (..) json_or_hash validator bug
     )
     type = params[:type] || 'experiment'
-    raise ValidationError.new('type', type, 'Not a correct experiment type') unless CONSTRUCTORS.has_key? type
-    send(CONSTRUCTORS[type])
+    Utils::raise_error_unless_has_key(CONSTRUCTORS, type, "Not a correct experiment type: #{type}")
+    workers_scaling_params = nil
+    if params.has_key? :workers_scaling and params[:workers_scaling]
+      Utils::raise_error_unless_has_key(params, :workers_scaling_params, 'Missing workers scaling parameters')
+      workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
+      message_prefix = 'Missing workers scaling parameter'
+      Utils::raise_error_unless_has_key(workers_scaling_params, :name, "#{message_prefix} name",
+                                        'workers_scaling_params')
+      Utils::raise_error_unless_has_key(workers_scaling_params, :allowed_infrastructures,
+                                        "#{message_prefix} allowed_infrastructures", 'workers_scaling_params')
+      Utils::raise_error_unless_has_key(workers_scaling_params, :time_limit, "#{message_prefix} time_limit",
+                                        'workers_scaling_params')
+      # TODO more precise validation
+    end
+    experiment = send(CONSTRUCTORS[type])
+    if params.has_key? :workers_scaling and params[:workers_scaling]
+      algorithm = WorkersScaling::SampleAlgorithm.new(experiment, current_user.id,
+                                                      workers_scaling_params[:allowed_infrastructures],
+                                                      Time.now + workers_scaling_params[:time_limit]*60)
+      WorkersScaling::AlgorithmRunner.new(experiment, algorithm, 10).start
+    end
   end
 
   def calculate_experiment_size

@@ -56,4 +56,13 @@ module ExperimentsHelper
     end
     options_for_select options, selected: options.first
   end
+
+  ##
+  # Returns workers scaling algorithm list parsed to select options.
+  def workers_scaling_options
+    options = []
+    # TODO get list of algorithms from factory
+    [:sample_algorithm].each { |name| options << [name.to_s.humanize, name] }
+    options_for_select options, selected: options.first
+  end
 end
