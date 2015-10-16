@@ -8,6 +8,20 @@ module WorkersScaling
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
 
     ##
+    # Arguments:
+    # * experiment - instance of Experiment
+    # * user_id - id of User starting Algorithm
+    # * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
+    # * planned_finish_time - desired time of end of Experiment
+    # * params - additional params, currently unused, may be used in subclasses
+    def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time, params = {})
+      @experiment = experiment
+      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, allowed_infrastructures)
+      @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
+      @planned_finish_time = planned_finish_time
+    end
+
+    ##
     # Method called when algorithm is starting, before first execution of
     # #experiment_status_check. Should contain actions performed in the
     # beginning of algorithm e.g. sending first workers on infrastructure.
