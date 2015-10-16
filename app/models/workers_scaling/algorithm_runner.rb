@@ -45,24 +45,29 @@ module WorkersScaling
     # Stops when there is no next execution time set
     def start
       Thread.new do
-        @algorithm.initial_deployment
-        @next_execution_time = Time.now + @interval
+        begin
+          @algorithm.initial_deployment
+          @next_execution_time = Time.now + @interval
 
-        @mutex.synchronize do
-          catch :finished do
-            until @next_execution_time.nil?
+          @mutex.synchronize do
+            catch :finished do
+              until @next_execution_time.nil?
 
-              while @next_execution_time > Time.now do
-                @mutex.sleep @next_execution_time - Time.now
-                throw :finished if @next_execution_time.nil?
+                while @next_execution_time > Time.now do
+                  @mutex.sleep @next_execution_time - Time.now
+                  throw :finished if @next_execution_time.nil?
+                end
+
+                execute_and_schedule
               end
-
-              execute_and_schedule
             end
           end
-        end
 
-        self.class.delete(@experiment.id)
+          self.class.delete(@experiment.id)
+        rescue => e
+          LOGGER.error "Exception occurred during workers scaling algorithm: #{e.to_s}\n#{e.backtrace.join("\n")}"
+          raise
+        end
       end
     end
 
