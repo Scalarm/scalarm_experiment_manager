@@ -1,0 +1,60 @@
+-# will be used as computed value of input definition designer
+%input#allowed_infrastructures{type: 'hidden', name: 'allowed_infrastructures'}
+
+.row
+  %fieldset#allowed-infrastructures-definition
+    %legend= 'Computational resources editor'
+    .row#input-designer
+      .small-5.columns
+        %fieldset#param-list
+          %legend= 'Infrastructures'
+          .row
+            %ul.stack-for-small.button-group
+              %li
+                %a.button.tiny.radius#add-param.unselectable
+                  %i.fa.fa-plus.fa-fw
+                  = 'Add'
+              %li
+                %a.button.tiny.radius#remove-param.unselectable
+                  %i.fa.fa-minus.fa-fw
+                  = 'Remove'
+          .row#params-tree.hidden
+      .small-7.columns
+        %fieldset{id: 'param-config', class:'hidden', 'data_abide' =>''}
+          %legend= 'Infrastructure specification'
+
+          #infrastructures_form_loader
+
+          .row
+            .small-5.columns
+              = label_tag :limit, 'Workers limit', class: 'right inline'
+            .small-4.columns.end
+              = number_field_tag :limit, 1, min: 1, required: true, class: 'text-right', pattern: "^\\d+$"
+
+          .row#editor-buttons
+            %ul.stack-for-small.button-group
+              %li
+                %a.tiny.button.radius.success#editor-save.disabled.unselectable
+                  %i.fa.fa-save.fa-fw
+                  = 'Save changes'
+                %a.tiny.button.radius#editor-discard.disabled.unselectable
+                  %i.fa.fa-undo.fa-fw
+                  = 'Discard changes'
+
+          #unsaved-modal.reveal-modal.small{'data-reveal' => true}
+            .row{style: 'margin-bottom: 25px;'}
+              .small-12.columns
+                = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
+            .row
+              .small-12.columns.text-center
+                %a#unsaved-ok.button.radius.medium= 'OK'
+
+          #invalid-modal.reveal-modal.small{'data-reveal' => true}
+            .row{style: 'margin-bottom: 25px;'}
+              .small-12.columns
+                = 'There are invalid values in parameter editor. Please correct them or discard changes.'
+            .row
+              .small-12.columns.text-center
+                %a#invalid-modal-ok.button.radius.medium= 'OK'
+
+
