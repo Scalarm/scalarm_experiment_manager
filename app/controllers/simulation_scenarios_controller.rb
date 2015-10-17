@@ -218,7 +218,4 @@ class SimulationScenariosController < ApplicationController
                              nil
                            end
   end
-
-
-
 end
