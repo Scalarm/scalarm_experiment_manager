@@ -54,6 +54,7 @@ ScalarmExperimentManager::Application.routes.draw do
 
   get 'infrastructures' => 'infrastructures#index'
 
+  get 'simulation_scenarios/:id/experiments' => 'simulation_scenarios#get_simulation_scenario_experiment_ids'
   resources :experiments do
     collection do
       post :start_import_based_experiment, to: 'experiments#create'
