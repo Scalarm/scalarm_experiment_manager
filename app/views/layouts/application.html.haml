@@ -26,17 +26,17 @@
         .row{style: 'padding: 10px 13px;'}
           .small-4.columns
             = raw t('copyright')
-          .small-8.columns.right(style="padding-top: 7px;")
+          .small-8.columns(style="padding-top: 7px;")
             .row
-              .small-6.columns
+              .small-5.columns.left
                 ="Report a problem at "
                 %a{:href => "https://helpdesk.plgrid.pl/"} helpdesk.plgrid.pl
-              .small-2.columns.right
-                = link_to image_tag('scalarm-blue-small.png'),
-                            'http://www.scalarm.com'
               .small-4.columns.right{style: "text-align: right;"}
+                = link_to image_tag('scalarm-blue-small.png'),
+                    'http://www.scalarm.com'
+              .small-3.columns.right{style: "text-align: right;"}
                 = link_to image_tag('cyfronet_logo.png', size: "92x64"),
-                              'http://www.cyfronet.pl'
+                      'http://www.cyfronet.pl'
     = javascript_include_tag 'application'
     :javascript
       $(function() {
