@@ -141,7 +141,7 @@ module WorkersScaling
           random_unused = unused_infrastructures
                     .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
                     .sample[:infrastructure]
-          add_workers(random_unused[:infrastructure], random_unused[:statistics][:average_throughput], throughput_needed)
+          add_workers(random_unused[:infrastructure])
         end
       end
     end
@@ -187,8 +187,9 @@ module WorkersScaling
 
     ##
     # Adds workers to given infrastructure basing on average throughput of infrastructure and throughput needed
+    # If average_throughput is 0, throughput_needed value is ignored and exactly one Worker is added
     # Returns predicted throughput growth
-    def add_workers(infrastructure, average_throughput, throughput_needed)
+    def add_workers(infrastructure, average_throughput = 0, throughput_needed = 0)
       workers_needed = average_throughput > 0 ? (throughput_needed / average_throughput).ceil : 1
       LOGGER.debug "Starting #{workers_needed} Workers on infrastructure: #{infrastructure}"
       @resources_interface.schedule_workers(workers_needed, infrastructure).count * average_throughput
