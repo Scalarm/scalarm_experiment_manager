@@ -160,12 +160,11 @@ module WorkersScaling
       LOGGER.debug "Excess throughput: #{'%.5f' % excess_throughput} sim/s"
 
       # get all workers with their throughput
-      workers_throughput = @resources_interface.get_available_infrastructures.map do |infrastructure|
-        @resources_interface.get_workers_records_list(infrastructure, cond: RUNNING_WORKERS_QUERY)
-                                      .map do |worker|
+      workers_throughput = @resources_interface.get_available_infrastructures.flat_map do |infrastructure|
+        @resources_interface.get_workers_records_list(infrastructure, cond: RUNNING_WORKERS_QUERY).map do |worker|
           {sm_uuid: worker.sm_uuid, throughput: @experiment_statistics.worker_throughput(worker.sm_uuid)}
         end
-      end .flatten
+      end
 
       # sort from lowest
       sorted_throughput = workers_throughput.sort_by { |worker| worker[:throughput] }
@@ -174,7 +173,7 @@ module WorkersScaling
       # iterate over sorted workers until system throughput is decreased to desired value
       sorted_throughput.each do |worker|
         break if excess_throughput < worker[:throughput]
-        @resources_interface.limit_worker_simulations(worker[:sm_uuid], 1)
+        @resources_interface.soft_stop_worker(worker[:sm_uuid])
         excess_throughput -= worker[:throughput]
         LOGGER.debug "Stopping Worker with sm_uuid: #{worker[:sm_uuid]}"
         LOGGER.debug "Reduced excess throughput to #{'%.5f' % excess_throughput} sim/s"

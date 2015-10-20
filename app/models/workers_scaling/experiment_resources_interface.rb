@@ -33,8 +33,8 @@ module WorkersScaling
           .select {|x| x[:enabled]}
           .map {|x| x[:infrastructure_name].to_sym}
           .flat_map do |infrastructure_name|
-        InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
-      end
+            InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
+          end
     end
 
     ##
@@ -82,11 +82,18 @@ module WorkersScaling
     # Using overwrite=true may result in unintentional resetting simulations_left field,
     # effectively prolonging lifetime of worker, therefore default value is false
     def limit_worker_simulations(sm_uuid, simulations_left, overwrite=false)
-        worker = get_worker_record_by_sm_uuid(sm_uuid)
-        unless worker.nil?
-          worker.simulations_left = simulations_left if worker.simulations_left.blank? or overwrite
-          worker.save
-        end
+      worker = get_worker_record_by_sm_uuid(sm_uuid)
+      unless worker.nil?
+        worker.simulations_left = simulations_left if worker.simulations_left.blank? or overwrite
+        worker.save
+      end
+    end
+
+    ##
+    # Simplifies use of #limit_worker_simulations when the goal is to stop worker
+    # Provides more intuitive name
+    def soft_stop_worker(sm_uuid)
+      limit_worker_simulations(sm_uuid, 1)
     end
 
     ##
@@ -104,9 +111,9 @@ module WorkersScaling
     ##
     # Returns worker record for given sm_uuid
     def get_worker_record_by_sm_uuid(sm_uuid)
-      get_available_infrastructures.map do |infrastructure|
+      get_available_infrastructures.flat_map do |infrastructure|
         get_workers_records_cursor(infrastructure, cond: {sm_uuid: sm_uuid}).first
-      end .flatten.first
+      end .first
     end
 
     ##
