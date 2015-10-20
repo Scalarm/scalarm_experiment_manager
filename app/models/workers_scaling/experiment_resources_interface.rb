@@ -109,6 +109,14 @@ module WorkersScaling
     end
 
     ##
+    # Returns overall Workers count for Experiment matching given params
+    def count_all_workers(params = {})
+      get_available_infrastructures
+          .flat_map { |infrastructure| get_workers_records_count(infrastructure, params) }
+          .reduce(0) { |sum, count| sum + count }
+    end
+
+    ##
     # Returns worker record for given sm_uuid
     def get_worker_record_by_sm_uuid(sm_uuid)
       get_available_infrastructures.flat_map do |infrastructure|
