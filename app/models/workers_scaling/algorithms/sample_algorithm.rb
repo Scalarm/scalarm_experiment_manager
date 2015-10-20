@@ -10,19 +10,9 @@ module WorkersScaling
     TOLERANCE = 10
 
     ##
-    # Arguments:
-    # * experiment - instance of Experiment
-    # * user_id - id of User starting Algorithm
-    # * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
-    # * planned_finish_time - desired time of end of Experiment
-    # * params - additional params, currently unused
-    # Creates instances of ExperimentResourcesInterface and ExperimentStatistics
+    # Arguments: see Algorithm#initialize
     def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time, params = {})
-      @experiment = experiment
-      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, allowed_infrastructures)
-      @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
-      @planned_finish_time = planned_finish_time
-      @total_time = (planned_finish_time - Time.now).seconds
+      super(experiment, user_id, allowed_infrastructures, planned_finish_time, params)
     end
 
     ##
@@ -44,7 +34,7 @@ module WorkersScaling
     def experiment_status_check
       LOGGER.debug 'experiment_status_check'
       @experiment = @experiment.reload
-      current_makespan = @experiment_statistics.makespan(cond: RUNNING_WORKERS_QUERY)
+      current_makespan = @experiment_statistics.makespan(cond: Query::RUNNING_WORKERS)
       case time_constraint_check(current_makespan, @planned_finish_time - Time.now)
         when :increase
           increase_computational_power
@@ -76,7 +66,7 @@ module WorkersScaling
     # If limits in all known infrastructures are reached, uses random unknown infrastructure
     def increase_computational_power
       LOGGER.debug 'Need to increase computational power'
-      if count_all_workers(cond: STARTING_WORKERS_QUERY) > 0
+      if count_all_workers(cond: Query::STARTING_WORKERS) > 0
         LOGGER.debug 'There are starting Workers already'
         return
       end
@@ -87,7 +77,7 @@ module WorkersScaling
 
       # calculate average infrastructures throughput
       infrastructures_throughput = @resources_interface.get_available_infrastructures.map do |infrastructure|
-        statistics = @experiment_statistics.get_infrastructure_statistics(infrastructure, cond: RUNNING_WORKERS_QUERY)
+        statistics = @experiment_statistics.get_infrastructure_statistics(infrastructure, cond: Query::RUNNING_WORKERS)
         {infrastructure: infrastructure, statistics: statistics}
       end
 
@@ -130,7 +120,7 @@ module WorkersScaling
     # Stops Workers with lowest throughput first
     def decrease_computational_power
       LOGGER.debug 'Need to decrease computational power'
-      if count_all_workers(cond: STOPPING_WORKERS_QUERY) > 0
+      if count_all_workers(cond: Query::STOPPING_WORKERS) > 0
         LOGGER.debug 'There are stopping Workers already'
         return
       end
@@ -141,7 +131,7 @@ module WorkersScaling
 
       # get all workers with their throughput
       workers_throughput = @resources_interface.get_available_infrastructures.map do |infrastructure|
-        @resources_interface.get_workers_records_list(infrastructure, cond: RUNNING_WORKERS_QUERY)
+        @resources_interface.get_workers_records_list(infrastructure, cond: Query::RUNNING_WORKERS)
                                       .map do |worker|
           {sm_uuid: worker.sm_uuid, throughput: @experiment_statistics.worker_throughput(worker.sm_uuid)}
         end
