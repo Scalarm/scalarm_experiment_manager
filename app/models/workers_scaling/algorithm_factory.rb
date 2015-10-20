@@ -11,8 +11,7 @@ module WorkersScaling
     def self.get_descendants(parent, include_self = true)
       descendants = ObjectSpace.each_object(Class)
           .select { |klass| klass < parent }
-          .map { |klass| get_descendants(klass) }
-          .flatten
+          .flat_map { |klass| get_descendants(klass) }
       descendants << parent if include_self
       descendants
     end

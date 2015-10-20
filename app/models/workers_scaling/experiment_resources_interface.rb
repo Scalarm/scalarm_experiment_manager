@@ -45,7 +45,7 @@ module WorkersScaling
         0
       else
         [0, infrastructure_limit[:limit] - get_workers_records_count(infrastructure,
-          cond: Constants::LIMITED_WORKERS_QUERY)].max
+          cond: Query::LIMITED_WORKERS)].max
       end
     end
 
