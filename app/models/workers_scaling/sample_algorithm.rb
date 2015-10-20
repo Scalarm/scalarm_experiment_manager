@@ -50,6 +50,7 @@ module WorkersScaling
     # Otherwise uses random subset of available infrastructures with size equal to Experiment size
     def initial_deployment
       LOGGER.debug 'Initial deployment'
+      @experiment.reload
       @resources_interface.get_available_infrastructures
           .select { |infrastructure| @resources_interface.current_infrastructure_limit(infrastructure) > 0 }
           .shuffle[0..@experiment.size-1]
@@ -63,7 +64,7 @@ module WorkersScaling
     # Executes action based on result of time_constraint_check
     def experiment_status_check
       LOGGER.debug 'experiment_status_check'
-      @experiment = @experiment.reload
+      @experiment.reload
       current_makespan = @experiment_statistics.makespan(cond: RUNNING_WORKERS_QUERY)
       case time_constraint_check(current_makespan, @planned_finish_time - Time.now)
         when :increase
@@ -96,13 +97,14 @@ module WorkersScaling
     # If limits in all known infrastructures are reached, uses random unknown infrastructure
     def increase_computational_power
       LOGGER.debug 'Need to increase computational power'
-      if count_all_workers(cond: STARTING_WORKERS_QUERY) > 0
+      if @resources_interface.count_all_workers(cond: STARTING_WORKERS_QUERY) > 0
         LOGGER.debug 'There are starting Workers already'
         return
       end
 
       # calculate needed additional throughput
-      throughput_needed = target_throughput - @experiment_statistics.system_throughput
+      throughput_needed = @experiment_statistics.target_throughput(@planned_finish_time) -
+                          @experiment_statistics.system_throughput
       LOGGER.debug "Additional throughput needed: #{'%.5f' % throughput_needed} sim/s"
 
       # calculate average infrastructures throughput
@@ -150,13 +152,14 @@ module WorkersScaling
     # Stops Workers with lowest throughput first
     def decrease_computational_power
       LOGGER.debug 'Need to decrease computational power'
-      if count_all_workers(cond: STOPPING_WORKERS_QUERY) > 0
+      if @resources_interface.count_all_workers(cond: STOPPING_WORKERS_QUERY) > 0
         LOGGER.debug 'There are stopping Workers already'
         return
       end
 
       # calculate excess throughput
-      excess_throughput = @experiment_statistics.system_throughput - target_throughput
+      excess_throughput = @experiment_statistics.system_throughput -
+                          @experiment_statistics.target_throughput(@planned_finish_time)
       LOGGER.debug "Excess throughput: #{'%.5f' % excess_throughput} sim/s"
 
       # get all workers with their throughput
@@ -180,23 +183,7 @@ module WorkersScaling
       end
     end
 
-
     # private
-
-    ##
-    # Returns throughput needed to finish Experiment in desired time
-    def target_throughput
-      (@experiment.size - @experiment.count_done_simulations) / [Float(@planned_finish_time - Time.now), 0.0].max
-    end
-
-    ##
-    # Returns overall Workers count for Experiment matching given params
-    def count_all_workers(params = {})
-      @resources_interface
-          .get_available_infrastructures
-          .map { |infrastructure| @resources_interface.get_workers_records_count(infrastructure, params) }
-          .flatten.reduce(0) { |sum, count| sum + count }
-    end
 
     ##
     # Adds workers to given infrastructure basing on average throughput of infrastructure and throughput needed

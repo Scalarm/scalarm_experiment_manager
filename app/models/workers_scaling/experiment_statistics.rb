@@ -51,6 +51,13 @@ module WorkersScaling
     end
 
     ##
+    # Returns throughput needed to finish Experiment in desired time
+    def target_throughput(planned_finish_time)
+      @experiment.reload
+      (@experiment.size - @experiment.count_done_simulations) / [Float(planned_finish_time - Time.now), 0.0].max
+    end
+
+    ##
     # Returns makespan of experiment associated with ExperimentStatistics instance.
     # Makespan is calculated as:
     #   makespan[s] = simulations_to_run/system_throughput
