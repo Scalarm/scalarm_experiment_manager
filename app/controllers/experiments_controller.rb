@@ -399,8 +399,11 @@ class ExperimentsController < ApplicationController
     end
     experiment = send(CONSTRUCTORS[type])
     if params.has_key? :workers_scaling and params[:workers_scaling]
+      allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
+        {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
+      end
       algorithm = WorkersScaling::SampleAlgorithm.new(experiment, current_user.id,
-                                                      workers_scaling_params[:allowed_infrastructures],
+                                                      allowed_infrastructures,
                                                       Time.now + workers_scaling_params[:time_limit]*60)
       WorkersScaling::AlgorithmRunner.new(experiment, algorithm, 10).start
     end

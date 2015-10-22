@@ -36,6 +36,11 @@ class window.AllowedInfrastructures
     @updateTree()
     @tree.show()
 
+#    boosterURL = "/infrastructure/get_booster_dialog"
+#    fieldsDiv = $('#infrastructures_form_loader')
+#    fieldsDiv.html(window.loaderHTML)
+#    fieldsDiv.load(boosterURL)
+
   editorSaveOnEnter: (object) =>
     object.keypress((event) =>
       if event.keyCode == 13
@@ -79,10 +84,14 @@ class window.AllowedInfrastructures
   saveEditorToParam: () =>
     # getting parameter by old parameter id
     parameter = @getModelParamById(@selectedNodeId)
-    
-    limit = $('#param-config #limit').val()
-    parameter.limit = limit
-    parameter.name += "saved"
+
+    parameter.limit = Number($('#param-config #limit').val())
+    params = {}
+    name = $('#param-config #infrastructure_name').val()
+    if name == 'private_machine'
+      params['credentials_id'] = $('#param-config #credentials_id').val()
+    parameter.name = name
+    parameter.params = params
 
     @updateTree()
     @loadParamToEditor(null)
@@ -129,7 +138,7 @@ class window.AllowedInfrastructures
     @createSimpleModel() # just in case TODO
     @allowed_infrastructures.push({
       id: ('param-' + param_num),
-      name: ('Dummy infrastructure'),
+      name: 'Unset',
       params: {}
       limit: 0
     })
@@ -155,6 +164,7 @@ class window.AllowedInfrastructures
   loadParamToEditor: (p) =>
     if p
       $('#param-config #limit').val(p.limit)
+      # TODO load from memory
       $('#param-config').show()
     else
       $('#param-config').hide()
@@ -208,7 +218,7 @@ class window.AllowedInfrastructures
           parameter : {
             max_children : 0,
             max_depth : 0,
-            icon : "fa fa-file-powerpoint-o"
+            icon : "fa fa-cogs"
           }
         },
         plugins : [

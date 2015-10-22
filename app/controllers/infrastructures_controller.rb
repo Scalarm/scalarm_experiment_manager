@@ -390,8 +390,10 @@ class InfrastructuresController < ApplicationController
   # - other_params - Hash
   def get_booster_partial
     validate(
-        infrastructure_name: :security_default
+        infrastructure_name: :security_default,
+        simple_version: [:optional] # TODO validate boolean
     )
+    Rails.logger.info "QQQ #{params[:simple_version]}"
 
     infrastructure_name = params[:infrastructure_name]
     group_name = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
@@ -400,7 +402,8 @@ class InfrastructuresController < ApplicationController
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
           infrastructure_name: infrastructure_name,
-          other_params: facade.other_params_for_booster(current_user.id)
+          other_params: facade.other_params_for_booster(current_user.id),
+          simple_version: params[:simple_version] == 'true'
       }
     rescue ActionView::MissingTemplate
       render nothing: true

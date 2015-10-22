@@ -1,5 +1,7 @@
--# will be used as computed value of input definition designer
-%input#allowed_infrastructures{type: 'hidden', name: 'allowed_infrastructures'}
+- infrastructure_name = InfrastructureFacadeFactory.get_registered_infrastructure_names.first if infrastructure_name.blank?
+- infrastructures_list = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(current_user.id))
+- infrastructures_select_data = infrastructures_list[:data]
+- disabled_infrastructures = infrastructures_list[:disabled]
 
 .row
   %fieldset#allowed-infrastructures-definition
@@ -8,7 +10,7 @@
       .small-5.columns
         %fieldset#param-list
           %legend= 'Infrastructures'
-          .row
+          .row{style: 'margin-left: 10px;'}
             %ul.stack-for-small.button-group
               %li
                 %a.button.tiny.radius#add-param.unselectable
@@ -23,15 +25,24 @@
         %fieldset{id: 'param-config', class:'hidden', 'data_abide' =>''}
           %legend= 'Infrastructure specification'
 
-          #infrastructures_form_loader
+          .row
+            .large-4.columns
+              = label_tag :infrastructure_name, t('infrastructure.information.infrastructure') + ':', class: 'inline right'
+            .large-4.columns
+              = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select_data,
+                infrastructure_name)
+            .large-1.columns
+
+          #infrastructure_fields
 
           .row
-            .small-5.columns
+            .large-4.columns
               = label_tag :limit, 'Workers limit', class: 'right inline'
-            .small-4.columns.end
+            .large-4.columns
               = number_field_tag :limit, 1, min: 1, required: true, class: 'text-right', pattern: "^\\d+$"
+            .large-1.columns
 
-          .row#editor-buttons
+          .row#editor-buttons{style: 'margin-left: 10px;'}
             %ul.stack-for-small.button-group
               %li
                 %a.tiny.button.radius.success#editor-save.disabled.unselectable
@@ -57,4 +68,8 @@
               .small-12.columns.text-center
                 %a#invalid-modal-ok.button.radius.medium= 'OK'
 
-
+- content_for :javascript do
+  :javascript
+    $(function() {
+      new window.InfrastructuresBooster("#{infrastructure_name}", #{disabled_infrastructures}, "dialog", true);
+    });
