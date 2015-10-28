@@ -18,7 +18,7 @@ class SimulationsControllerIntegrationTest < ActionDispatch::IntegrationTest
     super
   end
 
-  test 'get simulation scenarios' do
+  test 'simulations GET index should return simulation scenarios id accessible by user' do
 
     simulation = Simulation.new({
          'name' => 'test',
