@@ -4,8 +4,7 @@ require 'test_helper'
 require 'mocha/test_unit'
 require 'db_helper'
 
-class ExperimentIntegrationTest < MiniTest::Test
-  # NOTICE: slow test
+class ExperimentAutoConvertTest < MiniTest::Test
   include DBHelper
 
   def create_experiment(factory_method)
