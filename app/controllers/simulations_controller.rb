@@ -343,15 +343,16 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get LogBankUtils::simulation_binaries_size_url(@storage_manager_url,
-                                                                                  @experiment.id,
-                                                                                  @simulation_run.index)
+        url = LogBankUtils::simulation_binaries_size_url(@storage_manager_url,
+                                                         @experiment.id,
+                                                         @simulation_run.index)
+        size_response = RestClient::Request.execute(:url => url, :method => :get, :verify_ssl => false)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
           error = 0
         end
-      rescue Exception => ex
+      rescue => ex
         Rails.logger.error("An exception occured during communication with Storage Manager")
         Rails.logger.error("Error: #{ex.inspect}")
       end
@@ -365,15 +366,16 @@ class SimulationsController < ApplicationController
 
     unless @simulation_run.nil? or @storage_manager_url.blank?
       begin
-        size_response = RestClient.get LogBankUtils::simulation_run_stdout_size_url(@storage_manager_url,
-                                                                                    @experiment.id,
-                                                                                    @simulation_run.index)
+        url = LogBankUtils::simulation_run_stdout_size_url(@storage_manager_url,
+                                                           @experiment.id,
+                                                           @simulation_run.index)
+        size_response = RestClient::Request.execute(:url => url, :method => :get, :verify_ssl => false)
 
         if size_response.code == 200
           output_size = Utils.parse_json_if_string(size_response.body)['size']
           error = 0
         end
-      rescue Exception => ex
+      rescue => ex
         Rails.logger.error("An exception occured during communication with Storage Manager")
         Rails.logger.error("Error: #{ex.inspect}")
       end
