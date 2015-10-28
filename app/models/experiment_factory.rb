@@ -24,6 +24,19 @@ class ExperimentFactory
     experiment
   end
 
+  # Return a narrowed class name (String) for Experiment-based object
+  def self.resolve_type(experiment)
+    if experiment.type == 'manual_points'
+      if experiment.supervised
+        'SupervisedExperiment'
+      else
+        'CustomPointsExperiment'
+      end
+    else
+      'Experiment'
+    end
+  end
+
   private
 
   def self._create_record(record_class, user_id, simulation, params)
