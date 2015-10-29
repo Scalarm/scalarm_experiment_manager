@@ -96,7 +96,7 @@ module Utils
     elsif value.is_a? Float
       type_of_value = "float"
     elsif value.is_a? String
-      type_of_value = "string"
+      type_of_value = extract_type_from_string(value)
     else
       type_of_value = "undefined"
     end
