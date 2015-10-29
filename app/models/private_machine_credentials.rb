@@ -25,8 +25,7 @@ class PrivateMachineCredentials < EncryptedMongoActiveRecord
 
   def ssh_params
     {
-        port: port.to_i, password: secret_password,
-        auth_methods: SSH_AUTH_METHODS, timeout: 15
+        port: port.to_i, password: secret_password, timeout: 15
     }
   end
 
