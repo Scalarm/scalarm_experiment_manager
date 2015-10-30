@@ -9,80 +9,72 @@
     .small-12.small-centered.columns(style="text-align: center;")
       %h2= raw("Scalarm" + " &ndash; " + t('login-title'))
 
-- if session.include? :server_name and Rails.configuration.plgrid_domains.include? session[:server_name]
-  %section.panel.radius
-    .row
-      .small-6.columns.small-centered
-        %a.button.expand.radius{ href: login_openid_plgrid_url }
-          %i.fa.fa-openid.fa-fw.small-link
-          = t('openid.login', provider: 'PL-Grid')
-- else
-  %section.panel.radius
-    .row
-      - if single_user
-        = form_tag login_path do
-          = hidden_field_tag 'username', config.anonymous_user['login']
-          .small-6.columns.small-centered
-            .row
-              .small-3.columns
-                %label.right.inline(for='password')= t('user_controller.account.password')
-              .small-6.columns.left
-                = password_field_tag 'password', '', class: 'inline', autocomplete: :off
-
-            .row
-              .small-12.small-centered.columns(style="text-align: center;")
-                = submit_tag 'Login', class: 'button radius'
-      - else
-        - if plgrid_enabled?
-          .small-4.columns.small-centered
-            %a.button.split.custom-split.radius.plgrid{ href: login_openid_plgrid_url }
-              %span
-                =image_tag '/assets/plgridplus.png', width: '36px', style: 'margin-top: -4px;'
-              = t('openid.login', provider: 'PL-Grid')
-
-        - if google_configured?
-          .small-4.columns.small-centered
-            %a.button.split.custom-split.radius.google{ href: login_login_oauth_google_url }
-              %span
-                %i.fa.fa-google-plus.fa-fw.small-link
-              = t('openid.login', provider: 'Google+')
-
-        - if github_configured?
-          .small-4.columns.small-centered
-            %a.button.split.custom-split.radius.github{ href: login_login_oauth_github_url }
-              %span
-                %i.fi-social-github.small-link
-              = t('openid.login', provider: 'GitHub')
-
-        - if basicauth_enabled?
-          .small-4.columns.small-centered
-            %a.button.split.custom-split.radius.username#login_username_button
-              %span
-                %i.fa.fa-key.fa-fw.small-link
-              = t('openid.login', provider: 'BasicAuth')
-
-
-  #login_username_fieldset.hidden
-    %section.panel.radius
-      %h3= t('openid.login', provider: 'BasicAuth')
+%section.panel.radius
+  .row
+    - if single_user
       = form_tag login_path do
-        .row
-          .small-4.columns
-            %label.right.inline(for='username')= t('user_controller.account.login')
-          .small-4.columns.left
-            = text_field_tag 'username', '', class: 'inline'
-          .small-4-columns
+        = hidden_field_tag 'username', config.anonymous_user['login']
+        .small-6.columns.small-centered
+          .row
+            .small-3.columns
+              %label.right.inline(for='password')= t('user_controller.account.password')
+            .small-6.columns.left
+              = password_field_tag 'password', '', class: 'inline', autocomplete: :off
 
-        .row
-          .small-4.columns
-            %label.right.inline(for='password')= t('user_controller.account.password')
-          .small-4.columns.left
-            = password_field_tag 'password', '', class: 'inline', autocomplete: :off
-          .small-4-columns
+          .row
+            .small-12.small-centered.columns(style="text-align: center;")
+              = submit_tag 'Login', class: 'button radius'
+    - else
+      - if plgrid_enabled?
+        .small-4.columns.small-centered
+          %a.button.split.custom-split.radius.plgrid{ href: login_openid_plgrid_url }
+            %span
+              =image_tag '/assets/plgridplus.png', width: '36px', style: 'margin-top: -4px;'
+            = t('openid.login', provider: 'PL-Grid')
 
-        .row
-          .small-12.small-centered.columns(style="text-align: center;")
-            = submit_tag 'Login', class: 'button radius'
+      - if google_configured?
+        .small-4.columns.small-centered
+          %a.button.split.custom-split.radius.google{ href: login_login_oauth_google_url }
+            %span
+              %i.fa.fa-google-plus.fa-fw.small-link
+            = t('openid.login', provider: 'Google+')
+
+      - if github_configured?
+        .small-4.columns.small-centered
+          %a.button.split.custom-split.radius.github{ href: login_login_oauth_github_url }
+            %span
+              %i.fi-social-github.small-link
+            = t('openid.login', provider: 'GitHub')
+
+      - if basicauth_enabled?
+        .small-4.columns.small-centered
+          %a.button.split.custom-split.radius.username#login_username_button
+            %span
+              %i.fa.fa-key.fa-fw.small-link
+            = t('openid.login', provider: 'BasicAuth')
+
+
+#login_username_fieldset.hidden
+  %section.panel.radius
+    %h3= t('openid.login', provider: 'BasicAuth')
+    = form_tag login_path do
+      .row
+        .small-4.columns
+          %label.right.inline(for='username')= t('user_controller.account.login')
+        .small-4.columns.left
+          = text_field_tag 'username', '', class: 'inline'
+        .small-4-columns
+
+      .row
+        .small-4.columns
+          %label.right.inline(for='password')= t('user_controller.account.password')
+        .small-4.columns.left
+          = password_field_tag 'password', '', class: 'inline', autocomplete: :off
+        .small-4-columns
+
+      .row
+        .small-12.small-centered.columns(style="text-align: center;")
+          = submit_tag 'Login', class: 'button radius'
 
 -content_for :javascript do
   :coffeescript
