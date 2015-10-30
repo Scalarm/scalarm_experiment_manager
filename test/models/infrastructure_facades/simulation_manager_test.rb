@@ -226,7 +226,7 @@ class SimulationManagerTest < MiniTest::Test
   def test_terminated_untimely
     @sm.stubs(:state).returns(:running)
     @sm.stubs(:resource_status).returns(:released)
-    @sm.stubs(:should_not_be_already_terminated?).returns(true)
+    @sm.stubs(:should_be_running?).returns(true)
 
     @sm.expects(:store_terminated_error).once
 
@@ -236,7 +236,7 @@ class SimulationManagerTest < MiniTest::Test
   def test_wait_on_initializing
     @sm.stubs(:state).returns(:initializing)
     @sm.stubs(:resource_status).returns(:initializing)
-    @sm.stubs(:should_not_be_already_terminated?).returns(true)
+    @sm.stubs(:should_be_running?).returns(true)
 
     @sm.expects(:store_terminated_error).never
 
@@ -304,7 +304,7 @@ class SimulationManagerTest < MiniTest::Test
   def test_static_running_but_ready
     @sm.stubs(:state).returns(:running)
     @sm.stubs(:resource_status).returns(:ready)
-    @sm.stubs(:should_not_be_already_terminated?).returns(true)
+    @sm.stubs(:should_be_running?).returns(true)
 
     @sm.expects(:store_terminated_error).once
 
