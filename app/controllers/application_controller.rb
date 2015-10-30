@@ -13,7 +13,6 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :null_session, :except => [:openid_callback_plgrid]
 
-  before_filter :read_server_name
   before_filter :authenticate, :except => [:status, :login, :login_openid_google, :openid_callback_google,
                                            :login_openid_plgrid, :openid_callback_plgrid,
                                            :login_oauth_google, :oauth2_google_callback,
@@ -120,10 +119,6 @@ class ApplicationController < ActionController::Base
     processing_time = ((Time.now - @action_start_time)*1000).to_i.round
     #Rails.logger.info("[monitoring][#{controller_name}][#{action_name}]#{processing_time}")
     @@probe.send_measurement(controller_name, action_name, processing_time)
-  end
-
-  def read_server_name
-    session[:server_name] = params[:server_name] if params.include? :server_name
   end
 
   def keep_session_params(*args, &block)
