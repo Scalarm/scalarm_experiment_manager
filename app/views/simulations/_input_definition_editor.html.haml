@@ -17,6 +17,7 @@
         %label.right.inline{for: 'simulation_input'}= t("simulations.registration.simulation_input_desc") + ':'
       .small-7.columns
         = file_field_tag 'simulation_input', id: 'simulation_input_file'
+        %small(class="error") Simulation input file is required
 
     .row#input-designer.hide
       .row
@@ -149,10 +150,12 @@
 
     $('.menu li').click(function () {
       if ($(this).text().trim() == "Design") {
-        $("#input-designer-on").addClass("active")
-        $("#input-designer-off").removeClass("active")
+        $("#input-designer-on").addClass("active");
+        $("#input-designer-off").removeClass("active");
+        $("simulation_input_file").removeAttr('required');
       } else {
-        $("#input-designer-on").removeClass("active")
-        $("#input-designer-off").addClass("active")
+        $("#simulation_input_file").attr('required','required');
+        $("#input-designer-on").removeClass("active");
+        $("#input-designer-off").addClass("active");
       }
     });
