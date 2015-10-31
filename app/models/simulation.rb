@@ -48,7 +48,7 @@ class Simulation < Scalarm::Database::Model::Simulation
 
       adapter = Object.const_get("Simulation#{adapter_type.camelize}").new({
                                                                                name: adapter_name,
-                                                                               code: Utils.read_if_file(params[adapter_type]),
+                                                                               code: (Utils.read_if_file(params[adapter_type])).gsub("\r",""),
                                                                                user_id: current_user.id})
       adapter.save
       Rails.logger.debug(adapter)

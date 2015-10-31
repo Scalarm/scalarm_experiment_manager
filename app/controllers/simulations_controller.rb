@@ -40,18 +40,11 @@ class SimulationsController < ApplicationController
   end
 
   def upload_component
-    if params['component_type'] == 'input_writer'
-      input_writer = SimulationInputWriter.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
-      input_writer.save
-    elsif params['component_type'] == 'executor'
-      executor = SimulationExecutor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
-      executor.save
-    elsif params['component_type'] == 'output_reader'
-      output_reader = SimulationOutputReader.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
-      output_reader.save
-    elsif params['component_type'] == 'progress_monitor'
-      progress_monitor = SimulationProgressMonitor.new({name: params['component_name'], code: Utils.read_if_file(params['component_code']), user_id: current_user.id})
-      progress_monitor.save
+    adapter_list = ['input_writer','executor', 'output_reader', 'progress_monitor']
+    if adapter_list.include? params['component_type']
+      adapter_name = ('Simulation'+params['component_type'].to_s.camelize).constantize
+      adapter = adapter_name.new({name: params['component_name'], code: (Utils.read_if_file(params['component_code']).gsub(/\r/,"")), user_id: current_user.id})
+      adapter.save
     end
 
     flash[:notice] = t('new_adapter_added')

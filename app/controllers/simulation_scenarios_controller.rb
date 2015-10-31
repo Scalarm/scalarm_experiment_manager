@@ -77,6 +77,18 @@ class SimulationScenariosController < ApplicationController
     )
   end
 
+  def get_simulation_scenario_experiment_ids
+    experiment_ids = current_user.experiments.where({simulation_id: @simulation_scenario.id}, {fields: ["_id"]}).map{|obj| obj.id.to_s}
+
+    render json: (
+           if experiment_ids
+             {status: 'ok', experiments: experiment_ids}
+           else
+             {status: 'error', data: 'not_found'}
+           end
+           )
+  end
+
   def code_base
     if @simulation_scenario.blank?
       render inline: t('simulation_scenarios.not_found', id: params[:id]), status: 404
