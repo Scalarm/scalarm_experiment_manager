@@ -129,9 +129,16 @@ $icon-size: 2rem;
   }
 }
 
+.in-middle {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
-
-
+.fit-to-div {
+  max-height: 100%;
+  max-width: 100%;
+}
 
 //&.facebook {
 //  background: $facebook-color;

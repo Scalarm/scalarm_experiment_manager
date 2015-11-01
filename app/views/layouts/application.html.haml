@@ -24,16 +24,14 @@
           = yield
         %footer
           .row{style: 'padding: 10px 13px;'}
-            .small-5.columns
+            .small-5.columns.left#copyright-footer
               = raw t('copyright')
-            .small-5.columns.right(style="padding-top: 7px;")
-              .row
-                .small-8.columns
-                  = link_to image_tag('scalarm-blue-small.png'),
-                    'http://www.scalarm.com'
-                .small-4.columns.right{style: "text-align: right;"}
-                  = link_to image_tag('cyfronet_logo.png', size: "92x64"),
-                      'http://www.cyfronet.pl'
+              %br
+              = "Report a problem at: "
+              %a{:href => "https://helpdesk.plgrid.pl/"} helpdesk.plgrid.pl
+            .small-7.columns.right#links-footer
+              =footer_link_image 'cyfronet_logo.png', 'http://www.cyfronet.pl'
+              =footer_link_image 'scalarm-blue-small.png', 'http://www.scalarm.com'
 
     = javascript_include_tag 'application'
     :javascript
