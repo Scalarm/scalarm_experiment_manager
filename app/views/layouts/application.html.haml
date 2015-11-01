@@ -26,14 +26,20 @@
           .row{style: 'padding: 10px 13px;'}
             .small-5.columns
               = raw t('copyright')
+              %br
+              = "Report a problem at: "
+              %a{:href => "https://helpdesk.plgrid.pl/"} helpdesk.plgrid.pl
             .small-5.columns.right(style="padding-top: 7px;")
               .row
                 .small-8.columns
-                  = link_to image_tag('scalarm-blue-small.png'),
-                    'http://www.scalarm.com'
+                  %div{style: 'height: 30px;'}
+                    = link_to image_tag('scalarm-blue-small.png', class: 'in-middle'),
+                      'http://www.scalarm.com'
                 .small-4.columns.right{style: "text-align: right;"}
-                  = link_to image_tag('cyfronet_logo.png', size: "92x64"),
-                      'http://www.cyfronet.pl'
+                  %div{style: 'height: 30px;'}
+                    = link_to image_tag('cyfronet_logo.png', size: "92x64", class: 'in-middle'),
+                        'http://www.cyfronet.pl'
+
 
     = javascript_include_tag 'application'
     :javascript

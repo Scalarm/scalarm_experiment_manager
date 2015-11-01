@@ -129,7 +129,11 @@ $icon-size: 2rem;
   }
 }
 
-
+.in-middle {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 
 
