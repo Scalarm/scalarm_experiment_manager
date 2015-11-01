@@ -10,11 +10,12 @@ class SimRecordInfrastructureTest < ActionDispatch::IntegrationTest
   def setup
     super
 
-    @experiment = stub_everything
-    @record = stub_everything do
-      stubs(:experiment).returns(@experiment)
-    end
-    @sm = SimulationManager.new(@record, stub_everything)
+    @experiment = Experiment.new({name: 'experiment_mocked'}).save
+    @experiment.stubs(:experiment_input).returns({})
+    @record = stub_everything
+    @record.stubs(:experiment).returns(@experiment)
+    @infrastructure = stub_everything
+    @sm = SimulationManager.new(@record, @infrastructure)
   end
 
   def teardown
@@ -30,21 +31,14 @@ class SimRecordInfrastructureTest < ActionDispatch::IntegrationTest
   #   store_terminated_error should be launched
   test 'handling last failed simulation run with terminated_untimely' do
     # Given
-    @experiment = Experiment.new({name: 'experiment_mocked'}).save
-    @experiment.stubs(:experiment_input).returns({})
-
     running_sm_uuid = 'running_sm_uuid'
 
     sim_run = @experiment.create_new_simulation(1)
-    @experiment.create_new_simulation(2).save.rollback!
-
     sim_run.sm_uuid = running_sm_uuid
     sim_run.save
-    puts "Sim: #{@experiment.simulation_runs.where(index: 1).first}"
-    puts @experiment.has_simulations_to_run?
 
-    @record.sm_uuid = running_sm_uuid
-    @sm.stubs(:state).returns(:running_sm)
+    @record.stubs(:sm_uuid).returns(running_sm_uuid)
+    @sm.stubs(:state).returns(:running)
     @sm.stubs(:resource_status).returns(:released)
 
     # Predicted behaviour
@@ -62,6 +56,22 @@ class SimRecordInfrastructureTest < ActionDispatch::IntegrationTest
   # Then
   #   the simulation manager transmit to a TERMINATING state (stop effect)
   test 'dismiss stopped simulation managers when there is no simulation runs left to do' do
+    # Given
+    sim_run = @experiment.create_new_simulation(1)
+    sim_run.sm_uuid = 'other_sm_uuid'
+    sim_run.save
+    puts "Sim: #{@sm.no_pending_tasks?}"
+
+    @record.stubs(:sm_uuid).returns('sim_sm_uuid')
+    @sm.stubs(:state).returns(:running)
+    @sm.stubs(:resource_status).returns(:released)
+
+    # Predicted behaviour
+    @sm.expects(:store_terminated_error).never
+    @sm.expects(:stop).at_least_once
+
+    # When
+    @sm.monitor
 
   end
 
