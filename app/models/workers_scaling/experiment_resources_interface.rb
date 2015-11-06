@@ -21,7 +21,6 @@ module WorkersScaling
       @user_id = BSON::ObjectId(user_id.to_s)
       @facades_cache = {}
       @allowed_infrastructures = allowed_infrastructures
-      LOGGER.debug "#{allowed_infrastructures}"
     end
 
     ##
@@ -66,7 +65,6 @@ module WorkersScaling
 
         # TODO: SCAL-1024 - facades use both string and symbol keys
         params.symbolize_keys!.merge!(params.stringify_keys)
-        LOGGER.info "ASDASD #{params}"
         get_facade_for(infrastructure[:name])
           .start_simulation_managers(@user_id, amount, @experiment_id, params)
           .map &:sm_uuid

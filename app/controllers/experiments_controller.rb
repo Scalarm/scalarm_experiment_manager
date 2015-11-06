@@ -382,24 +382,28 @@ class ExperimentsController < ApplicationController
         workers_scaling: [:optional] # TODO boolean validator
         #workers_scaling_params: [:optional, :json_or_hash] TODO uncomment? SCAL-757: (..) json_or_hash validator bug
     )
+
+    # Params validation
     type = params[:type] || 'experiment'
     Utils::raise_error_unless_has_key(CONSTRUCTORS, type, "Not a correct experiment type: #{type}")
     workers_scaling_params = nil
-    if params.has_key? :workers_scaling and params[:workers_scaling]
-      Utils::raise_error_unless_has_key(params, :workers_scaling_params, 'Missing workers scaling parameters')
-      workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
+    if params[:workers_scaling]
       message_prefix = 'Missing workers scaling parameter'
-      Utils::raise_error_unless_has_key(workers_scaling_params, :name, "#{message_prefix} name",
-                                        'workers_scaling_params')
-      Utils::raise_error_unless_has_key(workers_scaling_params, :allowed_infrastructures,
-                                        "#{message_prefix} allowed_infrastructures", 'workers_scaling_params')
-      Utils::raise_error_unless_has_key(workers_scaling_params, :time_limit, "#{message_prefix} time_limit",
-                                        'workers_scaling_params')
+      Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
+      workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
+      [:name, :allowed_infrastructures, :time_limit].each do |param|
+        Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
+                                          'workers_scaling_params')
+      end
       # TODO more precise validation
     end
+    # Create experiment
     experiment = send(CONSTRUCTORS[type])
-    if params.has_key? :workers_scaling and params[:workers_scaling]
+
+    # Start workers scaling
+    if params[:workers_scaling]
       allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
+        # TODO Introduce infrastructure id
         {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
       end
       algorithm = WorkersScaling::SampleAlgorithm.new(experiment, current_user.id,

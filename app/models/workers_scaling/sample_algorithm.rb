@@ -39,9 +39,6 @@ module WorkersScaling
     # * planned_finish_time - desired time of end of Experiment (as Time instance)
     # Creates instances of ExperimentResourcesInterface and ExperimentStatistics
     def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time)
-
-      Rails.logger.info "QQQ #{allowed_infrastructures}"
-
       @experiment = experiment
       @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, allowed_infrastructures)
       @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
@@ -54,7 +51,6 @@ module WorkersScaling
     # Otherwise uses random subset of available infrastructures with size equal to Experiment size
     def initial_deployment
       LOGGER.debug 'Initial deployment'
-      LOGGER.debug "#{@resources_interface.get_available_infrastructures}"
       @resources_interface.get_available_infrastructures
           .select { |infrastructure| @resources_interface.current_infrastructure_limit(infrastructure) > 0 }
           .shuffle[0..@experiment.size-1]
@@ -144,7 +140,6 @@ module WorkersScaling
           random_unused = unused_infrastructures
                     .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
                     .sample[:infrastructure]
-          LOGGER.debug "TUTUTUTUTUTUTUT #{random_unused}"
           add_workers(random_unused[:infrastructure], random_unused[:statistics][:average_throughput], throughput_needed)
         end
       end

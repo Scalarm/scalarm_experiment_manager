@@ -36,11 +36,6 @@ class window.AllowedInfrastructures
     @updateTree()
     @tree.show()
 
-#    boosterURL = "/infrastructure/get_booster_dialog"
-#    fieldsDiv = $('#infrastructures_form_loader')
-#    fieldsDiv.html(window.loaderHTML)
-#    fieldsDiv.load(boosterURL)
-
   editorSaveOnEnter: (object) =>
     object.keypress((event) =>
       if event.keyCode == 13
@@ -87,10 +82,10 @@ class window.AllowedInfrastructures
 
     parameter.limit = Number($('#param-config #limit').val())
     params = {}
-    name = $('#param-config #infrastructure_name').val()
-    if name == 'private_machine'
-      params['credentials_id'] = $('#param-config #credentials_id').val()
-    parameter.name = name
+    for key in $('#param-config *').filter(':input')
+      if key.id != 'infrastructure_name' and key.id != 'limit'
+        params[key.id] = key.value
+    parameter.name = $('#param-config #infrastructure_name').val()
     parameter.params = params
 
     @updateTree()
@@ -113,29 +108,20 @@ class window.AllowedInfrastructures
 
   handleAddParam: =>
     @simpleAddParam()
-#    @simpleValidation()
     @activateNodeById(@selectedNodeId) if @selectedNodeId
 
   handleRemoveParam: =>
     @setSaved()
-#    @removingValidation()
     @simpleRemoveParam()
 
   createSimpleModel: =>
     @allowed_infrastructures = [] unless @allowed_infrastructures
 
-#  simpleValidation: =>
-#    $('#param-config #param_id').attr('required','required')
-
-#  removingValidation: =>
-#    $('#param-config #param_id').removeAttr('required')
-
   simpleAddParam: =>
-    # TODO load infrastructures form?
     @global_param_n = 0 unless @global_param_n
     param_num = @global_param_n++
 
-    @createSimpleModel() # just in case TODO
+    @createSimpleModel()
     @allowed_infrastructures.push({
       id: ('param-' + param_num),
       name: 'Unset',
@@ -162,9 +148,11 @@ class window.AllowedInfrastructures
 
 
   loadParamToEditor: (p) =>
+    @monitorEditorControls()
     if p
       $('#param-config #limit').val(p.limit)
-      # TODO load from memory
+      for key of p.params
+        $('#param-config #' + key).val(p.params[key])
       $('#param-config').show()
     else
       $('#param-config').hide()
@@ -182,7 +170,7 @@ class window.AllowedInfrastructures
       ]
 
   paramModelToTree: (p) =>
-    label = @cutText(p.name, 20)
+    label = @cutText(p.name, 20) # TODO humanize
     {
       id: p.id,
       text: "<strong>#{label}</strong>",

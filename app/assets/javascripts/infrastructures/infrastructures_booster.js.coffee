@@ -1,5 +1,5 @@
 class window.InfrastructuresBooster
-  constructor: (@infrastructureName, @disabledInfrastructures, @dialogId, @simple_version = false) ->
+  constructor: (@infrastructureName, @disabledInfrastructures, @dialogId) ->
     @dialog = $("##{dialogId}")
     @schedulerForm = $('#scheduler-form form')
     @bindToSubmissionForms()
@@ -16,7 +16,7 @@ class window.InfrastructuresBooster
 
   onInfrastructuresSelectChange: () =>
     selectValue = @infrastructureSelect.val()
-    params = $.param({infrastructure_name: selectValue, simple_version: @simple_version})
+    params = $.param({infrastructure_name: selectValue})
 
     fieldsURL = "/infrastructure/get_booster_partial?#{params}"
     fieldsDiv = $('#infrastructure_fields')
