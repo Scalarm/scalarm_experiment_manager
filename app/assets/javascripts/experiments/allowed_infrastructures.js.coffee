@@ -46,7 +46,12 @@ class window.AllowedInfrastructures
     )
 
   getAllowedInfrastructures: =>
-    @allowed_infrastructures
+    @allowed_infrastructures.map (entry) ->
+      {
+        name: entry.name,
+        params: entry.params
+        limit: entry.limit
+      }
 
   monitorEditorControls: =>
     $('#param-config input').on('input', => @setModified())
