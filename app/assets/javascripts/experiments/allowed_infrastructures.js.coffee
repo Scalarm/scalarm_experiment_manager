@@ -86,6 +86,7 @@ class window.AllowedInfrastructures
       if key.id != 'infrastructure_name' and key.id != 'limit'
         params[key.id] = key.value
     parameter.name = $('#param-config #infrastructure_name').val()
+    parameter.label = $('#param-config #infrastructure_name option:selected').text()
     parameter.params = params
 
     @updateTree()
@@ -124,7 +125,8 @@ class window.AllowedInfrastructures
     @createSimpleModel()
     @allowed_infrastructures.push({
       id: ('param-' + param_num),
-      name: 'Unset',
+      name: '',
+      label: 'Unset',
       params: {}
       limit: 0
     })
@@ -170,10 +172,9 @@ class window.AllowedInfrastructures
       ]
 
   paramModelToTree: (p) =>
-    label = @cutText(p.name, 20) # TODO humanize
     {
       id: p.id,
-      text: "<strong>#{label}</strong>",
+      text: "<strong>#{p.label}</strong>",
       type: 'parameter'
     }
 
@@ -221,10 +222,4 @@ class window.AllowedInfrastructures
     @bindActivateNode()
 
     @tree.on('redraw.jstree', => @activateNodeById(@selectedNodeId))
-
-  cutText: (text, maxChars) ->
-    if text.length > maxChars
-      "#{text.substring(0, maxChars)}..."
-    else
-      text
 
