@@ -406,6 +406,12 @@ class ExperimentsController < ApplicationController
         # TODO Introduce infrastructure id
         {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
       end
+      # TODO proper parsing
+      allowed_infrastructures.each do |inf|
+        if inf[:infrastructure][:params][:credentials_id]
+          inf[:infrastructure][:params][:credentials_id] = BSON::ObjectId(inf[:infrastructure][:params][:credentials_id])
+        end
+      end
       algorithm = WorkersScaling::SampleAlgorithm.new(experiment, current_user.id,
                                                       allowed_infrastructures,
                                                       Time.now + workers_scaling_params[:time_limit]*60)

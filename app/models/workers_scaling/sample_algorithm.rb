@@ -139,8 +139,10 @@ module WorkersScaling
           # schedule one worker on random unused infrastructure
           random_unused = unused_infrastructures
                     .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
-                    .sample[:infrastructure]
-          add_workers(random_unused[:infrastructure], random_unused[:statistics][:average_throughput], throughput_needed)
+                    .sample
+          if random_unused
+            add_workers(random_unused[:infrastructure], 0, throughput_needed)
+          end
         end
       end
     end
