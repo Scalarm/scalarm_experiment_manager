@@ -195,6 +195,8 @@ class SimulationManager
   end
 
   # This SiM is not computing any simulation run and we do not predict any
+  # If the experiment is supervised, this method always returns true,
+  # as it always can be more simulations to do
   def no_pending_tasks?
     if not @record.experiment.supervised
       simulation_run = record.experiment.simulation_runs.find_by_sm_uuid(record.sm_uuid)
