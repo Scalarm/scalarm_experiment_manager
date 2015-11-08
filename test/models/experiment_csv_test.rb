@@ -14,22 +14,31 @@ class ExperimentCsvTest < MiniTest::Test
       stubs(:index).returns(1)
       stubs(:values).returns('1.0,2')
       stubs(:result).returns({'one'=> 3, 'two' => 4})
+      stubs(:is_error).returns(false)
     end
 
     sim2 = mock 'sim2' do
       stubs(:index).returns(2)
       stubs(:values).returns('2.0,3')
       stubs(:result).returns({'one'=> 4, 'two' => 5})
+      stubs(:is_error).returns(false)
     end
 
     sim3 = mock 'sim3' do
       stubs(:index).returns(3)
       stubs(:values).returns('3.0,4')
       stubs(:result).returns({'one'=> 5, 'two' => 6})
+      stubs(:is_error).returns(false)
     end
-
+    sim4 = mock 'sim4' do
+      stubs(:index).returns(4)
+      stubs(:values).returns('4.0,5')
+      stubs(:result).returns({})
+      stubs(:is_error).returns(true)
+      stubs(:error_reason).returns("sh: 1: module: not found")
+    end
     simulation_runs = mock 'simulation_runs'
-    simulation_runs.stubs(:where).returns([sim1, sim2, sim3])
+    simulation_runs.stubs(:where).returns([sim1, sim2, sim3, sim4])
 
     @experiment.stubs(:simulation_runs).returns(simulation_runs)
   end
@@ -92,4 +101,20 @@ x,y
     assert_equal csv_should, csv
   end
 
+  def test_csv_full_with_error
+    # given
+    csv_should = <<-CSV
+simulation_index,x,y,one,two,is_error,error_reason
+1,1.0,2,3,4,false,
+2,2.0,3,4,5,false,
+3,3.0,4,5,6,false,
+4,4.0,5,\"\",\"\",true,sh: 1: module: not found
+    CSV
+
+    # when
+    csv = @experiment.create_result_csv(true, true, true,true)
+
+    # then
+    assert_equal csv_should, csv
+  end
 end
