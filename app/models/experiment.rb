@@ -46,7 +46,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   attr_join :user, ScalarmUser
 
   def self.to_a
-    super.map {|e| e.auto_convert}
+    super.map { |e| e.auto_convert }
   end
 
   def simulation_runs
@@ -97,7 +97,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def get_statistics
-    all  = simulation_runs.count
+    all = simulation_runs.count
     sent = simulation_runs.where(to_sent: false, is_done: false).count
     done = simulation_runs.where(is_done: true).count
 
@@ -182,7 +182,7 @@ class Experiment < Scalarm::Database::Model::Experiment
           if entity['id'] == entity_id || (entity['id'].blank? and entity_id.blank?)
             entity['parameters'].each do |parameter|
               if parameter['id'] == parameter_id
-                return [ entity_group['label'], entity['label'], parameter['label'] ].compact.join(" - ")
+                return [entity_group['label'], entity['label'], parameter['label']].compact.join(" - ")
               end
             end
           end
@@ -196,7 +196,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   def self.output_parameter_label_for(moe_name)
     label = moe_name.split(/([[:upper:]][[:lower:]]+)/).delete_if(&:empty?).join(" ")
 
-    label.split(' ').map{|x| x[0].capitalize + x[1..-1]}.join(' ').gsub('_', ' ')
+    label.split(' ').map { |x| x[0].capitalize + x[1..-1] }.join(' ').gsub('_', ' ')
   end
 
 
@@ -266,7 +266,7 @@ class Experiment < Scalarm::Database::Model::Experiment
     if self.size.nil?
       self.size = 0
       list_of_values = value_list(debug)
-      max_size = list_of_values.reduce(1){|acc, x| acc * x.size} * replication_level
+      max_size = list_of_values.reduce(1) { |acc, x| acc * x.size } * replication_level
 
       if parameters_constraints.blank?
         self.size = max_size
@@ -320,7 +320,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   def moe_names
     moe_name_set = []
     limit = self.experiment_size > 1000 ? self.experiment_size / 2 : self.experiment_size
-    simulation_runs.where({ is_done: true }, { fields: %w(result), limit: limit }).each do |simulation_run|
+    simulation_runs.where({is_done: true}, {fields: %w(result), limit: limit}).each do |simulation_run|
       moe_name_set += simulation_run.result.keys.to_a
     end
 
@@ -370,7 +370,7 @@ class Experiment < Scalarm::Database::Model::Experiment
     find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
     find_exp = /#{find_exp}#{param_value}/
 
-    param_values = simulation_runs.where({ values: { '$not' => find_exp } }, { fields: %w(values) }).
+    param_values = simulation_runs.where({values: {'$not' => find_exp}}, {fields: %w(values)}).
         map { |x| x.values.split(',')[param_index] }.uniq + [param_value]
 
     param_values.map { |x| x.to_f }.uniq.sort
@@ -419,7 +419,7 @@ class Experiment < Scalarm::Database::Model::Experiment
 
   end
 
-  def create_result_csv(with_index=false, with_params=true, with_moes=true)
+  def create_result_csv(with_index=false, with_params=true, with_moes=true, error_description = false)
     moes = self.moe_names
 
     CSV.generate do |csv|
@@ -427,24 +427,42 @@ class Experiment < Scalarm::Database::Model::Experiment
       header += ['simulation_index'] if with_index
       header += self.parameters.flatten if with_params
       header += moes if with_moes
+      header += ['is_error'] if error_description
+      header += ['error_reason'] if error_description
       csv << header
-
       query_fields = {_id: 0}
       query_fields[:index] = 1 if with_index
       query_fields[:values] = 1 if with_params
       query_fields[:result] = 1 if with_moes
-
       simulation_runs.where(
-          {is_done: true, is_error: {'$exists' => false}},
+          {is_done: true},
           {fields: query_fields}
       ).each do |simulation_run|
-        line = []
-        line += [simulation_run.index] if with_index
-        line += simulation_run.values.split(',') if with_params
-        # getting values of results in a specific order
-        line += moes.map { |moe_name| simulation_run.result[moe_name] || '' } if with_moes
+        if error_description
+          puts "error"
+          line = []
+          line += [simulation_run.index] if with_index
+          line += simulation_run.values.split(',') if with_params
+          # getting values of results in a specific order
+          line += moes.map { |moe_name| simulation_run.result[moe_name] || '' } if with_moes
+          line += [simulation_run.is_error]
+          if simulation_run.is_error
+            line += [simulation_run.error_reason]
+          else
+            line += [nil]
+          end
 
-        csv << line
+          csv << line
+        elsif !simulation_run.is_error
+          puts "OK"
+          line = []
+          line += [simulation_run.index] if with_index
+          line += simulation_run.values.split(',') if with_params
+          # getting values of results in a specific order
+          line += moes.map { |moe_name| simulation_run.result[moe_name] || '' } if with_moes
+          csv << line
+        end
+
       end
     end
   end
@@ -460,7 +478,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       sm_uuid = SecureRandom.uuid
       temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, self.experiment_id)
       begin
-        config = {'storage_manager' => { 'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password} }
+        config = {'storage_manager' => {'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password}}
         Rails.logger.debug("Destroy config = #{config}")
 
         sm_proxy = StorageManagerProxy.new(config)
@@ -480,8 +498,8 @@ class Experiment < Scalarm::Database::Model::Experiment
     # drop progress bar object
     self.progress_bar_table.drop
     # self-drop
-    @@db['experiments_info'].remove({ _id: self.id })
-    Experiment.destroy({ _id: self.id })
+    @@db['experiments_info'].remove({_id: self.id})
+    Experiment.destroy({_id: self.id})
   end
 
   def result_names
@@ -543,7 +561,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   def parameter_values_for(parameter_uid)
     values = []
 
-  #  if this parameter is used in DoE => get all values from doe_info
+    #  if this parameter is used in DoE => get all values from doe_info
     if get_parameter_doc(parameter_uid)['in_doe']
 
       self.doe_info.each do |method, list_of_parameters, doe_values|
@@ -556,7 +574,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       end
 
     else
-  #  if not used in DoE => get values from 'value_list' and 'value_list_extension'
+      #  if not used in DoE => get values from 'value_list' and 'value_list_extension'
       param_index = self.parameters.index(parameter_uid)
       values += value_list[param_index]
 
@@ -633,64 +651,64 @@ class Experiment < Scalarm::Database::Model::Experiment
     #self.doe_info.each do |doe_element|
     #  doe_id, doe_parameters = doe_element
     #  if doe_parameters.include?(parameter_uid)
-        #Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
-      #end
+    #Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
+    #end
     #end
 
     parameter_values = []
 
     case parameter['parametrizationType']
 
-    when 'value'
-      # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      validate_parameter_value(parameter['label'], parameter['value'])
+      when 'value'
+        # checking parameters for alpha-numeric characters, '_', '-' and '.'
+        validate_parameter_value(parameter['label'], parameter['value'])
 
-      parameter_values << parameter['value']
+        parameter_values << parameter['value']
 
-    when 'range'
-      # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      ['type', 'step', 'min', 'max'].each do |input_type|
-        value_of_input = parameter[input_type]
-        validate_parameter_value(parameter['label'], value_of_input)
-      end
+      when 'range'
+        # checking parameters for alpha-numeric characters, '_', '-' and '.'
+        ['type', 'step', 'min', 'max'].each do |input_type|
+          value_of_input = parameter[input_type]
+          validate_parameter_value(parameter['label'], value_of_input)
+        end
 
-      step = if parameter['type'] == 'float'
-               parameter['step'].to_f
-             elsif parameter['type'] == 'integer'
-               parameter['step'].to_i
-             end
-      raise "Step can't be zero" if step.to_f == 0.0
+        step = if parameter['type'] == 'float'
+                 parameter['step'].to_f
+               elsif parameter['type'] == 'integer'
+                 parameter['step'].to_i
+               end
+        raise "Step can't be zero" if step.to_f == 0.0
 
-      value = parameter['min'].to_f
-      while value <= parameter['max'].to_f
-        parameter_values << value.round(3)
-        value += step.round(3)
-      end
+        value = parameter['min'].to_f
+        while value <= parameter['max'].to_f
+          parameter_values << value.round(3)
+          value += step.round(3)
+        end
 
-    when 'gauss'
-      # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      ['mean', 'variance'].each do |input_type|
-        value_of_input = parameter[input_type]
-        validate_parameter_value(parameter['label'], value_of_input)
-      end
+      when 'gauss'
+        # checking parameters for alpha-numeric characters, '_', '-' and '.'
+        ['mean', 'variance'].each do |input_type|
+          value_of_input = parameter[input_type]
+          validate_parameter_value(parameter['label'], value_of_input)
+        end
 
-      r_interpreter = Rails.configuration.r_interpreter
-      r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
-      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
+        r_interpreter = Rails.configuration.r_interpreter
+        r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
+        parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
 
-    when 'uniform'
-      # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      ['min', 'max'].each do |input_type|
-        value_of_input = parameter[input_type]
-        validate_parameter_value(parameter['label'], value_of_input)
-      end
+      when 'uniform'
+        # checking parameters for alpha-numeric characters, '_', '-' and '.'
+        ['min', 'max'].each do |input_type|
+          value_of_input = parameter[input_type]
+          validate_parameter_value(parameter['label'], value_of_input)
+        end
 
-      r_interpreter = Rails.configuration.r_interpreter
-      r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
-      parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
+        r_interpreter = Rails.configuration.r_interpreter
+        r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
+        parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
 
-    when 'custom'
-      parameter_values.concat(parameter['custom_values'])
+      when 'custom'
+        parameter_values.concat(parameter['custom_values'])
 
     end
 
@@ -698,14 +716,14 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     case parameter['type']
 
-    when 'integer'
-      parameter_values.map!(&:to_i)
+      when 'integer'
+        parameter_values.map!(&:to_i)
 
-    when 'float'
-      parameter_values.map!(&:to_f)
+      when 'float'
+        parameter_values.map!(&:to_f)
 
-    when 'string'
-      parameter_values.map!(&:to_s)
+      when 'string'
+        parameter_values.map!(&:to_s)
 
     end
 
@@ -723,7 +741,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   def validate_parameter_value(name_of_input_parameter, value_of_input)
     if /\A(\w|-|\.)+\z/.match(value_of_input).nil?
       type_of_error = value_of_input.empty? ? 'Empty' : 'Wrong'
-      raise ValidationError.new(name_of_input_parameter, value_of_input, "#{type_of_error} value for parameter given" )
+      raise ValidationError.new(name_of_input_parameter, value_of_input, "#{type_of_error} value for parameter given")
     end
   end
 
@@ -734,13 +752,13 @@ class Experiment < Scalarm::Database::Model::Experiment
       when '2k'
         values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
           parameter = get_parameter_doc(parameter_uid)
-          sum << [ parameter['min'].to_f, parameter['max'].to_f ]
+          sum << [parameter['min'].to_f, parameter['max'].to_f]
         }
 
         if values.size > 1
-          values = values[1..-1].reduce(values.first){|acc,values| acc.product values}.map{|x| x.flatten}
+          values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
         else
-          values = values.first.map{|x| [ x ]}
+          values = values.first.map { |x| [x] }
         end
 
         values
@@ -765,7 +783,7 @@ class Experiment < Scalarm::Database::Model::Experiment
         else
           values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
             parameter = get_parameter_doc(parameter_uid)
-            sum << [ {level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f} ]
+            sum << [{level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f}]
           }
 
           if values.size > 1
@@ -774,8 +792,8 @@ class Experiment < Scalarm::Database::Model::Experiment
             values = values.first.map { |x| [x] }
           end
 
-          values = values.select{ |array| array[0..-2].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
-          values = values.map{ |array| array.map{ |item| item[:value] }}
+          values = values.select { |array| array[0..-2].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
+          values = values.map { |array| array.map { |item| item[:value] } }
 
           values
         end
@@ -786,7 +804,7 @@ class Experiment < Scalarm::Database::Model::Experiment
         else
           values = parameters_for_doe.reduce([]) { |sum, parameter_uid|
             parameter = get_parameter_doc(parameter_uid)
-            sum << [ {level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f} ]
+            sum << [{level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f}]
           }
 
           if values.size > 1
@@ -795,9 +813,9 @@ class Experiment < Scalarm::Database::Model::Experiment
             values = values.first.map { |x| [x] }
           end
 
-          values = values.select{ |array| array[0..-4].reduce(1) { |acc, item| acc*item[:level] } == array[-2][:level] }
-          values = values.select{ |array| array[1..-3].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
-          values = values.map{ |array| array.map{ |item| item[:value] }}
+          values = values.select { |array| array[0..-4].reduce(1) { |acc, item| acc*item[:level] } == array[-2][:level] }
+          values = values.select { |array| array[1..-3].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
+          values = values.map { |array| array.map { |item| item[:value] } }
 
           values
         end
@@ -807,15 +825,15 @@ class Experiment < Scalarm::Database::Model::Experiment
           raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 1))
         else
           design_file_path = File.join(Rails.root, 'public', 'designs.R')
-          Rails.logger.info("""arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}')
-                               design <- #{doe_method_name}(arg) design <- data.matrix(design)""")
+          Rails.logger.info("" "arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}')
+                               design <- #{doe_method_name}(arg) design <- data.matrix(design)" "")
           Rails.configuration.r_interpreter.eval("arg <- #{data_frame(parameters_for_doe)}
               source('#{design_file_path}')
               design <- #{doe_method_name}(arg)
               design <- data.matrix(design)")
 
           values = Rails.configuration.r_interpreter.design.to_a
-          values = values.map{|list| list.map{|num| num.round(5)}}
+          values = values.map { |list| list.map { |num| num.round(5) } }
           #Rails.logger.debug("Design: #{values}")
 
           values
@@ -827,7 +845,7 @@ class Experiment < Scalarm::Database::Model::Experiment
     data_frame_list = parameter_list.map do |parameter_uid|
       parameter = get_parameter_doc(parameter_uid)
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter_uid, parameter['min'], parameter['max'], parameter['step'] ].each do |some_value|
+      [parameter_uid, parameter['min'], parameter['max'], parameter['step']].each do |some_value|
         if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
           raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
         end

@@ -163,15 +163,15 @@ class ExperimentsController < ApplicationController
 
   @apiUse ConfigurationsParams
 =end
-  def configurations
+  def configurations(error_description = false)
     respond_to do |format|
       format.html { render text: _configurations_csv.gsub("\n", '<br/>') }
-      format.json { render json: {status: 'ok', data: _configurations_csv} }
+      format.json { render json: {status: 'ok', data: _configurations_csv(error_description)} }
     end
   end
 
   # NOT a controller method, only helper
-  def _configurations_csv
+  def _configurations_csv(error_description = false)
     validate(
         with_index: [:optional, :security_default],
         with_params: [:optional, :security_default],
@@ -182,7 +182,7 @@ class ExperimentsController < ApplicationController
     w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
     w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
 
-    @experiment.create_result_csv(w_index, w_params, w_moes)
+    @experiment.create_result_csv(w_index, w_params, w_moes, error_description)
   end
 
   def create_experiment
