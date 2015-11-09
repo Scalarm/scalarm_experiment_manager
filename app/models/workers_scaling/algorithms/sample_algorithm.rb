@@ -67,10 +67,6 @@ module WorkersScaling
     # If limits in all known infrastructures are reached, uses random unknown infrastructure
     def increase_computational_power
       LOGGER.debug 'Need to increase computational power'
-      if @resources_interface.count_all_workers(cond: Query::STARTING_WORKERS) > 0
-        LOGGER.debug 'There are starting Workers already'
-        return
-      end
 
       # calculate needed additional throughput
       throughput_needed = @experiment_statistics.target_throughput(@planned_finish_time) -
@@ -104,13 +100,14 @@ module WorkersScaling
       # if throughput is still too low, use other infrastructures or inform user
       if throughput_needed > 0
         random_unused = unused_infrastructures
-                .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
-                .sample
-        if random_unused
+            .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
+            .sample
+        if random_unused.blank?
           # TODO: inform user that planned_finish_time cannot be fulfilled with current limits
           LOGGER.debug 'May not meet time requirements'
         else
           # schedule one worker on random unused infrastructure
+          LOGGER.debug 'Need to use unknown infrastructure'
           add_workers(random_unused[:infrastructure])
         end
       end
@@ -160,9 +157,19 @@ module WorkersScaling
     # If average_throughput is 0, throughput_needed value is ignored and exactly one Worker is added
     # Returns predicted throughput growth
     def add_workers(infrastructure, average_throughput = 0, throughput_needed = 0)
-      workers_needed = average_throughput > 0 ? (throughput_needed / average_throughput).ceil : 1
-      LOGGER.debug "Starting #{workers_needed} Workers on infrastructure: #{infrastructure}"
-      @resources_interface.schedule_workers(workers_needed, infrastructure).count * average_throughput
+      workers_needed = if average_throughput > 0
+                         if throughput_needed == Float::INFINITY
+                           Float::INFINITY
+                         else
+                           (throughput_needed / average_throughput).ceil
+                         end
+                       else
+                         1
+                       end
+      LOGGER.debug "Trying to schedule #{workers_needed} Workers on infrastructure: #{infrastructure}"
+      scheduled = @resources_interface.schedule_workers(workers_needed, infrastructure).count
+      LOGGER.debug "Total of #{scheduled} Workers starting on infrastructure: #{infrastructure}"
+      scheduled * average_throughput
     end
   end
 end

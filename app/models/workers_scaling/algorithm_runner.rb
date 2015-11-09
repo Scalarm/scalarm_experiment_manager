@@ -1,3 +1,4 @@
+require 'workers_scaling/utils/logger'
 ##
 # Scheduler to run Algorithm decision loop periodically
 module WorkersScaling

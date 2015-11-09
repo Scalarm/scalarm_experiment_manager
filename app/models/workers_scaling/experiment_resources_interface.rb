@@ -1,5 +1,6 @@
 require 'infrastructure_facades/infrastructure_facade_factory'
 require 'infrastructure_facades/infrastructure_errors'
+require 'workers_scaling/utils/query'
 include InfrastructureErrors
 ##
 # Experiment interface to schedule and maintain computational resources
@@ -8,7 +9,7 @@ module WorkersScaling
 
     ##
     # Params:
-    # * experiment_id
+    # * experiment
     # * user_id
     # * allowed_infrastructures
     #     Variable storing user-defined workers limits for each infrastructure
@@ -16,8 +17,8 @@ module WorkersScaling
     #     Format: [{infrastructure: <infrastructure>, limit: <limit>}, ...]
     #     <infrastructure> - hash with infrastructure info
     #     <limit> - integer
-    def initialize(experiment_id, user_id, allowed_infrastructures)
-      @experiment_id = experiment_id.to_s
+    def initialize(experiment, user_id, allowed_infrastructures)
+      @experiment = experiment
       @user_id = BSON::ObjectId(user_id.to_s)
       @facades_cache = {}
       @allowed_infrastructures = allowed_infrastructures
@@ -57,10 +58,23 @@ module WorkersScaling
     # Schedules given amount of workers onto infrastructure and returns theirs sm_uuids
     # Additional params will be passed to start_simulation_managers facade method.
     # Raises InfrastructureError
+    # Number of workers scheduled may be lesser than <amount>,
+    # if limit left or number of simulations left to send is lesser than <amount>
     def schedule_workers(amount, infrastructure, params = {})
       begin
-        amount = [amount, current_infrastructure_limit(infrastructure)].min
-        return [] if amount <= 0
+        @experiment.reload
+        starting_workers = get_workers_records_list(infrastructure, cond: Query::STARTING_WORKERS).map &:sm_uuid
+        initializing_workers = get_workers_records_list(infrastructure, cond: Query::INITIALIZING_WORKERS).map &:sm_uuid
+        _, sent, done = @experiment.get_statistics
+
+        # initializing workers have not yet taken simulations, need to avoid scheduling workers that will not get one
+        simulations_left = @experiment.experiment_size - (sent + done) - initializing_workers.count
+
+        # amount includes workers that do not count towards throughput yet, algorithm has no knowledge about them
+        amount -= starting_workers.count + initializing_workers.count
+
+        amount = [amount, current_infrastructure_limit(infrastructure), simulations_left].min
+        return starting_workers + initializing_workers if amount <= 0
 
         # TODO: time of experiment
         params[:time_limit] = 60 if params[:time_limit].nil?
@@ -69,8 +83,9 @@ module WorkersScaling
         # TODO: SCAL-1024 - facades use both string and symbol keys
         params.symbolize_keys!.merge!(params.stringify_keys)
         get_facade_for(infrastructure[:name])
-          .start_simulation_managers(@user_id, amount, @experiment_id, params)
-          .map &:sm_uuid
+          .start_simulation_managers(@user_id, amount, @experiment.id.to_s, params)
+          .map(&:sm_uuid)
+          .concat(starting_workers + initializing_workers)
       rescue InvalidCredentialsError, NoCredentialsError
         # TODO inform user about credentials error
         raise
@@ -176,7 +191,7 @@ module WorkersScaling
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
     def get_workers_records_cursor(infrastructure, params = {})
-      cond = {experiment_id: @experiment_id, user_id: @user_id}
+      cond = {experiment_id: @experiment.id.to_s, user_id: @user_id}
       cond.merge! params[:cond] if params.has_key? :cond
       cond.merge! infrastructure[:params]
       opts = {}
