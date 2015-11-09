@@ -1,3 +1,4 @@
+require 'workers_scaling/utils/errors'
 module WorkersScaling
   Dir["#{File.dirname(__FILE__)}/algorithms/**/*.rb"].each { |file| require file }
 

@@ -15,13 +15,24 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
   }
 
   def setup
+    @sm_record_class = mock do
+      stubs(:where).returns([])
+    end
+    @experiment = mock do
+      stubs(:reload).returns(self)
+      stubs(:get_statistics).returns([100, 0, 0])
+      stubs(:experiment_size).returns(100)
+      stubs(:id).returns(EXPERIMENT_ID)
+    end
+    @experiment.stubs(:sm_record_class).returns(@sm_record_class)
+
     Rails.stubs(:logger).returns(stub_everything)
-    @resources_interface = WorkersScaling::ExperimentResourcesInterface.new(EXPERIMENT_ID, USER_ID, SAMPLE_LIMITS)
+    @resources_interface = WorkersScaling::ExperimentResourcesInterface.new(@experiment, USER_ID, SAMPLE_LIMITS)
   end
 
   test 'current_infrastructure_limit should return zero for infrastructure without limit' do
     # given
-    resources_interface = WorkersScaling::ExperimentResourcesInterface.new(EXPERIMENT_ID, USER_ID, {})
+    resources_interface = WorkersScaling::ExperimentResourcesInterface.new(@experiment, USER_ID, {})
     # when
     assert_equal 0, resources_interface.current_infrastructure_limit(SAMPLE_INFRASTRUCTURE)
     # then
@@ -69,10 +80,11 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
       schedule_workers_result << id
     end
     facade_mock = mock
+    facade_mock.stubs(:sm_record_class).returns(@sm_record_class)
     facade_mock.expects(:start_simulation_managers).with(USER_ID, amount, EXPERIMENT_ID, equals(final_params))
         .returns(start_simulation_managers_result)
 
-    @resources_interface.expects(:get_facade_for).with(SAMPLE_INFRASTRUCTURE[:name]).returns(facade_mock)
+    @resources_interface.expects(:get_facade_for).at_least_once.with(SAMPLE_INFRASTRUCTURE[:name]).returns(facade_mock)
     @resources_interface.stubs(:current_infrastructure_limit).returns(Float::INFINITY)
 
     # when
@@ -85,8 +97,8 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
   test 'schedule workers should not start workers when limit is zero' do
     # given
     amount = 10
-    @resources_interface.expects(:current_infrastructure_limit).returns(0)
-    @resources_interface.expects(:get_facade_for).never
+    @resources_interface.stubs(:current_infrastructure_limit).returns(0)
+    @resources_interface.stubs(:get_workers_records_list).returns([])
     # when
     assert_equal [], @resources_interface.schedule_workers(amount, SAMPLE_INFRASTRUCTURE)
     # then
@@ -96,13 +108,16 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     # given
     amount = LIMIT + 10
     facade_mock = mock
+    facade_mock.stubs(:sm_record_class).returns(@sm_record_class)
+
     start_simulation_managers_result = []
     (1..LIMIT).each do |id|
       start_simulation_managers_result << mock do
         stubs(:sm_uuid).returns(id)
       end
     end
-    facade_mock.expects(:start_simulation_managers).with(anything, LIMIT, anything, anything)
+    facade_mock.expects(:start_simulation_managers)
+        .with(anything, LIMIT, anything, anything)
         .returns(start_simulation_managers_result)
 
     @resources_interface.stubs(:get_facade_for).returns(facade_mock)

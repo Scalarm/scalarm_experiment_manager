@@ -1,6 +1,7 @@
-##
-# Scheduler to run Algorithm decision loop periodically
+require 'workers_scaling/utils/logger'
 module WorkersScaling
+  ##
+  # Scheduler to run Algorithm decision loop periodically
   class AlgorithmRunner
     @@cache = {}
 
