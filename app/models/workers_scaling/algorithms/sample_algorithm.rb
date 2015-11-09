@@ -103,14 +103,14 @@ module WorkersScaling
 
       # if throughput is still too low, use other infrastructures or inform user
       if throughput_needed > 0
-        if unused_infrastructures.blank?
+        random_unused = unused_infrastructures
+                .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
+                .sample
+        if random_unused
           # TODO: inform user that planned_finish_time cannot be fulfilled with current limits
           LOGGER.debug 'May not meet time requirements'
         else
           # schedule one worker on random unused infrastructure
-          random_unused = unused_infrastructures
-                    .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
-                    .sample[:infrastructure]
           add_workers(random_unused[:infrastructure])
         end
       end
@@ -153,7 +153,7 @@ module WorkersScaling
       end
     end
 
-    # private
+    private
 
     ##
     # Adds workers to given infrastructure basing on average throughput of infrastructure and throughput needed

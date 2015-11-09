@@ -35,12 +35,16 @@ module WorkersScaling
           .flat_map do |infrastructure_name|
             InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
           end
+          .select {|x| !!@allowed_infrastructures.detect {|ai| infrastructures_equal?(x, ai[:infrastructure])}}
+      # TODO return allowed infrastructures filter by available
     end
 
     ##
     # Returns amount of Workers that can be yet scheduled on given infrastructure
     def current_infrastructure_limit(infrastructure)
-      infrastructure_limit = @allowed_infrastructures.detect { |entry| entry[:infrastructure] == infrastructure }
+      infrastructure_limit = @allowed_infrastructures.detect do |entry|
+        infrastructures_equal?(infrastructure, entry[:infrastructure])
+      end
       if infrastructure_limit.nil?
         0
       else
@@ -58,13 +62,12 @@ module WorkersScaling
         amount = [amount, current_infrastructure_limit(infrastructure)].min
         return [] if amount <= 0
 
+        # TODO: time of experiment
         params[:time_limit] = 60 if params[:time_limit].nil?
-        params.merge! onsite_monitoring: true
         params.merge! infrastructure[:params]
 
         # TODO: SCAL-1024 - facades use both string and symbol keys
         params.symbolize_keys!.merge!(params.stringify_keys)
-
         get_facade_for(infrastructure[:name])
           .start_simulation_managers(@user_id, amount, @experiment_id, params)
           .map &:sm_uuid
@@ -137,6 +140,20 @@ module WorkersScaling
     end
 
     private
+
+    ##
+    # Compares infrastructure description from #get_available_infrastructures with @allowed_infrastructures entry.
+    # Entry from @allowed_infrastructures may have additional fields that
+    # should not be taken into consideration in comparison.
+    # Return true when infrastructures are equal, false otherwise.
+    def infrastructures_equal?(from_available, from_allowed)
+      # TODO replace with infrastructure id
+      return false if from_allowed[:name] != from_available[:name]
+      from_available[:params].each do |key, value|
+        return false if from_allowed[:params][key] != value
+      end
+      true
+    end
 
     ##
     # Returns InfrastructureFacade for given infrastructure name

@@ -12,7 +12,8 @@ module WorkersScaling
     # * experiment - instance of Experiment
     # * user_id - id of User starting Algorithm
     # * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
-    # * planned_finish_time - desired time of end of Experiment
+    #     (Detailed description at ExperimentResourcesInterface#initialize)
+    # * planned_finish_time - desired time of end of Experiment (as Time instance)
     # * params - additional params, currently unused, may be used in subclasses
     def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time, params = {})
       @experiment = experiment
