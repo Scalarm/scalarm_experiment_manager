@@ -14,8 +14,6 @@ require_relative 'infrastructure_errors'
 class PlGridFacade < InfrastructureFacade
   include SSHAccessedInfrastructure
   include SharedSSH
-  include ShellCommands
-  extend ShellCommands
 
   attr_reader :ssh_sessions
   attr_reader :long_name
@@ -143,7 +141,7 @@ class PlGridFacade < InfrastructureFacade
         RemoteHomePath::remote_monitoring_certificate,
         RemoteAbsolutePath::remote_monitoring_proxy
     ].each do |path|
-      ssh.exec! rm(path, true)
+      ssh.exec! BashCommand.new.rm(path, true).to_s
     end
   end
 
@@ -164,27 +162,24 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def self.start_monitoring_cmd
-    chain(
-        cd(RemoteDir::scalarm_root),
-        "unxz -f #{ScalarmFileName::monitoring_package}",
-        "chmod a+x #{ScalarmFileName::monitoring_binary}",
-        "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
-        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                                           "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
-`.log")}"
-    )
+    BashCommand.new.cd(RemoteDir::scalarm_root).
+        append("unxz -f #{ScalarmFileName::monitoring_package}").
+        append("chmod a+x #{ScalarmFileName::monitoring_binary}").
+        append("export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}").
+        run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000))`.log").to_s
   end
 
   def self.clone_proxy(ssh, remote_path)
     # TODO: checking if proxy file exists?
-    ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
+    ssh.exec! BashCommand.new.append("cp `voms-proxy-info -p` #{remote_path}").to_s
   end
 
   # TODO: NOTE: without voms extension!
   def self.generate_proxy(ssh, key_passphrase)
     output = ''
     Timeout::timeout 30 do
-      output = ssh.exec! "echo #{key_passphrase} | grid-proxy-init -rfc -hours 24"
+      output = ssh.exec! BashCommand.new.append("echo #{key_passphrase} | grid-proxy-init -rfc -hours 24").to_s
     end
     Rails.logger.debug("grid-proxy-init output: #{output}")
     output
@@ -286,7 +281,7 @@ class PlGridFacade < InfrastructureFacade
 
     begin
       credentials.ssh_session do |ssh|
-        grant_output = ssh.exec!('plg-show-grants').split("\n").select{|line| line.start_with?('|')}
+        grant_output = ssh.exec!(BashCommand.new.append('plg-show-grants').to_s).split("\n").select{|line| line.start_with?('|')}
       end
 
       grant_output.each do |line|
@@ -322,8 +317,9 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
-        sm_record.cmd_to_execute = chain(scheduler.cancel_sm_cmd(sm_record),
-                                     scheduler.clean_after_sm_cmd(sm_record))
+        sm_record.cmd_to_execute = BashCommand.new.
+                                      append(scheduler.cancel_sm_cmd(sm_record)).
+                                      append(scheduler.clean_after_sm_cmd(sm_record)).to_s
         sm_record.cmd_delegated_at = Time.now
         sm_record.save
       end
@@ -412,7 +408,7 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
+      sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
 

@@ -1,5 +1,4 @@
 require_relative 'shell_commands'
-include ShellCommands
 
 require_relative 'ssh_accessed_infrastructure'
 
@@ -14,28 +13,28 @@ module ShellBasedInfrastructure
     log_path = record.absolute_log_path
 
     if Rails.configuration.simulation_manager_version == :go
-      chain(
-          log(rm(sm_dir_name, true), log_path),
-          log("unzip #{sm_dir_name}.zip", log_path),
-          log(cd(sm_dir_name), log_path),
-          log('unxz scalarm_simulation_manager.xz', log_path),
-          log('chmod a+x scalarm_simulation_manager', log_path),
-          run_in_background('./scalarm_simulation_manager', log_path, '&1')
-      )
+
+      BashCommand.new.rm(sm_dir_name, true).log_last_command(log_path).
+          log("unzip #{sm_dir_name}.zip", log_path).
+          cd(sm_dir_name).log_last_command(log_path).
+          log('unxz scalarm_simulation_manager.xz', log_path).
+          log('chmod a+x scalarm_simulation_manager', log_path).
+          run_in_background('./scalarm_simulation_manager', log_path)
+
     elsif Rails.configuration.simulation_manager_version == :ruby
-      chain(
-          log('source ~/.rvm/environments/default', log_path),
-          log(rm(sm_dir_name, true), log_path),
-          log("unzip #{sm_dir_name}.zip", log_path),
-          log(cd(sm_dir_name), log_path),
-          run_in_background('ruby simulation_manager.rb', log_path, '&1')
-      )
+
+      BashCommand.new.log('source ~/.rvm/environments/default', log_path).
+          rm(sm_dir_name, true).log_last_command(log_path).
+          log("unzip #{sm_dir_name}.zip", log_path).
+          cd(sm_dir_name).log_last_command.
+          run_in_background('ruby simulation_manager.rb', log_path)
+
     end
   end
 
   def log_exists?(record, ssh)
     absolute_log_path = record.absolute_log_path
-    path_exists = (ssh.exec_sc!("ls #{absolute_log_path}").exit_code == 0)
+    path_exists = (ssh.exec_sc!(BashCommand.new.append("ls #{absolute_log_path}").to_s).exit_code == 0)
     logger.warn "Log file already exists: #{absolute_log_path}" if path_exists
     path_exists
   end
@@ -44,13 +43,13 @@ module ShellBasedInfrastructure
     SSHAccessedInfrastructure.create_remote_directories(ssh)
     logger.debug("Uploading SiM to #{record.host}")
     record.upload_file(LocalAbsolutePath::tmp_sim_zip(record.sm_uuid), RemoteDir::scalarm_root)
-    start_command = ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+    start_command = Command::cd_to_simulation_managers(
+        ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+    ).to_s
+
     logger.debug("Starting SiM with #{start_command} in remote SiM dir")
-    output = ssh.exec!(
-        Command::cd_to_simulation_managers(
-            start_command
-        )
-    )
+    output = ssh.exec!(start_command)
+
     output = ShellBasedInfrastructure.strip_pid_output(output)
     logger.debug "Simulation Manager init (stripped) output: #{output}"
     pid = ShellBasedInfrastructure.output_to_pid(output)

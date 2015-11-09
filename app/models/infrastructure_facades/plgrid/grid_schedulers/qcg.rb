@@ -75,7 +75,7 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      cmd = chain(Command::cd_to_simulation_managers(submit_job_cmd(job)))
+      cmd = Command::cd_to_simulation_managers(submit_job_cmd(job))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
@@ -84,10 +84,9 @@ module QcgScheduler
     end
 
     def submit_job_cmd(sm_record)
-      chain(
-          "chmod a+x #{job_script_file(sm_record.sm_uuid)}",
-          PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}")
-      )
+      BashCommand.new.
+          append("chmod a+x #{job_script_file(sm_record.sm_uuid)}").
+          append(PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}"))
     end
 
     def self.parse_job_id(submit_job_output)
@@ -154,25 +153,25 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!(get_job_info_cmd(job_id))
+      ssh.exec!(get_job_info_cmd(job_id).to_s)
     end
 
     def get_job_info_cmd(job_id)
-      PlGridScheduler.qcg_command "qcg-info #{job_id}"
+      BashCommand.new.append(PlGridScheduler.qcg_command("qcg-info #{job_id}"))
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!(cancel_sm_cmd(job))
+      output = ssh.exec!(cancel_sm_cmd(job).to_s)
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
 
     def cancel_sm_cmd(sm_record)
-      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_identifier} || true"
+      BashCommand.new.append(PlGridScheduler.qcg_command("qcg-cancel #{sm_record.job_identifier} || true"))
     end
 
     def get_log(ssh, job)
-      ssh.exec!(get_log_cmd(job))
+      ssh.exec!(get_log_cmd(job).to_s)
     end
 
     def get_log_cmd(sm_record)
@@ -180,19 +179,18 @@ module QcgScheduler
       stdout_path = "#{absolute_log_path}.out"
       stderr_path = "#{absolute_log_path}.err"
 
-      chain(
-        "echo '--- QCG info ---'",
-        sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_identifier),
-        "echo '--- STDOUT ---'",
-        "tail -40 #{stdout_path}",
-        "echo '--- STDERR ---'",
-        "tail -40 #{stderr_path}",
-        "rm -f #{stderr_path} #{stderr_path}"
-      )
+      BashCommand.new.
+          echo("--- QCG info ---").
+          append(sm_record.job_identifier.blank? ? '' : get_job_info_cmd(sm_record.job_identifier)).
+          echo("--- STDOUT ---").
+          tail(stdout_path, 40).
+          echo("--- STDERR ---").
+          tail(stderr_path, 40).
+          append("rm -f #{stderr_path} #{stderr_path}")
     end
 
     def clean_after_sm_cmd(sm_record)
-      chain(super, rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid)), true))
+      BashCommand.new.append(super).rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid)), true)
     end
 
     def self.available_hosts

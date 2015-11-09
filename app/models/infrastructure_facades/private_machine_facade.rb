@@ -3,7 +3,6 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PrivateMachineFacade < InfrastructureFacade
-  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
 
@@ -156,14 +155,13 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def self.start_monitoring_cmd
-    chain(
-        cd(RemoteDir::scalarm_root),
-        "unxz -f #{ScalarmFileName::monitoring_package}",
-        "chmod a+x #{ScalarmFileName::monitoring_binary}",
-        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                             "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
-`.log")}"
-    )
+    BashCommand.new.
+        cd(RemoteDir::scalarm_root).
+        append("unxz -f #{ScalarmFileName::monitoring_package}").
+        append("chmod a+x #{ScalarmFileName::monitoring_binary}").
+        run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)`.log"
+        ).to_s
   end
 
   def add_credentials(user, params, session)
@@ -253,13 +251,13 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = "tail -80 #{sm_record.absolute_log_path}"
+      sm_record.cmd_to_execute = BashCommand.new.tail(sm_record.absolute_log_path, 80).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
       nil
 
     else
-      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.absolute_log_path}"
+      shared_ssh_session(sm_record.credentials).exec! BashCommand.new.tail(sm_record.absolute_log_path, 80).to_s
     end
   end
 

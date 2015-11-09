@@ -76,7 +76,7 @@ ruby/2.1.1' load complete. 9871
     end
     Rails.stubs(:configuration).returns(configuration)
 
-    refute_empty ShellBasedInfrastructure.start_simulation_manager_cmd(record)
+    refute_empty ShellBasedInfrastructure.start_simulation_manager_cmd(record).to_s
   end
 
 end
