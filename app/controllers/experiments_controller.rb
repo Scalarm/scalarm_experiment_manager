@@ -412,6 +412,7 @@ class ExperimentsController < ApplicationController
           inf[:infrastructure][:params][:credentials_id] = BSON::ObjectId(inf[:infrastructure][:params][:credentials_id])
         end
       end
+      # TODO use of algorithms factory
       algorithm = WorkersScaling::SampleAlgorithm.new(experiment, current_user.id,
                                                       allowed_infrastructures,
                                                       Time.now + workers_scaling_params[:time_limit]*60)

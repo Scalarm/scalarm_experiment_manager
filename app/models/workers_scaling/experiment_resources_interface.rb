@@ -35,7 +35,7 @@ module WorkersScaling
           .flat_map do |infrastructure_name|
             InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
           end
-          .select {|x| !!@allowed_infrastructures.detect {|ai| compare_infrastructures(x, ai[:infrastructure])}}
+          .select {|x| !!@allowed_infrastructures.detect {|ai| infrastructures_equal?(x, ai[:infrastructure])}}
       # TODO return allowed infrastructures filter by available
     end
 
@@ -43,7 +43,7 @@ module WorkersScaling
     # Returns amount of Workers that can be yet scheduled on given infrastructure
     def current_infrastructure_limit(infrastructure)
       infrastructure_limit = @allowed_infrastructures.detect do |entry|
-        compare_infrastructures(infrastructure, entry[:infrastructure])
+        infrastructures_equal?(infrastructure, entry[:infrastructure])
       end
       if infrastructure_limit.nil?
         0
@@ -132,7 +132,7 @@ module WorkersScaling
     # Entry from @allowed_infrastructures may have additional fields that
     # should not be taken into consideration in comparison.
     # Return true when infrastructures are equal, false otherwise.
-    def compare_infrastructures(from_available, from_allowed)
+    def infrastructures_equal?(from_available, from_allowed)
       # TODO replace with infrastructure id
       return false if from_allowed[:name] != from_available[:name]
       from_available[:params].each do |key, value|
