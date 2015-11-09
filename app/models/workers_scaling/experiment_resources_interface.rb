@@ -2,9 +2,9 @@ require 'infrastructure_facades/infrastructure_facade_factory'
 require 'infrastructure_facades/infrastructure_errors'
 require 'workers_scaling/utils/query'
 include InfrastructureErrors
-##
-# Experiment interface to schedule and maintain computational resources
 module WorkersScaling
+  ##
+  # Experiment interface to schedule and maintain computational resources
   class ExperimentResourcesInterface
 
     ##

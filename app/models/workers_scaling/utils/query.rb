@@ -3,13 +3,11 @@ module WorkersScaling
   # Module containing global Workers queries for WorkersScaling module
   module Query
     ##
-    # Queries for categories of workers:
     # Initializing - state is :created or :initializing
-    # Starting     - state is :running and no simulation is finished
-    # Running      - state is :running and at least one simulation is finished
-    # Stopping     - state is :terminating or state is not :error and simulations_limit is already set
-    # Limited      - state is not :error (limited Workers are Workers that count against limits)
     INITIALIZING_WORKERS = {state: {'$in' => [:created, :initializing]}}
+
+    ##
+    # Starting - state is :running and no simulation is finished
     STARTING_WORKERS = {'$and' => [
       {state: :running},
       {'$or' => [
@@ -17,10 +15,16 @@ module WorkersScaling
           {finished_simulations: 0}
       ]}
     ]}
+
+    ##
+    # Running - state is :running and at least one simulation is finished
     RUNNING_WORKERS  = {'$and' => [
       {state: :running},
       {finished_simulations: {'$gt' => 0}}
     ]}
+
+    ##
+    # Stopping - state is :terminating or state is not :error and simulations_limit is already set
     STOPPING_WORKERS = {'$or' => [
       {state: :terminating},
       {'and' => [
@@ -28,6 +32,9 @@ module WorkersScaling
         {simulations_left: {'$exists' => true}}
       ]}
     ]}
+
+    ##
+    # Limited - state is not :error (limited Workers are Workers that count against limits)
     LIMITED_WORKERS = {state: {'$ne' => :error}}
   end
 end

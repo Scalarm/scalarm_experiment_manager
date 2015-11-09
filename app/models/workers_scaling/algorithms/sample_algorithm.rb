@@ -1,6 +1,7 @@
-##
-# Sample Workers scaling algorithm.
+require 'workers_scaling/utils/logger'
 module WorkersScaling
+  ##
+  # Sample Workers scaling algorithm.
   class SampleAlgorithm < Algorithm
 
     ##
