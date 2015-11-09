@@ -1,8 +1,8 @@
-##
-# Class describing interface of Workers scaling algorithm. Creating new algorithm
-# requires providing class with proper methods implemented, which also should
-# inherit Algorithm class.
 module WorkersScaling
+  ##
+  # Class describing interface of Workers scaling algorithm. Creating new algorithm
+  # requires providing class with proper methods implemented, which also should
+  # inherit Algorithm class.
   class Algorithm
 
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
@@ -17,7 +17,7 @@ module WorkersScaling
     # * params - additional params, currently unused, may be used in subclasses
     def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time, params = {})
       @experiment = experiment
-      @resources_interface = ExperimentResourcesInterface.new(@experiment.id, user_id, allowed_infrastructures)
+      @resources_interface = ExperimentResourcesInterface.new(@experiment, user_id, allowed_infrastructures)
       @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
       @planned_finish_time = planned_finish_time
     end

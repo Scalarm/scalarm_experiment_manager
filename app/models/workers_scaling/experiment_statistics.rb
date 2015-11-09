@@ -1,7 +1,7 @@
-##
-# ExperimentStatistics class calculates various statistics about
-# experiment run and execution.
 module WorkersScaling
+  ##
+  # ExperimentStatistics class calculates various statistics about
+  # experiment run and execution.
   class ExperimentStatistics
 
     ##
