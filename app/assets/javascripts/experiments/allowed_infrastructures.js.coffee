@@ -57,6 +57,7 @@ class window.AllowedInfrastructures
     $('#param-config input').on('input', => @setModified())
     $('#param-config select').on('change', => @setModified())
     $('#param-config textarea').on('input', => @setModified())
+    $('#param-config input:checkbox').on('change', => @setModified())
 
   setModified: =>
     @editorModified = true

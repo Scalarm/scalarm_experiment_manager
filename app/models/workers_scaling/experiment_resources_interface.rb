@@ -36,6 +36,7 @@ module WorkersScaling
             InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
           end
           .select {|x| !!@allowed_infrastructures.detect {|ai| compare_infrastructures(x, ai[:infrastructure])}}
+      # TODO return allowed infrastructures filter by available
     end
 
     ##

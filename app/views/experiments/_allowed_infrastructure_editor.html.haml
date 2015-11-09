@@ -7,10 +7,10 @@
   %fieldset#allowed-infrastructures-definition
     %legend= 'Computational resources editor'
     .row#input-designer
-      .small-5.columns
+      .small-3.columns
         %fieldset#param-list
           %legend= 'Infrastructures'
-          .row{style: 'margin-left: 10px;'}
+          .row{style: 'margin-left: 1px;'}
             %ul.stack-for-small.button-group
               %li
                 %a.button.tiny.radius#add-param.unselectable
@@ -21,26 +21,24 @@
                   %i.fa.fa-minus.fa-fw
                   = 'Remove'
           .row#params-tree.hidden
-      .small-7.columns
+      .small-9.columns
         %fieldset{id: 'param-config', class:'hidden', 'data_abide' =>''}
           %legend= 'Infrastructure specification'
 
           .row
             .large-4.columns
               = label_tag :infrastructure_name, t('infrastructure.information.infrastructure') + ':', class: 'inline right'
-            .large-4.columns
+            .large-4.columns.end
               = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select_data,
                 infrastructure_name)
-            .large-1.columns
 
           #infrastructure_fields
 
           .row
             .large-4.columns
               = label_tag :limit, 'Workers limit', class: 'right inline'
-            .large-4.columns
+            .large-4.columns.end
               = number_field_tag :limit, 1, min: 1, required: true, class: 'text-right', pattern: "^\\d+$"
-            .large-1.columns
 
           .row#editor-buttons{style: 'margin-left: 10px;'}
             %ul.stack-for-small.button-group
