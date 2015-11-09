@@ -439,22 +439,15 @@ class Experiment < Scalarm::Database::Model::Experiment
           {fields: query_fields}
       ).each do |simulation_run|
         if error_description
-          puts "error"
           line = []
           line += [simulation_run.index] if with_index
           line += simulation_run.values.split(',') if with_params
           # getting values of results in a specific order
           line += moes.map { |moe_name| simulation_run.result[moe_name] || '' } if with_moes
-          line += [simulation_run.is_error]
-          if simulation_run.is_error
-            line += [simulation_run.error_reason]
-          else
-            line += [nil]
-          end
-
+          line += simulation_run.is_error ? ['error'] : ['ok']
+          line += simulation_run.is_error ? [simulation_run.error_reason] : [nil]
           csv << line
         elsif !simulation_run.is_error
-          puts "OK"
           line = []
           line += [simulation_run.index] if with_index
           line += simulation_run.values.split(',') if with_params

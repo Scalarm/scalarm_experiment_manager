@@ -105,10 +105,10 @@ x,y
     # given
     csv_should = <<-CSV
 simulation_index,x,y,one,two,is_error,error_reason
-1,1.0,2,3,4,false,
-2,2.0,3,4,5,false,
-3,3.0,4,5,6,false,
-4,4.0,5,\"\",\"\",true,sh: 1: module: not found
+1,1.0,2,3,4,ok,
+2,2.0,3,4,5,ok,
+3,3.0,4,5,6,ok,
+4,4.0,5,\"\",\"\",error,sh: 1: module: not found
     CSV
 
     # when
