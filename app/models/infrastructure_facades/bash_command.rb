@@ -81,5 +81,8 @@ class BashCommand
     append "tail -#{num_lines} #{path}"
   end
 
+  def mkdir(dir_name, parents=true)
+    append "mkdir #{parents ? '-p' : ''} #{dir_name}"
+  end
 
 end
