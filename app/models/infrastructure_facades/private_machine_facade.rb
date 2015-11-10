@@ -3,7 +3,6 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PrivateMachineFacade < InfrastructureFacade
-  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
 
@@ -130,14 +129,13 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def self.start_monitoring_cmd
-    chain(
-        cd(RemoteDir::scalarm_root),
-        "unxz -f #{ScalarmFileName::monitoring_package}",
-        "chmod a+x #{ScalarmFileName::monitoring_binary}",
-        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                             "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
-`.log")}"
-    )
+    BashCommand.new.
+        cd(RemoteDir::scalarm_root).
+        append("unxz -f #{ScalarmFileName::monitoring_package}").
+        append("chmod a+x #{ScalarmFileName::monitoring_binary}").
+        run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)`.log"
+        ).to_s
   end
 
   def add_credentials(user, params, session)
