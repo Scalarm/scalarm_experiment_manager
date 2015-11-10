@@ -1,4 +1,5 @@
 class BashCommand
+  attr_reader :commands
 
   def initialize
     @commands = []
@@ -8,8 +9,17 @@ class BashCommand
     "/bin/bash -i -c '#{@commands.join(';')}'"
   end
 
+  def to_raw_s
+    @commands.join(';')
+  end
+
   def append(command)
-    @commands << command
+    if command.instance_of?(BashCommand)
+      @commands += command.commands
+    else
+      @commands << command
+    end
+
     self
   end
 
