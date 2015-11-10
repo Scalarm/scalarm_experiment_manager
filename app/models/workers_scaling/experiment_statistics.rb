@@ -52,9 +52,12 @@ module WorkersScaling
 
     ##
     # Returns throughput needed to finish Experiment in desired time
+    # Target throughput is calculated as:
+    #   throughput[sim/s] = simulations_to_run/(planned_finish_time - Time.now)
     def target_throughput(planned_finish_time)
-      @experiment.reload
-      (@experiment.size - @experiment.count_done_simulations) / [Float(planned_finish_time - Time.now), 0.0].max
+      simulations_to_run = count_simulations_to_run
+      return simulations_to_run if simulations_to_run == 0.0
+      simulations_to_run / [Float(planned_finish_time - Time.now), 0.0].max
     end
 
     ##
@@ -67,8 +70,9 @@ module WorkersScaling
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
     def makespan(params = {})
-      @experiment.reload
-      (@experiment.experiment_size - @experiment.count_done_simulations)/Float(system_throughput(params))
+      simulations_to_run = count_simulations_to_run
+      return simulations_to_run if simulations_to_run == 0.0
+      simulations_to_run / Float(system_throughput(params))
     end
 
     ##
@@ -95,6 +99,13 @@ module WorkersScaling
     # Returns throughput for given worker. For details look at #worker_throughput
     def calculate_worker_throughput(worker)
       ((worker.finished_simulations || 0) + RUNNING_SIMULATIONS)/Float(Time.now - worker.created_at)
+    end
+    
+    ##
+    # Return number of simulations to run
+    def count_simulations_to_run
+      @experiment.reload
+      [@experiment.size - @experiment.count_done_simulations, 0.0].max
     end
 
   end
