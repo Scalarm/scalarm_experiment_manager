@@ -104,7 +104,7 @@ x,y
   def test_csv_full_with_error
     # given
     csv_should = <<-CSV
-simulation_index,x,y,one,two,is_error,error_reason
+simulation_index,x,y,one,two,status,error_reason
 1,1.0,2,3,4,ok,
 2,2.0,3,4,5,ok,
 3,3.0,4,5,6,ok,

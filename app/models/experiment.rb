@@ -427,7 +427,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       header += ['simulation_index'] if with_index
       header += self.parameters.flatten if with_params
       header += moes if with_moes
-      header += ['is_error'] if error_description
+      header += ['status'] if error_description
       header += ['error_reason'] if error_description
       csv << header
       query_fields = {_id: 0}
