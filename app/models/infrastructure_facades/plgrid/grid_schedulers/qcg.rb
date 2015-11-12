@@ -75,7 +75,7 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      cmd = chain(Command::cd_to_simulation_managers(submit_job_cmd(job)))
+      cmd = Command::cd_to_simulation_managers(submit_job_cmd(job))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
@@ -84,10 +84,10 @@ module QcgScheduler
     end
 
     def submit_job_cmd(sm_record)
-      chain(
-          "chmod a+x #{job_script_file(sm_record.sm_uuid)}",
-          PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}")
-      )
+      BashCommand.new.
+          append("chmod a+x #{job_script_file(sm_record.sm_uuid)}").
+          append(PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}")).
+          to_raw_s
     end
 
     def self.parse_job_id(submit_job_output)
@@ -154,7 +154,7 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!(get_job_info_cmd(job_id))
+      ssh.exec!(BashCommand.new.append(get_job_info_cmd(job_id)).to_s)
     end
 
     def get_job_info_cmd(job_id)
@@ -162,7 +162,7 @@ module QcgScheduler
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!(cancel_sm_cmd(job))
+      output = ssh.exec!(BashCommand.new.append(cancel_sm_cmd(job)).to_s)
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
@@ -180,19 +180,19 @@ module QcgScheduler
       stdout_path = "#{absolute_log_path}.out"
       stderr_path = "#{absolute_log_path}.err"
 
-      chain(
-        "echo '--- QCG info ---'",
-        sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
-        "echo '--- STDOUT ---'",
-        "tail -40 #{stdout_path}",
-        "echo '--- STDERR ---'",
-        "tail -40 #{stderr_path}",
-        "rm -f #{stderr_path} #{stderr_path}"
-      )
+      BashCommand.new.
+          append("echo '--- QCG info ---'").
+          append(sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id)).
+          append("echo '--- STDOUT ---'").
+          append("tail -40 #{stdout_path}").
+          append("echo '--- STDERR ---'").
+          append("tail -40 #{stderr_path}").
+          append("rm -f #{stderr_path} #{stderr_path}").
+          to_s
     end
 
     def clean_after_sm_cmd(sm_record)
-      chain(super, rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid)), true))
+      BashCommand.new.append(super).rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid)), true)
     end
 
     def self.available_hosts
