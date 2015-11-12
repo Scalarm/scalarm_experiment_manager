@@ -80,6 +80,7 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :extension_dialog
       post  :change_scheduling_policy
       post  :schedule_point
+      post  :schedule_multiple_points
       get   :get_result
 
       # experiment charts

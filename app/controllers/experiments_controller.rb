@@ -1099,6 +1099,27 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  # Extend a custom point experiment with multiple parameter space points
+  # POST params:
+  # - csv - a CSV ("," separated) file or string with points to add to this experiment
+  #    first line should contain parameter ids, next lines should contain values
+  def schedule_multiple_points
+    validate(
+        csv: []
+    )
+
+    custom_experiment = (@experiment.type == 'manual_points')
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+
+    points = CSV.new(Utils.read_if_file(params[:csv]).to_s, headers: true).map &:to_h
+    @experiment.add_points!(points)
+
+    respond_to do |format|
+      format.json { render json: {status: 'ok'}, status: :ok }
+    end
+  end
+
   # GET params:
   # - point - JSON Hash with parameter space point
   def get_result
