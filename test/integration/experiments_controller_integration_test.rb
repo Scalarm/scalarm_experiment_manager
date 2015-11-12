@@ -37,4 +37,53 @@ class ExperimentsControllerIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal exp.id.to_s, hash_resp['running'][0], hash_resp
   end
 
+
+  # Given
+  #   There is a supervised experiment without any points
+  # When
+  #   A point is added with /experiments/:id/schedule_point {"point": ...}
+  # Then
+  #   A simulation run for this point should be generated using /experiments/:id/next_simulation
+  test 'next_instance should return scheduled point after schedule_point' do
+    # Given
+    simulation = Simulation.new({name: 'test_simulation', user_id: @user.id, created_at: Time.now})
+    simulation.input_specification = [
+        {'entities' => [{'parameters' => [{
+                                              'id' => 'x',
+                                              'label' => 'X',
+                                              'type' => 'integer',
+                                              'max' => 100
+                                          }]
+                        }]}
+    ]
+    simulation.save
+
+    experiment = ExperimentFactory.create_supervised_experiment(@user.id, simulation)
+    experiment.save
+
+    get "/experiments/#{experiment.id.to_s}/next_simulation"
+    assert_response :success
+
+    # When
+    scheduled_x = 5
+
+    post "experiments/#{experiment.id.to_s}/schedule_point.json", {point: {x: scheduled_x}.to_json}
+
+    # Then
+    get "/experiments/#{experiment.id.to_s}/next_simulation"
+    assert_response :success
+    success_response = JSON.parse(response.body)
+    assert_equal 'ok', success_response['status']
+    assert success_response.has_key?('input_parameters')
+    assert_equal scheduled_x, success_response['input_parameters']['x'].to_i
+    puts success_response
+
+    get "/experiments/#{experiment.id.to_s}/next_simulation"
+    assert_response :success
+    wait_response = JSON.parse(response.body)
+    assert_equal 'wait', wait_response['status']
+    assert_nil wait_response['input_parameters']
+  end
+
+
 end
