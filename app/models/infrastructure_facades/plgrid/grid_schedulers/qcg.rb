@@ -153,25 +153,25 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!(BashCommand.new.append(get_job_info_cmd(job_id)).to_s)
+      ssh.exec!(get_job_info_cmd(job_id).to_s)
     end
 
     def get_job_info_cmd(job_id)
-      PlGridScheduler.qcg_command "qcg-info #{job_id}"
+      BashCommand.new.append(PlGridScheduler.qcg_command("qcg-info #{job_id}"))
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!(BashCommand.new.append(cancel_sm_cmd(job)).to_s)
+      output = ssh.exec!(cancel_sm_cmd(job).to_s)
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
 
     def cancel_sm_cmd(sm_record)
-      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_id} || true"
+      BashCommand.new.append(PlGridScheduler.qcg_command("qcg-cancel #{sm_record.job_id} || true"))
     end
 
     def get_log(ssh, job)
-      ssh.exec!(get_log_cmd(job))
+      ssh.exec!(get_log_cmd(job).to_s)
     end
 
     def get_log_cmd(sm_record)
@@ -186,8 +186,7 @@ module QcgScheduler
           tail(stdout_path, 40).
           echo("--- STDERR ---").
           tail(stderr_path, 40).
-          append("rm -f #{stderr_path} #{stderr_path}").
-          to_s
+          append("rm -f #{stderr_path} #{stderr_path}")
     end
 
     def clean_after_sm_cmd(sm_record)
