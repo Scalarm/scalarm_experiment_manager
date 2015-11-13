@@ -20,11 +20,11 @@ class BashCommand
   end
 
   def mute(command)
-    log command, '/dev/null'
+    log(command, '/dev/null')
   end
 
   def cd(dir)
-    append "cd #{dir}"
+    append("cd #{dir}")
   end
 
   def log_last_command(stdout, stderr='&1')
@@ -34,11 +34,11 @@ class BashCommand
 
   def mute_last_command
     last_cmd = @commands.pop
-    mute last_cmd
+    mute(last_cmd)
   end
 
   def log(command, stdout, stderr='&1')
-    append "#{command} >#{stdout} 2>#{stderr}"
+    append("#{command} >#{stdout} 2>#{stderr}")
   end
 
   def run_and_get_pid(command, stdout='/dev/null', stderr='&1')
@@ -58,27 +58,27 @@ class BashCommand
   def run_in_background(command, stdout='/dev/null', stderr='&1')
     run_and_get_pid(command, stdout, stderr)
     last_cmd = @commands.pop
-    append "nohup #{last_cmd}"
+    append("nohup #{last_cmd}")
   end
 
   def rm(file, rf=false)
-    append "rm #{rf ? '-rf' : ''} #{file}"
+    append("rm #{rf ? '-rf' : ''} #{file}")
   end
 
   def kill(pid, signal=9)
-    append "kill -#{signal} #{pid}"
+    append("kill -#{signal} #{pid}")
   end
 
   def echo(s)
-    append "echo #{s}"
+    append("echo #{s}")
   end
 
   def tail(path, num_lines)
-    append "tail -#{num_lines} #{path}"
+    append("tail -#{num_lines} #{path}")
   end
 
   def mkdir(dir_name, parents=true)
-    append "mkdir #{parents ? '-p' : ''} #{dir_name}"
+    append("mkdir #{parents ? '-p' : ''} #{dir_name}")
   end
 
 end
