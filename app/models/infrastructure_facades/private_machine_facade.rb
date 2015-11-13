@@ -225,13 +225,13 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = "tail -80 #{sm_record.absolute_log_path}"
+      sm_record.cmd_to_execute = BashCommand.new.tail(sm_record.absolute_log_path, 80).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
       nil
 
     else
-      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.absolute_log_path}"
+      shared_ssh_session(sm_record.credentials).exec! BashCommand.new.tail(sm_record.absolute_log_path, 80).to_s
     end
   end
 
