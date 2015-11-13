@@ -181,12 +181,12 @@ module QcgScheduler
       stderr_path = "#{absolute_log_path}.err"
 
       BashCommand.new.
-          append("echo '--- QCG info ---'").
+          echo("--- QCG info ---").
           append(sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id)).
-          append("echo '--- STDOUT ---'").
-          append("tail -40 #{stdout_path}").
-          append("echo '--- STDERR ---'").
-          append("tail -40 #{stderr_path}").
+          echo("--- STDOUT ---").
+          tail(stdout_path, 40).
+          echo("--- STDERR ---").
+          tail(stderr_path, 40).
           append("rm -f #{stderr_path} #{stderr_path}").
           to_s
     end
