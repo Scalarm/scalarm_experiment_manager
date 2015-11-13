@@ -112,7 +112,7 @@ ruby simulation_manager.rb
   end
 
   def restart_sm_cmd(record)
-    BashCommand.new.append(cancel_sm_cmd(record)).append(submit_job_cmd(record)).to_s
+    BashCommand.new.append(cancel_sm_cmd(record)).append(submit_job_cmd(record))
   end
 
   def send_job_files(sm_uuid, scp)

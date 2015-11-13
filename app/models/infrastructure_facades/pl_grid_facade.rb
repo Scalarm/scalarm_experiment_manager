@@ -375,7 +375,7 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
+      sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
 

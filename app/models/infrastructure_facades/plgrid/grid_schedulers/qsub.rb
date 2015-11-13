@@ -121,13 +121,13 @@ cd $PBS_O_WORKDIR
     end
 
     def cancel(ssh, job)
-      cmd = cancel_sm_cmd(job)
+      cmd = cancel_sm_cmd(job).to_s
       output = ssh.exec!(cmd)
       logger.debug("PBS cmd: #{cmd}, output lines:\n#{output}")
     end
 
     def get_log(ssh, job)
-      ssh.exec! get_log_cmd(job)
+      ssh.exec!(get_log_cmd(job).to_s)
     end
 
     def get_log_cmd(sm_record)
@@ -142,7 +142,7 @@ cd $PBS_O_WORKDIR
           # the command will return 0
           "export NAMEF=#{log_path}; export ITER=0; export EC=1; while [ $ITER -lt 30 -a $EC -ne 0 ]; do tail -80 $NAMEF; EC=$?; ITER=`expr $ITER + 1`; [ $EC -ne 0 ] && sleep 1; done; rm -f #{log_path}"
         end
-      ).to_s
+      )
     end
 
     def cancel_sm_cmd(sm_record)
