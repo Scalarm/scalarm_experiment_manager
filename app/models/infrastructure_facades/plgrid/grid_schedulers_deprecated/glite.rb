@@ -1,8 +1,5 @@
 require_relative '../pl_grid_scheduler_base'
 
-require 'infrastructure_facades/shell_commands'
-include ShellCommands
-
 module GliteScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
@@ -63,7 +60,7 @@ module GliteScheduler
 
     def get_job_info(ssh, job_id)
       PlGridScheduler.execute_glite_command(
-          chain(Command::cd_to_simulation_managers("glite-wms-job-status #{job_id}")),
+          Command::cd_to_simulation_managers("glite-wms-job-status #{job_id}"),
           ssh
       )
     end
@@ -119,11 +116,11 @@ module GliteScheduler
     end
 
     def cancel_sm_cmd(record)
-      "glite-wms-job-cancel --no-int #{record.job_id} || true"
+      BashCommand.new.append("glite-wms-job-cancel --no-int #{record.job_id} || true")
     end
 
     def clean_after_sm_cmd(sm_record)
-      chain(super, rm(File.join(RemoteDir::scalarm_root, job_jdl_file(sm_record.sm_uuid)), true))
+      BashCommand.new.append(super).rm(File.join(RemoteDir::scalarm_root, job_jdl_file(sm_record.sm_uuid)), true)
     end
 
     def self.default_host
@@ -215,7 +212,10 @@ module GliteScheduler
     def self.execute_glite_command(command, ssh)
       # Before proxy init, force to use X509 default certificate and key (from UI storage)
       # Because by default it could use KeyFS storage
-      cmd = "unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}"
+      cmd = BashCommand.new.
+          append("unset X509_USER_CERT").
+          append("unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}").to_s
+
       begin
         result = nil
         timeout 15 do
