@@ -59,8 +59,7 @@ module QsubScheduler
 
       BashCommand.new.
           append("chmod a+x #{job_script_file(sm_uuid)}").
-          append("qsub #{job_pbs_file(sm_uuid)}").
-          to_raw_s
+          append("qsub #{job_pbs_file(sm_uuid)}")
     end
 
     def prepare_job_descriptor(uuid, params)

@@ -86,8 +86,7 @@ module QcgScheduler
     def submit_job_cmd(sm_record)
       BashCommand.new.
           append("chmod a+x #{job_script_file(sm_record.sm_uuid)}").
-          append(PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}")).
-          to_raw_s
+          append(PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}"))
     end
 
     def self.parse_job_id(submit_job_output)

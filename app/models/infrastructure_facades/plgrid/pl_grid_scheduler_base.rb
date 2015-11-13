@@ -108,8 +108,7 @@ ruby simulation_manager.rb
 
     BashCommand.new.
         rm(ScalarmFileName::tmp_sim_zip(sm_uuid)).
-        rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)), true).
-        to_raw_s
+        rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)), true)
   end
 
   def restart_sm_cmd(record)
