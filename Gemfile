@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source 'http://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 4.1.12'
@@ -89,8 +89,8 @@ gem 'newrelic_rpm'
 gem 'scalarm-database', '>= 0.3.3', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
-# gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 1.0', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', path: '/Users/dkrol/workspace/scalarm/scalarm-service_core'
+# gem 'scalarm-service_core', '~> 1.0', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'

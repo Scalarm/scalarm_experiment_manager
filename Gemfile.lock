@@ -10,16 +10,6 @@ GIT
       mongo
 
 GIT
-  remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 370ca92f1604f7f355739613be83c7decd04025d
-  specs:
-    scalarm-service_core (1.0)
-      actionpack (~> 4.1)
-      activesupport (~> 4.1)
-      grid-proxy (~> 0.1)
-      rest-client (~> 1.8)
-
-GIT
   remote: git://github.com/rweng/jquery-datatables-rails.git
   revision: d0f07e9aded9de30a2ca796d8036b332b41645dc
   specs:
@@ -27,8 +17,17 @@ GIT
       jquery-rails
       sass-rails
 
+PATH
+  remote: /Users/dkrol/workspace/scalarm/scalarm-service_core
+  specs:
+    scalarm-service_core (1.0)
+      actionpack (~> 4.1)
+      activesupport (~> 4.1)
+      grid-proxy (~> 0.1)
+      rest-client (~> 1.8)
+
 GEM
-  remote: https://rubygems.org/
+  remote: http://rubygems.org/
   specs:
     actionmailer (4.1.12)
       actionpack (= 4.1.12)
@@ -468,10 +467,13 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (>= 0.3.3)!
-  scalarm-service_core (~> 1.0)!
+  scalarm-service_core!
   sdoc
   signet
   therubyracer
   uglifier (>= 1.3.0)
   vmstat
   xml-simple
+
+BUNDLED WITH
+   1.10.6
