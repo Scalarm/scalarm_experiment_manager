@@ -46,12 +46,14 @@ class window.AllowedInfrastructures
     )
 
   getAllowedInfrastructures: =>
-    @allowed_infrastructures.map (entry) ->
-      {
-        name: entry.name,
-        params: entry.params
-        limit: entry.limit
-      }
+    @allowed_infrastructures.filter (entry) ->
+        entry.name != "" and entry.limit != 0
+      .map (entry) ->
+        {
+          name: entry.name,
+          params: entry.params
+          limit: entry.limit
+        }
 
   monitorEditorControls: =>
     $('#param-config input').on('input', => @setModified())
@@ -158,6 +160,11 @@ class window.AllowedInfrastructures
   loadParamToEditor: (p) =>
     @monitorEditorControls()
     if p
+      if p.name != ""
+        $('#param-config #infrastructure_name').val(p.name)
+      else
+        $('#param-config #infrastructure_name').val('private_machine')
+      window.infrastructures_booster.onInfrastructuresSelectChange()
       $('#param-config #limit').val(p.limit)
       for key of p.params
         $('#param-config #' + key).val(p.params[key])
@@ -180,7 +187,7 @@ class window.AllowedInfrastructures
   paramModelToTree: (p) =>
     {
       id: p.id,
-      text: "<strong>#{p.label}</strong>",
+      text: "<strong>#{p.label} (#{p.limit})</strong>",
       type: 'parameter'
     }
 
