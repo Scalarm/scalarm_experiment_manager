@@ -11,6 +11,7 @@
 # - status(ssh, record) -> job state in queue mapped to: :initializing, :running, :deactivated, :error
 # - clean_after_job(ssh, record) - cleans UI user's account from temporary files
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
+# - get_subinfrastructures(user_id) -> list of hashes representing distinct types of infrastructure
 
 require 'infrastructure_facades/shell_commands'
 require 'infrastructure_facades/ssh_accessed_infrastructure'
