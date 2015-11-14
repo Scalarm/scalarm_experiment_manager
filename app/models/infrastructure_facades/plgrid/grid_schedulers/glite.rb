@@ -232,6 +232,12 @@ module GliteScheduler
       "scalarm_job_#{sm_uuid}.jdl"
     end
 
+    def get_subinfrastructures(user_id)
+      self.class.available_hosts.map do |host|
+        {name: short_name.to_sym, params: {plgrid_host: host}}
+      end
+    end
+
   end
 
 end

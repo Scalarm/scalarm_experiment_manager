@@ -128,6 +128,19 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord.find_by_id(record_id)
   end
 
+  def get_subinfrastructures(user_id)
+    creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
+    cloud_client = nil
+    begin
+      cloud_client = (creds.nil? ? nil : @client_class.new(creds))
+    rescue InfrastructureErrors::InvalidCredentialsError => _
+      cloud_client = nil
+    end
+    return [] if (cloud_client == nil or not cloud_client.valid_credentials?)
+
+    cloud_client.get_subinfrastructures(user_id)
+  end
+
   # -- SimulationManager delegation methods --
 
   def handle_proxy_error(secrets, &block)

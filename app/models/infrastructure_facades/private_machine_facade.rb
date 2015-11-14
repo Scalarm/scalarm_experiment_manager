@@ -190,6 +190,7 @@ class PrivateMachineFacade < InfrastructureFacade
       {name: short_name.to_sym, params: {credentials_id: credentials.id}}
     end
   end
+
   # -- SimulationManager delegation methods --
 
   def _simulation_manager_stop(record)

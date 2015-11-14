@@ -359,6 +359,8 @@ class InfrastructureFacade
     _get_sm_records(query, params)
   end
 
+  ##
+  # Returns list of hashes representing distinct types of infrastructure
   def get_subinfrastructures(user_id)
     [{name: short_name.to_sym, params: {}}]
   end

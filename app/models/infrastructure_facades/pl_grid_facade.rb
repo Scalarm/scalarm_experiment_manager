@@ -266,6 +266,10 @@ class PlGridFacade < InfrastructureFacade
 
     grants
   end
+
+  def get_subinfrastructures(user_id)
+    scheduler.get_subinfrastructures(user_id)
+  end
   
   # Appends PL-Grid scheduler name to shared SSH session ID
   # NOTICE: not used because of stateless SSH sessions

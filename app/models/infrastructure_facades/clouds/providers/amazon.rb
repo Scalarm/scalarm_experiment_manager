@@ -97,6 +97,14 @@ module AmazonCloud
       @ec2.instances[id]
     end
 
+    def get_subinfrastructures(user_id)
+      security_groups_list = security_groups
+      super(user_id).flat_map do |subinfrastructure|
+        security_groups_list.flat_map do |security_group|
+          subinfrastructure[:params].merge({security_group: security_group})
+        end
+      end
+    end
   end
 
 end

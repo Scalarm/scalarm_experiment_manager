@@ -57,4 +57,17 @@ class AbstractCloudClient
     all_images_info.keys.include? image_id
   end
 
+  def get_subinfrastructures(user_id)
+    instance_types_list = instance_types.map { |type, _| type }
+    image_secrets_ids = CloudImageSecrets
+        .find_all_by_query(user_id: user_id, cloud_name: self.class.short_name.to_s)
+        .map { |i| i.id }
+
+    instance_types_list.flat_map do |instance_type|
+      image_secrets_ids.flat_map do |image_secret_id|
+        {name: self.class.short_name.to_sym, params: {image_secrets_id: image_secret_id, instance_type: instance_type}}
+      end
+    end
+  end
+
 end
