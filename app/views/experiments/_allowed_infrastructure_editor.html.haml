@@ -69,5 +69,5 @@
 - content_for :javascript do
   :javascript
     $(function() {
-      new window.InfrastructuresBooster("#{infrastructure_name}", #{disabled_infrastructures}, "dialog");
+      window.infrastructures_booster = new window.InfrastructuresBooster("#{infrastructure_name}", #{disabled_infrastructures}, "dialog");
     });
