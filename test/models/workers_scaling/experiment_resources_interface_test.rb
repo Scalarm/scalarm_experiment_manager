@@ -69,8 +69,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     amount = 10
     additional_params = {param1: 'value'}
     final_params = additional_params.merge(SAMPLE_INFRASTRUCTURE[:params]).merge!(DEFAULT_SCHEDULE_WORK_PARAMS)
-    #TODO: SCAL-1024 - facades use both string and symbol keys
-    final_params.symbolize_keys!.merge!(final_params.stringify_keys)
+    final_params = ActiveSupport::HashWithIndifferentAccess.new(final_params)
     start_simulation_managers_result = []
     schedule_workers_result = []
     (1..amount).each do |id|
