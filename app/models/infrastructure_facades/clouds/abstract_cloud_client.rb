@@ -2,6 +2,7 @@
 # - all_images_info -> get array of hashes: image_id => image_name for all images permitted to use by cloud user
 # - instantiate_vms(base_instace_name, image_id, number) => list of instance ids (Strings)
 # - all_vm_ids -> get array of VM ids (Strings)
+# - get_subinfrastructures(user_id) -> list of hashes representing distinct types of infrastructure
 # Methods for checking and changing virtual machine state (taking vm id)
 # - status -> one of: [:intializing, :running, :deactivated, :rebooting, :error]
 # - exists? -> true if VM exists (instance with given @instance_id is still available)
@@ -55,6 +56,24 @@ class AbstractCloudClient
 
   def image_exists?(image_id)
     all_images_info.keys.include? image_id
+  end
+
+  ##
+  # Returns list of hashes representing distinct types of infrastructure
+  # Subinfrastructures are distinguished by:
+  #  * type of machine instance
+  #  * image secrets
+  def get_subinfrastructures(user_id)
+    instance_types_list = instance_types.map { |type, _| type }
+    image_secrets_ids = CloudImageSecrets
+        .find_all_by_query(user_id: user_id, cloud_name: self.class.short_name.to_s)
+        .map { |i| i.id }
+
+    instance_types_list.flat_map do |instance_type|
+      image_secrets_ids.flat_map do |image_secret_id|
+        {name: self.class.short_name.to_sym, params: {image_secrets_id: image_secret_id, instance_type: instance_type}}
+      end
+    end
   end
 
 end
