@@ -142,6 +142,7 @@ class ExperimentsController < ApplicationController
   @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
   @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
   @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
+  @apiParam {Number=0,1} with_status=1 "1" to add status and error reason columns to result CSV
 =end
 
 =begin
@@ -181,8 +182,8 @@ class ExperimentsController < ApplicationController
     w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
     w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
     w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
-    error_description = (params.include?(:error_description) ? (params[:error_description] == '1') : true)
-    @experiment.create_result_csv(w_index, w_params, w_moes, error_description)
+    w_status = (params.include?(:with_status) ? (params[:with_status] == '1') : true)
+    @experiment.create_result_csv(w_index, w_params, w_moes, w_status)
   end
 
   def create_experiment
