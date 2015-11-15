@@ -57,6 +57,11 @@ class AbstractCloudClient
     all_images_info.keys.include? image_id
   end
 
+  ##
+  # Returns list of hashes representing distinct types of infrastructure
+  # Subinfrastructures are distinguished by:
+  #  * type of machine instance
+  #  * image secrets
   def get_subinfrastructures(user_id)
     instance_types_list = instance_types.map { |type, _| type }
     image_secrets_ids = CloudImageSecrets

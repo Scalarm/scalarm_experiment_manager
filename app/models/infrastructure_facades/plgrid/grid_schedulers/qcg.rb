@@ -217,6 +217,11 @@ module QcgScheduler
       "scalarm_job_#{sm_uuid}.qcg"
     end
 
+    ##
+    # Returns list of hashes representing distinct types of infrastructure
+    # Subinfrastructures are distinguished by:
+    #  * PLGrid hosts
+    #  * grant ids
     def get_subinfrastructures(user_id)
       hosts = self.class.available_hosts
       grant_ids = PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id))

@@ -97,6 +97,11 @@ module AmazonCloud
       @ec2.instances[id]
     end
 
+    ##
+    # Returns list of hashes representing distinct types of infrastructure
+    # Invokes method from super class
+    # Further distinguishes subinfrastructures by:
+    #  * security group
     def get_subinfrastructures(user_id)
       security_groups_list = security_groups
       super(user_id).flat_map do |subinfrastructure|

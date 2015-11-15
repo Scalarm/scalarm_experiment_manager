@@ -128,6 +128,9 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord.find_by_id(record_id)
   end
 
+  ##
+  # Returns list of hashes representing distinct types of infrastructure
+  # Delegates method to classes inheriting from #AbstractCloudClient
   def get_subinfrastructures(user_id)
     creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
     cloud_client = nil
