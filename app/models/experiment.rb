@@ -331,23 +331,22 @@ class Experiment < Scalarm::Database::Model::Experiment
     CSV.generate do |csv|
       csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}).each do |simulation_run|
         simulation_run_ind = simulation_run.index.to_s
-        simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
         x_axis_value = if simulation_run.result.include?(x_axis)
                          # this is a MoE
                          simulation_run.result[x_axis]
                        else
                          # this is an input parameter
-                         simulation_input[x_axis]
+                         simulation_run.input_parameters[x_axis]
                        end
         y_axis_value = if simulation_run.result.include?(y_axis)
                          # this is a MoE
                          simulation_run.result[y_axis]
                        else
                          # this is an input parameter
-                         simulation_input[y_axis]
+                         simulation_run.input_parameters[y_axis]
                        end
 
         csv << [x_axis_value, y_axis_value, simulation_run_ind]
