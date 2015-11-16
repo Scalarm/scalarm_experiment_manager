@@ -69,6 +69,12 @@ module Gsi
         end
       end
 
+      # Kill gsissh process with kill -9
+      # The same as Gsi::SSH::Session#close because it uses KILL
+      def shutdown!
+        close
+      end
+
       def pop_leftovers
         to_pop = @leftovers
         @leftovers = []
@@ -80,6 +86,11 @@ module Gsi
           yield scp
         end
       end
+
+
+      # Adding timeout for exec!
+      prepend SSHExecTimeout
+
     end
 
     def self.start(host, user, proxy_cert_path, options={}, &block)

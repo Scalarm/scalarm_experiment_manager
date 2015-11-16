@@ -4,6 +4,22 @@ require 'timeout'
 
 require 'ostruct'
 
+module SSHExecTimeout
+  def exec!(*args, &block)
+    time_limit = Rails.application.config.ssh_exec_timeout_secs
+    begin
+      timeout(time_limit) do
+        super(*args, &block)
+      end
+    rescue Timeout::Error => e
+      self.shutdown!
+      raise(e, "ssh exec! timeout (time limit: #{time_limit}s) with arguments: '#{args.to_sentence}' - #{e}", e.backtrace)
+    rescue => x
+      raise x.to_s
+    end
+  end
+end
+
 class Net::SSH::Connection::Session
   class CommandFailed < StandardError
   end
@@ -64,11 +80,6 @@ class Net::SSH::Connection::Session
 
   end
 
-  alias_method '__exec!', 'exec!'
-  def exec!(*args, &block)
-    timeout(60) do
-      __exec!(*args, &block)
-    end
-  end
+  prepend SSHExecTimeout
 
 end
