@@ -37,5 +37,17 @@ module WorkersScaling
       raise NOT_IMPLEMENTED
     end
 
+    ##
+    # Name of algorithm visible to user
+    def self.algorithm_name
+      raise NOT_IMPLEMENTED
+    end
+
+    ##
+    # Description of algorithm visible to user
+    def self.description
+      raise NOT_IMPLEMENTED
+    end
+
   end
 end

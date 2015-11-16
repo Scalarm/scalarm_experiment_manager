@@ -1,5 +1,6 @@
 - es_url = sample_service_url('experiment_supervisors')
 - supervisor_ids = get_supervisor_ids(es_url)
+- wss_algorithms_descriptions = workers_scaling_algorithms_description
 
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
@@ -102,7 +103,12 @@
     .content
       .row
         .small-6.small-centered.columns
-          = select_tag 'workers_scaling_algorithm_select', ws_algorithm_options
+          .row
+            .small-11.columns
+              = select_tag 'workers_scaling_algorithm_select', ws_algorithm_options
+            .small-1.columns
+              %i.fa.fa-question-circle.has-tip.tip-bottom{'aria-haspopup' => 'true', 'data-tooltip' => '',
+              style: 'color: 333', title: 'asdasdsa', cursor: 'pointer', id: 'algorithm_description'}
       .row
         .small-5.columns
           = label_tag :experiment_execution_time_limit,
@@ -116,8 +122,6 @@
             .small-4.columns
               %span.postfix.radius
                 = t('experiments.workers_scaling.algorithm.execution_time_unit')
-      .row
-        .small-2.columns
 
       = render partial: 'allowed_infrastructure_editor'
 
@@ -140,6 +144,7 @@
 - content_for :javascript do
   :javascript
     $(function() {
+      var wss_algorithms_descriptions = JSON.parse('#{raw(workers_scaling_algorithms_description.to_json)}');
       var es_url = "#{es_url}";
       if (es_url) {
         new window.SupervisorBooster(es_url);
@@ -287,4 +292,10 @@
           $("#workers-scaling-algorithm").show();
         }
       });
+      workers_scaling_algorithm_select_change = function(){
+        Foundation.libs.tooltip.getTip($('#algorithm_description')).contents().first()
+          .replaceWith(wss_algorithms_descriptions[$("#workers_scaling_algorithm_select").val()]);
+      }
+      $("#workers_scaling_algorithm_select").on("change", workers_scaling_algorithm_select_change);
+      workers_scaling_algorithm_select_change();
     });
