@@ -54,6 +54,7 @@ ScalarmExperimentManager::Application.routes.draw do
 
   get 'infrastructures' => 'infrastructures#index'
 
+  get 'simulation_scenarios/:id/experiments' => 'simulation_scenarios#get_simulation_scenario_experiment_ids'
   resources :experiments do
     collection do
       post :start_import_based_experiment, to: 'experiments#create'
@@ -74,12 +75,12 @@ ScalarmExperimentManager::Application.routes.draw do
       get   :results_binaries
 
       post  :stop
-      post  :destroy
       post  :extend_input_values
       get   :intermediate_results
       get   :extension_dialog
       post  :change_scheduling_policy
       post  :schedule_point
+      post  :schedule_multiple_points
       get   :get_result
 
       # experiment charts

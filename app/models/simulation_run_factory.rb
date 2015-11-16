@@ -5,9 +5,8 @@ module SimulationRunExtensions
   def rollback!
     Rails.logger.debug("Rolling back SimulationRun: #{id}")
 
-    self.to_sent = true
+    self.destroy
     experiment.progress_bar_update(self.index, 'rollback')
-    self.save
     self
   end
 
@@ -16,6 +15,36 @@ module SimulationRunExtensions
       attributes['tmp_result']
     else
       self.tmp_results_list.last['result']
+    end
+  end
+
+  def arguments
+    if attributes.include?('input_parameters')
+      attributes['input_parameters'].keys.join(',')
+    elsif attributes.include?('arguments')
+      attributes['arguments']
+    else
+      ""
+    end
+  end
+
+  def values
+    if attributes.include?('input_parameters')
+      attributes['input_parameters'].values.join(',')
+    elsif attributes.include?('values')
+      attributes['values']
+    else
+      ""
+    end
+  end
+
+  def input_parameters
+    if attributes.include?('input_parameters')
+      attributes['input_parameters']
+    elsif attributes.include?('arguments') and attributes.include?('values')
+      Hash[*attributes['arguments'].split(',').zip(attributes['values'].split(',')).flatten]
+    else
+      {}
     end
   end
 end

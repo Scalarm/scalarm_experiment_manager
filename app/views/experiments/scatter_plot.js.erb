@@ -1,7 +1,7 @@
 //TODO: translate
 
 $("#bivariate_charts").prepend("<div id='wrapper_<%= @container_id %>'></div>");
-$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'bivariate_chart') %>");
+$("#wrapper_<%= @container_id %>").html("<%= escape_javascript(render partial: 'scatter_plot_chart') %>");
 
 var number_of_points = 0
 
@@ -21,19 +21,33 @@ try {
         title: { text: '\'<%= @chart.x_axis_label %>\' versus \'<%= @chart.y_axis_label %>\'' },
         xAxis: {
             title: { text: '<%= @chart.x_axis_label %>' },
-            <% if @chart.type_of_x === 'string' %>
+            <% if @chart.type_of_x == 'string' %>
                 categories: <%= raw @chart.categories_for_x %>,
             <% else %>
                 type: '<%= @chart.x_axis_type or 'linear' %>',
+                 <% if @chart.x_axis_notation == 'scientific'%>
+                     labels:{
+                        formatter: function(){
+                            return this.value.toExponential(2);
+                       }
+                   }
+                 <% end %>
             <% end %>
 
         },
         yAxis: {
             title: { text: '<%= @chart.y_axis_label %>' },
-            <% if @chart.type_of_y === 'string' %>
+            <% if @chart.type_of_y == 'string' %>
                 categories: <%= raw @chart.categories_for_y %>,
             <% else %>
                 type: '<%= @chart.y_axis_type or 'linear' %>',
+                <% if @chart.y_axis_notation == 'scientific'%>
+                    labels:{
+                        formatter: function(){
+                            return this.value.toExponential(2);
+                        }
+                    }
+                <% end %>
             <% end %>
 
         },
@@ -41,7 +55,7 @@ try {
             //need to this way, because yAxis has small support for this.y with string type
             formatter: function () {
                 return '<%= @chart.x_axis_label %>: <b>' + this.x + '</b><br/><%= @chart.y_axis_label %>: <b>' +
-                        <% if @chart.type_of_y === 'string' %>
+                        <% if @chart.type_of_y == 'string' %>
                             <%= raw @chart.categories_for_y%>[this.y]
                         <% else %>
                             this.y
@@ -49,6 +63,8 @@ try {
                         + '</b><br /><b><%= t '.click_for_details' %></b>';
             }
         },
+        // above 1000 points that cointatins strings chart is not displayed without TurboThreshold
+        // TODO decide if it is necessary
         plotOptions: {
             series: {
                 //enable to plot more than 1000 points (default),
@@ -100,7 +116,6 @@ try {
         }]
       });
     });
-
     // scroll to
     var targetOffset =  $('#wrapper_<%= @container_id %>').offset().top;
     $('html,body').animate({scrollTop: targetOffset}, 1000);

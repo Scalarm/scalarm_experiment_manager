@@ -147,7 +147,7 @@ cd $PBS_O_WORKDIR
       if sm_record.job_id.blank?
         'echo no job_id specified'
       else
-        "qdel #{sm_record.job_id}"
+        "qdel #{sm_record.job_id} || true"
       end
     end
 

@@ -33,11 +33,13 @@ class Experiment < Scalarm::Database::Model::Experiment
   require 'experiment_extensions/experiment_progress_bar'
   require 'experiment_extensions/simulation_run_module'
   require 'experiment_extensions/simulation_scheduler'
+  require 'scalarm/service_core/parameter_validation'
 
   include ExperimentProgressBar
   include SimulationScheduler
   include ExperimentExtender
   include SimulationRunModule
+  include Scalarm::ServiceCore::ParameterValidation
 
   # attr_joins are overriden to get proper classes (not basic models)
   attr_join :simulation, Simulation
@@ -329,23 +331,22 @@ class Experiment < Scalarm::Database::Model::Experiment
     CSV.generate do |csv|
       csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}).each do |simulation_run|
         simulation_run_ind = simulation_run.index.to_s
-        simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
 
         x_axis_value = if simulation_run.result.include?(x_axis)
                          # this is a MoE
                          simulation_run.result[x_axis]
                        else
                          # this is an input parameter
-                         simulation_input[x_axis]
+                         simulation_run.input_parameters[x_axis]
                        end
         y_axis_value = if simulation_run.result.include?(y_axis)
                          # this is a MoE
                          simulation_run.result[y_axis]
                        else
                          # this is an input parameter
-                         simulation_input[y_axis]
+                         simulation_run.input_parameters[y_axis]
                        end
 
         csv << [x_axis_value, y_axis_value, simulation_run_ind]
@@ -572,13 +573,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     values.uniq
   end
 
-  def simulation_rollback(simulation_run)
-    simulation_run.to_sent = true
-    simulation_run.save    
-
-    progress_bar_update(simulation_run.index, 'rollback')
-  end
-
   def csv_parameter_ids
     self.doe_info[0][1]
   end
@@ -648,18 +642,15 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'value'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      if /\A((\w)|(-)|(\.))+\z/.match(parameter['value']).nil?
-        raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
-      end
+      validate_parameter_value(parameter['label'], parameter['value'])
 
       parameter_values << parameter['value']
 
     when 'range'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter['type'], parameter['step'], parameter['min'], parameter['max'] ].each do |some_value|
-        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
-          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
-        end
+      ['type', 'step', 'min', 'max'].each do |input_type|
+        value_of_input = parameter[input_type]
+        validate_parameter_value(parameter['label'], value_of_input)
       end
 
       step = if parameter['type'] == 'float'
@@ -677,10 +668,9 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'gauss'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter['mean'], parameter['variance'] ].each do |some_value|
-        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
-          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
-        end
+      ['mean', 'variance'].each do |input_type|
+        value_of_input = parameter[input_type]
+        validate_parameter_value(parameter['label'], value_of_input)
       end
 
       r_interpreter = Rails.configuration.r_interpreter
@@ -689,10 +679,9 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     when 'uniform'
       # checking parameters for alpha-numeric characters, '_', '-' and '.'
-      [ parameter['min'], parameter['max'] ].each do |some_value|
-        if /\A((\w)|(-)|(\.))+\z/.match(some_value).nil?
-          raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
-        end
+      ['min', 'max'].each do |input_type|
+        value_of_input = parameter[input_type]
+        validate_parameter_value(parameter['label'], value_of_input)
       end
 
       r_interpreter = Rails.configuration.r_interpreter
@@ -728,6 +717,13 @@ class Experiment < Scalarm::Database::Model::Experiment
     end
 
     parameter_values
+  end
+
+  def validate_parameter_value(name_of_input_parameter, value_of_input)
+    if /\A(\w|-|\.)+\z/.match(value_of_input).nil?
+      type_of_error = value_of_input.empty? ? 'Empty' : 'Wrong'
+      raise ValidationError.new(name_of_input_parameter, value_of_input, "#{type_of_error} value for parameter given" )
+    end
   end
 
   def execute_doe_method(doe_method_name, parameters_for_doe)

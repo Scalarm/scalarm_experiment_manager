@@ -12,7 +12,7 @@ class ExperimentWatcher
             experiment.simulation_runs.where(is_done: false, to_sent: false).each do |simulation_run|
               Rails.logger.debug("#{Time.now - simulation_run.sent_at} ? #{experiment.time_constraint_in_sec}")
               if Time.now - simulation_run.sent_at >= experiment.time_constraint_in_sec
-                experiment.simulation_rollback(simulation_run)
+                simulation_run.rollback!
               end
             end
           rescue Exception => e

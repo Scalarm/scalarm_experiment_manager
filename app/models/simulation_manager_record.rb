@@ -121,6 +121,7 @@ module SimulationManagerRecord
     self.created_at + 3.minutes < Time.now
   end
 
+  # A special cases, when SiM should be destroyed regardless of its Simulation Run
   def should_destroy?
     (time_limit_exceeded? or experiment_end?) and record.state != :error
   end

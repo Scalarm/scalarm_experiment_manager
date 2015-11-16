@@ -30,7 +30,6 @@ class CloudSecretsTest < MiniTest::Test
     cs.other_user_id = su2.id
     cs.save
 
-    puts "csid: #{cs.id}, #{cs}"
     saved_cs = CloudSecrets.find_by_id(cs.id)
 
     # -- then

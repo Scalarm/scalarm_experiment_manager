@@ -1,7 +1,7 @@
 i = basic_chart_tab.length;
 
 $("#basic_charts").prepend("<div id='basic_chart_" + i + "'></div>");
-$("#basic_chart_"+i).html("<%= escape_javascript(render :partial => 'basic_statistics_chart', :locals => { experiment: @experiment, moe_name: @chart.moe_name, resolution: @chart.resolution, stats: @chart.stats, type: @chart.type }) %>")
+$("#basic_chart_"+i).html("<%= escape_javascript(render :partial => 'histogram_chart', :locals => { experiment: @experiment, moe_name: @chart.moe_name, resolution: @chart.resolution, stats: @chart.stats, type: @chart.type, y_axis_notation: @chart.y_axis_notation }) %>")
 
 
 $(document).ready(function() {
@@ -23,11 +23,19 @@ $(document).ready(function() {
                 enabled: false
             }
             <% end %>
+            
         },
         yAxis: {
             title: {
                 text: 'Num. of simulations'
+            },
+            <% if @chart.y_axis_notation == 'scientific'%>
+            labels:{
+                formatter: function(){
+                    return this.value.toExponential(2);
+                }
             }
+            <% end %>
         },
         tooltip: {
             formatter: function() {

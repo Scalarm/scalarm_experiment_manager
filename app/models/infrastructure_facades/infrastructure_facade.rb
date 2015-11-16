@@ -347,6 +347,13 @@ class InfrastructureFacade
         query.merge!({onsite_monitoring: {'$ne' => true}})
       end
     end
+    if params.include? 'has_cmd_to_execute'
+      if params['has_cmd_to_execute'].downcase == 'true'
+        query.merge!({'$and' => [{cmd_to_execute_code: {'$ne'=>nil}}, {cmd_to_execute_code: {'$ne'=>''}}]})
+      else
+        query.merge!({cmd_to_execute_code: {'$in'=>['', nil]}})
+      end
+    end
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
     _get_sm_records(query, params)

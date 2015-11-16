@@ -314,11 +314,6 @@ class ExperimentsController < ApplicationController
       'reason': 'Unable to connect with Experiment Supervisor'
     }
 =end
-
-  def parse_json_if_string2(value)
-    value.kind_of?(String) and JSON.parse(value) or value
-  end
-
   def create_supervised_experiment
     validate(
         simulation_id: :security_default,
@@ -337,9 +332,6 @@ class ExperimentsController < ApplicationController
 
     experiment.save
     response = {'status' => 'ok'}
-
-
-
     supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
 
     if params.has_key?(:supervisor_script_id)
@@ -510,10 +502,10 @@ class ExperimentsController < ApplicationController
   def moes_json
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-       [t('experiments.analysis.no_results'),'',"moes_parameter"]
-     else
-       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
-                 end
+      [t('experiments.analysis.no_results'),'',"moes_parameter"]
+    else
+      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+    end
     moes_and_params = get_moes_and_params(result_set)
     array = []
     moes_and_params.map do |label, id, type|
@@ -530,7 +522,7 @@ class ExperimentsController < ApplicationController
 
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-      [t('experiments.analysis.no_results'),'',"moes_parameter"]
+      [t('experiments.analysis.no_results')]
     else
       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
     end
@@ -546,17 +538,17 @@ class ExperimentsController < ApplicationController
 
     #TODO Unsafety behaviour, inject code???
     moes_info[:moes] = result_set.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+      "<option value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
     moes_info[:moes_and_params] = moes_and_params.map{ |label, id, type|
-      "<option data-type='#{type}' value='#{id}'>#{label}</option>" }.join
+      "<option data-type='#{ERB::Util.h(type)}' value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
     moes_info[:params] = params.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+      "<option value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
-    moes_info[:moes_types] = extract_types_for_moes
+    moes_info[:moes_types] = extract_types_for_moes(@experiment.simulation_runs)
     moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
-    moes_info[:inputs_types] = extract_types_for_parameters
+    moes_info[:inputs_types] = extract_types_for_parameters(@experiment.simulation_runs)
     moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
 
     #TODO add new map for histogram to improve selector
@@ -566,60 +558,43 @@ class ExperimentsController < ApplicationController
 
   end
 
-  #TODO Move this method to gem utils
-  #Extract types for moes from string
-  def extract_types_for_parameters
+  # Extract types of parameters (inputs) from theirs values
+  #
+  # * *Args*:
+  #   - +simulation_runs+ -> Summary of experiment's information extracted by simulation_runs method
+  #
+  # * *Returns*:
+  #   - +array_for_inputs_types+ -> String array with types of parameters
+  def extract_types_for_parameters(simulation_runs)
     array_for_inputs_types = []
 
-    first_run = @experiment.simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
     unless first_run.nil?
-      first_line_inputs = first_run.values.split(",")
-      first_line_inputs.each{|x|
-        item = x
-        a = item.to_i
-        b = item.to_f
-
-        if x.eql?a.to_s
-          array_for_inputs_types.push("integer")
-        elsif x.eql?b.to_s
-          array_for_inputs_types.push("float")
-        elsif x.is_a? String
-          array_for_inputs_types.push("string")
-        else
-          array_for_inputs_types.push("undefined")
-        end
-
-      }
+      first_line_inputs = simulation_runs.first.values.split(",")
+      array_for_inputs_types = first_line_inputs.map{|result| Utils::extract_type_from_string(result)}
     end
 
     array_for_inputs_types
   end
 
-  #TODO Move this method to gem util
-  def extract_types_for_moes
+  # Extract types of moes (outputs) from theirs values
+  #
+  # * *Args*:
+  #   - +simulation_runs+ -> Summary of experiment's information extracted by simulation_runs method
+  #
+  # * *Returns*:
+  #   - +array_for_moes_types+ -> String array with types of moes
+  def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    first_run = @experiment.simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
     unless first_run.nil?
-      first_result = first_run.result
-      first_result.each{|x|
-        item = x[1]
-        if item.is_a? Integer
-          array_for_moes_types.push("integer")
-        elsif item.is_a? Float
-          array_for_moes_types.push("float")
-        elsif item.is_a? String
-          array_for_moes_types.push("string")
-        else
-          array_for_moes_types.push("undefined")
-        end
-      }
+      first_line_result = simulation_runs.first.result
+      array_for_moes_types = first_line_result.map{|result| Utils::extract_type_from_value(result[1])}
     end
 
     array_for_moes_types
   end
-
-
 
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
@@ -629,12 +604,12 @@ class ExperimentsController < ApplicationController
     moes_and_params = if done_run.nil?
                         (@experiment.parameters.flatten).map { |x|
                           #@experiment.input_parameter_label_for(x) for label
-                            [x, x, "input_parameter"] } +
-                         [%w(----------- delimiter)] + [result_set]
+                          [x, x, "input_parameter"] } +
+                          [%w(----------- delimiter)] + [result_set]
                       else
                         done_run.arguments.split(',').map { |x|
                           [@experiment.input_parameter_label_for(x), x, "input_parameter"] } +
-                            [%w(----------- delimiter)] + result_set
+                          [%w(----------- delimiter)] + result_set
                       end
   end
 
@@ -861,7 +836,7 @@ class ExperimentsController < ApplicationController
 
         simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                    'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
-                   'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
+                   'input_parameters' => simulation_to_send.input_parameters })
       else
         Rails.logger.debug('next_simulation: Simulation to send is nil!')
         if @experiment.supervised and not @experiment.completed?
@@ -920,7 +895,10 @@ class ExperimentsController < ApplicationController
     if params[:moe_name].blank? or not resolution.between?(1,100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, moe_type)
+      @chart = HistogramChart.new(@experiment, params[:moe_name],
+                                  resolution, moe_type,
+                                  x_axis_notation: params[:x_axis_notation].to_s,
+                                  y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -938,6 +916,8 @@ class ExperimentsController < ApplicationController
         y_axis: [:optional, :security_default],
         x_axis_type: [:optional, :security_default],
         y_axis_type: [:optional, :security_default],
+        x_axis_notation:  [:optional, :security_default],
+        y_axis_notation: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
     if params[:x_axis].blank? or params[:y_axis].blank?
@@ -951,7 +931,8 @@ class ExperimentsController < ApplicationController
           params[:type_of_y],
           x_axis_type: params[:x_axis_type].to_s,
           y_axis_type: params[:y_axis_type].to_s,
-
+          x_axis_notation: params[:x_axis_notation].to_s,
+          y_axis_notation: params[:y_axis_notation].to_s
       )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
@@ -964,7 +945,11 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s, params[:type_of_x].to_s, params[:type_of_y].to_s)
+      @chart = ScatterPlotChart.new(@experiment,
+                                    params[:x_axis].to_s,
+                                    params[:y_axis].to_s,
+                                    params[:type_of_x].to_s,
+                                    params[:type_of_y].to_s,)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data
@@ -1108,6 +1093,27 @@ class ExperimentsController < ApplicationController
               new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
 
     @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
+
+    respond_to do |format|
+      format.json { render json: {status: 'ok'}, status: :ok }
+    end
+  end
+
+  # Extend a custom point experiment with multiple parameter space points
+  # POST params:
+  # - csv - a CSV ("," separated) file or string with points to add to this experiment
+  #    first line should contain parameter ids, next lines should contain values
+  def schedule_multiple_points
+    validate(
+        csv: []
+    )
+
+    custom_experiment = (@experiment.type == 'manual_points')
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+
+    points = CSV.new(Utils.read_if_file(params[:csv]).to_s, headers: true).map &:to_h
+    @experiment.add_points!(points)
 
     respond_to do |format|
       format.json { render json: {status: 'ok'}, status: :ok }
