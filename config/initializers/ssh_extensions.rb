@@ -1,5 +1,6 @@
 require 'net/ssh'
 require 'net/scp'
+require 'timeout'
 
 require 'ostruct'
 
@@ -61,6 +62,13 @@ class Net::SSH::Connection::Session
       scp_session
     end
 
+  end
+
+  alias_method '__exec!', 'exec!'
+  def exec!(*args, &block)
+    timeout(60) do
+      __exec!(*args, &block)
+    end
   end
 
 end
