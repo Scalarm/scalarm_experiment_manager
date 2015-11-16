@@ -225,8 +225,15 @@ def monitoring_process(action)
   case action
     when 'start'
       monitoring_job_pid = fork do
+        STDOUT.reopen(File.open('log/monitoring_process.log', 'w+'))
+        STDERR.reopen(File.open('log/monitoring_process.log', 'w+'))
+        
+        STDOUT.sync = true
+        STDERR.sync = true
+ 
+        Rails.logger.info("Monitoring process started with PID: #{Process.pid}")
+
         begin
-          Process.daemon(true)
           # requiring all class from the model
           Dir[File.join(Rails.root, 'app', 'models', '**/*.rb')].each do |f|
             require f
@@ -264,19 +271,29 @@ def monitoring_process(action)
             raise
           end
         rescue Exception => e
-          Rails.logger.error("Error occured in monitoring process (application may be unusable): #{e.to_s}\n#{e.backtrace().join("\n")}")
-          raise
+          unless e.class == SystemExit
+            Rails.logger.error("Unhandled exception in monitoring process (application may be unusable): #{e.class} #{e.to_s}\n#{e.backtrace().join("\n")}")
+            raise
+          end
+          Rails.logger.info("Exiting monitoring process #{Process.pid}")
         end
       end
 
-      Rails.logger.info("Monitoring process started with PID: #{monitoring_job_pid}")
       IO.write(probe_pid_path, monitoring_job_pid)
 
       Process.detach(monitoring_job_pid)
     when 'stop'
       if File.exist?(probe_pid_path)
         monitoring_job_pid = IO.read(probe_pid_path)
-        Process.kill('TERM', monitoring_job_pid.to_i)
+        begin
+          puts "Terminating monitoring process with PID: #{monitoring_job_pid}"
+          Process.kill('TERM', monitoring_job_pid.to_i)
+        rescue Errno::ESRCH
+          puts "Killing monitoring process with pid #{monitoring_job_pid} failed: #{$!}"
+          Process.exit(1)
+        end
+      else
+        puts "Monitoring probe PID file (#{probe_pid_path}) does not exists!"
       end
   end
 end
@@ -519,3 +536,4 @@ def create_information_service(config)
     !!config['information_service_development']
   )
 end
+
