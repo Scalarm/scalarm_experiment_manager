@@ -1,8 +1,18 @@
 require 'workers_scaling/utils/logger'
 module WorkersScaling
   ##
-  # Sample Workers scaling algorithm.
-  class SampleAlgorithm < Algorithm
+  # Resources usage minimization algorithm will use minimal possible
+  # number of resources to fulfil imposed restriction
+  class ResourcesUsageMinimization < Algorithm
+
+    def self.algorithm_name
+      'Resources usage minimization'
+    end
+
+    def self.description
+      'Method will use minimal possible amount of resources to fulfil imposed restriction and '\
+      'will try to ensure even resources usage through entire experiment.'
+    end
 
     ##
     # Tolerance used in #time_constraint_check

@@ -18,13 +18,14 @@ module WorkersScaling
     end
 
     ALGORITHMS = self.get_descendants(Algorithm, false)
-                     .map { |klass| [klass.name.split('::')[-1].underscore.to_sym, klass] }
+                     .map { |klass| [klass.name.split('::').last.underscore.to_sym, klass] }
                      .to_h
 
     ##
-    # Returns list of symbols representing all available Algorithm implementations
-    def self.get_algorithms
-      ALGORITHMS.keys
+    # Returns list representing all available Algorithm implementations in format:
+    #   {id: <id>, name: <name>, description: <description>}
+    def self.get_algorithms_list
+      ALGORITHMS.map{|key, klass| {id: key, name: klass.algorithm_name, description: klass.description} }
     end
 
     ##
@@ -33,13 +34,13 @@ module WorkersScaling
     # * experiment,
     #   user_id,
     #   allowed_infrastructures,
-    #   planned_finish_time - standard attributes for Algorithms (see #SampleAlgorithm for example)
+    #   planned_finish_time - standard attributes for Algorithms (see #ResourcesUsageMinimization for example)
     # * params - hash with additional parameters for specific Algorithm implementations
     # Returns new instance of Algorithm implementation for given name
     # Raises AlgorithmNameUnknown if given name is unknown
     # Raises AlgorithmParameterMissing if attributes required by Algorithm implementation are not present in params
     def self.create_algorithm(name, experiment, user_id, allowed_infrastructures, planned_finish_time, params = {})
-      raise AlgorithmNameUnknown unless ALGORITHMS.keys.include? name
+      raise AlgorithmNameUnknown.new unless ALGORITHMS.has_key? name
       ALGORITHMS[name].new(experiment, user_id, allowed_infrastructures, planned_finish_time, params)
     end
 
