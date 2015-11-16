@@ -24,7 +24,7 @@ module SimulationRunExtensions
     elsif attributes.include?('arguments')
       attributes['arguments']
     else
-      nil
+      ""
     end
   end
 
@@ -34,7 +34,17 @@ module SimulationRunExtensions
     elsif attributes.include?('values')
       attributes['values']
     else
-      nil
+      ""
+    end
+  end
+
+  def input_parameters
+    if attributes.include?('input_parameters')
+      attributes['input_parameters']
+    elsif attributes.include?('arguments') and attributes.include?('values')
+      Hash[*attributes['arguments'].split(',').zip(attributes['values'].split(',')).flatten]
+    else
+      {}
     end
   end
 end
