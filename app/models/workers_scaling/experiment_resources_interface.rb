@@ -80,7 +80,7 @@ module WorkersScaling
         params[:time_limit] = 60 if params[:time_limit].nil?
         params.merge! infrastructure[:params]
 
-        params = ActiveSupport::HashWithIndifferentAccess(params)
+        params = ActiveSupport::HashWithIndifferentAccess.new(params)
         get_facade_for(infrastructure[:name])
           .start_simulation_managers(@user_id, amount, @experiment.id.to_s, params)
           .map(&:sm_uuid)
