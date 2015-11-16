@@ -47,7 +47,7 @@ class window.AllowedInfrastructures
 
   getAllowedInfrastructures: =>
     @allowed_infrastructures.filter (entry) ->
-        entry.name != ""
+        entry.name != "" and entry.limit != 0
       .map (entry) ->
         {
           name: entry.name,
