@@ -80,8 +80,7 @@ module WorkersScaling
         params[:time_limit] = 60 if params[:time_limit].nil?
         params.merge! infrastructure[:params]
 
-        # TODO: SCAL-1024 - facades use both string and symbol keys
-        params.symbolize_keys!.merge!(params.stringify_keys)
+        params = ActiveSupport::HashWithIndifferentAccess(params)
         get_facade_for(infrastructure[:name])
           .start_simulation_managers(@user_id, amount, @experiment.id.to_s, params)
           .map(&:sm_uuid)
