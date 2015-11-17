@@ -158,17 +158,18 @@ class window.AllowedInfrastructures
 
 
   loadParamToEditor: (p) =>
-    @monitorEditorControls()
     if p
       if p.name != ""
         $('#param-config #infrastructure_name').val(p.name)
       else
         $('#param-config #infrastructure_name').val('private_machine')
-      window.infrastructures_booster.onInfrastructuresSelectChange()
-      $('#param-config #limit').val(p.limit)
-      for key of p.params
-        $('#param-config #' + key).val(p.params[key])
-      $('#param-config').show()
+      window.infrastructures_booster.onInfrastructuresSelectChange(null, =>
+        @monitorEditorControls()
+        $('#param-config #limit').val(p.limit)
+        for key of p.params
+          $('#param-config #' + key).val(p.params[key])
+        $('#param-config').show()
+      )
     else
       $('#param-config').hide()
 
