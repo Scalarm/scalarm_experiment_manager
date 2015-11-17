@@ -23,6 +23,8 @@ require 'mongo_lock'
 # Database support methods:
 # - _get_sm_records(query, params={}) -> Array of SimulationManagerRecord subclass instances
 # - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
+# - query_simulation_manager_records(user_id, experiment_id, params) -> Array of simulation manager records
+#  -- queries database for records created with start_simulation_managers with the same user_id, experiment_id and params
 #
 # SimulationManager delegate methods to implement
 # - _simulation_manager_stop(record) - stop Simulation Manager execution and free used computational resources

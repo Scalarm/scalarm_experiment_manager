@@ -23,6 +23,9 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   # Params hash:
+  # - time_limit
+  # - start_at
+  # - onsite_monitoring [optional] - if is a string 'on' - enable onsite monitoring
   # Alternative - get credentials by ID from database or use simple host matching
   # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
   # - 'host' => hostname - matches first PM Credentials with this host name
@@ -46,6 +49,8 @@ class PrivateMachineFacade < InfrastructureFacade
     ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
     ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
+    onsite_monitoring_enabled = (params[:onsite_monitoring] == 'on')
+
     records = (1..instances_count).map do
       record = PrivateMachineRecord.new(
           user_id: user_id,
@@ -58,7 +63,7 @@ class PrivateMachineFacade < InfrastructureFacade
           ppn: ppn
       )
 
-      record.onsite_monitoring = params.include?(:onsite_monitoring)
+      record.onsite_monitoring = onsite_monitoring_enabled
 
       record.initialize_fields
       record.save
@@ -66,7 +71,7 @@ class PrivateMachineFacade < InfrastructureFacade
       record
     end
 
-    if params[:onsite_monitoring]
+    if onsite_monitoring_enabled
       sm_uuid = SecureRandom.uuid
       self.class.handle_monitoring_send_errors(records) do
         self.class.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id, short_name, params)
@@ -74,6 +79,23 @@ class PrivateMachineFacade < InfrastructureFacade
     end
 
     records
+  end
+
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    credentials_id = params[:credentials_id]
+    if params.include?(:host)
+      creds = PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
+      credentials_id = creds.id
+    end
+
+    PrivateMachineRecord.where(
+        user_id: user_id,
+        experiment_id: experiment_id,
+        credentials_id: credentials_id,
+        time_limit: params[:time_limit],
+        start_at: params[:start_at],
+        infrastructure: short_name
+    ).to_a
   end
 
   def get_number_of_cores_command
