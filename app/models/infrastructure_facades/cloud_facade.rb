@@ -43,6 +43,12 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord
   end
 
+  # params: (string keys)
+  # - image_secrets_id
+  # - time_limit
+  # - start_at
+  # - instance_type
+  # - stored_* - special params for various clouds
   def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
@@ -55,10 +61,23 @@ class CloudFacade < InfrastructureFacade
     rescue CloudErrors::ImageValidationError => ive
       logger.error "Error validating image secrets: #{ive.to_s}"
       raise InfrastructureErrors::ScheduleError.new(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
-    rescue Exception => e
+    rescue => e
       logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
       raise InfrastructureErrors::ScheduleError.new(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
     end
+  end
+
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    CloudVmRecord.where(
+        cloud_name: short_name,
+        user_id: user_id,
+        experiment_id: experiment_id,
+        image_secrets_id: params['image_secrets_id'],
+        time_limit: params['time_limit'],
+        start_at: params['start_at'],
+        instance_type: params['instance_type'],
+        params: find_stored_params(params)
+    ).to_a
   end
 
   def find_stored_params(params)
