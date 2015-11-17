@@ -52,4 +52,4 @@
     - forced = !!other_params[:force_onsite_monitoring]
     - if forced
       = hidden_field_tag :onsite_monitoring, true
-    = check_box_tag :onsite_monitoring, '', true, disabled: forced
+    = check_box_tag :onsite_monitoring, 'on', true, disabled: forced

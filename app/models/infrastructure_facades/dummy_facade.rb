@@ -24,6 +24,14 @@ class DummyFacade < InfrastructureFacade
     end
   end
 
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    DummyRecord.where(
+        user_id: user_id,
+        experiment_id: experiment_id,
+        time_limit: params['time_limit'].to_i
+    ).to_a
+  end
+
   def sm_record_class
     DummyRecord
   end
