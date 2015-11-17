@@ -14,14 +14,14 @@ class window.InfrastructuresBooster
     @infrastructureSelect.change(@onInfrastructuresSelectChange)
     @onInfrastructuresSelectChange()
 
-  onInfrastructuresSelectChange: (event, infrastructure_fields_callback = ->) =>
+  onInfrastructuresSelectChange: (event, loadInfrastructureFieldsCallback = ->) =>
     selectValue = @infrastructureSelect.val()
     params = $.param({infrastructure_name: selectValue})
 
     fieldsURL = "/infrastructure/get_booster_partial?#{params}"
     fieldsDiv = $('#infrastructure_fields')
     fieldsDiv.html(window.loaderHTML)
-    fieldsDiv.load(fieldsURL, null, infrastructure_fields_callback)
+    fieldsDiv.load(fieldsURL, null, loadInfrastructureFieldsCallback)
 
     smURL = "/infrastructure/simulation_managers_summary?#{params}"
     smDiv = $('#simulation-managers')
