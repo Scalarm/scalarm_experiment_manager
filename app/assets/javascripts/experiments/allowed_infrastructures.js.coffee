@@ -91,7 +91,10 @@ class window.AllowedInfrastructures
     parameter.limit = Number($('#param-config #limit').val())
     params = {}
     for key in $('#param-config *').filter(':input')
-      if key.id != 'infrastructure_name' and key.id != 'limit'
+      if key.type == 'checkbox'
+        if key.checked
+          params[key.id] = 'on'
+      else if key.id not in ['infrastructure_name', 'limit']
         params[key.id] = key.value
     parameter.name = $('#param-config #infrastructure_name').val()
     parameter.label = $('#param-config #infrastructure_name option:selected').text()
@@ -167,7 +170,11 @@ class window.AllowedInfrastructures
         @monitorEditorControls()
         $('#param-config #limit').val(p.limit)
         for key of p.params
-          $('#param-config #' + key).val(p.params[key])
+          if $('#param-config #' + key).is(':checkbox')
+            if p.params[key] == 'on'
+              $('#param-config #' + key).attr('checked', true)
+          else
+            $('#param-config #' + key).val(p.params[key])
         $('#param-config').show()
       )
     else
