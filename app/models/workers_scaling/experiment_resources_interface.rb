@@ -15,7 +15,7 @@ module WorkersScaling
     #     Variable storing user-defined workers limits for each infrastructure
     #     Only infrastructures specified here can be used by experiment.
     #     Format: [{infrastructure: <infrastructure>, limit: <limit>}, ...]
-    #     <infrastructure> - hash with infrastructure info
+    #     <infrastructure> - hash with infrastructure info: {name: <name>, params: {<params>}}
     #     <limit> - integer
     def initialize(experiment, user_id, allowed_infrastructures)
       @experiment = experiment
@@ -62,6 +62,13 @@ module WorkersScaling
     # if limit left or number of simulations left to send is lesser than <amount>
     def schedule_workers(amount, infrastructure, params = {})
       begin
+        # Get params of infrastructure
+        infrastructure_params = @allowed_infrastructures.detect do |allowed|
+          infrastructures_equal?(infrastructure, allowed[:infrastructure])
+        end
+        raise AccessDeniedError unless infrastructure_params
+        infrastructure_params = infrastructure_params[:infrastructure][:params]
+
         @experiment.reload
         starting_workers = get_workers_records_list(infrastructure, cond: Query::STARTING_WORKERS).map &:sm_uuid
         initializing_workers = get_workers_records_list(infrastructure, cond: Query::INITIALIZING_WORKERS).map &:sm_uuid
@@ -78,10 +85,11 @@ module WorkersScaling
 
         # TODO: time of experiment
         params[:time_limit] = 60 if params[:time_limit].nil?
-        params.merge! infrastructure[:params]
+        params.merge! infrastructure_params
 
         # TODO: SCAL-1024 - facades use both string and symbol keys
         params.symbolize_keys!.merge!(params.stringify_keys)
+        LOGGER.debug "Scheduling #{amount} workers onto #{infrastructure[:name]} [#{params}]"
         get_facade_for(infrastructure[:name])
           .start_simulation_managers(@user_id, amount, @experiment.id.to_s, params)
           .map(&:sm_uuid)
