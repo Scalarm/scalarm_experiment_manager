@@ -51,9 +51,9 @@ class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCreden
         os_and_arch["os"] = "linux"
 
         if line.include?(" x86_64 ")
-          os_and_arch["arch"] = "x86_64"
+          os_and_arch["arch"] = "amd64"
         elsif line.include?(" x86 ")
-          os_and_arch["arch"] = "x86"
+          os_and_arch["arch"] = "386"
         end
 
         break
@@ -62,9 +62,9 @@ class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCreden
         os_and_arch["os"] = "darwin"
 
         if line.include?("RELEASE_X86_64 ")
-          os_and_arch["arch"] = "x86_64"
+          os_and_arch["arch"] = "amd64"
         elsif line.include?("RELEASE_X86")
-          os_and_arch["arch"] = "x86"
+          os_and_arch["arch"] = "386"
         end
 
         break
