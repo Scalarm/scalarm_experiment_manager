@@ -48,7 +48,7 @@ https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q
     ssh = mock('ssh')
     job_id = mock 'job_id'
     job = mock('job') {
-      stubs(:job_id).returns(job_id)
+      stubs(:job_identifier).returns(job_id)
     }
     @glite.stubs(:glite_state).returns('Waiting').once
 
@@ -59,7 +59,7 @@ https://lb02.grid.cyf-kr.edu.pl:9000/VdIE_cHwTo8qWRZFa69R5Q
     ssh = mock('ssh')
     job_id = mock 'job_id'
     job = mock('job') {
-      stubs(:job_id).returns(job_id)
+      stubs(:job_identifier).returns(job_id)
     }
     @glite.stubs(:glite_state).returns('Scheduled').once
 
@@ -167,7 +167,7 @@ have been successfully retrieved and stored in the directory:
     ssh = stub_everything 'ssh'
     job = mock 'job'
     job_id = mock 'job_id'
-    job.stubs(:job_id).returns(job_id)
+    job.stubs(:job_identifier).returns(job_id)
     num_lines = 25
     glite_stdout_path = mock 'glite_stdout_path'
     tail_command = mock 'tail_command'

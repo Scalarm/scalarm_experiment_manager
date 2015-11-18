@@ -170,7 +170,7 @@ class InfrastructuresController < ApplicationController
       :host,
       :login,
       :port,
-      :image_id,
+      :image_identifier,
       :cloud_name
   ]
 
