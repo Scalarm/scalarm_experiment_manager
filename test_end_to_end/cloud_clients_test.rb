@@ -51,7 +51,7 @@ class CloudClientsTest < MiniTest::Test
       assert_include images, cloud_image, "no image with id #{cloud_image} available in cloud service, please create"
 
       # image secrets from database
-      image_secrets = CloudImageSecrets.find_by_query cloud_name: cloud_name, image_id: cloud_image
+      image_secrets = CloudImageSecrets.find_by_query cloud_name: cloud_name, image_identifier: cloud_image
       refute_nil image_secrets, "no image with image_id #{cloud_image} credentials for #{cloud_name} in database, please create"
 
       # instance types

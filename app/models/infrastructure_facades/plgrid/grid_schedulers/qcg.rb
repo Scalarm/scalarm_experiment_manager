@@ -124,7 +124,7 @@ module QcgScheduler
     }
 
     def status(ssh, job)
-      STATES_MAPPING[qcg_state(ssh, job.job_id)] or :error
+      STATES_MAPPING[qcg_state(ssh, job.job_identifier)] or :error
     end
 
     def qcg_state(ssh, job_id)
@@ -168,7 +168,7 @@ module QcgScheduler
     end
 
     def cancel_sm_cmd(sm_record)
-      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_id} || true"
+      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_identifier} || true"
     end
 
     def get_log(ssh, job)
@@ -182,7 +182,7 @@ module QcgScheduler
 
       chain(
         "echo '--- QCG info ---'",
-        sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
+        sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_identifier),
         "echo '--- STDOUT ---'",
         "tail -40 #{stdout_path}",
         "echo '--- STDERR ---'",
