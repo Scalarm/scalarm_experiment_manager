@@ -84,7 +84,7 @@ class PlGridFacade < InfrastructureFacade
 
   def query_simulation_manager_records(user_id, experiment_id, params)
     query = {}
-    query[:grant_id] = params['grant_id'] unless params['grant_id'].blank?
+    query[:grant_identifier] = params['grant_id'] unless params['grant_id'].blank?
     query[:nodes] = params['nodes'] unless params['nodes'].blank?
     query[:ppn] = params['ppn'] unless params['ppn'].blank?
     query[:plgrid_host] = params['plgrid_host'] unless params['plgrid_host'].blank?
@@ -232,7 +232,7 @@ class PlGridFacade < InfrastructureFacade
     )
 
     job.start_at = params['start_at']
-    job.grant_id = params['grant_id'] unless params['grant_id'].blank?
+    job.grant_identifier = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
     job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?
@@ -365,7 +365,7 @@ class PlGridFacade < InfrastructureFacade
       end
 
       begin
-        job_id = sm_record.job_id
+        job_id = sm_record.job_identifier
         if job_id
           status = scheduler.status(ssh, sm_record)
           case status
@@ -424,7 +424,7 @@ class PlGridFacade < InfrastructureFacade
         create_and_upload_simulation_manager(ssh, sm_record)
 
         begin
-          sm_record.job_id = scheduler.submit_job(ssh, sm_record)
+          sm_record.job_identifier = scheduler.submit_job(ssh, sm_record)
           sm_record.save
         rescue JobSubmissionFailed => job_failed
           logger.warn "Scheduling job failed: #{job_failed.to_s}"

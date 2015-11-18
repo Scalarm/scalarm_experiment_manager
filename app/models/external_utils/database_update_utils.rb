@@ -44,5 +44,22 @@ module DatabaseUpdateUtils
     true
   end
 
+  # In the past, some fields has *_id name but was not foreign keys
+  # this caused problems with foreign keys auto-convert on where
+  def self.rename_old_id_fields
+    rename_field(DummyRecord, 'res_id', 'res_name')
+    rename_field(CloudImageSecrets, 'image_id', 'image_name')
+    rename_field(CloudVmRecord, 'vm_id', 'vm_identifier')
+    rename_field(PlGridJob, 'grant_id', 'grant_identifier')
+    rename_field(PlGridJob, 'job_id', 'job_identifier')
+  end
+
+  def self.rename_field(collection_class, old_name, new_name)
+    collection_class.each do |record|
+      record.send("#{new_name}=", record.send(old_name))
+      record._delete_attribute(old_name)
+      record.save
+    end
+  end
 
 end

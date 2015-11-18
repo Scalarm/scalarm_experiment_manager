@@ -11,7 +11,7 @@ class DummyFacade < InfrastructureFacade
     require 'securerandom'
     (1..instances_count).map do
       record = DummyRecord.new({
-        res_id: SecureRandom.hex(8),
+        res_name: SecureRandom.hex(8),
         user_id: user_id,
         experiment_id: experiment_id,
         sm_uuid: SecureRandom.uuid,

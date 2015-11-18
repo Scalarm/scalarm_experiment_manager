@@ -86,7 +86,7 @@ gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
 # gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
-gem 'scalarm-database', '>= 0.3.3', git: 'git://github.com/Scalarm/scalarm-database.git'
+gem 'scalarm-database', '>= 1.1', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
 # gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
