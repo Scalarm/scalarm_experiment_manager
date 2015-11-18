@@ -26,11 +26,52 @@ class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCreden
 
   def valid?
     begin
-      ssh_session {}
+      ssh_session do |ssh|
+        discover_os_and_arch(ssh)
+      end
       true
     rescue
       false
     end
+  end
+
+  def discover_os_and_arch(ssh)
+    uname_output = ssh.exec!(BashCommand.new().append("uname -a").to_s)
+    os_and_arch = parse_os_and_arch_string(uname_output)
+
+    self.os = os_and_arch["os"] if os_and_arch.include?("os")
+    self.arch = os_and_arch["arch"] if os_and_arch.include?("arch")
+  end
+
+  def parse_os_and_arch_string(uname_output)
+    os_and_arch = {}
+
+    uname_output.split("\n").each do |line|
+      if line.include?("GNU/Linux")
+        os_and_arch["os"] = "linux"
+
+        if line.include?(" x86_64 ")
+          os_and_arch["arch"] = "x86_64"
+        elsif line.include?(" x86 ")
+          os_and_arch["arch"] = "x86"
+        end
+
+        break
+
+      elsif line.include?("Darwin")
+        os_and_arch["os"] = "darwin"
+
+        if line.include?("RELEASE_X86_64 ")
+          os_and_arch["arch"] = "x86_64"
+        elsif line.include?("RELEASE_X86")
+          os_and_arch["arch"] = "x86"
+        end
+
+        break
+      end
+    end
+
+    os_and_arch
   end
 
   private # -------
