@@ -108,7 +108,7 @@ module GliteScheduler
     end
 
     def status(ssh, job)
-      PlGridScheduler.map_status(glite_state(ssh, job.job_id)) or :error
+      PlGridScheduler.map_status(glite_state(ssh, job.job_identifier)) or :error
     end
 
     def cancel(ssh, record)
@@ -119,7 +119,7 @@ module GliteScheduler
     end
 
     def cancel_sm_cmd(record)
-      "glite-wms-job-cancel --no-int #{record.job_id} || true"
+      "glite-wms-job-cancel --no-int #{record.job_identifier} || true"
     end
 
     def clean_after_sm_cmd(sm_record)
@@ -192,7 +192,7 @@ module GliteScheduler
 
         <<-eos
 --- gLite info ---
-#{get_job_info(ssh, job.job_id)}
+#{get_job_info(ssh, job.job_identifier)}
 --- Simulation Manager log ---
 #{out_log_content}
         eos
@@ -200,7 +200,7 @@ module GliteScheduler
 
     def get_glite_output_to_file(ssh, job)
       output = PlGridScheduler.execute_glite_command(
-          Command::cd_to_simulation_managers("glite-wms-job-output --dir . #{job.job_id}"),
+          Command::cd_to_simulation_managers("glite-wms-job-output --dir . #{job.job_identifier}"),
           ssh
       )
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
