@@ -37,6 +37,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "linux", @credentials.os
     assert_equal "386", @credentials.arch
+    assert_equal "linux_386", @credentials.runtime_platform
   end
 
   def test_os_and_arch_setting_linux_x86_64
@@ -46,6 +47,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "linux", @credentials.os
     assert_equal "amd64", @credentials.arch
+    assert_equal "linux_amd64", @credentials.runtime_platform
   end
 
   def test_os_and_arch_setting_mac_x86
@@ -55,6 +57,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "darwin", @credentials.os
     assert_equal "386", @credentials.arch
+    assert_equal "darwin_386", @credentials.runtime_platform
   end
 
   def test_os_and_arch_setting_mac_x86_64
@@ -64,6 +67,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "darwin", @credentials.os
     assert_equal "amd64", @credentials.arch
+    assert_equal "darwin_amd64", @credentials.runtime_platform
   end
 
   def test_os_and_arch_string_parsing
@@ -94,6 +98,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "linux", @credentials.os
     assert_equal "386", @credentials.arch
+    assert_equal "linux_386", @credentials.runtime_platform
   end
 
   def test_os_and_arch_setting_through_validation_linux_x86_64
@@ -106,6 +111,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "linux", @credentials.os
     assert_equal "amd64", @credentials.arch
+    assert_equal "linux_amd64", @credentials.runtime_platform
   end
 
   def test_os_and_arch_setting_through_validation_mac_x86
@@ -118,6 +124,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "darwin", @credentials.os
     assert_equal "386", @credentials.arch
+    assert_equal "darwin_386", @credentials.runtime_platform
   end
 
   def test_os_and_arch_setting_through_validation_mac_x86_64
@@ -130,6 +137,7 @@ class PrivateMachineCredentialsTest < Minitest::Test
 
     assert_equal "darwin", @credentials.os
     assert_equal "amd64", @credentials.arch
+    assert_equal "darwin_amd64", @credentials.runtime_platform
   end
 
 end

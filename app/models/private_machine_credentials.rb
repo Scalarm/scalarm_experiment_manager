@@ -74,6 +74,14 @@ class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCreden
     os_and_arch
   end
 
+  def runtime_platform
+    unless self.os.nil? or self.arch.nil?
+      "#{self.os}_#{self.arch}"
+    else
+      "linux_amd64"
+    end
+  end
+
   private # -------
 
   def _get_ssh_session
