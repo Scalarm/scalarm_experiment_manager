@@ -312,7 +312,9 @@ class InfrastructureFacade
   # @param [BSON::ObjectId] user_id id of {ScalarmUser} for which SiMs were scheduled
   # @param [BSON::ObjectId] experiment_id id of {Experiment} for which SiMs were scheduled
   # @param [ActiveSupport::HashWithIndifferentAccess] params
-  #   params which were passed to start_simulation_managers - should be as similar as possible
+  #   params which were passed to +start_simulation_managers+ - should be as similar as possible
+  # @return [MongoClass] a query object of specific {SimulationManagerRecord},
+  #   e.g. class of +PlGridJob.where+ results
   def query_simulation_manager_records(user_id, experiment_id, params)
     raise NotImplementedError
   end

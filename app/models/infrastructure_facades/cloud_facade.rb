@@ -67,6 +67,7 @@ class CloudFacade < InfrastructureFacade
     end
   end
 
+  # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
     CloudVmRecord.where(
         cloud_name: short_name,
@@ -77,7 +78,7 @@ class CloudFacade < InfrastructureFacade
         start_at: params['start_at'],
         instance_type: params['instance_type'],
         params: find_stored_params(params)
-    ).to_a
+    )
   end
 
   def find_stored_params(params)

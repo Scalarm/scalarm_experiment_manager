@@ -82,6 +82,7 @@ class PlGridFacade < InfrastructureFacade
     records
   end
 
+  # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
     query = {}
     query[:grant_identifier] = params['grant_id'] unless params['grant_id'].blank?
@@ -99,7 +100,7 @@ class PlGridFacade < InfrastructureFacade
         start_at: params['start_at']
     )
 
-    PlGridJob.where(query).to_a
+    PlGridJob.where(query)
   end
 
   def create_records(count, *args)
