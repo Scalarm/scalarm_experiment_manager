@@ -185,7 +185,7 @@ module GliteScheduler
 
       out_log_content = ssh.exec!(tail(log_path, 25))
       # TODO: remove also output dir
-      ssh.exec!(rm(log_path))
+      ssh.exec!(BashCommand.new.rm(log_path).to_s)
 
         <<-eos
 --- gLite info ---
