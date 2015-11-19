@@ -11,10 +11,6 @@ class PlGridJob < Scalarm::Database::Model::PlGridJob
     scheduler_type
   end
 
-  def self.ids_auto_convert
-    false
-  end
-
   def resource_id
     self.job_identifier
   end
