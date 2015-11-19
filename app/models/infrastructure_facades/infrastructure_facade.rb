@@ -307,6 +307,16 @@ class InfrastructureFacade
     raise NotImplementedError
   end
 
+  # An abstract method - for documentation
+  #
+  # @param [BSON::ObjectId] user_id id of {ScalarmUser} for which SiMs were scheduled
+  # @param [BSON::ObjectId] experiment_id id of {Experiment} for which SiMs were scheduled
+  # @param [ActiveSupport::HashWithIndifferentAccess] params
+  #   params which were passed to start_simulation_managers - should be as similar as possible
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    raise NotImplementedError
+  end
+
   # -- SimulationManger delegation default implementation --
 
   def _simulation_manager_before_monitor(record); end
