@@ -81,6 +81,7 @@ class PrivateMachineFacade < InfrastructureFacade
     records
   end
 
+  # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
     credentials_id = params[:credentials_id]
     if params.include?(:host)
@@ -98,7 +99,7 @@ class PrivateMachineFacade < InfrastructureFacade
         start_at: params[:start_at],
         infrastructure: short_name,
         onsite_monitoring: onsite_monitoring_enabled
-    ).to_a
+    )
   end
 
   def get_number_of_cores_command
