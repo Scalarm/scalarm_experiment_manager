@@ -60,15 +60,13 @@ class InfrastructureFacade
   end
 
   # Write tmp file: ZIP with SimulationManager application and config
-  def self.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, start_at = '')
-    Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
+  def self.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, start_at = '', platform = "linux_amd64")
+    Rails.logger.debug "Preparing configuration for Simulation Manager (#{platform}) with id: #{sm_uuid}"
 
     # using simulation manager implementation based on application config
     case Rails.configuration.simulation_manager_version
       when :go
-        # TODO checking somehow the destination server architecture
-        arch = 'linux_386'
-        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_go(arch), LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
+        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_go(platform), LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
       when :ruby
         FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_ruby, LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
       else

@@ -81,7 +81,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, infrastructure_name, params={})
     # TODO: implement multiple architectures support
-    arch = 'linux_386'
+    platform = credentials.runtime_platform
 
     InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id,
                                                    [{name: infrastructure_name, credentials_id: credentials.id.to_s}])
@@ -92,7 +92,7 @@ class PrivateMachineFacade < InfrastructureFacade
         SSHAccessedInfrastructure::create_remote_directories(ssh)
 
         PrivateMachineFacade.remove_remote_monitoring_files(ssh)
-        PrivateMachineFacade.upload_monitoring_files(scp, sm_uuid, arch)
+        PrivateMachineFacade.upload_monitoring_files(scp, sm_uuid, platform)
         PrivateMachineFacade.remove_local_monitoring_config(sm_uuid)
 
         cmd = PrivateMachineFacade.start_monitoring_cmd
@@ -248,15 +248,18 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else
-      logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
+      platform = sm_record.credentials.runtime_platform
+
+      logger.debug "Sending files and launching SM on host (#{platform}): #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
 
       InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, sm_record.user_id,
-                                                                        sm_record.experiment_id, sm_record.start_at) do
+                                                                        sm_record.experiment_id, sm_record.start_at,
+                                                                        platform) do
 
         error_counter = 0
         ssh = nil
