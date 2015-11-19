@@ -15,7 +15,7 @@ module ShellBasedInfrastructure
     if Rails.configuration.simulation_manager_version == :go
       BashCommand.new.rm(sm_dir_name, true).log_last_command(log_path).
           log("unzip #{sm_dir_name}.zip", log_path).
-          cd(sm_dir_name).log_last_command.
+          cd(sm_dir_name).log_last_command(log_path)
           log('unxz scalarm_simulation_manager.xz', log_path).
           log('chmod a+x scalarm_simulation_manager', log_path).
           run_in_background('./scalarm_simulation_manager', log_path).to_s
