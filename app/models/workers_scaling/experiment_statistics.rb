@@ -28,7 +28,9 @@ module WorkersScaling
     #   * opts
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
+    # By default only running workers are included into calculations.
     def infrastructure_throughput(infrastructure, params = {})
+      params[:cond] = Query::RUNNING_WORKERS unless params.has_key? :cond
       workers_for_infrastructure = @resources_interface.get_workers_records_list(infrastructure, params)
       workers_for_infrastructure.map {|worker| calculate_worker_throughput(worker)}
         .reduce(0.0, :+) / Float(workers_for_infrastructure.size)
@@ -42,8 +44,10 @@ module WorkersScaling
     #   * opts
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
+    # By default only running workers are included into calculations.
     def system_throughput(params = {})
-      @resources_interface.get_available_infrastructures.map do |infrastructure|
+      params[:cond] = Query::RUNNING_WORKERS unless params.has_key? :cond
+      @resources_interface.get_enabled_infrastructures.map do |infrastructure|
         @resources_interface.get_workers_records_list(infrastructure, params)
           .map {|worker| calculate_worker_throughput worker}
           .reduce 0.0, :+
@@ -69,7 +73,9 @@ module WorkersScaling
     #   * opts
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
+    # By default only running workers are included into calculations.
     def makespan(params = {})
+      params[:cond] = Query::RUNNING_WORKERS unless params.has_key? :cond
       simulations_to_run = count_simulations_to_run
       return simulations_to_run if simulations_to_run == 0.0
       simulations_to_run / Float(system_throughput(params))
@@ -85,8 +91,10 @@ module WorkersScaling
     #   * opts
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
+    # By default only running workers are included into calculations.
     # Raises InfrastructureError
     def get_infrastructure_statistics(infrastructure, params = {})
+      params[:cond] = Query::RUNNING_WORKERS unless params.has_key? :cond-
       {
           average_throughput: infrastructure_throughput(infrastructure, params),
           workers_count: @resources_interface.get_workers_records_count(infrastructure, params)

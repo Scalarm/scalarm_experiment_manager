@@ -25,10 +25,10 @@ module WorkersScaling
     end
 
     ##
-    # Returns list of available infrastructure configurations for experiment
+    # Return list of enabled infrastructure configurations for experiment
     # Infrastructure configuration format: {name: <name>, params: {<params>}}
     # <params> may include e.g. credentials_id for private_machine
-    def get_available_infrastructures
+    def get_enabled_infrastructures
       InfrastructureFacadeFactory.list_infrastructures(@user_id)
           .flat_map {|x| x.has_key?(:children) ? x[:children] : x }
           .select {|x| x[:enabled]}
@@ -36,7 +36,16 @@ module WorkersScaling
           .flat_map do |infrastructure_name|
             InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
           end
-          .select {|x| !!@allowed_infrastructures.detect {|ai| infrastructures_equal?(x, ai[:infrastructure])}}
+    end
+
+    ##
+    # Returns list of available infrastructure configurations for experiment
+    # Infrastructure configuration format: {name: <name>, params: {<params>}}
+    # <params> may include e.g. credentials_id for private_machine
+    def get_available_infrastructures
+      get_enabled_infrastructures.select do |enabled|
+        !!@allowed_infrastructures.detect { |allowed| infrastructures_equal?(enabled, allowed[:infrastructure]) }
+      end
       # TODO return allowed infrastructures filter by available
     end
 
@@ -62,6 +71,7 @@ module WorkersScaling
     # if limit left or number of simulations left to send is lesser than <amount>
     def schedule_workers(amount, infrastructure, params = {})
       begin
+        # TODO only allowed infrastructures
         @experiment.reload
         starting_workers = get_workers_records_list(infrastructure, cond: Query::STARTING_WORKERS).map &:sm_uuid
         initializing_workers = get_workers_records_list(infrastructure, cond: Query::INITIALIZING_WORKERS).map &:sm_uuid
@@ -175,7 +185,7 @@ module WorkersScaling
     # Previously accessed facades are cached
     def get_facade_for(infrastructure_name)
       unless @facades_cache.has_key? infrastructure_name
-        throw NoSuchInfrastructureError unless get_available_infrastructures.map {|infrastructure| infrastructure[:name]}
+        throw NoSuchInfrastructureError unless get_enabled_infrastructures.map {|infrastructure| infrastructure[:name]}
                                                                             .include? infrastructure_name
         @facades_cache[infrastructure_name] = InfrastructureFacadeFactory.get_facade_for infrastructure_name
       end
