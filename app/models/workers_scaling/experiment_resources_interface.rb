@@ -21,7 +21,7 @@ module WorkersScaling
       @experiment = experiment
       @user_id = BSON::ObjectId(user_id.to_s)
       @facades_cache = {}
-      @allowed_infrastructures = allowed_infrastructures
+      @allowed_infrastructures = allowed_infrastructures.map {|x| ActiveSupport::HashWithIndifferentAccess.new(x)}
     end
 
     ##
@@ -37,6 +37,7 @@ module WorkersScaling
             InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
           end
           .select {|x| !!@allowed_infrastructures.detect {|ai| infrastructures_equal?(x, ai[:infrastructure])}}
+          .map {|x| ActiveSupport::HashWithIndifferentAccess.new(x)}
       # TODO return allowed infrastructures filter by available
     end
 

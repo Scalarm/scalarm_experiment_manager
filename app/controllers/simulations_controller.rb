@@ -345,9 +345,9 @@ class SimulationsController < ApplicationController
           else
             @experiment.progress_bar_update(@simulation_run.index, 'done')
           end
-
-          algorithm_runner = WorkersScaling::AlgorithmRunner.get(@experiment.id)
-          Thread.new { algorithm_runner.execute_and_schedule } if algorithm_runner
+          Thread.new do
+            WorkersScaling::AlgorithmRunner.execute_and_schedule(@experiment.id)
+          end
         end
       end
     rescue Exception => e

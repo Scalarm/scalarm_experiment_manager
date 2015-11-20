@@ -412,14 +412,25 @@ class ExperimentsController < ApplicationController
           inf[:infrastructure][:params][:credentials_id] = BSON::ObjectId(inf[:infrastructure][:params][:credentials_id])
         end
       end
-      algorithm = WorkersScaling::AlgorithmFactory.create_algorithm(
-          workers_scaling_params[:name].to_sym,
-          experiment,
-          current_user.id,
-          allowed_infrastructures,
-          Time.now + workers_scaling_params[:time_limit]*60 # minutes to seconds
-      )
-      WorkersScaling::AlgorithmRunner.new(experiment, algorithm, 10).start
+
+      Thread.new do
+        begin
+          algorithm = WorkersScaling::AlgorithmFactory.create_algorithm(
+              name: workers_scaling_params[:name].to_sym,
+              experiment_id: experiment.id,
+              user_id: current_user.id,
+              allowed_infrastructures: allowed_infrastructures,
+              planned_finish_time: Time.now + workers_scaling_params[:time_limit].minutes,
+              last_update_time: Time.now
+          )
+          algorithm.initial_deployment
+          algorithm.update_next_execution_time
+          WorkersScaling::LOGGER.debug 'Initial deployment finished'
+        rescue => e
+          WorkersScaling::LOGGER.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}"
+          raise
+        end
+      end
     end
   end
 
