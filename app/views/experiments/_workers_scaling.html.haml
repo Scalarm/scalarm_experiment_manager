@@ -1,0 +1,49 @@
+.row
+  .small-3.columns
+    %h5.subheader= t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
+  .small-9.columns
+    %h5.subheader{id: 'planned_finish_time'}= ''
+
+.row
+  .small-3.columns
+    %h5.subheader= t('experiments.workers_scaling.information_panel.execution_time.expected') + ':'
+  .small-9.columns
+    %h5.subheader{id: 'expected_finish_time'}= ''
+
+.row
+  .small-10.columns
+    %h5.subheader{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
+      = t('experiments.workers_scaling.information_panel.execution_time.warning')
+
+- content_for :javascript do
+  :javascript
+    var planned_finish_time = new Date("#{@experiment.planned_finish_time}");
+    window.updateWorkersScalingStatus = function() {
+      $.getJSON("/experiments/#{@experiment.id.to_s}/stats", function(data) {
+          if (data.completed == true) {
+            $('#time_constraints_warning').hide();
+            $('#expected_finish_time').text("Finished")
+          } else {
+            if (data.planned_finish_time == -1) {
+              $('#time_constraints_warning').show()
+              $('#expected_finish_time').text("Unknown")
+            } else {
+              var expected_finish_time = new Date(data.planned_finish_time*1000);
+              $('#expected_finish_time').text(expected_finish_time.toString());
+              if (expected_finish_time > planned_finish_time) {
+                $('#time_constraints_warning').show()
+              } else {
+                $('#time_constraints_warning').hide()
+              }
+            }
+          }
+        });
+      };
+    $(function() {
+      window.updateWorkersScalingStatus();
+      setInterval(window.updateWorkersScalingStatus, 30000);
+    });
+    $('#planned_finish_time').text(planned_finish_time.toString());
+
+
+
