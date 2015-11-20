@@ -3,7 +3,7 @@ module WorkersScaling
     @cache = ActiveSupport::Cache::MemoryStore.new expires_in: 10.minutes
 
     ##
-    # Creates new ExperimentStatistics with read-only ExperimentResourcesInterfaceX
+    # Creates new ExperimentStatistics with read-only ExperimentResourcesInterface
     # or uses existing from cache
     # * experiment
     # * user_id

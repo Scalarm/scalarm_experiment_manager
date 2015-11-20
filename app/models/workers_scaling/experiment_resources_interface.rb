@@ -25,7 +25,7 @@ module WorkersScaling
     end
 
     ##
-    # Return list of enabled infrastructure configurations for experiment
+    # Returns list of enabled infrastructure configurations for experiment
     # Infrastructure configuration format: {name: <name>, params: {<params>}}
     # <params> may include e.g. credentials_id for private_machine
     def get_enabled_infrastructures
