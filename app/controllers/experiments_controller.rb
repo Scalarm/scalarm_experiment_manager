@@ -414,14 +414,19 @@ apiDoc:
           inf[:infrastructure][:params][:credentials_id] = BSON::ObjectId(inf[:infrastructure][:params][:credentials_id])
         end
       end
+      planned_finish_time = Time.now + workers_scaling_params[:time_limit].minutes
+
       algorithm = WorkersScaling::AlgorithmFactory.create_algorithm(
           workers_scaling_params[:name].to_sym,
           experiment,
           current_user.id,
           allowed_infrastructures,
-          Time.now + workers_scaling_params[:time_limit]*60 # minutes to seconds
+          planned_finish_time
       )
       WorkersScaling::AlgorithmRunner.new(experiment, algorithm, 10).start
+      experiment.workers_scaling = true
+      experiment.planned_finish_time = planned_finish_time
+      experiment.save
     end
   end
 
@@ -544,6 +549,10 @@ apiDoc:
       #
       #  partial_stats["predicted_finish_time"] = predicted_finish_time
     end
+
+    makespan = WorkersScaling::ExperimentStatisticsFactory.create_statistics(@experiment, current_user.id).makespan()
+    stats[:planned_finish_time] = makespan == Float::INFINITY ? -1 : (Time.now + makespan).to_i
+    stats[:completed] = @experiment.completed?
 
     render json: stats
   end
