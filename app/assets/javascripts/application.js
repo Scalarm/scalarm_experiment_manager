@@ -98,3 +98,7 @@ $.prototype.disable = function () {
 String.prototype.with_delimeters = string_with_delimeters;
 
 window.loaderHTML = '<div class="row small-1 small-centered" style="margin-bottom: 10px;"><img src="/assets/loading.gif"/></div>'
+
+function display_date(div_selector, epoch_seconds) {
+    $(div_selector).html(new Date(epoch_seconds * 1000).toString());
+}
