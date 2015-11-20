@@ -61,20 +61,22 @@
       - elsif record.state == :initialized
         %li
           %strong= t('infrastructures.sm_dialog.sm_initialized_at') + ':'
-          =record.sm_initialized_at.to_s
+          #sm-installed-at-date
       %li
         %strong= t('infrastructures.sm_dialog.created_at') + ': '
-        =record.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        #sm-created-at-date{style: 'display: inline;'}
       %li
         %strong= t('infrastructures.sm_dialog.time_limit') + ': '
-        =record.created_at.since(record.time_limit.to_i.minutes).to_s + ' ' + "(#{record.time_limit.to_s} minutes)"
+        ="#{record.time_limit.to_s} minutes (will work until: "
+        - time_limit_until = record.created_at.since(record.time_limit.to_i.minutes).to_i
+        #sm-time-limit-until{style: 'display: inline'}
+        =')'
       %li
         %strong= t('infrastructures.sm_dialog.experiment') + ': '
         - if record.experiment
           = link_to "#{record.experiment.name}", experiment_path(record.experiment_id)
         - else
           = t('infrastructure.information.sm_record_error', error: t('infrastructure.information.experiment_not_found'))
-
 
 
 - rescue Exception => e
@@ -85,4 +87,8 @@
     $(document).foundation();
 
     new window.SmDialog("#dialog", "#{facade.short_name}", "#{record.id}");
+
+    display_date("#sm-initialized-at-date", #{record.initialized_at.to_i});
+    display_date("#sm-created-at-date", #{record.created_at.to_i});
+    display_date("#sm-time-limit-until", #{time_limit_until});
   });
