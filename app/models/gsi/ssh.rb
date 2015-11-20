@@ -19,13 +19,15 @@ module Gsi
           @input, @output, @thread =
               Open3.popen2e({'X509_USER_PROXY' => @proxy_path}, 'gsissh', '-v', '-T', "#{user}@#{host}")
           @leftovers = []
-          init_log = ''
-          begin
-            Timeout::timeout 5 do
-              init_log = @output.readline 'Entering interactive session.'
-            end
-          rescue Timeout::Error, Errno::EPIPE
-            raise TimeoutError.new("gsissh invocation timeout, output: #{@output.read}")
+          output_results = nil
+          # whole process of read should be also timed-out because of single byte timeout
+          timeout(10) do
+            output_results = self.class.time_limited_io_read(@output, 5)
+          end
+          raise Gsi::ClientError.new('time_limited_io_read failed') if output_results.nil?
+          init_log, read_error = output_results
+          if read_error == :timeout_error
+            raise TimeoutError.new("gsissh invocation timeout, output: #{init_log or '<empty>'}")
           end
           init_match = init_log.match /Entering interactive session./
           Gsi.handle_init_error(init_log) unless init_match
@@ -33,6 +35,37 @@ module Gsi
           close
           raise
         end
+      end
+
+      # Reads an {IO} object with {IO.readpartial} one-by-one byte.
+      # If reading single byte will exceed time_limit seconds,
+      # it will stop and return read string.
+      # @param [IO] io IO object to read string from
+      # @param [Integer] time_limit max time in seconds to read single byte from IO
+      # @return [Array(String, Symbol)]
+      #   +[<read string output>, <symbol representing an error or nil>]+
+      #   An error can be:
+      #   * :timeout - when Timeout::Error occurs because of single char read time limit
+      #   * :eof - when EOFError occurs - in most cases this is desired behaviour
+      #   * nil - when reading has been stopped because of empty buffer
+      def self.time_limited_io_read(io, time_limit = 1)
+        buf = ''
+        error = nil
+        loop do
+          begin
+            timeout(time_limit) do
+              buf += io.readpartial(1)
+              break unless buf
+            end
+          rescue Timeout::Error
+            error = :timeout
+            break
+          rescue EOFError
+            error = :eof
+            break
+          end
+        end
+        [buf, error]
       end
 
       def exec!(command)
