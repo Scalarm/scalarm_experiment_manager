@@ -227,10 +227,10 @@ def monitoring_process(action)
       monitoring_job_pid = fork do
         STDOUT.reopen(File.open('log/monitoring_process.log', 'w+'))
         STDERR.reopen(File.open('log/monitoring_process.log', 'w+'))
-        
+
         STDOUT.sync = true
         STDERR.sync = true
- 
+
         Rails.logger.info("Monitoring process started with PID: #{Process.pid}")
 
         begin
