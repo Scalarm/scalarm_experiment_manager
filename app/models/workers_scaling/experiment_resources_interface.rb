@@ -29,15 +29,16 @@ module WorkersScaling
     # Infrastructure configuration format: {name: <name>, params: {<params>}}
     # <params> may include e.g. credentials_id for private_machine
     def get_available_infrastructures
-      InfrastructureFacadeFactory.list_infrastructures(@user_id)
+      enabled_infrastructures = InfrastructureFacadeFactory.list_infrastructures(@user_id)
           .flat_map {|x| x.has_key?(:children) ? x[:children] : x }
           .select {|x| x[:enabled]}
           .map {|x| x[:infrastructure_name].to_sym}
           .flat_map do |infrastructure_name|
             InfrastructureFacadeFactory.get_facade_for(infrastructure_name).get_subinfrastructures(@user_id)
           end
-          .select {|x| !!@allowed_infrastructures.detect {|ai| infrastructures_equal?(x, ai[:infrastructure])}}
-      # TODO return allowed infrastructures filter by available
+      @allowed_infrastructures.select do |allowed|
+        !!enabled_infrastructures.detect {|enabled| infrastructures_equal?(enabled, allowed)}
+      end
     end
 
     ##
@@ -62,6 +63,10 @@ module WorkersScaling
     # if limit left or number of simulations left to send is lesser than <amount>
     def schedule_workers(amount, infrastructure, params = {})
       begin
+        raise AccessDeniedError unless @allowed_infrastructures.detect do |allowed|
+          infrastructures_equal?(infrastructure, allowed[:infrastructure], true)
+        end
+
         @experiment.reload
         starting_workers = get_workers_records_list(infrastructure, cond: Query::STARTING_WORKERS).map &:sm_uuid
         initializing_workers = get_workers_records_list(infrastructure, cond: Query::INITIALIZING_WORKERS).map &:sm_uuid
@@ -107,8 +112,7 @@ module WorkersScaling
     end
 
     ##
-    # Simplifies use of #limit_worker_simulations when the goal is to stop worker
-    # Provides more intuitive name
+    # Stops worker after completing its current simulation execution
     def soft_stop_worker(sm_uuid)
       limit_worker_simulations(sm_uuid, 1)
     end
@@ -157,15 +161,20 @@ module WorkersScaling
     private
 
     ##
-    # Compares infrastructure description from #get_available_infrastructures with @allowed_infrastructures entry.
-    # Entry from @allowed_infrastructures may have additional fields that
-    # should not be taken into consideration in comparison.
+    # TODO: update description after merge with WSS-35 - enabled inf
+    # Compares whether all fields from narrower are equal with corresponding fields from wider
+    # when exact flag is set to false. Performs full comparison when exact flag is true.
+    # By default exact flag is set to false
     # Return true when infrastructures are equal, false otherwise.
-    def infrastructures_equal?(from_available, from_allowed)
+    def infrastructures_equal?(narrower, wider, exact=false)
       # TODO replace with infrastructure id
-      return false if from_allowed[:name] != from_available[:name]
-      from_available[:params].each do |key, value|
-        return false if from_allowed[:params][key] != value
+      return false if wider[:name] != narrower[:name]
+      if exact
+        return false unless wider[:params] == wider[:params]
+      else
+        narrower[:params].each do |key, value|
+          return false if wider[:params][key] != value
+        end
       end
       true
     end
@@ -191,13 +200,12 @@ module WorkersScaling
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
     def get_workers_records_cursor(infrastructure, params = {})
-      cond = {experiment_id: @experiment.id.to_s, user_id: @user_id}
-      cond.merge! params[:cond] if params.has_key? :cond
-      cond.merge! infrastructure[:params]
-      opts = {}
-      opts.merge! params[:opts] if params.has_key? :opts
-
-      get_facade_for(infrastructure[:name]).sm_record_class.where(cond, opts)
+      get_facade_for(infrastructure[:name])
+          .query_simulation_manager_records(@user_id, @experiment.id.to_s, infrastructure[:params])
+          .where(
+              params[:cond] || ActiveSupport::HashWithIndifferentAccess.new,
+              params[:opts] || ActiveSupport::HashWithIndifferentAccess.new
+          )
     end
   end
 

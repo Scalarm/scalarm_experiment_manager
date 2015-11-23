@@ -24,7 +24,6 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
       stubs(:experiment_size).returns(100)
       stubs(:id).returns(EXPERIMENT_ID)
     end
-    @experiment.stubs(:sm_record_class).returns(@sm_record_class)
 
     Rails.stubs(:logger).returns(stub_everything)
     @resources_interface = WorkersScaling::ExperimentResourcesInterface.new(@experiment, USER_ID, SAMPLE_LIMITS)
@@ -46,7 +45,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     # then
   end
 
-  test 'current_infrastructure_limit should return proper value when some workers are running' do
+  test 'current_infrastructure_limit should return limit reduced by running workers when workers are running' do
     # given
     working_workers = 5
     @resources_interface.expects(:get_workers_records_count).returns(working_workers)
@@ -64,7 +63,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     # then
   end
 
-  test 'schedule_workers should start workers with proper config' do
+  test 'schedule_workers should start workers with given config' do
     # given
     amount = 10
     additional_params = {param1: 'value'}
@@ -80,7 +79,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
       schedule_workers_result << id
     end
     facade_mock = mock
-    facade_mock.stubs(:sm_record_class).returns(@sm_record_class)
+    facade_mock.stubs(:query_simulation_manager_records).returns(@sm_record_class)
     facade_mock.expects(:start_simulation_managers).with(USER_ID, amount, EXPERIMENT_ID, equals(final_params))
         .returns(start_simulation_managers_result)
 
@@ -108,7 +107,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     # given
     amount = LIMIT + 10
     facade_mock = mock
-    facade_mock.stubs(:sm_record_class).returns(@sm_record_class)
+    facade_mock.stubs(:query_simulation_manager_records).returns(@sm_record_class)
 
     start_simulation_managers_result = []
     (1..LIMIT).each do |id|
