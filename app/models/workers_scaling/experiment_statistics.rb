@@ -1,5 +1,6 @@
 require 'workers_scaling/utils/query'
 module WorkersScaling
+  require_relative 'utils/query'
   ##
   # ExperimentStatistics class calculates various statistics about
   # experiment run and execution.
