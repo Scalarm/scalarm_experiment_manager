@@ -13,6 +13,7 @@ module WorkersScaling
 
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
     ALGORITHM_INTERVAL = 30.seconds
+    ERRORS_MAX = 3
 
     ##
     # Returns name of Algorithm implementation class
@@ -21,17 +22,8 @@ module WorkersScaling
     end
 
     ##
-    # Finds all records of Algorithm implementations
-    # Returns hash containing {experiment_id => next_execution_time} pair for each record
-    def self.get_all_algorithms_times
-      self.where({}, {fields: [:experiment_id, :next_execution_time]}).map do |record|
-        [record.experiment_id, record.next_execution_time]
-      end .to_h
-    end
-
-    ##
     # Arguments: attributes hash containing fields:
-    #  * experiment_id - id of Experiment
+    #  * experiment_id - id of Experiment to be subjected to Algorithm
     #  * user_id - id of User starting Algorithm
     #  * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
     #      (Detailed description at ExperimentResourcesInterface#initialize)
@@ -77,9 +69,28 @@ module WorkersScaling
       raise NOT_IMPLEMENTED
     end
 
-    def update_next_execution_time
+    ##
+    # Marks Algorithm record as executed successfully
+    # Sets next_execution_time as ALGORITHM_INTERVAL from now
+    # Zeroes errors_count
+    def notify_execution
       self.next_execution_time = Time.now + ALGORITHM_INTERVAL
+      self.errors_count = 0
       save
+    end
+
+    ##
+    # Notifies error encountered during Algorithm execution
+    # Increments errors_count
+    # Destroys record if errors_count exceeds ERRORS_MAX
+    def notify_error
+      self.errors_count ||= 0
+      self.errors_count += 1
+      if self.errors_count > ERRORS_MAX
+        destroy
+      else
+        save
+      end
     end
 
   end

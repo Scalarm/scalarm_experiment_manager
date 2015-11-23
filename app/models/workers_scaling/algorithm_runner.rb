@@ -13,32 +13,57 @@ module WorkersScaling
     def self.start
       Thread.new do
         begin
-          while true do
-            LOGGER.debug 'Entering Algorithm Runner loop'
-            work_queue = Queue.new
-            Algorithm.get_all_algorithms_times.each do |experiment_id, next_execution_time|
-              if next_execution_time <= Time.now
-                work_queue.push(experiment_id)
-              end
-            end
+          work_queue = Queue.new
+          initialize_threads(work_queue)
 
-            threads = (1..THREADS_NUMBER).map do
-              Thread.new do
-                until work_queue.empty?
-                  execute_and_schedule(work_queue.pop)
-                end
-              end
-            end
-
-            threads.each &:join
-
-            sleep(RUNNER_INTERVAL)
+          loop do
+            runner_loop(work_queue)
           end
         rescue => e
           LOGGER.error "Exception occurred during Algorithm Runner loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
           raise
         end
       end
+    end
+
+    ##
+    # Arguments:
+    #  * work_queue - queue with next algorithms to be executed
+    # Starts THREADS_NUMBER threads, each running in loop
+    # and calling execute_and_schedule for next experiment_id from queue
+    # Returns list of started threads
+    def self.initialize_threads(work_queue)
+      LOGGER.debug 'Starting Algorithm Runner worker threads'
+      (1..THREADS_NUMBER).map do
+        Thread.new do
+          loop do
+            begin
+              execute_and_schedule(work_queue.pop)
+            rescue => e
+              LOGGER.error "Worker thread encountered exception: #{e.to_s}"
+              LOGGER.error 'Will continue working'
+            end
+          end
+        end
+      end
+    end
+
+    ##
+    # Arguments:
+    #  * work_queue - queue for scheduling next algorithms for execution
+    # Gets from database all algorithms ready to be executed
+    # Enqueues them to be executed by threads
+    # Waits until all are taken from queue for execution and sleeps for RUNNER_INTERVAL
+    def self.runner_loop(work_queue)
+      LOGGER.debug 'Entering Algorithm Runner loop'
+      AlgorithmFactory.get_ready_algorithms.each do |experiment_id|
+        work_queue.push(experiment_id)
+      end
+
+      # wait for all algorithms completion
+      sleep 0.5 until work_queue.empty?
+
+      sleep(RUNNER_INTERVAL)
     end
 
     ##
@@ -58,12 +83,13 @@ module WorkersScaling
           else
             LOGGER.debug 'Starting experiment_status_check method'
             algorithm.experiment_status_check
-            algorithm.update_next_execution_time
+            algorithm.notify_execution
             LOGGER.debug "Setting next execution time to #{algorithm.next_execution_time.inspect}"
           end
         end
       rescue => e
         LOGGER.error "Exception occurred during workers scaling algorithm: #{e.to_s}\n#{e.backtrace.join("\n")}"
+        AlgorithmFactory.get_algorithm(experiment_id).notify_error
         raise
       end
     end

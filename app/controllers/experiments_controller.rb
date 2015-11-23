@@ -413,24 +413,12 @@ class ExperimentsController < ApplicationController
         end
       end
 
-      Thread.new do
-        begin
-          algorithm = WorkersScaling::AlgorithmFactory.create_algorithm(
-              name: workers_scaling_params[:name].to_sym,
-              experiment_id: experiment.id,
-              user_id: current_user.id,
-              allowed_infrastructures: allowed_infrastructures,
-              planned_finish_time: Time.now + workers_scaling_params[:time_limit].minutes,
-              last_update_time: Time.now
-          )
-          algorithm.initial_deployment
-          algorithm.update_next_execution_time
-          WorkersScaling::LOGGER.debug 'Initial deployment finished'
-        rescue => e
-          WorkersScaling::LOGGER.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}"
-          raise
-        end
-      end
+      WorkersScaling::AlgorithmFactory.initial_deployment(
+          experiment.id,
+          current_user.id,
+          allowed_infrastructures,
+          workers_scaling_params
+      )
     end
   end
 
