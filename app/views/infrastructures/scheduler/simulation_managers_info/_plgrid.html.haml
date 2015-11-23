@@ -1,7 +1,7 @@
-- if record.job_id
+- if record.job_identifier
   %li
     %strong= t('plgrid.job_desc.job_id') + ': '
-    =record.job_id
+    =record.job_identifier
 - if record.nodes
   %li
     %strong= t('plgrid.job_desc.nodes') + ': '

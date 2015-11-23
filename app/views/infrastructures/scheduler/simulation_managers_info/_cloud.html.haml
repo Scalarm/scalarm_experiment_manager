@@ -1,10 +1,10 @@
 -image = record.image_secrets
 %li
   %strong= t('infrastructure.information.cloud.sm_info.vm_id') + ': '
-  =record.vm_id
+  =record.vm_identifier
 %li
   %strong= t('infrastructure.information.cloud.sm_info.image') + ': '
-  = image.label.blank? ? "#{record.image_secrets.image_id}" : "#{record.image_secrets.label} (#{record.image_secrets.image_id})"
+  = image.label.blank? ? "#{record.image_secrets.image_identifier}" : "#{record.image_secrets.label} (#{record.image_secrets.image_identifier})"
 %li
   %strong= t('infrastructure.information.cloud.sm_info.instance_type') + ': '
   =record.instance_type

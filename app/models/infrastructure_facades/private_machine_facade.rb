@@ -18,33 +18,38 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # -- InfrastructureFacade implementation --
 
-  def sm_record_class
-    PrivateMachineRecord
-  end
-
-  # Params hash:
-  # Alternative - get credentials by ID from database or use simple host matching
-  # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
-  # - 'host' => hostname - matches first PM Credentials with this host name
-  def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
-    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
-
-    machine_creds = if params[:host]
-                      PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
-                    else
-                      PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
-                    end
-
-    raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
-    raise InfrastructureErrors::InvalidCredentialsError.new if machine_creds.invalid
-
-    if machine_creds.user_id != user_id
-      return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
-                             name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
+    def sm_record_class
+      PrivateMachineRecord
     end
 
-    ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
-    ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
+    # Params hash:
+    # - time_limit
+    # - start_at
+    # - onsite_monitoring [optional] - if is a string 'on' - enable onsite monitoring
+    # Alternative - get credentials by ID from database or use simple host matching
+    # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
+    # - 'host' => hostname - matches first PM Credentials with this host name
+    def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
+      logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
+
+      machine_creds = if params[:host]
+                        PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
+                      else
+                        PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
+                      end
+
+      raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
+      raise InfrastructureErrors::InvalidCredentialsError.new if machine_creds.invalid
+
+      if machine_creds.user_id != user_id
+        return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
+                               name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
+      end
+
+      ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
+      ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
+
+      onsite_monitoring_enabled = (params[:onsite_monitoring] == 'on')
 
     records = (1..instances_count).map do
       record = PrivateMachineRecord.new(
@@ -58,7 +63,7 @@ class PrivateMachineFacade < InfrastructureFacade
           ppn: ppn
       )
 
-      record.onsite_monitoring = params.include?(:onsite_monitoring)
+      record.onsite_monitoring = onsite_monitoring_enabled
 
       record.initialize_fields
       record.save
@@ -66,7 +71,7 @@ class PrivateMachineFacade < InfrastructureFacade
       record
     end
 
-    if params[:onsite_monitoring]
+    if onsite_monitoring_enabled
       sm_uuid = SecureRandom.uuid
       self.class.handle_monitoring_send_errors(records) do
         self.class.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id, short_name, params)
@@ -74,6 +79,27 @@ class PrivateMachineFacade < InfrastructureFacade
     end
 
     records
+  end
+
+  # See: {InfrastructureFacade#query_simulation_manager_records}
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    credentials_id = params[:credentials_id]
+    if params.include?(:host)
+      creds = PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
+      credentials_id = creds.id
+    end
+
+    onsite_monitoring_enabled = (params[:onsite_monitoring] == 'on')
+
+    PrivateMachineRecord.where(
+        user_id: user_id,
+        experiment_id: experiment_id,
+        credentials_id: credentials_id,
+        time_limit: params[:time_limit],
+        start_at: params[:start_at],
+        infrastructure: short_name,
+        onsite_monitoring: onsite_monitoring_enabled
+    )
   end
 
   def get_number_of_cores_command

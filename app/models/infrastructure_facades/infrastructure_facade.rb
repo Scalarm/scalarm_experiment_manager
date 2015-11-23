@@ -23,6 +23,8 @@ require 'mongo_lock'
 # Database support methods:
 # - _get_sm_records(query, params={}) -> Array of SimulationManagerRecord subclass instances
 # - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
+# - query_simulation_manager_records(user_id, experiment_id, params) -> Array of simulation manager records
+#  -- queries database for records created with start_simulation_managers with the same user_id, experiment_id and params
 #
 # SimulationManager delegate methods to implement
 # - _simulation_manager_stop(record) - stop Simulation Manager execution and free used computational resources
@@ -302,6 +304,18 @@ class InfrastructureFacade
   end
 
   def get_credentials(*args)
+    raise NotImplementedError
+  end
+
+  # An abstract method - for documentation
+  #
+  # @param [BSON::ObjectId] user_id id of {ScalarmUser} for which SiMs were scheduled
+  # @param [BSON::ObjectId] experiment_id id of {Experiment} for which SiMs were scheduled
+  # @param [ActiveSupport::HashWithIndifferentAccess] params
+  #   params which were passed to +start_simulation_managers+ - should be as similar as possible
+  # @return [MongoClass] a query object of specific {SimulationManagerRecord},
+  #   e.g. class of +PlGridJob.where+ results
+  def query_simulation_manager_records(user_id, experiment_id, params)
     raise NotImplementedError
   end
 
