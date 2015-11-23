@@ -94,7 +94,7 @@ module WorkersScaling
     # By default only running workers are included into calculations.
     # Raises InfrastructureError
     def get_infrastructure_statistics(infrastructure, params = {})
-      params[:cond] = Query::RUNNING_WORKERS unless params.has_key? :cond-
+      params[:cond] = Query::RUNNING_WORKERS unless params.has_key? :cond
       {
           average_throughput: infrastructure_throughput(infrastructure, params),
           workers_count: @resources_interface.get_workers_records_count(infrastructure, params)

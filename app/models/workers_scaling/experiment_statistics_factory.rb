@@ -1,6 +1,6 @@
 module WorkersScaling
   class ExperimentStatisticsFactory
-    @cache = ActiveSupport::Cache::MemoryStore.new expires_in: 10.minutes
+    @cache = ActiveSupport::Cache::MemoryStore.new(expires_in: 10.minutes)
 
     ##
     # Creates new ExperimentStatistics with read-only ExperimentResourcesInterface

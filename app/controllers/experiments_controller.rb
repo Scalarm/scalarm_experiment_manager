@@ -412,7 +412,7 @@ class ExperimentsController < ApplicationController
           inf[:infrastructure][:params][:credentials_id] = BSON::ObjectId(inf[:infrastructure][:params][:credentials_id])
         end
       end
-      planned_finish_time = Time.now + workers_scaling_params[:time_limit]*60 # minutes to seconds
+      planned_finish_time = Time.now + workers_scaling_params[:time_limit].minutes
 
       algorithm = WorkersScaling::AlgorithmFactory.create_algorithm(
           workers_scaling_params[:name].to_sym,
