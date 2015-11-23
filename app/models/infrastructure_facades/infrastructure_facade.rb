@@ -80,7 +80,7 @@ class InfrastructureFacade
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id) if temp_password.nil?
 
     sm_config = {
-        experiment_id: experiment_id,
+        experiment_id: experiment_id.to_s,
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
