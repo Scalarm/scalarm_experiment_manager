@@ -1,3 +1,4 @@
+require 'workers_scaling/utils/query'
 module WorkersScaling
   ##
   # ExperimentStatistics class calculates various statistics about
