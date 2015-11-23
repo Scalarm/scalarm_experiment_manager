@@ -44,17 +44,19 @@ module WorkersScaling
     # Infrastructure configuration format: {name: <name>, params: {<params>}}
     # <params> may include e.g. credentials_id for private_machine
     def get_available_infrastructures
-      get_enabled_infrastructures.select do |enabled|
-        !!@allowed_infrastructures.detect { |allowed| infrastructures_equal?(enabled, allowed[:infrastructure]) }
-      end
-      # TODO return allowed infrastructures filter by available
+      enabled_infrastructures = get_enabled_infrastructures
+      @allowed_infrastructures
+          .select do |allowed|
+            !!enabled_infrastructures.detect {|enabled| infrastructure_configs_equal?(enabled, allowed[:infrastructure])}
+          end
+          .map{|entry| entry[:infrastructure]}
     end
 
     ##
     # Returns amount of Workers that can be yet scheduled on given infrastructure
     def current_infrastructure_limit(infrastructure)
       infrastructure_limit = @allowed_infrastructures.detect do |entry|
-        infrastructures_equal?(infrastructure, entry[:infrastructure])
+        infrastructure_configs_equal?(infrastructure, entry[:infrastructure])
       end
       if infrastructure_limit.nil?
         0
@@ -72,7 +74,10 @@ module WorkersScaling
     # if limit left or number of simulations left to send is lesser than <amount>
     def schedule_workers(amount, infrastructure, params = {})
       begin
-        # TODO only allowed infrastructures
+        raise AccessDeniedError unless @allowed_infrastructures.detect do |allowed|
+          infrastructure_configs_equal?(infrastructure, allowed[:infrastructure], true)
+        end
+
         @experiment.reload
         starting_workers = get_workers_records_list(infrastructure, cond: Query::STARTING_WORKERS).map &:sm_uuid
         initializing_workers = get_workers_records_list(infrastructure, cond: Query::INITIALIZING_WORKERS).map &:sm_uuid
@@ -87,9 +92,9 @@ module WorkersScaling
         amount = [amount, current_infrastructure_limit(infrastructure), simulations_left].min
         return starting_workers + initializing_workers if amount <= 0
 
-        # TODO: time of experiment
-        params[:time_limit] = 60 if params[:time_limit].nil?
         params.merge! infrastructure[:params]
+        # Time limit is 1 year in minutes
+        params[:time_limit] = 60 if params[:time_limit].nil?
 
         params = ActiveSupport::HashWithIndifferentAccess.new(params)
         get_facade_for(infrastructure[:name])
@@ -117,8 +122,7 @@ module WorkersScaling
     end
 
     ##
-    # Simplifies use of #limit_worker_simulations when the goal is to stop worker
-    # Provides more intuitive name
+    # Stops worker after completing its current simulation execution
     def soft_stop_worker(sm_uuid)
       limit_worker_simulations(sm_uuid, 1)
     end
@@ -138,7 +142,7 @@ module WorkersScaling
     ##
     # Returns overall Workers count for Experiment matching given params
     def count_all_workers(params = {})
-      get_available_infrastructures
+      get_enabled_infrastructures
           .flat_map { |infrastructure| get_workers_records_count(infrastructure, params) }
           .reduce(0) { |sum, count| sum + count }
     end
@@ -146,36 +150,27 @@ module WorkersScaling
     ##
     # Returns worker record for given sm_uuid
     def get_worker_record_by_sm_uuid(sm_uuid)
-      get_available_infrastructures.flat_map do |infrastructure|
+      get_enabled_infrastructures.map do |infrastructure|
         get_workers_records_cursor(infrastructure, cond: {sm_uuid: sm_uuid}).first
-      end .first
-    end
-
-    ##
-    # Yields workers for given records
-    # Usage:
-    #   yield_workers(records) do |worker|
-    #      worker.<some method>
-    #   end
-    # Workers commands: restart, stop, destroy_record
-    def yield_workers(records)
-      records.each do |record|
-        get_facade_for(record.infrastructure).yield_simulation_manager(record) {|worker| yield worker}
-      end
+      end .detect { |worker| not worker.nil? }
     end
 
     private
 
     ##
-    # Compares infrastructure description from #get_available_infrastructures with @allowed_infrastructures entry.
-    # Entry from @allowed_infrastructures may have additional fields that
-    # should not be taken into consideration in comparison.
-    # Return true when infrastructures are equal, false otherwise.
-    def infrastructures_equal?(from_available, from_allowed)
+    # Checks whether all fields from narrower are equal with corresponding fields from wider
+    # when exact flag is set to false. Performs full comparison when exact flag is true.
+    # By default exact flag is set to false
+    # Returns true when infrastructure configurations are equal, false otherwise.
+    def infrastructure_configs_equal?(narrower, wider, exact=false)
       # TODO replace with infrastructure id
-      return false if from_allowed[:name] != from_available[:name]
-      from_available[:params].each do |key, value|
-        return false if from_allowed[:params][key] != value
+      return false if wider[:name] != narrower[:name]
+      if exact
+        return false if wider[:params] != narrower[:params]
+      else
+        narrower[:params].each do |key, value|
+          return false if wider[:params][key] != value
+        end
       end
       true
     end
@@ -201,13 +196,12 @@ module WorkersScaling
     #   * cond
     # Possible cond and opts can be found in MongoActiveRecord#where.
     def get_workers_records_cursor(infrastructure, params = {})
-      cond = {experiment_id: @experiment.id.to_s, user_id: @user_id}
-      cond.merge! params[:cond] if params.has_key? :cond
-      cond.merge! infrastructure[:params]
-      opts = {}
-      opts.merge! params[:opts] if params.has_key? :opts
-
-      get_facade_for(infrastructure[:name]).sm_record_class.where(cond, opts)
+      get_facade_for(infrastructure[:name])
+        .query_simulation_manager_records(@user_id, @experiment.id.to_s, infrastructure[:params])
+        .where(
+            params[:cond] || ActiveSupport::HashWithIndifferentAccess.new,
+            params[:opts] || ActiveSupport::HashWithIndifferentAccess.new
+        )
     end
   end
 
