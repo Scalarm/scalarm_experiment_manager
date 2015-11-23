@@ -134,7 +134,7 @@ class PrivateMachineFacade < InfrastructureFacade
         RemoteHomePath::monitoring_binary,
         RemoteHomePath::remote_monitoring_certificate
     ].each do |path|
-      ssh.exec! rm(path, true)
+      ssh.exec! BashCommand.new.rm(path, true).to_s
     end
   end
 
