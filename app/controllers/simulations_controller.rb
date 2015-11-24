@@ -336,6 +336,10 @@ class SimulationsController < ApplicationController
               unless sm_record.computational_resources.blank?
                 @simulation_run.computational_resources = sm_record.computational_resources
               end
+
+              sm_record.finished_simulations ||= 0
+              sm_record.finished_simulations += 1
+              sm_record.save
             end
 
             if params.include? :execution_statistics
