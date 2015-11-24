@@ -1,0 +1,73 @@
+- infrastructure_name = InfrastructureFacadeFactory.get_registered_infrastructure_names.first if infrastructure_name.blank?
+- infrastructures_list = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(current_user.id))
+- infrastructures_select_data = infrastructures_list[:data]
+- disabled_infrastructures = infrastructures_list[:disabled]
+
+.row
+  %fieldset#allowed-infrastructures-definition
+    %legend= 'Computational resources editor'
+    .row#input-designer
+      .small-3.columns
+        %fieldset#param-list
+          %legend= 'Infrastructures'
+          .row{style: 'margin-left: 1px;'}
+            %ul.stack-for-small.button-group
+              %li
+                %a.button.tiny.radius#add-param.unselectable
+                  %i.fa.fa-plus.fa-fw
+                  = 'Add'
+              %li
+                %a.button.tiny.radius#remove-param.unselectable
+                  %i.fa.fa-minus.fa-fw
+                  = 'Remove'
+          .row#params-tree.hidden
+      .small-9.columns
+        %fieldset{id: 'param-config', class:'hidden', 'data_abide' =>''}
+          %legend= 'Infrastructure specification'
+
+          .row
+            .large-4.columns
+              = label_tag :infrastructure_name, t('infrastructure.information.infrastructure') + ':', class: 'inline right'
+            .large-4.columns.end
+              = select_tag :infrastructure_name, grouped_options_for_select(infrastructures_select_data,
+                infrastructure_name)
+
+          #infrastructure_fields
+
+          .row
+            .large-4.columns
+              = label_tag :limit, 'Workers limit', class: 'right inline'
+            .large-4.columns.end
+              = number_field_tag :limit, 1, min: 1, required: true, class: 'text-right', pattern: "^\\d+$"
+
+          .row#editor-buttons{style: 'margin-left: 10px;'}
+            %ul.stack-for-small.button-group
+              %li
+                %a.tiny.button.radius.success#editor-save.disabled.unselectable
+                  %i.fa.fa-save.fa-fw
+                  = 'Save changes'
+                %a.tiny.button.radius#editor-discard.disabled.unselectable
+                  %i.fa.fa-undo.fa-fw
+                  = 'Discard changes'
+
+          #unsaved-modal.reveal-modal.small{'data-reveal' => true}
+            .row{style: 'margin-bottom: 25px;'}
+              .small-12.columns
+                = 'There are unsaved changes in parameter editor. Please save them or discard changes.'
+            .row
+              .small-12.columns.text-center
+                %a#unsaved-ok.button.radius.medium= 'OK'
+
+          #invalid-modal.reveal-modal.small{'data-reveal' => true}
+            .row{style: 'margin-bottom: 25px;'}
+              .small-12.columns
+                = 'There are invalid values in parameter editor. Please correct them or discard changes.'
+            .row
+              .small-12.columns.text-center
+                %a#invalid-modal-ok.button.radius.medium= 'OK'
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      new window.InfrastructuresBooster("#{infrastructure_name}", #{disabled_infrastructures}, "dialog");
+    });
