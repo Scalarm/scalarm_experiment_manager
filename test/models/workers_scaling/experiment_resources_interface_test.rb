@@ -12,7 +12,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
       {infrastructure: SAMPLE_INFRASTRUCTURE, limit: LIMIT}
   ]
   DEFAULT_SCHEDULE_WORK_PARAMS = {
-      time_limit: (1.year / 1.minutes).to_i
+      time_limit: 60
   }
 
   def setup

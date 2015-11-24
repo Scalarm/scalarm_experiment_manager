@@ -94,7 +94,7 @@ module WorkersScaling
 
         params.merge! infrastructure[:params]
         # Time limit is 1 year in minutes
-        params[:time_limit] = (1.year / 1.minute).to_i if params[:time_limit].nil?
+        params[:time_limit] = 60 if params[:time_limit].nil?
 
         params = ActiveSupport::HashWithIndifferentAccess.new(params)
         get_facade_for(infrastructure[:name])
@@ -171,11 +171,10 @@ module WorkersScaling
     private
 
     ##
-    # TODO: update description after merge with WSS-35 - enabled inf
-    # Compares whether all fields from narrower are equal with corresponding fields from wider
+    # Checks whether all fields from narrower are equal with corresponding fields from wider
     # when exact flag is set to false. Performs full comparison when exact flag is true.
     # By default exact flag is set to false
-    # Return true when infrastructures are equal, false otherwise.
+    # Returns true when infrastructures are equal, false otherwise.
     def infrastructures_equal?(narrower, wider, exact=false)
       # TODO replace with infrastructure id
       return false if wider[:name] != narrower[:name]
