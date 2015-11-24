@@ -281,6 +281,9 @@ class SimulationsController < ApplicationController
     end
 
     # a life-cycle of a single simulation
+    # Expected params:
+    #  * execution_statistics (optional) - hash containing information about simulation execution, currently:
+    #     * time_in_seconds - float, time of simulation execution in seconds
     def mark_as_complete
       response = {status: 'ok'}
 
@@ -336,6 +339,10 @@ class SimulationsController < ApplicationController
               end
             end
 
+            if params.include? :execution_statistics
+              @simulation_run.execution_statistics = Utils.parse_json_if_string params[:execution_statistics]
+            end
+            
             @simulation_run.save
             # TODO adding caching capability
             #@simulation.remove_from_cache
