@@ -11,8 +11,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
       {infrastructure: SAMPLE_INFRASTRUCTURE, limit: LIMIT}
   ]
   DEFAULT_SCHEDULE_WORK_PARAMS = {
-      time_limit: 60,
-      onsite_monitoring: true
+      time_limit: 60
   }
 
   def setup

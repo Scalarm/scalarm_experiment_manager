@@ -1,5 +1,7 @@
 require 'json'
 require 'scalarm/service_core/utils'
+require 'scalarm/service_core/parameter_validation'
+
 
 module Utils
 
@@ -22,6 +24,15 @@ module Utils
       params.delete id
     else
       params[id] = parse_method.call(params[id])
+    end
+  end
+
+  ##
+  # Raises ValidationError unless given hash contains specified key
+  def self.raise_error_unless_has_key(hash, key, message, key_prefix='')
+    unless hash.has_key? key
+      raise Scalarm::ServiceCore::ParameterValidation::ValidationError.new(
+                key_prefix == '' ? key.to_s : "#{key_prefix}:#{key}", nil, message)
     end
   end
 
