@@ -336,6 +336,10 @@ class SimulationsController < ApplicationController
               end
             end
 
+            if params.include? :execution_statistics
+              @simulation_run.execution_statistics = Utils.parse_json_if_string params[:execution_statistics]
+            end
+            
             @simulation_run.save
             # TODO adding caching capability
             #@simulation.remove_from_cache
