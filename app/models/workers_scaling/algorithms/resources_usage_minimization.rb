@@ -21,12 +21,6 @@ module WorkersScaling
     TOLERANCE = 10
 
     ##
-    # Arguments: see Algorithm#initialize
-    def initialize(experiment, user_id, allowed_infrastructures, planned_finish_time, params = {})
-      super(experiment, user_id, allowed_infrastructures, planned_finish_time, params)
-    end
-
-    ##
     # Schedules one Worker on each available infrastructure if Experiment size is greater than infrastructures number
     # Otherwise uses random subset of available infrastructures with size equal to Experiment size
     def initial_deployment
@@ -47,7 +41,7 @@ module WorkersScaling
       LOGGER.debug 'experiment_status_check'
       @experiment.reload
       current_makespan = @experiment_statistics.makespan(cond: Query::RUNNING_WORKERS)
-      case time_constraint_check(current_makespan, @planned_finish_time - Time.now)
+      case time_constraint_check(current_makespan, planned_finish_time - Time.now)
         when :increase
           increase_computational_power
         when :decrease
@@ -63,7 +57,7 @@ module WorkersScaling
     # Returns :ok otherwise
     # Arguments:
     # * predicted - predicted time until Experiment end in seconds
-    # * left - time left until @planned_finish_time in seconds
+    # * left - time left until planned_finish_time in seconds
     def time_constraint_check(predicted, left)
       LOGGER.debug "Time predicted: #{'%.5f' % predicted} s, time left: #{'%.5f' % left} s"
       return :increase if predicted > left * (1 + TOLERANCE/100)
@@ -80,7 +74,7 @@ module WorkersScaling
       LOGGER.debug 'Need to increase computational power'
 
       # calculate needed additional throughput
-      throughput_needed = @experiment_statistics.target_throughput(@planned_finish_time) -
+      throughput_needed = @experiment_statistics.target_throughput(planned_finish_time) -
                           @experiment_statistics.system_throughput
       LOGGER.debug "Additional throughput needed: #{'%.5f' % throughput_needed} sim/s"
 
@@ -137,7 +131,7 @@ module WorkersScaling
 
       # calculate excess throughput
       excess_throughput = @experiment_statistics.system_throughput -
-                          @experiment_statistics.target_throughput(@planned_finish_time)
+                          @experiment_statistics.target_throughput(planned_finish_time)
       LOGGER.debug "Excess throughput: #{'%.5f' % excess_throughput} sim/s"
 
       # get all workers with their throughput
