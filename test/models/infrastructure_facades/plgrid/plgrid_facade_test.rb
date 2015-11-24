@@ -70,7 +70,7 @@ class PlGridFacadeTest < MiniTest::Test
       stubs(:new).returns(scheduler)
     end
     record = stub_everything do
-      stubs(:job_id).returns('job_1')
+      stubs(:job_identifier).returns('job_1')
     end
 
     facade = PlGridFacade.new(scheduler_class)
@@ -90,7 +90,7 @@ class PlGridFacadeTest < MiniTest::Test
       stubs(:new).returns(scheduler)
     end
     record = stub_everything do
-      stubs(:job_id).returns('job_1')
+      stubs(:job_identifier).returns('job_1')
     end
     facade = PlGridFacade.new(scheduler_class)
     facade.stubs(:logger).returns(stub_everything)
@@ -109,7 +109,7 @@ class PlGridFacadeTest < MiniTest::Test
       stubs(:new).returns(scheduler)
     end
     record = stub_everything do
-      stubs(:job_id).returns('job_1')
+      stubs(:job_identifier).returns('job_1')
     end
     facade = PlGridFacade.new(scheduler_class)
     facade.stubs(:logger).returns(stub_everything)

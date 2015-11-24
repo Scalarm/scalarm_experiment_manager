@@ -43,6 +43,12 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord
   end
 
+  # params: (string keys)
+  # - image_secrets_id
+  # - time_limit
+  # - start_at
+  # - instance_type
+  # - stored_* - special params for various clouds
   def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
     logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
@@ -55,10 +61,24 @@ class CloudFacade < InfrastructureFacade
     rescue CloudErrors::ImageValidationError => ive
       logger.error "Error validating image secrets: #{ive.to_s}"
       raise InfrastructureErrors::ScheduleError.new(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
-    rescue Exception => e
+    rescue => e
       logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
       raise InfrastructureErrors::ScheduleError.new(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
     end
+  end
+
+  # See: {InfrastructureFacade#query_simulation_manager_records}
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    CloudVmRecord.where(
+        cloud_name: short_name,
+        user_id: user_id,
+        experiment_id: experiment_id,
+        image_secrets_id: params['image_secrets_id'],
+        time_limit: params['time_limit'],
+        start_at: params['start_at'],
+        instance_type: params['instance_type'],
+        params: find_stored_params(params)
+    )
   end
 
   def find_stored_params(params)
@@ -79,9 +99,9 @@ class CloudFacade < InfrastructureFacade
 
   def get_and_validate_image_secrets(image_secrets_id, user_id)
     exp_image = CloudImageSecrets.find_by_id(image_secrets_id.to_s)
-    if exp_image.nil? or exp_image.image_id.nil?
+    if exp_image.nil? or exp_image.image_identifier.nil?
       raise CloudErrors::ImageValidationError.new 'provide_image_secrets'
-    elsif not cloud_client_instance(user_id).image_exists? exp_image.image_id
+    elsif not cloud_client_instance(user_id).image_exists? exp_image.image_identifier
       raise CloudErrors::ImageValidationError.new 'image_not_exists'
     elsif exp_image.user_id != user_id
       raise CloudErrors::ImageValidationError.new 'image_permission'
@@ -92,12 +112,12 @@ class CloudFacade < InfrastructureFacade
     exp_image
   end
 
-  # Intantiate virtual machine and save vm_id to given record
+  # Intantiate virtual machine and save vm_identifier to given record
   def schedule_vm_instance(record)
     cloud_client = cloud_client_instance(record.user_id)
-    vm_id = cloud_client.instantiate_vms('scalarm', record.image_secrets.image_id, 1,
+    vm_id = cloud_client.instantiate_vms('scalarm', record.image_secrets.image_identifier, 1,
                                          record.params.merge('instance_type' => record.instance_type)).first
-    record.vm_id = vm_id
+    record.vm_identifier = vm_id
     record.save
     record
   end
@@ -160,13 +180,13 @@ class CloudFacade < InfrastructureFacade
   def _simulation_manager_stop(record)
     Rails.logger.warn("stop disabled")
     # handle_proxy_error(record.secrets) do
-    #   cloud_client_instance(record.user_id).terminate(record.vm_id)
+    #   cloud_client_instance(record.user_id).terminate(record.vm_identifier)
     # end
   end
 
   def _simulation_manager_restart(record)
     handle_proxy_error(record.secrets) do
-      cloud_client_instance(record.user_id).reinitialize(record.vm_id)
+      cloud_client_instance(record.user_id).reinitialize(record.vm_identifier)
     end
   end
 
@@ -180,7 +200,7 @@ class CloudFacade < InfrastructureFacade
         return :not_available
       end
 
-      vm_id = record.vm_id
+      vm_id = record.vm_identifier
       if vm_id
         vm_status = cloud_client.status(vm_id)
         case vm_status
@@ -188,7 +208,9 @@ class CloudFacade < InfrastructureFacade
           when :running
             begin
               # VM is running, so check SSH connection
-              record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+              unless record.has_ssh_address?
+                record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_identifier))
+              end
               if record.has_ssh_address?
                 ssh = shared_ssh_session(record)
                 return (record.pid and app_running?(ssh, record.pid) and :running_sm or :ready)
@@ -228,7 +250,9 @@ class CloudFacade < InfrastructureFacade
 
   def _simulation_manager_install(record)
     handle_proxy_error(record.secrets) do
-      record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+      unless record.has_ssh_address?
+        record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_identifier))
+      end
       logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
 
       InfrastructureFacade.prepare_simulation_manager_package(record.sm_uuid, record.user_id,
@@ -341,7 +365,7 @@ class CloudFacade < InfrastructureFacade
     image_id, label = params[:image_info].split(';')
 
     credentials = CloudImageSecrets.new(cloud_name: @short_name, user_id: user.id,
-                                        image_id: image_id, label: label)
+                                        image_identifier: image_id, label: label)
 
     credentials.image_login = params[:image_login]
     credentials.secret_image_password = params[:secret_image_password]

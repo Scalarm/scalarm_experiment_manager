@@ -38,6 +38,9 @@ class PlGridFacade < InfrastructureFacade
     PlGridJob
   end
 
+  # additional_params:
+  # - (:plgrid_login and :plgrid_password) or :proxy
+  # -
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     # 1. checking if the user can schedule SiM
     credentials = if PlGridFacade.using_temp_credentials?(additional_params)
@@ -77,6 +80,27 @@ class PlGridFacade < InfrastructureFacade
     end
 
     records
+  end
+
+  # See: {InfrastructureFacade#query_simulation_manager_records}
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    query = {}
+    query[:grant_identifier] = params['grant_id'] unless params['grant_id'].blank?
+    query[:nodes] = params['nodes'] unless params['nodes'].blank?
+    query[:ppn] = params['ppn'] unless params['ppn'].blank?
+    query[:plgrid_host] = params['plgrid_host'] unless params['plgrid_host'].blank?
+    query[:queue_name] = params['queue'] unless params['queue'].blank?
+    query[:onsite_monitoring] = (params['onsite_monitoring'] == 'on')
+
+    query.merge!(
+        user_id: user_id,
+        experiment_id: experiment_id,
+        scheduler_type: scheduler.short_name,
+        time_limit: params['time_limit'].to_i,
+        start_at: params['start_at']
+    )
+
+    PlGridJob.where(query)
   end
 
   def create_records(count, *args)
@@ -189,6 +213,15 @@ class PlGridFacade < InfrastructureFacade
     GridCredentials.find_by_user_id(user_id)
   end
 
+  # params: (string keys)
+  # - time_limit
+  # - start_at
+  # - grant_id (optional)
+  # - nodes (optional)
+  # - ppn (optional)
+  # - plgrid_host (optional)
+  # - queue (optional)
+  # - onsite_monitoring (optional) - monitoring will be enabled if onsite_monitoring == 'on'
   def create_record(user_id, experiment_id, sm_uuid, params)
     job = PlGridJob.new(
         user_id:user_id,
@@ -200,7 +233,7 @@ class PlGridFacade < InfrastructureFacade
     )
 
     job.start_at = params['start_at']
-    job.grant_id = params['grant_id'] unless params['grant_id'].blank?
+    job.grant_identifier = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
     job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?
@@ -208,7 +241,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.onsite_monitoring = params.include?(:onsite_monitoring)
+    job.onsite_monitoring = (params['onsite_monitoring'] == 'on')
 
     job
   end
@@ -340,7 +373,7 @@ class PlGridFacade < InfrastructureFacade
       end
 
       begin
-        job_id = sm_record.job_id
+        job_id = sm_record.job_identifier
         if job_id
           status = scheduler.status(ssh, sm_record)
           case status
@@ -399,7 +432,7 @@ class PlGridFacade < InfrastructureFacade
         create_and_upload_simulation_manager(ssh, sm_record)
 
         begin
-          sm_record.job_id = scheduler.submit_job(ssh, sm_record)
+          sm_record.job_identifier = scheduler.submit_job(ssh, sm_record)
           sm_record.save
         rescue JobSubmissionFailed => job_failed
           logger.warn "Scheduling job failed: #{job_failed.to_s}"

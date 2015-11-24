@@ -169,6 +169,7 @@ class SimulationManagersController < ApplicationController
   end
 
   def handle_exception(exception)
+    Rails.logger.error("SimulationManagersController error: #{exception.class} #{exception.to_s}\n#{exception.backtrace.join("\n")}")
     render json: {
         status: 'error',
         msg: "#{exception.class.to_s}: #{exception.to_s} in line #{exception.backtrace[0].split(':')[-2]}"

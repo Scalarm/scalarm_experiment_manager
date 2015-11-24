@@ -80,9 +80,9 @@ cd $PBS_O_WORKDIR
     end
 
     def pbs_state(ssh, job)
-      state_output = ssh.exec!("qstat #{job.job_id}")
+      state_output = ssh.exec!("qstat #{job.job_identifier}")
       state_output.split("\n").each do |line|
-        if line.start_with?(job.job_id.split('.').first)
+        if line.start_with?(job.job_identifier.split('.').first)
           info = line.split(' ')
           return info[4]
 
@@ -144,10 +144,10 @@ cd $PBS_O_WORKDIR
     end
 
     def cancel_sm_cmd(sm_record)
-      if sm_record.job_id.blank?
+      if sm_record.job_identifier.blank?
         'echo no job_id specified'
       else
-        "qdel #{sm_record.job_id} || true"
+        "qdel #{sm_record.job_identifier} || true"
       end
     end
 

@@ -100,7 +100,7 @@ ruby simulation_manager.rb
 
   def restart(ssh, job)
     cancel(ssh, job)
-    job.job_id = submit_job(ssh, job)
+    job.job_identifier = submit_job(ssh, job)
     job.save
   end
 
