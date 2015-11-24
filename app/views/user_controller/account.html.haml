@@ -29,8 +29,7 @@
         .small-5.columns
           %label.right.inline(for='current_password')= t('.current_password')
         .small-4.columns.end
-          = password_field_tag 'current_password', '', class: 'inline', autocomplete: :off, required: true
-          %small(class="error") Current password is required
+          = password_field_tag 'current_password', '', class: 'inline', autocomplete: :off
 
       .row
         .small-5.columns
