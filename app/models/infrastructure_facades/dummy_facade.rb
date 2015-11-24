@@ -26,11 +26,13 @@ class DummyFacade < InfrastructureFacade
 
   # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
-    DummyRecord.where(
-        user_id: user_id,
-        experiment_id: experiment_id,
-        time_limit: params['time_limit'].to_i
-    )
+    query = {
+      user_id: user_id,
+      experiment_id: experiment_id,
+    }
+    query[:time_limit] = params['time_limit'].to_i unless params['time_limit'].blank?
+
+    DummyRecord.where(query)
   end
 
   def sm_record_class
