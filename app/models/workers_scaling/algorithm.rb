@@ -88,6 +88,7 @@ module WorkersScaling
       self.errors_count += 1
       if self.errors_count > ERRORS_MAX
         destroy
+        # TODO: notify user
       else
         save
       end

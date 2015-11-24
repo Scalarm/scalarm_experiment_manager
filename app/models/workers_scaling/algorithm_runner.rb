@@ -8,8 +8,8 @@ module WorkersScaling
     THREADS_NUMBER = 4
 
     ##
-    # Runs periodically and loads some data from all saved Algorithms
-    # If next_execution_time has passed, starts execute_and_schedule for this algorithm
+    # Firstly initializes threads
+    # Then runs periodically and calls runner_loop
     def self.start
       Thread.new do
         begin
@@ -18,6 +18,7 @@ module WorkersScaling
 
           loop do
             runner_loop(work_queue)
+            sleep(RUNNER_INTERVAL)
           end
         rescue => e
           LOGGER.error "Exception occurred during Algorithm Runner loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
@@ -40,8 +41,7 @@ module WorkersScaling
             begin
               execute_and_schedule(work_queue.pop)
             rescue => e
-              LOGGER.error "Worker thread encountered exception: #{e.to_s}"
-              LOGGER.error 'Will continue working'
+              LOGGER.error "Worker thread encountered exception: #{e.to_s}\nWill continue working"
             end
           end
         end
@@ -53,7 +53,7 @@ module WorkersScaling
     #  * work_queue - queue for scheduling next algorithms for execution
     # Gets from database all algorithms ready to be executed
     # Enqueues them to be executed by threads
-    # Waits until all are taken from queue for execution and sleeps for RUNNER_INTERVAL
+    # Waits until all are taken from queue for execution
     def self.runner_loop(work_queue)
       LOGGER.debug 'Entering Algorithm Runner loop'
       AlgorithmFactory.get_ready_algorithms.each do |experiment_id|
@@ -62,8 +62,6 @@ module WorkersScaling
 
       # wait for all algorithms completion
       sleep 0.5 until work_queue.empty?
-
-      sleep(RUNNER_INTERVAL)
     end
 
     ##
