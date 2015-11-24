@@ -15,6 +15,11 @@
     %h5.subheader{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
       = t('experiments.workers_scaling.information_panel.execution_time.warning')
 
+.row
+  .small-10.columns
+    %h5.subheader{id: 'workers_scaling_error', style: 'font-weight: bold; color: red; display: none' }
+      = t('experiments.workers_scaling.information_panel.error')
+
 - content_for :javascript do
   :javascript
     var planned_finish_time = new Date("#{@experiment.planned_finish_time}");
@@ -22,8 +27,14 @@
       $.getJSON("/experiments/#{@experiment.id.to_s}/stats", function(data) {
           if (data.completed == true) {
             $('#time_constraints_warning').hide();
+            $('#workers_scaling_error').hide();
             $('#expected_finish_time').text("Finished")
           } else {
+            if (data.workers_scaling_error == true) {
+              $('#workers_scaling_error').show();
+            } else {
+              $('#workers_scaling_error').hide();
+            }
             if (data.planned_finish_time == -1) {
               $('#time_constraints_warning').show()
               $('#expected_finish_time').text("Unknown")

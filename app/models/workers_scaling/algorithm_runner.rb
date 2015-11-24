@@ -3,96 +3,93 @@ module WorkersScaling
   ##
   # Scheduler to run Algorithm decision loop periodically
   class AlgorithmRunner
-    @@cache = {}
+
+    RUNNER_INTERVAL = 15.seconds
+    THREADS_NUMBER = 4
 
     ##
-    # Returns instance of AlgorithmRunner for experiment_id if registered
-    # Otherwise returns nil
-    def self.get(experiment_id)
-      LOGGER.debug "Getting runner from cache, experiment id: #{experiment_id}"
-      return @@cache[experiment_id.to_s] if @@cache
-    end
-
-    ##
-    # Registers instance of AlgorithmRunner for experiment_id
-    def self.put(experiment_id, runner)
-      @@cache[experiment_id.to_s] = runner
-      LOGGER.debug "Adding runner to cache, experiment id: #{experiment_id}"
-    end
-
-    ##
-    # Unregisters instance of AlgorithmRunner for experiment_id
-    def self.delete(experiment_id)
-      @@cache.delete(experiment_id.to_s) if @@cache
-      LOGGER.debug "Deleting runner from cache, experiment id: #{experiment_id}"
-    end
-
-    ##
-    # Expects:
-    # * instance of Experiment
-    # * instance of Algorithm for given Experiment
-    # * interval between decision loop executions in seconds
-    def initialize(experiment, algorithm, interval)
-      @experiment = experiment
-      @algorithm = algorithm
-      @interval = interval
-      @mutex = Mutex.new
-
-      self.class.put(@experiment.id, self)
-    end
-
-    ##
-    # Initializes Algorithm, then starts its decision loop
-    # Stops when there is no next execution time set
-    def start
+    # Firstly initializes threads
+    # Then runs periodically and calls runner_loop
+    def self.start
       Thread.new do
         begin
-          @algorithm.initial_deployment
-          @next_execution_time = Time.now + @interval
+          work_queue = Queue.new
+          initialize_threads(work_queue)
 
-          @mutex.synchronize do
-            catch :finished do
-              until @next_execution_time.nil?
-
-                while @next_execution_time > Time.now do
-                  @mutex.sleep @next_execution_time - Time.now
-                  throw :finished if @next_execution_time.nil?
-                end
-
-                execute_and_schedule
-              end
-            end
+          loop do
+            runner_loop(work_queue)
+            sleep(RUNNER_INTERVAL)
           end
-
-          self.class.delete(@experiment.id)
         rescue => e
-          LOGGER.error "Exception occurred during workers scaling algorithm: #{e.to_s}\n#{e.backtrace.join("\n")}"
+          LOGGER.error "Exception occurred during Algorithm Runner loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
           raise
         end
       end
     end
 
     ##
-    # Executes decision loop of Algorithm, then schedules next execution
-    # Next execution time is not set when Experiment is completed
-    def execute_and_schedule
-      should_unlock = false
-      unless @mutex.owned?
-        @mutex.lock
-        should_unlock = true
+    # Arguments:
+    #  * work_queue - queue with next algorithms to be executed
+    # Starts THREADS_NUMBER threads, each running in loop
+    # and calling execute_and_schedule for next experiment_id from queue
+    # Returns list of started threads
+    def self.initialize_threads(work_queue)
+      LOGGER.debug 'Starting Algorithm Runner worker threads'
+      (1..THREADS_NUMBER).map do
+        Thread.new do
+          loop do
+            begin
+              execute_and_schedule(work_queue.pop)
+            rescue => e
+              LOGGER.error "Worker thread encountered exception: #{e.to_s}\nWill continue working"
+            end
+          end
+        end
+      end
+    end
+
+    ##
+    # Arguments:
+    #  * work_queue - queue for scheduling next algorithms for execution
+    # Gets from database all algorithms ready to be executed
+    # Enqueues them to be executed by threads
+    # Waits until all are taken from queue for execution
+    def self.runner_loop(work_queue)
+      LOGGER.debug 'Entering Algorithm Runner loop'
+      AlgorithmFactory.get_ready_algorithms.each do |experiment_id|
+        work_queue.push(experiment_id)
       end
 
-      LOGGER.debug "Starting experiment_status_check method, #{should_unlock ? 'asynchronous' : 'synchronous'} call"
-      @algorithm.experiment_status_check
+      # wait for all algorithms completion
+      sleep 0.5 until work_queue.empty?
+    end
 
-      @next_execution_time = if @experiment.reload.completed?
-                               nil
-                             else
-                               Time.now + @interval
-                             end
-      LOGGER.debug "Setting @next_execution_time to #{@next_execution_time.inspect}"
+    ##
+    # Arguments:
+    #  * experiment_id - id of experiment which algorithm should be executed
+    # Executes decision loop of Algorithm, then schedules next execution
+    # Algorithm is destroyed when Experiment is completed
+    def self.execute_and_schedule(experiment_id)
+      begin
+        Scalarm::MongoLock.try_mutex("experiment-#{experiment_id}-workers-scaling") do
+          experiment = Experiment.find_by_id(experiment_id)
+          algorithm = AlgorithmFactory.get_algorithm(experiment_id)
 
-      @mutex.unlock if should_unlock
+          if experiment.nil? or experiment.completed?
+            algorithm.destroy
+            LOGGER.debug 'Experiment is completed, destroying algorithm record'
+          else
+            LOGGER.debug 'Starting experiment_status_check method'
+            algorithm.experiment_status_check
+            algorithm.notify_execution
+            LOGGER.debug "Setting next execution time to #{algorithm.next_execution_time.inspect}"
+          end
+        end
+      rescue => e
+        LOGGER.error "Exception occurred during workers scaling algorithm: #{e.to_s}\n#{e.backtrace.join("\n")}"
+        AlgorithmFactory.get_algorithm(experiment_id).notify_error
+        raise
+      end
     end
 
   end
