@@ -15,6 +15,7 @@ class SimulationManagersController < ApplicationController
 
   #TODO: describe basic sm_record elements, eg. sm_record.id...
 =begin
+apiDoc:
   @api {get} /simulation_managers Get list of Simulation Manager objects (records) for authenticated user in JSON
   @apiName GetAllSimulationManagers
   @apiGroup SimulationManagers

@@ -296,6 +296,7 @@ class InfrastructuresController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {post} /infrastructure/simulation_manager_command Invoke command on this Infrastructure's SimulationManager
   @apiName SimulationManagerCommand
   @apiGroup Infrastructures

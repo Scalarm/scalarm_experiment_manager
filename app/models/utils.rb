@@ -44,7 +44,7 @@ module Utils
   #   - "-1.21" -> "float"
   #   - "loveRuby" -> "string"
   #   - "123.always" -> "string"
-  #   - {id: 42} -> "undefined"
+  #   - +{id: 42}+ -> "undefined"
   def self.extract_type_from_string(value_as_string)
     type_of_value = ""
 
@@ -87,7 +87,7 @@ module Utils
   #   - -1.21 -> "float"
   #   - "loveRuby" -> "string"
   #   - "123.always" -> "string"
-  #   - {id: 42} -> "undefined"
+  #   - +{id: 42}+ -> "undefined"
   def self.extract_type_from_value(value)
     type_of_value = ""
 

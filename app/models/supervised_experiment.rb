@@ -47,7 +47,6 @@ class SupervisedExperiment < CustomPointsExperiment
   # @param [BSON::ObjectID] simulation_id
   # @param [String] supervisor_script_id
   # @param [Hash] script_params
-  # @param [Hash] cookies - cookies Hash used to authenticate to ExperimentSupervisor
   #
   # Set supervisor script parameters:
   # * experiment_id - id of current experiment

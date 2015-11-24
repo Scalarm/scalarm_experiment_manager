@@ -137,6 +137,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @apiDefine ConfigurationsParams
 
   @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
@@ -146,6 +147,9 @@ class ExperimentsController < ApplicationController
 =end
 
 =begin
+Get CSV file with simulation runs results (sends a file).
+
+apiDoc:
   @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
   @apiName GetFileWithConfigurations
   @apiGroup Experiments
@@ -158,6 +162,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
   @apiName GetConfigurations
   @apiGroup Experiments
@@ -266,6 +271,10 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+Controller method used to create supervised experiment when POST on /experiments
+with type='supervised' is invoked.
+
+apiDoc:
   @api {post} /experiments/ Create SupervisedExperiment
   @apiName start_supervised_experiment
   @apiGroup Experiments
@@ -987,9 +996,10 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
-@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
-@apiName GetSimulationManager
-@apiGroup Experiments
+apiDoc:
+  @api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+  @apiName GetSimulationManager
+  @apiGroup Experiments
 =end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
@@ -1143,6 +1153,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
   @apiName mark_as_complete
   @apiGroup Experiments
