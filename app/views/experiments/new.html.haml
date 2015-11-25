@@ -1,6 +1,7 @@
 - es_url = sample_service_url('experiment_supervisors')
 - supervisor_ids = get_supervisor_ids(es_url)
 - wss_algorithms_descriptions = workers_scaling_algorithms_description
+- plgrid_default_enabled = !InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(current_user.id).blank?
 
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
@@ -92,12 +93,18 @@
       .row
         .small-6.small-centered.columns
           - ws_algorithm_options = workers_scaling_options
+          - ws_plgrid_default = [t('experiments.workers_scaling.mode.plgrid_default'), :plgrid_default]
           - ws_manual = [t('experiments.workers_scaling.mode.manual'), :manual]
           - ws_automatic = [t('experiments.workers_scaling.mode.automatic'), :automatic ]
-          - workers_scaling_mode = (ws_algorithm_options == ''? [ws_manual] : [ws_manual, ws_automatic])
+          - workers_scaling_mode = []
+          - workers_scaling_mode << ws_plgrid_default if plgrid_default_enabled
+          - workers_scaling_mode << ws_manual
+          - workers_scaling_mode << ws_automatic unless ws_algorithm_options == ''
           = select_tag 'workers_scaling_mode_select', options_for_select(workers_scaling_mode, workers_scaling_mode.first)
+          #plgrid_default{:style => 'display: none'}
+            = t('experiments.workers_scaling.plgrid_default')
 
-#workers-scaling-algorithm
+#workers-scaling-algorithm{:style => 'display: none'}
   %section.panel.radius
     %h3.subheader= t('experiments.workers_scaling.algorithm.title')
     .content
@@ -176,6 +183,13 @@
         $("input[name='workers_scaling_params']").val(JSON.stringify(builder));
       }
 
+      function fill_workers_scaling_fields_with_plgrid_default() {
+        $("input[name='workers_scaling']").val(true);
+        var builder = {};
+        builder["plgrid_default"] = true;
+        $("input[name='workers_scaling_params']").val(JSON.stringify(builder));
+      }
+
       function delete_workers_scaling_fields() {
         $('input#workers_scaling').remove()
         $('input#workers_scaling_params').remove()
@@ -184,6 +198,8 @@
       $("#new_experiment_submit").on("click", function() {
         if (!$("#workers_scaling_mode_select").val().localeCompare("automatic")) {
           fill_workers_scaling_fields();
+        } else if (!$("#workers_scaling_mode_select").val().localeCompare("plgrid_default")) {
+          fill_workers_scaling_fields_with_plgrid_default();
         } else {
           delete_workers_scaling_fields();
         }
@@ -282,16 +298,20 @@
       });
 
       // workers scaling
-      if (!$("#workers_scaling_mode_select").val().localeCompare("manual")) {
-        $("#workers-scaling-algorithm").hide();
-      }
-      $("#workers_scaling_mode_select").on("change", function(){
+      workers_scaling_mode_select_on_change = function() {
         if (!$("#workers_scaling_mode_select").val().localeCompare("manual")) {
           $("#workers-scaling-algorithm").hide();
+          $("#plgrid_default").hide();
         } else if (!$("#workers_scaling_mode_select").val().localeCompare("automatic")) {
           $("#workers-scaling-algorithm").show();
+          $("#plgrid_default").hide();
+        } else if (!$("#workers_scaling_mode_select").val().localeCompare("plgrid_default")) {
+          $("#plgrid_default").show();
+          $("#workers-scaling-algorithm").hide();
         }
-      });
+      };
+      workers_scaling_mode_select_on_change();
+      $("#workers_scaling_mode_select").on("change", workers_scaling_mode_select_on_change);
       workers_scaling_algorithm_select_change = function(){
         Foundation.libs.tooltip.getTip($('#algorithm_description')).contents().first()
           .replaceWith(wss_algorithms_descriptions[$("#workers_scaling_algorithm_select").val()]);

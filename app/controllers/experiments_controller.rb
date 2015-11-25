@@ -384,9 +384,15 @@ class ExperimentsController < ApplicationController
       message_prefix = 'Missing workers scaling parameter'
       Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
       workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
-      [:name, :allowed_infrastructures, :time_limit].each do |param|
-        Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
-                                          'workers_scaling_params')
+      if workers_scaling_params[:plgrid_default]
+        if InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(current_user.id).blank?
+          raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
+        end
+      else
+        [:name, :allowed_infrastructures, :time_limit].each do |param|
+          Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
+                                            'workers_scaling_params')
+        end
       end
       # TODO more precise validation
     end
@@ -395,25 +401,23 @@ class ExperimentsController < ApplicationController
 
     # Start workers scaling
     if params[:workers_scaling]
-      allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
-        # TODO Introduce infrastructure id
-        {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
-      end
-      # TODO proper parsing
-      allowed_infrastructures.each do |inf|
-        if inf[:infrastructure][:params][:credentials_id]
-          inf[:infrastructure][:params][:credentials_id] = BSON::ObjectId(inf[:infrastructure][:params][:credentials_id])
+      planned_finish_time = Time.now + (workers_scaling_params[:time_limit] || 0).minutes
+      if workers_scaling_params[:plgrid_default]
+        WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id)
+        experiment.plgrid_default = true
+      else
+        allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
+          # TODO Introduce infrastructure id
+          {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
         end
+        WorkersScaling::AlgorithmFactory.initial_deployment(
+            experiment.id,
+            current_user.id,
+            allowed_infrastructures,
+            planned_finish_time,
+            workers_scaling_params
+        )
       end
-
-      planned_finish_time = Time.now + workers_scaling_params[:time_limit].minutes
-      WorkersScaling::AlgorithmFactory.initial_deployment(
-          experiment.id,
-          current_user.id,
-          allowed_infrastructures,
-          planned_finish_time,
-          workers_scaling_params
-      )
       experiment.workers_scaling = true
       experiment.planned_finish_time = planned_finish_time
       experiment.save
