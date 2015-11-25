@@ -115,6 +115,22 @@ module WorkersScaling
       end
     end
 
+    ##
+    # Starts workers scaling with default configuration for PLGrid
+    def self.plgrid_default(experiment_id, user_id)
+      infrastructures = InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(user_id)
+      if infrastructures.blank?
+        raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
+      end
+      self.initial_deployment(
+              experiment_id,
+              user_id,
+              [{infrastructure: infrastructures.first, limit: 5}],
+              Time.now,
+              {name: WorkersScaling::ResourcesUsageMaximization.get_class_name}
+      )
+    end
+
     private
 
     REQUIRED_ATTRIBUTES = [:class_name, :experiment_id, :user_id, :allowed_infrastructures,
