@@ -22,7 +22,7 @@ class ApplicationController < ActionController::Base
   # after_filter :set_cache_buster
 
   rescue_from ValidationError, MissingParametersError, SecurityError, BSON::InvalidObjectId,
-              with: :generic_exception_handler
+              InfrastructureErrors::NoCredentialsError, with: :generic_exception_handler
 
   if Rails.application.secrets.monitoring
     before_filter :start_monitoring, except: [:status]

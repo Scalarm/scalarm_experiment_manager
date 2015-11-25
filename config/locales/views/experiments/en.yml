@@ -12,10 +12,13 @@ en:
       title: Automatic experiment algorithm
 
     workers_scaling:
+      plgrid_default:
+        This option will automatically execute experiment on PlGrid resources.
       mode:
         title: Computational resources
         manual: Manual
-        automatic: Automatic
+        automatic: Advanced
+        plgrid_default: PlGrid default
       algorithm:
         title: Computational resources details
         execution_time_limit: Execution time limit
