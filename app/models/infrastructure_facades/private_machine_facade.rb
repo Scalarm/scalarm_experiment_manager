@@ -216,7 +216,7 @@ class PrivateMachineFacade < InfrastructureFacade
   #  * private machine credentials
   def get_subinfrastructures(user_id)
     PrivateMachineCredentials.where(user_id: user_id).map do |credentials|
-      {name: short_name.to_sym, params: {credentials_id: credentials.id}}
+      {name: short_name.to_sym, params: {credentials_id: credentials.id.to_s}}
     end
   end
 

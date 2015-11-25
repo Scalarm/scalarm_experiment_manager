@@ -1,8 +1,9 @@
-.row
-  .small-3.columns
-    %h5.subheader= t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
-  .small-9.columns
-    %h5.subheader{id: 'planned_finish_time'}= ''
+- unless @experiment.plgrid_default
+  .row
+    .small-3.columns
+      %h5.subheader= t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
+    .small-9.columns
+      %h5.subheader{id: 'planned_finish_time'}= ''
 
 .row
   .small-3.columns
@@ -10,10 +11,11 @@
   .small-9.columns
     %h5.subheader{id: 'expected_finish_time'}= ''
 
-.row
-  .small-10.columns
-    %h5.subheader{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
-      = t('experiments.workers_scaling.information_panel.execution_time.warning')
+- unless @experiment.plgrid_default
+  .row
+    .small-10.columns
+      %h5.subheader{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
+        = t('experiments.workers_scaling.information_panel.execution_time.warning')
 
 .row
   .small-10.columns
@@ -22,11 +24,14 @@
 
 - content_for :javascript do
   :javascript
+    var plgrid_default = "#{@experiment.plgrid_default}"
     var planned_finish_time = new Date("#{@experiment.planned_finish_time}");
     window.updateWorkersScalingStatus = function() {
       $.getJSON("/experiments/#{@experiment.id.to_s}/stats", function(data) {
           if (data.completed == true) {
-            $('#time_constraints_warning').hide();
+            if (!plgrid_default) {
+              $('#time_constraints_warning').hide();
+            }
             $('#workers_scaling_error').hide();
             $('#expected_finish_time').text("Finished")
           } else {
@@ -36,15 +41,19 @@
               $('#workers_scaling_error').hide();
             }
             if (data.planned_finish_time == -1) {
-              $('#time_constraints_warning').show()
+              if (!plgrid_default) {
+                $('#time_constraints_warning').show();
+              }
               $('#expected_finish_time').text("Unknown")
             } else {
               var expected_finish_time = new Date(data.planned_finish_time*1000);
               $('#expected_finish_time').text(expected_finish_time.toString());
-              if (expected_finish_time > planned_finish_time) {
-                $('#time_constraints_warning').show()
-              } else {
-                $('#time_constraints_warning').hide()
+              if (!plgrid_default) {
+                if (expected_finish_time > planned_finish_time) {
+                  $('#time_constraints_warning').show()
+                } else {
+                  $('#time_constraints_warning').hide()
+                }
               }
             }
           }
