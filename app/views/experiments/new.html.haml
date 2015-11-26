@@ -104,11 +104,15 @@
       .row
         .small-6.small-centered.columns
           .row
-            .small-11.columns
+            .small-4.columns
+              = label_tag :experiment_execution_time_limit,
+                  t('experiments.workers_scaling.algorithm.method_selection') + ':',
+                  class: 'right inline'
+            .small-7.columns
               = select_tag 'workers_scaling_algorithm_select', ws_algorithm_options
             .small-1.columns
               %i.fa.fa-question-circle.has-tip.tip-bottom{'aria-haspopup' => 'true', 'data-tooltip' => '',
-              style: 'color: 333', title: 'asdasdsa', cursor: 'pointer', id: 'algorithm_description'}
+              style: 'color: 333', title: '', cursor: 'pointer', id: 'algorithm_description'}
       .row
         .small-5.columns
           = label_tag :experiment_execution_time_limit,
