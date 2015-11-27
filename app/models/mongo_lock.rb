@@ -79,7 +79,7 @@ module Scalarm
       end
     end
 
-    def self.try_mutex(name, probe_sec=0.1, &block)
+    def self.try_mutex(name, &block)
       lock = MongoLock.new(name)
       return unless lock.acquire
       begin
