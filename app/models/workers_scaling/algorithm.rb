@@ -5,6 +5,11 @@ module WorkersScaling
   # Class describing interface of Workers scaling algorithm. Creating new algorithm
   # requires providing class with proper methods implemented, which also should
   # inherit Algorithm class.
+  # Methods to implement by subclasses:
+  #  * #initial_deployment
+  #  * #experiment_status_check
+  #  * #self.algorithm_name
+  #  * #self.description
   class Algorithm < Scalarm::Database::MongoActiveRecord
     use_collection 'workers_scaling_algorithms'
     attr_accessor :experiment
