@@ -155,19 +155,6 @@ module WorkersScaling
       end .first
     end
 
-    ##
-    # Yields workers for given records
-    # Usage:
-    #   yield_workers(records) do |worker|
-    #      worker.<some method>
-    #   end
-    # Workers commands: restart, stop, destroy_record
-    def yield_workers(records)
-      records.each do |record|
-        get_facade_for(record.infrastructure).yield_simulation_manager(record) {|worker| yield worker}
-      end
-    end
-
     private
 
     ##
