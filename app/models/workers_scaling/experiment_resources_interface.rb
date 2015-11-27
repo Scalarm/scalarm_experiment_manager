@@ -152,7 +152,7 @@ module WorkersScaling
     def get_worker_record_by_sm_uuid(sm_uuid)
       get_available_infrastructures.flat_map do |infrastructure|
         get_workers_records_cursor(infrastructure, cond: {sm_uuid: sm_uuid}).first
-      end .first
+      end .detect { |worker| not worker.nil? }
     end
 
     private
