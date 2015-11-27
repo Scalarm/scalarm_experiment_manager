@@ -47,7 +47,7 @@ module WorkersScaling
       enabled_infrastructures = get_enabled_infrastructures
       @allowed_infrastructures
           .select do |allowed|
-            !!enabled_infrastructures.detect {|enabled| infrastructures_equal?(enabled, allowed[:infrastructure])}
+            !!enabled_infrastructures.detect {|enabled| infrastructure_configs_equal?(enabled, allowed[:infrastructure])}
           end
           .map{|entry| entry[:infrastructure]}
     end
@@ -56,7 +56,7 @@ module WorkersScaling
     # Returns amount of Workers that can be yet scheduled on given infrastructure
     def current_infrastructure_limit(infrastructure)
       infrastructure_limit = @allowed_infrastructures.detect do |entry|
-        infrastructures_equal?(infrastructure, entry[:infrastructure])
+        infrastructure_configs_equal?(infrastructure, entry[:infrastructure])
       end
       if infrastructure_limit.nil?
         0
@@ -75,7 +75,7 @@ module WorkersScaling
     def schedule_workers(amount, infrastructure, params = {})
       begin
         raise AccessDeniedError unless @allowed_infrastructures.detect do |allowed|
-          infrastructures_equal?(infrastructure, allowed[:infrastructure], true)
+          infrastructure_configs_equal?(infrastructure, allowed[:infrastructure], true)
         end
 
         @experiment.reload
@@ -174,8 +174,8 @@ module WorkersScaling
     # Checks whether all fields from narrower are equal with corresponding fields from wider
     # when exact flag is set to false. Performs full comparison when exact flag is true.
     # By default exact flag is set to false
-    # Returns true when infrastructures are equal, false otherwise.
-    def infrastructures_equal?(narrower, wider, exact=false)
+    # Returns true when infrastructure configurations are equal, false otherwise.
+    def infrastructure_configs_equal?(narrower, wider, exact=false)
       # TODO replace with infrastructure id
       return false if wider[:name] != narrower[:name]
       if exact
