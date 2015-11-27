@@ -385,7 +385,7 @@ class ExperimentsController < ApplicationController
       message_prefix = 'Missing workers scaling parameter'
       Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
       workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
-      if workers_scaling_params[:plgrid_default]
+      if workers_scaling_params[:plgrid_default] == 'true'
         if InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(current_user.id).blank?
           raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
         end
@@ -404,7 +404,7 @@ class ExperimentsController < ApplicationController
     # Start workers scaling
     if workers_scaling_enabled
       planned_finish_time = Time.now + (workers_scaling_params[:time_limit] || 0).minutes
-      if workers_scaling_params[:plgrid_default]
+      if workers_scaling_params[:plgrid_default] == 'true'
         WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id)
         experiment.plgrid_default = true
       else
