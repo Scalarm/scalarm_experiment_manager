@@ -281,6 +281,9 @@ class SimulationsController < ApplicationController
     end
 
     # a life-cycle of a single simulation
+    # Expected params:
+    #  * execution_statistics (optional) - hash containing information about simulation execution, currently:
+    #     * time_in_seconds - float, time of simulation execution in seconds
     def mark_as_complete
       response = {status: 'ok'}
       sm_record = nil
