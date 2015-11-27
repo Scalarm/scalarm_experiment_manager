@@ -380,7 +380,8 @@ class ExperimentsController < ApplicationController
     type = params[:type] || 'experiment'
     Utils::raise_error_unless_has_key(CONSTRUCTORS, type, "Not a correct experiment type: #{type}")
     workers_scaling_params = nil
-    if params[:workers_scaling]
+    workers_scaling_enabled = (params[:workers_scaling] == 'true')
+    if workers_scaling_enabled
       message_prefix = 'Missing workers scaling parameter'
       Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
       workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
@@ -396,11 +397,12 @@ class ExperimentsController < ApplicationController
       end
       # TODO more precise validation
     end
+
     # Create experiment
     experiment = send(CONSTRUCTORS[type])
 
     # Start workers scaling
-    if params[:workers_scaling]
+    if workers_scaling_enabled
       planned_finish_time = Time.now + (workers_scaling_params[:time_limit] || 0).minutes
       if workers_scaling_params[:plgrid_default]
         WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id)
