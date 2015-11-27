@@ -164,7 +164,7 @@ cd $PBS_O_WORKDIR
     end
 
     ##
-    # Returns list of hashes representing distinct types of infrastructure
+    # Returns list of hashes representing distinct configurations of infrastructure
     # Subinfrastructures are distinguished by:
     #  * grant ids
     def get_subinfrastructures(user_id)

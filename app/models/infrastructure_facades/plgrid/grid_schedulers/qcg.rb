@@ -216,7 +216,7 @@ module QcgScheduler
     end
 
     ##
-    # Returns list of hashes representing distinct types of infrastructure
+    # Returns list of hashes representing distinct configurations of infrastructure
     # Subinfrastructures are distinguished by:
     #  * PLGrid hosts
     #  * grant ids

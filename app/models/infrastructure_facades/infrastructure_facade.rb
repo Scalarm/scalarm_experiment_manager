@@ -373,7 +373,7 @@ class InfrastructureFacade
   end
 
   ##
-  # Returns list of hashes representing distinct types of infrastructure
+  # Returns list of hashes representing distinct configurations of infrastructure
   # Overridden in most of subclasses
   def get_subinfrastructures(user_id)
     [{name: short_name.to_sym, params: {}}]

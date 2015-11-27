@@ -98,7 +98,7 @@ module AmazonCloud
     end
 
     ##
-    # Returns list of hashes representing distinct types of infrastructure
+    # Returns list of hashes representing distinct configurations of infrastructure
     # Invokes method from super class
     # Further distinguishes subinfrastructures by:
     #  * security group

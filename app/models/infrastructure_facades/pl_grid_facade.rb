@@ -294,7 +294,7 @@ class PlGridFacade < InfrastructureFacade
   end
 
   ##
-  # Returns list of hashes representing distinct types of infrastructure
+  # Returns list of hashes representing distinct configurations of infrastructure
   # Delegates method to classes inheriting from #PlGridSchedulerBase
   def get_subinfrastructures(user_id)
     scheduler.get_subinfrastructures(user_id)

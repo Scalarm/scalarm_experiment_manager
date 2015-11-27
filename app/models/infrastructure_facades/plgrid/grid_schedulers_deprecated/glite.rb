@@ -234,7 +234,7 @@ module GliteScheduler
     end
 
     ##
-    # Returns list of hashes representing distinct types of infrastructure
+    # Returns list of hashes representing distinct configurations of infrastructure
     # Subinfrastructures are distinguished by:
     #  * PLGrid hosts
     def get_subinfrastructures(user_id)

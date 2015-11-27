@@ -151,7 +151,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   ##
-  # Returns list of hashes representing distinct types of infrastructure
+  # Returns list of hashes representing distinct configurations of infrastructure
   # Delegates method to classes inheriting from #AbstractCloudClient
   def get_subinfrastructures(user_id)
     creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
