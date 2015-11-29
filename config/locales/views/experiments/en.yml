@@ -13,12 +13,12 @@ en:
 
     workers_scaling:
       plgrid_default:
-        This option will automatically execute experiment on PlGrid resources using your grant.
+        This option will automatically execute experiment on PL-Grid resources using your grant.
       mode:
         title: Computational resources
         manual: Manual
         automatic: Automated - advanced
-        plgrid_default: Automated - PlGrid default
+        plgrid_default: Automated - PL-Grid default
       algorithm:
         title: Automated computational resources management
         method_selection: Automation method
