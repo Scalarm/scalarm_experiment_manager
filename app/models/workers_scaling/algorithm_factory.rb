@@ -26,7 +26,7 @@ module WorkersScaling
     ##
     # Returns list representing all available Algorithm implementations in format:
     #   {id: <id>, name: <name>, description: <description>}
-    def self.get_algorithms
+    def self.get_algorithms_list
       ALGORITHMS.map{|key, klass| {id: key, name: klass.algorithm_name, description: klass.description} }
     end
 
