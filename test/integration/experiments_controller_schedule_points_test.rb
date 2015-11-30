@@ -71,6 +71,49 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
     assert_nil wait_response['input_parameters']
   end
 
+  # Given
+  #   There is a running supervised experiment with no points to compute
+  # When
+  #   The experiment is marked "is_error"
+  # Then
+  #   next_simulation should return status: all_sent
+  test 'next_instance should return all_sent status if experiment.is_error and has no points' do
+    # Given
+    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    assert_response :success
+    assert_equal 'wait', JSON.parse(response.body)['status']
+
+    # When
+    @experiment.is_error = true
+    @experiment.save
+
+    # Then
+    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    assert_response :success
+    assert_equal 'all_sent', JSON.parse(response.body)['status']
+  end
+
+  # Given
+  #   There is a running supervised experiment with no points to compute
+  # When
+  #   The experiment is marked "is_error"
+  # Then
+  #   next_simulation should return status: all_sent
+  test 'next_instance should return all_sent status if experiment.is_error and has points' do
+    # Given
+    scheduled_x = 5
+    post "experiments/#{@experiment.id.to_s}/schedule_point.json", {point: {x: scheduled_x}.to_json}
+
+    # When
+    @experiment.is_error = true
+    @experiment.save
+
+    # Then
+    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    assert_response :success
+    assert_equal 'all_sent', JSON.parse(response.body)['status']
+  end
+
   # G:
   #   There is a supervised experiment without any points
   # W:

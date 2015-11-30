@@ -920,7 +920,7 @@ apiDoc:
                                  'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
         else
           Rails.logger.debug('next_simulation: Simulation to send is nil!')
-          if @experiment.supervised and not @experiment.completed?
+          if @experiment.supervised and not @experiment.completed? and not @experiment.is_error
             simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
                                    'duration_in_seconds' => 2})
           else
