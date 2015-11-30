@@ -220,6 +220,7 @@ end
 # - ExperimentWatcher - check periodically if some SimulationRuns does not
 #   exceeded their time limit (probably they are faulty)
 # - InfrastructureFacade monitoring - multiple threads for SimulationManagers status monitoring
+# - WorkersScaling::AlgorithmRunner - thread maintaining all Worker Scaling Algorithms
 def monitoring_process(action)
   unless File.directory?(File.join(Rails.root, 'tmp'))
     FileUtils.mkdir_p(File.join(Rails.root, 'tmp'))
@@ -262,6 +263,9 @@ def monitoring_process(action)
 
           Rails.logger.info('Starting monitoring threads for all infrastructures')
           threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
+
+          Rails.logger.info('Starting algorithm runner')
+          threads << WorkersScaling::AlgorithmRunner.start
 
           # do not quit this process until all threads are working
           threads.each &:join

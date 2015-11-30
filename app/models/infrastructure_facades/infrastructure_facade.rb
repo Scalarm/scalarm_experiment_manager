@@ -311,6 +311,7 @@ class InfrastructureFacade
   # @param [BSON::ObjectId] experiment_id id of {Experiment} for which SiMs were scheduled
   # @param [ActiveSupport::HashWithIndifferentAccess] params
   #   params which were passed to +start_simulation_managers+ - should be as similar as possible
+  #   It is possible to omit some parameters to acquire wider set of workers.
   # @return [MongoClass] a query object of specific {SimulationManagerRecord},
   #   e.g. class of +PlGridJob.where+ results
   def query_simulation_manager_records(user_id, experiment_id, params)
@@ -369,6 +370,13 @@ class InfrastructureFacade
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
     _get_sm_records(query, params)
+  end
+
+  ##
+  # Returns list of hashes representing distinct configurations of infrastructure
+  # Overridden in most of subclasses
+  def get_subinfrastructures(user_id)
+    [{name: short_name.to_sym, params: {}}]
   end
 
   def self.handle_monitoring_send_errors(records)

@@ -56,4 +56,17 @@ module ExperimentsHelper
     end
     options_for_select options, selected: options.first
   end
+
+  ##
+  # Returns workers scaling algorithm list parsed to select options.
+  def workers_scaling_options
+    options = WorkersScaling::AlgorithmFactory.get_algorithms_list.map { |entry| [entry[:name], entry[:id]] }
+    options_for_select options, selected: options.first
+  end
+
+  ##
+  # Returns workers scaling algorithms descriptions as hash [id -> description]
+  def workers_scaling_algorithms_description
+    WorkersScaling::AlgorithmFactory.get_algorithms_list.map {|entry| [entry[:id], entry[:description]] }.to_h
+  end
 end
