@@ -2,7 +2,10 @@
 - infrastructures_list = infrastructures_list_to_select_data(InfrastructureFacadeFactory.list_infrastructures(current_user.id))
 - infrastructures_select_data = infrastructures_list[:data]
 - disabled_infrastructures = infrastructures_list[:disabled]
-
+-if disabled_infrastructures.include? infrastructure_name
+  - InfrastructureFacadeFactory.get_registered_infrastructure_names.each do |i|
+    - infrastructure_name = i unless disabled_infrastructures.include? i
+    - break unless disabled_infrastructures.include? i
 %h2= t('experiments.monitoring_actions.booster.header')
 
 %a.close-reveal-modal &#215;
