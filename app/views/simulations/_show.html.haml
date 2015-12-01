@@ -24,13 +24,12 @@
 
 .row
   %h4= t('.input_section')
-  - if @simulation_run.arguments
-    %ul
-      - @simulation_run.arguments.split(',').each_with_index do |argument, index|
-        %li
-          %b
-            = @experiment.input_parameter_label_for(argument) + ':'
-          = @simulation_run.values.split(',')[index]
+  %ul
+    - @simulation_run.input_parameters.each do |parameter, value|
+      %li
+        %b
+          = @experiment.input_parameter_label_for(parameter) + ':'
+        = value
 
 - if @simulation_run.is_error == true
   .row

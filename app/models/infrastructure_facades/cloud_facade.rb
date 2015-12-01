@@ -68,16 +68,19 @@ class CloudFacade < InfrastructureFacade
 
   # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
-    CloudVmRecord.where(
-        cloud_name: short_name,
-        user_id: user_id,
-        experiment_id: experiment_id,
-        image_secrets_id: params['image_secrets_id'],
-        time_limit: params['time_limit'],
-        start_at: params['start_at'],
-        instance_type: params['instance_type'],
-        params: find_stored_params(params)
-    )
+    query = {
+      cloud_name: short_name,
+      user_id: user_id,
+      experiment_id: experiment_id
+    }
+    query[:image_secrets_id] = params['image_secrets_id'] unless params['image_secrets_id'].blank?
+    query[:time_limit] = params['time_limit'] unless params['time_limit'].blank?
+    query[:start_at] = params['start_at'] unless params['start_at'].blank?
+    query[:instance_type] = params['instance_type'] unless params['instance_type'].blank?
+    stored_params = find_stored_params(params)
+    query[:params] = stored_params unless stored_params.blank?
+
+    CloudVmRecord.where(query)
   end
 
   def find_stored_params(params)
@@ -145,6 +148,22 @@ class CloudFacade < InfrastructureFacade
 
   def get_sm_record_by_id(record_id)
     CloudVmRecord.find_by_id(record_id)
+  end
+
+  ##
+  # Returns list of hashes representing distinct configurations of infrastructure
+  # Delegates method to classes inheriting from #AbstractCloudClient
+  def get_subinfrastructures(user_id)
+    creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
+    cloud_client = nil
+    begin
+      cloud_client = (creds.nil? ? nil : @client_class.new(creds))
+    rescue InfrastructureErrors::InvalidCredentialsError => _
+      cloud_client = nil
+    end
+    return [] if (cloud_client == nil or not cloud_client.valid_credentials?)
+
+    cloud_client.get_subinfrastructures(user_id)
   end
 
   # -- SimulationManager delegation methods --

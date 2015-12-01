@@ -82,23 +82,24 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
+    query = {
+      user_id: user_id,
+      experiment_id: experiment_id,
+      infrastructure: short_name
+    }
+
     credentials_id = params[:credentials_id]
     if params.include?(:host)
       creds = PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
       credentials_id = creds.id
     end
 
-    onsite_monitoring_enabled = (params[:onsite_monitoring] == 'on')
+    query[:credentials_id] = credentials_id unless credentials_id.blank?
+    query[:time_limit] = params[:time_limit] unless params[:time_limit].blank?
+    query[:start_at] = params[:start_at] unless params[:start_at].blank?
+    query[:onsite_monitoring] = (params[:onsite_monitoring] == 'on') unless params[:onsite_monitoring].blank?
 
-    PrivateMachineRecord.where(
-        user_id: user_id,
-        experiment_id: experiment_id,
-        credentials_id: credentials_id,
-        time_limit: params[:time_limit],
-        start_at: params[:start_at],
-        infrastructure: short_name,
-        onsite_monitoring: onsite_monitoring_enabled
-    )
+    PrivateMachineRecord.where(query)
   end
 
   def get_number_of_cores_command
@@ -207,6 +208,16 @@ class PrivateMachineFacade < InfrastructureFacade
 
   def get_sm_record_by_id(record_id)
     PrivateMachineRecord.find_by_id(record_id.to_s)
+  end
+
+  ##
+  # Returns list of hashes representing distinct configurations of infrastructure
+  # Subinfrastructures are distinguished by:
+  #  * private machine credentials
+  def get_subinfrastructures(user_id)
+    PrivateMachineCredentials.where(user_id: user_id).map do |credentials|
+      {name: short_name.to_sym, params: {credentials_id: credentials.id.to_s}}
+    end
   end
 
   # -- SimulationManager delegation methods --

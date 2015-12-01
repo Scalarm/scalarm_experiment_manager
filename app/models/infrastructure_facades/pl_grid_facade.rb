@@ -82,21 +82,19 @@ class PlGridFacade < InfrastructureFacade
 
   # See: {InfrastructureFacade#query_simulation_manager_records}
   def query_simulation_manager_records(user_id, experiment_id, params)
-    query = {}
+    query = {
+      user_id: user_id,
+      experiment_id: experiment_id,
+      scheduler_type: scheduler.short_name
+    }
     query[:grant_identifier] = params['grant_id'] unless params['grant_id'].blank?
     query[:nodes] = params['nodes'] unless params['nodes'].blank?
     query[:ppn] = params['ppn'] unless params['ppn'].blank?
     query[:plgrid_host] = params['plgrid_host'] unless params['plgrid_host'].blank?
     query[:queue_name] = params['queue'] unless params['queue'].blank?
-    query[:onsite_monitoring] = (params['onsite_monitoring'] == 'on')
-
-    query.merge!(
-        user_id: user_id,
-        experiment_id: experiment_id,
-        scheduler_type: scheduler.short_name,
-        time_limit: params['time_limit'].to_i,
-        start_at: params['start_at']
-    )
+    query[:onsite_monitoring] = (params['onsite_monitoring'] == 'on') unless params['onsite_monitoring'].blank?
+    query[:time_limit] = params['time_limit'].to_i unless params['time_limit'].blank?
+    query[:start_at] = params['start_at'] unless params['start_at'].blank?
 
     PlGridJob.where(query)
   end
@@ -293,6 +291,13 @@ class PlGridFacade < InfrastructureFacade
     end
 
     grants
+  end
+
+  ##
+  # Returns list of hashes representing distinct configurations of infrastructure
+  # Delegates method to classes inheriting from #PlGridSchedulerBase
+  def get_subinfrastructures(user_id)
+    scheduler.get_subinfrastructures(user_id)
   end
   
   # Appends PL-Grid scheduler name to shared SSH session ID

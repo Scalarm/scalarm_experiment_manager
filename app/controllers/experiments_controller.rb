@@ -8,8 +8,7 @@ class ExperimentsController < ApplicationController
   include SSHAccessedInfrastructure
 
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
-  before_filter :load_simulation, only: [:create, :new, :calculate_experiment_size,
-                                         :start_custom_points_experiment, :start_supervised_experiment]
+  before_filter :load_simulation, only: [:create, :new, :calculate_experiment_size]
 
   def index
     load_simulations_and_experiments_for_current_user
@@ -137,6 +136,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @apiDefine ConfigurationsParams
 
   @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
@@ -146,6 +146,9 @@ class ExperimentsController < ApplicationController
 =end
 
 =begin
+Get CSV file with simulation runs results (sends a file).
+
+apiDoc:
   @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
   @apiName GetFileWithConfigurations
   @apiGroup Experiments
@@ -158,6 +161,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
   @apiName GetConfigurations
   @apiGroup Experiments
@@ -248,6 +252,7 @@ class ExperimentsController < ApplicationController
         format.json { render json: {status: 'error', message: flash[:error]} }
       end
     end
+    experiment
   end
 
   # POST params:
@@ -263,9 +268,14 @@ class ExperimentsController < ApplicationController
     experiment.save
 
     render json: {status: 'ok', experiment_id: experiment.id.to_s}
+    experiment
   end
 
 =begin
+Controller method used to create supervised experiment when POST on /experiments
+with type='supervised' is invoked.
+
+apiDoc:
   @api {post} /experiments/ Create SupervisedExperiment
   @apiName start_supervised_experiment
   @apiGroup Experiments
@@ -356,6 +366,7 @@ class ExperimentsController < ApplicationController
       format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
       format.json { render json: response }
     end
+    experiment
   end
 
   CONSTRUCTORS = {
@@ -369,11 +380,59 @@ class ExperimentsController < ApplicationController
         replication_level: [:optional, :security_default, :integer, :positive],
         execution_time_constraint: [:optional, :security_default, :integer, :positive],
         parameter_constraints: [:optional, :security_json],
-        type: [:optional, :security_default]
+        type: [:optional, :security_default],
+        workers_scaling: [:optional] # TODO boolean validator
+        #workers_scaling_params: [:optional, :json_or_hash] TODO uncomment? SCAL-757: (..) json_or_hash validator bug
     )
+
+    # Params validation
     type = params[:type] || 'experiment'
-    raise ValidationError.new('type', type, 'Not a correct experiment type') unless CONSTRUCTORS.has_key? type
-    send(CONSTRUCTORS[type])
+    Utils::raise_error_unless_has_key(CONSTRUCTORS, type, "Not a correct experiment type: #{type}")
+    workers_scaling_params = nil
+    workers_scaling_enabled = (params[:workers_scaling] == 'true')
+    if workers_scaling_enabled
+      message_prefix = 'Missing workers scaling parameter'
+      Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
+      workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
+      if workers_scaling_params[:plgrid_default]
+        if InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(current_user.id).blank?
+          raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
+        end
+      else
+        [:name, :allowed_infrastructures, :time_limit].each do |param|
+          Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
+                                            'workers_scaling_params')
+        end
+      end
+      # TODO more precise validation
+    end
+
+    # Create experiment
+    experiment = send(CONSTRUCTORS[type])
+
+    # Start workers scaling
+    if workers_scaling_enabled
+      planned_finish_time = Time.now + (workers_scaling_params[:time_limit] || 0).minutes
+      if workers_scaling_params[:plgrid_default]
+        WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id)
+        experiment.plgrid_default = true
+      else
+        allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
+          # TODO Introduce infrastructure id
+          {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
+        end
+        WorkersScaling::AlgorithmFactory.initial_deployment(
+            experiment.id,
+            current_user.id,
+            allowed_infrastructures,
+            planned_finish_time,
+            workers_scaling_params
+        )
+      end
+      experiment.workers_scaling = true
+      experiment.planned_finish_time = planned_finish_time
+      experiment.save
+    end
   end
 
   def calculate_experiment_size
@@ -495,6 +554,11 @@ class ExperimentsController < ApplicationController
       #
       #  partial_stats["predicted_finish_time"] = predicted_finish_time
     end
+
+    makespan = WorkersScaling::ExperimentStatisticsFactory.create_statistics(@experiment, current_user.id).makespan
+    stats[:planned_finish_time] = makespan == Float::INFINITY ? -1 : (Time.now + makespan).to_i
+    stats[:completed] = @experiment.completed?
+    stats[:workers_scaling_error] = WorkersScaling::Algorithm.where(experiment_id: @experiment.id).count == 0
 
     render json: stats
   end
@@ -820,35 +884,50 @@ class ExperimentsController < ApplicationController
     begin
       raise 'Experiment is not running any more' if not @experiment.is_running
 
-      simulation_to_send = nil
+      denied = false
 
-      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
-        unless sm_user.nil? or simulation_to_send.nil?
-          simulation_to_send.sm_uuid = sm_user.sm_uuid
-          simulation_to_send.save
+      # Following block checks if Simulation Manager is in state, in which it should receive no more simulations
+      sm_record = !sm_user.nil? && InfrastructureFacadeFactory.get_sm_records_by_query(sm_uuid: sm_user.sm_uuid).first
+      if sm_record
+        if sm_record.state == :terminating
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'This SiM is terminating'})
+          denied = true
+        elsif not sm_record.simulations_left.nil? and sm_record.simulations_left == 0
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'This SiM has no simulations left'})
+          denied = true
         end
       end
 
-      if simulation_to_send
-        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
-        # TODO adding caching capability to the experiment object
-        #simulation_to_send.put_in_cache
-        @experiment.progress_bar_update(simulation_to_send.index, 'sent')
+      unless denied
+        simulation_to_send = nil
 
-        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                               'execution_constraints' => {'time_constraint_in_sec' => @experiment.time_constraint_in_sec},
-                               'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))]})
-      else
-        Rails.logger.debug('next_simulation: Simulation to send is nil!')
-        if @experiment.supervised and not @experiment.completed?
-          simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
-                                 'duration_in_seconds' => 2})
+        Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
+          simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
+          unless sm_user.nil? or simulation_to_send.nil?
+            simulation_to_send.sm_uuid = sm_user.sm_uuid
+            simulation_to_send.save
+          end
+        end
+
+        if simulation_to_send
+          Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
+          # TODO adding caching capability to the experiment object
+          #simulation_to_send.put_in_cache
+          @experiment.progress_bar_update(simulation_to_send.index, 'sent')
+
+          simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
+                                 'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
+                                 'input_parameters' => simulation_to_send.input_parameters })
         else
-          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+          Rails.logger.debug('next_simulation: Simulation to send is nil!')
+          if @experiment.supervised and not @experiment.completed? and not @experiment.is_error
+            simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
+                                   'duration_in_seconds' => 2})
+          else
+            simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+          end
         end
       end
-
     rescue Exception => e
       Rails.logger.debug("Error while preparing next simulation: #{e}")
       simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
@@ -987,9 +1066,10 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
-@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
-@apiName GetSimulationManager
-@apiGroup Experiments
+apiDoc:
+  @api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+  @apiName GetSimulationManager
+  @apiGroup Experiments
 =end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
@@ -1143,6 +1223,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
   @apiName mark_as_complete
   @apiGroup Experiments

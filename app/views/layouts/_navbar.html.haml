@@ -29,12 +29,12 @@
       %ul.right
         %li
           %a.has-tip.tip-bottom{"href"=>"#", "onclick"=>"$('.help').toggle(400, 'swing'); return false;", "aria-haspopup" => "true", "data-tooltip" => "", title: "#{t('.help_button')}"}
-            =image_tag "help-icon.png"
+            =image_tag "help-icon-navbar.png"
         %li.divider
         %li
           %a.has-tip.tip-bottom{"href"=>"#{user_controller_account_path}", "aria-haspopup" => "true", "data-tooltip" => "", title: "#{t('.account_link', login: current_user.login)}"}
-            =image_tag "profile-icon.png"
+            =image_tag "profile-icon-navbar.png"
         %li.divider
         %li
           %a.has-tip.tip-bottom{"href"=>"#{logout_path}", "data-method"=>"post", "aria-haspopup" => "true", "data-tooltip" => "", title: "#{t('.logout_link')}"}
-            =image_tag "logout-icon.png"
+            =image_tag "logout-icon-navbar.png"

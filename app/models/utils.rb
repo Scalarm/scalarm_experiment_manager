@@ -1,5 +1,7 @@
 require 'json'
 require 'scalarm/service_core/utils'
+require 'scalarm/service_core/parameter_validation'
+
 
 module Utils
 
@@ -25,6 +27,15 @@ module Utils
     end
   end
 
+  ##
+  # Raises ValidationError unless given hash contains specified key
+  def self.raise_error_unless_has_key(hash, key, message, key_prefix='')
+    unless hash.has_key? key
+      raise Scalarm::ServiceCore::ParameterValidation::ValidationError.new(
+                key_prefix == '' ? key.to_s : "#{key_prefix}:#{key}", nil, message)
+    end
+  end
+
   # Extract type of variable from given string
   #
   # * *Args*:
@@ -44,7 +55,7 @@ module Utils
   #   - "-1.21" -> "float"
   #   - "loveRuby" -> "string"
   #   - "123.always" -> "string"
-  #   - {id: 42} -> "undefined"
+  #   - +{id: 42}+ -> "undefined"
   def self.extract_type_from_string(value_as_string)
     type_of_value = ""
 
@@ -87,7 +98,7 @@ module Utils
   #   - -1.21 -> "float"
   #   - "loveRuby" -> "string"
   #   - "123.always" -> "string"
-  #   - {id: 42} -> "undefined"
+  #   - +{id: 42}+ -> "undefined"
   def self.extract_type_from_value(value)
     type_of_value = ""
 

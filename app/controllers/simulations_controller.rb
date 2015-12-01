@@ -281,9 +281,12 @@ class SimulationsController < ApplicationController
     end
 
     # a life-cycle of a single simulation
+    # Expected params:
+    #  * execution_statistics (optional) - hash containing information about simulation execution, currently:
+    #     * time_in_seconds - float, time of simulation execution in seconds
     def mark_as_complete
       response = {status: 'ok'}
-
+      sm_record = nil
       begin
         Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
           if @simulation_run.nil? or @simulation_run.is_done
@@ -326,7 +329,9 @@ class SimulationsController < ApplicationController
               @simulation_run.cpu_info = cpu_info
             end
 
-            unless sm_user.nil? or (sm_record = sm_user.simulation_manager_record).nil?
+            sm_record = !sm_user.nil? && InfrastructureFacadeFactory.get_sm_records_by_query(sm_uuid: sm_user.sm_uuid).first
+
+            if sm_record
               unless sm_record.infrastructure.blank?
                 @simulation_run.infrastructure = sm_record.infrastructure
               end
@@ -334,8 +339,17 @@ class SimulationsController < ApplicationController
               unless sm_record.computational_resources.blank?
                 @simulation_run.computational_resources = sm_record.computational_resources
               end
+
+              sm_record.simulations_left -= 1 if sm_record.simulations_left
+              sm_record.finished_simulations ||= 0
+              sm_record.finished_simulations += 1
+              sm_record.save
             end
 
+            if params.include? :execution_statistics
+              @simulation_run.execution_statistics = Utils.parse_json_if_string params[:execution_statistics]
+            end
+            
             @simulation_run.save
             # TODO adding caching capability
             #@simulation.remove_from_cache
@@ -345,6 +359,7 @@ class SimulationsController < ApplicationController
             else
               @experiment.progress_bar_update(@simulation_run.index, 'done')
             end
+            Thread.new { WorkersScaling::AlgorithmRunner.execute_and_schedule(@experiment.id) }
           end
         end
       rescue Exception => e
@@ -352,6 +367,13 @@ class SimulationsController < ApplicationController
         response = {status: 'error', reason: e.to_s}
       end
 
+      if sm_record and sm_record.simulations_left <= 0
+        InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure)
+            .yield_simulation_manager(sm_record) do |sm|
+          sm.stop
+        end
+      end
+      
       render json: response
     end
 

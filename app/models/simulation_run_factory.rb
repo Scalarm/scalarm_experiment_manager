@@ -17,6 +17,36 @@ module SimulationRunExtensions
       self.tmp_results_list.last['result']
     end
   end
+
+  def arguments
+    if attributes.include?('input_parameters')
+      attributes['input_parameters'].keys.join(',')
+    elsif attributes.include?('arguments')
+      attributes['arguments']
+    else
+      ""
+    end
+  end
+
+  def values
+    if attributes.include?('input_parameters')
+      attributes['input_parameters'].values.join(',')
+    elsif attributes.include?('values')
+      attributes['values']
+    else
+      ""
+    end
+  end
+
+  def input_parameters
+    if attributes.include?('input_parameters')
+      attributes['input_parameters']
+    elsif attributes.include?('arguments') and attributes.include?('values')
+      Hash[*attributes['arguments'].split(',').zip(attributes['values'].split(',')).flatten]
+    else
+      {}
+    end
+  end
 end
 
 class SimulationRunFactory < Scalarm::Database::SimulationRunFactory
