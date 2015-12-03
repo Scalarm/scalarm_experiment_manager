@@ -166,6 +166,11 @@ apiDoc:
   @apiName GetConfigurations
   @apiGroup Experiments
 
+  @apiParam {Number} [min_index=0]
+    include only simulation runs with simulation_index greater than min_index
+  @apiParam {Number} [max_index]
+    include only simulation runs with simulation_index lesser than max_index
+
   @apiUse ConfigurationsParams
 =end
   def configurations
@@ -181,13 +186,24 @@ apiDoc:
         with_index: [:optional, :security_default],
         with_params: [:optional, :security_default],
         with_moes: [:optional, :security_default],
-        error_description: [:optional, :security_default]
+        error_description: [:optional, :security_default],
+        min_index: [:optional, :integer],
+        max_index: [:optional, :integer]
     )
     w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
     w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
     w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
     w_status = (params.include?(:with_status) ? (params[:with_status] == '1') : true)
-    @experiment.create_result_csv(w_index, w_params, w_moes, w_status)
+    additional_query = {}
+    min_index = Integer(params[:min_index]) rescue nil
+    unless min_index.nil?
+      additional_query[:index] ||= {}
+      additional_query[:index].merge()
+    end
+    additional_query.merge!({index: {'$gte' => min_index}})
+    max_index = Integer(params[:max_index]) rescue nil
+    additional_query.merge!({index: {'$lte' => max_index}}) unless max_index.nil?
+    @experiment.create_result_csv(w_index, w_params, w_moes, w_status, additional_query)
   end
 
   def create_experiment
