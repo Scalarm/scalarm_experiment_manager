@@ -419,8 +419,9 @@ class Experiment < Scalarm::Database::Model::Experiment
 
   end
 
-  def create_result_csv(with_index=false, with_params=true, with_moes=true, error_description = false)
+  def create_result_csv(with_index=false, with_params=true, with_moes=true, error_description = false, additional_query=nil)
     moes = self.moe_names
+    additional_query ||= {}
 
     CSV.generate do |csv|
       header = []
@@ -435,7 +436,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       query_fields[:values] = 1 if with_params
       query_fields[:result] = 1 if with_moes
       simulation_runs.where(
-          {is_done: true},
+          {is_done: true}.merge(additional_query),
           {fields: query_fields}
       ).each do |simulation_run|
         if error_description

@@ -143,6 +143,10 @@ apiDoc:
   @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
   @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
   @apiParam {Number=0,1} with_status=1 "1" to add status and error reason columns to result CSV
+  @apiParam {Number} [min_index]
+    include only simulation runs with index greater than min_index
+  @apiParam {Number} [max_index]
+    include only simulation runs with index lesser than max_index
 =end
 
 =begin
@@ -181,13 +185,31 @@ apiDoc:
         with_index: [:optional, :security_default],
         with_params: [:optional, :security_default],
         with_moes: [:optional, :security_default],
-        error_description: [:optional, :security_default]
+        error_description: [:optional, :security_default],
+        min_index: [:optional, :integer],
+        max_index: [:optional, :integer]
     )
     w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
     w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
     w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
     w_status = (params.include?(:with_status) ? (params[:with_status] == '1') : true)
-    @experiment.create_result_csv(w_index, w_params, w_moes, w_status)
+
+    # additional conditions to include simulation runs in results
+    additional_query = {}
+
+    min_index = Integer(params[:min_index]) rescue nil
+    unless min_index.nil?
+      additional_query[:index] ||= {}
+      additional_query[:index].merge!('$gte' => min_index)
+    end
+
+    max_index = Integer(params[:max_index]) rescue nil
+    unless max_index.nil?
+      additional_query[:index] ||= {}
+      additional_query[:index].merge!('$lte' => max_index)
+    end
+
+    @experiment.create_result_csv(w_index, w_params, w_moes, w_status, additional_query)
   end
 
   def create_experiment
