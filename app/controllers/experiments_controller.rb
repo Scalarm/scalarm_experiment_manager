@@ -917,7 +917,7 @@ apiDoc:
 
           simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                                  'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
-                                 'input_parameters' => simulation_to_send.input_parameters })
+                                 'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
         else
           Rails.logger.debug('next_simulation: Simulation to send is nil!')
           if @experiment.supervised and not @experiment.completed? and not @experiment.is_error
