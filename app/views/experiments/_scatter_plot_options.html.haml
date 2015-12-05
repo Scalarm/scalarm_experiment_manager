@@ -36,7 +36,7 @@
   .row
     %ul.inline-list
       %li= submit_tag t('charts.load_button'), class: 'button radius', id: "load_chart_button"
-      %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
+      %li= loading_gif('busy_scatter_plot')
 #bivariate_charts
 
 - content_for :javascript do
@@ -125,7 +125,7 @@
         }
 
       } catch (e) {
-        $('#busy_basic').hide();
+        $('#busy_scatter_plot').hide();
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });
@@ -154,7 +154,7 @@
         }
 
       } catch (e) {
-        $('#busy_basic').hide();
+        $('#busy_scatter_plot').hide();
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });

@@ -27,7 +27,7 @@
         = select_tag "notation_#{@uuid}", notation_options, id: "notation"
       .small-2.columns.end
         %span.add_series.button.radius.tiny= t('charts.scatter.add_series')
-        = image_tag 'loading.gif', id: "busy_bivariate_#{@uuid}", size: '16x16', style: 'display: none;'
+        = loading_gif("busy_bivariate_#{@uuid}")
 
 
   %br

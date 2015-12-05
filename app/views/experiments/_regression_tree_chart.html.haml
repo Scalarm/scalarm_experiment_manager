@@ -2,7 +2,7 @@
 %section.panel.radius.plot
   %h3.subheader
     = t('charts.regression.header', moe: chart.moe_name)
-    = image_tag 'loading.gif', id: "busy_#{ chart.experiment.experiment_id }_#{ chart.moe_name }", size: '16x16', style: 'display: none;'
+    = loading_gif("busy_#{chart.experiment.experiment_id}_#{chart.moe_name}")
   .row
     -#= button_to_function "Refresh" , "refresh_regression_tree_chart('#{@experiment.experiment_id}', '#{@moe_name}', '#{experiments_update_regression_tree_path}')", :class => "nice_button"
     %span.button= t('charts.hide_button')
