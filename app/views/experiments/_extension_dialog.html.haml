@@ -1,5 +1,5 @@
 %h2= t('experiments.extension_dialog.header')
-= form_tag(extend_input_values_experiment_path, remote: true, class: 'custom', id: 'experiment-extension-form', 'data-abide' =>'ajax') do
+= form_tag(extend_input_values_experiment_path, remote: true, class: 'custom', id: 'experiment-extension-form', 'data-abide' =>'') do
   = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
   .row
     .small-3.columns
@@ -58,7 +58,7 @@
       %h4.subheader.right= t('experiments.extension_dialog.step') + ':'
     .small-4.columns
       = text_field_tag 'range_step','',style: "margin-bottom: 5px;", required: 'true', pattern: "^[0-9]*[1-9][0-9]*$"
-      %small(class="error") Invalid step value. It is required and must be positive number
+      %small(class="error") Invalid step value. It is required and must be a positive number
     .small-3.columns
   .row.small-12.columns(style="text-align: center")
     = submit_tag('Submit', class: 'button radius')
@@ -72,7 +72,7 @@
         live_validate : true,
         validate_on_blur : true,
         focus_on_invalid : true,
-        timeout : 100,
+        timeout : 10,
         validators: {
           validate_ranges: function(el, required, parent){
             var from  = parseFloat($("#range_max").val());
@@ -82,7 +82,7 @@
                 $("#range_min").attr('aria-invalid','false');
                 $("#range_min").removeAttr('data-invalid');
                 document.getElementById("range_min_error_msg").style.display="none";
-              //  $("#label_min").removeClass("error");
+
               }
               if (el.id == "range_min" && from >= to ){
                 $("#range_max").attr('aria-invalid','false');
@@ -107,18 +107,15 @@
       $("#experiment-extension-form [parameter_uid='" + $('#experiment-extension-form #param_name').val() + "']").show();
     });
     $("#experiment-extension-form").on('invalid.fndtn.abide', function(){
-      var error_basic = $('#experiment-extension-form').find(':input[data-invalid]:visible')[0];
-      if (typeof error_basic != "undefined") {
         $(this).find('[data-invalid]').blur();
-       // $('#invalid-form').foundation('reveal', 'open');
-      }
     });
     $('#experiment-extension-form').on('submit', function() {
-      $("#experiment-extension-form").on('valid.fndtn.abide', function(){
+      if ($("#experiment-extension-form").find(':input[data-invalid]:visible').length==0){
+      //$("#experiment-extension-form").on('valid.fndtn.abide', function(){
         $( '#extension-dialog' ).foundation('reveal', 'close');
         $( '#extension-dialog' ).html("");
         window.Notices.show_loading_notice();
-      });
+      }
     });
 
     $('#extension-dialog').trigger('extension-dialog-loaded');
