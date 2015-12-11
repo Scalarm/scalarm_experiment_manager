@@ -27,7 +27,14 @@
     var plgrid_default = "#{@experiment.plgrid_default}"
     var planned_finish_time = new Date("#{@experiment.planned_finish_time}");
     window.updateWorkersScalingStatus = function() {
-      $.getJSON("/experiments/#{@experiment.id.to_s}/stats", function(data) {
+      $.getJSON("/experiments/#{@experiment.id.to_s}/stats",
+                {
+                  simulations_statistics: false,
+                  progress_bar: false,
+                  predicted_finish_time: true,
+                  workers_scaling_active: true,
+                },
+                function(data) {
           if (data.completed == true) {
             if (!plgrid_default) {
               $('#time_constraints_warning').hide();
@@ -35,21 +42,21 @@
             $('#workers_scaling_error').hide();
             $('#expected_finish_time').text("Finished")
           } else {
-            if (data.workers_scaling_error == true) {
-              $('#workers_scaling_error').show();
-            } else {
+            if (data.workers_scaling_active == true) {
               $('#workers_scaling_error').hide();
+            } else {
+              $('#workers_scaling_error').show();
             }
-            if (data.planned_finish_time == -1) {
+            if (data.predicted_finish_time == -1) {
               if (!plgrid_default) {
                 $('#time_constraints_warning').show();
               }
               $('#expected_finish_time').text("Unknown")
             } else {
-              var expected_finish_time = new Date(data.planned_finish_time*1000);
+              var predicted_finish_time = new Date(data.predicted_finish_time*1000);
               $('#expected_finish_time').text(expected_finish_time.toString());
               if (!plgrid_default) {
-                if (expected_finish_time > planned_finish_time) {
+                if (predicted_finish_time > planned_finish_time) {
                   $('#time_constraints_warning').show()
                 } else {
                   $('#time_constraints_warning').hide()
