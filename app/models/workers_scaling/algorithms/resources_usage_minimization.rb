@@ -40,7 +40,7 @@ module WorkersScaling
     def experiment_status_check
       LOGGER.debug 'experiment_status_check'
       @experiment.reload
-      current_makespan = @experiment_metrics.makespan(cond: Query::RUNNING_WORKERS)
+      current_makespan = @experiment_metrics.makespan(cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
       case time_constraint_check(current_makespan, planned_finish_time - Time.now)
         when :increase
           increase_computational_power
@@ -80,7 +80,8 @@ module WorkersScaling
 
       # calculate average infrastructures throughput
       infrastructures_throughput = @resources_interface.get_available_infrastructures.map do |infrastructure|
-        statistics = @experiment_metrics.get_infrastructure_statistics(infrastructure, cond: Query::RUNNING_WORKERS)
+        statistics = @experiment_metrics.get_infrastructure_statistics(
+            infrastructure, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
         {infrastructure: infrastructure, statistics: statistics}
       end
 
@@ -124,7 +125,7 @@ module WorkersScaling
     # Stops Workers with lowest throughput first
     def decrease_computational_power
       LOGGER.debug 'Need to decrease computational power'
-      if @resources_interface.count_all_workers(cond: Query::STOPPING_WORKERS) > 0
+      if @resources_interface.count_all_workers(cond: Query::Workers::STOPPING) > 0
         LOGGER.debug 'There are stopping Workers already'
         return
       end
@@ -136,9 +137,11 @@ module WorkersScaling
 
       # get all workers with their throughput
       workers_throughput = @resources_interface.get_available_infrastructures.flat_map do |infrastructure|
-        @resources_interface.get_workers_records_list(infrastructure, cond: Query::RUNNING_WORKERS).map do |worker|
-          {sm_uuid: worker.sm_uuid, throughput: @experiment_metrics.worker_throughput(worker.sm_uuid)}
-        end
+        @resources_interface
+            .get_workers_records_list(infrastructure, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
+            .map do |worker|
+              {sm_uuid: worker.sm_uuid, throughput: @experiment_metrics.worker_throughput(worker.sm_uuid)}
+            end
       end
 
       # sort from lowest

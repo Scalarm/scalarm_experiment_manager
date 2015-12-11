@@ -86,6 +86,11 @@ class Experiment < Scalarm::Database::Model::Experiment
     experiment_size > (sent+done)
   end
 
+  def count_simulations_to_run
+    _, sent, done = get_statistics
+    experiment_size - (sent + done)
+  end
+
   # Should, in this moment, more computations for this experiment should be made?
   def end?
     (self.is_running == false) or completed?
