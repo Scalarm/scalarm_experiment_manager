@@ -518,69 +518,80 @@ apiDoc:
     render json: {count: simulation_counter}
   end
 
+=begin
+  @api {get} /experiments/:id/stats/ Get Experiment statistics
+  @apiName stats
+  @apiGroup Experiments
+  @apiDescription This method returns json containing Experiment statistics. All returned statistics can be included
+                  or excluded using params.
+
+  @apiParam {String} id Unique id of experiment on which action will be performed
+  @apiParam {String=false,true} [simulations_statistics=true] Param defining if fields 'all', 'sent', 'done_num',
+                      'done_percentage', 'generated' and 'avg_execution_time' should be computed and included.
+                       Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [progress_bar=true] Param defining if field 'progress_bar' should be computed and included.
+                       Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [completed=true] Param defining if field 'completed' should be computed and included.
+                       Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [predicted_finish_time=false] Param defining if field 'predicted_finish_time' should be
+                       computed and included. Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [workers_scaling_active=false] Param defining if field 'workers_scaling_active' should be
+                       computed and included. Values other than 'true' are treated as false.
+
+  @apiParamExample Params-Example
+    simulations_statistics: 'false'
+    progress_bar: 'false'
+    predicted_finish_time: 'true'
+    workers_scaling_active: 'true'
+
+  @apiSuccess {Object} stats json object containing Experiment statistics
+  @apiSuccess {Number} [stats.all] size of Experiment
+  @apiSuccess {Number} [stats.sent] number of sent simulations
+  @apiSuccess {Number} [stats.done_num] number of done simulations
+  @apiSuccess {String} [stats.done_percentage] percent of done simulations, as String
+  @apiSuccess {Number} [stats.generated] number of generated simulations
+  @apiSuccess {Number} [stats.avg_execution_time] average simulation execution time
+  @apiSuccess {String} [stats.progress_bar] average simulation execution time
+  @apiSuccess {Boolean} [stats.completed] information whether experiment is completed
+  @apiSuccess {Number} [stats.predicted_finish_time] predicted time of Experiment end in seconds since the Epoch
+  @apiSuccess {Boolean} [stats.workers_scaling_active] information whether workers scaling algorithm is working with
+                        that Experiment
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'completed': false
+      'predicted_finish_time': 1449846185
+      'workers_scaling_active': true
+    }
+=end
   def stats
-    sims_generated, sims_sent, sims_done = @experiment.get_statistics
+    validate(
+        simulations_statistics: [:optional, :security_default],
+        progress_bar: [:optional, :security_default],
+        completed: [:optional, :security_default],
+        predicted_finish_time: [:optional, :security_default],
+        workers_scaling_active: [:optional, :security_default]
+    )
 
-    if sims_generated > @experiment.experiment_size
-      Rails.logger.error("FATAL - too many simulations generated for experiment #{@experiment.inspect}")
-      sims_generated = @experiment.experiment_size
-    end
-
-    if sims_done > @experiment.experiment_size
-      Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.inspect}")
-      sims_done = @experiment.experiment_size
-    end
-
-    if sims_done + sims_sent > @experiment.experiment_size
-      sims_sent = @experiment.experiment_size - sims_done
-    end
-
-    #if sims_generated > @experiment.experiment_size
-    #  @experiment.experiment_size = sims_generated
-    #  @experiment.save
-    #end
-
-
-    if @experiment.experiment_size!=0
-      percentage = (sims_done.to_f / @experiment.experiment_size) * 100
-    else
-      percentage=0
-    end
-    stats = {
-        all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
-        done_percentage: "'%.2f'" % (percentage),
-        generated: [sims_generated, @experiment.experiment_size].min,
-        progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
+    default_params = {
+        simulations_statistics: true,
+        progress_bar: true,
+        completed: true,
+        predicted_finish_time: false,
+        workers_scaling_active: false
     }
 
-    # TODO - mean execution time and predicted time to finish the experiment
-    if sims_done > 0 and (rand() < (sims_done.to_f / @experiment.experiment_size) or sims_done == @experiment.experiment_size)
-      execution_time = @experiment.simulation_runs.where({is_done: true}, fields: %w(sent_at done_at)).reduce(0) do |acc, simulation_run|
-        if simulation_run.done_at and simulation_run.sent_at
-          acc += simulation_run.done_at - simulation_run.sent_at
-        else
-          acc
-        end
+    params.each do |method, include|
+      if default_params.has_key? method.to_sym
+        default_params[method.to_sym] = (include == 'true')
       end
-      stats['avg_execution_time'] = (execution_time / sims_done).round(2)
-
-      #  predicted_finish_time = (Time.now - experiment.start_at).to_f / 3600
-      #  predicted_finish_time /= (instances_done.to_f / experiment.experiment_size)
-      #  predicted_finish_time_h = predicted_finish_time.floor
-      #  predicted_finish_time_m = ((predicted_finish_time.to_f - predicted_finish_time_h.to_f)*60).to_i
-      #
-      #  predicted_finish_time = ''
-      #  predicted_finish_time += "#{predicted_finish_time_h} hours"  if predicted_finish_time_h > 0
-      #  predicted_finish_time += ' and ' if (predicted_finish_time_h > 0) and (predicted_finish_time_m > 0)
-      #  predicted_finish_time +=  "#{predicted_finish_time_m} minutes" if predicted_finish_time_m > 0
-      #
-      #  partial_stats["predicted_finish_time"] = predicted_finish_time
     end
 
-    makespan = WorkersScaling::ExperimentStatisticsFactory.create_statistics(@experiment, current_user.id).makespan
-    stats[:planned_finish_time] = makespan == Float::INFINITY ? -1 : (Time.now + makespan).to_i
-    stats[:completed] = @experiment.completed?
-    stats[:workers_scaling_error] = WorkersScaling::Algorithm.where(experiment_id: @experiment.id).count == 0
+    experiment_statistics = ExperimentStatistics.new(@experiment, current_user)
+    stats = {}
+    default_params.each do |method, include|
+      stats.merge!(experiment_statistics.send(method)) if include
+    end
 
     render json: stats
   end

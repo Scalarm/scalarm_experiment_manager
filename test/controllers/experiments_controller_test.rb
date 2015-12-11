@@ -72,4 +72,95 @@ class ExperimentsControllerTest < ActionController::TestCase
 
   end
 
+  STATS_PARAMS_CONFIGURATIONS = [
+      {
+          method_name: :simulations_statistics,
+          default_value: true,
+          result_keys: [:all, :sent, :done_num, :done_percentage, :generated, :avg_execution_time]
+      },
+      {
+          method_name: :progress_bar,
+          default_value: true,
+          result_keys: [:progress_bar]
+      },
+      {
+          method_name: :completed,
+          default_value: true,
+          result_keys: [:completed]
+      },
+      {
+          method_name: :predicted_finish_time,
+          default_value: false,
+          result_keys: [:predicted_finish_time]
+      },
+      {
+          method_name: :workers_scaling_active,
+          default_value: false,
+          result_keys: [:workers_scaling_active]
+      }
+  ]
+
+  def stub_experiment_statistics
+    STATS_PARAMS_CONFIGURATIONS.each do |configuration|
+      result = configuration[:result_keys].map { |key| [key, "#{key} value"] }.to_h
+      ExperimentStatistics.any_instance.stubs(configuration[:method_name]).returns(result)
+    end
+  end
+
+  def self.create_stats_param_test(method_name, default_value, result_keys)
+    default_behaviour = (default_value ? 'present' : 'absent')
+    instance_eval do
+      test "result of method #{method_name} should be present in returned JSON when param #{method_name} is set to true" do
+        # given
+        stub_experiment_statistics
+        ExperimentsController.any_instance.stubs(:load_experiment)
+        # when
+        get :stats, id: 'id', method_name => 'true'
+        # then
+        assert_response :success
+
+        stats = JSON.parse(response.body)
+
+        result_keys.each do |key|
+          assert stats.include?(key.to_s), "Key '#{key}' should be present in returned JSON"
+        end
+      end
+
+      test "result of method #{method_name} should be absent in returned JSON when param #{method_name} is set to false" do
+        # given
+        stub_experiment_statistics
+        ExperimentsController.any_instance.stubs(:load_experiment)
+        # when
+        get :stats, id: 'id', method_name => 'false'
+        # then
+        assert_response :success
+
+        stats = JSON.parse(response.body)
+
+        result_keys.each do |key|
+          assert (not stats.include?(key.to_s)), "Key '#{key}' should be absent in returned JSON"
+        end
+      end
+
+      test "result of method #{method_name} should be #{default_behaviour} in returned JSON when param #{method_name} is unset" do
+        # given
+        stub_experiment_statistics
+        ExperimentsController.any_instance.stubs(:load_experiment)
+        # when
+        get :stats, id: 'id'
+        # then
+        assert_response :success
+
+        stats = JSON.parse(response.body)
+
+        result_keys.each do |key|
+          assert_equal default_value, stats.include?(key.to_s), "Key '#{key}' should be #{default_behaviour} in returned JSON"
+        end
+      end
+    end
+  end
+  STATS_PARAMS_CONFIGURATIONS.each do |configuration|
+    create_stats_param_test(configuration[:method_name], configuration[:default_value], configuration[:result_keys])
+  end
+
 end

@@ -40,7 +40,7 @@ module WorkersScaling
     def experiment_status_check
       LOGGER.debug 'experiment_status_check'
       @experiment.reload
-      current_makespan = @experiment_statistics.makespan(cond: Query::RUNNING_WORKERS)
+      current_makespan = @experiment_metrics.makespan(cond: Query::RUNNING_WORKERS)
       case time_constraint_check(current_makespan, planned_finish_time - Time.now)
         when :increase
           increase_computational_power
@@ -74,13 +74,13 @@ module WorkersScaling
       LOGGER.debug 'Need to increase computational power'
 
       # calculate needed additional throughput
-      throughput_needed = @experiment_statistics.target_throughput(planned_finish_time) -
-                          @experiment_statistics.system_throughput
+      throughput_needed = @experiment_metrics.target_throughput(planned_finish_time) -
+          @experiment_metrics.system_throughput
       LOGGER.debug "Additional throughput needed: #{'%.5f' % throughput_needed} sim/s"
 
       # calculate average infrastructures throughput
       infrastructures_throughput = @resources_interface.get_available_infrastructures.map do |infrastructure|
-        statistics = @experiment_statistics.get_infrastructure_statistics(infrastructure, cond: Query::RUNNING_WORKERS)
+        statistics = @experiment_metrics.get_infrastructure_statistics(infrastructure, cond: Query::RUNNING_WORKERS)
         {infrastructure: infrastructure, statistics: statistics}
       end
 
@@ -130,14 +130,14 @@ module WorkersScaling
       end
 
       # calculate excess throughput
-      excess_throughput = @experiment_statistics.system_throughput -
-                          @experiment_statistics.target_throughput(planned_finish_time)
+      excess_throughput = @experiment_metrics.system_throughput -
+          @experiment_metrics.target_throughput(planned_finish_time)
       LOGGER.debug "Excess throughput: #{'%.5f' % excess_throughput} sim/s"
 
       # get all workers with their throughput
       workers_throughput = @resources_interface.get_available_infrastructures.flat_map do |infrastructure|
         @resources_interface.get_workers_records_list(infrastructure, cond: Query::RUNNING_WORKERS).map do |worker|
-          {sm_uuid: worker.sm_uuid, throughput: @experiment_statistics.worker_throughput(worker.sm_uuid)}
+          {sm_uuid: worker.sm_uuid, throughput: @experiment_metrics.worker_throughput(worker.sm_uuid)}
         end
       end
 

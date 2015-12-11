@@ -1,5 +1,5 @@
 require_relative 'experiment_resources_interface'
-require_relative 'experiment_statistics'
+require_relative 'experiment_metrics'
 module WorkersScaling
   ##
   # Class describing interface of Workers scaling algorithm. Creating new algorithm
@@ -14,7 +14,7 @@ module WorkersScaling
     use_collection 'workers_scaling_algorithms'
     attr_accessor :experiment
     attr_accessor :resources_interface
-    attr_accessor :experiment_statistics
+    attr_accessor :experiment_metrics
 
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
     ALGORITHM_INTERVAL = 30.seconds
@@ -45,12 +45,12 @@ module WorkersScaling
     # Initializes fields that are not stored in database:
     #  * @experiment
     #  * @resources_interface
-    #  * @experiment_statistics
+    #  * @experiment_metrics
     # Returns self to allow chaining
     def initialize_runtime_fields
       @experiment = Experiment.find_by_id(experiment_id)
       @resources_interface = ExperimentResourcesInterface.new(@experiment, user_id, allowed_infrastructures)
-      @experiment_statistics = ExperimentStatistics.new(@experiment, @resources_interface)
+      @experiment_metrics = ExperimentMetrics.new(@experiment, @resources_interface)
       self
     end
 
