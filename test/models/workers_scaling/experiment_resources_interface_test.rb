@@ -244,8 +244,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     @experiment.expects(:count_simulations_to_run).returns(simulations_to_run)
     @resources_interface.stubs(:current_infrastructure_limit).returns(requested_amount)
     # when
-    real_amount, _ = @resources_interface.send(:calculate_needed_workers, requested_amount,
-                                               SAMPLE_INFRASTRUCTURE)
+    real_amount, _ = @resources_interface.send(:calculate_needed_workers, requested_amount, SAMPLE_INFRASTRUCTURE)
     # then
     assert_equal simulations_to_run, real_amount
   end
@@ -258,35 +257,26 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     @experiment.stubs(:count_simulations_to_run).returns(requested_amount)
     @resources_interface.expects(:current_infrastructure_limit).returns(workers_limit)
     # when
-    real_amount, _ = @resources_interface.send(:calculate_needed_workers, requested_amount,
-                                               SAMPLE_INFRASTRUCTURE)
+    real_amount, _ = @resources_interface.send(:calculate_needed_workers, requested_amount, SAMPLE_INFRASTRUCTURE)
     # then
     assert_equal workers_limit, real_amount
   end
 
-  SAMPLE_INFRASTRUCTURES_LIST = [
-      {:name => "Private resources", :infrastructure_name => "private_machine", :enabled => true},
-      {:name => "Dummy", :infrastructure_name => "dummy", :enabled => true},
-      {:name => "PL-Grid", :group => "plgrid", :children => [
-          {:name => "PL-Grid PBS", :infrastructure_name => "qsub", :enabled => true, :group => "plgrid"},
-          {:name => "PL-Grid QosCosGrid", :infrastructure_name => "qcg", :enabled => true, :group => "plgrid"}]},
-      {:name => "Clouds", :group => "cloud", :children => [
-          {:name => "Google Compute Engine", :infrastructure_name => "google", :enabled => false, :group => "cloud"},
-          {:name => "PLGrid Cloud", :infrastructure_name => "pl_cloud", :enabled => false, :group => "cloud"},
-          {:name => "Amazon Elastic Compute Cloud", :infrastructure_name => "amazon", :enabled => false,
-           :group => "cloud"}]}
-  ]
-  ENABLED_INFRASTRUCTURES_LIST = [
-      {name: :private_machine, params: {}},
-      {name: :dummy, params: {}},
-      {name: :qsub, params: {}},
-      {name: :qcg, params: {}}
-  ].map! { |inf| ActiveSupport::HashWithIndifferentAccess.new(inf) }
+  ENABLED_INFRASTRUCTURE_CONFIGURATION = ActiveSupport::HashWithIndifferentAccess.new({name: :enabled, params: {}})
 
   test 'get_enabled_infrastructures should return enabled infrastructures in infrastructure_configuration format' do
     # given
-    InfrastructureFacadeFactory.stubs(:list_infrastructures).returns(SAMPLE_INFRASTRUCTURES_LIST)
+    enabled_infrastructure = mock do
+      stubs(:enabled_for_user?).returns(true)
+      stubs(:short_name).returns('enabled')
+    end
+    disabled_infrastructure = mock do
+      stubs(:enabled_for_user?).returns(false)
+    end
+
+    InfrastructureFacadeFactory.stubs(:get_all_infrastructures)
+        .returns([enabled_infrastructure, disabled_infrastructure])
     # when, then
-    assert_equal ENABLED_INFRASTRUCTURES_LIST, @resources_interface.get_enabled_infrastructures
+    assert_equal [ENABLED_INFRASTRUCTURE_CONFIGURATION], @resources_interface.get_enabled_infrastructures
   end
 end

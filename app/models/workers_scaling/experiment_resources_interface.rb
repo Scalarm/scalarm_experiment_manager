@@ -29,18 +29,15 @@ module WorkersScaling
     # Returns list of enabled infrastructure configurations for experiment
     # Infrastructure configuration format: {name: <name>, params: {<params>}}
     def get_enabled_infrastructures
-      InfrastructureFacadeFactory.list_infrastructures(@user_id)
-          .flat_map {|inf| inf.has_key?(:children) ? inf[:children] : inf }
-          .select {|inf| inf[:enabled]}
-          .map do |inf|
-            ActiveSupport::HashWithIndifferentAccess.new({name: inf[:infrastructure_name].to_sym, params: {}})
-          end
+      InfrastructureFacadeFactory.get_all_infrastructures
+          .select { |inf| inf.enabled_for_user?(@user_id) }
+          .map { |inf| ActiveSupport::HashWithIndifferentAccess.new({name: inf.short_name.to_sym, params: {}}) }
     end
 
     ##
     # Returns list of available infrastructure configurations for experiment
     # Infrastructure configuration format: {name: <name>, params: {<params>}}
-    # Infrastructures with to many workers in error state will be omitted
+    # Infrastructures with too many workers in error state will be omitted
     # <params> may include e.g. credentials_id for private_machine
     def get_available_infrastructures
       enabled_infrastructures = get_enabled_infrastructures
@@ -68,10 +65,10 @@ module WorkersScaling
 
     ##
     # Schedules workers on infrastructure
-    # Number of workers scheduled may be lesser than <amount>, see #calculate_needed_workers
+    # Amount of workers scheduled may be lesser than <amount>, see #calculate_needed_workers
     # @param amount [Fixnum]
     # @param infrastructure_configuration [ActiveSupport::HashWithIndifferentAccess]
-    # @return [Array<Symbol>] sm_uuids of started workers
+    # @return [Array<String>] sm_uuids of started workers
     # @raise [InfrastructureError] if #start_simulation_managers method fails
     #   or infrastructure_configuration not allowed
     def schedule_workers(amount, infrastructure_configuration)
@@ -141,13 +138,13 @@ module WorkersScaling
     private
 
     ##
-    # Parses requested amount of workers to schedule to real amount.
+    # Adjusts requested amount of workers.
+    # Amount to start is limited by imposed restriction and number of simulations to run.
     # Already starting and initializing workers are taken into consideration.
-    # Amount to start is limited by imposed restriction and not simulation to run number.
     # @param requested_amount [Fixnum]
     # @param infrastructure_configuration [ActiveSupport::HashWithIndifferentAccess]
     # @return [Fixnum] real needed amount
-    # @return [Array<Symbol>] list of sm_uuids of already scheduled workers
+    # @return [Array<String>] list of sm_uuids of already scheduled workers
     def calculate_needed_workers(requested_amount, infrastructure_configuration)
       @experiment.reload
       starting_workers = get_workers_records_list(

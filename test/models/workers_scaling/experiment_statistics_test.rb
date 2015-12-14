@@ -6,7 +6,7 @@ class ExperimentStatisticsTest < ActiveSupport::TestCase
     @experiment_statistics = WorkersScaling::ExperimentStatistics.new(stub_everything, stub_everything)
   end
 
-  test 'count_simulations_to_run should always return non-negative number' do
+  test 'count_not_finished_simulations should always return non-negative number' do
     # given
     experiment = mock do
       stubs(:size).returns(0)
@@ -20,7 +20,7 @@ class ExperimentStatisticsTest < ActiveSupport::TestCase
     assert simulations_to_run >= 0, "Number of simulations to run must be non-negative, got #{simulations_to_run}"
   end
 
-  test 'count_simulations_to_run should always return current data' do
+  test 'count_not_finished_simulations should always return current data' do
     # given
     experiment = mock do
       expects(:reload)
@@ -32,7 +32,7 @@ class ExperimentStatisticsTest < ActiveSupport::TestCase
     experiment_statistics.send(:count_not_finished_simulations)
   end
 
-  test 'count_simulations_to_run should return number of simulations to run' do
+  test 'count_not_finished_simulations should return number of simulations to run' do
     # given
     experiment_size = 10
     done_simulations = 5
