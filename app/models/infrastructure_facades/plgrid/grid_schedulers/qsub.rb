@@ -167,7 +167,7 @@ cd $PBS_O_WORKDIR
     # Returns list of hashes representing distinct configurations of infrastructure
     # Subinfrastructures are distinguished by:
     #  * grant ids
-    def get_subinfrastructures(user_id)
+    def get_infrastructure_configurations(user_id)
       PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id)).flat_map do |grant_id|
         {name: short_name.to_sym, params: {grant_id: grant_id}}
       end

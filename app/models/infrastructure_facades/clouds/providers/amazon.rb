@@ -102,7 +102,7 @@ module AmazonCloud
     # Invokes method from super class
     # Further distinguishes subinfrastructures by:
     #  * security group
-    def get_subinfrastructures(user_id)
+    def get_infrastructure_configurations(user_id)
       security_groups_list = security_groups
       super(user_id).flat_map do |subinfrastructure|
         security_groups_list.flat_map do |security_group|

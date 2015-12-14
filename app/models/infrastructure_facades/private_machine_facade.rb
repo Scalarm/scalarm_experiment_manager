@@ -214,7 +214,7 @@ class PrivateMachineFacade < InfrastructureFacade
   # Returns list of hashes representing distinct configurations of infrastructure
   # Subinfrastructures are distinguished by:
   #  * private machine credentials
-  def get_subinfrastructures(user_id)
+  def get_infrastructure_configurations(user_id)
     PrivateMachineCredentials.where(user_id: user_id).map do |credentials|
       {name: short_name.to_sym, params: {credentials_id: credentials.id.to_s}}
     end

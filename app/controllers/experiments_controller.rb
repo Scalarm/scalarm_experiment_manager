@@ -417,7 +417,7 @@ apiDoc:
       Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
       workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
       if workers_scaling_params[:plgrid_default]
-        if InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(current_user.id).blank?
+        if InfrastructureFacadeFactory.get_facade_for(:qsub).get_infrastructure_configurations(current_user.id).blank?
           raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
         end
       else
