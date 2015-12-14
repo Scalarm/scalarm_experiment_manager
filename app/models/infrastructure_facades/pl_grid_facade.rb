@@ -296,8 +296,8 @@ class PlGridFacade < InfrastructureFacade
   ##
   # Returns list of hashes representing distinct configurations of infrastructure
   # Delegates method to classes inheriting from #PlGridSchedulerBase
-  def get_subinfrastructures(user_id)
-    scheduler.get_subinfrastructures(user_id)
+  def get_infrastructure_configurations(user_id)
+    scheduler.get_infrastructure_configurations(user_id)
   end
   
   # Appends PL-Grid scheduler name to shared SSH session ID
