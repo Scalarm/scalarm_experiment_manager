@@ -153,7 +153,7 @@ class CloudFacade < InfrastructureFacade
   ##
   # Returns list of hashes representing distinct configurations of infrastructure
   # Delegates method to classes inheriting from #AbstractCloudClient
-  def get_subinfrastructures(user_id)
+  def get_infrastructure_configurations(user_id)
     creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
     cloud_client = nil
     begin
@@ -163,7 +163,7 @@ class CloudFacade < InfrastructureFacade
     end
     return [] if (cloud_client == nil or not cloud_client.valid_credentials?)
 
-    cloud_client.get_subinfrastructures(user_id)
+    cloud_client.get_infrastructure_configurations(user_id)
   end
 
   # -- SimulationManager delegation methods --

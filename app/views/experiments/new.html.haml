@@ -1,7 +1,7 @@
 - es_url = sample_service_url('experiment_supervisors')
 - supervisor_ids = get_supervisor_ids(es_url)
 - wss_algorithms_descriptions = workers_scaling_algorithms_description
-- plgrid_default_enabled = !InfrastructureFacadeFactory.get_facade_for(:qsub).get_subinfrastructures(current_user.id).blank?
+- plgrid_default_enabled = !InfrastructureFacadeFactory.get_facade_for(:qsub).get_infrastructure_configurations(current_user.id).blank?
 
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
