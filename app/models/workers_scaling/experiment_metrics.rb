@@ -1,9 +1,9 @@
 require 'workers_scaling/utils/query'
 module WorkersScaling
   ##
-  # ExperimentStatistics class calculates various statistics about
+  # ExperimentMetrics class calculates various metrics about
   # experiment run and execution.
-  class ExperimentStatistics
+  class ExperimentMetrics
 
     ##
     # Number of running simulations in sequential worker
@@ -38,7 +38,7 @@ module WorkersScaling
     end
 
     ##
-    # Returns throughput of experiment (system) associated with ExperimentStatistics instance.
+    # Returns throughput of experiment (system) associated with ExperimentMetrics instance.
     # System throughput is calculated as sum of all workers throughput [sim/s].
     # Arguments:
     # * params:
@@ -66,7 +66,7 @@ module WorkersScaling
     end
 
     ##
-    # Returns makespan of experiment associated with ExperimentStatistics instance.
+    # Returns makespan of experiment associated with ExperimentMetrics instance.
     # Makespan is calculated as:
     #   makespan[s] = simulations_to_run/system_throughput
     # Arguments:

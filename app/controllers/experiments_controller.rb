@@ -519,22 +519,23 @@ apiDoc:
   end
 
 =begin
-  @api {get} /stats/ Get Experiment statistics
+  @api {get} /experiments/:id/stats/ Get Experiment statistics
   @apiName stats
   @apiGroup Experiments
   @apiDescription This method returns json containing Experiment statistics. All returned statistics can be included
                   or excluded using params.
 
-  @apiParam {String=false,true} [simulations_statistics='true'] Param defining if fields 'all', 'sent', 'done_num',
+  @apiParam {String} id Unique id of experiment on which action will be performed
+  @apiParam {String=false,true} [simulations_statistics=true] Param defining if fields 'all', 'sent', 'done_num',
                       'done_percentage', 'generated' and 'avg_execution_time' should be computed and included.
                        Values other than 'true' are treated as false.
-  @apiParam {String=false,true} [progress_bar='true'] Param defining if field 'progress_bar' should be computed and included.
+  @apiParam {String=false,true} [progress_bar=true] Param defining if field 'progress_bar' should be computed and included.
                        Values other than 'true' are treated as false.
-  @apiParam {String=false,true} [completed='true'] Param defining if field 'completed' should be computed and included.
+  @apiParam {String=false,true} [completed=true] Param defining if field 'completed' should be computed and included.
                        Values other than 'true' are treated as false.
-  @apiParam {String=false,true} [predicted_finish_time='false'] Param defining if field 'predicted_finish_time' should be
+  @apiParam {String=false,true} [predicted_finish_time=false] Param defining if field 'predicted_finish_time' should be
                        computed and included. Values other than 'true' are treated as false.
-  @apiParam {String=false,true} [workers_scaling_active='false'] Param defining if field 'workers_scaling_active' should be
+  @apiParam {String=false,true} [workers_scaling_active=false] Param defining if field 'workers_scaling_active' should be
                        computed and included. Values other than 'true' are treated as false.
 
   @apiParamExample Params-Example
@@ -586,9 +587,10 @@ apiDoc:
       end
     end
 
+    experiment_statistics = ExperimentStatistics.new(@experiment, current_user)
     stats = {}
     default_params.each do |method, include|
-      stats.merge!(ExperimentStatisticsGenerator.send(method, @experiment, current_user)) if include
+      stats.merge!(experiment_statistics.send(method)) if include
     end
 
     render json: stats

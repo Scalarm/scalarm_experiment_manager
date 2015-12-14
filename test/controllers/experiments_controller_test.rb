@@ -100,10 +100,10 @@ class ExperimentsControllerTest < ActionController::TestCase
       }
   ]
 
-  def stub_experiment_statistics_generator
+  def stub_experiment_statistics
     STATS_PARAMS_CONFIGURATIONS.each do |configuration|
       result = configuration[:result_keys].map { |key| [key, "#{key} value"] }.to_h
-      ExperimentStatisticsGenerator.stubs(configuration[:method_name]).returns(result)
+      ExperimentStatistics.any_instance.stubs(configuration[:method_name]).returns(result)
     end
   end
 
@@ -112,7 +112,7 @@ class ExperimentsControllerTest < ActionController::TestCase
     instance_eval do
       test "result of method #{method_name} should be present in returned JSON when param #{method_name} is set to true" do
         # given
-        stub_experiment_statistics_generator
+        stub_experiment_statistics
         ExperimentsController.any_instance.stubs(:load_experiment)
         # when
         get :stats, id: 'id', method_name => 'true'
@@ -128,7 +128,7 @@ class ExperimentsControllerTest < ActionController::TestCase
 
       test "result of method #{method_name} should be absent in returned JSON when param #{method_name} is set to false" do
         # given
-        stub_experiment_statistics_generator
+        stub_experiment_statistics
         ExperimentsController.any_instance.stubs(:load_experiment)
         # when
         get :stats, id: 'id', method_name => 'false'
@@ -144,7 +144,7 @@ class ExperimentsControllerTest < ActionController::TestCase
 
       test "result of method #{method_name} should be #{default_behaviour} in returned JSON when param #{method_name} is unset" do
         # given
-        stub_experiment_statistics_generator
+        stub_experiment_statistics
         ExperimentsController.any_instance.stubs(:load_experiment)
         # when
         get :stats, id: 'id'
