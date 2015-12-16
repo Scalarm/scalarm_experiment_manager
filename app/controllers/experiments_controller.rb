@@ -675,11 +675,18 @@ apiDoc:
   def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    Rails.logger.debug("Simulation_runs: #{simulation_runs.to_a}" )
+
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => {}}}, {result: {'$ne' => nil}} ]).first
+
+    Rails.logger.debug("First run: #{first_run}" )
+
     unless first_run.nil?
-      first_line_result = simulation_runs.first.result
+      first_line_result = first_run.result
       array_for_moes_types = first_line_result.map { |result| Utils::extract_type_from_value(result[1]) }
     end
+
+    Rails.logger.debug("MoE types: #{array_for_moes_types}" )
 
     array_for_moes_types
   end
@@ -939,7 +946,7 @@ apiDoc:
 
           simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                                  'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
-                                 'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
+                                 'input_parameters' => simulation_to_send.input_parameters })
         else
           Rails.logger.debug('next_simulation: Simulation to send is nil!')
           if @experiment.supervised and not @experiment.completed? and not @experiment.is_error
