@@ -675,18 +675,12 @@ apiDoc:
   def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    Rails.logger.debug("Simulation_runs: #{simulation_runs.to_a}" )
-
     first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => {}}}, {result: {'$ne' => nil}} ]).first
-
-    Rails.logger.debug("First run: #{first_run}" )
 
     unless first_run.nil?
       first_line_result = first_run.result
       array_for_moes_types = first_line_result.map { |result| Utils::extract_type_from_value(result[1]) }
     end
-
-    Rails.logger.debug("MoE types: #{array_for_moes_types}" )
 
     array_for_moes_types
   end
