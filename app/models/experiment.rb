@@ -282,7 +282,7 @@ class Experiment < Scalarm::Database::Model::Experiment
     CSV.generate do |csv|
       csv << self.parameters.flatten + [moe_name]
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(values result)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}).each do |simulation_run|
         next if not simulation_run.result.has_key?(moe_name)
 
         values = simulation_run.values.split(',')
@@ -307,23 +307,23 @@ class Experiment < Scalarm::Database::Model::Experiment
     CSV.generate do |csv|
       csv << [x_axis, y_axis, 'simulation_run_ind']
 
-      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}, {fields: %w(index values result arguments)}).each do |simulation_run|
+      simulation_runs.where({is_done: true, is_error: {'$exists' => false}}).each do |simulation_run|
         simulation_run_ind = simulation_run.index.to_s
-        simulation_input = Hash[simulation_run.arguments.split(',').zip(simulation_run.values.split(','))]
+        input_parameters = simulation_run.input_parameters
 
         x_axis_value = if simulation_run.result.include?(x_axis)
                          # this is a MoE
                          simulation_run.result[x_axis]
                        else
                          # this is an input parameter
-                         simulation_input[x_axis]
+                         input_parameters[x_axis]
                        end
         y_axis_value = if simulation_run.result.include?(y_axis)
                          # this is a MoE
                          simulation_run.result[y_axis]
                        else
                          # this is an input parameter
-                         simulation_input[y_axis]
+                         input_parameters[y_axis]
                        end
 
         csv << [x_axis_value, y_axis_value, simulation_run_ind]
@@ -332,24 +332,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def generated_parameter_values_for(parameter_uid)
-    simulation_id = 1
-    while (instance = simulation_runs.where(index: simulation_id).nil?)
-      simulation_id += 1
-    end
-
-    #Rails.logger.debug("Parameter UID: #{parameter_uid}")
-    #Rails.logger.debug("instance.arguments: #{instance.arguments.split(',')}")
-    param_index = instance.arguments.split(',').index(parameter_uid)
-    param_value = instance.values.split(',')[param_index]
-
-    find_exp = '^'
-    find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
-    find_exp = /#{find_exp}#{param_value}/
-
-    param_values = simulation_runs.where({values: {'$not' => find_exp}}, {fields: %w(values)}).
-        map { |x| x.values.split(',')[param_index] }.uniq + [param_value]
-
-    param_values.map { |x| x.to_f }.uniq.sort
+    simulation_runs.map{|sr| sr.input_parameters[parameter_uid]}.uniq.sort
   end
 
   ## return a full experiment input based on partial information given, and using default values for other parameters
@@ -409,7 +392,10 @@ class Experiment < Scalarm::Database::Model::Experiment
       csv << header
       query_fields = {_id: 0}
       query_fields[:index] = 1 if with_index
-      query_fields[:values] = 1 if with_params
+      if with_params
+        query_fields[:input_parameters] = 1
+        query_fields[:values] = 1
+      end
       query_fields[:result] = 1 if with_moes
       simulation_runs.where(
           {is_done: true}.merge(additional_query),

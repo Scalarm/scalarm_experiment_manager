@@ -90,7 +90,7 @@
 
       function check_if_no_results_to_plot() {
         if (window.moes_info.moes_types.length <= 0 || typeof window.moes_info.moes_types == 'undefined') {
-          toastr.error("No results to plot on chart");
+          toastr.error("#{t('errors.no_results_to_plot')}");
           return true;
         }
       }

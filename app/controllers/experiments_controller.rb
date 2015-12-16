@@ -686,9 +686,10 @@ apiDoc:
   def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => {}}}, {result: {'$ne' => nil}} ]).first
+
     unless first_run.nil?
-      first_line_result = simulation_runs.first.result
+      first_line_result = first_run.result
       array_for_moes_types = first_line_result.map { |result| Utils::extract_type_from_value(result[1]) }
     end
 
@@ -698,7 +699,7 @@ apiDoc:
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
     done_run = @experiment.simulation_runs.where(done_run_query_condition,
-                                                 {limit: 1, fields: %w(arguments)}).first
+                                                 {limit: 1, fields: %w(arguments input_parameters)}).first
 
     moes_and_params = if done_run.nil?
                         (@experiment.parameters.flatten).map { |x|
@@ -950,7 +951,7 @@ apiDoc:
 
           simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
                                  'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
-                                 'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
+                                 'input_parameters' => simulation_to_send.input_parameters })
         else
           Rails.logger.debug('next_simulation: Simulation to send is nil!')
           if @experiment.supervised and not @experiment.completed? and not @experiment.is_error
