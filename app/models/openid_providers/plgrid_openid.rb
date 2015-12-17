@@ -127,7 +127,7 @@ module PlGridOpenID
   end
 
   def update_pl_cloud_credentials(scalarm_user_id, plgrid_login, proxy_secret)
-    pl_cloud_credentials = (CloudSecrets.where(user_id: scalarm_user_id.to_s, cloud_name: 'pl_cloud').first ||
+    pl_cloud_credentials = (CloudSecrets.where(cloud_name: 'pl_cloud', user_id: scalarm_user_id.to_s).first ||
         CloudSecrets.new(user_id: scalarm_user_id, cloud_name: 'pl_cloud'))
     pl_cloud_credentials.login = plgrid_login
     pl_cloud_credentials.secret_proxy = proxy_secret

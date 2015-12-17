@@ -333,7 +333,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    creds = CloudSecrets.find_by_query(user_id: user_id, cloud_name: @short_name)
+    creds = CloudSecrets.where(cloud_name: @short_name, user_id: user_id).first
     !!(creds and not creds.invalid)
   end
 
@@ -361,7 +361,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def get_or_create_cloud_secrets(user_id)
-    CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id) or
+    CloudSecrets.where(cloud_name: @short_name, user_id: user_id).first or
         CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user_id})
   end
 
@@ -388,7 +388,7 @@ class CloudFacade < InfrastructureFacade
   			return
   		end
 
-  		cs = CloudSecrets.where(user_id: user.id, cloud_name: 'pl_cloud').first
+  		cs = CloudSecrets.where(cloud_name: 'pl_cloud', user_id: user.id).first
       unless cs.nil?
         cs._delete_attribute(:secret_proxy)
 
