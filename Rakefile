@@ -18,6 +18,41 @@ task :check_test_env do
   raise 'RAILS_ENV not set to test' unless Rails.env.test?
 end
 
+task :build_indexes do
+  require 'scalarm/service_core/initializers/mongo_active_record_initializer'
+
+  MongoActiveRecordInitializer.start(Rails.application.secrets.database) unless Rails.env.test?
+
+  mongo_active_records = Scalarm::Database::MongoActiveRecord.descendants.select do |c|
+    not (c.name.include?("CappedMongoActiveRecord") or c.name.include?("EncryptedMongoActiveRecord"))
+  end.map{|c| c.name}.compact.map do |c_name|
+    Object.const_get(c_name)
+  end
+
+  mongo_active_records.each do |mar|
+    puts "Processing '#{mar.name}' - #{mar._indexed_attributes} ..."
+    record_collection = mar.collection
+
+    mar._indexed_attributes.each do |attr|
+      puts "Checking if an index for '#{attr}' exists ..."
+      index_exist = false
+
+      record_collection.index_information.each do |_, index_info|
+        if index_info["key"].include?(attr.to_s)
+          index_exist = true
+        end
+      end
+
+      unless index_exist
+        puts "Index for '#{attr}' does not exist so we create it"
+        record_collection.ensure_index(attr.to_s)
+      else
+        puts "Index for '#{attr}' exists"
+      end
+    end
+  end
+end
+
 namespace :test do |ns|
   # add dependency to check_test_env for each test task
   ns.tasks.each do |t|
