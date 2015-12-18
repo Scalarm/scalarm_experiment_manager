@@ -203,7 +203,7 @@ class SimulationsController < ApplicationController
         when (params[:simulation_name].blank?)
           flash[:error] = t('simulations.create.no_simulation_name')
 
-        when (not Simulation.where(name: params[:simulation_name], user_id: current_user.id).to_a.blank?)
+        when (not Simulation.where(user_id: current_user.id, name: params[:simulation_name]).to_a.blank?)
           flash[:error] = t('simulations.create.simulation_invalid_name')
 
         when (simulation_input.blank?)

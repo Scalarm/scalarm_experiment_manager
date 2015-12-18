@@ -1,6 +1,13 @@
 GIT
-  remote: git://github.com/Scalarm/scalarm-database.git
-  revision: 638e131fa85e3a67b9aa6764f2a5be75b8c2b0b9
+  remote: git://github.com/rweng/jquery-datatables-rails.git
+  revision: d0f07e9aded9de30a2ca796d8036b332b41645dc
+  specs:
+    jquery-datatables-rails (3.0.0)
+      jquery-rails
+      sass-rails
+
+PATH
+  remote: /Users/dkrol/workspace/scalarm/scalarm-database
   specs:
     scalarm-database (1.1)
       activesupport
@@ -9,23 +16,14 @@ GIT
       encryptor
       mongo
 
-GIT
-  remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 4448a42f9b17006a1c0defbe1e25d00a34006b3e
+PATH
+  remote: /Users/dkrol/workspace/scalarm/scalarm-service_core
   specs:
-    scalarm-service_core (1.1.1)
+    scalarm-service_core (1.0)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       grid-proxy (~> 0.1)
       rest-client (~> 1.8)
-
-GIT
-  remote: git://github.com/rweng/jquery-datatables-rails.git
-  revision: d0f07e9aded9de30a2ca796d8036b332b41645dc
-  specs:
-    jquery-datatables-rails (3.0.0)
-      jquery-rails
-      sass-rails
 
 GEM
   remote: https://rubygems.org/
@@ -467,11 +465,14 @@ DEPENDENCIES
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
-  scalarm-database (>= 1.1)!
-  scalarm-service_core (~> 1.1.1)!
+  scalarm-database!
+  scalarm-service_core!
   sdoc
   signet
   therubyracer
   uglifier (>= 1.3.0)
   vmstat
   xml-simple
+
+BUNDLED WITH
+   1.10.6

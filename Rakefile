@@ -363,7 +363,7 @@ def create_anonymous_user
       anonymous_login = config['login']
       anonymous_password = config['password']
 
-      if anonymous_login and anonymous_password and not ScalarmUser.find_by_login(anonymous_login)
+      if anonymous_login and anonymous_password and not ScalarmUser.where(login: anonymous_login).first
         Rails.logger.debug "Creating anonymous user with login: #{anonymous_login}"
         user = ScalarmUser.new(login: anonymous_login)
         user.password = anonymous_password

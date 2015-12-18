@@ -193,7 +193,7 @@ class SimulationScenariosController < ApplicationController
           flash[:error] = t('simulations.create.bad_simulation_input')
         end
 
-      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: current_user.id})).blank?)
+      when (not (scenarios = Simulation.where({user_id: current_user.id, name: params[:simulation_name].to_s})).blank?)
         unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end

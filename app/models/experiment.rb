@@ -98,7 +98,7 @@ class Experiment < Scalarm::Database::Model::Experiment
 
   def get_statistics
     all = simulation_runs.count
-    sent = simulation_runs.where(to_sent: false, is_done: false).count
+    sent = simulation_runs.where(is_done: false, to_sent: false).count
     done = simulation_runs.where(is_done: true).count
 
     return all, sent, done

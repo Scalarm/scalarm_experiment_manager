@@ -32,7 +32,7 @@ class PrivateMachineFacade < InfrastructureFacade
       logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
 
       machine_creds = if params[:host]
-                        PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
+                        PrivateMachineCredentials.where(user_id: user_id, host: params[:host].to_s).to_a
                       else
                         PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
                       end
@@ -90,7 +90,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
     credentials_id = params[:credentials_id]
     if params.include?(:host)
-      creds = PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
+      creds = PrivateMachineCredentials.where(user_id: user_id, host: params[:host].to_s).first
       credentials_id = creds.id
     end
 
@@ -203,7 +203,7 @@ class PrivateMachineFacade < InfrastructureFacade
     if params and params.include? 'credentials_id'
       query.merge!({credentials_id: BSON::ObjectId(params['credentials_id'].to_s)})
     end
-    PrivateMachineRecord.find_all_by_query(query)
+    PrivateMachineRecord.where(query).to_a
   end
 
   def get_sm_record_by_id(record_id)
