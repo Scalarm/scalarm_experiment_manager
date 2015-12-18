@@ -355,24 +355,7 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def generated_parameter_values_for(parameter_uid)
-    simulation_id = 1
-    while (instance = simulation_runs.where(index: simulation_id).nil?)
-      simulation_id += 1
-    end
-
-    #Rails.logger.debug("Parameter UID: #{parameter_uid}")
-    #Rails.logger.debug("instance.arguments: #{instance.arguments.split(',')}")
-    param_index = instance.arguments.split(',').index(parameter_uid)
-    param_value = instance.values.split(',')[param_index]
-
-    find_exp = '^'
-    find_exp += "(\\d+\\.\\d+,){#{param_index}}" if param_index > 0
-    find_exp = /#{find_exp}#{param_value}/
-
-    param_values = simulation_runs.where({values: {'$not' => find_exp}}, {fields: %w(values)}).
-        map { |x| x.values.split(',')[param_index] }.uniq + [param_value]
-
-    param_values.map { |x| x.to_f }.uniq.sort
+    simulation_runs.map{|sr| sr.input_parameters[parameter_uid]}.uniq.sort
   end
 
   ## return a full experiment input based on partial information given, and using default values for other parameters
