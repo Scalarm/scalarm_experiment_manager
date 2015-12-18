@@ -38,14 +38,24 @@ task :build_indexes do
       index_exist = false
 
       record_collection.index_information.each do |_, index_info|
-        if index_info["key"].include?(attr.to_s)
-          index_exist = true
+        if attr.is_a?(Hash)
+          if (index_info["key"].keys - attr.keys.map(&:to_s)).empty?
+            index_exist = true
+          end
+        else
+          if index_info["key"].include?(attr.to_s)
+            index_exist = true
+          end
         end
       end
 
       unless index_exist
         puts "Index for '#{attr}' does not exist so we create it"
-        record_collection.ensure_index(attr.to_s)
+        if attr.is_a?(Hash)
+          record_collection.ensure_index(attr)
+        else
+          record_collection.ensure_index(attr.to_s)
+        end
       else
         puts "Index for '#{attr}' exists"
       end
