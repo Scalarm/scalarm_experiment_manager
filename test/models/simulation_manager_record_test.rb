@@ -152,4 +152,18 @@ class SimulationManagerRecordTest < MiniTest::Test
     assert_equal 'code1#_#code2', "#{attributes_mock[:cmd_to_execute_code]}"
   end
 
+  def test_simulations_left_field_existing
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:attributes).returns('simulations_left' => 1)
+
+    assert_equal 1, sm_record.simulations_left
+  end
+
+  def test_simulations_left_field_not_existing
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:attributes).returns({})
+
+    assert_equal Float::INFINITY, sm_record.simulations_left
+  end
+
 end

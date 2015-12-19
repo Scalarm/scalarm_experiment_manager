@@ -207,6 +207,12 @@ module SimulationManagerRecord
     end
   end
 
+  ##
+  # Returns default infinity value when attribute simulations_left is not present
+  def simulations_left
+    attributes['simulations_left'] || Float::INFINITY
+  end
+
   def store_no_credentials
     unless self.no_credentials
       self.set_attribute('no_credentials', true)

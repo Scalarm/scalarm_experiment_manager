@@ -367,7 +367,7 @@ class SimulationsController < ApplicationController
         response = {status: 'error', reason: e.to_s}
       end
 
-      if sm_record and (sm_record.simulations_left || Float::INFINITY) <= 0
+      if sm_record and sm_record.simulations_left <= 0
         InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure)
             .yield_simulation_manager(sm_record) do |sm|
           sm.stop
