@@ -208,9 +208,9 @@ module SimulationManagerRecord
   end
 
   ##
-  # Returns default infinity value when attribute simulations_left is not present
-  def simulations_left
-    attributes['simulations_left'] || Float::INFINITY
+  # Returns true if attribute simulations_left is greater than zero or does not exist
+  def has_more_simulations_to_run?
+    (attributes['simulations_left'] || Float::INFINITY) > 0
   end
 
   def store_no_credentials
