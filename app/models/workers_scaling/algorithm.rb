@@ -17,7 +17,6 @@ module WorkersScaling
     attr_accessor :experiment_metrics
 
     NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
-    ALGORITHM_INTERVAL = 30.seconds
     ERRORS_MAX = 3
 
     ##
@@ -75,11 +74,18 @@ module WorkersScaling
     end
 
     ##
+    # Returns time to wait between subsequent invocations of #experiment_status_check method
+    # May be overridden in subclasses
+    def interval
+      30.seconds
+    end
+
+    ##
     # Marks Algorithm record as executed successfully
-    # Sets next_execution_time as ALGORITHM_INTERVAL from now
+    # Sets next_execution_time as interval from now
     # Zeroes errors_count
     def notify_execution
-      self.next_execution_time = Time.now + ALGORITHM_INTERVAL
+      self.next_execution_time = Time.now + interval
       self.errors_count = 0
       save
     end
