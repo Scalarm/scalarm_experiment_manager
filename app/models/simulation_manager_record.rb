@@ -207,6 +207,13 @@ module SimulationManagerRecord
     end
   end
 
+  ##
+  # Determines if simulation manager should run more simulations
+  # If attribute simulations_left is not set, returned value is always true
+  def has_more_simulations_to_run?
+    (self.simulations_left || Float::INFINITY) > 0
+  end
+
   def store_no_credentials
     unless self.no_credentials
       self.set_attribute('no_credentials', true)

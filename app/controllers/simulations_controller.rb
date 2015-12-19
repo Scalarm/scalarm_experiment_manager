@@ -344,6 +344,11 @@ class SimulationsController < ApplicationController
               sm_record.finished_simulations ||= 0
               sm_record.finished_simulations += 1
               sm_record.save
+
+              unless sm_record.has_more_simulations_to_run?
+                InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure)
+                    .yield_simulation_manager(sm_record) {|sm| sm.stop}
+              end
             end
 
             if params.include? :execution_statistics
@@ -365,13 +370,6 @@ class SimulationsController < ApplicationController
       rescue Exception => e
         Rails.logger.error("Error in marking a simulation as complete - #{e}")
         response = {status: 'error', reason: e.to_s}
-      end
-
-      if sm_record and sm_record.simulations_left <= 0
-        InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure)
-            .yield_simulation_manager(sm_record) do |sm|
-          sm.stop
-        end
       end
       
       render json: response
