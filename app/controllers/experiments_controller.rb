@@ -416,15 +416,18 @@ apiDoc:
       message_prefix = 'Missing workers scaling parameter'
       Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
       workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
-      if workers_scaling_params[:plgrid_default]
-        if InfrastructureFacadeFactory.get_facade_for(:qsub).get_infrastructure_configurations(current_user.id).blank?
-          raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
+      required_params =
+        if workers_scaling_params[:plgrid_default]
+          if InfrastructureFacadeFactory.get_facade_for(:qsub).get_infrastructure_configurations(current_user.id).blank?
+            raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
+          end
+          [:worker_time_limit]
+        else
+          [:name, :allowed_infrastructures, :experiment_execution_time_limit]
         end
-      else
-        [:name, :allowed_infrastructures, :time_limit].each do |param|
-          Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
-                                            'workers_scaling_params')
-        end
+      required_params.each do |param|
+        Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
+                                          'workers_scaling_params')
       end
       # TODO more precise validation
     end
@@ -434,9 +437,10 @@ apiDoc:
 
     # Start workers scaling
     if workers_scaling_enabled
-      planned_finish_time = Time.now + (workers_scaling_params[:time_limit] || 0).minutes
+      planned_finish_time = Time.now + (workers_scaling_params[:experiment_execution_time_limit] || 0).minutes
       if workers_scaling_params[:plgrid_default]
-        WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id)
+        WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id,
+                                                        workers_scaling_params[:worker_time_limit])
         experiment.plgrid_default = true
       else
         allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
