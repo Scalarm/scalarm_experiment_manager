@@ -47,7 +47,7 @@ module WorkersScaling
     #  * class_name - symbol representing Algorithm implementation
     #  * experiment_id,
     #  * user_id,
-    #  * allowed_infrastructures,
+    #  * allowed_resource_configurations,
     #  * planned_finish_time,
     #  * last_update_time - standard attributes for Algorithms (see #Algorithm for details)
     #  * params (optional) - hash with additional parameters for specific Algorithm implementations
@@ -66,16 +66,16 @@ module WorkersScaling
     # Arguments:
     #  * experiment_id - id of Experiment to be subjected to Algorithm
     #  * user_id - id of User starting Algorithm
-    #  * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
+    #  * allowed_resource_configurations - list of hashes with resource configurations and maximal Workers amount
     #      (Detailed description at ExperimentResourcesInterface#initialize)
     #  * planned_finish_time - planned time of Experiment end
     #  * params - workers scaling params passed from ExperimentsController
-    def self.initial_deployment(experiment_id, user_id, allowed_infrastructures, planned_finish_time, params)
+    def self.initial_deployment(experiment_id, user_id, allowed_resource_configurations, planned_finish_time, params)
       algorithm = create_algorithm(
           class_name: params[:name].to_sym,
           experiment_id: experiment_id,
           user_id: user_id,
-          allowed_infrastructures: allowed_infrastructures,
+          allowed_resource_configurations: allowed_resource_configurations,
           planned_finish_time: planned_finish_time,
           last_update_time: Time.now
       )
@@ -126,7 +126,7 @@ module WorkersScaling
       self.initial_deployment(
               experiment_id,
               user_id,
-              [{infrastructure: configuration, limit: 5}],
+              [{resource_configuration: configuration, limit: 5}],
               Time.now,
               {name: WorkersScaling::ResourcesUsageMaximization.get_class_name}
       )
@@ -134,7 +134,7 @@ module WorkersScaling
 
     private
 
-    REQUIRED_ATTRIBUTES = [:class_name, :experiment_id, :user_id, :allowed_infrastructures,
+    REQUIRED_ATTRIBUTES = [:class_name, :experiment_id, :user_id, :allowed_resource_configurations,
                            :planned_finish_time, :last_update_time]
 
     def self.validate_attributes(attributes)

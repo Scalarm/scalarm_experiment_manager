@@ -29,10 +29,10 @@ module WorkersScaling
     # Arguments: attributes hash containing fields:
     #  * experiment_id - id of Experiment to be subjected to Algorithm
     #  * user_id - id of User starting Algorithm
-    #  * allowed_infrastructures - list of hashes with infrastructure and maximal Workers amount
+    #  * allowed_resource_configurations - list of hashes with infrastructure and maximal Workers amount
     #      (Detailed description at ExperimentResourcesInterface#initialize)
     #  * planned_finish_time - desired time of end of Experiment (as Time instance)
-    #  * last_update_time - time of last change of user-defined fields (allowed_infrastructures, planned_finish_time)
+    #  * last_update_time - time of last change of user-defined fields (allowed_resource_configurations, planned_finish_time)
     #  * params (optional) - additional params, currently unused, may be used in subclasses
     # All these fields are available in any Algorithm as if attr_accessor was created for each of them
     def initialize(attributes)
@@ -48,7 +48,7 @@ module WorkersScaling
     # Returns self to allow chaining
     def initialize_runtime_fields
       @experiment = Experiment.find_by_id(experiment_id)
-      @resources_interface = ExperimentResourcesInterface.new(@experiment, user_id, allowed_infrastructures)
+      @resources_interface = ExperimentResourcesInterface.new(@experiment, user_id, allowed_resource_configurations)
       @experiment_metrics = ExperimentMetrics.new(@experiment, @resources_interface)
       self
     end

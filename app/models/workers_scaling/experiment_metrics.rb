@@ -48,7 +48,7 @@ module WorkersScaling
     # By default only running workers are included into calculations.
     def system_throughput(params = {})
       params[:cond] = Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS unless params.has_key? :cond
-      @resources_interface.get_enabled_infrastructures.map do |infrastructure|
+      @resources_interface.get_enabled_resource_configurations.map do |infrastructure|
         @resources_interface.get_workers_records_list(infrastructure, params)
           .map {|worker| calculate_worker_throughput worker}
           .reduce 0.0, :+
