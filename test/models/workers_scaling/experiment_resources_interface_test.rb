@@ -11,9 +11,6 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
   SAMPLE_LIMITS = [
       {infrastructure: SAMPLE_INFRASTRUCTURE, limit: LIMIT}
   ]
-  DEFAULT_SCHEDULE_WORK_PARAMS = {
-      time_limit: 60
-  }
 
   def setup
     @sm_record_class = mock do
@@ -64,7 +61,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
 
   test 'schedule_workers should start workers with given config and return theirs sm_uuids' do
     # given
-    final_params = SAMPLE_INFRASTRUCTURE[:params].merge(DEFAULT_SCHEDULE_WORK_PARAMS)
+    final_params = SAMPLE_INFRASTRUCTURE[:params]
     final_params = ActiveSupport::HashWithIndifferentAccess.new(final_params)
     start_simulation_managers_result = []
     schedule_workers_result = []
