@@ -40,7 +40,7 @@ module WorkersScaling
     def experiment_status_check
       LOGGER.debug 'experiment_status_check'
       @experiment.reload
-      current_makespan = @experiment_metrics.makespan(cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
+      current_makespan = @experiment_metrics.makespan
       case time_constraint_check(current_makespan, planned_finish_time - Time.now)
         when :increase
           increase_computational_power
@@ -80,8 +80,8 @@ module WorkersScaling
 
       # calculate average configurations throughput
       configurations_throughput = @resources_interface.get_available_resource_configurations.map do |configuration|
-        statistics = @experiment_metrics.get_infrastructure_statistics(
-            configuration, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
+        statistics = @experiment_metrics.resource_configuration_statistics(configuration)
+        statistics[:average_throughput] = statistics[:throughput] / statistics[:workers_count]
         {resource_configuration: configuration, statistics: statistics}
       end
 

@@ -190,7 +190,7 @@ module WorkersScaling
     # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
     # @return [true, false]
     def resource_configuration_not_working?(resource_configuration)
-      get_workers_records_count(resource_configuration, Query::Workers::ERROR) > MAXIMUM_NUMBER_OF_FAILED_WORKERS
+      get_workers_records_count(resource_configuration, cond: Query::Workers::ERROR) > MAXIMUM_NUMBER_OF_FAILED_WORKERS
     end
 
     ##
