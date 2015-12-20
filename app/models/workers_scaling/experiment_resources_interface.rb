@@ -79,8 +79,7 @@ module WorkersScaling
 
       real_amount, already_scheduled_workers = calculate_needed_workers(amount, infrastructure_configuration)
       return already_scheduled_workers if real_amount <= 0
-      # TODO: SCAL-1189
-      infrastructure_configuration[:params][:time_limit] = 60 if infrastructure_configuration[:params][:time_limit].nil?
+
       get_facade_for(infrastructure_configuration[:name])
         .start_simulation_managers(@user_id, real_amount, @experiment.id.to_s, infrastructure_configuration[:params])
         .map(&:sm_uuid)

@@ -103,6 +103,11 @@
           = select_tag 'workers_scaling_mode_select', options_for_select(workers_scaling_mode, workers_scaling_mode.first)
           #plgrid_default{:style => 'display: none'}
             = t('experiments.workers_scaling.plgrid_default')
+            .row
+              .small-5.columns
+                = label_tag :time_limit_plgrid, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
+              .small-4.columns.end
+                = number_field_tag :time_limit_plgrid, 60, min: 1, step: 1, required: true, pattern: "^\\d+$", class: 'text-right'
 
 #workers-scaling-algorithm{:style => 'display: none'}
   %section.panel.radius
@@ -182,7 +187,7 @@
         $("input[name='workers_scaling']").val(true);
         var builder = {};
         builder["name"] = $("#workers_scaling_algorithm_select").val();
-        builder["time_limit"] = Number($("#experiment_execution_time_limit").val());
+        builder["experiment_execution_time_limit"] = Number($("#experiment_execution_time_limit").val());
         builder["allowed_infrastructures"] = window.scenario_registration.getAllowedInfrastructures();
         $("input[name='workers_scaling_params']").val(JSON.stringify(builder));
       }
@@ -191,6 +196,7 @@
         $("input[name='workers_scaling']").val(true);
         var builder = {};
         builder["plgrid_default"] = true;
+        builder["worker_time_limit"] = Number($("input[name='time_limit_plgrid']").val());
         $("input[name='workers_scaling_params']").val(JSON.stringify(builder));
       }
 
