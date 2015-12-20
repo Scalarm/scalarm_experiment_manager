@@ -56,7 +56,7 @@ module WorkersScaling
     # Waits until all are taken from queue for execution
     def self.runner_loop(work_queue)
       LOGGER.debug 'Entering Algorithm Runner loop'
-      AlgorithmFactory.get_ready_algorithms.each do |experiment_id|
+      AlgorithmFactory.get_experiment_ids_for_ready_algorithms.each do |experiment_id|
         work_queue.push(experiment_id)
       end
 
@@ -79,8 +79,8 @@ module WorkersScaling
             algorithm.destroy
             LOGGER.debug 'Experiment is not running, destroying algorithm record'
           else
-            LOGGER.debug 'Starting experiment_status_check method'
-            algorithm.experiment_status_check
+            LOGGER.debug 'Starting execute_algorithm_step method'
+            algorithm.execute_algorithm_step
             algorithm.notify_execution
             LOGGER.debug "Setting next execution time to #{algorithm.next_execution_time.inspect}"
           end

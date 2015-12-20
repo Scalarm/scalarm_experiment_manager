@@ -2,14 +2,14 @@ require_relative 'experiment_resources_interface'
 require_relative 'experiment_metrics'
 module WorkersScaling
   ##
-  # Class describing interface of Workers scaling algorithm. Creating new algorithm
-  # requires providing class with proper methods implemented, which also should
-  # inherit Algorithm class.
-  # Methods to implement by subclasses:
+  # Class describing interface of Workers scaling algorithm. New algorithms should
+  # inherit from Algorithm class, which requires implementing several methods:
   #  * #initial_deployment
-  #  * #experiment_status_check
+  #  * #execute_algorithm_step
   #  * #self.algorithm_name
   #  * #self.description
+  # New algorithms can also override method #interval to change interval between
+  # subsequent algorithm steps
   class Algorithm < Scalarm::Database::MongoActiveRecord
     use_collection 'workers_scaling_algorithms'
     attr_accessor :experiment
@@ -40,7 +40,7 @@ module WorkersScaling
     end
 
     ##
-    # Must be executed before running #initial_deployment or #experiment_status_check
+    # Must be executed before running #initial_deployment or #execute_algorithm_step
     # Initializes fields that are not stored in database:
     #  * @experiment
     #  * @resources_interface
@@ -60,7 +60,7 @@ module WorkersScaling
 
     ##
     # Method called when algorithm is starting, before first execution of
-    # #experiment_status_check. Should contain actions performed in the
+    # #execute_algorithm_step. Should contain actions performed in the
     # beginning of algorithm e.g. sending first workers on infrastructure.
     def initial_deployment
       raise NOT_IMPLEMENTED
@@ -69,12 +69,12 @@ module WorkersScaling
     ##
     # Main algorithm loop, executed on specified event (e.g. finished simulation) or
     # when given time since last execution passed. Should contain main algorithm logic.
-    def experiment_status_check
+    def execute_algorithm_step
       raise NOT_IMPLEMENTED
     end
 
     ##
-    # Returns time to wait between subsequent invocations of #experiment_status_check method
+    # Returns time to wait between subsequent invocations of #execute_algorithm_step method
     # May be overridden in subclasses
     def interval
       30.seconds

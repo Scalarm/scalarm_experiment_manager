@@ -31,7 +31,7 @@ module WorkersScaling
 
     ##
     # Description at #schedule_workers
-    def experiment_status_check
+    def execute_algorithm_step
       schedule_workers
     end
 
