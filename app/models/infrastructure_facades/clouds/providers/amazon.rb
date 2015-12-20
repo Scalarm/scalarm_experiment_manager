@@ -98,10 +98,12 @@ module AmazonCloud
     end
 
     ##
-    # Returns list of hashes representing distinct configurations of infrastructure
+    # Returns list of hashes representing distinct resource configurations
     # Invokes method from super class
-    # Further distinguishes subinfrastructures by:
+    # Further distinguishes resource configurations by:
     #  * security group
+    # @param user_id [BSON::ObjectId, String]
+    # @return [Array<Hash>] list of resource configurations
     def get_resource_configurations(user_id)
       security_groups_list = security_groups
       super(user_id).flat_map do |subinfrastructure|

@@ -59,10 +59,12 @@ class AbstractCloudClient
   end
 
   ##
-  # Returns list of hashes representing distinct configurations of infrastructure
-  # Subinfrastructures are distinguished by:
+  # Returns list of hashes representing distinct resource configurations
+  # Resource configurations are distinguished by:
   #  * type of machine instance
   #  * image secrets
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
   def get_resource_configurations(user_id)
     instance_types_list = instance_types.map { |type, _| type }
     image_secrets_ids = CloudImageSecrets

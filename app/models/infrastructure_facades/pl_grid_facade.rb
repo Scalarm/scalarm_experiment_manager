@@ -294,8 +294,10 @@ class PlGridFacade < InfrastructureFacade
   end
 
   ##
-  # Returns list of hashes representing distinct configurations of infrastructure
+  # Returns list of hashes representing distinct resource configurations
   # Delegates method to classes inheriting from #PlGridSchedulerBase
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
   def get_resource_configurations(user_id)
     scheduler.get_resource_configurations(user_id)
   end

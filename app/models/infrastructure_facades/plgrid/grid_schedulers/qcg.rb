@@ -216,10 +216,12 @@ module QcgScheduler
     end
 
     ##
-    # Returns list of hashes representing distinct configurations of infrastructure
-    # Subinfrastructures are distinguished by:
+    # Returns list of hashes representing distinct resource configurations
+    # Resource configurations are distinguished by:
     #  * PLGrid hosts
     #  * grant ids
+    # @param user_id [BSON::ObjectId, String]
+    # @return [Array<Hash>] list of resource configurations
     def get_resource_configurations(user_id)
       hosts = self.class.available_hosts
       grant_ids = PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id))
