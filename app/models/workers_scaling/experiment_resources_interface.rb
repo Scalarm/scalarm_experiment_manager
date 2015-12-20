@@ -9,89 +9,97 @@ module WorkersScaling
     MAXIMUM_NUMBER_OF_FAILED_WORKERS = 3
 
     ##
-    # Params:
-    # * experiment
-    # * user_id
-    # * allowed_infrastructures
-    #     Variable storing user-defined workers limits for each infrastructure configuration
-    #     Only infrastructures specified here can be used by experiment.
-    #     Format: [{infrastructure: <infrastructure_configuration>, limit: <limit>}, ...]
-    #     <infrastructure_configuration> - hash with infrastructure configuration
-    #     <limit> - integer
-    def initialize(experiment, user_id, allowed_infrastructures)
+    # @param experiment [Experiment]
+    # @param user_id [BSON::ObjectId, String]
+    # @param allowed_resource_configurations [Array<Hash, ActiveSupport::HashWithIndifferentAccess>]
+    #   Variable storing user-defined workers limits for each resource configuration
+    #   Only resource configuration specified here can be used by experiment.
+    #   Format: [{resource_configuration: <resource_configuration>, limit: <limit>}, ...]
+    #     <resource_configuration> - hash with resource configuration
+    #     <limit> - Fixnum
+    def initialize(experiment, user_id, allowed_resource_configurations)
       @experiment = experiment
       @user_id = BSON::ObjectId(user_id.to_s)
       @facades_cache = {}
-      @allowed_infrastructures = allowed_infrastructures.map {|x| ActiveSupport::HashWithIndifferentAccess.new(x)}
+      @allowed_resource_configurations = allowed_resource_configurations.map do |x|
+        ActiveSupport::HashWithIndifferentAccess.new(x)
+      end
     end
 
     ##
-    # Returns list of enabled infrastructure configurations for experiment
-    # Infrastructure configuration format: {name: <name>, params: {<params>}}
-    def get_enabled_infrastructures
+    # Returns list of enabled resource configurations for experiment
+    # Resource configuration format: {name: <name>, params: {<params>}}
+    # @return [Arrat<ActiveSupport::HashWithIndifferentAccess>] list of enabled resource configurations
+    def get_enabled_resource_configurations
       InfrastructureFacadeFactory.get_all_infrastructures
           .select { |inf| inf.enabled_for_user?(@user_id) }
           .map { |inf| ActiveSupport::HashWithIndifferentAccess.new({name: inf.short_name.to_sym, params: {}}) }
     end
 
     ##
-    # Returns list of available infrastructure configurations for experiment
-    # Infrastructure configuration format: {name: <name>, params: {<params>}}
-    # Infrastructures with too many workers in error state will be omitted
+    # Returns list of available resource configurations for experiment
+    # Resource configuration format: {name: <name>, params: {<params>}}
+    # Resource configuration with too many workers in error state will be omitted
     # <params> may include e.g. credentials_id for private_machine
-    def get_available_infrastructures
-      enabled_infrastructures = get_enabled_infrastructures
-      @allowed_infrastructures
+    # @return [Arrat<ActiveSupport::HashWithIndifferentAccess>] list of available resource configurations
+    def get_available_resource_configurations
+      enabled_resource_configurations = get_enabled_resource_configurations
+      @allowed_resource_configurations
           .select do |allowed|
-            !!enabled_infrastructures.detect {|enabled| infrastructure_configs_equal?(enabled, allowed[:infrastructure])}
+            !!enabled_resource_configurations.detect do |enabled|
+              resource_configurations_equal?(enabled, allowed[:resource_configuration])
+            end
           end
-          .map{|entry| entry[:infrastructure]}
-          .select {|inf| not infrastructure_not_working?(inf)}
+          .map{|entry| entry[:resource_configuration]}
+          .select {|inf| not resource_configuration_not_working?(inf)}
     end
 
     ##
-    # Returns amount of Workers that can be yet scheduled on given infrastructure_configuration
-    def current_infrastructure_limit(infrastructure_configuration)
-      infrastructure_limit = @allowed_infrastructures.detect do |entry|
-        infrastructure_configs_equal?(infrastructure_configuration, entry[:infrastructure])
+    # Returns amount of workers that can be yet scheduled using resource_configuration
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # @return [Fixnum] current resource_configuration workers limit
+    def current_resource_configuration_limit(resource_configuration)
+      allowed_configurations_entry = @allowed_resource_configurations.detect do |entry|
+        resource_configurations_equal?(resource_configuration, entry[:resource_configuration])
       end
-      if infrastructure_limit.nil?
+      if allowed_configurations_entry.nil?
         0
       else
-        [0, infrastructure_limit[:limit] - get_workers_records_count(infrastructure_configuration,
+        [0, allowed_configurations_entry[:limit] - get_workers_records_count(resource_configuration,
           cond: Query::Workers::NOT_ERROR)].max
       end
     end
 
     ##
-    # Schedules workers on infrastructure
+    # Schedules workers on resource configuration
     # Amount of workers scheduled may be lesser than <amount>, see #calculate_needed_workers
-    # @param amount [Fixnum]
-    # @param infrastructure_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # @param amount [Fixnum] amount of workers to start
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
     # @return [Array<String>] sm_uuids of started workers
-    # @raise [InfrastructureError] if #start_simulation_managers method fails
-    #   or infrastructure_configuration not allowed
-    def schedule_workers(amount, infrastructure_configuration)
-      raise AccessDeniedError unless @allowed_infrastructures.detect do |allowed|
-        infrastructure_configs_equal?(infrastructure_configuration, allowed[:infrastructure], true)
+    # @raise [InfrastructureErrors::AccessDeniedError] if resource_configuration not allowed
+    # @raise [InfrastructureErrors::InfrastructureError] if #start_simulation_managers method fails
+    def schedule_workers(amount, resource_configuration)
+      raise AccessDeniedError unless @allowed_resource_configurations.detect do |allowed|
+        resource_configurations_equal?(resource_configuration, allowed[:resource_configuration], true)
       end
-      return [] if infrastructure_not_working?(infrastructure_configuration)
+      return [] if resource_configuration_not_working?(resource_configuration)
 
-      real_amount, already_scheduled_workers = calculate_needed_workers(amount, infrastructure_configuration)
+      real_amount, already_scheduled_workers = calculate_needed_workers(amount, resource_configuration)
       return already_scheduled_workers if real_amount <= 0
 
-      get_facade_for(infrastructure_configuration[:name])
-        .start_simulation_managers(@user_id, real_amount, @experiment.id.to_s, infrastructure_configuration[:params])
+      get_facade_for(resource_configuration[:name])
+        .start_simulation_managers(@user_id, real_amount, @experiment.id.to_s, resource_configuration[:params])
         .map(&:sm_uuid)
         .concat(already_scheduled_workers)
     end
 
     ##
     # Marks worker with given sm_uuid to be deleted after finishing given number of simulations
-    # If overwrite is set to false, worker will not be marked if simulations_left field is already set,
-    # otherwise new number will be set in all cases
     # Using overwrite=true may result in unintentional resetting simulations_left field,
     # effectively prolonging lifetime of worker, therefore default value is false
+    # @param sm_uuid [String] worker sm_uuid
+    # @param simulations_left [Fixnum] number of simulation left to execute by worker 
+    # @param overwrite [true, false] if set to false, simulations_left will not be updated if already set
     def limit_worker_simulations(sm_uuid, simulations_left, overwrite=false)
       worker = get_worker_record_by_sm_uuid(sm_uuid)
       unless worker.nil?
@@ -102,35 +110,52 @@ module WorkersScaling
 
     ##
     # Stops worker after completing its current simulation execution
+    # @param sm_uuid [String] worker sm_uuid
     def soft_stop_worker(sm_uuid)
       limit_worker_simulations(sm_uuid, 1)
     end
 
     ##
-    # Returns list of workers records for infrastructure_configuration
-    def get_workers_records_list(infrastructure_configuration, params = {})
-      get_workers_records_cursor(infrastructure_configuration, params).to_a
+    # Returns list of workers records for resource_configuration
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # @param params [Hash] optional parameters for database query, for details see MongoActiveRecord#where
+    # @option params [Hash] :cond query conditions 
+    # @option params [Hash] :opts query options
+    # @return [Array<PrivateMachineRecord, PlGridJob, CloudVmRecord, DummyRecord>] workers records
+    def get_workers_records_list(resource_configuration, params = {})
+      get_workers_records_cursor(resource_configuration, params).to_a
     end
 
     ##
-    # Returns workers records count for infrastructure_configuration
-    def get_workers_records_count(infrastructure_configuration, params = {})
-      get_workers_records_cursor(infrastructure_configuration, params).count
+    # Returns workers records count for resource_configuration
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # @param params [Hash] optional parameters for database query, for details see MongoActiveRecord#where
+    # @option params [Hash] :cond query conditions
+    # @option params [Hash] :opts query options
+    # @return [Fixnum] workers records count
+    def get_workers_records_count(resource_configuration, params = {})
+      get_workers_records_cursor(resource_configuration, params).count
     end
 
     ##
-    # Returns overall Workers count for Experiment matching given params
+    # Returns overall workers count for Experiment matching given params
+    # @param params [Hash] optional parameters for database query, for details see MongoActiveRecord#where
+    # @option params [Hash] :cond query conditions
+    # @option params [Hash] :opts query options
+    # @return [Fixnum] workers records count
     def count_all_workers(params = {})
-      get_enabled_infrastructures
-          .flat_map { |infrastructure| get_workers_records_count(infrastructure, params) }
+      get_enabled_resource_configurations
+          .flat_map { |configuration| get_workers_records_count(configuration, params) }
           .reduce(0) { |sum, count| sum + count }
     end
 
     ##
     # Returns worker record for given sm_uuid
+    # @param sm_uuid [String] worker sm_uuid
+    # @return [PrivateMachineRecord, PlGridJob, CloudVmRecord, DummyRecord] worker record
     def get_worker_record_by_sm_uuid(sm_uuid)
-      get_enabled_infrastructures.map do |infrastructure|
-        get_workers_records_cursor(infrastructure, cond: {sm_uuid: sm_uuid}).first
+      get_enabled_resource_configurations.map do |configuration|
+        get_workers_records_cursor(configuration, cond: {sm_uuid: sm_uuid}).first
       end .detect { |worker| not worker.nil? }
     end
 
@@ -141,40 +166,42 @@ module WorkersScaling
     # Amount to start is limited by imposed restriction and number of simulations to run.
     # Already starting and initializing workers are taken into consideration.
     # @param requested_amount [Fixnum]
-    # @param infrastructure_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
     # @return [Fixnum] real needed amount
     # @return [Array<String>] list of sm_uuids of already scheduled workers
-    def calculate_needed_workers(requested_amount, infrastructure_configuration)
+    def calculate_needed_workers(requested_amount, resource_configuration)
       @experiment.reload
       starting_workers = get_workers_records_list(
-          infrastructure_configuration, cond: Query::Workers::RUNNING_WITHOUT_FINISHED_SIMULATIONS).map(&:sm_uuid)
+          resource_configuration, cond: Query::Workers::RUNNING_WITHOUT_FINISHED_SIMULATIONS).map(&:sm_uuid)
       initializing_workers = get_workers_records_list(
-          infrastructure_configuration, cond: Query::Workers::INITIALIZING).map(&:sm_uuid)
+          resource_configuration, cond: Query::Workers::INITIALIZING).map(&:sm_uuid)
 
       # amount includes workers that do not count towards throughput yet, algorithm has no knowledge about them
       requested_amount -= starting_workers.count + initializing_workers.count
       # initializing workers have not yet taken simulations, need to avoid scheduling workers that will not get one
       simulations_left = @experiment.count_simulations_to_run - initializing_workers.count
 
-      real_amount = [requested_amount, current_infrastructure_limit(infrastructure_configuration), simulations_left].min
+      real_amount = [requested_amount, current_resource_configuration_limit(resource_configuration), simulations_left].min
       return real_amount, starting_workers + initializing_workers
     end
 
     ##
-    # Checks whether infrastructure works by checking number of workers in error state
-    # @param infrastructure_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # Checks whether resource configuration works by checking number of workers in error state
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
     # @return [true, false]
-    def infrastructure_not_working?(infrastructure_configuration)
-      get_workers_records_count(infrastructure_configuration, Query::Workers::ERROR) > MAXIMUM_NUMBER_OF_FAILED_WORKERS
+    def resource_configuration_not_working?(resource_configuration)
+      get_workers_records_count(resource_configuration, Query::Workers::ERROR) > MAXIMUM_NUMBER_OF_FAILED_WORKERS
     end
 
     ##
     # Checks whether all fields from narrower are equal with corresponding fields from wider
     # when exact flag is set to false. Performs full comparison when exact flag is true.
-    # By default exact flag is set to false
-    # Returns true when infrastructure configurations are equal, false otherwise.
-    def infrastructure_configs_equal?(narrower, wider, exact=false)
-      # TODO replace with infrastructure id
+    # Returns true when resource configurations are equal, false otherwise.
+    # @param narrower [ActiveSupport::HashWithIndifferentAccess] resource configuration
+    # @param wider [ActiveSupport::HashWithIndifferentAccess] resource configuration
+    # @param exact [true, false] specifies whether compares all fields or only from narrower
+    # @return [true, false] comparison result
+    def resource_configurations_equal?(narrower, wider, exact=false)
       return false if wider[:name] != narrower[:name]
       if exact
         return false if wider[:params] != narrower[:params]
@@ -187,12 +214,11 @@ module WorkersScaling
     end
 
     ##
-    # Returns InfrastructureFacade for given infrastructure name
-    # Previously accessed facades are cached
+    # Returns InfrastructureFacade for given infrastructure name, previously accessed facades are cached
+    # @param infrastructure_name [Symbol]
+    # @return [PrivateMachineFacade, PlGridFacade, CloudFacade, DummyFacade] infrastructure facade
     def get_facade_for(infrastructure_name)
       unless @facades_cache.has_key? infrastructure_name
-        throw NoSuchInfrastructureError unless get_enabled_infrastructures.map {|infrastructure| infrastructure[:name]}
-                                                                            .include? infrastructure_name
         @facades_cache[infrastructure_name] = InfrastructureFacadeFactory.get_facade_for infrastructure_name
       end
       @facades_cache[infrastructure_name]
@@ -200,19 +226,15 @@ module WorkersScaling
 
     ##
     # Returns Mongo cursor for given query
-    # Arguments:
-    # * infrastructure_configuration - hash with infrastructure configuration
-    # * params:
-    #   * opts
-    #   * cond
-    # Possible cond and opts can be found in MongoActiveRecord#where.
-    def get_workers_records_cursor(infrastructure_configuration, params = {})
-      get_facade_for(infrastructure_configuration[:name])
-        .query_simulation_manager_records(@user_id, @experiment.id.to_s, infrastructure_configuration[:params])
-        .where(
-            params[:cond] || ActiveSupport::HashWithIndifferentAccess.new,
-            params[:opts] || ActiveSupport::HashWithIndifferentAccess.new
-        )
+    # @param resource_configuration [ActiveSupport::HashWithIndifferentAccess]
+    # @param params [Hash] optional parameters for database query, for details see MongoActiveRecord#where
+    # @option params [Hash] :cond query conditions
+    # @option params [Hash] :opts query options
+    # @return [MongoActiveRecord] cursor for workers record mongo collection
+    def get_workers_records_cursor(resource_configuration, params = {})
+      get_facade_for(resource_configuration[:name])
+        .query_simulation_manager_records(@user_id, @experiment.id.to_s, resource_configuration[:params])
+        .where(params[:cond] || {}, params[:opts] || {})
     end
   end
 

@@ -423,7 +423,7 @@ apiDoc:
           end
           [:worker_time_limit]
         else
-          [:name, :allowed_infrastructures, :experiment_execution_time_limit]
+          [:name, :allowed_resource_configurations, :experiment_execution_time_limit]
         end
       required_params.each do |param|
         Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
@@ -443,9 +443,11 @@ apiDoc:
                                                         workers_scaling_params[:worker_time_limit])
         experiment.plgrid_default = true
       else
-        allowed_infrastructures = workers_scaling_params[:allowed_infrastructures].map do |record|
-          # TODO Introduce infrastructure id
-          {infrastructure: {name: record['name'].to_sym, params: record['params'].symbolize_keys}, limit: record['limit']}
+        allowed_infrastructures = workers_scaling_params[:allowed_resource_configurations].map do |record|
+          {
+              resource_configuration: {name: record['name'].to_sym, params: record['params'].symbolize_keys},
+              limit: record['limit']
+          }
         end
         WorkersScaling::AlgorithmFactory.initial_deployment(
             experiment.id,

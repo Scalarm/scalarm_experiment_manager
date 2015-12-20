@@ -21,17 +21,17 @@ module WorkersScaling
     TOLERANCE = 10
 
     ##
-    # Schedules one Worker on each available infrastructure if Experiment size is greater than infrastructures number
-    # Otherwise uses random subset of available infrastructures with size equal to Experiment size
+    # Schedules one Worker on each available configuration if Experiment size is greater than configurations number
+    # Otherwise uses random subset of available configurations with size equal to Experiment size
     def initial_deployment
       LOGGER.debug 'Initial deployment'
       @experiment.reload
-      @resources_interface.get_available_infrastructures
-          .select { |infrastructure| @resources_interface.current_infrastructure_limit(infrastructure) > 0 }
+      @resources_interface.get_available_resource_configurations
+          .select { |configuration| @resources_interface.current_resource_configuration_limit(configuration) > 0 }
           .shuffle[0..@experiment.size-1]
-          .each do |infrastructure|
-        @resources_interface.schedule_workers(1, infrastructure)
-        LOGGER.debug "Initializing infrastructure: #{infrastructure}"
+          .each do |configuration|
+        @resources_interface.schedule_workers(1, configuration)
+        LOGGER.debug "Initializing configuration: #{configuration}"
       end
     end
 
@@ -68,8 +68,8 @@ module WorkersScaling
     ##
     # Increases computational power to match required system throughput
     # Does nothing if there are starting Workers already
-    # Uses known infrastructures with highest throughput if limits are not reached
-    # If limits in all known infrastructures are reached, uses random unknown infrastructure
+    # Uses known configurations with highest throughput if limits are not reached
+    # If limits in all known configurations are reached, uses random unknown configuration
     def increase_computational_power
       LOGGER.debug 'Need to increase computational power'
 
@@ -78,43 +78,45 @@ module WorkersScaling
           @experiment_metrics.system_throughput
       LOGGER.debug "Additional throughput needed: #{'%.5f' % throughput_needed} sim/s"
 
-      # calculate average infrastructures throughput
-      infrastructures_throughput = @resources_interface.get_available_infrastructures.map do |infrastructure|
+      # calculate average configurations throughput
+      configurations_throughput = @resources_interface.get_available_resource_configurations.map do |configuration|
         statistics = @experiment_metrics.get_infrastructure_statistics(
-            infrastructure, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
-        {infrastructure: infrastructure, statistics: statistics}
+            configuration, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
+        {resource_configuration: configuration, statistics: statistics}
       end
 
-      # separate infrastructures currently in use
-      used_infrastructures = infrastructures_throughput.select { |entity| entity[:statistics][:workers_count] > 0 }
-      unused_infrastructures = infrastructures_throughput.select { |entity| entity[:statistics][:workers_count] == 0 }
-      # TODO: calculate avg throughput for unused infrastructures basing on ECU?
+      # separate configurations currently in use
+      used_configurations = configurations_throughput.select { |entity| entity[:statistics][:workers_count] > 0 }
+      unused_configurations = configurations_throughput.select { |entity| entity[:statistics][:workers_count] == 0 }
+      # TODO: calculate avg throughput for unused configurations basing on ECU?
 
       # sort from highest
-      sorted_throughput = used_infrastructures.sort_by { |infrastructure| infrastructure[:average_throughput] }.reverse
+      sorted_throughput = used_configurations.sort_by { |configuration| configuration[:average_throughput] }.reverse
       LOGGER.debug "Avg inf throughput: #{sorted_throughput}"
 
       # iterate over sorted entities until system throughput is increased to desired value
       sorted_throughput.each do |entity|
         break if throughput_needed <= 0
-        throughput_needed -= add_workers(entity[:infrastructure],
+        throughput_needed -= add_workers(entity[:resource_configuration],
                                          entity[:statistics][:average_throughput],
                                          throughput_needed)
         LOGGER.debug "Reduced needed throughput to #{'%.5f' % throughput_needed} sim/s"
       end
 
-      # if throughput is still too low, use other infrastructures or inform user
+      # if throughput is still too low, use other configurations or inform user
       if throughput_needed > 0
-        random_unused = unused_infrastructures
-            .select { |entity| @resources_interface.current_infrastructure_limit(entity[:infrastructure]) > 0 }
+        random_unused = unused_configurations
+            .select do |entity|
+              @resources_interface.current_resource_configuration_limit(entity[:resource_configuration]) > 0
+            end
             .sample
         if random_unused.blank?
           # TODO: inform user that planned_finish_time cannot be fulfilled with current limits
           LOGGER.debug 'May not meet time requirements'
         else
-          # schedule one worker on random unused infrastructure
-          LOGGER.debug 'Need to use unknown infrastructure'
-          add_workers(random_unused[:infrastructure])
+          # schedule one worker on random unused configuration
+          LOGGER.debug 'Need to use unknown configuration'
+          add_workers(random_unused[:resource_configuration])
         end
       end
     end
@@ -136,9 +138,9 @@ module WorkersScaling
       LOGGER.debug "Excess throughput: #{'%.5f' % excess_throughput} sim/s"
 
       # get all workers with their throughput
-      workers_throughput = @resources_interface.get_available_infrastructures.flat_map do |infrastructure|
+      workers_throughput = @resources_interface.get_available_resource_configurations.flat_map do |configuration|
         @resources_interface
-            .get_workers_records_list(infrastructure, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
+            .get_workers_records_list(configuration, cond: Query::Workers::RUNNING_WITH_FINISHED_SIMULATIONS)
             .map do |worker|
               {sm_uuid: worker.sm_uuid, throughput: @experiment_metrics.worker_throughput(worker.sm_uuid)}
             end
@@ -161,10 +163,10 @@ module WorkersScaling
     private
 
     ##
-    # Adds workers to given infrastructure basing on average throughput of infrastructure and throughput needed
+    # Adds workers to given configuration basing on average throughput of configuration and throughput needed
     # If average_throughput is 0, throughput_needed value is ignored and exactly one Worker is added
     # Returns predicted throughput growth
-    def add_workers(infrastructure, average_throughput = 0, throughput_needed = 0)
+    def add_workers(resource_configuration, average_throughput = 0, throughput_needed = 0)
       workers_needed = if average_throughput > 0
                          if throughput_needed == Float::INFINITY
                            Float::INFINITY
@@ -174,9 +176,9 @@ module WorkersScaling
                        else
                          1
                        end
-      LOGGER.debug "Trying to schedule #{workers_needed} Workers on infrastructure: #{infrastructure}"
-      scheduled = @resources_interface.schedule_workers(workers_needed, infrastructure).count
-      LOGGER.debug "Total of #{scheduled} Workers starting on infrastructure: #{infrastructure}"
+      LOGGER.debug "Trying to schedule #{workers_needed} Workers on configuration: #{resource_configuration}"
+      scheduled = @resources_interface.schedule_workers(workers_needed, resource_configuration).count
+      LOGGER.debug "Total of #{scheduled} Workers starting on configuration: #{resource_configuration}"
       scheduled * average_throughput
     end
   end

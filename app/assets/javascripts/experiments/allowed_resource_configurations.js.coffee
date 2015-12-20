@@ -1,8 +1,6 @@
-class window.AllowedInfrastructures
+class window.AllowedResourceConfigurations
 
   constructor: () ->
-    @allowed_infrastructures_form = $('#allowed_infrastructures')
-
     # TODO make themes support
     #$.jstree._themes = '/assets/jstree-themes/'
 
@@ -45,8 +43,8 @@ class window.AllowedInfrastructures
         true
     )
 
-  getAllowedInfrastructures: =>
-    @allowed_infrastructures.filter (entry) ->
+  getAllowedResourceConfigurations: =>
+    @allowed_resource_configurations.filter (entry) ->
         entry.name != "" and entry.limit != 0
       .map (entry) ->
         {
@@ -129,14 +127,14 @@ class window.AllowedInfrastructures
     @simpleRemoveParam()
 
   createSimpleModel: =>
-    @allowed_infrastructures = [] unless @allowed_infrastructures
+    @allowed_resource_configurations = [] unless @allowed_resource_configurations
 
   simpleAddParam: =>
     @global_param_n = 0 unless @global_param_n
     param_num = @global_param_n++
 
     @createSimpleModel()
-    @allowed_infrastructures.push({
+    @allowed_resource_configurations.push({
       id: ('param-' + param_num),
       name: '',
       label: 'Unset',
@@ -157,7 +155,7 @@ class window.AllowedInfrastructures
     param_id = @getSelectedNodeId()
     if param_id
       index = @getModelParamIndexById(param_id)
-      @allowed_infrastructures.splice(index, 1)
+      @allowed_resource_configurations.splice(index, 1)
       @updateTree()
       @loadParamToEditor(null)
 
@@ -185,8 +183,8 @@ class window.AllowedInfrastructures
 
   simpleModelToTreeData: =>
     try
-      return [] unless @allowed_infrastructures
-      parameters = @allowed_infrastructures
+      return [] unless @allowed_resource_configurations
+      parameters = @allowed_resource_configurations
       parameters.map(@paramModelToTree)
     catch error
       console.log error
@@ -202,17 +200,17 @@ class window.AllowedInfrastructures
     }
 
   getModelParamById: (id) =>
-    @allowed_infrastructures.filter((p) -> p.id == id)[0]
+    @allowed_resource_configurations.filter((p) -> p.id == id)[0]
 
   getModelParamIndexById: (id) =>
-    parameters = @allowed_infrastructures
+    parameters = @allowed_resource_configurations
     for i in [0..parameters.length-1] by 1
       return i if parameters[i].id == id
 
   # modify model
   # - edit parameter property -> find parameter in model and modify
   simpleModifyParameter: (param_id, attr, value) =>
-    for p in @allowed_infrastructures
+    for p in @allowed_resource_configurations
       if p.id == param_id
         p[attr] = value
         break
