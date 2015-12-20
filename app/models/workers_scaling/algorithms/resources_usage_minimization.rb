@@ -10,8 +10,8 @@ module WorkersScaling
     end
 
     def self.description
-      'Method will use minimal possible amount of resources to fulfil imposed restriction and '\
-      'will try to ensure even resources usage through entire experiment.'
+      'Method will use minimal possible amount of resources to finish experiment within execution time limit '\
+      'and will try to ensure even resources usage through entire experiment.'
     end
 
     ##
@@ -37,8 +37,7 @@ module WorkersScaling
 
     ##
     # Executes action based on result of time_constraint_check
-    def experiment_status_check
-      LOGGER.debug 'experiment_status_check'
+    def execute_algorithm_step
       @experiment.reload
       current_makespan = @experiment_metrics.makespan
       case time_constraint_check(current_makespan, planned_finish_time - Time.now)

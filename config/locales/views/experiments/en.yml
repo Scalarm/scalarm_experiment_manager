@@ -29,7 +29,7 @@ en:
           expected: Expected finish time
           planned: Planned finish time
           warning: May not meet time requirements
-        error: An error occurred, automated management stopped
+        error: An error occurred, automated management stopped, please contact administrators
 
 
 

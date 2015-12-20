@@ -32,8 +32,8 @@ module WorkersScaling
 
     ##
     # Finds all records of Algorithm implementations with next_execution_time before current time
-    # Returns list of experiment_ids for each record
-    def self.get_ready_algorithms
+    # Returns list of experiment_ids for each record found
+    def self.get_experiment_ids_for_ready_algorithms
       WorkersScaling::Algorithm.where(
           {next_execution_time: {'$lte' => Time.now}},
           {fields: [:experiment_id]}
