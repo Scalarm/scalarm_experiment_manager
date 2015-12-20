@@ -116,4 +116,135 @@ class ExperimentMetricsTest < ActiveSupport::TestCase
     assert_equal expected_target_throughput, target_throughput
   end
 
+  test 'calculate_worker_throughput should return correctly calculated throughput' do
+    # given
+    finished_simulations = 1
+    time_start = Time.new(0)
+    time_end = Time.new(1000)
+    worker = mock do
+      expects(:created_at).returns(time_start)
+      expects(:finished_simulations).returns(finished_simulations)
+    end
+    Time.stubs(:now).returns(time_end)
+    expected_worker_throughput = (finished_simulations + 1)/(time_end - time_start)
+    # when
+    worker_throughput = @experiment_metrics.send(:calculate_worker_throughput, worker)
+    # then
+    assert_equal expected_worker_throughput, worker_throughput
+  end
+
+
+  test 'calculate_worker_throughput should correctly calculate throughput when workers does not have attribute finished_simulations' do
+    # given
+    time_start = Time.new(0)
+    time_end = Time.new(1000)
+    worker = mock do
+      expects(:created_at).returns(time_start)
+      expects(:finished_simulations).returns(nil)
+    end
+    Time.stubs(:now).returns(time_end)
+    expected_worker_throughput = (0 + 1)/(time_end - time_start)
+    # when
+    worker_throughput = @experiment_metrics.send(:calculate_worker_throughput, worker)
+    # then
+    assert_equal expected_worker_throughput, worker_throughput
+  end
+
+  test 'system_throughput should calculate throughput correctly for multiple configurations with workers' do
+    # given
+    worker_throughput = 5
+    configurations_list = [mock, mock]
+    workers_list = [mock, mock]
+    resources_interface = mock do
+      expects(:get_enabled_resource_configurations).returns(configurations_list)
+      expects(:get_workers_records_list).twice.returns(workers_list)
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(mock, resources_interface)
+    experiment_metrics.stubs(:calculate_worker_throughput).returns(worker_throughput)
+    expected_system_throughput = configurations_list.size * workers_list.size * worker_throughput
+    # when
+    system_throughput = experiment_metrics.system_throughput
+    # then
+    assert_equal expected_system_throughput, system_throughput
+  end
+
+  test 'system_throughput should calculate throughput correctly when one of configurations has no workers' do
+    # given
+    worker_throughput = 5
+    configurations_list = [mock, mock]
+    workers_list = [mock, mock]
+    resources_interface = mock do
+      expects(:get_enabled_resource_configurations).returns(configurations_list)
+      expects(:get_workers_records_list).twice.returns(workers_list, [])
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(mock, resources_interface)
+    experiment_metrics.stubs(:calculate_worker_throughput).returns(worker_throughput)
+    expected_system_throughput = workers_list.size * worker_throughput
+    # when
+    system_throughput = experiment_metrics.system_throughput
+    # then
+    assert_equal expected_system_throughput, system_throughput
+  end
+
+  test 'system_throughput should return zero when configuration has no workers' do
+    # given
+    worker_throughput = 5
+    configurations_list = [mock]
+    workers_list = []
+    resources_interface = mock do
+      expects(:get_enabled_resource_configurations).returns(configurations_list)
+      expects(:get_workers_records_list).returns(workers_list)
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(mock, resources_interface)
+    experiment_metrics.stubs(:calculate_worker_throughput).returns(worker_throughput)
+    expected_system_throughput = 0
+    # when
+    system_throughput = experiment_metrics.system_throughput
+    # then
+    assert_equal expected_system_throughput, system_throughput
+  end
+
+  test 'system_throughput should return zero when no configuration is available' do
+    # given
+    configurations_list = []
+    resources_interface = mock do
+      expects(:get_enabled_resource_configurations).returns(configurations_list)
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(mock, resources_interface)
+    expected_system_throughput = 0
+    # when
+    system_throughput = experiment_metrics.system_throughput
+    # then
+    assert_equal expected_system_throughput, system_throughput
+  end
+
+  test 'resource_configuration_throughput should calculate throughput correctly when configurations has workers' do
+    # given
+    worker_throughput = 5
+    workers_list = [mock, mock]
+    resources_interface = mock do
+      expects(:get_workers_records_list).returns(workers_list)
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(mock, resources_interface)
+    experiment_metrics.stubs(:calculate_worker_throughput).returns(worker_throughput)
+    expected_resource_configuration_throughput = workers_list.size * worker_throughput
+    # when
+    resource_configuration_throughput = experiment_metrics.resource_configuration_throughput(mock)
+    # then
+    assert_equal expected_resource_configuration_throughput, resource_configuration_throughput
+  end
+
+  test 'resource_configuration_throughput should return zero when configurations has no workers' do
+    # given
+    workers_list = []
+    resources_interface = mock do
+      expects(:get_workers_records_list).returns(workers_list)
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(mock, resources_interface)
+    expected_resource_configuration_throughput = 0
+    # when
+    resource_configuration_throughput = experiment_metrics.resource_configuration_throughput(mock)
+    # then
+    assert_equal expected_resource_configuration_throughput, resource_configuration_throughput
+  end
 end

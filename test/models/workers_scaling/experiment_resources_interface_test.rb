@@ -161,7 +161,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
   test 'resource_configuration_not_working? should return true when too much workers failed to work' do
     # given
     @resources_interface.expects(:get_workers_records_count)
-        .with(anything, WorkersScaling::Query::Workers::ERROR)
+        .with(anything, equals(cond: WorkersScaling::Query::Workers::ERROR))
         .returns(WorkersScaling::ExperimentResourcesInterface::MAXIMUM_NUMBER_OF_FAILED_WORKERS + 5)
     # when, then
     assert_equal true, @resources_interface.send(:resource_configuration_not_working?, SAMPLE_RESOURCE_CONFIGURATION)
@@ -170,7 +170,7 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
   test 'resource_configuration_not_working? should return false when not enough workers failed to work' do
     # given
     @resources_interface.expects(:get_workers_records_count)
-        .with(anything, WorkersScaling::Query::Workers::ERROR)
+        .with(anything, equals(cond: WorkersScaling::Query::Workers::ERROR))
         .returns(0)
     # when, then
     assert_equal false, @resources_interface.send(:resource_configuration_not_working?, SAMPLE_RESOURCE_CONFIGURATION)
