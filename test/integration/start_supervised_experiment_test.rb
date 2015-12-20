@@ -11,7 +11,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     # mocks
     # mock supervised experiment instance to return specified id (needed to test post params to supervisor)
     supervised_experiment = ExperimentFactory.create_supervised_experiment(@user.id, @simulation)
-    supervised_experiment.expects(:id).returns(BSON::ObjectId(EXPERIMENT_ID)).times(3)
+    supervised_experiment.stubs(:id).returns(BSON::ObjectId(EXPERIMENT_ID))
     ExperimentFactory.expects(:create_supervised_experiment).returns(supervised_experiment)
 
     # set user and password to specified value (needed to test post params to supervisor)
@@ -129,7 +129,7 @@ class StartSupervisedExperimentTest < ActionDispatch::IntegrationTest
     # mocks
     # mock supervised experiment instance to return specified id (needed to test post params to supervisor)
     supervised_experiment = ExperimentFactory.create_supervised_experiment(@user.id, @simulation)
-    supervised_experiment.expects(:id).returns(BSON::ObjectId(EXPERIMENT_ID))
+    supervised_experiment.stubs(:id).returns(BSON::ObjectId(EXPERIMENT_ID))
     ExperimentFactory.expects(:create_supervised_experiment).returns(supervised_experiment)
     # mock experiment supervisor response with testing proper query params
     ScalarmUser.any_instance.expects(:post_with_token).never

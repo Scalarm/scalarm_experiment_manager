@@ -215,6 +215,7 @@ apiDoc:
   def create_experiment
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
+    response = {}
     begin
       Utils::parse_param(params, :replication_level, lambda { |x| x.to_i })
       Utils::parse_param(params, :execution_time_constraint, lambda { |x| x.to_i * 60 })
@@ -255,26 +256,30 @@ apiDoc:
       end
 
       unless flash[:error].blank?
-        respond_to do |format|
-          format.html { redirect_to experiments_path }
-          format.json { render json: {status: 'error', message: flash[:error]} }
-        end
+        response = {
+            status: :error,
+            json: {status: 'error', message: flash[:error]},
+            html: experiments_path,
+        }
       else
-        respond_to do |format|
-          format.html { redirect_to experiment_path(experiment.id) }
-          format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
-        end
+        response = {
+            status: :ok,
+            json: {status: 'ok', experiment_id: experiment.id.to_s},
+            html: experiment_path(experiment.id),
+            experiment: experiment
+        }
       end
     rescue Exception => e
       Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace.join("\n")}"
       flash[:error] = e.to_s
 
-      respond_to do |format|
-        format.html { redirect_to experiments_path }
-        format.json { render json: {status: 'error', message: flash[:error]} }
-      end
+      response = {
+          status: :error,
+          json: {status: 'error', message: flash[:error]},
+          html: experiments_path,
+      }
     end
-    experiment
+    response
   end
 
   # POST params:
@@ -289,8 +294,11 @@ apiDoc:
     experiment = ExperimentFactory.create_custom_points_experiment(current_user.id, @simulation)
     experiment.save
 
-    render json: {status: 'ok', experiment_id: experiment.id.to_s}
-    experiment
+    {
+        status: :ok,
+        json: {status: 'ok', experiment_id: experiment.id.to_s},
+        experiment: experiment
+    }
   end
 
 =begin
@@ -384,11 +392,12 @@ apiDoc:
       experiment.save
     end
 
-    respond_to do |format|
-      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
-      format.json { render json: response }
-    end
-    experiment
+    {
+        status: response['status'].to_sym,
+        json: response,
+        html: (response['status'] == 'ok') ? experiment_path(experiment.id) : experiments_path,
+        experiment: experiment
+    }
   end
 
   CONSTRUCTORS = {
@@ -410,56 +419,31 @@ apiDoc:
     # Params validation
     type = params[:type] || 'experiment'
     Utils::raise_error_unless_has_key(CONSTRUCTORS, type, "Not a correct experiment type: #{type}")
-    workers_scaling_params = nil
+
     workers_scaling_enabled = (params[:workers_scaling] == 'true')
+    workers_scaling_initializer = nil
     if workers_scaling_enabled
-      message_prefix = 'Missing workers scaling parameter'
-      Utils::raise_error_unless_has_key(params, :workers_scaling_params, message_prefix.pluralize)
-      workers_scaling_params = Utils::parse_json_if_string(params[:workers_scaling_params]).symbolize_keys
-      required_params =
-        if workers_scaling_params[:plgrid_default]
-          if InfrastructureFacadeFactory.get_facade_for(:qsub).get_resource_configurations(current_user.id).blank?
-            raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
-          end
-          [:worker_time_limit]
-        else
-          [:name, :allowed_resource_configurations, :experiment_execution_time_limit]
-        end
-      required_params.each do |param|
-        Utils::raise_error_unless_has_key(workers_scaling_params, param, "#{message_prefix} #{param}",
-                                          'workers_scaling_params')
-      end
-      # TODO more precise validation
+      workers_scaling_initializer = WorkersScaling::Initializer.new(current_user.id, params)
+      workers_scaling_initializer.validate_params
     end
 
     # Create experiment
-    experiment = send(CONSTRUCTORS[type])
+    result = send(CONSTRUCTORS[type])
 
     # Start workers scaling
-    if workers_scaling_enabled
-      planned_finish_time = Time.now + (workers_scaling_params[:experiment_execution_time_limit] || 0).minutes
-      if workers_scaling_params[:plgrid_default]
-        WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id,
-                                                        workers_scaling_params[:worker_time_limit])
-        experiment.plgrid_default = true
-      else
-        allowed_infrastructures = workers_scaling_params[:allowed_resource_configurations].map do |record|
-          {
-              resource_configuration: {name: record['name'].to_sym, params: record['params'].symbolize_keys},
-              limit: record['limit']
-          }
-        end
-        WorkersScaling::AlgorithmFactory.initial_deployment(
-            experiment.id,
-            current_user.id,
-            allowed_infrastructures,
-            planned_finish_time,
-            workers_scaling_params
-        )
-      end
-      experiment.workers_scaling = true
-      experiment.planned_finish_time = planned_finish_time
-      experiment.save
+    if workers_scaling_enabled and result[:status] == :ok
+      workers_scaling_initializer.start(result[:experiment])
+    end
+
+    if not result.has_key? :html and not result.has_key? :json
+      flash[:error] = 'Unexpected error, please contact administrator'
+      result[:html] = experiments_path
+      result[:json] = {status: :error, message: flash[:error]}
+    end
+
+    respond_to do |format|
+      format.html { redirect_to(result[:html]) } if result.has_key? :html
+      format.json { render json: result[:json] } if result.has_key? :json
     end
   end
 
