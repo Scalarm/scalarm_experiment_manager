@@ -234,9 +234,11 @@ module GliteScheduler
     end
 
     ##
-    # Returns list of hashes representing distinct configurations of infrastructure
-    # Subinfrastructures are distinguished by:
+    # Returns list of hashes representing distinct resource configurations
+    # Resource configurations are distinguished by:
     #  * PLGrid hosts
+    # @param user_id [BSON::ObjectId, String]
+    # @return [Array<Hash>] list of resource configurations
     def get_resource_configurations(user_id)
       self.class.available_hosts.map do |host|
         {name: short_name.to_sym, params: {plgrid_host: host}}

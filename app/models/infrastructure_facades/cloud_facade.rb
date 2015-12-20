@@ -151,8 +151,10 @@ class CloudFacade < InfrastructureFacade
   end
 
   ##
-  # Returns list of hashes representing distinct configurations of infrastructure
+  # Returns list of hashes representing distinct resource configurations
   # Delegates method to classes inheriting from #AbstractCloudClient
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
   def get_resource_configurations(user_id)
     creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
     cloud_client = nil

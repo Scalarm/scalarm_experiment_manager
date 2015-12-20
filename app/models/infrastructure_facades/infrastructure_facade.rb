@@ -373,8 +373,10 @@ class InfrastructureFacade
   end
 
   ##
-  # Returns list of hashes representing distinct configurations of infrastructure
+  # Returns list of hashes representing distinct resource configurations
   # Overridden in most of subclasses
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
   def get_resource_configurations(user_id)
     [{name: short_name.to_sym, params: {}}]
   end
