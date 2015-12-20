@@ -220,7 +220,7 @@ module QcgScheduler
     # Subinfrastructures are distinguished by:
     #  * PLGrid hosts
     #  * grant ids
-    def get_infrastructure_configurations(user_id)
+    def get_resource_configurations(user_id)
       hosts = self.class.available_hosts
       grant_ids = PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id))
 
