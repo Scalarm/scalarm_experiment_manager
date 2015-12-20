@@ -21,7 +21,9 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
     end
     @experiment = mock do
       stubs(:reload).returns(self)
-      stubs(:get_statistics).returns([100, 0, 0])
+      stubs(:count_all_generated_simulations).returns(100)
+      stubs(:count_sent_simulations).returns(0)
+      stubs(:count_done_simulations).returns(0)
       stubs(:experiment_size).returns(100)
       stubs(:id).returns(EXPERIMENT_ID)
     end

@@ -82,12 +82,11 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def has_simulations_to_run?
-    all, sent, done = get_statistics
-    experiment_size > (sent+done)
+    count_simulations_to_run > 0
   end
 
   def count_simulations_to_run
-    _, sent, done = get_statistics
+    sent, done = count_sent_simulations, count_done_simulations
     experiment_size - (sent + done)
   end
 
@@ -101,24 +100,16 @@ class Experiment < Scalarm::Database::Model::Experiment
     (self.experiment_size == self.count_done_simulations)
   end
 
-  def get_statistics
-    all = simulation_runs.count
-    sent = simulation_runs.where(to_sent: false, is_done: false).count
-    done = simulation_runs.where(is_done: true).count
-
-    return all, sent, done
-  end
-
   def count_all_generated_simulations
-    get_statistics[0]
+    simulation_runs.count
   end
 
   def count_sent_simulations
-    get_statistics[1]
+    simulation_runs.where(is_done: false, to_sent: false).count
   end
 
   def count_done_simulations
-    get_statistics[2]
+    simulation_runs.where(is_done: true).count
   end
 
   def range_arguments

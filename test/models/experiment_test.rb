@@ -48,7 +48,9 @@ class ExperimentTest < MiniTest::Test
   def test_all_already_sent
     @experiment.stubs(:is_running).returns(true)
     @experiment.stubs(:experiment_size).returns(10)
-    @experiment.stubs(:get_statistics).returns([10, 2, 8])
+    @experiment.stubs(:count_all_generated_simulations).returns(10)
+    @experiment.stubs(:count_sent_simulations).returns(2)
+    @experiment.stubs(:count_done_simulations).returns(8)
 
     refute @experiment.has_simulations_to_run?
   end
@@ -56,7 +58,9 @@ class ExperimentTest < MiniTest::Test
   def test_has_more_simulations
     @experiment.stubs(:is_running).returns(true)
     @experiment.stubs(:experiment_size).returns(11)
-    @experiment.stubs(:get_statistics).returns([11, 2, 8])
+    @experiment.stubs(:count_all_generated_simulations).returns(11)
+    @experiment.stubs(:count_sent_simulations).returns(2)
+    @experiment.stubs(:count_done_simulations).returns(8)
 
     assert @experiment.has_simulations_to_run?
   end
@@ -64,7 +68,9 @@ class ExperimentTest < MiniTest::Test
   def test_end_not_running
     @experiment.stubs(:is_running).returns(false).once
     @experiment.stubs(:experiment_size).never
-    @experiment.stubs(:get_statistics).never
+    @experiment.stubs(:count_all_generated_simulations).never
+    @experiment.stubs(:count_sent_simulations).never
+    @experiment.stubs(:count_done_simulations).never
 
     assert (@experiment.end?)
   end
@@ -72,7 +78,7 @@ class ExperimentTest < MiniTest::Test
   def test_end_all_done
     @experiment.stubs(:is_running).returns(true).once
     @experiment.stubs(:experiment_size).returns(10).once
-    @experiment.stubs(:get_statistics).returns([10, 10, 10]).once
+    @experiment.stubs(:count_done_simulations).returns(10).once
 
     assert @experiment.end?
   end
@@ -80,7 +86,7 @@ class ExperimentTest < MiniTest::Test
   def test_end_not
     @experiment.stubs(:is_running).returns(true).once
     @experiment.stubs(:experiment_size).returns(10).once
-    @experiment.stubs(:get_statistics).returns([10, 10, 5]).once
+    @experiment.stubs(:count_done_simulations).returns(5).once
 
     refute (@experiment.end?)
   end

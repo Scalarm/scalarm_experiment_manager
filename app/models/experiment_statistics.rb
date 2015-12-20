@@ -11,7 +11,9 @@ class ExperimentStatistics
 
   # @return [Hash] hash containing simulations statistics
   def simulations_statistics
-    sims_generated, sims_sent, sims_done = @experiment.get_statistics
+    sims_generated = @experiment.count_all_generated_simulations
+    sims_sent = @experiment.count_sent_simulations
+    sims_done = @experiment.count_done_simulations
 
     if sims_generated > @experiment.experiment_size
       Rails.logger.error("FATAL - too many simulations generated for experiment #{experiment.inspect}")
@@ -27,11 +29,6 @@ class ExperimentStatistics
       sims_sent = @experiment.experiment_size - sims_done
     end
 
-    #if sims_generated > @experiment.experiment_size
-    #  @experiment.experiment_size = sims_generated
-    #  @experiment.save
-    #end
-
     if @experiment.experiment_size != 0
       percentage = (sims_done.to_f / @experiment.experiment_size) * 100
     else
@@ -44,7 +41,7 @@ class ExperimentStatistics
         generated: [sims_generated, @experiment.experiment_size].min
     }
 
-    if sims_done > 0 and (rand() < (sims_done.to_f / @experiment.experiment_size) or sims_done == @experiment.experiment_size)
+    if sims_done > 0
       execution_time = @experiment.simulation_runs.where({is_done: true}, fields: %w(sent_at done_at)).reduce(0) do |acc, simulation_run|
         if simulation_run.done_at and simulation_run.sent_at
           acc += simulation_run.done_at - simulation_run.sent_at
