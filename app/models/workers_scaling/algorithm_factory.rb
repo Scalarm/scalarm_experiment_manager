@@ -63,37 +63,6 @@ module WorkersScaling
     end
 
     ##
-    # Arguments:
-    #  * experiment_id - id of Experiment to be subjected to Algorithm
-    #  * user_id - id of User starting Algorithm
-    #  * allowed_resource_configurations - list of hashes with resource configurations and maximal Workers amount
-    #      (Detailed description at ExperimentResourcesInterface#initialize)
-    #  * planned_finish_time - planned time of Experiment end
-    #  * params - workers scaling params passed from ExperimentsController
-    def self.initial_deployment(experiment_id, user_id, allowed_resource_configurations, planned_finish_time, params)
-      algorithm = create_algorithm(
-          class_name: params[:name].to_sym,
-          experiment_id: experiment_id,
-          user_id: user_id,
-          allowed_resource_configurations: allowed_resource_configurations,
-          planned_finish_time: planned_finish_time,
-          last_update_time: Time.now
-      )
-      algorithm.save
-      Thread.new do
-        begin
-          algorithm.initial_deployment
-          algorithm.notify_execution
-          LOGGER.debug 'Initial deployment finished'
-        rescue => e
-          LOGGER.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}"
-          raise
-        end
-      end
-    end
-
-
-    ##
     # Returns instance of algorithm from cache
     # If Algorithm is not stored in cache, new one will be created
     # If stored algorithm has last_update_time older than the one in database,

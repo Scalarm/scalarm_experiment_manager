@@ -8,31 +8,103 @@ class ExperimentsControllerTest < ActionController::TestCase
   end
 
   test 'create should call proper constructor without type' do
-    ExperimentsController.any_instance.expects(:create_experiment)
-    assert_raises ActionView::MissingTemplate do
-      post :create
-    end
+    ExperimentsController.any_instance.expects(:create_experiment).returns({})
+    post :create
   end
 
   test 'create should call proper constructor when type is experiment' do
-    ExperimentsController.any_instance.expects(:create_experiment)
-    assert_raises ActionView::MissingTemplate do
-      post :create, type: 'experiment'
-    end
+    ExperimentsController.any_instance.expects(:create_experiment).returns({})
+    post :create, type: 'experiment'
   end
 
   test 'create should call proper constructor when type is supervised' do
-    ExperimentsController.any_instance.expects(:create_supervised_experiment)
-    assert_raises ActionView::MissingTemplate do
-      post :create, type: 'supervised'
-    end
+    ExperimentsController.any_instance.expects(:create_supervised_experiment).returns({})
+    post :create, type: 'supervised'
   end
 
   test 'create should call proper constructor when type is custom_points' do
-    ExperimentsController.any_instance.expects(:create_custom_points_experiment)
-    assert_raises ActionView::MissingTemplate do
-      post :create, type: 'custom_points'
+    ExperimentsController.any_instance.expects(:create_custom_points_experiment).returns({})
+    post :create, type: 'custom_points'
+  end
+
+  test 'create should raise ValidationError when workers scaling is enabled and its params are missing' do
+    # given
+    # when
+    post :create, format: :json, workers_scaling: 'true'
+    # then
+    assert_response :precondition_failed
+    response_hash = JSON.parse(response.body)
+    assert_nothing_raised do
+      response_hash.assert_valid_keys('status', 'reason')
     end
+    assert_equal 'error', response_hash['status']
+  end
+
+  test 'create should initialize workers scaling when workers scaling is enabled parameters are present' do
+    # given
+    initializer = mock do
+      expects(:validate_params)
+      expects(:start).with(:experiment)
+    end
+    WorkersScaling::Initializer.expects(:new).returns(initializer)
+    ExperimentsController.any_instance.expects(:create_experiment).returns({status: :ok, experiment: :experiment})
+    # when
+    post :create, format: :json, workers_scaling: 'true'
+    # then
+    assert_response :success
+  end
+
+  test 'create should return json responce given by experiments constructors' do
+    # given
+    ExperimentsController.any_instance.expects(:create_experiment).returns({
+      status: :ok,
+      json: {status: :ok}
+    })
+    # when
+    post :create, format: :json
+    # then
+    assert_response :success
+    response_hash = JSON.parse(response.body)
+    assert_nothing_raised do
+      response_hash.assert_valid_keys('status')
+    end
+    assert_equal 'ok', response_hash['status']
+  end
+
+  test 'create should return html responce given by experiments constructors' do
+    # given
+    ExperimentsController.any_instance.expects(:create_experiment).returns({
+       status: :ok,
+       html: experiments_path
+    })
+    # when
+    post :create
+    # then
+    assert_redirected_to experiments_path
+  end
+
+  test 'create should return json with error when json and html responses from constructor are missing' do
+    # given
+    ExperimentsController.any_instance.expects(:create_experiment).returns({})
+    # when
+    post :create, format: :json
+    # then
+    assert_response :success
+    response_hash = JSON.parse(response.body)
+    assert_nothing_raised do
+      response_hash.assert_valid_keys('status', 'message')
+    end
+    assert_equal 'error', response_hash['status']
+  end
+
+  test 'create should redirect to index with flash error when json and html responses from constructor are missing' do
+    # given
+    ExperimentsController.any_instance.expects(:create_experiment).returns({})
+    # when
+    post :create
+    # then
+    assert_redirected_to experiments_path
+    assert flash[:error], 'Error message should be present in flash'
   end
 
   test 'get index json should return user running non completed experiments id collection' do
