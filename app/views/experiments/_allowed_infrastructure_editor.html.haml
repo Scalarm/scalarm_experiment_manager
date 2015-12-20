@@ -36,6 +36,13 @@
 
           .row
             .large-4.columns
+              = label_tag :time_limit, t('infrastructure.information.time_constraint') + ':', class: 'inline right'
+            .large-4.columns
+              = number_field_tag :time_limit, 60, min: 1, step: 1, required: true, pattern: "^\\d+$", class: 'text-right'
+            .large-1.columns
+
+          .row
+            .large-4.columns
               = label_tag :limit, 'Workers limit', class: 'right inline'
             .large-4.columns.end
               = number_field_tag :limit, 1, min: 1, required: true, class: 'text-right', pattern: "^\\d+$"
