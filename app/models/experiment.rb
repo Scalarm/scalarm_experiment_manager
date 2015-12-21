@@ -128,16 +128,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     params_with_range
   end
 
-  def parameters_with_multiple_values
-    result = self.range_arguments
-
-    self.doe_info.each do |triple|
-      result += triple[1]
-    end
-
-    result
-  end
-
   # @return [Array<String>] Array of parameter ids in proper order
   # NOTICE: value of this function should be cached
   def parameters
@@ -162,16 +152,6 @@ class Experiment < Scalarm::Database::Model::Experiment
     split_uid = uid.split(ID_DELIM)
     entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
 
-    if parameter_id.blank? and (not entity_id.blank?)
-      parameter_id = entity_id
-      entity_id = nil
-    end
-
-    if parameter_id.blank? and (not entity_group_id.blank?)
-      parameter_id = entity_group_id
-      entity_group_id = nil
-    end
-
     self.experiment_input.each do |entity_group|
       if entity_group['id'] == entity_group_id || (entity_group['id'].blank? and entity_group_id.blank?)
         entity_group['entities'].each do |entity|
@@ -190,9 +170,9 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def self.output_parameter_label_for(moe_name)
-    label = moe_name.split(/([[:upper:]][[:lower:]]+)/).delete_if(&:empty?).join(" ")
+    name_tokens = moe_name.split(/([[:upper:]][[:lower:]]+)/).delete_if(&:empty?)
 
-    label.split(' ').map { |x| x[0].capitalize + x[1..-1] }.join(' ').gsub('_', ' ')
+    name_tokens.map{|x| x.capitalize.gsub('_', ' ')}.join(' ').gsub('_', ' ').gsub(/\s+/, ' ')
   end
 
 
@@ -519,16 +499,6 @@ class Experiment < Scalarm::Database::Model::Experiment
   def get_parameter_doc(parameter_uid)
     split_uid = parameter_uid.split(ID_DELIM)
     entity_group_id, entity_id, parameter_id = split_uid[-3], split_uid[-2], split_uid[-1]
-
-    if parameter_id.blank? and (not entity_id.blank?)
-      parameter_id = entity_id
-      entity_id = nil
-    end
-
-    if parameter_id.blank? and (not entity_group_id.blank?)
-      parameter_id = entity_group_id
-      entity_group_id = nil
-    end
 
     self.experiment_input.each do |entity_group|
       if entity_group['id'] == entity_group_id || (entity_group_id.blank? and entity_group['id'].blank?)
