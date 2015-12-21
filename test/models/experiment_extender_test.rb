@@ -31,7 +31,7 @@ class ExperimentExtenderTest < MiniTest::Test
                                                          "max" => 1000,
                                                          "with_default_value" => false,
                                                          "index" => 1,
-                                                         "parametrizationType" => "value",
+                                                         "parametrizationType" => "range",
                                                          "value" => "0",
                                                          "in_doe" => true},
                                                         {"id" => "parameter2",
