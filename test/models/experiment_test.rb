@@ -187,4 +187,199 @@ class ExperimentTest < MiniTest::Test
     assert_equal [0, 1, 2], @experiment_with_flat_space.parameter_values_for("param-1")
   end
 
+  def test_doe_2k_method
+    @experiment_with_flat_space.doe_info = [["2k", ["param-0"]]]
+    assert_equal [["2k", ["param-0"], [[0.0], [100.0]]]], @experiment_with_flat_space.apply_doe_methods
+    @experiment_with_flat_space.doe_info = [["2k", ["param-0", "param-1"]]]
+    assert_equal [["2k", ["param-0", "param-1"], [[0.0, 0.0], [0.0, 100.0], [100.0, 0.0], [100.0, 100.0]]]],
+                 @experiment_with_flat_space.apply_doe_methods
+  end
+
+  def test_doe_fullFactorial_method
+    @experiment_with_flat_space.doe_info = [["fullFactorial", ["param-0"]]]
+    assert_equal [["fullFactorial", ["param-0"], (0..100).step(20).map{|x| [x.to_f]}]],
+        @experiment_with_flat_space.apply_doe_methods
+
+    @experiment_with_flat_space.experiment_input = [{"entities"=>[
+                                                              {"parameters"=>[
+                                                                  {"id"=>"param-0", "label"=>"New parameter 1",
+                                                                   "type"=>"integer", "min"=>"0", "max"=>"100",
+                                                                   "with_default_value"=>false, "index"=>1,
+                                                                   "parametrizationType"=>"range", "step"=>"20",
+                                                                   "in_doe"=>true},
+                                                                  {"id"=>"param-1", "label"=>"New parameter 2 ",
+                                                                   "type"=>"integer", "min"=>"0", "max"=>"100",
+                                                                   "with_default_value"=>false, "index"=>2,
+                                                                   "parametrizationType"=>"range", "step"=>"20",
+                                                                   "in_doe"=>true}]}]}]
+
+    @experiment_with_flat_space.doe_info = [["fullFactorial", ["param-0", "param-1"]]]
+    assert_equal [["fullFactorial", ["param-0", "param-1"], (0..100).step(20).map{|x|
+      [x.to_f]}.product((0..100).step(20).map{|x| [x.to_f]}).map(&:flatten)]],
+                 @experiment_with_flat_space.apply_doe_methods
+  end
+
+  def test_doe_2k_1_method
+    @experiment_with_flat_space.doe_info = [["2k-1", ["param-0", "param-1"]]]
+
+    err = assert_raises StandardError do
+      @experiment_with_flat_space.apply_doe_methods
+    end
+
+    assert_equal "Selected DoE method requires more than 2 parameters.", err.message
+
+    @experiment_with_flat_space.experiment_input = [{"entities" => [{"parameters" => [
+        {"id" => "param-0", "index" => 1, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-1", "index" => 2, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-2", "index" => 3, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-3", "index" => 3, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-4", "index" => 4, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true}
+    ]}]}]
+
+    @experiment_with_flat_space.doe_info = [["2k-1", ["param-0", "param-1", "param-2", "param-3", "param-4"]]]
+    doe_method_result = @experiment_with_flat_space.apply_doe_methods.first
+
+    assert_equal "2k-1", doe_method_result[0]
+    assert_equal ["param-0", "param-1", "param-2", "param-3", "param-4"], doe_method_result[1]
+    assert_equal 16, doe_method_result[2].size
+
+    low_level_counters = [0, 0, 0, 0, 0]
+    high_level_counters = [0, 0, 0, 0, 0]
+
+    doe_method_result[2].each do |input_parameter_space_point|
+      input_parameter_space_point.each_with_index do |value, index|
+        if value > 0.0
+          high_level_counters[index] += 1
+        else
+          low_level_counters[index] += 1
+        end
+      end
+    end
+
+    low_level_counters.each{|counter| assert_equal 8, counter}
+    high_level_counters.each{|counter| assert_equal 8, counter}
+  end
+
+  def test_doe_2k_2_method
+    @experiment_with_flat_space.doe_info = [["2k-2", ["param-0", "param-1"]]]
+
+    err = assert_raises StandardError do
+      @experiment_with_flat_space.apply_doe_methods
+    end
+
+    assert_equal "Selected DoE method requires more than 4 parameters.", err.message
+
+    @experiment_with_flat_space.experiment_input = [{"entities" => [{"parameters" => [
+        {"id" => "param-0", "index" => 1, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-1", "index" => 2, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-2", "index" => 3, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-3", "index" => 3, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-4", "index" => 4, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true}
+    ]}]}]
+
+    @experiment_with_flat_space.doe_info = [["2k-2", ["param-0", "param-1", "param-2", "param-3", "param-4"]]]
+    doe_method_result = @experiment_with_flat_space.apply_doe_methods.first
+
+    assert_equal "2k-2", doe_method_result[0]
+    assert_equal ["param-0", "param-1", "param-2", "param-3", "param-4"], doe_method_result[1]
+    assert_equal 8, doe_method_result[2].size
+
+    low_level_counters = [0, 0, 0, 0, 0]
+    high_level_counters = [0, 0, 0, 0, 0]
+
+    doe_method_result[2].each do |input_parameter_space_point|
+      input_parameter_space_point.each_with_index do |value, index|
+        if value > 0.0
+          high_level_counters[index] += 1
+        else
+          low_level_counters[index] += 1
+        end
+      end
+    end
+
+    low_level_counters.each{|counter| assert_equal 4, counter}
+    high_level_counters.each{|counter| assert_equal 4, counter}
+  end
+
+  def test_doe_latin_hypercube_method
+    @experiment_with_flat_space.doe_info = [["latinHypercube", ["param-0"]]]
+
+    err = assert_raises StandardError do
+      @experiment_with_flat_space.apply_doe_methods
+    end
+
+    assert_equal "Selected DoE method requires more than 1 parameter.", err.message
+
+    @experiment_with_flat_space.experiment_input = [{"entities" => [{"parameters" => [
+        {"id" => "param-0", "index" => 1, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-1", "index" => 2, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-2", "index" => 3, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-3", "index" => 3, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true},
+        {"id" => "param-4", "index" => 4, "parametrizationType" => "range",
+         "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
+         "with_default_value" => false, "in_doe" => true}
+    ]}]}]
+
+    @experiment_with_flat_space.doe_info = [["latinHypercube", ["param-0", "param-1"]]]
+    doe_method_result = @experiment_with_flat_space.apply_doe_methods.first
+
+    assert_equal "latinHypercube", doe_method_result[0]
+    assert_equal ["param-0", "param-1"], doe_method_result[1]
+    assert_equal 6, doe_method_result[2].size
+
+    level_counters = [ [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0] ]
+
+    doe_method_result[2].each do |input_parameter_space_point|
+      input_parameter_space_point.each_with_index do |value, index|
+        level_counters[index][value / 20] += 1
+      end
+    end
+
+    level_counters.each{|counter| assert_equal [1, 1, 1, 1, 1, 1], counter}
+
+    @experiment_with_flat_space.doe_info = [["latinHypercube", ["param-0", "param-1", "param-2", "param-3", "param-4"]]]
+        doe_method_result = @experiment_with_flat_space.apply_doe_methods.first
+
+    assert_equal "latinHypercube", doe_method_result[0]
+    assert_equal ["param-0", "param-1", "param-2", "param-3", "param-4"], doe_method_result[1]
+    assert_equal 6, doe_method_result[2].size
+
+    level_counters = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
+
+    doe_method_result[2].each do |input_parameter_space_point|
+      input_parameter_space_point.each_with_index do |value, index|
+        level_counters[index][value / 20] += 1
+      end
+    end
+
+    level_counters.each { |counter| assert_equal [1, 1, 1, 1, 1, 1], counter }
+  end
 end

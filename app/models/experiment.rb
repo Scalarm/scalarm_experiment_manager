@@ -608,13 +608,6 @@ class Experiment < Scalarm::Database::Model::Experiment
   def generate_parameter_values(parameter)
     parameter_uid = parameter_uid({'id' => parameter['entity_group_id']}, {'id' => parameter['entity_id']}, parameter)
 
-    #self.doe_info.each do |doe_element|
-    #  doe_id, doe_parameters = doe_element
-    #  if doe_parameters.include?(parameter_uid)
-    #Rails.logger.debug("Parameter #{parameter_uid} is on DoE list")
-    #end
-    #end
-
     parameter_values = []
 
     case parameter['parametrizationType']
@@ -746,12 +739,7 @@ class Experiment < Scalarm::Database::Model::Experiment
             sum << [{level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f}]
           }
 
-          if values.size > 1
-            values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
-          else
-            values = values.first.map { |x| [x] }
-          end
-
+          values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
           values = values.select { |array| array[0..-2].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
           values = values.map { |array| array.map { |item| item[:value] } }
 
@@ -767,12 +755,7 @@ class Experiment < Scalarm::Database::Model::Experiment
             sum << [{level: -1, value: parameter['min'].to_f}, {level: 1, value: parameter['max'].to_f}]
           }
 
-          if values.size > 1
-            values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
-          else
-            values = values.first.map { |x| [x] }
-          end
-
+          values = values[1..-1].reduce(values.first) { |acc, values| acc.product values }.map { |x| x.flatten }
           values = values.select { |array| array[0..-4].reduce(1) { |acc, item| acc*item[:level] } == array[-2][:level] }
           values = values.select { |array| array[1..-3].reduce(1) { |acc, item| acc*item[:level] } == array[-1][:level] }
           values = values.map { |array| array.map { |item| item[:value] } }
@@ -780,7 +763,7 @@ class Experiment < Scalarm::Database::Model::Experiment
           values
         end
 
-      when *%w(latinHypercube fractionalFactorial nolhDesign)
+      when *%w(latinHypercube)
         if parameters_for_doe.size < 2
           raise StandardError.new(I18n.t('experiments.errors.too_few_parameters', count: 1))
         else
@@ -810,7 +793,7 @@ class Experiment < Scalarm::Database::Model::Experiment
           raise SecurityError.new("Insecure parameter given - #{parameter.to_s}")
         end
       end
-      "#{parameter_uid}=c(#{parameter['min']}, #{parameter['max']}, #{parameter['step']})"
+      "#{parameter_uid.gsub("-", "delim1")}=c(#{parameter['min']}, #{parameter['max']}, #{parameter['step']})"
     end
 
     "data.frame(#{data_frame_list.join(',')})"
