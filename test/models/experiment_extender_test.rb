@@ -9,27 +9,17 @@ class ExperimentExtenderTest < MiniTest::Test
     @experiment = Experiment.new({experiment_input:
                                       [{"id" => "main_category", "entities" =>
                                           [{"id" => "main_group", "parameters" =>
-                                              [{"id" => "parameter1",
-                                                "type" => "integer",
-                                                "min" => 0,
-                                                "max" => 1000,
-                                                "with_default_value" => false,
-                                                "index" => 1,
+                                              [{"id" => "parameter1", "type" => "integer", "index" => 1,
+                                                "min" => 0, "max" => 1000, "with_default_value" => false, "value" => "0",
                                                 "parametrizationType" => "value",
-                                                "value" => "0",
                                                 "in_doe" => false},
-                                               {"id" => "parameter2",
-                                                "type" => "integer",
-                                                "min" => "1",
-                                                "max" => "3",
-                                                "step" => "1",
+                                               {"id" => "parameter2", "type" => "integer", "index" => 2,
+                                                "min" => "1", "max" => "3", "step" => "1",
                                                 "with_default_value" => false,
-                                                "index" => 2,
                                                 "parametrizationType" => "range",
                                                 "in_doe" => false}]
                                            }]
-                                       }
-                                      ]
+                                       }]
                                  })
 
     @experiment_with_doe = Experiment.new({experiment_input:
@@ -98,13 +88,16 @@ class ExperimentExtenderTest < MiniTest::Test
     @experiment.add_parameter_values("main_category___main_group___parameter2", [100])
 
     assert_equal original_size + 1, @experiment.experiment_size
-
+    assert_equal [[0], [1, 2, 3, 100]], @experiment.value_list
+    assert_equal [4, 1], @experiment.multiply_list
 
     original_size = @experiment.experiment_size
 
     @experiment.add_parameter_values("main_category___main_group___parameter1", [200])
 
     assert_equal original_size * 2, @experiment.experiment_size
+    assert_equal [[0, 200], [1, 2, 3, 100]], @experiment.value_list
+    assert_equal [4, 1], @experiment.multiply_list
   end
 
   def test_extend_with_multiple_values
@@ -116,13 +109,17 @@ class ExperimentExtenderTest < MiniTest::Test
     @experiment.add_parameter_values("main_category___main_group___parameter2", [100, 200, 300])
 
     assert_equal original_size + 3, @experiment.experiment_size
-
+    assert_equal [[0], [1, 2, 3, 100, 200, 300]], @experiment.value_list
+    assert_equal [6, 1], @experiment.multiply_list
 
     original_size = @experiment.experiment_size
 
     @experiment.add_parameter_values("main_category___main_group___parameter1", [100, 200, 300])
 
     assert_equal original_size * 4, @experiment.experiment_size
+    assert_equal [[0, 100, 200, 300], [1, 2, 3, 100, 200, 300]], @experiment.value_list
+    assert_equal [6, 1], @experiment.multiply_list
+
   end
 
   def test_extend_experiment_with_doe
