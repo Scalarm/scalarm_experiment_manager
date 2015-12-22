@@ -1,25 +1,40 @@
+.row
+  .small-12.columns
+    %strong
+      = t('experiments.workers_scaling.information_panel.workers_scaling_active')
+
+- algorithm = WorkersScaling::AlgorithmFactory.get_algorithm(@experiment.id.to_s)
+.row
+  .small-3.columns
+    %strong
+      = t('experiments.workers_scaling.information_panel.algorithm_name') + ':'
+  .small-9.columns
+    = algorithm.blank? ? t('experiments.workers_scaling.information_panel.unknown_algorithm') : algorithm.class.algorithm_name
+
 - unless @experiment.plgrid_default
   .row
     .small-3.columns
-      %h5.subheader= t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
+      %strong
+        = t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
     .small-9.columns
-      %h5.subheader{id: 'planned_finish_time'}= ''
+      %span#planned_finish_time ''
 
 .row
   .small-3.columns
-    %h5.subheader= t('experiments.workers_scaling.information_panel.execution_time.expected') + ':'
+    %strong
+      = t('experiments.workers_scaling.information_panel.execution_time.expected') + ':'
   .small-9.columns
-    %h5.subheader{id: 'expected_finish_time'}= ''
+    %span#expected_finish_time ''
 
 - unless @experiment.plgrid_default
   .row
-    .small-10.columns
-      %h5.subheader{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
+    .small-9.columns
+      %strong{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
         = t('experiments.workers_scaling.information_panel.execution_time.warning')
 
 .row
-  .small-10.columns
-    %h5.subheader{id: 'workers_scaling_error', style: 'font-weight: bold; color: red; display: none' }
+  .small-9.columns
+    %strong{id: 'workers_scaling_error', style: 'font-weight: bold; color: red; display: none' }
       = t('experiments.workers_scaling.information_panel.error')
 
 - content_for :javascript do
