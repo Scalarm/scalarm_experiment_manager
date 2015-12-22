@@ -110,7 +110,7 @@ module WorkersScaling
 
     def self.validate_attributes(attributes)
       REQUIRED_ATTRIBUTES.each do |attribute|
-        raise AlgorithmParameterMissing, attribute unless attributes.has_key?(attribute)
+        raise AlgorithmParameterMissing.new(attribute) unless attributes.has_key?(attribute)
       end
     end
 
