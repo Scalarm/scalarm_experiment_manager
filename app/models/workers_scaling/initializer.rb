@@ -55,13 +55,14 @@ module WorkersScaling
         )
         algorithm.save
 
+        logger = WorkersScaling::TaggedLoggerFactory.with_tag(experiment.id)
         Thread.new do
           begin
             algorithm.initial_deployment
             algorithm.notify_execution
-            LOGGER.debug 'Initial deployment finished'
+            logger.debug 'Initial deployment finished'
           rescue => e
-            LOGGER.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}"
+            logger.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}"
             raise
           end
         end
