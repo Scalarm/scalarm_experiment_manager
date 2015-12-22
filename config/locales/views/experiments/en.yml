@@ -25,6 +25,9 @@ en:
         execution_time_limit: Experiment execution time limit
         execution_time_unit: minutes
       information_panel:
+        workers_scaling_active: Automated computational resources management is active
+        algorithm_name: Automation method
+        unknown_algorithm: Unknown
         execution_time:
           expected: Expected finish time
           planned: Planned finish time

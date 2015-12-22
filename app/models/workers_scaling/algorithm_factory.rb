@@ -63,23 +63,25 @@ module WorkersScaling
     end
 
     ##
-    # Returns instance of algorithm from cache
+    # Returns instance of algorithm from cache, nil if algorithm does not exist
     # If Algorithm is not stored in cache, new one will be created
     # If stored algorithm has last_update_time older than the one in database,
     # it will be deleted from cache
+    # @param experiment_id [BSON::ObjectId, String]
+    # @return [class < Algorithm, nil]
     def self.get_algorithm(experiment_id)
       cache_key = "workers_scaling_algorithm_#{experiment_id}"
       if @cache.exist?(cache_key)
-        last_update_time = Algorithm.where({experiment_id: experiment_id},
-                                           fields: [:last_update_time])
-                               .first.last_update_time
-        if @cache.read(cache_key).last_update_time < last_update_time
+        algorithm = Algorithm.where({experiment_id: experiment_id}, fields: [:last_update_time]).first
+        return nil if algorithm.blank?
+        if @cache.read(cache_key).last_update_time < algorithm.last_update_time
           @cache.delete(cache_key)
         end
       end
 
       @cache.fetch(cache_key) do
         raw_algorithm = Algorithm.where(experiment_id: experiment_id).first
+        return nil if raw_algorithm.blank?
         AlgorithmFactory.create_algorithm(raw_algorithm.attributes)
       end
     end
