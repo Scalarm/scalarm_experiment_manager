@@ -47,8 +47,8 @@ module WorkersScaling
     #  * @experiment_metrics
     # Returns self to allow chaining
     def initialize_runtime_fields
-      @experiment = Experiment.find_by_id(experiment_id)
-      @resources_interface = ExperimentResourcesInterface.new(@experiment, user_id, allowed_resource_configurations)
+      @experiment = Experiment.find_by_id(self.experiment_id)
+      @resources_interface = ExperimentResourcesInterface.new(@experiment, self.user_id, self.allowed_resource_configurations)
       @experiment_metrics = ExperimentMetrics.new(@experiment, @resources_interface)
       self
     end
@@ -56,6 +56,13 @@ module WorkersScaling
     def save
       self.class_name = self.class.get_class_name
       super
+    end
+
+    ##
+    # Returns logger tagged with id of experiment for current algorithm
+    # @return [Logger]
+    def logger
+      TaggedLoggerFactory.with_tag(self.experiment_id)
     end
 
     ##
