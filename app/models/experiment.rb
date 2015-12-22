@@ -692,9 +692,11 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def validate_parameter_value(name_of_input_parameter, value_of_input)
-    if /\A(\w|-|\.)+\z/.match(value_of_input).nil?
-      type_of_error = value_of_input.empty? ? 'Empty' : 'Wrong'
-      raise ValidationError.new(name_of_input_parameter, value_of_input, "#{type_of_error} value for parameter given")
+    string_value_of_input = value_of_input.to_s
+
+    if /\A(\w|-|\.)+\z/.match(string_value_of_input).nil?
+      type_of_error = value_of_input.string_value_of_input ? 'Empty' : 'Wrong'
+      raise ValidationError.new(name_of_input_parameter, string_value_of_input, "#{type_of_error} value for parameter given")
     end
   end
 
