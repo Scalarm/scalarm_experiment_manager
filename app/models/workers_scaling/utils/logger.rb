@@ -11,7 +11,7 @@ module WorkersScaling
   end
 
   ##
-  # Class creating TaggedLogging with LoggerFormatter and proper log file setings
+  # Class creating TaggedLogging with LoggerFormatter and proper log file settings
   class TaggedLogger
 
     def self.create

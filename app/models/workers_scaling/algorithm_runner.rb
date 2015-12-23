@@ -94,6 +94,10 @@ module WorkersScaling
 
     private
 
+    ##
+    # Logs message msg at given level adding 'AlgorithmRunner' tag
+    # @param level [Symbol]
+    # @param msg [Object] must respond to .to_s
     def self.log(level, msg)
       LOGGER.tagged('AlgorithmRunner') { LOGGER.send(level, msg) }
     end
