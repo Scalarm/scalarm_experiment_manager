@@ -60,9 +60,10 @@ module WorkersScaling
 
     ##
     # Returns logger tagged with id of experiment for current algorithm
-    # @return [Logger]
-    def logger
-      TaggedLoggerFactory.with_tag(self.experiment_id)
+    # @param level [Symbol]
+    # @param msg [Object] must respond to .to_s
+    def log(level, msg)
+      LOGGER.tagged(self.experiment.id.to_s) { LOGGER.send(level, msg) }
     end
 
     ##
