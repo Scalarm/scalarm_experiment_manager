@@ -59,7 +59,7 @@ module WorkersScaling
     end
 
     ##
-    # Returns logger tagged with id of experiment for current algorithm
+    # Logs message msg at given level adding experiment id tag
     # @param level [Symbol]
     # @param msg [Object] must respond to .to_s
     def log(level, msg)
