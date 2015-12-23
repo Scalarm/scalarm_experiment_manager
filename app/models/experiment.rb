@@ -333,20 +333,21 @@ class Experiment < Scalarm::Database::Model::Experiment
 
       simulation_runs.where({is_done: true, is_error: {'$exists' => false}}).each do |simulation_run|
         simulation_run_ind = simulation_run.index.to_s
+        input_parameters = simulation_run.input_parameters
 
         x_axis_value = if simulation_run.result.include?(x_axis)
                          # this is a MoE
                          simulation_run.result[x_axis]
                        else
                          # this is an input parameter
-                         simulation_run.input_parameters[x_axis]
+                         input_parameters[x_axis]
                        end
         y_axis_value = if simulation_run.result.include?(y_axis)
                          # this is a MoE
                          simulation_run.result[y_axis]
                        else
                          # this is an input parameter
-                         simulation_run.input_parameters[y_axis]
+                         input_parameters[y_axis]
                        end
 
         csv << [x_axis_value, y_axis_value, simulation_run_ind]
