@@ -116,7 +116,7 @@ module WorkersScaling
     # @return [Fixnum] number of not finished simulations
     def count_not_finished_simulations
       @experiment.reload
-      [@experiment.size - @experiment.count_done_simulations, 0].max
+      [@experiment.experiment_size - @experiment.count_done_simulations, 0].max
     end
 
   end
