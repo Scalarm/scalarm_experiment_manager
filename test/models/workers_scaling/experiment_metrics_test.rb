@@ -9,7 +9,7 @@ class ExperimentMetricsTest < ActiveSupport::TestCase
   test 'count_not_finished_simulations should always return non-negative number' do
     # given
     experiment = mock do
-      stubs(:size).returns(0)
+      stubs(:experiment_size).returns(0)
       stubs(:count_done_simulations).returns(1)
       stubs(:reload)
     end
@@ -24,7 +24,7 @@ class ExperimentMetricsTest < ActiveSupport::TestCase
     # given
     experiment = mock do
       expects(:reload)
-      stubs(:size).returns(0)
+      stubs(:experiment_size).returns(0)
       stubs(:count_done_simulations).returns(0)
     end
     experiment_metrics = WorkersScaling::ExperimentMetrics.new(experiment, mock)
@@ -39,7 +39,7 @@ class ExperimentMetricsTest < ActiveSupport::TestCase
     expected_simulations_to_run = experiment_size - done_simulations
     experiment = mock do
       expects(:reload)
-      stubs(:size).returns(experiment_size)
+      stubs(:experiment_size).returns(experiment_size)
       stubs(:count_done_simulations).returns(done_simulations)
     end
     experiment_metrics = WorkersScaling::ExperimentMetrics.new(experiment, mock)
