@@ -16,9 +16,9 @@ module WorkersScaling
     ##
     # Schedules maximum number of workers to all available infrastructures
     def schedule_workers
-      logger.debug 'Schedule maximum number of workers to all available resource configurations'
+      log(:debug, 'Schedule maximum number of workers to all available resource configurations')
       @resources_interface.get_available_resource_configurations.each do |configuration|
-        logger.debug "#{configuration.inspect}"
+        log(:debug, "#{configuration.inspect}")
         @resources_interface.schedule_workers(Float::INFINITY, configuration)
       end
     end

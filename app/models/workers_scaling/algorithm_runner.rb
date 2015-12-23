@@ -11,7 +11,6 @@ module WorkersScaling
     # Firstly initializes threads
     # Then runs periodically and calls runner_loop
     def self.start
-      @logger = TaggedLoggerFactory.with_tag('AlgorithmRunner')
       Thread.new do
         begin
           work_queue = Queue.new
@@ -22,7 +21,7 @@ module WorkersScaling
             sleep(RUNNER_INTERVAL)
           end
         rescue => e
-          @logger.error "Exception occurred during Algorithm Runner loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
+          log(:error, "Exception occurred during Algorithm Runner loop: #{e.to_s}\n#{e.backtrace.join("\n")}")
           raise
         end
       end
@@ -35,14 +34,14 @@ module WorkersScaling
     # and calling execute_and_schedule for next experiment_id from queue
     # Returns list of started threads
     def self.initialize_threads(work_queue)
-      @logger.debug 'Starting Algorithm Runner worker threads'
+      log(:debug,'Starting Algorithm Runner worker threads')
       (1..THREADS_NUMBER).map do
         Thread.new do
           loop do
             begin
               execute_and_schedule(work_queue.pop)
             rescue => e
-              @logger.error "Worker thread encountered exception: #{e.to_s}\nWill continue working"
+              log(:error, "Worker thread encountered exception: #{e.to_s}\nWill continue working")
             end
           end
         end
@@ -56,7 +55,7 @@ module WorkersScaling
     # Enqueues them to be executed by threads
     # Waits until all are taken from queue for execution
     def self.runner_loop(work_queue)
-      @logger.debug 'Entering Algorithm Runner loop'
+      log(:debug, 'Entering Algorithm Runner loop')
       AlgorithmFactory.get_experiment_ids_for_ready_algorithms.each do |experiment_id|
         work_queue.push(experiment_id)
       end
@@ -78,20 +77,25 @@ module WorkersScaling
 
           if experiment.nil? or experiment.completed? or not experiment.is_running
             algorithm.destroy
-            @logger.debug 'Experiment is not running, destroying algorithm record'
+            log(:debug, 'Experiment is not running, destroying algorithm record')
           else
-            @logger.debug 'Starting execute_algorithm_step method'
+            log(:debug, 'Starting execute_algorithm_step method')
             algorithm.execute_algorithm_step
             algorithm.notify_execution
-            @logger.debug "Setting next execution time to #{algorithm.next_execution_time.inspect}"
+            log(:debug, "Setting next execution time to #{algorithm.next_execution_time.inspect}")
           end
         end
       rescue => e
-        @logger.error "Exception occurred during workers scaling algorithm: #{e.to_s}\n#{e.backtrace.join("\n")}"
+        log(:error, "Exception occurred during workers scaling algorithm: #{e.to_s}\n#{e.backtrace.join("\n")}")
         AlgorithmFactory.get_algorithm(experiment_id).notify_error
         raise
       end
     end
 
+    private
+
+    def self.log(level, msg)
+      LOGGER.tagged('AlgorithmRunner') { LOGGER.send(level, msg) }
+    end
   end
 end

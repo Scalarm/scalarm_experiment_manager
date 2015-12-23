@@ -24,14 +24,14 @@ module WorkersScaling
     # Schedules one Worker on each available configuration if Experiment size is greater than configurations number
     # Otherwise uses random subset of available configurations with size equal to Experiment size
     def initial_deployment
-      logger.debug 'Initial deployment'
+      log(:debug, 'Initial deployment')
       @experiment.reload
       @resources_interface.get_available_resource_configurations
           .select { |configuration| @resources_interface.current_resource_configuration_limit(configuration) > 0 }
           .shuffle[0..@experiment.size-1]
           .each do |configuration|
         @resources_interface.schedule_workers(1, configuration)
-        logger.debug "Initializing configuration: #{configuration}"
+        log(:debug, "Initializing configuration: #{configuration}")
       end
     end
 
@@ -46,7 +46,7 @@ module WorkersScaling
         when :decrease
           decrease_computational_power
         else
-          logger.debug 'Nothing to do'
+          log(:debug, 'Nothing to do')
       end
     end
 
@@ -58,7 +58,7 @@ module WorkersScaling
     # * predicted - predicted time until Experiment end in seconds
     # * left - time left until planned_finish_time in seconds
     def time_constraint_check(predicted, left)
-      logger.debug "Time predicted: #{'%.5f' % predicted} s, time left: #{'%.5f' % left} s"
+      log(:debug, "Time predicted: #{'%.5f' % predicted} s, time left: #{'%.5f' % left} s")
       return :increase if predicted > left * (1 + TOLERANCE/100)
       return :decrease if predicted < left * (1 - TOLERANCE/100)
       :ok
@@ -70,12 +70,12 @@ module WorkersScaling
     # Uses known configurations with highest throughput if limits are not reached
     # If limits in all known configurations are reached, uses random unknown configuration
     def increase_computational_power
-      logger.debug 'Need to increase computational power'
+      log(:debug, 'Need to increase computational power')
 
       # calculate needed additional throughput
       throughput_needed = @experiment_metrics.target_throughput(self.planned_finish_time) -
           @experiment_metrics.system_throughput
-      logger.debug "Additional throughput needed: #{'%.5f' % throughput_needed} sim/s"
+      log(:debug, "Additional throughput needed: #{'%.5f' % throughput_needed} sim/s")
 
       # calculate average configurations throughput
       configurations_throughput = @resources_interface.get_available_resource_configurations.map do |configuration|
@@ -90,7 +90,7 @@ module WorkersScaling
 
       # sort from highest
       sorted_throughput = used_configurations.sort_by { |configuration| configuration[:average_throughput] }.reverse
-      logger.debug "Avg inf throughput: #{sorted_throughput}"
+      log(:debug, "Avg inf throughput: #{sorted_throughput}")
 
       # iterate over sorted entities until system throughput is increased to desired value
       sorted_throughput.each do |entity|
@@ -98,7 +98,7 @@ module WorkersScaling
         throughput_needed -= add_workers(entity[:resource_configuration],
                                          entity[:statistics][:average_throughput],
                                          throughput_needed)
-        logger.debug "Reduced needed throughput to #{'%.5f' % throughput_needed} sim/s"
+        log(:debug, "Reduced needed throughput to #{'%.5f' % throughput_needed} sim/s")
       end
 
       # if throughput is still too low, use other configurations or inform user
@@ -109,10 +109,10 @@ module WorkersScaling
             end
             .sample
         if random_unused.blank?
-          logger.debug 'May not meet time requirements'
+          log(:debug, 'May not meet time requirements')
         else
           # schedule one worker on random unused configuration
-          logger.debug 'Need to use unknown configuration'
+          log(:debug, 'Need to use unknown configuration')
           add_workers(random_unused[:resource_configuration])
         end
       end
@@ -123,16 +123,16 @@ module WorkersScaling
     # Does nothing if there are stopping Workers already
     # Stops Workers with lowest throughput first
     def decrease_computational_power
-      logger.debug 'Need to decrease computational power'
+      log(:debug, 'Need to decrease computational power')
       if @resources_interface.count_all_workers(cond: Query::Workers::STOPPING) > 0
-        logger.debug 'There are stopping Workers already'
+        log(:debug, 'There are stopping Workers already')
         return
       end
 
       # calculate excess throughput
       excess_throughput = @experiment_metrics.system_throughput -
           @experiment_metrics.target_throughput(self.planned_finish_time)
-      logger.debug "Excess throughput: #{'%.5f' % excess_throughput} sim/s"
+      log(:debug, "Excess throughput: #{'%.5f' % excess_throughput} sim/s")
 
       # get all workers with their throughput
       workers_throughput = @resources_interface.get_available_resource_configurations.flat_map do |configuration|
@@ -145,15 +145,15 @@ module WorkersScaling
 
       # sort from lowest
       sorted_throughput = workers_throughput.sort_by { |worker| worker[:throughput] }
-      logger.debug "Sorted throughput: #{sorted_throughput}"
+      log(:debug, "Sorted throughput: #{sorted_throughput}")
 
       # iterate over sorted workers until system throughput is decreased to desired value
       sorted_throughput.each do |worker|
         break if excess_throughput < worker[:throughput]
         @resources_interface.soft_stop_worker(worker[:sm_uuid])
         excess_throughput -= worker[:throughput]
-        logger.debug "Stopping Worker with sm_uuid: #{worker[:sm_uuid]}"
-        logger.debug "Reduced excess throughput to #{'%.5f' % excess_throughput} sim/s"
+        log(:debug, "Stopping Worker with sm_uuid: #{worker[:sm_uuid]}")
+        log(:debug, "Reduced excess throughput to #{'%.5f' % excess_throughput} sim/s")
       end
     end
 
@@ -173,9 +173,9 @@ module WorkersScaling
                        else
                          1
                        end
-      logger.debug "Trying to schedule #{workers_needed} Workers on configuration: #{resource_configuration}"
+      log(:debug, "Trying to schedule #{workers_needed} Workers on configuration: #{resource_configuration}")
       scheduled = @resources_interface.schedule_workers(workers_needed, resource_configuration).count
-      logger.debug "Total of #{scheduled} Workers starting on configuration: #{resource_configuration}"
+      log(:debug, "Total of #{scheduled} Workers starting on configuration: #{resource_configuration}")
       scheduled * average_throughput
     end
   end
