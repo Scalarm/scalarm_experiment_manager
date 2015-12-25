@@ -62,7 +62,9 @@ end
 
 # Use unicorn as the app server
 gem 'puma'
+#gem 'thin'
 
+# Use debugger
 # gem 'debugger', group: [:development, :test]
 # Rubinius specifics
 platforms :rbx do
@@ -83,11 +85,11 @@ gem 'remotipart', '~> 1.0'
 gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
-#gem 'scalarm-database', path: '/Users/dkrol/workspace/scalarm/scalarm-database'
+# gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
 gem 'scalarm-database', '>= 1.1', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
-#gem 'scalarm-service_core', path: '/Users/dkrol/workspace/scalarm/scalarm-service_core'
+# gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
 gem 'scalarm-service_core', '~> 1.1.1', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
