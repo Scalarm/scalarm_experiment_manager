@@ -688,7 +688,7 @@ apiDoc:
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
     done_run = @experiment.simulation_runs.where(done_run_query_condition,
-                                                 {limit: 1, fields: %w(arguments)}).first
+                                                 {limit: 1, fields: %w(arguments input_parameters)}).first
 
     moes_and_params = if done_run.nil?
                         (@experiment.parameters.flatten).map { |x|

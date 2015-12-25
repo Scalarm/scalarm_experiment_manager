@@ -416,7 +416,10 @@ class Experiment < Scalarm::Database::Model::Experiment
       csv << header
       query_fields = {_id: 0}
       query_fields[:index] = 1 if with_index
-      query_fields[:values] = 1 if with_params
+      if with_params
+        query_fields[:input_parameters] = 1
+        query_fields[:values] = 1
+      end
       query_fields[:result] = 1 if with_moes
       simulation_runs.where(
           {is_done: true}.merge(additional_query),
