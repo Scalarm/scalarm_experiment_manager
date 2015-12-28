@@ -1,8 +1,8 @@
 GIT
   remote: git://github.com/Scalarm/scalarm-database.git
-  revision: 638e131fa85e3a67b9aa6764f2a5be75b8c2b0b9
+  revision: bfb8f5e6cd357b349d573f6ed9c6eb8c765b6223
   specs:
-    scalarm-database (1.1)
+    scalarm-database (1.2)
       activesupport
       bson
       bson_ext
@@ -467,7 +467,7 @@ DEPENDENCIES
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
-  scalarm-database (>= 1.1)!
+  scalarm-database (>= 1.2)!
   scalarm-service_core (~> 1.1.1)!
   sdoc
   signet
@@ -475,3 +475,6 @@ DEPENDENCIES
   uglifier (>= 1.3.0)
   vmstat
   xml-simple
+
+BUNDLED WITH
+   1.10.6
