@@ -365,6 +365,9 @@ def install_r_libraries
   puts 'Checking R libraries...'
   Rails.configuration.r_interpreter.eval(
       ".libPaths(c(\"#{Dir.pwd}/r_libs\", .libPaths()))
+    if(!require(lhs, quietly=TRUE)){
+      install.packages(\"lhs\", repos=\"http://cran.rstudio.com/\")
+    }
     if(!require(AlgDesign, quietly=TRUE)){
       install.packages(\"AlgDesign\", repos=\"http://cran.rstudio.com/\")
     }")
