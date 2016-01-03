@@ -478,6 +478,19 @@ article#experiment_stats {
   }
 }
 
+article#workers_scaling_info {
+  position: relative;
+  font-size: 15px;
+
+  .content {
+    min-height: 150px;
+  }
+
+  .row {
+    margin-bottom: 10px;
+  }
+}
+
 #exp_progress_bar_2 {
     width: 100%;
     height: 50px;

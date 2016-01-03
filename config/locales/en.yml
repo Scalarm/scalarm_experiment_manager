@@ -122,6 +122,7 @@ en:
       boost_button: Add computing power
       show_details_link: Show details...
       no_workers_alert: "No resources in use. Please add them with 'Add computing power' button."
+      no_workers_alert_with_workers_scaling: No resources in use.
 
     monitoring_table:
       show_completed: Show/Hide completed

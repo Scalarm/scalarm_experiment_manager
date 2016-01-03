@@ -1,41 +1,42 @@
-.row
-  .small-12.columns
-    %strong
-      = t('experiments.workers_scaling.information_panel.workers_scaling_active')
+%article#workers_scaling_info
+  .row
+    .small-12.columns
+      %strong
+        = t('experiments.workers_scaling.information_panel.workers_scaling_active')
 
-- algorithm = WorkersScaling::AlgorithmFactory.get_algorithm(@experiment.id.to_s)
-.row
-  .small-3.columns
-    %strong
-      = t('experiments.workers_scaling.information_panel.algorithm_name') + ':'
-  .small-9.columns
-    = algorithm.blank? ? t('experiments.workers_scaling.information_panel.unknown_algorithm') : algorithm.class.algorithm_name
-
-- unless @experiment.plgrid_default
+  - algorithm = WorkersScaling::AlgorithmFactory.get_algorithm(@experiment.id.to_s)
   .row
     .small-3.columns
       %strong
-        = t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
+        = t('experiments.workers_scaling.information_panel.algorithm_name') + ':'
     .small-9.columns
-      %span#planned_finish_time ''
+      = algorithm.blank? ? t('experiments.workers_scaling.information_panel.unknown_algorithm') : algorithm.class.algorithm_name
 
-.row
-  .small-3.columns
-    %strong
-      = t('experiments.workers_scaling.information_panel.execution_time.expected') + ':'
-  .small-9.columns
-    %span#expected_finish_time ''
+  - unless @experiment.plgrid_default
+    .row
+      .small-3.columns
+        %strong
+          = t('experiments.workers_scaling.information_panel.execution_time.planned') + ':'
+      .small-9.columns
+        %span#planned_finish_time ''
 
-- unless @experiment.plgrid_default
+  .row
+    .small-3.columns
+      %strong
+        = t('experiments.workers_scaling.information_panel.execution_time.expected') + ':'
+    .small-9.columns
+      %span#expected_finish_time ''
+
+  - unless @experiment.plgrid_default
+    .row
+      .small-9.columns
+        %strong{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
+          = t('experiments.workers_scaling.information_panel.execution_time.warning')
+
   .row
     .small-9.columns
-      %strong{id: 'time_constraints_warning', style: 'font-weight: bold; color: red; display: none' }
-        = t('experiments.workers_scaling.information_panel.execution_time.warning')
-
-.row
-  .small-9.columns
-    %strong{id: 'workers_scaling_error', style: 'font-weight: bold; color: red; display: none' }
-      = t('experiments.workers_scaling.information_panel.error')
+      %strong{id: 'workers_scaling_error', style: 'font-weight: bold; color: red; display: none' }
+        = t('experiments.workers_scaling.information_panel.error')
 
 - content_for :javascript do
   :javascript
@@ -55,7 +56,7 @@
               $('#time_constraints_warning').hide();
             }
             $('#workers_scaling_error').hide();
-            $('#expected_finish_time').text("Finished")
+            $('#expected_finish_time').text("#{t('experiments.workers_scaling.information_panel.execution_time.finished')}")
           } else {
             if (data.workers_scaling_active == true) {
               $('#workers_scaling_error').hide();
@@ -66,7 +67,7 @@
               if (!plgrid_default) {
                 $('#time_constraints_warning').show();
               }
-              $('#expected_finish_time').text("Unknown")
+              $('#expected_finish_time').text("#{t('experiments.workers_scaling.information_panel.execution_time.unknown')}")
             } else {
               var predicted_finish_time = new Date(data.predicted_finish_time*1000);
               $('#expected_finish_time').text(predicted_finish_time.toString());

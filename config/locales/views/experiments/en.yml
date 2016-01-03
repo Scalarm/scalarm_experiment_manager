@@ -15,7 +15,7 @@ en:
       plgrid_default:
         This option will automatically execute experiment on PL-Grid resources using your grant.
       mode:
-        title: Computational resources
+        title: Computational resources management
         manual: Manual
         automatic: Automated - advanced
         plgrid_default: Automated - PL-Grid default
@@ -27,12 +27,14 @@ en:
       information_panel:
         workers_scaling_active: Automated computational resources management is active
         algorithm_name: Automation method
-        unknown_algorithm: Unknown
+        unknown_algorithm: Not available due to execution error
         execution_time:
+          finished: Finished
+          unknown: Not available due to insufficient data
           expected: Expected finish time
-          planned: Planned finish time
-          warning: May not meet time requirements
-        error: An error occurred, automated management stopped, please contact administrators
+          planned: Experiment execution deadline
+          warning: Experiment execution may exceed planned finish time.
+        error: An error occurred, automated computational resources management stopped, please contact administrators.
 
 
 

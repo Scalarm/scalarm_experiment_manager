@@ -71,6 +71,8 @@
         Computational resources summary
         = image_tag('loading.gif', id: 'actions-loading-workers')
       = render 'workers_info'
+      - if @experiment.workers_scaling
+        = render 'workers_scaling'
 
 
   %section.row.panel.radius.last-element#monitoring_section
