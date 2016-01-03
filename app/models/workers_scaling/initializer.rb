@@ -54,19 +54,18 @@ module WorkersScaling
                         params: @workers_scaling_params[:algorithm_params] || {}
                     )
                   end
-        algorithm.save
+      algorithm.save
 
-        Thread.new do
-          begin
-            algorithm.initial_deployment
-            algorithm.notify_execution
-            LOGGER.tagged(experiment.id) { LOGGER.debug 'Initial deployment finished' }
-          rescue => e
-            LOGGER.tagged(experiment.id) { LOGGER.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}" }
-            raise
-          end
+      Thread.new do
+        begin
+          algorithm.initial_deployment
+          algorithm.notify_execution
+          LOGGER.tagged(experiment.id) { LOGGER.debug 'Initial deployment finished' }
+        rescue => e
+          LOGGER.tagged(experiment.id) { LOGGER.error "Exception occurred during initial deployment: #{e.to_s}\n#{e.backtrace.join("\n")}" }
+          raise
         end
-
+      end
 
       experiment.workers_scaling = true
       experiment.planned_finish_time = planned_finish_time
