@@ -86,6 +86,9 @@ module WorkersScaling
       end
     end
 
+    PL_GRID_DEFAULT_WORKERS_LIMIT = 5
+    ONSITE_MONITORING_ACTIVE = 'on'
+
     ##
     # Starts workers scaling with default configuration for PLGrid
     def self.plgrid_default(experiment_id, user_id, worker_time_limit)
@@ -93,13 +96,16 @@ module WorkersScaling
       if configuration.blank?
         raise InfrastructureErrors::NoCredentialsError.new('Missing credentials for PlGrid resources')
       end
-      configuration.merge!({time_limit: worker_time_limit, onsite_monitoring: 'on'})
-      self.initial_deployment(
-              experiment_id,
-              user_id,
-              [{resource_configuration: configuration, limit: 5}],
-              Time.now,
-              {name: WorkersScaling::ResourcesUsageMaximization.get_class_name}
+      configuration.merge!({time_limit: worker_time_limit, onsite_monitoring: ONSITE_MONITORING_ACTIVE})
+      self.create_algorithm(
+          class_name: WorkersScaling::ResourcesUsageMaximization.get_class_name.to_sym,
+          experiment_id: experiment_id,
+          user_id: user_id,
+          planned_finish_time: Time.now,
+          allowed_resource_configurations: [
+              {resource_configuration: configuration, limit: PL_GRID_DEFAULT_WORKERS_LIMIT}],
+          last_update_time: Time.now,
+          params: {}
       )
     end
 

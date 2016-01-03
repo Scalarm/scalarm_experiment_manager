@@ -32,27 +32,28 @@ module WorkersScaling
     def start(experiment)
       planned_finish_time = Time.now + (@workers_scaling_params[:experiment_execution_time_limit] || 0).minutes
 
-      if @workers_scaling_params[:plgrid_default]
-        WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, current_user.id,
-                                                        @workers_scaling_params[:worker_time_limit])
-        experiment.plgrid_default = true
-      else
-        allowed_infrastructures = @workers_scaling_params[:allowed_resource_configurations].map do |record|
-          {
-              resource_configuration: {name: record['name'].to_sym, params: record['params'].symbolize_keys},
-              limit: record['limit']
-          }
-        end
+      algorithm = if @workers_scaling_params[:plgrid_default]
+                    experiment.plgrid_default = true
+                    WorkersScaling::AlgorithmFactory.plgrid_default(experiment.id.to_s, @user_id,
+                                                                    @workers_scaling_params[:worker_time_limit])
+                  else
+                    allowed_infrastructures = @workers_scaling_params[:allowed_resource_configurations].map do |record|
+                      {
+                          resource_configuration: {name: record['name'].to_sym, params: record['params'].symbolize_keys},
+                          limit: record['limit']
+                      }
+                    end
 
-        algorithm = WorkersScaling::AlgorithmFactory.create_algorithm(
-            class_name: @workers_scaling_params[:name].to_sym,
-            experiment_id: experiment.id,
-            user_id: @user_id,
-            allowed_resource_configurations: allowed_infrastructures,
-            planned_finish_time: planned_finish_time,
-            last_update_time: Time.now,
-            params: @workers_scaling_params[:algorithm_params] || {}
-        )
+                    WorkersScaling::AlgorithmFactory.create_algorithm(
+                        class_name: @workers_scaling_params[:name].to_sym,
+                        experiment_id: experiment.id,
+                        user_id: @user_id,
+                        allowed_resource_configurations: allowed_infrastructures,
+                        planned_finish_time: planned_finish_time,
+                        last_update_time: Time.now,
+                        params: @workers_scaling_params[:algorithm_params] || {}
+                    )
+                  end
         algorithm.save
 
         Thread.new do
@@ -65,7 +66,7 @@ module WorkersScaling
             raise
           end
         end
-      end
+
 
       experiment.workers_scaling = true
       experiment.planned_finish_time = planned_finish_time
