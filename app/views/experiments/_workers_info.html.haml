@@ -5,7 +5,10 @@
 
       #workers_alert.row(style="display: none; margin-bottom: 10px;")
         .small-12.columns.w-failed(style="font-weight: bold")
-          = t('experiments.computational_resources.no_workers_alert')
+          - if @experiment.workers_scaling
+            = t('experiments.computational_resources.no_workers_alert_with_workers_scaling')
+          - else
+            = t('experiments.computational_resources.no_workers_alert')
       .row
         .small-8.columns
           %a{href: "#{infrastructures_path}?experiment_id=#{@experiment.id}"}
