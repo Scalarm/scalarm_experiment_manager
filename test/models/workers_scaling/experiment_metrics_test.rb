@@ -6,49 +6,6 @@ class ExperimentMetricsTest < ActiveSupport::TestCase
     @experiment_metrics = WorkersScaling::ExperimentMetrics.new(stub_everything, stub_everything)
   end
 
-  test 'count_not_finished_simulations should always return non-negative number' do
-    # given
-    experiment = mock do
-      stubs(:experiment_size).returns(0)
-      stubs(:count_done_simulations).returns(1)
-      stubs(:reload)
-    end
-    experiment_metrics = WorkersScaling::ExperimentMetrics.new(experiment, mock)
-    # when
-    simulations_to_run = experiment_metrics.send(:count_not_finished_simulations)
-    # then
-    assert simulations_to_run >= 0, "Number of simulations to run must be non-negative, got #{simulations_to_run}"
-  end
-
-  test 'count_not_finished_simulations should always return current data' do
-    # given
-    experiment = mock do
-      expects(:reload)
-      stubs(:experiment_size).returns(0)
-      stubs(:count_done_simulations).returns(0)
-    end
-    experiment_metrics = WorkersScaling::ExperimentMetrics.new(experiment, mock)
-    # when, then
-    experiment_metrics.send(:count_not_finished_simulations)
-  end
-
-  test 'count_not_finished_simulations should return number of simulations to run' do
-    # given
-    experiment_size = 10
-    done_simulations = 5
-    expected_simulations_to_run = experiment_size - done_simulations
-    experiment = mock do
-      expects(:reload)
-      stubs(:experiment_size).returns(experiment_size)
-      stubs(:count_done_simulations).returns(done_simulations)
-    end
-    experiment_metrics = WorkersScaling::ExperimentMetrics.new(experiment, mock)
-    # when
-    simulations_to_run = experiment_metrics.send(:count_not_finished_simulations)
-    # then
-    assert_equal expected_simulations_to_run, simulations_to_run
-  end
-
   test 'makespan should be zero when there are no simulations to run' do
     # given
     @experiment_metrics.stubs(:count_not_finished_simulations).returns(0)
@@ -116,36 +73,23 @@ class ExperimentMetricsTest < ActiveSupport::TestCase
     assert_equal expected_target_throughput, target_throughput
   end
 
-  test 'calculate_worker_throughput should return correctly calculated throughput' do
+  test 'worker_throughput should return correctly calculated throughput' do
     # given
     finished_simulations = 1
     time_start = Time.new(0)
     time_end = Time.new(1000)
     worker = mock do
-      expects(:created_at).returns(time_start)
-      expects(:finished_simulations).returns(finished_simulations)
+      stubs(:created_at).returns(time_start)
+      stubs(:finished_simulations).returns(finished_simulations)
     end
+    resources_interface = mock do
+      stubs(:get_worker_record_by_sm_uuid).returns(worker)
+    end
+    experiment_metrics = WorkersScaling::ExperimentMetrics.new(stub_everything, resources_interface)
     Time.stubs(:now).returns(time_end)
     expected_worker_throughput = (finished_simulations + 1)/(time_end - time_start)
     # when
-    worker_throughput = @experiment_metrics.send(:calculate_worker_throughput, worker)
-    # then
-    assert_equal expected_worker_throughput, worker_throughput
-  end
-
-
-  test 'calculate_worker_throughput should correctly calculate throughput when workers does not have attribute finished_simulations' do
-    # given
-    time_start = Time.new(0)
-    time_end = Time.new(1000)
-    worker = mock do
-      expects(:created_at).returns(time_start)
-      expects(:finished_simulations).returns(nil)
-    end
-    Time.stubs(:now).returns(time_end)
-    expected_worker_throughput = (0 + 1)/(time_end - time_start)
-    # when
-    worker_throughput = @experiment_metrics.send(:calculate_worker_throughput, worker)
+    worker_throughput = experiment_metrics.worker_throughput('sm_uuid')
     # then
     assert_equal expected_worker_throughput, worker_throughput
   end
