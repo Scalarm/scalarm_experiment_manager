@@ -163,109 +163,35 @@ class ExperimentResourcesInterfaceTest < ActiveSupport::TestCase
                  @resources_interface.schedule_workers(amount, SAMPLE_RESOURCE_CONFIGURATION)
   end
 
-  test 'resource_configuration_not_working? should return true when too many workers failed to work' do
+  test 'get_available_resource_configurations should return all available resource configurations' do
     # given
-    @resources_interface.expects(:get_workers_records_count)
-        .with(anything, equals(cond: WorkersScaling::Query::Workers::ERROR))
+    @resources_interface.stubs(:get_enabled_resource_configurations).returns(
+        [ActiveSupport::HashWithIndifferentAccess.new({name: 'name', params: {}})]
+    )
+    @resources_interface.stubs(:get_workers_records_count)
+        .returns(WorkersScaling::ExperimentResourcesInterface::MAXIMUM_NUMBER_OF_FAILED_WORKERS)
+    # when, then
+    assert_equal [SAMPLE_RESOURCE_CONFIGURATION], @resources_interface.get_available_resource_configurations
+  end
+
+  test 'get_available_resource_configurations should not return configurations for not working infrastructures' do
+    # given
+    @resources_interface.stubs(:get_enabled_resource_configurations).returns(
+        [ActiveSupport::HashWithIndifferentAccess.new({name: 'name', params: {}})]
+    )
+    @resources_interface.stubs(:get_workers_records_count)
         .returns(WorkersScaling::ExperimentResourcesInterface::MAXIMUM_NUMBER_OF_FAILED_WORKERS + 5)
     # when, then
-    assert_equal true, @resources_interface.send(:resource_configuration_not_working?, SAMPLE_RESOURCE_CONFIGURATION)
+    assert_equal [], @resources_interface.get_available_resource_configurations
   end
 
-  test 'resource_configuration_not_working? should return false when number of failed workers is lower than limit' do
+  test 'get_available_resource_configurations should not return configurations for not enabled infrastructures' do
     # given
-    @resources_interface.expects(:get_workers_records_count)
-        .with(anything, equals(cond: WorkersScaling::Query::Workers::ERROR))
-        .returns(0)
+    @resources_interface.stubs(:get_enabled_resource_configurations).returns([])
+    @resources_interface.stubs(:get_workers_records_count)
+        .returns(WorkersScaling::ExperimentResourcesInterface::MAXIMUM_NUMBER_OF_FAILED_WORKERS)
     # when, then
-    assert_equal false, @resources_interface.send(:resource_configuration_not_working?, SAMPLE_RESOURCE_CONFIGURATION)
-  end
-
-  test 'calculate_needed_workers should include running workers without finished simulations in requested amount' do
-    # given
-    requested_amount = 10
-    starting_workers = 5
-    @resources_interface.stubs(:get_workers_records_list).returns([])
-    starting_workers_records = get_workers_stubs(starting_workers)
-    @resources_interface.expects(:get_workers_records_list)
-        .with(anything, equals({cond: WorkersScaling::Query::Workers::RUNNING_WITHOUT_FINISHED_SIMULATIONS}))
-        .returns(starting_workers_records)
-    @experiment.stubs(:count_simulations_to_run).returns(requested_amount)
-    @resources_interface.stubs(:current_resource_configuration_limit).returns(requested_amount)
-    # when
-    actual_needed_amount, already_scheduled_workers = @resources_interface.send(:calculate_needed_workers,
-                                                                                requested_amount,
-                                                                                SAMPLE_RESOURCE_CONFIGURATION)
-    # then
-    assert_equal requested_amount - starting_workers, actual_needed_amount
-    assert_equal starting_workers_records.map(&:sm_uuid), already_scheduled_workers
-  end
-
-  test 'calculate_needed_workers should include initializing workers in requested amount' do
-    # given
-    requested_amount = 10
-    initializing_workers = 5
-    @resources_interface.stubs(:get_workers_records_list).returns([])
-    initializing_workers_records = get_workers_stubs(initializing_workers)
-    @resources_interface.expects(:get_workers_records_list)
-        .with(anything, equals({cond: WorkersScaling::Query::Workers::INITIALIZING}))
-        .returns(initializing_workers_records)
-    @experiment.stubs(:count_simulations_to_run).returns(requested_amount)
-    @resources_interface.stubs(:current_resource_configuration_limit).returns(requested_amount)
-    # when
-    actual_needed_amount, already_scheduled_workers = @resources_interface.send(:calculate_needed_workers,
-                                                                                requested_amount,
-                                                                                SAMPLE_RESOURCE_CONFIGURATION)
-    # then
-    assert_equal requested_amount - initializing_workers, actual_needed_amount
-    assert_equal initializing_workers_records.map(&:sm_uuid), already_scheduled_workers
-  end
-
-  test 'calculate_needed_workers should include initializing workers in simulations left' do
-    # given
-    requested_amount = 20
-    simulations_to_run = 10
-    initializing_workers = 5
-    @resources_interface.stubs(:get_workers_records_list).returns([])
-    initializing_workers_records = get_workers_stubs(initializing_workers)
-    @resources_interface.expects(:get_workers_records_list)
-        .with(anything, equals({cond: WorkersScaling::Query::Workers::INITIALIZING}))
-        .returns(initializing_workers_records)
-    @experiment.expects(:count_simulations_to_run).returns(simulations_to_run)
-    @resources_interface.stubs(:current_resource_configuration_limit).returns(requested_amount)
-    # when
-    actual_needed_amount, _ = @resources_interface.send(:calculate_needed_workers, requested_amount,
-                                               SAMPLE_RESOURCE_CONFIGURATION)
-    # then
-    assert_equal simulations_to_run - initializing_workers, actual_needed_amount
-  end
-
-  test 'calculate_needed_workers should limit needed workers to number of left simulations' do
-    # given
-    requested_amount = 20
-    simulations_to_run = 10
-    @resources_interface.stubs(:get_workers_records_list).returns([])
-    @experiment.expects(:count_simulations_to_run).returns(simulations_to_run)
-    @resources_interface.stubs(:current_resource_configuration_limit).returns(requested_amount)
-    # when
-    actual_needed_amount, _ = @resources_interface.send(:calculate_needed_workers,
-                                                        requested_amount, SAMPLE_RESOURCE_CONFIGURATION)
-    # then
-    assert_equal simulations_to_run, actual_needed_amount
-  end
-
-  test 'calculate_needed_workers should limit needed workers to imposed limit' do
-    # given
-    requested_amount = 20
-    workers_limit = 10
-    @resources_interface.stubs(:get_workers_records_list).returns([])
-    @experiment.stubs(:count_simulations_to_run).returns(requested_amount)
-    @resources_interface.expects(:current_resource_configuration_limit).returns(workers_limit)
-    # when
-    actual_needed_amount, _ = @resources_interface.send(:calculate_needed_workers,
-                                                        requested_amount, SAMPLE_RESOURCE_CONFIGURATION)
-    # then
-    assert_equal workers_limit, actual_needed_amount
+    assert_equal [], @resources_interface.get_available_resource_configurations
   end
 
   ENABLED_RESOURCE_CONFIGURATION = ActiveSupport::HashWithIndifferentAccess.new({name: :enabled, params: {}})
