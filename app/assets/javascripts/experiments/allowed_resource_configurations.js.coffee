@@ -94,7 +94,7 @@ class window.AllowedResourceConfigurations
           params[key.id] = 'on'
       else if key.id not in ['infrastructure_name', 'limit', 'time_limit']
         params[key.id] = key.value
-      else if key.id in ['time_limit']
+      else if key.id == 'time_limit'
         params[key.id] = Number(key.value)
     parameter.name = $('#param-config #infrastructure_name').val()
     parameter.label = $('#param-config #infrastructure_name option:selected').text()

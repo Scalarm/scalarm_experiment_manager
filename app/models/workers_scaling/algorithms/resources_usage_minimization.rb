@@ -18,7 +18,7 @@ module WorkersScaling
     # Tolerance used in #time_constraint_check
     # Defines maximal allowed difference at given moment
     # between planned and predicted finish time in percents
-    TOLERANCE = 10
+    TIME_COMPARISON_TOLERANCE = 10
 
     ##
     # Schedules one Worker on each available configuration if Experiment size is greater than configurations number
@@ -51,16 +51,16 @@ module WorkersScaling
     end
 
     ##
-    # Returns :increase when predicted time is longer than left time increased by TOLERANCE %
-    # Returns :decrease when predicted time is shorter than left time decreased by TOLERANCE %
+    # Returns :increase when predicted time is longer than left time increased by TIME_COMPARISON_TOLERANCE %
+    # Returns :decrease when predicted time is shorter than left time decreased by TIME_COMPARISON_TOLERANCE %
     # Returns :ok otherwise
     # Arguments:
     # * predicted - predicted time until Experiment end in seconds
     # * left - time left until planned_finish_time in seconds
     def time_constraint_check(predicted, left)
       log(:debug, "Time predicted: #{'%.5f' % predicted} s, time left: #{'%.5f' % left} s")
-      return :increase if predicted > left * (1 + TOLERANCE/100)
-      return :decrease if predicted < left * (1 - TOLERANCE/100)
+      return :increase if predicted > left * (1 + TIME_COMPARISON_TOLERANCE/100)
+      return :decrease if predicted < left * (1 - TIME_COMPARISON_TOLERANCE/100)
       :ok
     end
 
@@ -70,8 +70,6 @@ module WorkersScaling
     # Uses known configurations with highest throughput if limits are not reached
     # If limits in all known configurations are reached, uses random unknown configuration
     def increase_computational_power
-      log(:debug, 'Need to increase computational power')
-
       # calculate needed additional throughput
       throughput_needed = @experiment_metrics.target_throughput(self.planned_finish_time) -
           @experiment_metrics.system_throughput
@@ -123,7 +121,6 @@ module WorkersScaling
     # Does nothing if there are stopping Workers already
     # Stops Workers with lowest throughput first
     def decrease_computational_power
-      log(:debug, 'Need to decrease computational power')
       if @resources_interface.count_all_workers(cond: Query::Workers::STOPPING) > 0
         log(:debug, 'There are stopping Workers already')
         return

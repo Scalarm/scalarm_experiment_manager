@@ -29,7 +29,7 @@ module WorkersScaling
     ##
     # Returns list of enabled resource configurations for experiment
     # Resource configuration format: {name: <name>, params: {<params>}}
-    # @return [Arrat<ActiveSupport::HashWithIndifferentAccess>] list of enabled resource configurations
+    # @return [Array<ActiveSupport::HashWithIndifferentAccess>] list of enabled resource configurations
     def get_enabled_resource_configurations
       InfrastructureFacadeFactory.get_all_infrastructures
           .select { |inf| inf.enabled_for_user?(@user_id) }
@@ -41,7 +41,7 @@ module WorkersScaling
     # Resource configuration format: {name: <name>, params: {<params>}}
     # Resource configuration with too many workers in error state will be omitted
     # <params> may include e.g. credentials_id for private_machine
-    # @return [Arrat<ActiveSupport::HashWithIndifferentAccess>] list of available resource configurations
+    # @return [Array<ActiveSupport::HashWithIndifferentAccess>] list of available resource configurations
     def get_available_resource_configurations
       enabled_resource_configurations = get_enabled_resource_configurations
       @allowed_resource_configurations
@@ -84,11 +84,11 @@ module WorkersScaling
       end
       return [] if resource_configuration_not_working?(resource_configuration)
 
-      real_amount, already_scheduled_workers = calculate_needed_workers(amount, resource_configuration)
-      return already_scheduled_workers if real_amount <= 0
+      actual_needed_amount, already_scheduled_workers = calculate_needed_workers(amount, resource_configuration)
+      return already_scheduled_workers if actual_needed_amount <= 0
 
       get_facade_for(resource_configuration[:name])
-        .start_simulation_managers(@user_id, real_amount, @experiment.id.to_s, resource_configuration[:params])
+        .start_simulation_managers(@user_id, actual_needed_amount, @experiment.id.to_s, resource_configuration[:params])
         .map(&:sm_uuid)
         .concat(already_scheduled_workers)
     end
@@ -181,8 +181,9 @@ module WorkersScaling
       # initializing workers have not yet taken simulations, need to avoid scheduling workers that will not get one
       simulations_left = @experiment.count_simulations_to_run - initializing_workers.count
 
-      real_amount = [requested_amount, current_resource_configuration_limit(resource_configuration), simulations_left].min
-      return real_amount, starting_workers + initializing_workers
+      actual_needed_amount = [requested_amount,
+                              current_resource_configuration_limit(resource_configuration), simulations_left].min
+      return actual_needed_amount, starting_workers + initializing_workers
     end
 
     ##
