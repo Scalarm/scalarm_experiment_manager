@@ -229,8 +229,8 @@ class window.ExperimentMonitor
 
       $("#execution_time_avg").html("#{hours} #{minutes} #{seconds}")
       $("#avg_execution_time").show()
-    if(statistics.predicted_finish_time != undefined)
-      $("#predicted_finish_time").html(statistics.predicted_finish_time)
+    if(statistics.predicted_finish_time != -1 and not statistics.completed)
+      display_date("#predicted_finish_time", statistics.predicted_finish_time)
       $("#p_predicted_finish_time").show()
 
   update_bar: (bar_info) =>

@@ -162,7 +162,7 @@ class ExperimentsControllerTest < ActionController::TestCase
       },
       {
           method_name: :predicted_finish_time,
-          default_value: false,
+          default_value: true,
           result_keys: [:predicted_finish_time]
       },
       {
