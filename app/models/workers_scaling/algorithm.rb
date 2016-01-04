@@ -16,7 +16,6 @@ module WorkersScaling
     attr_accessor :resources_interface
     attr_accessor :experiment_metrics
 
-    NOT_IMPLEMENTED = 'This is an abstract method, which must be implemented by all subclasses'
     ERRORS_MAX = 3
 
     ##
@@ -71,14 +70,14 @@ module WorkersScaling
     # #execute_algorithm_step. Should contain actions performed in the
     # beginning of algorithm e.g. sending first workers on infrastructure.
     def initial_deployment
-      raise NOT_IMPLEMENTED
+      raise NotImplementedError
     end
 
     ##
     # Main algorithm loop, executed on specified event (e.g. finished simulation) or
     # when given time since last execution passed. Should contain main algorithm logic.
     def execute_algorithm_step
-      raise NOT_IMPLEMENTED
+      raise NotImplementedError
     end
 
     ##
@@ -115,13 +114,13 @@ module WorkersScaling
     ##
     # Name of algorithm visible to user
     def self.algorithm_name
-      raise NOT_IMPLEMENTED
+      raise NotImplementedError
     end
 
     ##
     # Description of algorithm visible to user
     def self.description
-      raise NOT_IMPLEMENTED
+      raise NotImplementedError
     end
 
   end
