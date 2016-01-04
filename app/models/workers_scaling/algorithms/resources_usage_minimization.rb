@@ -6,12 +6,11 @@ module WorkersScaling
   class ResourcesUsageMinimization < Algorithm
 
     def self.algorithm_name
-      'Resources usage minimization'
+      I18n::t('algorithms.resources_usage_minimization.algorithm_name')
     end
 
     def self.description
-      'Method will use minimal possible amount of resources to finish experiment within execution time limit '\
-      'and will try to ensure even resources usage through entire experiment.'
+      I18n::t('algorithms.resources_usage_minimization.description')
     end
 
     ##

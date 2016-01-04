@@ -6,11 +6,11 @@ module WorkersScaling
   class ResourcesUsageMaximization < Algorithm
 
     def self.algorithm_name
-      'Resources usage maximization'
+      I18n::t('algorithms.resources_usage_maximization.algorithm_name')
     end
 
     def self.description
-      'Method will use all available computational power through entire experiment.'
+      I18n::t('algorithms.resources_usage_maximization.description')
     end
 
     ##
