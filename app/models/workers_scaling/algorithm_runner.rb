@@ -74,6 +74,10 @@ module WorkersScaling
         Scalarm::MongoLock.try_mutex("experiment-#{experiment_id}-workers-scaling") do
           experiment = Experiment.find_by_id(experiment_id)
           algorithm = AlgorithmFactory.get_algorithm(experiment_id)
+          if algorithm.nil?
+            log(:debug, 'Algorithm associated with given experiment does not exists')
+            return
+          end
 
           if experiment.nil? or experiment.completed? or not experiment.is_running
             algorithm.destroy
