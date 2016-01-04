@@ -567,7 +567,7 @@ apiDoc:
         simulations_statistics: true,
         progress_bar: true,
         completed: true,
-        predicted_finish_time: false,
+        predicted_finish_time: true,
         workers_scaling_active: false
     }
 
