@@ -651,8 +651,6 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     end
 
-    Rails.logger.debug("Parameter type: #{parameter['type']} --- #{parameter_values.inspect}")
-
     case parameter['type']
 
       when 'integer'

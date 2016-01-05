@@ -124,7 +124,6 @@ module ExperimentProgressBar
     experiment_id, experiment_size = self.experiment_id, self.experiment_size
 
     a = Time.now
-    Rails.logger.debug("update_bar_state(#{instance_id})")
     parts_per_slot = parts_per_progress_bar_slot
     bar_index = ((instance_id - 1) / parts_per_slot).floor
 
@@ -157,7 +156,6 @@ module ExperimentProgressBar
       Rails.logger.debug("Error --- #{e}")
     end
 
-    Rails.logger.debug("Updating bar state took #{Time.now - a}")
   end
 
   ##
@@ -166,7 +164,6 @@ module ExperimentProgressBar
   def is_update_free_time(bar_index)
     cache_key = "progress_bar_#{self.experiment_id}_#{bar_index}"
     bar_last_update = Rails.cache.read(cache_key)
-    Rails.logger.debug("Bar last update - #{bar_last_update}")
     Rails.cache.write(cache_key, Time.now, :expires_in => 30) if bar_last_update.nil?
     not bar_last_update.nil?
   end
