@@ -263,13 +263,12 @@ class Experiment < Scalarm::Database::Model::Experiment
     self.size
   end
 
-  def extend_progress_bar
+  def extend_progress_bar(force = false)
     self.create_progress_bar_table.drop
     self.insert_initial_bar
     # to not draw gray bar if the last change was made < 30 sec -> method Experiment_progress_bar.update_all_bars
     Rails.cache.delete_matched(/progress_bar_#{self.id}_\d+/)
-    # Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-    Thread.start { self.update_all_bars }
+    Thread.start { self.update_all_bars(force) }
   end
 
   def experiment_size=(new_size)

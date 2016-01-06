@@ -105,12 +105,12 @@ module ExperimentProgressBar
 
   ##
   # changes made on whole bar
-  def update_all_bars
+  def update_all_bars(force = false)
     parts_per_slot = parts_per_progress_bar_slot
     Rails.logger.debug("UPDATE ALL BARS --- #{parts_per_slot}")
     instance_id = 1
     while instance_id <= self.experiment_size
-      update_bar_state(instance_id)
+      update_bar_state(instance_id, force)
       instance_id += parts_per_slot
     end
   end
@@ -119,7 +119,7 @@ module ExperimentProgressBar
   ##
   #changes in number of simulation in bar or their state
   #used in update_all_bars
-  def update_bar_state(instance_id)
+  def update_bar_state(instance_id, force = false)
     return if self.nil? or (not self.is_running)
     experiment_id, experiment_size = self.experiment_id, self.experiment_size
 
@@ -127,7 +127,7 @@ module ExperimentProgressBar
     parts_per_slot = parts_per_progress_bar_slot
     bar_index = ((instance_id - 1) / parts_per_slot).floor
 
-    return if is_update_free_time(bar_index)
+    return if is_update_free_time(bar_index) and not force
 
     first_id = [bar_index*parts_per_slot + 1, experiment_size].min
     last_id = [(bar_index+1)*parts_per_slot, experiment_size].min

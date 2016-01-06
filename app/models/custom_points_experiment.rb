@@ -23,7 +23,7 @@ class CustomPointsExperiment < Experiment
     begin
       points.each {|p| self._add_single_point(p)}
     ensure
-      extend_progress_bar
+      extend_progress_bar(true)
       save
     end
   end
