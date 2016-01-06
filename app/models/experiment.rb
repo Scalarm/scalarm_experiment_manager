@@ -551,17 +551,18 @@ class Experiment < Scalarm::Database::Model::Experiment
   # returns Hash with result
   # TODO: handle results with errors
   def get_result_for(simulation_parameters)
-    # TODO: check if SimulationRun.arguments is always the same as Experiment.parameters
-    values = self.parameters.flatten.collect do |p|
-      simulation_parameters[p.to_s] || simulation_parameters[p.to_sym]
-    end
+    sim_run = self.simulation_runs.where(is_done: true).select{|sim_run|
+      is_equal = true
 
-    values = values.collect(&:to_s).join(',')
+      simulation_parameters.each do |param, val|
+        if sim_run.input_parameters[param] != val
+          is_equal = false
+          break
+        end
+      end
 
-    sim_run = self.simulation_runs.where(
-        {is_done: true, values: values},
-        {fields: {_id: 0, result: 1}}
-    ).first
+      is_equal
+    }.first
 
     sim_run and sim_run.result
   end
