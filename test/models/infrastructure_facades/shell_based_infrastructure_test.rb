@@ -28,6 +28,18 @@ ruby/2.1.1' load complete.
     assert_equal 20257, ShellBasedInfrastructure.output_to_pid(output)
   end
 
+  def test_strip_pid_output_should_return_pid_when_output_includes_background_procs_counter
+    output = '[1] 20257'
+
+    assert_equal "20257", ShellBasedInfrastructure.strip_pid_output(output)
+  end
+
+  def test_strip_pid_output_should_return_pid_when_output_includes_only_pid
+    output = ' 20257 '
+
+    assert_equal "20257", ShellBasedInfrastructure.strip_pid_output(output)
+  end
+
   def test_output_to_pid_inline
     output = <<-OUT
 ruby/2.1.1' load complete. 9871

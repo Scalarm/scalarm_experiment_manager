@@ -57,7 +57,7 @@ module ShellBasedInfrastructure
   end
 
   def self.strip_pid_output(output)
-    output.split("\n").last.strip
+    output.split("\n").last.strip.split.last
   end
 
   def self.output_to_pid(output)
