@@ -39,7 +39,7 @@ class SimulationManagerRecordTest < MiniTest::Test
 
   def test_time_limit_exceeded_true
     sm_record = MockRecord.new({})
-    sm_record.expects(:created_at).returns(Time.now - 2.minutes).once
+    sm_record.expects(:run_detected_at).returns(Time.now - 2.minutes).at_least_once
     sm_record.expects(:time_limit).returns(1).once
 
     assert sm_record.time_limit_exceeded?
@@ -47,7 +47,7 @@ class SimulationManagerRecordTest < MiniTest::Test
 
   def test_time_limit_exceeded_false
     sm_record = MockRecord.new({})
-    sm_record.expects(:created_at).returns(Time.now - 2.minutes).once
+    sm_record.expects(:run_detected_at).returns(Time.now - 2.minutes).at_least_once
     sm_record.expects(:time_limit).returns(3).once
 
     assert (not sm_record.time_limit_exceeded?)

@@ -1,16 +1,30 @@
 require 'minitest/autorun'
 require 'test_helper'
 require 'mocha'
+require 'active_support/testing/declarative'
 
 require 'infrastructure_facades/simulation_manager'
 
 class SimulationManagerTest < MiniTest::Test
 
+  extend ActiveSupport::Testing::Declarative
+
   def setup
-    @record = stub_everything do
-      stubs(:experiment).returns(stub_everything)
-    end
+    @simulation_runs = stub_everything 'simulation_runs'
+    @experiment = stub_everything 'experiment'
+    @experiment.stubs(:simulation_runs).returns(@simulation_runs)
+
+    @record = stub_everything 'record'
+    @record.stubs(:experiment).returns(@experiment)
+
     @sm = SimulationManager.new(@record, stub_everything)
+
+    # NOTICE
+    # by default in this test, there are tasks waiting
+    @sm.stubs(:no_pending_tasks?).returns(false)
+
+    # no test should accept errors by default
+    @sm.logger.expects(:error).never
   end
 
   METHOD_NAMES = [

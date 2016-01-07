@@ -62,4 +62,22 @@ module DatabaseUpdateUtils
     end
   end
 
+  # With SCAL-1148, a new SiM field run_detected_at was added
+  #
+  # When the SCAL-1148 patch is applied, working SiMs in system do not have this field
+  # in old system, the behaviour of system is: cretated_at == run_detected_at
+  # so it should be copied in all records
+  #
+  # When the SCAL-1148 patch is applied without this migration
+  # time_limit monitoring case will not work
+  def self.init_run_detected_at
+    classes = [PlGridJob, DummyRecord, CloudVmRecord, PrivateMachineRecord]
+
+    classes.each do |cls|
+      cls.where.each do |record|
+        record.run_detected_at = record.created_at
+      end
+    end
+  end
+
 end

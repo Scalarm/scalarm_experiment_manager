@@ -163,4 +163,28 @@ class SimulationManagerIntegrationTest < ActionDispatch::IntegrationTest
     @sm.monitor
   end
 
+  # Given:
+  #   Simulation Manager with short time limit is in running state.
+  #   Time limit has been reached counting from created_at, but not from run_detected_at.
+  # When:
+  #   Monitor is invoked on SiM.
+  # Then:
+  #   An effect for running_time_limit_exceeded should not be invoked.
+  test 'running_time_limit_exceeded action should respect initialization time' do
+    # Given
+    @sm.stubs(:state).returns(:running)
+    @sm.stubs(:resource_status).returns(:running_sm)
+    # @record.unstub(:time_limit_exceeded?)
+    @record.stubs(:time_limit).returns(5)
+    @record.stubs(:created_at).returns(6.minutes.ago)
+    @record.stubs(:run_detected_at).returns(4.minutes.ago)
+    @sm.stubs(:no_pending_tasks?).returns(false)
+
+    # Expected behaviour
+    @sm.expects(:execute_effect_for).with(:running_time_limit_exceeded).never
+
+    # When
+    @sm.monitor
+  end
+
 end

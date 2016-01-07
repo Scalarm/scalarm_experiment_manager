@@ -357,8 +357,8 @@ class SimulationManager
         infrastructure_action(action_name)
       rescue InfrastructureErrors::NoCredentialsError
         raise
-      rescue Exception => e
-        logger.warn "Exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
+      rescue => e
+        logger.error "Exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         record.store_error('resource_action', "#{action_name}: #{e.to_s}")
         infrastructure_action('stop') rescue nil
       end

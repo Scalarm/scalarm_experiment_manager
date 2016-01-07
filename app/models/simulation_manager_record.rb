@@ -4,6 +4,7 @@
 # - experiment_id => the experiment which should be computed by this job
 # -* created_at => time - when this job were scheduled
 # -* sm_initialized_at => time - last time when simulation manager of this job was started or restarted
+# - run_detected_at => time - time when monitoring detected that this SiM is running
 # - time_limit => time - when this job should be stopped - in minutes
 # - sm_uuid => string - uuid of configuration files
 # -* sm_initialized => boolean - whether or not SM code has been sent to this machine
@@ -59,7 +60,7 @@ module SimulationManagerRecord
       when :initializing
         self.sm_initialized_at = Time.now
       when :running
-        # pass
+        self.run_detected_at = Time.now
       when :terminating
         self.stopped_at = Time.now
       when :error
@@ -99,7 +100,8 @@ module SimulationManagerRecord
   end
 
   def time_limit_exceeded?
-    self.created_at + self.time_limit.to_i.minutes < Time.now
+    not self.run_detected_at.nil? and
+        (self.run_detected_at + self.time_limit.to_i.minutes < Time.now)
   end
 
   def init_time_exceeded?
