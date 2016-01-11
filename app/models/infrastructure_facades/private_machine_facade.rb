@@ -29,7 +29,7 @@ class PrivateMachineFacade < InfrastructureFacade
     # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
     # - 'host' => hostname - matches first PM Credentials with this host name
     def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
-      logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
+      logger.debug "Start simulation managers for experiment #{experiment_id}"
 
       machine_creds = if params[:host]
                         PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)

@@ -49,7 +49,7 @@ class CloudFacade < InfrastructureFacade
   # - instance_type
   # - stored_* - special params for various clouds
   def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
-    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
+    logger.debug "Start simulation managers for experiment #{experiment_id}"
 
     begin
       image_secrets_id = params['image_secrets_id']
