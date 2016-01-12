@@ -99,4 +99,16 @@ qsub: submit filter returned an error code, aborting job submission.
     assert_match /#PBS -q some_queue\s*\n/, desc
   end
 
+  def test_memory_should_be_used_when_set
+    desc = @qsub.prepare_job_descriptor('sm_uuid', 'memory' => '2')
+
+    assert_match /#PBS -l mem=2gb\s*\n/, desc    
+  end
+
+  def test_memory_should_not_be_used_when_blank
+    desc = @qsub.prepare_job_descriptor('sm_uuid', 'memory' => '')
+
+    assert(/#PBS -l mem=\s*\n/ !~ desc)
+  end
+
 end
