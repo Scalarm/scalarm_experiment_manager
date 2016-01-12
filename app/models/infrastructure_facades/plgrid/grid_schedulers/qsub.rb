@@ -72,6 +72,7 @@ module QsubScheduler
 #PBS -l walltime=#{params['time_limit'].to_i.minutes.to_i}
 #{params['nodes'].blank? ? '' : "#PBS -l nodes=#{params['nodes']}:ppn=#{params['ppn'] || 1}" }
 #{params['grant_id'].blank? ? '' : "#PBS -A #{params['grant_id']}" }
+#{params['memory'].to_i <= 0 ? '' : "#PBS -l mem=#{params['memory'].to_i}gb" }
 
 cd $PBS_O_WORKDIR
 ./#{job_script_file(uuid)} #{uuid} # SiM unpacking and execution script

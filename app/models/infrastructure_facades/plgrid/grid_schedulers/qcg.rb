@@ -58,6 +58,8 @@ module QcgScheduler
 #QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
 #{params['nodes'].blank? ? '' : "#QCG nodes=#{params['nodes']}:#{params['ppn']}" }
 #{params['grant_id'].blank? ? '' : "#QCG grant=#{params['grant_id']}" }
+#{params['memory'].to_i <= 0 ? '' : "#QCG memory=#{params['memory'].to_i * 1024}" }
+
       eos
     end
 

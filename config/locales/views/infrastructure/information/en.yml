@@ -67,6 +67,10 @@ en:
           nodes: "Nodes"
           ppn: "Cores per node"
           host: "PL-Grid Compute Engine"
+          memory: Memory
+          memory_units: "[GB]"
+          memory_help: "Total task memory. Leave blank to use default value, i.e. for each requested core a task will get the amount of node memory divide by the number of cores on the node."
+
       amazon:
         security_group: Security group
 
