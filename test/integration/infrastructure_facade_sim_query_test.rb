@@ -39,7 +39,7 @@ class InfrastructureFacadeSimQueryTest < ActionDispatch::IntegrationTest
     sim_params = {
         time_limit: '99',
         start_at: '',
-        onsite_monitoring: 'off',
+        onsite_monitoring: '',
         credentials_id: creds.id
     }
 
@@ -54,7 +54,7 @@ class InfrastructureFacadeSimQueryTest < ActionDispatch::IntegrationTest
     other_sim_params = {
         time_limit: '10',
         start_at: '',
-        onsite_monitoring: 'off',
+        onsite_monitoring: '',
         credentials_id: other_creds.id
     }
 
