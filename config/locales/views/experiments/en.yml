@@ -5,11 +5,11 @@ en:
       manual: Manual
       automatic: Automatic
     manual_experiment:
-      title:  Input space
-      manual_designed: Manual designed
-      csv_imported: CSV imported
+      title: Input space specification
+      manual_designed: Manually designed
+      csv_imported: Imported from a CSV file
     automatic_experiment:
-      title: Automatic experiment algorithm
+      title: Automatic input space exploration method
 
     workers_scaling:
       plgrid_default:
@@ -18,7 +18,7 @@ en:
         title: Computational resources management
         manual: Manual
         automatic: Automated - advanced
-        plgrid_default: Automated - Zeus @ ACC Cyfronet AGH 
+        plgrid_default: Automated - Zeus @ ACC Cyfronet AGH
       algorithm:
         title: Automated computational resources management
         method_selection: Automation method
