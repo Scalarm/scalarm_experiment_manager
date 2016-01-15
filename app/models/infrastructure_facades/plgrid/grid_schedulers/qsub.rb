@@ -4,7 +4,7 @@ module QsubScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
     def self.long_name
-      'PL-Grid PBS'
+      'Zeus @ ACC Cyfronet AGH'
     end
 
     def self.short_name
