@@ -92,7 +92,7 @@ class PlGridFacade < InfrastructureFacade
     query[:ppn] = params['ppn'] unless params['ppn'].blank?
     query[:plgrid_host] = params['plgrid_host'] unless params['plgrid_host'].blank?
     query[:queue_name] = params['queue'] unless params['queue'].blank?
-    query[:onsite_monitoring] = (params['onsite_monitoring'] == 'on') unless params['onsite_monitoring'].blank?
+    query[:onsite_monitoring] = if params['onsite_monitoring'].blank? then false else true end
     query[:time_limit] = params['time_limit'].to_i unless params['time_limit'].blank?
     query[:start_at] = params['start_at'] unless params['start_at'].blank?
 
@@ -214,7 +214,7 @@ class PlGridFacade < InfrastructureFacade
   # - ppn (optional)
   # - plgrid_host (optional)
   # - queue (optional)
-  # - onsite_monitoring (optional) - monitoring will be enabled if onsite_monitoring == 'on'
+  # - onsite_monitoring (optional) - monitoring will be enabled if onsite_monitoring is not blank
   def create_record(user_id, experiment_id, sm_uuid, params)
     job = PlGridJob.new(
         user_id:user_id,
@@ -234,7 +234,7 @@ class PlGridFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.onsite_monitoring = (params['onsite_monitoring'] == 'on')
+    job.onsite_monitoring = if params['onsite_monitoring'].blank? then false else true end
 
     job
   end
@@ -301,7 +301,7 @@ class PlGridFacade < InfrastructureFacade
   def get_resource_configurations(user_id)
     scheduler.get_resource_configurations(user_id)
   end
-  
+
   # Appends PL-Grid scheduler name to shared SSH session ID
   # NOTICE: not used because of stateless SSH sessions
   #def shared_ssh_session(record)

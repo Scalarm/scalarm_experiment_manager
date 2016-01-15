@@ -48,7 +48,7 @@ class PrivateMachineFacade < InfrastructureFacade
       ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
       ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
 
-      onsite_monitoring_enabled = (params[:onsite_monitoring] == 'on')
+      onsite_monitoring_enabled = if params['onsite_monitoring'].blank? then false else true end
 
     records = (1..instances_count).map do
       record = PrivateMachineRecord.new(
@@ -97,7 +97,7 @@ class PrivateMachineFacade < InfrastructureFacade
     query[:credentials_id] = credentials_id unless credentials_id.blank?
     query[:time_limit] = params[:time_limit] unless params[:time_limit].blank?
     query[:start_at] = params[:start_at] unless params[:start_at].blank?
-    query[:onsite_monitoring] = (params[:onsite_monitoring] == 'on') unless params[:onsite_monitoring].blank?
+    query[:onsite_monitoring] = if params['onsite_monitoring'].blank? then false else true end
 
     PrivateMachineRecord.where(query)
   end
