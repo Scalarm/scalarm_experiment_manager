@@ -1,17 +1,17 @@
 GIT
   remote: git://github.com/Scalarm/scalarm-database.git
-  revision: bfb8f5e6cd357b349d573f6ed9c6eb8c765b6223
+  revision: eecce55015ff634add8b833f5b412b8833d35cbb
   specs:
-    scalarm-database (1.2)
+    scalarm-database (1.2.1)
       activesupport
       bson
       bson_ext
-      encryptor
+      encryptor (= 1.3.0)
       mongo
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 4448a42f9b17006a1c0defbe1e25d00a34006b3e
+  revision: f0ef19635fe682f9e6f2c91cf7f5e166c1e1a361
   specs:
     scalarm-service_core (1.1.1)
       actionpack (~> 4.1)
@@ -467,11 +467,7 @@ DEPENDENCIES
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
-<<<<<<< HEAD
-  scalarm-database (>= 1.2)!
-=======
-  scalarm-database (>= 1.1)!
->>>>>>> 3c90183... Reverting changes in Gemfile and Gemfile.lock.
+  scalarm-database (= 1.2.1)!
   scalarm-service_core (~> 1.1.1)!
   sdoc
   signet
@@ -479,3 +475,6 @@ DEPENDENCIES
   uglifier (>= 1.3.0)
   vmstat
   xml-simple
+
+BUNDLED WITH
+   1.11.2
