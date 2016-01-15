@@ -1,7 +1,6 @@
 - es_url = sample_service_url('experiment_supervisors')
 - supervisor_ids = get_supervisor_ids(es_url)
 - wss_algorithms_descriptions = workers_scaling_algorithms_description
-- plgrid_default_enabled = !InfrastructureFacadeFactory.get_facade_for(:qsub).get_resource_configurations(current_user.id).blank?
 
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
@@ -97,9 +96,9 @@
           - ws_manual = [t('experiments.workers_scaling.mode.manual'), :manual]
           - ws_automatic = [t('experiments.workers_scaling.mode.automatic'), :automatic ]
           - workers_scaling_mode = []
-          - workers_scaling_mode << ws_plgrid_default if plgrid_default_enabled
           - workers_scaling_mode << ws_manual
           - workers_scaling_mode << ws_automatic unless ws_algorithm_options == ''
+          - workers_scaling_mode << ws_plgrid_default if @is_plgrid_enabled
           = select_tag 'workers_scaling_mode_select', options_for_select(workers_scaling_mode, workers_scaling_mode.first)
           #plgrid_default{:style => 'display: none'}
             = t('experiments.workers_scaling.plgrid_default')

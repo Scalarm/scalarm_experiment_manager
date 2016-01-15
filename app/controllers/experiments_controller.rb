@@ -1161,7 +1161,11 @@ apiDoc:
   end
 
   def new
+    pbs_facade = InfrastructureFacadeFactory.get_facade_for(:qsub)
+
     @simulation_input = @simulation.input_specification
+
+    @is_plgrid_enabled = pbs_facade.valid_credentials_available?(current_user.id)
   end
 
   # getting id of a random running experiment
