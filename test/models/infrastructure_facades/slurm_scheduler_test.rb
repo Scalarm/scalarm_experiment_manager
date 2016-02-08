@@ -11,7 +11,7 @@ class SlurmSchedulerTest < MiniTest::Test
     @record = stub_everything
     @record.stubs(:job_identifier).returns('1131597')
     @ssh = stub_everything
-    @slurm = SlurmScheduler.new(@logger)
+    @slurm = SlurmScheduler.new
   end
 
   def teardown
@@ -374,7 +374,7 @@ its all wrong...
 
   def test_job_description_with_params
     desc = @slurm.prepare_job_descriptor('1', {
-      'grant_id' => 'testowy',
+      'grant_identifier' => 'testowy',
       'nodes' => 2,
       'time_limit' => (55*60) + 30,
       'ppn' => 8,

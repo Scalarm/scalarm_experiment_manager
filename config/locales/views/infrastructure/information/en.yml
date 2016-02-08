@@ -38,13 +38,17 @@ en:
       instance_counter: Instance counter
       image_label: Image
       vm_type: Instance type
-      grant_id: Grant
+      grant_id: Computing grant id (if you are using one)
       time_constraint: Job time constraint [min]
       start_at: 'Start at ("hh:mm:ss" format)'
       submit: Submit
       remove_credentials: Remove credentials
       onsite_monitoring: Enable job monitoring on the infrastructure side
       queue: Queue name (only if you really know what you are doing)
+      login: Username
+      password: Password
+      credentials_needed: "No credentials were configured. We need them to submit and monitor jobs on your behalf.
+      Provided credentials will not be stored in Scalarm."
 
       launched_at: 'Launched at'
       time_limit: 'Time limit'

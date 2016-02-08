@@ -2,6 +2,20 @@
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://coffeescript.org/
 
+window.string_with_delimeters = () ->
+    string_copy = this.split("").reverse().join("")
+    len = 3
+    num_of_comas = 0
+
+    while (len + num_of_comas <= string_copy.length) && string_copy.length > 3
+        string_copy = string_copy.substr(0, len) + "," + string_copy.substr(len)
+        num_of_comas = 1
+        len += 4
+
+    return string_copy.split("").reverse().join("");
+
+String.prototype.with_delimeters = window.string_with_delimeters;
+
 window.scalarm_objects = {}
 
 class window.ExperimentSpeedometer

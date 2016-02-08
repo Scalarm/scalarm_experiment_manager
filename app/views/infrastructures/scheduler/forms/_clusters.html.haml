@@ -1,0 +1,6 @@
+- scheduler = other_params[:scheduler]
+
+- begin
+  = render partial: "infrastructures/scheduler/forms/#{scheduler}", locals: {other_params: other_params}
+- rescue ActionView::MissingTemplate
+  - # ignore missing cloud-specific partials

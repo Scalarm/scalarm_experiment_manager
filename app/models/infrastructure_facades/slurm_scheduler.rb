@@ -4,6 +4,10 @@ require 'infrastructure_facades/plgrid/pl_grid_scheduler_base.rb'
 # the SLURM scheduling system
 class SlurmScheduler < PlGridSchedulerBase
 
+  def initialize
+    super(InfrastructureTaskLogger.new(self.short_name))
+  end
+
   def self.long_name
     'SLURM'
   end
@@ -37,36 +41,42 @@ class SlurmScheduler < PlGridSchedulerBase
 
   def status(ssh, job_record)
     scontrol_output = ssh.exec!(BashCommand.new.append("scontrol show job #{job_record.job_identifier}").to_s)
+    logger.debug("SLURM scontrol output #{scontrol_output}")
     state_line = scontrol_output.match(/JobState=.*\s/)
 
     if state_line
       job_state_line = state_line[0]
       state = job_state_line.split('JobState=').last.split.first
 
+      logger.debug("SLURM state based on JobState #{state} --- #{JOB_STATE_MAPPING[state.gsub(/\+/, '')]}")
+
       return JOB_STATE_MAPPING[state.gsub(/\+/, '')]
     end
 
     sacct_output = ssh.exec!(BashCommand.new.append("sacct -j #{job_record.job_identifier}").to_s)
+    logger.debug("SLURM sacct_output #{sacct_output}")
 
-    job_id_idx = sacct_output.split.index("JobID")
-    state_idx = sacct_output.split.index("State")
+    job_id_idx = nil; state_idx = nil
 
-    if job_id_idx.nil? or state_idx.nil?
-      Rails.logger.error("Couldn't find job state - #{sacct_output}")
-      return :error
-    end
+    sacct_output.split("\n").each do |line|
+      logger.debug("SLURM: line: #{line}")
+      if job_id_idx.nil?
+        job_id_idx = line.split.index("JobID")
+        state_idx = line.split.index("State")
+      else
+        job_id = line.split[job_id_idx]
+        state = line.split[state_idx]
 
-    sacct_output.split("\n")[2..-1].each do |line|
-      job_id = line.split[job_id_idx]
-      state = line.split[state_idx]
-
-      if job_id == job_record.job_identifier
-        return JOB_STATE_MAPPING[state.gsub(/\+/, '')]
+        if job_id == job_record.job_identifier
+          Rails.logger.debug { "Returning #{JOB_STATE_MAPPING[state.gsub(/\+/, '')]}" }
+          return JOB_STATE_MAPPING[state.gsub(/\+/, '')]
+        end
       end
     end
 
     Rails.logger.error("Couldn't find job state - #{sacct_output}")
-    return :error
+    # :error
+    raise StandardError("Couldn't find job state")
   end
 
   JOB_STATE_MAPPING = {
@@ -111,7 +121,7 @@ class SlurmScheduler < PlGridSchedulerBase
 #!/bin/bash -l
 #{params['nodes'].blank? ? '' : "#SBATCH -N #{params['nodes']}" }
 #{params['ppn'].blank? ? '' : "#SBATCH --ntasks-per-node=#{params['nodes']}" }
-#{params['grant_id'].blank? ? '' : "#SBATCH -A #{params['grant_id']}" }
+#{params['grant_identifier'].blank? ? '' : "#SBATCH -A #{params['grant_identifier']}" }
 #{params['time_limit'].blank? ? '' : "#SBATCH --time=#{params['time_limit']}" }
 #{params['queue_name'].blank? ? '' : "#SBATCH -p #{params['queue_name']}" }
 #{params['memory'].blank? ? '' : "#SBATCH --mem=#{params['memory']}" }
@@ -180,7 +190,7 @@ cd $SLURM_SUBMIT_DIR
 
     BashCommand.new.
         append("chmod a+x #{job_script_file(sm_uuid)}").
-        append("sbatch #{job_pbs_file(sm_uuid)}")
+        append("sbatch #{job_description_file(sm_uuid)}")
   end
 
   def job_description_file(sm_uuid)

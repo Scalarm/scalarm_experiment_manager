@@ -18,6 +18,8 @@ class InfrastructureFacadeFactory
         #   # this is a hack for removing/adding credentials
         #   # because every PL-Grid queuing system uses the same credentials, default Q-system is used
         #   PlGridFacadeFactory.instance.get_facade('qsub')
+        elsif infrastructure_name.start_with?('cluster_')
+          ClusterFacadeFactory.instance.get_facade_for(infrastructure_name)
         else
           facade_class = InfrastructureFacadeFactory.other_infrastructures[infrastructure_name]
           raise InfrastructureErrors::NoSuchInfrastructureError.new(infrastructure_name) if facade_class.nil?
@@ -32,7 +34,8 @@ class InfrastructureFacadeFactory
   def self.get_registered_infrastructure_names
     names = other_infrastructures.keys +
       PlGridFacadeFactory.instance.provider_names +
-      CloudFacadeFactory.instance.provider_names
+      CloudFacadeFactory.instance.provider_names # +
+      # ClusterFacadeFactory.instance.provider_names
     names.map &:to_s
   end
 
@@ -43,7 +46,12 @@ class InfrastructureFacadeFactory
   end
 
   def self.get_all_sm_records(*args)
-    (get_all_infrastructures.collect { |facade| facade.get_sm_records(*args) }).flatten
+    infrastructures = get_all_infrastructures +
+                      ClusterFacadeFactory.instance.provider_names.collect { |facade_name|
+                        InfrastructureFacadeFactory.get_facade_for(facade_name)
+                      }
+
+    (infrastructures.collect { |facade| facade.get_sm_records(*args) }).flatten
   end
 
   ##
@@ -76,27 +84,40 @@ class InfrastructureFacadeFactory
                 CloudFacadeFactory.instance.provider_names.map do |name|
                   CloudFacadeFactory.instance.get_facade(name).to_h(user_id).merge(group: 'cloud')
                 end
+        },
+        {
+            name: 'Computer clusters',
+            group: 'clusters',
+            children:
+                ClusterFacadeFactory.instance.provider_names.map do |cluster_record_id|
+                  ClusterFacadeFactory.instance.get_facade_for(cluster_record_id).to_h(user_id).merge(group: 'clusters')
+                end
         }
     ]
   end
 
   def self.start_all_monitoring_threads
-    get_all_infrastructures.map do |facade|
+    monit_threads = get_all_infrastructures.map do |facade|
       Rails.logger.info("Starting monitoring thread of '#{facade.long_name}'")
 
-      t = Thread.start do
-        begin
-          facade.monitoring_thread
-        rescue Exception => e
-          Rails.logger.error "Uncaught monitoring exception for infrastructure: #{infrastructure_name}: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
-          raise
-        end
+      Thread.start do
+        t = facade.monitoring_thread
+        t["name"] = facade.short_name
+        t
       end
 
       t["name"] = facade.short_name
 
       t
     end
+
+    monit_threads << Thread.start do
+      t = ClusterFacade.new(nil, nil).monitoring_thread
+      t["name"] = 'clusters'
+      t
+    end
+
+    monit_threads
   end
 
   def self.start_monitoring_thread_for(infrastructure_name)
@@ -117,6 +138,8 @@ class InfrastructureFacadeFactory
       'plgrid'
     elsif CloudFacadeFactory.instance.provider_names.include? infrastructure_name
       'cloud'
+    elsif ClusterFacadeFactory.instance.provider_names.include? infrastructure_name
+      'clusters'
     else
       nil
     end

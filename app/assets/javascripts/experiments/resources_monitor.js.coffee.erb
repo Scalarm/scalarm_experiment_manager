@@ -1,0 +1,47 @@
+class window.ExperimentResourcesMonitor
+
+  constructor: (@simulationManagersCurrentStateUrl) ->
+
+  getResourcesSummary: () ->
+    $.getJSON @simulationManagersCurrentStateUrl,
+      (data) =>
+        workers = data.sm_records
+        workers_in_states_counter =
+          "created": 0,
+          "initializing": 0,
+          "running": 0,
+          "terminating": 0,
+          "failed": 0
+
+        for worker in workers
+          state = worker.state
+          if state == "error"
+            state = "failed"
+
+          workers_in_states_counter[state]++
+
+        @resetView(workers_in_states_counter)
+
+  resetView: (workers_in_states_counter) ->
+    $("#state").empty()
+
+    for state, counter of workers_in_states_counter
+      if workers_in_states_counter[state] != 0
+        console.log "#{counter}  #{state.toLowerCase()}"
+        $("<li>").
+          addClass("w-#{state}").
+          text("#{counter} #{state.toLowerCase()}").
+          append("<br>").
+          appendTo($("#state"))
+
+    if workers_in_states_counter["created"] == 0 &&
+        workers_in_states_counter["initializing"] == 0 &&
+          workers_in_states_counter["running"] == 0
+
+      $("#workers_alert").show();
+      $("#boostButton").addClass("success");
+    else
+      $("#workers_alert").hide();
+      $("#boostButton").removeClass("success");
+
+    $("#actions-loading-workers").hide();

@@ -11,7 +11,7 @@
             = t('experiments.computational_resources.no_workers_alert')
       .row
         .small-8.columns
-          %a{href: "#{infrastructures_path}?experiment_id=#{@experiment.id}"}
+          %a{href: "#{infrastructures_path(experiment_id: @experiment.id)}"}
             = t('experiments.computational_resources.show_details_link')
 
     .small-12.large-6.columns
@@ -29,41 +29,9 @@
 
 - content_for :javascript do
   :javascript
-    window.retrieveComputationalResourcesSummary = function() {
-      $.getJSON("/simulation_managers", function(data) {
-        var array_of_workers = data.sm_records;
-        var map = {"created": 0,
-                   "initializing": 0,
-                   "running": 0,
-                   "terminating": 0,
-                   "failed": 0};
-        array_of_workers.map(function(worker) {
-          var property = worker.state;
-          if(worker.experiment_id === '#{@experiment.id}') {
-            if(property==="error")
-              property = "failed";
-
-            map[property]++;
-          }
-        })
-        $("#state").empty();
-        for(var key in map) {
-          if(map[key]!=0) {
-            $("<li>").addClass("w-"+key).text(map[key]+" " + key.toLowerCase()).append("<br>").appendTo($("#state"));
-          }
-        }
-        if(map["created"] == 0 && map["initializing"]==0 && map["running"]==0) {
-          $("#workers_alert").show();
-          $("#boostButton").addClass("success");
-        }
-        else {
-          $("#workers_alert").hide();
-          $("#boostButton").removeClass("success");
-        }
-        $("#actions-loading-workers").hide();
-      });
-    }
     $(function() {
-      window.retrieveComputationalResourcesSummary();
-      setInterval(window.retrieveComputationalResourcesSummary, 30000);
+      monitor = new window.ExperimentResourcesMonitor("#{simulation_managers_path(experiment_id: @experiment.id)}")
+      monitor.getResourcesSummary();
+
+      setInterval(function() { monitor.getResourcesSummary() }, 30000);
     });

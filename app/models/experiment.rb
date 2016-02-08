@@ -3,6 +3,9 @@ require 'csv'
 require 'set'
 require 'yaml'
 
+require_dependency 'simulation_run_factory'
+require_dependency 'experiment_factory'
+
 # Attributes:
 #_id: id
 #experiment_id: ObjectId - same as _id

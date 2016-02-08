@@ -226,7 +226,7 @@ class PlGridFacade < InfrastructureFacade
     )
 
     job.start_at = params['start_at']
-    job.grant_identifier = params['grant_id'] unless params['grant_id'].blank?
+    job.grant_id = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
     job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?

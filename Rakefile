@@ -341,41 +341,44 @@ def monitoring_process(action)
           threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
 
           Rails.logger.info('Starting algorithm runner')
+          t2 = WorkersScaling::AlgorithmRunner.start
           threads << WorkersScaling::AlgorithmRunner.start
-
-          Rails.logger.error("Threads: #{threads.map{|t| t["name"]}}")
 
           # EXPERIMENTAL
           correct_thread_number = threads.size
+
           while true
             not_working_threads = threads.select{|t| t.status != 'sleep' and t.status != 'run'}
-            Rails.logger.error("Not working threads: #{not_working_threads.size}")
 
             if threads.size != correct_thread_number or not_working_threads.size > 0
               Rails.logger.error("Not working threads: #{not_working_threads.map{|t| t["name"]}}")
-              Rails.logger.error("All started threads were: #{threads.map{|t| t["name"]}}")
               Rails.logger.error("Threads.size = #{threads.size}; Correct thread number: #{correct_thread_number}")
               threads.map(&:kill)
-              Scalarm::MongoLockRecord.each(&:destroy)
 
               # all started threads will be collected here
               threads = []
+
               # start machine monitoring only if there is configuration
               if Rails.application.secrets.monitoring
                 Rails.logger.info('Starting monitoring probe')
-              probe = MonitoringProbe.new
+                probe = MonitoringProbe.new
                 threads << probe.start_monitoring
               else
                 Rails.logger.info('Monitoring probe disabled due to lack of configuration')
               end
 
               Rails.logger.info('Starting experiment watcher')
-              t = ExperimentWatcher.watch_experiments
-              t['name'] = 'experiment_watcher'
-              threads << t
+
+              threads << ExperimentWatcher.watch_experiments
+
+              Rails.logger.info('Starting monitoring threads for all infrastructures')
               threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
-              Rails.logger.error("Threads after restart: #{threads.map{|t| t["name"]}}")
+
+              Rails.logger.info('Starting algorithm runner')
+              threads << WorkersScaling::AlgorithmRunner.start
+
               correct_thread_number = threads.size
+
             end
 
             sleep(300)
@@ -663,4 +666,3 @@ def create_information_service(config)
     !!config['information_service_development']
   )
 end
-
