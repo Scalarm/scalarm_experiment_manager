@@ -15,6 +15,7 @@ en:
       amazon: "Amazon Elastic Compute Cloud credentials"
       cloud_image: "Cloud virtual machine images management"
       private_machine: "Private resources credentials"
+      clusters: "Computer clusters"
     index:
       title: "Welcome to Scalarm"
       header: "What would you like to do?"
@@ -29,6 +30,18 @@ en:
       login_banned: "You need to wait till %{time} to try to login again."
 
       bad_login_or_pass: "Bad login or password"
+
+    clusters:
+      name: Cluster name
+      host: Cluster access node
+      scheduler: Scheduling system
+      public: Public cluster?
+      manage_clusters:
+        add_clusters: "Please, provide information about a cluster you want to use"
+        manage_cluster: "Clusters you defined"
+
+
+
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

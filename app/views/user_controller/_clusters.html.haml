@@ -1,0 +1,58 @@
+.row
+  .small-12.columns
+    %h5.subheader= t('.manage_clusters.add_cluster')
+
+  .small-12.columns
+    = form_tag clusters_path, class: 'custom', multipart: true, id: 'cluster-create-form' do
+      = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
+
+      .row
+        .small-4.large-2.columns
+          = label_tag :name, t('.name') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = text_field_tag :name
+
+      .row
+        .small-4.large-2.columns
+          = label_tag :host, t('.host') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = text_field_tag :host
+
+      .row
+        .small-4.large-2.columns
+          = label_tag :scheduler, t('.scheduler') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = select_tag :scheduler, options_for_select([ ["SLURM", 'slurm'] ])
+
+      .row
+        .small-4.large-2.columns
+          = label_tag :public, t('.public') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = check_box_tag :public, "true", false
+
+      .row
+        .small-10.large-6.columns.text-center.end
+          = submit_tag t('infrastructure.information.submit') , class: 'button radius'
+
+.row
+  .small-12.columns
+    %h5.subheader= t('.manage_clusters.manage_cluster')
+
+  .small-12.columns
+    %table#clusters
+      %thead
+        %tr
+          %th= t('.name')
+          %th= t('.host')
+          %th= t('.scheduler')
+          %th= t('.public')
+          %th
+      %tbody
+
+= content_for :javascript do
+  :javascript
+    $(function() {
+      window._token = "#{form_authenticity_token}";
+      window._token_name = "#{request_forgery_protection_token.to_s}";
+      new window.ClustersManager();
+    });

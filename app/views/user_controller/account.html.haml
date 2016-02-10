@@ -109,6 +109,14 @@
 
                       -#Table partial
                       %div{id: "#{tab_id}-table-partial"}
+
+      %dd
+        %a(href="#clusters")
+          = t(".clusters")
+        .content{id: "clusters", class: params[:active_tab] == "clusters" ? 'active' : ''}
+          = render partial: "clusters"
+
+
 - content_for :javascript do
   :javascript
     $(function() {
@@ -126,5 +134,3 @@
 
       });
     });
-
-

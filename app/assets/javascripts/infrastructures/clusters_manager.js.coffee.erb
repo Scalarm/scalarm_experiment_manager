@@ -1,0 +1,76 @@
+class window.ClustersManager
+
+  constructor: () ->
+    $('#cluster-create-form').submit @clusterCreate
+    @resetClustersTable()
+
+  clusterCreate: (event) =>
+    valuesToSubmit = $(event.target).serialize()
+
+    $.ajax(
+      type: "POST",
+      url: $(event.target).attr('action'),
+      data: valuesToSubmit,
+      dataType: "JSON"
+    ).success( (json) ->
+      console.log 'success', json
+      window.Notices.show_notice("Cluster successfully added")
+    ).error( ( jqXHR, textStatus, errorThrown ) ->
+      console.log jqXHR, textStatus, errorThrown
+      window.Notices.show_error("Couldn't create a new cluster. Status: #{textStatus} - Error: #{errorThrown}")
+    ).complete( () => @resetClustersTable() )
+
+    return false
+
+  clusterDelete: (event) =>
+    valuesToSubmit = $(event.target).serialize()
+
+    $.ajax(
+      type: "DELETE",
+      url: $(event.target).attr('action'),
+      data: valuesToSubmit,
+    ).success( () ->
+      window.Notices.show_notice("Cluster successfully removed")
+    ).error( ( jqXHR, textStatus, errorThrown ) ->
+      console.log jqXHR, textStatus, errorThrown
+      window.Notices.show_error("Couldn't remove a cluster. Status: #{textStatus} - Error: #{errorThrown}")
+    ).complete( () => @resetClustersTable() )
+
+    return false
+
+  resetClustersTable: () ->
+    $.ajax(
+      type: "GET",
+      url: "/clusters"
+    ).success( (json) =>
+      console.log 'success', json
+      $("table#clusters tbody").empty()
+
+      for cluster in json
+        console.log cluster.attributes._id["$oid"]
+        cluster_id = cluster.attributes._id["$oid"]
+
+        $removeButton = $("<form></form>").attr("action", "/clusters/#{cluster_id}").attr("method", "DELETE").attr("data-type", "json").
+                        append( $("<input />").attr("type", "submit").attr("value", "Remove record").addClass("button radius tiny alert") ).
+                        append( $("<input />").attr("type", "hidden").attr("name", window._token_name).attr("value", window._token) )
+
+        $clusterRow = $("<tr></tr>").append( $("<td></td>").html(cluster.attributes.name) ).
+                              append( $("<td></td>").html(cluster.attributes.host) ).
+                              append( $("<td></td>").html(cluster.attributes.scheduler_label) ).
+                              append( $("<td></td>").html(
+                                if cluster.attributes.public
+                                  "<i class='fa fa-check'></i>YES"
+                                else
+                                  "<i class='fa fa-close'></i>NO"
+                              ) ).
+                              append( $("<td></td>").append($removeButton) )
+        console.log $clusterRow
+        $clusterRow.appendTo( $("table#clusters tbody") )
+
+      $("table#clusters tbody form[method=DELETE]").submit @clusterDelete
+
+
+    ).error( ( jqXHR, textStatus, errorThrown ) ->
+      console.log jqXHR, textStatus, errorThrown
+      window.Notices.show_error("Couldn't fetch information about clusters. Status: #{textStatus} - Error: #{errorThrown}")
+    )

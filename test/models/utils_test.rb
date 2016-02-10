@@ -17,6 +17,7 @@ class UtilsTest < MiniTest::Test
     regexp = Utils::get_validation_regexp(:default)
 
     assert regexp, 'hello_wo-rld'
+    assert regexp, 'hello.wo@ rld'
   end
 
   def test_regexp_openid_id

@@ -156,6 +156,8 @@ ScalarmExperimentManager::Application.routes.draw do
     end
   end
 
+  resources :clusters
+
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
 
@@ -190,7 +192,7 @@ ScalarmExperimentManager::Application.routes.draw do
   #       get 'recent', on: :collection
   #     end
   #   end
-  
+
   # Example resource route with concerns:
   #   concern :toggleable do
   #     post 'toggle'
