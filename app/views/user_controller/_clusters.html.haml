@@ -49,6 +49,60 @@
           %th
       %tbody
 
+.row
+  .small-12.columns
+    %h5.subheader= t('.manage_clusters.manage_credentials')
+
+  .small-12.columns
+    %table#cluster-credentials
+      %thead
+        %tr
+          %th
+          %th= t('.name')
+          %th= t('.login')
+          %th= t('.type')
+          %th
+      %tbody
+
+#cluster-credentials-dialog.reveal-modal{"data-reveal" => "", "aria-hidden" => "true",  role: "dialog"}
+  %h2#modalTitle Add new credentials to your clusters
+
+  %p
+    = form_tag "#", class: 'custom', multipart: true, id: 'cluster-credentials-create-form' do
+      = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
+      = hidden_field_tag :cluster_id, ""
+      = hidden_field_tag :infrastructure_name, ""
+
+      .row
+        .small-6.large-4.columns
+          = label_tag :type, t('.type') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = select_tag :type, options_for_select([ [ t('.password_type'), 'password'], [ t('.privkey_type'), 'privkey'] ])
+
+      .row
+        .small-6.large-4.columns
+          = label_tag :login, t('.login') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = text_field_tag :login
+
+      .row
+        .small-6.large-4.columns
+          = label_tag :password, t('.password') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = password_field_tag :password
+
+      .row
+        .small-6.large-4.columns
+          = label_tag :password_repeat, t('.password_repeat') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = password_field_tag :password_repeat
+
+      .row
+        .small-10.large-8.columns.text-center.end
+          = submit_tag t('infrastructure.information.submit') , class: 'button radius'
+
+  %a.close-reveal-modal{"aria-label" => "Close"} &#215;
+
 = content_for :javascript do
   :javascript
     $(function() {

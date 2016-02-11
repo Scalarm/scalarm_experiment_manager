@@ -1,76 +1,187 @@
 class window.ClustersManager
 
   constructor: () ->
+    @clusters = {}
+
     $('#cluster-create-form').submit @clusterCreate
+    $('#cluster-credentials-dialog form').submit @clusterCredentialsCreate
+
+    $("#cluster-credentials-create-form #password").on "change", @validatePassword
+    $("#cluster-credentials-create-form #repeat_password").on "change", @validatePassword
+
     @resetClustersTable()
+    @resetCredentialsTable()
 
   clusterCreate: (event) =>
     valuesToSubmit = $(event.target).serialize()
 
-    $.ajax(
-      type: "POST",
-      url: $(event.target).attr('action'),
-      data: valuesToSubmit,
+    $.ajax $(event.target).attr('action'),
+      type: "POST"
+      data: valuesToSubmit
       dataType: "JSON"
-    ).success( (json) ->
-      console.log 'success', json
-      window.Notices.show_notice("Cluster successfully added")
-    ).error( ( jqXHR, textStatus, errorThrown ) ->
-      console.log jqXHR, textStatus, errorThrown
-      window.Notices.show_error("Couldn't create a new cluster. Status: #{textStatus} - Error: #{errorThrown}")
-    ).complete( () => @resetClustersTable() )
+
+      success: (json) ->
+        console.log 'success', json
+        window.Notices.show_notice("Cluster successfully added")
+
+      error: ( jqXHR, textStatus, errorThrown ) ->
+        console.log jqXHR, textStatus, errorThrown
+        window.Notices.show_error("Couldn't create a new cluster. Status: #{textStatus} - Error: #{errorThrown}")
+
+      complete: () =>
+        @resetClustersTable()
 
     return false
 
   clusterDelete: (event) =>
     valuesToSubmit = $(event.target).serialize()
 
-    $.ajax(
-      type: "DELETE",
-      url: $(event.target).attr('action'),
-      data: valuesToSubmit,
-    ).success( () ->
-      window.Notices.show_notice("Cluster successfully removed")
-    ).error( ( jqXHR, textStatus, errorThrown ) ->
-      console.log jqXHR, textStatus, errorThrown
-      window.Notices.show_error("Couldn't remove a cluster. Status: #{textStatus} - Error: #{errorThrown}")
-    ).complete( () => @resetClustersTable() )
+    $.ajax $(event.target).attr('action'),
+      type: $(event.target).attr('method')
+      data: valuesToSubmit
+
+      success: () -> window.Notices.show_notice("Cluster successfully removed")
+
+      error:  ( jqXHR, textStatus, errorThrown ) ->
+        console.log jqXHR, textStatus, errorThrown
+        window.Notices.show_error("Couldn't remove a cluster. Status: #{textStatus} - Error: #{errorThrown}")
+
+      complete: () =>
+        @resetClustersTable()
+        @resetCredentialsTable()
 
     return false
 
-  resetClustersTable: () ->
-    $.ajax(
-      type: "GET",
-      url: "/clusters"
-    ).success( (json) =>
-      console.log 'success', json
-      $("table#clusters tbody").empty()
+  resetClustersTable: () =>
+    $.ajax "/clusters",
+      success: (json) =>
+        console.log 'success', json
+        $("table#clusters tbody").empty()
+        @clusters = {}
 
-      for cluster in json
-        console.log cluster.attributes._id["$oid"]
-        cluster_id = cluster.attributes._id["$oid"]
+        for cluster in json
+          clusterId = cluster.attributes._id["$oid"]
+          @clusters[clusterId] = cluster
 
-        $removeButton = $("<form></form>").attr("action", "/clusters/#{cluster_id}").attr("method", "DELETE").attr("data-type", "json").
-                        append( $("<input />").attr("type", "submit").attr("value", "Remove record").addClass("button radius tiny alert") ).
-                        append( $("<input />").attr("type", "hidden").attr("name", window._token_name).attr("value", window._token) )
+          $clusterRow = @createClusterTableRow(clusterId, cluster)
+          $clusterRow.appendTo( $("table#clusters tbody") )
 
-        $clusterRow = $("<tr></tr>").append( $("<td></td>").html(cluster.attributes.name) ).
-                              append( $("<td></td>").html(cluster.attributes.host) ).
-                              append( $("<td></td>").html(cluster.attributes.scheduler_label) ).
-                              append( $("<td></td>").html(
-                                if cluster.attributes.public
-                                  "<i class='fa fa-check'></i>YES"
-                                else
-                                  "<i class='fa fa-close'></i>NO"
-                              ) ).
-                              append( $("<td></td>").append($removeButton) )
-        console.log $clusterRow
-        $clusterRow.appendTo( $("table#clusters tbody") )
+        $('.open-credentials-dialog').on 'click', @openClusterCredentialsDialog
+        $("table#clusters tbody form[method=DELETE]").on 'submit', @clusterDelete
 
-      $("table#clusters tbody form[method=DELETE]").submit @clusterDelete
+      error: ( jqXHR, textStatus, errorThrown ) ->
+        console.log jqXHR, textStatus, errorThrown
+        window.Notices.show_error("Couldn't fetch information about clusters. Status: #{textStatus} - Error: #{errorThrown}")
 
+  createClusterTableRow: (clusterId, cluster) =>
+    $removeButton = $("<form></form>").attr("action", "/clusters/#{clusterId}").attr("method", "DELETE").attr("data-type", "json").
+                    append( $("<input />").attr("type", "submit").attr("value", "Remove record").addClass("button radius tiny alert") ).
+                    append( $("<input />").attr("type", "hidden").attr("name", window._token_name).attr("value", window._token) )
 
-    ).error( ( jqXHR, textStatus, errorThrown ) ->
-      console.log jqXHR, textStatus, errorThrown
-      window.Notices.show_error("Couldn't fetch information about clusters. Status: #{textStatus} - Error: #{errorThrown}")
-    )
+    publicityState = if cluster.attributes.public
+                      "<i class='fa fa-check'></i>YES"
+                    else
+                      "<i class='fa fa-close'></i>NO"
+
+    $addCredentialsButton = $("<a></a>").attr("href", "#").addClass("button radius tiny open-credentials-dialog").text("Add credentials")
+
+    $row = $("<tr></tr>").attr("cluster", clusterId)
+            .append( $("<td></td>").html(cluster.attributes.name) )
+            .append( $("<td></td>").html(cluster.attributes.host) )
+            .append( $("<td></td>").html(cluster.attributes.scheduler_label) )
+            .append( $("<td></td>").html(publicityState) )
+            .append( $("<td></td>")
+                      .append($addCredentialsButton)
+                      .append($removeButton) )
+
+    $row
+
+  openClusterCredentialsDialog: (clickEvent) =>
+    clusterId = $(clickEvent.target).closest("[cluster]").attr("cluster")
+    clusterName = @clusters[clusterId].attributes.name
+
+    $("#cluster-credentials-create-form #login").val("")
+    $("#cluster-credentials-create-form #password").val("")
+    $("#cluster-credentials-create-form #password_repeat").val("")
+
+    $("#cluster-credentials-create-form #cluster_id").attr("value", clusterId)
+    $("#cluster-credentials-create-form #infrastructure_name").attr("value", "cluster_#{clusterId}")
+    $("#cluster-credentials-create-form").attr("action", "/infrastructure/add_infrastructure_credentials")
+    $('#cluster-credentials-dialog #modalTitle').html("Add new credentials to '#{clusterName}'")
+    $('#cluster-credentials-dialog').foundation('reveal', 'open')
+
+    false
+
+  clusterCredentialsCreate: (submitEvent) =>
+    credentialsType = $("#cluster-credentials-create-form #type").val()
+
+    if credentialsType == "password" and not @passwordsMatch()
+      window.Notices.show_error("Passwords do not match!")
+      return false
+
+    valuesToSubmit = $(submitEvent.target).serialize()
+
+    $.ajax $(submitEvent.target).attr('action'),
+      type: "POST"
+      data: valuesToSubmit
+      dataType: "JSON"
+
+      success: (json) ->
+        window.Notices.show_notice(json.msg)
+
+      error: ( jqXHR, textStatus, errorThrown ) ->
+        console.log jqXHR, textStatus, errorThrown
+        window.Notices.show_error("Couldn't add cluster credentials. Error: #{errorThrown}")
+
+      complete: () =>
+        $('#cluster-credentials-dialog').foundation('reveal', 'close')
+        @resetCredentialsTable()
+
+    false
+
+  passwordsMatch: () =>
+    pass1 = $("#cluster-credentials-create-form #password").val()
+    pass2 = $("#cluster-credentials-create-form #password_repeat").val()
+
+    pass1 == pass2
+
+  resetCredentialsTable: () =>
+    $.ajax "/clusters/credentials",
+      success: (json) =>
+        console.log 'success', json
+        $("table#cluster-credentials tbody").empty()
+        @clusterCredendials = {}
+
+        for creds in json
+          credentialsId = creds.attributes._id["$oid"]
+
+          $tableRow = @createClusterCredentialsTableRow(credentialsId, creds)
+          $tableRow.appendTo( $("table#cluster-credentials tbody") )
+          $("table#cluster-credentials tbody form[method=POST]").on 'submit', @clusterDelete
+
+      error: ( jqXHR, textStatus, errorThrown ) ->
+        console.log jqXHR, textStatus, errorThrown
+        window.Notices.show_error("Couldn't fetch information about credentials. Status: #{textStatus} - Error: #{errorThrown}")
+
+  createClusterCredentialsTableRow: (recordId, record) =>
+    infrastructure_name = "cluster_#{record.attributes.cluster_id["$oid"]}"
+
+    $removeButton = $("<form></form>").attr("action", "/infrastructure/remove_credentials").attr("method", "POST").attr("data-type", "json")
+                    .append( $("<input />").attr("type", "submit").attr("value", "Remove").addClass("button radius tiny alert") )
+                    .append( $("<input />").attr("type", "hidden").attr("name", window._token_name).attr("value", window._token) )
+                    .append( $("<input />").attr("type", "hidden").attr("name", "infrastructure_name").attr("value", infrastructure_name) )
+                    .append( $("<input />").attr("type", "hidden").attr("name", "record_id").attr("value", recordId))
+
+    validityState = if record.attributes.invalid
+                      "INVALID"
+                    else
+                      "VALID"
+
+    $row = $("<tr></tr>").attr("clusterCredentials", recordId)
+            .append( $("<td></td>").html(validityState) )
+            .append( $("<td></td>").html(record.attributes.cluster_name) )
+            .append( $("<td></td>").html(record.attributes.login) )
+            .append( $("<td></td>").html(record.attributes.type_label) )
+            .append( $("<td></td>").append($removeButton) )
+
+    $row

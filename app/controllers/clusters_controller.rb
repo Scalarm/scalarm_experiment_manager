@@ -42,11 +42,11 @@ class ClustersController < ApplicationController
 
     cluster_record = ClusterRecord.where(id: params[:id].to_s).first
 
-
     if cluster_record.nil? or not cluster_record.visible_to?(@current_user.id)
       status = :not_found
     else
       if cluster_record.destroy
+        ClusterCredentials.where(cluster_id: params[:id].to_s).each(&:destroy)
         status = :ok
       else
         status = :internal_server_error
@@ -58,4 +58,23 @@ class ClustersController < ApplicationController
     end
   end
 
+  def credentials
+    creds = ClusterCredentials.where(owner_id: @current_user.id).map{|cr|
+      cr.cluster_name = cr.cluster.name
+      cr.type_label = if cr.type == "password"
+                        "Username & password"
+                      elsif cr.type == "privkey"
+                        "Private key"
+                      else
+                        "Unknown type"
+                      end
+
+      cr.secret_password = nil
+      cr
+    }
+
+    respond_to do |format|
+      format.json { render json: creds }
+    end
+  end
 end

@@ -149,12 +149,23 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def add_credentials(user, params, session)
+    creds = if params[:type].to_s == "password"
+      ClusterCredentials.create_password_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:password].to_s)
+    elsif params[:type].to_s == "password"
+      ClusterCredentials.create_privkey_credentials(user.id, params[:cluster_id].to_s, params[:privkey].to_s)
+    else
+      nil
+    end
+
+    creds.save if not creds.nil?
   end
 
   def remove_credentials(record_id, user_id, params)
+    ClusterCredentials.where(owner_id: user_id, id: record_id).first.destroy
   end
 
   def get_credentials(user_id, params)
+    ClusterCredentials.where(owner_id: user_id).to_a
   end
 
 

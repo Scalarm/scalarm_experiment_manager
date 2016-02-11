@@ -28,23 +28,17 @@ en:
     login:
       user_not_found: The provided username is invalid
       login_banned: "You need to wait till %{time} to try to login again."
-
       bad_login_or_pass: "Bad login or password"
-
     clusters:
       name: Cluster name
       host: Cluster access node
       scheduler: Scheduling system
       public: Public cluster?
       manage_clusters:
-        add_clusters: "Please, provide information about a cluster you want to use"
+        add_cluster: "Please, provide information about a cluster you want to use"
         manage_cluster: "Clusters you defined"
-
-
-
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"
-
   login:
     required: You have to login first

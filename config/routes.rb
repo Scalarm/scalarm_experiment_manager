@@ -156,7 +156,11 @@ ScalarmExperimentManager::Application.routes.draw do
     end
   end
 
-  resources :clusters
+  resources :clusters do
+    collection do
+      get :credentials
+    end
+  end
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
