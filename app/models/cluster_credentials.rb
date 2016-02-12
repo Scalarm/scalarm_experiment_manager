@@ -34,12 +34,42 @@ class ClusterCredentials < Scalarm::Database::EncryptedMongoActiveRecord
       return Net::SSH.start(cluster.host, login, password: secret_password, auth_methods: %w(keyboard-interactive password))
     end
 
+    if type == 'privkey'
+      privkey_file = Tempfile.new(owner_id.to_s)
+      privkey_file.write(secret_privkey)
+      privkey_file.close
+
+      ssh = nil
+      begin
+        ssh = Net::SSH.start(cluster.host, login, keys: [ privkey_file.path ], auth_methods: %w(publickey))
+      ensure
+        privkey_file.unlink
+      end
+
+      return ssh
+    end
+
     raise InfrastructureErrors::NoCredentialsError
   end
 
   def _get_scp_session
     if type == 'password'
       return Net::SCP.start(cluster.host, login, password: secret_password, auth_methods: %w(keyboard-interactive password))
+    end
+
+    if type == 'privkey'
+      privkey_file = Tempfile.new(owner_id.to_s)
+      privkey_file.write(secret_privkey)
+      privkey_file.close
+
+      scp = nil
+      begin
+        scp = Net::SCP.start(cluster.host, login, keys: [ privkey_file.path ], auth_methods: %w(publickey))
+      ensure
+        privkey_file.unlink
+      end
+
+      return scp
     end
 
     raise InfrastructureErrors::NoCredentialsError
@@ -55,7 +85,7 @@ class ClusterCredentials < Scalarm::Database::EncryptedMongoActiveRecord
     creds
   end
 
-  def self.create_privkey_credentials(user_id, cluster_id, privkey)
+  def self.create_privkey_credentials(user_id, cluster_id, login, privkey)
     if privkey.blank?
       raise StandardError.new('Provided privkey is blank')
     end

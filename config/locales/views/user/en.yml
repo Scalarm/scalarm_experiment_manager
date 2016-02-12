@@ -30,13 +30,21 @@ en:
       login_banned: "You need to wait till %{time} to try to login again."
       bad_login_or_pass: "Bad login or password"
     clusters:
+      type: Authentication method
+      password_type: Username and password
+      privkey_type: Private key
       name: Cluster name
       host: Cluster access node
       scheduler: Scheduling system
       public: Public cluster?
+      private_key: Private SSH key to the cluster's access node
+      login: Username
+      password: Password
+      password_repeat: Password repeat
       manage_clusters:
         add_cluster: "Please, provide information about a cluster you want to use"
-        manage_cluster: "Clusters you defined"
+        manage_cluster: "Clusters you specified"
+        manage_credentials: "Cluster credentials you provided"
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

@@ -481,14 +481,19 @@ end
 
 def install_r_libraries
   puts 'Checking R libraries...'
-  Rails.configuration.r_interpreter.eval(
-      ".libPaths(c(\"#{Dir.pwd}/r_libs\", .libPaths()))
-    if(!require(lhs, quietly=TRUE)){
-      install.packages(\"lhs\", repos=\"http://cran.rstudio.com/\")
+  install_r_cmd = <<-EOF
+    ## Create the personal library if it doesn't exist. Ignore a warning if the directory already exists.
+    dir.create(Sys.getenv("R_LIBS_USER"), showWarnings = FALSE, recursive = TRUE)
+    ## Install one package.
+    if(!require(lhs, quietly=TRUE)) {
+      install.packages("lhs", Sys.getenv("R_LIBS_USER"), repos = "http://cran.rstudio.com" )
     }
-    if(!require(AlgDesign, quietly=TRUE)){
-      install.packages(\"AlgDesign\", repos=\"http://cran.rstudio.com/\")
-    }")
+    if(!require(AlgDesign, quietly=TRUE)) {
+      install.packages("AlgDesign", Sys.getenv("R_LIBS_USER"), repos = "http://cran.rstudio.com" )
+    }
+  EOF
+
+  Rails.configuration.r_interpreter.eval(install_r_cmd)
 end
 
 def install_mongodb

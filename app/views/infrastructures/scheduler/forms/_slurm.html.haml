@@ -1,16 +1,21 @@
-.panel.callout.radius
-  = raw t 'infrastructure.information.credentials_needed'
 
-.row
-  .small-4.columns
-    = label_tag :login, t('infrastructure.information.login') + ':', class: 'inline right'
-  .small-4.columns.end
-    = text_field_tag :login, '', class: 'right'
-.row
-  .small-4.columns
-    = label_tag :password, t('infrastructure.information.password') + ':', class: 'inline right'
-  .small-4.columns.end
-    = password_field_tag :password, '', class: 'right', autocomplete: :off
+- if not other_params[:user_has_valid_credentials]
+  .panel.callout.radius
+    = raw t 'infrastructure.information.credentials_needed'
+
+  .row
+    .small-4.columns
+      = label_tag :login, t('infrastructure.information.login') + ':', class: 'inline right'
+    .small-4.columns.end
+      = text_field_tag :login, '', class: 'right'
+  .row
+    .small-4.columns
+      = label_tag :password, t('infrastructure.information.password') + ':', class: 'inline right'
+    .small-4.columns.end
+      = password_field_tag :password, '', class: 'right', autocomplete: :off
+- else
+  .panel.radius
+    = t 'infrastructure.information.credentials_available'
 
 .row
   .small-4.columns
@@ -54,5 +59,8 @@
   .small-4.columns
     = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
   .small-4.columns.end
-    = hidden_field_tag :onsite_monitoring, true
-    = check_box_tag :onsite_monitoring, 'on', true
+    - if other_params[:user_has_valid_credentials]
+      = check_box_tag :onsite_monitoring, 'on', true
+    - else
+      = hidden_field_tag :onsite_monitoring, true
+      = check_box_tag :onsite_monitoring, 'on', true, disabled: true

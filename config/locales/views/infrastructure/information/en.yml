@@ -47,8 +47,9 @@ en:
       queue: Queue name (only if you really know what you are doing)
       login: Username
       password: Password
-      credentials_needed: "No credentials were configured. We need them to submit and monitor jobs on your behalf.
-      Provided credentials will not be stored in Scalarm."
+      credentials_needed: "No credentials to the cluster were configured. We need them to submit and monitor jobs on your behalf.
+      Provided below credentials are temporary and will not be stored in Scalarm."
+      credentials_available: "Credentials to the cluster are configured and valid"
 
       launched_at: 'Launched at'
       time_limit: 'Time limit'

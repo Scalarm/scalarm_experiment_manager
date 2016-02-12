@@ -70,8 +70,11 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def other_params_for_booster(user_id)
+    creds = ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first
+
     {
-      scheduler: @cluster_record.scheduler
+      scheduler: @cluster_record.scheduler,
+      user_has_valid_credentials: (not creds.nil?)
     }
   end
 
@@ -151,8 +154,8 @@ class ClusterFacade < InfrastructureFacade
   def add_credentials(user, params, session)
     creds = if params[:type].to_s == "password"
       ClusterCredentials.create_password_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:password].to_s)
-    elsif params[:type].to_s == "password"
-      ClusterCredentials.create_privkey_credentials(user.id, params[:cluster_id].to_s, params[:privkey].to_s)
+    elsif params[:type].to_s == "privkey"
+      ClusterCredentials.create_privkey_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:privkey].to_s)
     else
       nil
     end

@@ -72,12 +72,13 @@
       = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
       = hidden_field_tag :cluster_id, ""
       = hidden_field_tag :infrastructure_name, ""
+      = hidden_field_tag :privkey, ""
 
       .row
         .small-6.large-4.columns
           = label_tag :type, t('.type') + ':', class: 'inline right'
         .small-6.large-4.columns.end
-          = select_tag :type, options_for_select([ [ t('.password_type'), 'password'], [ t('.privkey_type'), 'privkey'] ])
+          = select_tag :type, options_for_select([ [ t('.password_type'), 'password'], [ t('.privkey_type'), 'privkey'] ], 'password')
 
       .row
         .small-6.large-4.columns
@@ -85,17 +86,23 @@
         .small-6.large-4.columns.end
           = text_field_tag :login
 
-      .row
+      .row.credentials-specific.password-type
         .small-6.large-4.columns
           = label_tag :password, t('.password') + ':', class: 'inline right'
         .small-6.large-4.columns.end
           = password_field_tag :password
 
-      .row
+      .row.credentials-specific.password-type
         .small-6.large-4.columns
           = label_tag :password_repeat, t('.password_repeat') + ':', class: 'inline right'
         .small-6.large-4.columns.end
           = password_field_tag :password_repeat
+
+      .row.credentials-specific.privkey-type{style: "display: none;"}
+        .small-6.large-4.columns
+          = label_tag :private_key_file, t('.private_key') + ':', class: 'inline right'
+        .small-6.large-4.columns.end
+          = file_field_tag :private_key_file
 
       .row
         .small-10.large-8.columns.text-center.end
