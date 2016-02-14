@@ -85,7 +85,7 @@ class ClusterFacade < InfrastructureFacade
     Rails.logger.debug { "Cluster id is #{cluster_id}" }
 
     # 1. checking if the user can schedule SiM
-    credentials = get_credentials(user_id, cluster_id, additional_params)
+    credentials = load_or_create_credentials(user_id, cluster_id, additional_params)
     if not credentials.valid?
       raise InfrastructureErrors::InvalidCredentialsError.new
     end
@@ -105,12 +105,12 @@ class ClusterFacade < InfrastructureFacade
       record
     end
 
-    # if additional_params[:onsite_monitoring]
-    #   sm_uuid = SecureRandom.uuid
-    #   InfrastructureFacade.handle_monitoring_send_errors(records) do
-    #     InfrastructureFacade.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, @scheduler.short_name, additional_params)
-    #   end
-    # end
+    if additional_params[:onsite_monitoring]
+      sm_uuid = SecureRandom.uuid
+      InfrastructureFacade.handle_monitoring_send_errors(records) do
+        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, @scheduler.short_name, additional_params)
+      end
+    end
 
     records
   end
@@ -174,16 +174,16 @@ class ClusterFacade < InfrastructureFacade
 
   #### private ####
 
-  def get_credentials(user_id, cluster_id, request_params)
+  def load_or_create_credentials(user_id, cluster_id, request_params)
     credentials = if not request_params[:login].blank? and not request_params[:password].blank?
                     Rails.logger.debug { "Creade temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
-                      user_id, cluster_id, request_params[:login], request_params[:password]
+                      user_id, cluster_id, request_params[:login].to_s, request_params[:password].to_s
                     )
-                  elsif request_params.include?(:priv_key)
+                  elsif request_params.include?(:privkey)
                     Rails.logger.debug { "Creade temp credentials with privkey" }
                     ClusterCredentials.create_privkey_credentials(
-                      user_id, cluster_id, request_params[:priv_key]
+                      user_id, cluster_id, params[:login].to_s, request_params[:privkey].to_s
                     )
                   else
                     Rails.logger.debug { "finding existing " }
@@ -232,8 +232,9 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler_name, params={})
+    Rails.logger.debug("Sending and launching onsite monitoring: #{scheduler_name}, #{credentials}")
    # TODO: implement multiple architectures support
-   arch = 'linux_x86'
+   arch = 'linux_amd64'
 
    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
 
@@ -246,7 +247,7 @@ class ClusterFacade < InfrastructureFacade
        PlGridFacade.remove_local_monitoring_config(sm_uuid)
 
        cmd = PlGridFacade.start_monitoring_cmd
-       Rails.logger.info("Executing scalarm_monitoring for user #{user_id}: #{cmd}")
+       Rails.logger.info("[cluster facade] Executing scalarm_monitoring for user #{user_id}: #{cmd}")
        output = ssh.exec!(cmd)
        Rails.logger.info("Output: #{output}")
      end
