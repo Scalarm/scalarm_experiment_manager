@@ -15,7 +15,7 @@
     %a(href="#submission-panel")= t 'infrastructure.information.submission_label'
     .content.active#submission-panel
       #scheduler-form
-        = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom', "data-abide" => '', :'data-type' => 'json',: multipart => false do
+        = form_tag schedule_simulation_managers_infrastructure_path(format: 'json'), remote: true, class: 'custom', "data-abide" => '', :'data-type' => 'json', multipart: false do
           = tag(:input, type: "hidden", name: request_forgery_protection_token.to_s, value: form_authenticity_token)
           .row
             .large-4.columns

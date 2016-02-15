@@ -17,15 +17,14 @@ class ClustersController < ApplicationController
     validate(
         name: [:security_default],
         scheduler: [:security_default],
-        host: [:security_default],
-        public: [:optional, :security_default]
+        host: [:security_default]
     )
 
     cluster = ClusterRecord.new({
       name: params[:name].to_s,
       scheduler: params[:scheduler].to_s,
       host: params[:host].to_s,
-      public: params[:public].to_s == 'true',
+      public: false,
       created_by: @current_user.id
     })
 
