@@ -9,9 +9,6 @@ class window.ClustersManager
     $("#cluster-credentials-create-form #password").on "change", @validatePassword
     $("#cluster-credentials-create-form #repeat_password").on "change", @validatePassword
 
-    $("#cluster-credentials-dialog #type").on "change", @toogleCredentialsType
-    $("#cluster-credentials-dialog #private_key_file").on "change", @readPrivateKeyFile
-
     $("#cluster-credentials-dialog #type").val("password")
     $("#cluster-credentials-dialog #private_key_file").val("")
     $("#cluster-credentials-dialog #type").change()
@@ -189,20 +186,3 @@ class window.ClustersManager
             .append( $("<td></td>").append($removeButton) )
 
     $row
-
-  toogleCredentialsType: (changeEvent) =>
-    credentialsType = $("#cluster-credentials-dialog #type").val()
-    $("#cluster-credentials-dialog .credentials-specific").hide()
-
-    $("#cluster-credentials-dialog .#{credentialsType}-type").show()
-
-  readPrivateKeyFile: (changeEvent) =>
-    f = changeEvent.target.files[0]
-
-    if f
-      r = new FileReader()
-      r.onload = (e) ->
-        contents = e.target.result
-        $("#cluster-credentials-dialog #privkey").val(contents)
-    else
-      window.Notices.show_error("Failed to load file")

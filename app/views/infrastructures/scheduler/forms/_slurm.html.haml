@@ -3,16 +3,17 @@
   .panel.callout.radius
     = raw t 'infrastructure.information.credentials_needed'
 
-  .row
-    .small-4.columns
-      = label_tag :login, t('infrastructure.information.login') + ':', class: 'inline right'
-    .small-4.columns.end
-      = text_field_tag :login, '', class: 'right'
-  .row
-    .small-4.columns
-      = label_tag :password, t('infrastructure.information.password') + ':', class: 'inline right'
-    .small-4.columns.end
-      = password_field_tag :password, '', class: 'right', autocomplete: :off
+  -#.row
+  -#  .small-4.columns
+  -#    = label_tag :login, t('infrastructure.information.login') + ':', class: 'inline right'
+  -#  .small-4.columns.end
+  -#    = text_field_tag :login, '', class: 'right'
+  -#.row
+  -#  .small-4.columns
+  -#    = label_tag :password, t('infrastructure.information.password') + ':', class: 'inline right'
+  -#  .small-4.columns.end
+  -#    = password_field_tag :password, '', class: 'right', autocomplete: :off
+  = render "user_controller/cluster_credentials_form"
 - else
   .panel.radius
     = t 'infrastructure.information.credentials_available'
@@ -64,3 +65,11 @@
     - else
       = hidden_field_tag :onsite_monitoring, true
       = check_box_tag :onsite_monitoring, 'on', true, disabled: true
+
+-#= content_for :javascript do
+:javascript
+  $(function() {
+    window._token = "#{form_authenticity_token}";
+    window._token_name = "#{request_forgery_protection_token.to_s}";
+    new window.ClusterCredentialsManager("#infrastructure_fields");
+  });

@@ -37,6 +37,7 @@ class InfrastructureFacadeTest < MiniTest::Test
     end
 
     InfrastructureFacadeFactory.stubs(:get_all_infrastructures).returns([f1, f2])
+    ClusterFacadeFactory.any_instance.stubs(:provider_names).returns([])
 
     all_records = InfrastructureFacadeFactory.get_all_sm_records(user_id, experiment_id, params)
 

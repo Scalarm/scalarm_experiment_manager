@@ -37,14 +37,14 @@ en:
       host: Cluster access node
       scheduler: Scheduling system
       public: Public cluster?
+      manage_clusters:
+        add_cluster: "Please, provide information about a cluster you want to use"
+        manage_cluster: "Clusters you specified"
+    cluster_credentials_form:
       private_key: Private SSH key to the cluster's access node
       login: Username
       password: Password
       password_repeat: Password repeat
-      manage_clusters:
-        add_cluster: "Please, provide information about a cluster you want to use"
-        manage_cluster: "Clusters you specified"
-        manage_credentials: "Cluster credentials you provided"
   experiments:
     extend_input_values:
       extension_response: "%{count} simulations were created"

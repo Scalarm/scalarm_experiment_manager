@@ -175,15 +175,15 @@ class ClusterFacade < InfrastructureFacade
   #### private ####
 
   def load_or_create_credentials(user_id, cluster_id, request_params)
-    credentials = if not request_params[:login].blank? and not request_params[:password].blank?
+    credentials = if request_params[:type] == "password"
                     Rails.logger.debug { "Creade temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
                       user_id, cluster_id, request_params[:login].to_s, request_params[:password].to_s
                     )
-                  elsif request_params.include?(:privkey)
+                  elsif request_params[:type] == "privkey"
                     Rails.logger.debug { "Creade temp credentials with privkey" }
                     ClusterCredentials.create_privkey_credentials(
-                      user_id, cluster_id, params[:login].to_s, request_params[:privkey].to_s
+                      user_id, cluster_id, request_params[:login].to_s, request_params[:privkey].to_s
                     )
                   else
                     Rails.logger.debug { "finding existing " }
@@ -226,7 +226,7 @@ class ClusterFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.onsite_monitoring = if params['onsite_monitoring'] == true  then true else false end
+    job.onsite_monitoring = if params['onsite_monitoring'] == "true"  then true else false end
 
     job
   end
