@@ -82,7 +82,6 @@ class ClusterFacade < InfrastructureFacade
   # - (:login and :password)
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     cluster_id = additional_params[:infrastructure_name].split("_").last
-    Rails.logger.debug { "Cluster id is #{cluster_id}" }
 
     # 1. checking if the user can schedule SiM
     credentials = load_or_create_credentials(user_id, cluster_id, additional_params)
@@ -175,7 +174,14 @@ class ClusterFacade < InfrastructureFacade
   #### private ####
 
   def load_or_create_credentials(user_id, cluster_id, request_params)
-    credentials = if request_params[:type] == "password"
+    cluster = ClusterRecord.where(id: cluster_id).first
+
+    credentials = if request_params.include?(:proxy) and cluster.plgrid == true
+                    Rails.logger.debug { "Creade proxy based credentials" }
+                    creds = GridCredentials.new(login: request_params[:login].to_s)
+                    creds.secret_proxy = params[:proxy]
+                    creds
+                  elsif request_params[:type] == "password"
                     Rails.logger.debug { "Creade temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
                       user_id, cluster_id, request_params[:login].to_s, request_params[:password].to_s

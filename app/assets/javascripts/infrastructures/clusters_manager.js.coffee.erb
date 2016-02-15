@@ -20,16 +20,22 @@ class window.ClustersManager
     valuesToSubmit = $(event.target).serialize()
 
     $.ajax $(event.target).attr('action'),
-      type: "POST"
-      data: new FormData(event.target)
-      dataType: "JSON"
+      dataType: "json"
+      method: "POST"
+      data: valuesToSubmit
 
       success: (json) ->
         window.Notices.show_notice("Cluster successfully added")
 
       error: ( jqXHR, textStatus, errorThrown ) ->
         console.log jqXHR, textStatus, errorThrown
-        window.Notices.show_error("Couldn't create a new cluster. Status: #{textStatus} - Error: #{errorThrown}")
+        detailed_error = ""
+        if jqXHR.responseText
+          detailed_error_obj = JSON.parse(jqXHR.responseText)
+          if detailed_error_obj.status == "error" and detailed_error_obj.reason
+            detailed_error = detailed_error_obj.reason
+
+        window.Notices.show_error("Couldn't create a new cluster. Error: #{errorThrown} - #{detailed_error}")
 
       complete: () =>
         @resetClustersTable()
@@ -40,14 +46,20 @@ class window.ClustersManager
     valuesToSubmit = $(event.target).serialize()
 
     $.ajax $(event.target).attr('action'),
-      type: $(event.target).attr('method')
+      method: $(event.target).attr('method')
       data: valuesToSubmit
 
       success: () -> window.Notices.show_notice("Cluster successfully removed")
 
       error:  ( jqXHR, textStatus, errorThrown ) ->
         console.log jqXHR, textStatus, errorThrown
-        window.Notices.show_error("Couldn't remove a cluster. Status: #{textStatus} - Error: #{errorThrown}")
+        detailed_error = ""
+        if jqXHR.responseText
+          detailed_error_obj = JSON.parse(jqXHR.responseText)
+          if detailed_error_obj.status == "error" and detailed_error_obj.reason
+            detailed_error = detailed_error_obj.reason
+
+        window.Notices.show_error("Couldn't create a new cluster. Error: #{errorThrown} - #{detailed_error}")
 
       complete: () =>
         @resetClustersTable()
@@ -73,7 +85,7 @@ class window.ClustersManager
 
       error: ( jqXHR, textStatus, errorThrown ) ->
         console.log jqXHR, textStatus, errorThrown
-        window.Notices.show_error("Couldn't fetch information about clusters. Status: #{textStatus} - Error: #{errorThrown}")
+        window.Notices.show_error("Couldn't fetch information about clusters. Error: #{errorThrown} - #{jqXHR.statusText}")
 
   createClusterTableRow: (clusterId, cluster) =>
     $removeButton = $("<form></form>").attr("action", "/clusters/#{clusterId}").attr("method", "DELETE").attr("data-type", "json").
@@ -133,7 +145,13 @@ class window.ClustersManager
 
       error: ( jqXHR, textStatus, errorThrown ) ->
         console.log jqXHR, textStatus, errorThrown
-        window.Notices.show_error("Couldn't add cluster credentials. Error: #{errorThrown}")
+        detailed_error = ""
+        if jqXHR.responseText
+          detailed_error_obj = JSON.parse(jqXHR.responseText)
+          if detailed_error_obj.status == "error" and detailed_error_obj.reason
+            detailed_error = detailed_error_obj.reason
+
+        window.Notices.show_error("Couldn't create a new cluster. Error: #{errorThrown} - #{detailed_error}")
 
       complete: () =>
         $('#cluster-credentials-dialog').foundation('reveal', 'close')
@@ -162,7 +180,7 @@ class window.ClustersManager
 
       error: ( jqXHR, textStatus, errorThrown ) ->
         console.log jqXHR, textStatus, errorThrown
-        window.Notices.show_error("Couldn't fetch information about credentials. Status: #{textStatus} - Error: #{errorThrown}")
+        window.Notices.show_error("Couldn't fetch information about credentials. Error: #{errorThrown} - #{jqXHR.statusText}")
 
   createClusterCredentialsTableRow: (recordId, record) =>
     infrastructure_name = "cluster_#{record.attributes.cluster_id["$oid"]}"

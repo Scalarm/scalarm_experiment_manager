@@ -54,9 +54,10 @@ class SchedulingSimulationManagersTest < ActionDispatch::IntegrationTest
       nodes: 1,
       ppn: 1,
       time_limit: 60,
+      type: 'password',
       login: 'temp',
       password: 'temp',
-      onsite_monitoring: true
+      onsite_monitoring: false
     }, { user: @user_id }
 
     assert_equal 5, JobRecord.all.size
