@@ -218,7 +218,9 @@ module ExperimentProgressBar
     end
 
     progress_bar_table = create_progress_bar_table
-    progress_bar_table.insert(progress_bar_data)
+    if not progress_bar_data.empty?
+      progress_bar_table.insert(progress_bar_data)
+    end
   end
 
 end
