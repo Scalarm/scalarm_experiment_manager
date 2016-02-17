@@ -577,7 +577,7 @@ apiDoc:
       end
     end
 
-    experiment_statistics = ExperimentStatistics.new(@experiment, current_user)
+    experiment_statistics = ExperimentStatistics.new(@experiment, current_user || sm_user)
     stats = {}
     default_params.each do |method, include|
       stats.merge!(experiment_statistics.send(method)) if include
