@@ -107,7 +107,7 @@ class ClusterFacade < InfrastructureFacade
     if additional_params[:onsite_monitoring]
       sm_uuid = SecureRandom.uuid
       InfrastructureFacade.handle_monitoring_send_errors(records) do
-        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, @scheduler.short_name, additional_params)
+        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, "#{self.short_name}.#{@scheduler.short_name}", additional_params)
       end
     end
 
@@ -170,6 +170,41 @@ class ClusterFacade < InfrastructureFacade
     ClusterCredentials.where(owner_id: user_id).to_a
   end
 
+  def simulation_manager_code(sm_record)
+    sm_uuid = sm_record.sm_uuid
+
+    Rails.logger.debug "Preparing Simulation Manager package with id: #{sm_uuid}"
+
+    InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, nil, sm_record.experiment_id, sm_record.start_at) do
+      code_dir = LocalAbsoluteDir::tmp_sim_code(sm_uuid)
+      FileUtils.remove_dir(code_dir, true)
+      FileUtils.mkdir(code_dir)
+      @scheduler.create_tmp_job_files(sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h}) do
+
+
+        FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
+
+        Dir.chdir(LocalAbsoluteDir::tmp) do
+          %x[zip #{LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)} #{ScalarmDirName::tmp_sim_code(sm_uuid)}/*]
+        end
+        FileUtils.rm_rf(LocalAbsoluteDir::tmp_sim_code(sm_uuid))
+
+        zip_path = LocalAbsolutePath::tmp_sim_code_zip(sm_uuid)
+
+        if block_given?
+          begin
+            yield zip_path
+          ensure
+            FileUtils.rm_rf(zip_path)
+          end
+        else
+          return zip_path
+        end
+      end
+      FileUtils.remove_dir(code_dir, true)
+    end
+
+  end
 
   #### private ####
 

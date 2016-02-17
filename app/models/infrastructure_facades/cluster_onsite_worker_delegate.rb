@@ -15,20 +15,20 @@ class ClusterOnsiteWorkerDelegate
     end
   end
 
-  def restart(record)
+  def restart(sm_record)
     sm_record.cmd_to_execute_code = 'restart'
-    sm_record.cmd_to_execute = @scheduler.restart_sm_cmd(sm_record)
+    sm_record.cmd_to_execute = @scheduler.restart_sm_cmd(sm_record).to_s
     sm_record.cmd_delegated_at = Time.now
     sm_record.save
   end
 
-  def resource_status(record)
+  def resource_status(sm_record)
     sm_record.resource_status || :not_available
   end
 
-  def get_log(record)
+  def get_log(sm_record)
     sm_record.cmd_to_execute_code = "get_log"
-    sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
+    sm_record.cmd_to_execute = @scheduler.get_log_cmd(sm_record).to_s
     sm_record.cmd_delegated_at = Time.now
     sm_record.save
 
@@ -41,6 +41,5 @@ class ClusterOnsiteWorkerDelegate
     sm_record.cmd_delegated_at = Time.now
     sm_record.save
   end
-
 
 end

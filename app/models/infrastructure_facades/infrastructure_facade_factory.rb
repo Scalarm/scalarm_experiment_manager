@@ -111,11 +111,11 @@ class InfrastructureFacadeFactory
       t
     end
 
-    monit_threads << Thread.start do
-      t = ClusterFacade.new(nil, nil).monitoring_thread
-      t["name"] = 'clusters'
-      t
-    end
+    # monit_threads << Thread.start do
+    #   t = ClusterFacade.new(nil, nil).monitoring_thread
+    #   t["name"] = 'clusters'
+    #   t
+    # end
 
     monit_threads
   end

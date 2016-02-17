@@ -93,6 +93,14 @@ class SlurmScheduler < PlGridSchedulerBase
     'TIMEOUT' => :error,
   }
 
+  def create_tmp_job_files(sm_uuid, params)
+    begin
+      prepare_job_files(sm_uuid, params)
+      yield
+    ensure
+      tmp_job_files_list(sm_uuid).each { |f| FileUtils.rm_rf(f) } if block_given?
+    end
+  end
 
   def prepare_job_files(sm_uuid, params)
     execution_dir = if params.include?(:dest_dir)
