@@ -151,7 +151,7 @@ class SimulationsController < ApplicationController
         allowed_values = parameter[:allowed_values]
         if allowed_values and
             (not allowed_values.kind_of?(Array) or not allowed_values.all? {|av| av.kind_of?(String)} )
-          error.push(t('allowed_values_must_be_array'))
+          error.push(t('simulations.create.allowed_values_must_be_array'))
         end
       elsif parameter[:type] == 'integer'
 
