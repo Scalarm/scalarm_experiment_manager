@@ -147,8 +147,11 @@ class SimulationsController < ApplicationController
         error.push(t('simulations.create.required_collection_id', collection: "parameter"))
       end
       if parameter[:type] == 'string'
-        if parameter[:allowed_values].blank? || !parameter[:allowed_values].kind_of?(String)
-          error.push(t('simulations.create.parameter_field_not_found', type: "String"))
+        # modified in SCAL-1254: allowed_values is optional
+        allowed_values = parameter[:allowed_values]
+        if allowed_values and
+            (not allowed_values.kind_of?(Array) or not allowed_values.all? {|av| av.kind_of?(String)} )
+          error.push(t('allowed_values_must_be_array'))
         end
       elsif parameter[:type] == 'integer'
 

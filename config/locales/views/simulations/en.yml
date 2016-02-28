@@ -38,6 +38,7 @@ en:
       wrong_parameter_type: "Parameter has wrong type. It must be string, integer or float"
       parameter_field_not_found: "%{type} value is required"
       not_valid_parameter_value: "Not valid parameter %{type} value"
+      allowed_values_must_be_array: 'Optional field "allowed_values" must be an array of string values'
 
     conduct:
       doe:

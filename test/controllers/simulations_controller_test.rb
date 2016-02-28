@@ -178,28 +178,26 @@ class SimulationsControllerTest < ActionController::TestCase
     assert_response 412, response.body
   end
 
-  test 'Failed registration of simulation - wrong param type ' do
+  test 'Successful registration of simulation - allowed_values is not required' do
 
     simulation_input =  [{
 
                              entities: [{
                                             parameters:[{
                                                             id: "param1",
-                                                            type: "string",
-                                                            min: 0.5,
-                                                            max: -100
+                                                            type: "string"
                                                         }]
                                         }]
                          }]
 
     post :create, prepare_request_content(simulation_input)
-    assert_response 412, response.body
+    assert_response 200, response.body
 
     post :create, prepare_request_content(simulation_input.to_json)
-    assert_response 412, response.body
+    assert_response 200, response.body
   end
 
-  test 'Failed registration of simulation - wrong string param type ' do
+  test 'Successful registration of simulation - allowed_values can be empty array' do
 
     simulation_input =  [{
 
@@ -213,10 +211,10 @@ class SimulationsControllerTest < ActionController::TestCase
                          }]
 
     post :create, prepare_request_content(simulation_input)
-    assert_response 412, response.body
+    assert_response 200, response.body
 
     post :create, prepare_request_content(simulation_input.to_json)
-    assert_response 412, response.body
+    assert_response 200, response.body
   end
 
   test 'Failed registration of simulation - empty paramaters hash ' do
@@ -285,7 +283,7 @@ class SimulationsControllerTest < ActionController::TestCase
                                           parameters:[{
                                                           id: "abc3",
                                                           type: "string",
-                                                          allowed_values: "Ala"
+                                                          allowed_values: ["Ala", "ma"]
                                                       }]
                                       },
                                       {   id: "group2",
@@ -343,7 +341,7 @@ class SimulationsControllerTest < ActionController::TestCase
                                            parameters:[{
                                                            id: "abc3",
                                                            type: "string",
-                                                           allowed_values: "Ala"
+                                                           allowed_values: ["Ala", "foo"]
                                                        }]
                                        },
                                        {   id: "group2",
