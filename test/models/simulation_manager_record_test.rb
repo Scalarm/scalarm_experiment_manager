@@ -133,10 +133,10 @@ class SimulationManagerRecordTest < MiniTest::Test
     @record.stubs(:attributes).returns(attributes_mock)
 
     @record.cmd_to_execute = cmd1
-    assert_equal 'cmd1', attributes_mock[:cmd_to_execute]
+    assert_equal 'cmd1', attributes_mock['cmd_to_execute']
 
     @record.cmd_to_execute = cmd2
-    assert_equal 'cmd1#_#cmd2', attributes_mock[:cmd_to_execute]
+    assert_equal 'cmd1#_#cmd2', attributes_mock['cmd_to_execute']
   end
 
   def test_cmd_to_execute_code
@@ -146,10 +146,10 @@ class SimulationManagerRecordTest < MiniTest::Test
     @record.stubs(:attributes).returns(attributes_mock)
 
     @record.cmd_to_execute_code = code1
-    assert_equal 'code1', attributes_mock[:cmd_to_execute_code]
+    assert_equal 'code1', attributes_mock['cmd_to_execute_code']
 
     @record.cmd_to_execute_code = code2
-    assert_equal 'code1#_#code2', "#{attributes_mock[:cmd_to_execute_code]}"
+    assert_equal 'code1#_#code2', "#{attributes_mock['cmd_to_execute_code']}"
   end
 
   def test_has_more_simulations_to_run_field_greater_than_zero

@@ -179,12 +179,12 @@ module SimulationManagerRecord
   # See more in SCAL-956 issue comments
   def cmd_to_execute=(cmd)
     if cmd.blank?
-      attributes[:cmd_to_execute] = ''
+      attributes['cmd_to_execute'] = ''
     else
-      if attributes[:cmd_to_execute].blank?
-        attributes[:cmd_to_execute] = cmd
+      if attributes['cmd_to_execute'].blank?
+        attributes['cmd_to_execute'] = cmd
       else
-        attributes[:cmd_to_execute] << "#{CMD_SEPARATOR}#{cmd}"
+        attributes['cmd_to_execute'] << "#{CMD_SEPARATOR}#{cmd}"
       end
     end
   end
@@ -197,12 +197,12 @@ module SimulationManagerRecord
   # See more in SCAL-956 issue comments
   def cmd_to_execute_code=(code)
     if code.blank?
-      attributes[:cmd_to_execute_code] = ''
+      attributes['cmd_to_execute_code'] = ''
     else
-      if attributes[:cmd_to_execute_code].blank?
-        attributes[:cmd_to_execute_code] = code
+      if attributes['cmd_to_execute_code'].blank?
+        attributes['cmd_to_execute_code'] = code
       else
-        attributes[:cmd_to_execute_code] << "#{CMD_SEPARATOR}#{code}"
+        attributes['cmd_to_execute_code'] << "#{CMD_SEPARATOR}#{code}"
       end
     end
   end
