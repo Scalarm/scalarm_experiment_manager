@@ -178,7 +178,7 @@ class SimulationsControllerTest < ActionController::TestCase
     assert_response 412, response.body
   end
 
-  test 'Successful registration of simulation - allowed_values is not required' do
+  test 'Failed registration of simulation - allowed_values is required' do
 
     simulation_input =  [{
 
@@ -191,13 +191,13 @@ class SimulationsControllerTest < ActionController::TestCase
                          }]
 
     post :create, prepare_request_content(simulation_input)
-    assert_response 200, response.body
+    assert_response 412, response.body
 
     post :create, prepare_request_content(simulation_input.to_json)
-    assert_response 200, response.body
+    assert_response 412, response.body
   end
 
-  test 'Successful registration of simulation - allowed_values can be empty array' do
+  test 'Failed registration of simulation - allowed_values cannot be empty array' do
 
     simulation_input =  [{
 
@@ -211,10 +211,50 @@ class SimulationsControllerTest < ActionController::TestCase
                          }]
 
     post :create, prepare_request_content(simulation_input)
-    assert_response 200, response.body
+    assert_response 412, response.body
 
     post :create, prepare_request_content(simulation_input.to_json)
-    assert_response 200, response.body
+    assert_response 412, response.body
+  end
+
+  test 'Failed registration of simulation - allowed_values should contain only strings' do
+
+    simulation_input =  [{
+
+                             entities: [{
+                                            parameters:[{
+                                                            id: "param1",
+                                                            type: "string",
+                                                            allowed_values: ['a', 1, 2]
+                                                        }]
+                                        }]
+                         }]
+
+    post :create, prepare_request_content(simulation_input)
+    assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
+  end
+
+  test 'Failed registration of simulation - allowed_values should be an array' do
+
+    simulation_input =  [{
+
+                             entities: [{
+                                            parameters:[{
+                                                            id: "param1",
+                                                            type: "string",
+                                                            allowed_values: 'x'
+                                                        }]
+                                        }]
+                         }]
+
+    post :create, prepare_request_content(simulation_input)
+    assert_response 412, response.body
+
+    post :create, prepare_request_content(simulation_input.to_json)
+    assert_response 412, response.body
   end
 
   test 'Failed registration of simulation - empty paramaters hash ' do
