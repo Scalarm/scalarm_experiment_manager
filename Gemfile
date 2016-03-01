@@ -46,7 +46,7 @@ gem 'haml'
 gem 'foundation-rails'
 gem 'jit-rails'
 gem 'foundation-icons-sass-rails'
-gem 'jquery-datatables-rails', git: 'git://github.com/rweng/jquery-datatables-rails.git'
+#gem 'jquery-datatables-rails', git: 'git://github.com/rweng/jquery-datatables-rails.git'
 gem 'font-awesome-sass', '4.4'
 
 # Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
@@ -89,8 +89,8 @@ gem 'newrelic_rpm'
 gem 'scalarm-database', '1.3.0', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
-# gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 1.1.1', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', path: '/vagrant/scalarm-service_core'
+#gem 'scalarm-service_core', '~> 1.1.1', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'
