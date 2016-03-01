@@ -19,14 +19,6 @@ GIT
       grid-proxy (~> 0.1)
       rest-client (~> 1.8)
 
-GIT
-  remote: git://github.com/rweng/jquery-datatables-rails.git
-  revision: d0f07e9aded9de30a2ca796d8036b332b41645dc
-  specs:
-    jquery-datatables-rails (3.0.0)
-      jquery-rails
-      sass-rails
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -447,7 +439,6 @@ DEPENDENCIES
   haml
   jbuilder (~> 1.2)
   jit-rails
-  jquery-datatables-rails!
   jquery-rails
   jquery-tmpl-rails
   jquery-ui-rails
