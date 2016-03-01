@@ -455,17 +455,8 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def result_names
-    moe_name_set = Set.new
-    result_limit = self.experiment_size < 5000 ? self.experiment_size : (self.experiment_size / 2)
-
-    query_opts = {fields: {_id: 0, result: 1, is_error: 1}, limit: result_limit}
-    simulation_runs.where({is_done: true}, query_opts).each do |simulation_run|
-      unless simulation_run.is_error == true
-        moe_name_set += simulation_run.result.keys
-      end
-    end
-
-    moe_name_set.empty? ? nil : moe_name_set.to_a
+    completed_sim_run = simulation_runs.where({is_done: true, is_error: { "$exists" => false }}).first
+    completed_sim_run.nil? ? nil : completed_sim_run.result.keys.to_a
   end
 
   def clear_cached_data
