@@ -165,7 +165,7 @@ class PlGridFacade < InfrastructureFacade
         append("chmod a+x #{ScalarmFileName::monitoring_binary}").
         append("export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}").
         run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000))`.log").to_s
+          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)`.log").to_s
   end
 
   def self.clone_proxy(ssh, remote_path)
