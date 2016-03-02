@@ -43,8 +43,8 @@ class ExperimentsTest < ActionDispatch::IntegrationTest
   end
 
   test 'experiment should return response names from runs without any errors' do
-    @experiment.simulation_runs.new({result: { "error_param1" => 1, "error_param2" => 2 }, is_error: true}).save
-    @experiment.simulation_runs.new({result: { "param1" => 1, "param2" => 2 }}).save
+    @experiment.simulation_runs.new({is_done: true, result: { "error_param1" => 1, "error_param2" => 2 }, is_error: true}).save
+    @experiment.simulation_runs.new({is_done: true, result: { "param1" => 1, "param2" => 2 }}).save
 
     assert_equal ["param1", "param2"], @experiment.result_names
   end
