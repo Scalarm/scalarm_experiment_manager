@@ -326,7 +326,14 @@ class SimulationManager
       logger.warn 'Forcing removing record, because experiment does not exists'
       stop_and_destroy(false)
     elsif state == :error
-      logger.debug 'Has error flag - skipping'
+      unless record.error_set_at
+        record.error_set_at = Time.now
+        record.save
+      end
+      if record.error_set_at < Time.now - 1.day
+        record.destroy
+        logger.info 'Is in error state for more than 1 day - destroying'
+      end
     else
       begin
         before_monitor(record)
