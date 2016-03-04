@@ -57,7 +57,7 @@ module QcgScheduler
 #QCG queue=#{params['queue_name'] or PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
 #QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
 #{params['nodes'].blank? ? '' : "#QCG nodes=#{params['nodes']}:#{params['ppn']}" }
-#{params['grant_id'].blank? ? '' : "#QCG grant=#{params['grant_id']}" }
+#{params['grant_identifier'].blank? ? '' : "#QCG grant=#{params['grant_identifier']}" }
 #{params['memory'].to_i <= 0 ? '' : "#QCG memory=#{params['memory'].to_i * 1024}" }
 
       eos

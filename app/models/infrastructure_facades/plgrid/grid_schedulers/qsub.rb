@@ -71,7 +71,7 @@ module QsubScheduler
 #PBS -o #{log_path}
 #PBS -l walltime=#{params['time_limit'].to_i.minutes.to_i}
 #{params['nodes'].blank? ? '' : "#PBS -l nodes=#{params['nodes']}:ppn=#{params['ppn'] || 1}" }
-#{params['grant_id'].blank? ? '' : "#PBS -A #{params['grant_id']}" }
+#{params['grant_identifier'].blank? ? '' : "#PBS -A #{params['grant_identifier']}" }
 #{params['memory'].to_i <= 0 ? '' : "#PBS -l mem=#{params['memory'].to_i}gb" }
 
 cd $PBS_O_WORKDIR

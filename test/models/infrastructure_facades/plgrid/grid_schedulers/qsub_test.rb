@@ -102,13 +102,28 @@ qsub: submit filter returned an error code, aborting job submission.
   def test_memory_should_be_used_when_set
     desc = @qsub.prepare_job_descriptor('sm_uuid', 'memory' => '2')
 
-    assert_match /#PBS -l mem=2gb\s*\n/, desc    
+    assert_match /#PBS -l mem=2gb\s*\n/, desc
   end
 
   def test_memory_should_not_be_used_when_blank
     desc = @qsub.prepare_job_descriptor('sm_uuid', 'memory' => '')
 
     assert(/#PBS -l mem=\s*\n/ !~ desc)
+  end
+
+  def test_prepare_job_descriptor_with_grant_id
+    sm_uuid = 'sm_uuid'
+    time_limit = 1000
+
+    PlGridJob.expects(:queue_for_minutes).never
+
+    desc = @qsub.prepare_job_descriptor('sm_uuid',
+                                 'queue_name' => 'some_queue',
+                                 'time_limit' => time_limit,
+                                 'grant_identifier' => 'testowy_nowy'
+    )
+
+    assert_match /#PBS -A testowy_nowy\s*\n/, desc
   end
 
 end
