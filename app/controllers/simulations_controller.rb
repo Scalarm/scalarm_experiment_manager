@@ -292,10 +292,10 @@ class SimulationsController < ApplicationController
       begin
         Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-complete") do
           if @simulation_run.nil? or @simulation_run.is_done
-            msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done or is nil? #{@simulation_run.nil?}"
+            msg = "Simulation run #{params[:id]} of experiment #{params[:experiment_id]} is already done (#{@simulation_run.is_done}) or is nil? (#{@simulation_run.nil?})"
 
             Rails.logger.error(msg)
-            response = {status: 'error', reason: msg}
+            response = {status: 'preconditioned_failed', reason: msg}
           else
             unless sm_user.nil?
               if @simulation_run.sm_uuid != sm_user.sm_uuid
