@@ -30,7 +30,10 @@ module SimulationManagerRecord
   CMD_SEPARATOR = '#_#'
 
   attr_join :user, ScalarmUser
-  attr_join :experiment, Experiment
+
+  def experiment
+    Experiment.where(id: self.experiment_id).first.auto_convert
+  end
 
   def initialize_fields
     set_state(:created)

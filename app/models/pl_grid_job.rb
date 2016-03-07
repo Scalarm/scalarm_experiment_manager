@@ -5,22 +5,12 @@ require 'scalarm/database/model/pl_grid_job'
 class PlGridJob < Scalarm::Database::Model::PlGridJob
   include SimulationManagerRecord
 
-  attr_join :experiment, Experiment
-
   def infrastructure_name
     scheduler_type
   end
 
   def resource_id
     self.job_identifier
-  end
-
-  def experiment
-    if @attributes.include?('experiment_id')
-      Experiment.find_by_id(self.experiment_id)
-    else
-      nil
-    end
   end
 
   def to_s
