@@ -109,7 +109,7 @@ class PlGridFacade < InfrastructureFacade
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler_name, params={})
     # TODO: implement multiple architectures support
-    arch = 'linux_386'
+    arch = 'linux_amd64'
 
     InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
 
