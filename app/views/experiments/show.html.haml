@@ -82,7 +82,7 @@
 
 
       = render 'monitoring_stats'
-      .speedometer{id: "speedometer_#{@experiment.id}"}
+      .speedometer.show-for-large-up{id: "speedometer_#{@experiment.id}"}
 
       %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
         %h4#header_progress_bar.hidden.subheader= t('.progress_bar_header')
