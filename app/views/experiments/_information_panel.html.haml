@@ -18,20 +18,20 @@
 %h3.subheader= t('.experiment_info_title')
 .content
   .row
-    .small-3.columns
-      %h5.subheader.right= t('.experiment_name') + ':'
-    .small-9.columns
+    .small-12.large-3.columns
+      %h5.subheader= t('.experiment_name') + ':'
+    .small-12.large-9.columns
       %h5.subheader= @experiment.name
   .row
-    .small-3.columns
-      %h5.subheader.right= t('.experiment_description') + ':'
-    .small-9.columns
+    .small-12.large-3.columns
+      %h5.subheader= t('.experiment_description') + ':'
+    .small-12.large-9.columns
       %h5.subheader= @experiment.description
   .row
     - if current_user.owns?(@experiment)
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_with') + ':'
-      .small-9.columns
+      .small-12.large-3.columns
+        %h5.subheader= t('simulations.conduct_experiment.simulation_overview_shared_with') + ':'
+      .small-12.large-9.columns
         %h5.subheader
           - if @experiment.shared_with.blank?
             = t('experiments.monitoring_actions.blank_shared_with_list')
@@ -44,9 +44,9 @@
                 = submit_tag raw("&#215; #{t('experiments.monitoring_actions.unshare')}"), class: 'button radius tiny'
               &nbsp;
     - else
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_shared_by') + ':'
-      .small-9.columns
+      .small-12.large-3.columns
+        %h5.subheader= t('simulations.conduct_experiment.simulation_overview_shared_by') + ':'
+      .small-12.large-9.columns
         %h5.subheader= ScalarmUser.find_by_id(@experiment.user_id).login
 
   - if @experiment.simulation.nil?
@@ -55,14 +55,14 @@
     %h4.subheader= t('simulations.conduct_experiment.simulation_overview_header')
 
     .row
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_name') + ':'
-      .small-9.columns
+      .small-12.large-3.columns
+        %h5.subheader= t('simulations.conduct_experiment.simulation_overview_name') + ':'
+      .small-12.large-9.columns
         %h5.subheader= @experiment.simulation.name
     .row
-      .small-3.columns
-        %h5.subheader.right= t('simulations.conduct_experiment.simulation_overview_description') + ':'
-      .small-9.columns
+      .small-12.large-3.columns
+        %h5.subheader= t('simulations.conduct_experiment.simulation_overview_description') + ':'
+      .small-12.large-9.columns
         %h5.subheader= @experiment.simulation.description
 
 
@@ -73,20 +73,18 @@
   .content
     = form_tag experiment_path(@experiment.id), method: :put, class: 'custom' do
       .row
-        .small-3.columns
-          %h5.subheader.right= t('.experiment_name') + ':'
-        .small-6.columns
+        .small-12.large-3.columns
+          %h5.subheader= t('.experiment_name') + ':'
+        .small-12.large-6.columns.end
           = text_field_tag 'experiment[name]', @experiment.name
-        .small-1.columns
       .row
-        .small-3.columns
-          %h5.subheader.right= t('.experiment_description') + ':'
-        .small-6.columns
+        .small-12.large-3.columns
+          %h5.subheader= t('.experiment_description') + ':'
+        .small-12.large-6.columns.end
           = text_area_tag 'experiment[description]', @experiment.description
-        .small-1.columns
       .row
-        .small-2.small-centered.columns
-          = submit_tag t('experiments.edit.submit_btn'), class: 'button radius expanded'
+        .small-12.small-centered.large-2.large-centered.columns
+          = submit_tag t('experiments.edit.submit_btn'), class: 'button radius expand'
 
 - if @experiment.user_id == current_user.id
   #share-dialog.reveal-modal(data-reveal)
@@ -96,27 +94,16 @@
     = form_tag share_experiment_path(@experiment.id), class: 'custom' do
       = hidden_field_tag 'mode', 'share'
       .row
-        .small-4.columns
-          %label.inline.right(for="sharing_with_login")
-            = t('experiments.monitoring_actions.share_with_login') + ':'
-        .small-3.columns
+        .small-12.large-4.columns
+          %h5.subheader= t('experiments.monitoring_actions.share_with_login') + ':'
+        .small-12.large-3.columns
           = text_field_tag('sharing_with_login')
-        .small-3.columns
+        .small-12.large-3.columns.end
           = submit_tag t('experiments.monitoring_actions.share'), class: 'button radius expand small'
-
-        .small-1.columns
 
 = content_for :javascript do
   :javascript
     $(function() {
-      var logins = #{share_with_users.to_json};
-
-      $("#sharing_with_login").autocomplete({
-        source: logins
-      });
-
-      $('.ui-autocomplete').addClass('f-dropdown').css("z-index", 1006);
-
       // disable "disabled" buttons
       $("[disabled]").click(function(event) {
           event.stopImmediatePropagation();
