@@ -429,7 +429,7 @@ GEM
     unf_ext (0.0.7.1)
     uuidtools (2.1.5)
     vmstat (2.1.0)
-    xml-simple (1.1.5)
+    xml-simple (1.1.3)
 
 PLATFORMS
   ruby
@@ -475,4 +475,4 @@ DEPENDENCIES
   therubyracer
   uglifier (>= 1.3.0)
   vmstat
-  xml-simple
+  xml-simple (= 1.1.3)

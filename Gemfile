@@ -74,7 +74,7 @@ end
 
 gem 'ruby-openid'
 gem 'rest-client', '~> 1.8'
-gem 'xml-simple'
+gem 'xml-simple', '1.1.3'
 gem 'vmstat'
 
 gem 'mocha', group: :test
