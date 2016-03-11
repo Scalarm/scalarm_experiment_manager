@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 4.1.14.1'
+gem 'rails', '~> 4.1.14'
 gem 'racc'
 
 # wrapper for R interpreter
@@ -86,7 +86,7 @@ gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
 # gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
-gem 'scalarm-database', '1.3.0', git: 'git://github.com/Scalarm/scalarm-database.git'
+gem 'scalarm-database', '~> 1.3.0', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
 # gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'

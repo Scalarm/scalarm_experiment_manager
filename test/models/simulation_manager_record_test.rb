@@ -24,17 +24,17 @@ class SimulationManagerRecordTest < MiniTest::Test
   end
 
   def test_experiment
-    mock_experiment = Object
-    mock_experiment.stubs(:id).returns(1)
+    exp_id = BSON::ObjectId.from_time(Time.now)
+    mock_experiment = Experiment.new({_id: exp_id})
 
-    Experiment.stubs(:find_by_id).with(1).returns(mock_experiment)
+    Experiment.stubs(:where).returns([mock_experiment])
 
     sm_record = MockRecord.new({})
-    sm_record.stubs(:experiment_id).returns(1)
+    sm_record.stubs(:experiment_id).returns(exp_id)
 
     experiment_get = sm_record.experiment
 
-    assert_equal 1, experiment_get.id
+    assert_equal exp_id, experiment_get.id
   end
 
   def test_time_limit_exceeded_true
