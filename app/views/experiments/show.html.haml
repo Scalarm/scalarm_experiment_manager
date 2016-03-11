@@ -68,7 +68,7 @@
   - if @experiment.is_running
     %section.panel.radius
       %h3.subheader
-        Computational resources summary
+        = t('experiments.computational_resources.title')
         = image_tag('loading.gif', id: 'actions-loading-workers')
       = render 'workers_info'
       - if @experiment.workers_scaling

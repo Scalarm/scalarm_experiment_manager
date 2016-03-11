@@ -74,6 +74,7 @@ en:
         tooltip: Stop this experiment. All running Simulation Managers will be stopped.
 
     computational_resources:
+      title: Computational resources summary
       get_sm_button: "Download Simulation Manager"
 
     sharing:
