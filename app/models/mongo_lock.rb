@@ -55,6 +55,9 @@ module Scalarm
 
     end
 
+    # Releases a lock stored in Mongo database
+    # @return [String] a "global_pid" of process, which originally acquired the lock,
+    #   @see #global_pid for format
     def release
       old_lock = MongoLockRecord.collection.find_and_modify({
          query: { name: @name, pid: MongoLock.global_pid },
