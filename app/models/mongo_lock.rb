@@ -47,8 +47,8 @@ module Scalarm
           @locked_pid = lock_dock['pid']
           @locked_time = Time.now
         elsif timeout?
-          Rails.logger.debug "Process #{MongoLock.global_pid} releases lock on #{@name} "\
-            "owned by #{lock_dock['pid']} due to time limit"
+          Rails.logger.warn "LOCK TIMEOUT: Process #{MongoLock.global_pid} releases lock named \"#{@name}\" "\
+            "owned by #{lock_dock['pid']}, acquired at \"#{lock_dock['acquired_at']}\" due to time limit (#{@max_time}s)"
           MongoLock.forced_release(@name)
         end
 
