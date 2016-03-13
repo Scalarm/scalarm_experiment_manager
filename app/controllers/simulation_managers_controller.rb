@@ -112,6 +112,9 @@ apiDoc:
 
     unless sm_record.nil?
       Utils.parse_json_if_string(params[:parameters]).each do |key, value|
+        # new name of a key - backward compatibility, job_id will be deprecated someday
+        key = 'job_identifier' if key == 'job_id'
+
         if key == 'state'
           sm_record.set_state(value.to_sym)
         elsif key == 'resource_status'
