@@ -8,6 +8,8 @@ module Scalarm
 
   class MongoLock
 
+    attr_reader :name
+
     def initialize(name, max_time=10.minutes)
       @locked_pid = nil
       @locked_time = nil
@@ -33,7 +35,7 @@ module Scalarm
       if lock_dock.nil? # lock acquired
         MongoLockRecord.collection.find_and_modify({
            query: { name: @name },
-           update: { '$set' => { pid: MongoLock.global_pid } }
+           update: { '$set' => { pid: MongoLock.global_pid, acquired_at: Time.now } }
         })
 
         Rails.logger.debug "Process #{MongoLock.global_pid} acquired lock on #{@name}"

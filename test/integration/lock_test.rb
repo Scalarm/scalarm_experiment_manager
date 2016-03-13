@@ -186,6 +186,32 @@ class LockTest < MiniTest::Test
     end
   end
 
+  def test_first_acquire_of_lock_should_set_a_lock_date
+    lock_name = 'test_1234'
+
+    lock = Scalarm::MongoLock.new(lock_name)
+    lock.acquire
+
+    second_pid = fork do
+      lock = Scalarm::MongoLock.new(lock_name, 20.seconds)
+      sleep(3)
+      lock.acquire
+    end
+
+    sleep(5)
+
+    lock_record = Scalarm::MongoLockRecord.where(name: lock_name).first
+
+    begin
+      refute_nil lock_record.acquired_at, 'lock record should have acquired_at field after acquire'
+
+      assert (lock_record.acquired_at <= (Time.now - 5.seconds)),
+             "lock should have acquired_at set at least 5 seconds ago (#{(Time.now - 5.seconds)}), but is: #{lock_record.acquired_at}"
+    ensure
+      Process.kill('KILL', second_pid)
+    end
+  end
+
   def self.process_running?(pid)
     begin
       Process.getpgid pid
