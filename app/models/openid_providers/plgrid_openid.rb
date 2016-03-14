@@ -10,6 +10,7 @@ module PlGridOpenID
   # Invoke PL-Grid OpenID login procedure.
   # Optional parameters:
   # - generate_temp_pass - boolean - should temp password be generated
+  # - no_cert - string/boolean - if "true", do not request proxy certificate chain
   def login_openid_plgrid
     begin
       oidreq = consumer.begin(PLGRID_OID_URI)
@@ -20,10 +21,16 @@ module PlGridOpenID
       return
     end
 
-    # -- Attribute Exchange support --
-    OpenIDUtils.request_ax_attributes(oidreq, [:proxy, :user_cert, :proxy_priv_key, :dn, :POSTresponse])
+    req_user_cert = (params[:no_cert] != 'true' and params[:no_cert] != true)
 
-    return_to = openid_callback_plgrid_url((params[:generate_temp_pass] ? SecureRandom.hex(4) : nil))
+    # -- Attribute Exchange support --
+    req_attributes = [:dn, :POSTresponse]
+    req_attributes = req_attributes.concat([:user_cert, :proxy, :proxy_priv_key]) if req_user_cert
+    OpenIDUtils.request_ax_attributes(oidreq, req_attributes)
+
+    callback = req_user_cert ? :openid_callback_plgrid_url : :openid_callback_plgrid_no_cert_url
+
+    return_to = send(callback, ((params[:generate_temp_pass] ? SecureRandom.hex(4) : nil)))
 
     # remove following "/" from url (to match PL-Grid OpenID realm)
     realm = root_url.match(/(.*)\//)[1]
@@ -78,6 +85,8 @@ module PlGridOpenID
 
   # Optional params:
   # - temp_pass - a password to set for created user
+  # - no_cert - string - if not blank, do not request proxy certificate chain
+  # - no_cert - string/boolean - if "true", do not request proxy certificate chain
   def openid_callback_plgrid_success(oidresp, params)
     # check if response is from appropriate endpoint
     op_endpoint = params['openid.op_endpoint']
@@ -86,8 +95,12 @@ module PlGridOpenID
       redirect_to login_path
     end
 
+    req_user_cert = (params[:no_cert] != 'true' and params[:no_cert] != true)
+
     # -- Attribute Exchange support --
-    ax_attrs = OpenIDUtils::get_ax_attributes(oidresp, [:proxy, :user_cert, :proxy_priv_key, :dn])
+    req_attributes = [:dn, :POSTresponse]
+    req_attributes = req_attributes.concat([:user_cert, :proxy, :proxy_priv_key]) if req_user_cert
+    ax_attrs = OpenIDUtils::get_ax_attributes(oidresp, req_attributes)
 
     plgrid_identity = oidresp.identity_url
     plgrid_login = PlGridOpenID::strip_identity(oidresp.identity_url)
@@ -96,11 +109,17 @@ module PlGridOpenID
 
     scalarm_user = PlGridOpenID::get_or_create_user(ax_attrs[:dn], plgrid_login, params[:temp_pass])
 
-    x509_proxy_cert =
-        Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
-    update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
+    if req_user_cert
+      x509_proxy_cert =
+          Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
 
-    pl_cloud_secret = PLCloudUtil::openid_proxy_to_cloud_proxy(x509_proxy_cert)
+      pl_cloud_secret = PLCloudUtil::openid_proxy_to_cloud_proxy(x509_proxy_cert)
+    else
+      x509_proxy_cert = nil
+      pl_cloud_secret = nil
+    end
+
+    update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
     update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)

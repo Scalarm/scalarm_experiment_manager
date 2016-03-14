@@ -42,12 +42,24 @@ module UserControllerHelper
     url_for :action => 'openid_callback_google', :only_path => false
   end
 
+  # PL-Grid with certificate (standard)
+
   def login_openid_plgrid_url
     url_for :action => 'login_openid_plgrid', :only_path => false
   end
 
   def openid_callback_plgrid_url(temp_pass=nil)
     url_for action: 'openid_callback_plgrid', only_path: false, params: (temp_pass ? {temp_pass: temp_pass} : {})
+  end
+
+  # no certificate PL-Grid
+
+  def login_openid_plgrid_no_cert_url
+    url_for :action => 'login_openid_plgrid', :only_path => false, params: {no_cert: 'true'}
+  end
+
+  def openid_callback_plgrid_no_cert_url(temp_pass=nil)
+    url_for action: 'openid_callback_plgrid', only_path: false, params: (temp_pass ? {temp_pass: temp_pass, no_cert: 'true'} : {no_cert: 'true'})
   end
 
   def github_configured?

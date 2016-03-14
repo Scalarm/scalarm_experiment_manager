@@ -31,6 +31,11 @@
             %span
               =image_tag '/assets/plgridplus.png', width: '36px', style: 'margin-top: -4px;'
             = t('openid.login', provider: 'PL-Grid')
+        .small-4.columns.small-centered
+          %a.button.split.custom-split.radius.plgrid-nocert{ href: login_openid_plgrid_no_cert_url }
+            %span
+              =image_tag '/assets/plgridplus.png', width: '36px', style: 'margin-top: -4px;'
+            = t('openid.login', provider: 'PL-Grid (no certificate)')
 
       - if google_configured?
         .small-4.columns.small-centered
