@@ -54,6 +54,7 @@ $facebook-color: #3b5998;
 $twitter-color: #55acee;
 $google-color: #d50f25;
 $plgrid-color: rgb(10, 115, 148);
+$plgrid-nocert-color: rgb(97, 11, 28);
 $github-color: #444444;
 $username-color: #F7931E;
 //$text-transform: uppercase;
@@ -103,6 +104,16 @@ $icon-size: 2rem;
       }
       &.custom-split:hover {
         background: darken($plgrid-color, 10%);
+      }
+    }
+
+    &.plgrid-nocert {
+      background: $plgrid-nocert-color;
+      span {
+        background: darken($plgrid-nocert-color, 10%);
+      }
+      &.custom-split:hover {
+        background: darken($plgrid-nocert-color, 10%);
       }
     }
 
