@@ -434,7 +434,7 @@ class PlGridFacade < InfrastructureFacade
 
   def valid_credentials_available?(user_id)
     creds = GridCredentials.find_by_user_id user_id
-    !!(creds and (creds.secret_proxy or not creds.invalid))
+    !!(creds and (creds.secret_proxy or (creds.password and not creds.invalid)))
   end
 
   def force_onsite_monitoring?(user_id)
