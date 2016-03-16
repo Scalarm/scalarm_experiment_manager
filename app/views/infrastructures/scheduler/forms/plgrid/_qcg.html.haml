@@ -27,7 +27,11 @@
   .small-4.columns
     = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
   .small-4.columns
-    = select_tag :grant_id, options_for_select(grants)
+  .small-4.columns.end
+    -if grants.empty?
+      = text_field_tag :grant_id, '', class: 'right'
+    -else
+      = select_tag :grant_id, options_for_select(grants)
   .small-4.columns
 .row
   .small-4.columns
