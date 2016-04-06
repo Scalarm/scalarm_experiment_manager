@@ -3,7 +3,7 @@
 
   %h3.subheader
     = t('charts.histogram.header', moe: moe_name)
-    = image_tag 'loading.gif', size: '16x16', style: 'display: none', id: "busy_basic_#{experiment.id}_#{moe_name}_#{resolution}"
+    = loading_gif("busy_basic_#{experiment.id}_#{moe_name}_#{resolution}")
   .row
     %span.button= t('charts.hide_button')
     %input{id: "checkbox_#{experiment.id}_#{moe_name}_#{resolution}",type: "checkbox", checked: "", style: "margin-left: 20px;"}

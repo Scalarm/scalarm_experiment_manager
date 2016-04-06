@@ -24,17 +24,17 @@ class SimulationManagerRecordTest < MiniTest::Test
   end
 
   def test_experiment
-    mock_experiment = Object
-    mock_experiment.stubs(:id).returns(1)
+    exp_id = BSON::ObjectId.from_time(Time.now)
+    mock_experiment = Experiment.new({_id: exp_id})
 
-    Experiment.stubs(:find_by_id).with(1).returns(mock_experiment)
+    Experiment.stubs(:where).returns([mock_experiment])
 
     sm_record = MockRecord.new({})
-    sm_record.stubs(:experiment_id).returns(1)
+    sm_record.stubs(:experiment_id).returns(exp_id)
 
     experiment_get = sm_record.experiment
 
-    assert_equal 1, experiment_get.id
+    assert_equal exp_id, experiment_get.id
   end
 
   def test_time_limit_exceeded_true
@@ -133,10 +133,10 @@ class SimulationManagerRecordTest < MiniTest::Test
     @record.stubs(:attributes).returns(attributes_mock)
 
     @record.cmd_to_execute = cmd1
-    assert_equal 'cmd1', attributes_mock[:cmd_to_execute]
+    assert_equal 'cmd1', attributes_mock['cmd_to_execute']
 
     @record.cmd_to_execute = cmd2
-    assert_equal 'cmd1#_#cmd2', attributes_mock[:cmd_to_execute]
+    assert_equal 'cmd1#_#cmd2', attributes_mock['cmd_to_execute']
   end
 
   def test_cmd_to_execute_code
@@ -146,10 +146,38 @@ class SimulationManagerRecordTest < MiniTest::Test
     @record.stubs(:attributes).returns(attributes_mock)
 
     @record.cmd_to_execute_code = code1
-    assert_equal 'code1', attributes_mock[:cmd_to_execute_code]
+    assert_equal 'code1', attributes_mock['cmd_to_execute_code']
 
     @record.cmd_to_execute_code = code2
-    assert_equal 'code1#_#code2', "#{attributes_mock[:cmd_to_execute_code]}"
+    assert_equal 'code1#_#code2', "#{attributes_mock['cmd_to_execute_code']}"
+  end
+
+  def test_has_more_simulations_to_run_field_greater_than_zero
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(1)
+
+    assert sm_record.has_more_simulations_to_run?, 'Simulation Manager has more simulations to run when simulations_left is greater than 0'
+  end
+
+  def test_has_more_simulations_to_run_field_equal_to_zero
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(0)
+
+    assert (not sm_record.has_more_simulations_to_run?), 'Simulation Manager has no more simulations to run when simulations_left is 0'
+  end
+
+  def test_has_more_simulations_to_run_field_lesser_than_zero
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(-1)
+
+    assert (not sm_record.has_more_simulations_to_run?), 'Simulation Manager has no more simulations to run when simulations_left is lesser than 0'
+  end
+
+  def test_has_more_simulations_to_run_field_not_existing
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(nil)
+
+    assert sm_record.has_more_simulations_to_run?, 'Simulation Manager has more simulations to run when simulations_left is not present'
   end
 
 end

@@ -8,8 +8,7 @@ class ExperimentsController < ApplicationController
   include SSHAccessedInfrastructure
 
   before_filter :load_experiment, except: [:index, :share, :new, :random_experiment]
-  before_filter :load_simulation, only: [ :create, :new, :calculate_experiment_size,
-                                          :start_custom_points_experiment, :start_supervised_experiment]
+  before_filter :load_simulation, only: [:create, :new, :calculate_experiment_size]
 
   def index
     load_simulations_and_experiments_for_current_user
@@ -17,11 +16,11 @@ class ExperimentsController < ApplicationController
     respond_to do |format|
       format.html
       format.json { render json: {
-          status: 'ok',
-          running: @running_experiments.collect { |e| e.id.to_s },
-          completed: @completed_experiments.collect {|e| e.id.to_s},
-          historical: @historical_experiments.collect { |e| e.id.to_s }
-      }}
+                               status: 'ok',
+                               running: @running_experiments.collect { |e| e.id.to_s },
+                               completed: @completed_experiments.collect { |e| e.id.to_s },
+                               historical: @historical_experiments.collect { |e| e.id.to_s }
+                           } }
     end
   end
 
@@ -49,7 +48,7 @@ class ExperimentsController < ApplicationController
   def load_running_experiments
     @non_historical_experiments ||= load_non_historical_experiments
 
-    @non_historical_experiments.select {|e| not e.completed?} # running and completed
+    @non_historical_experiments.select { |e| not e.completed? } # running and completed
   end
 
   def load_historical_experiments
@@ -59,7 +58,7 @@ class ExperimentsController < ApplicationController
   def load_completed_experiments
     @non_historical_experiments ||= load_non_historical_experiments
 
-    @non_historical_experiments.select {|e| e.completed?} # running and not completed
+    @non_historical_experiments.select { |e| e.completed? } # running and not completed
   end
 
   def load_simulations
@@ -76,7 +75,7 @@ class ExperimentsController < ApplicationController
     begin
       start_update_bars_thread if Time.now - @experiment.start_at > 30
     rescue Exception => e
-      flash[:error] = t('experiments.not_found', { id: @experiment.id, user: current_user.login })
+      flash[:error] = t('experiments.not_found', {id: @experiment.id, user: current_user.login})
       respond_to do |format|
         format.html { redirect_to action: :index }
         format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
@@ -85,7 +84,7 @@ class ExperimentsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: {status: 'ok', data: @experiment.to_h } }
+      format.json { render json: {status: 'ok', data: @experiment.to_h} }
     end
   end
 
@@ -98,22 +97,22 @@ class ExperimentsController < ApplicationController
 
   def running_experiments
     @running_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @running_experiments.select! {|e| not e.completed?} # running and not completed
+    @running_experiments.select! { |e| not e.completed? } # running and not completed
 
-    render partial: 'running_experiments', locals: { show_close_button: true }
+    render partial: 'running_experiments', locals: {show_close_button: true}
   end
 
   def completed_experiments
     @completed_experiments = current_user.get_running_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
-    @completed_experiments.select! {|e| e.completed?} # running and completed
+    @completed_experiments.select! { |e| e.completed? } # running and completed
 
-    render partial: 'completed_experiments', locals: { show_close_button: true }
+    render partial: 'completed_experiments', locals: {show_close_button: true}
   end
 
   def historical_experiments
     @historical_experiments = current_user.get_historical_experiments.sort { |e1, e2| e2.start_at <=> e1.start_at }
 
-    render partial: 'historical_experiments', locals: { show_close_button: true }
+    render partial: 'historical_experiments', locals: {show_close_button: true}
   end
 
   def get_booster_dialog
@@ -128,7 +127,7 @@ class ExperimentsController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to action: :index }
-      format.json { render json: { status: 'ok' } }
+      format.json { render json: {status: 'ok'} }
     end
   end
 
@@ -137,14 +136,23 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @apiDefine ConfigurationsParams
 
   @apiParam {Number=0,1} with_index=0 "1" to add simulation index column to result CSV
   @apiParam {Number=0,1} with_params=0 "1" to add params columns to result CSV
   @apiParam {Number=0,1} with_moes=1 "1" to add moes columns to result CSV
+  @apiParam {Number=0,1} with_status=1 "1" to add status and error reason columns to result CSV
+  @apiParam {Number} [min_index]
+    include only simulation runs with index greater than min_index
+  @apiParam {Number} [max_index]
+    include only simulation runs with index lesser than max_index
 =end
 
 =begin
+Get CSV file with simulation runs results (sends a file).
+
+apiDoc:
   @api {get} /experiments/:id/file_with_configurations Get CSV file with simulation runs results
   @apiName GetFileWithConfigurations
   @apiGroup Experiments
@@ -157,6 +165,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {get} /experiments/:id/configurations Get CSV text with simulation runs results
   @apiName GetConfigurations
   @apiGroup Experiments
@@ -175,23 +184,42 @@ class ExperimentsController < ApplicationController
     validate(
         with_index: [:optional, :security_default],
         with_params: [:optional, :security_default],
-        with_moes: [:optional, :security_default]
+        with_moes: [:optional, :security_default],
+        error_description: [:optional, :security_default],
+        min_index: [:optional, :integer],
+        max_index: [:optional, :integer]
     )
-
     w_index = (params.include?(:with_index) ? (params[:with_index] == '1') : false)
     w_params = (params.include?(:with_params) ? (params[:with_params] == '1') : true)
     w_moes = (params.include?(:with_moes) ? (params[:with_moes] == '1') : true)
+    w_status = (params.include?(:with_status) ? (params[:with_status] == '1') : true)
 
-    @experiment.create_result_csv(w_index, w_params, w_moes)
+    # additional conditions to include simulation runs in results
+    additional_query = {}
+
+    min_index = Integer(params[:min_index]) rescue nil
+    unless min_index.nil?
+      additional_query[:index] ||= {}
+      additional_query[:index].merge!('$gte' => min_index)
+    end
+
+    max_index = Integer(params[:max_index]) rescue nil
+    unless max_index.nil?
+      additional_query[:index] ||= {}
+      additional_query[:index].merge!('$lte' => max_index)
+    end
+
+    @experiment.create_result_csv(w_index, w_params, w_moes, w_status, additional_query)
   end
 
   def create_experiment
     #validate_params(:json, :doe) # TODO :experiment_input :parameters_constraints,
 
+    response = {}
     begin
-      Utils::parse_param(params, :replication_level, lambda {|x| x.to_i})
-      Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
-      Utils::parse_param(params, :parameters_constraints, lambda {|x| Utils.parse_json_if_string(x)})
+      Utils::parse_param(params, :replication_level, lambda { |x| x.to_i })
+      Utils::parse_param(params, :execution_time_constraint, lambda { |x| x.to_i * 60 })
+      Utils::parse_param(params, :parameters_constraints, lambda { |x| Utils.parse_json_if_string(x) })
 
       parsed_params = params.slice(:replication_level, :execution_time_constraint, :scheduling_policy, :experiment_name,
                                    :experiment_description, :parameters_constraints).symbolize_keys
@@ -228,25 +256,30 @@ class ExperimentsController < ApplicationController
       end
 
       unless flash[:error].blank?
-        respond_to do |format|
-          format.html { redirect_to experiments_path }
-          format.json { render json: {status: 'error', message: flash[:error]} }
-        end
+        response = {
+            status: :error,
+            json: {status: 'error', message: flash[:error]},
+            html: experiments_path,
+        }
       else
-        respond_to do |format|
-          format.html { redirect_to experiment_path(experiment.id) }
-          format.json { render json: {status: 'ok', experiment_id: experiment.id.to_s} }
-        end
+        response = {
+            status: :ok,
+            json: {status: 'ok', experiment_id: experiment.id.to_s},
+            html: experiment_path(experiment.id),
+            experiment: experiment
+        }
       end
     rescue Exception => e
       Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace.join("\n")}"
       flash[:error] = e.to_s
 
-      respond_to do |format|
-        format.html { redirect_to experiments_path }
-        format.json { render json: {status: 'error', message: flash[:error]} }
-      end
+      response = {
+          status: :error,
+          json: {status: 'error', message: flash[:error]},
+          html: experiments_path,
+      }
     end
+    response
   end
 
   # POST params:
@@ -261,10 +294,18 @@ class ExperimentsController < ApplicationController
     experiment = ExperimentFactory.create_custom_points_experiment(current_user.id, @simulation)
     experiment.save
 
-    render json: {status: 'ok', experiment_id: experiment.id.to_s}
+    {
+        status: :ok,
+        json: {status: 'ok', experiment_id: experiment.id.to_s},
+        experiment: experiment
+    }
   end
 
 =begin
+Controller method used to create supervised experiment when POST on /experiments
+with type='supervised' is invoked.
+
+apiDoc:
   @api {post} /experiments/ Create SupervisedExperiment
   @apiName start_supervised_experiment
   @apiGroup Experiments
@@ -314,22 +355,17 @@ class ExperimentsController < ApplicationController
       'reason': 'Unable to connect with Experiment Supervisor'
     }
 =end
-
-  def parse_json_if_string2(value)
-    value.kind_of?(String) and JSON.parse(value) or value
-  end
-
   def create_supervised_experiment
     validate(
         simulation_id: :security_default,
         supervisor_script_id: [:optional, :security_default]
-        #supervisor_script_params: [:optional, :json_or_hash]
+    #supervisor_script_params: [:optional, :json_or_hash]
     )
     # TODO: other experiment parameters
     # TODO: handle errors
 
-    Utils::parse_param(params, :replication_level, lambda {|x| x.to_i})
-    Utils::parse_param(params, :execution_time_constraint, lambda {|x| x.to_i * 60})
+    Utils::parse_param(params, :replication_level, lambda { |x| x.to_i })
+    Utils::parse_param(params, :execution_time_constraint, lambda { |x| x.to_i * 60 })
 
     parsed_params = params.permit(:replication_level, :time_constraint_in_sec, :scheduling_policy, :experiment_name,
                                   :experiment_description)
@@ -337,9 +373,6 @@ class ExperimentsController < ApplicationController
 
     experiment.save
     response = {'status' => 'ok'}
-
-
-
     supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
 
     if params.has_key?(:supervisor_script_id)
@@ -359,10 +392,12 @@ class ExperimentsController < ApplicationController
       experiment.save
     end
 
-    respond_to do |format|
-      format.html { (response['status'] == 'ok') ? redirect_to(experiment_path(experiment.id)) : redirect_to(experiments_path) }
-      format.json { render json: response }
-    end
+    {
+        status: response['status'].to_sym,
+        json: response,
+        html: (response['status'] == 'ok') ? experiment_path(experiment.id) : experiments_path,
+        experiment: experiment
+    }
   end
 
   CONSTRUCTORS = {
@@ -376,11 +411,40 @@ class ExperimentsController < ApplicationController
         replication_level: [:optional, :security_default, :integer, :positive],
         execution_time_constraint: [:optional, :security_default, :integer, :positive],
         parameter_constraints: [:optional, :security_json],
-        type: [:optional, :security_default]
+        type: [:optional, :security_default],
+        workers_scaling: [:optional] # TODO boolean validator
+        #workers_scaling_params: [:optional, :json_or_hash] TODO uncomment? SCAL-757: (..) json_or_hash validator bug
     )
+
+    # Params validation
     type = params[:type] || 'experiment'
-    raise ValidationError.new('type', type, 'Not a correct experiment type') unless CONSTRUCTORS.has_key? type
-    send(CONSTRUCTORS[type])
+    Utils::raise_error_unless_has_key(CONSTRUCTORS, type, "Not a correct experiment type: #{type}")
+
+    workers_scaling_enabled = (params[:workers_scaling] == 'true')
+    workers_scaling_initializer = nil
+    if workers_scaling_enabled
+      workers_scaling_initializer = WorkersScaling::Initializer.new(current_user.id, params)
+      workers_scaling_initializer.validate_params
+    end
+
+    # Create experiment
+    result = send(CONSTRUCTORS[type])
+
+    # Start workers scaling
+    if workers_scaling_enabled and result[:status] == :ok
+      workers_scaling_initializer.start(result[:experiment])
+    end
+
+    if not result.has_key? :html and not result.has_key? :json
+      flash[:error] = 'Unexpected error, please contact administrator'
+      result[:html] = experiments_path
+      result[:json] = {status: :error, message: flash[:error]}
+    end
+
+    respond_to do |format|
+      format.html { redirect_to(result[:html]) } if result.has_key? :html
+      format.json { render json: result[:json] } if result.has_key? :json
+    end
   end
 
   def calculate_experiment_size
@@ -395,10 +459,10 @@ class ExperimentsController < ApplicationController
 
     # TODO: use ExperimentsFactory
     # create the new type of experiment object
-    experiment = Experiment.new({ simulation_id: @simulation.id,
-                                  experiment_input: @experiment_input,
-                                  name: @simulation.name,
-                                  doe_info: doe_info
+    experiment = Experiment.new({simulation_id: @simulation.id,
+                                 experiment_input: @experiment_input,
+                                 name: @simulation.name,
+                                 doe_info: doe_info
                                 })
     experiment.replication_level = params[:replication_level].blank? ? 1 : params[:replication_level].to_i
     experiment.parameters_constraints = params[:parameters_constraints].blank? ? {} : Utils.parse_json_if_string(params[:parameters_constraints])
@@ -411,7 +475,7 @@ class ExperimentsController < ApplicationController
       Rails.logger.warn("An exception occured: #{message}")
     end
 
-    render json: { experiment_size: experiment_size, error: message }
+    render json: {experiment_size: experiment_size, error: message}
   end
 
   def calculate_imported_experiment_size
@@ -419,100 +483,117 @@ class ExperimentsController < ApplicationController
         replication_level: [:optional, :security_default]
     )
 
-    parameters_to_include = params.keys.select{ |parameter|
+    parameters_to_include = params.keys.select { |parameter|
       parameter.start_with?('param_') and params[parameter] == '1'
-    }.map{ |parameter| parameter.split('param_').last }
+    }.map { |parameter| parameter.split('param_').last }
 
     if parameters_to_include.blank? or params[:file_content].blank?
 
-      render json: { experiment_size: 0 }
+      render json: {experiment_size: 0}
 
     else
       importer = ExperimentCsvImporter.new(params[:file_content], parameters_to_include)
       replication_level = params['replication_level'].blank? ? 1 : params['replication_level'].to_i
 
-      render json: { experiment_size: importer.parameter_values.size * replication_level }
+      render json: {experiment_size: importer.parameter_values.size * replication_level}
     end
   end
 
   ### Progress monitoring API
 
   def completed_simulations_count
-    simulation_counter = @experiment.simulation_runs.where(is_done: true, 
-      done_at: { '$gte' => (Time.now - params[:secs].to_i) }).count
+    simulation_counter = @experiment.simulation_runs.where(is_done: true,
+                                                           done_at: {'$gte' => (Time.now - params[:secs].to_i)}).count
 
     render json: {count: simulation_counter}
   end
 
+=begin
+  @api {get} /experiments/:id/stats/ Get Experiment statistics
+  @apiName stats
+  @apiGroup Experiments
+  @apiDescription This method returns json containing Experiment statistics. All returned statistics can be included
+                  or excluded using params.
+
+  @apiParam {String} id Unique id of experiment on which action will be performed
+  @apiParam {String=false,true} [simulations_statistics=true] Param defining if fields 'all', 'sent', 'done_num',
+                      'done_percentage', 'generated' and 'avg_execution_time' should be computed and included.
+                       Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [progress_bar=true] Param defining if field 'progress_bar' should be computed and included.
+                       Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [completed=true] Param defining if field 'completed' should be computed and included.
+                       Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [predicted_finish_time=false] Param defining if field 'predicted_finish_time' should be
+                       computed and included. Values other than 'true' are treated as false.
+  @apiParam {String=false,true} [workers_scaling_active=false] Param defining if field 'workers_scaling_active' should be
+                       computed and included. Values other than 'true' are treated as false.
+
+  @apiParamExample Params-Example
+    simulations_statistics: 'false'
+    progress_bar: 'false'
+    predicted_finish_time: 'true'
+    workers_scaling_active: 'true'
+
+  @apiSuccess {Object} stats json object containing Experiment statistics
+  @apiSuccess {Number} [stats.all] size of Experiment
+  @apiSuccess {Number} [stats.sent] number of sent simulations
+  @apiSuccess {Number} [stats.done_num] number of done simulations
+  @apiSuccess {String} [stats.done_percentage] percent of done simulations, as String
+  @apiSuccess {Number} [stats.generated] number of generated simulations
+  @apiSuccess {Number} [stats.avg_execution_time] average simulation execution time
+  @apiSuccess {String} [stats.progress_bar] average simulation execution time
+  @apiSuccess {Boolean} [stats.completed] information whether experiment is completed
+  @apiSuccess {Number} [stats.predicted_finish_time] predicted time of Experiment end in seconds since the Epoch
+  @apiSuccess {Boolean} [stats.workers_scaling_active] information whether workers scaling algorithm is working with
+                        that Experiment
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'completed': false
+      'predicted_finish_time': 1449846185
+      'workers_scaling_active': true
+    }
+=end
   def stats
-    sims_generated, sims_sent, sims_done = @experiment.get_statistics
+    validate(
+        simulations_statistics: [:optional, :security_default],
+        progress_bar: [:optional, :security_default],
+        completed: [:optional, :security_default],
+        predicted_finish_time: [:optional, :security_default],
+        workers_scaling_active: [:optional, :security_default]
+    )
 
-    if sims_generated > @experiment.experiment_size
-      Rails.logger.error("FATAL - too many simulations generated for experiment #{@experiment.inspect}")
-      sims_generated = @experiment.experiment_size
-    end
-
-    if sims_done > @experiment.experiment_size
-      Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.inspect}")
-      sims_done = @experiment.experiment_size
-    end
-
-    if sims_done + sims_sent > @experiment.experiment_size
-      sims_sent = @experiment.experiment_size - sims_done
-    end
-
-    #if sims_generated > @experiment.experiment_size
-    #  @experiment.experiment_size = sims_generated
-    #  @experiment.save
-    #end
-
-
-    if @experiment.experiment_size!=0
-      percentage = (sims_done.to_f / @experiment.experiment_size) * 100
-    else
-      percentage=0
-    end
-    stats = {
-        all: @experiment.experiment_size, sent: sims_sent, done_num: sims_done,
-        done_percentage: "'%.2f'" % (percentage),
-        generated: [sims_generated, @experiment.experiment_size].min,
-        progress_bar: "[#{@experiment.progress_bar_color.join(',')}]"
+    default_params = {
+        simulations_statistics: true,
+        progress_bar: true,
+        completed: true,
+        predicted_finish_time: true,
+        workers_scaling_active: false
     }
 
-    # TODO - mean execution time and predicted time to finish the experiment
-    if sims_done > 0 and (rand() < (sims_done.to_f / @experiment.experiment_size) or sims_done == @experiment.experiment_size)
-      execution_time = @experiment.simulation_runs.where({is_done: true}, fields: %w(sent_at done_at)).reduce(0) do |acc, simulation_run|
-        if simulation_run.done_at and simulation_run.sent_at
-          acc += simulation_run.done_at - simulation_run.sent_at
-        else
-          acc
-        end
-     end
-     stats['avg_execution_time'] = (execution_time / sims_done).round(2)
+    params.each do |method, include|
+      if default_params.has_key? method.to_sym
+        default_params[method.to_sym] = (include == 'true')
+      end
+    end
 
-    #  predicted_finish_time = (Time.now - experiment.start_at).to_f / 3600
-    #  predicted_finish_time /= (instances_done.to_f / experiment.experiment_size)
-    #  predicted_finish_time_h = predicted_finish_time.floor
-    #  predicted_finish_time_m = ((predicted_finish_time.to_f - predicted_finish_time_h.to_f)*60).to_i
-    #
-    #  predicted_finish_time = ''
-    #  predicted_finish_time += "#{predicted_finish_time_h} hours"  if predicted_finish_time_h > 0
-    #  predicted_finish_time += ' and ' if (predicted_finish_time_h > 0) and (predicted_finish_time_m > 0)
-    #  predicted_finish_time +=  "#{predicted_finish_time_m} minutes" if predicted_finish_time_m > 0
-    #
-    #  partial_stats["predicted_finish_time"] = predicted_finish_time
+    experiment_statistics = ExperimentStatistics.new(@experiment, current_user || sm_user)
+    stats = {}
+    default_params.each do |method, include|
+      stats.merge!(experiment_statistics.send(method)) if include
     end
 
     render json: stats
   end
+
   ##
   # new function return array of json with paramaeter id label and type
   def moes_json
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-       [t('experiments.analysis.no_results'),'',"moes_parameter"]
-     else
-       result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
+                   [t('experiments.analysis.no_results'), '', "moes_parameter"]
+                 else
+                   result_set.map { |x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"] }
                  end
     moes_and_params = get_moes_and_params(result_set)
     array = []
@@ -530,10 +611,10 @@ class ExperimentsController < ApplicationController
 
     result_set = @experiment.result_names
     result_set = if result_set.blank?
-      [t('experiments.analysis.no_results'),'',"moes_parameter"]
-    else
-      result_set.map{|x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"]}
-    end
+                   [t('experiments.analysis.no_results')]
+                 else
+                   result_set.map { |x| [Experiment.output_parameter_label_for(x), x, "moes_parameter"] }
+                 end
     moes_and_params = get_moes_and_params(result_set)
 
     # params = if done_run.nil?
@@ -545,18 +626,18 @@ class ExperimentsController < ApplicationController
 
 
     #TODO Unsafety behaviour, inject code???
-    moes_info[:moes] = result_set.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+    moes_info[:moes] = result_set.map { |label, id|
+      "<option value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
-    moes_info[:moes_and_params] = moes_and_params.map{ |label, id, type|
-      "<option data-type='#{type}' value='#{id}'>#{label}</option>" }.join
+    moes_info[:moes_and_params] = moes_and_params.map { |label, id, type|
+      "<option data-type='#{ERB::Util.h(type)}' value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
-    moes_info[:params] = params.map{ |label, id|
-      "<option value='#{id}'>#{label}</option>" }.join
+    moes_info[:params] = params.map { |label, id|
+      "<option value='#{ERB::Util.h(id)}'>#{ERB::Util.h(label)}</option>" }.join
 
-    moes_info[:moes_types] = extract_types_for_moes
+    moes_info[:moes_types] = extract_types_for_moes(@experiment.simulation_runs)
     moes_info[:moes_names] = @experiment.simulation_runs.empty? ? t('experiments.analysis.no_results') : @experiment.result_names
-    moes_info[:inputs_types] = extract_types_for_parameters
+    moes_info[:inputs_types] = extract_types_for_parameters(@experiment.simulation_runs)
     moes_info[:inputs_names] = @experiment.simulation_runs.empty? ? @experiment.parameters.to_sentence : @experiment.simulation_runs.first.arguments.split(",")
 
     #TODO add new map for histogram to improve selector
@@ -566,71 +647,55 @@ class ExperimentsController < ApplicationController
 
   end
 
-  #TODO Move this method to gem utils
-  #Extract types for moes from string
-  def extract_types_for_parameters
+  # Extract types of parameters (inputs) from theirs values
+  #
+  # * *Args*:
+  #   - +simulation_runs+ -> Summary of experiment's information extracted by simulation_runs method
+  #
+  # * *Returns*:
+  #   - +array_for_inputs_types+ -> String array with types of parameters
+  def extract_types_for_parameters(simulation_runs)
     array_for_inputs_types = []
 
-    first_run = @experiment.simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
     unless first_run.nil?
-      first_line_inputs = first_run.values.split(",")
-      first_line_inputs.each{|x|
-        item = x
-        a = item.to_i
-        b = item.to_f
-
-        if x.eql?a.to_s
-          array_for_inputs_types.push("integer")
-        elsif x.eql?b.to_s
-          array_for_inputs_types.push("float")
-        elsif x.is_a? String
-          array_for_inputs_types.push("string")
-        else
-          array_for_inputs_types.push("undefined")
-        end
-
-      }
+      first_line_inputs = simulation_runs.first.values.split(",")
+      array_for_inputs_types = first_line_inputs.map { |result| Utils::extract_type_from_string(result) }
     end
 
     array_for_inputs_types
   end
 
-  #TODO Move this method to gem util
-  def extract_types_for_moes
+  # Extract types of moes (outputs) from theirs values
+  #
+  # * *Args*:
+  #   - +simulation_runs+ -> Summary of experiment's information extracted by simulation_runs method
+  #
+  # * *Returns*:
+  #   - +array_for_moes_types+ -> String array with types of moes
+  def extract_types_for_moes(simulation_runs)
     array_for_moes_types = []
 
-    first_run = @experiment.simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => nil}}]).first
+    first_run = simulation_runs.where('$and' => [{result: {'$exists' => true}}, {result: {'$ne' => {}}}, {result: {'$ne' => nil}} ]).first
+
     unless first_run.nil?
-      first_result = first_run.result
-      first_result.each{|x|
-        item = x[1]
-        if item.is_a? Integer
-          array_for_moes_types.push("integer")
-        elsif item.is_a? Float
-          array_for_moes_types.push("float")
-        elsif item.is_a? String
-          array_for_moes_types.push("string")
-        else
-          array_for_moes_types.push("undefined")
-        end
-      }
+      first_line_result = first_run.result
+      array_for_moes_types = first_line_result.map { |result| Utils::extract_type_from_value(result[1]) }
     end
 
     array_for_moes_types
   end
 
-
-
   def get_moes_and_params(result_set)
     done_run_query_condition = {is_done: true, is_error: {'$exists' => false}}
     done_run = @experiment.simulation_runs.where(done_run_query_condition,
-                                                 {limit: 1, fields: %w(arguments)}).first
+                                                 {limit: 1, fields: %w(arguments input_parameters)}).first
 
     moes_and_params = if done_run.nil?
                         (@experiment.parameters.flatten).map { |x|
                           #@experiment.input_parameter_label_for(x) for label
-                            [x, x, "input_parameter"] } +
-                         [%w(----------- delimiter)] + [result_set]
+                          [x, x, "input_parameter"] } +
+                            [%w(----------- delimiter)] + [result_set]
                       else
                         done_run.arguments.split(',').map { |x|
                           [@experiment.input_parameter_label_for(x), x, "input_parameter"] } +
@@ -722,7 +787,7 @@ class ExperimentsController < ApplicationController
                 new('range_min', range_min, "Range minimum is greater than maximum")
     end
 
-  #to add one point (example => min: 2, max: 3, step: 5 gives [2] as single point) need to remove this, it works the same in creation of experiment
+    #to add one point (example => min: 2, max: 3, step: 5 gives [2] as single point) need to remove this, it works the same in creation of experiment
 =begin
     unless range_step <= (range_max-range_min)
       raise ValidationError.
@@ -774,7 +839,7 @@ class ExperimentsController < ApplicationController
         end
 
         split_values = simulation_run.values.split(',')
-        modified_values = @experiment.range_arguments.reduce([]){|acc, param_uid| acc << split_values[arguments.index(param_uid)]}
+        modified_values = @experiment.range_arguments.reduce([]) { |acc, param_uid| acc << split_values[arguments.index(param_uid)] }
         time_column = if params[:simulations] == 'running'
                         simulation_run.sent_at.nil? ? 'N/A' : simulation_run.sent_at.strftime('%Y-%m-%d %H:%M')
                       elsif params[:simulations] == 'completed'
@@ -789,9 +854,9 @@ class ExperimentsController < ApplicationController
         ].flatten
       end
 
-      render json: { 'aaData' => results }.as_json
+      render json: {'aaData' => results}.as_json
     else
-      render json: { 'aaData' => [] }.as_json
+      render json: {'aaData' => []}.as_json
     end
   end
 
@@ -804,10 +869,10 @@ class ExperimentsController < ApplicationController
 
     @experiment.scheduling_policy = new_scheduling_policy
     msg = if @experiment.save_and_cache
-      'The scheduling policy of the experiment has been changed.'
-    else
-      'The scheduling policy of the experiment could not have been changed due to internal server issues.'
-    end
+            'The scheduling policy of the experiment has been changed.'
+          else
+            'The scheduling policy of the experiment could not have been changed due to internal server issues.'
+          end
 
     respond_to do |format|
       format.js {
@@ -831,7 +896,7 @@ class ExperimentsController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to action: :index }
-      format.json { render json: { status: 'ok' } }
+      format.json { render json: {status: 'ok'} }
     end
   end
 
@@ -843,35 +908,50 @@ class ExperimentsController < ApplicationController
     begin
       raise 'Experiment is not running any more' if not @experiment.is_running
 
-      simulation_to_send = nil
+      denied = false
 
-      Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
-        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
-        unless sm_user.nil? or simulation_to_send.nil?
-          simulation_to_send.sm_uuid = sm_user.sm_uuid
-          simulation_to_send.save
+      # Following block checks if Simulation Manager is in state, in which it should receive no more simulations
+      sm_record = !sm_user.nil? && InfrastructureFacadeFactory.get_sm_records_by_query(sm_uuid: sm_user.sm_uuid).first
+      if sm_record
+        if sm_record.state == :terminating
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'This SiM is terminating'})
+          denied = true
+        elsif not sm_record.simulations_left.nil? and sm_record.simulations_left == 0
+          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'This SiM has no simulations left'})
+          denied = true
         end
       end
 
-      if simulation_to_send
-        Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
-        # TODO adding caching capability to the experiment object
-        #simulation_to_send.put_in_cache
-        @experiment.progress_bar_update(simulation_to_send.index, 'sent')
+      unless denied
+        simulation_to_send = nil
 
-        simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
-                   'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
-                   'input_parameters' => Hash[simulation_to_send.arguments.split(',').zip(simulation_to_send.values.split(','))] })
-      else
-        Rails.logger.debug('next_simulation: Simulation to send is nil!')
-        if @experiment.supervised and not @experiment.completed?
-          simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
-                                 'duration_in_seconds' => 2})
+        Scalarm::MongoLock.mutex("experiment-#{@experiment.id}-simulation-start") do
+          simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
+          unless sm_user.nil? or simulation_to_send.nil?
+            simulation_to_send.sm_uuid = sm_user.sm_uuid
+            simulation_to_send.save
+          end
+        end
+
+        if simulation_to_send
+          Rails.logger.info("Next simulation run for experiment #{@experiment.id} is: #{simulation_to_send.index}")
+          # TODO adding caching capability to the experiment object
+          #simulation_to_send.put_in_cache
+          @experiment.progress_bar_update(simulation_to_send.index, 'sent')
+
+          simulation_doc.merge!({'status' => 'ok', 'simulation_id' => simulation_to_send.index,
+                                 'execution_constraints' => { 'time_constraint_in_sec' => @experiment.time_constraint_in_sec },
+                                 'input_parameters' => simulation_to_send.input_parameters })
         else
-          simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+          Rails.logger.debug('next_simulation: Simulation to send is nil!')
+          if @experiment.supervised and not @experiment.completed? and not @experiment.is_error
+            simulation_doc.merge!({'status' => 'wait', 'reason' => 'There is no more simulations',
+                                   'duration_in_seconds' => 2})
+          else
+            simulation_doc.merge!({'status' => 'all_sent', 'reason' => 'There is no more simulations'})
+          end
         end
       end
-
     rescue Exception => e
       Rails.logger.debug("Error while preparing next simulation: #{e}")
       simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
@@ -917,10 +997,13 @@ class ExperimentsController < ApplicationController
 
     resolution = params[:resolution].to_i
     moe_type= params[:type]
-    if params[:moe_name].blank? or not resolution.between?(1,100)
+    if params[:moe_name].blank? or not resolution.between?(1, 100)
       render inline: ""
     else
-      @chart = HistogramChart.new(@experiment, params[:moe_name], resolution, moe_type)
+      @chart = HistogramChart.new(@experiment, params[:moe_name],
+                                  resolution, moe_type,
+                                  x_axis_notation: params[:x_axis_notation].to_s,
+                                  y_axis_notation: params[:y_axis_notation].to_s)
       @visible_threshold_resolution = 15
     end
   end
@@ -938,6 +1021,8 @@ class ExperimentsController < ApplicationController
         y_axis: [:optional, :security_default],
         x_axis_type: [:optional, :security_default],
         y_axis_type: [:optional, :security_default],
+        x_axis_notation: [:optional, :security_default],
+        y_axis_notation: [:optional, :security_default],
         container_id: [:optional, :security_default]
     )
     if params[:x_axis].blank? or params[:y_axis].blank?
@@ -951,7 +1036,8 @@ class ExperimentsController < ApplicationController
           params[:type_of_y],
           x_axis_type: params[:x_axis_type].to_s,
           y_axis_type: params[:y_axis_type].to_s,
-
+          x_axis_notation: params[:x_axis_notation].to_s,
+          y_axis_notation: params[:y_axis_notation].to_s
       )
       Rails.logger.debug("ScatterPlotChart --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
@@ -964,7 +1050,11 @@ class ExperimentsController < ApplicationController
     if params[:x_axis].blank? or params[:y_axis].blank? or params[:x_axis]=="nil"
       render inline: ""
     else
-      @chart = ScatterPlotChart.new(@experiment, params[:x_axis].to_s, params[:y_axis].to_s, params[:type_of_x].to_s, params[:type_of_y].to_s)
+      @chart = ScatterPlotChart.new(@experiment,
+                                    params[:x_axis].to_s,
+                                    params[:y_axis].to_s,
+                                    params[:type_of_x].to_s,
+                                    params[:type_of_y].to_s,)
       Rails.logger.debug("New series for scatter plot --- x axis: #{@chart.x_axis}, y axis: #{@chart.y_axis}")
       @chart.prepare_chart_data
       render json: @chart.chart_data
@@ -1000,15 +1090,16 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
-@api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
-@apiName GetSimulationManager
-@apiGroup Experiments
+apiDoc:
+  @api {get} /experiments/:id/simulation_manager Get SimulationManager Code package including SiM App, Config, etc.
+  @apiName GetSimulationManager
+  @apiGroup Experiments
 =end
   def simulation_manager
     sm_uuid = SecureRandom.uuid
     # prepare locally code of a simulation manager to download with a configuration file
     InfrastructureFacade.prepare_simulation_manager_package(sm_uuid, current_user.id, @experiment.id.to_s) do |path|
-      contents = File.open(path) {|f| f.read}
+      contents = File.open(path) { |f| f.read }
       send_data contents,
                 filename: File.basename(path),
                 type: 'application/zip'
@@ -1024,13 +1115,13 @@ class ExperimentsController < ApplicationController
     @experiment, @user = nil, nil
 
     if (not params.include?('sharing_with_login')) or (@user = ScalarmUser.find_by_login(params[:sharing_with_login].to_s)).blank?
-      flash[:error] = t('experiments.user_not_found', { user: params[:sharing_with_login] })
+      flash[:error] = t('experiments.user_not_found', {user: params[:sharing_with_login]})
     end
 
     experiment_id = BSON::ObjectId(params[:id])
 
-    if (@experiment = Experiment.find_by_query({ '$and' => [{ _id: experiment_id }, { user_id: current_user.id } ]})).blank?
-      flash[:error] = t('experiments.not_found', { id: params[:id], user: params[:sharing_with_login] })
+    if (@experiment = Experiment.find_by_query({'$and' => [{_id: experiment_id}, {user_id: current_user.id}]})).blank?
+      flash[:error] = t('experiments.not_found', {id: params[:id], user: params[:sharing_with_login]})
     end
 
     unless flash[:error].blank?
@@ -1039,9 +1130,9 @@ class ExperimentsController < ApplicationController
     else
       # TODO use Experiment.share method
       sharing_list = @experiment.shared_with
-      sharing_list = [ ] if sharing_list.nil?
+      sharing_list = [] if sharing_list.nil?
       if params[:mode] == 'unshare'
-        sharing_list.delete_if{|x| x == @user.id}
+        sharing_list.delete_if { |x| x == @user.id }
       else
         sharing_list << @user.id
       end
@@ -1049,7 +1140,7 @@ class ExperimentsController < ApplicationController
       @experiment.shared_with = sharing_list
       @experiment.save
 
-      flash[:notice] = t("experiments.sharing.#{params[:mode]}", { user: @user.login })
+      flash[:notice] = t("experiments.sharing.#{params[:mode]}", {user: @user.login})
 
       redirect_to action: :show, id: @experiment.id.to_s
     end
@@ -1070,18 +1161,22 @@ class ExperimentsController < ApplicationController
   end
 
   def new
+    pbs_facade = InfrastructureFacadeFactory.get_facade_for(:qsub)
+
     @simulation_input = @simulation.input_specification
+
+    @is_plgrid_enabled = pbs_facade.valid_credentials_available?(current_user.id)
   end
 
   # getting id of a random running experiment
   def random_experiment
     @running_experiments = if not current_user.nil?
-      current_user.get_running_experiments
-    elsif not sm_user.nil?
-      sm_user.scalarm_user.get_running_experiments
-    else
-      []
-    end
+                             current_user.get_running_experiments
+                           elsif not sm_user.nil?
+                             sm_user.scalarm_user.get_running_experiments
+                           else
+                             []
+                           end
 
     if (experiment = @running_experiments.sample).nil?
       render inline: '', status: 404
@@ -1114,6 +1209,27 @@ class ExperimentsController < ApplicationController
     end
   end
 
+  # Extend a custom point experiment with multiple parameter space points
+  # POST params:
+  # - csv - a CSV ("," separated) file or string with points to add to this experiment
+  #    first line should contain parameter ids, next lines should contain values
+  def schedule_multiple_points
+    validate(
+        csv: []
+    )
+
+    custom_experiment = (@experiment.type == 'manual_points')
+    raise ValidationError.
+              new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
+
+    points = CSV.new(Utils.read_if_file(params[:csv]).to_s, headers: true).map &:to_h
+    @experiment.add_points!(points)
+
+    respond_to do |format|
+      format.json { render json: {status: 'ok'}, status: :ok }
+    end
+  end
+
   # GET params:
   # - point - JSON Hash with parameter space point
   def get_result
@@ -1135,6 +1251,7 @@ class ExperimentsController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {post} /experiments/:id/mark_as_complete.json Mark as Complete
   @apiName mark_as_complete
   @apiGroup Experiments
@@ -1228,7 +1345,7 @@ class ExperimentsController < ApplicationController
         @experiment = current_user.experiments.where(id: experiment_id).first
 
         if @experiment.nil?
-          flash[:error] = t('experiments.not_found', { id: experiment_id, user: current_user.login })
+          flash[:error] = t('experiments.not_found', {id: experiment_id, user: current_user.login})
         end
 
       elsif (not sm_user.nil?)
@@ -1243,7 +1360,7 @@ class ExperimentsController < ApplicationController
       if @experiment.nil?
         respond_to do |format|
           format.html { redirect_to action: :index }
-          format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
+          format.json { render json: {status: 'error', reason: flash[:error]}, status: 403 }
         end
       else
         @experiment
@@ -1266,12 +1383,12 @@ class ExperimentsController < ApplicationController
                   end
 
     if @simulation.nil?
-      flash[:error] = t('simulation_scenarios.not_found', { id: (params['simulation_id'] or params['simulation_name']),
-                        user: current_user.login })
+      flash[:error] = t('simulation_scenarios.not_found', {id: (params['simulation_id'] or params['simulation_name']),
+                                                           user: current_user.login})
 
       respond_to do |format|
         format.html { redirect_to action: :index }
-        format.json { render json: { status: 'error', reason: flash[:error] }, status: 403 }
+        format.json { render json: {status: 'error', reason: flash[:error]}, status: 403 }
       end
     end
   end
@@ -1311,7 +1428,7 @@ class ExperimentsController < ApplicationController
     if are_csv_parameters_not_valid
       flash[:error] = t('experiments.import.csv_parameters_not_valid')
     else
-      experiment.doe_info = [ [ 'csv_import', importer.parameters, importer.parameter_values ] ]
+      experiment.doe_info = [['csv_import', importer.parameters, importer.parameter_values]]
       experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, {}, experiment.doe_info)
     end
   end

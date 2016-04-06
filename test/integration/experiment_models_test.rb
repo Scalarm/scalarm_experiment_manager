@@ -56,4 +56,12 @@ class ExperimentModelsTest < ActionDispatch::IntegrationTest
     se.get_result_for(parameter1: 1, parameter2: 2)
   end
 
+  def test_execution_time_constraint
+    ExperimentFactory.create_experiment(@su.id, @sim, one: 1, execution_time_constraint: 60*1440).save
+
+    experiment = Experiment.first
+
+    assert_equal 86400, experiment.time_constraint_in_sec
+  end
+
 end

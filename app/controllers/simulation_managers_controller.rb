@@ -15,6 +15,7 @@ class SimulationManagersController < ApplicationController
 
   #TODO: describe basic sm_record elements, eg. sm_record.id...
 =begin
+apiDoc:
   @api {get} /simulation_managers Get list of Simulation Manager objects (records) for authenticated user in JSON
   @apiName GetAllSimulationManagers
   @apiGroup SimulationManagers
@@ -111,6 +112,9 @@ class SimulationManagersController < ApplicationController
 
     unless sm_record.nil?
       Utils.parse_json_if_string(params[:parameters]).each do |key, value|
+        # new name of a key - backward compatibility, job_id will be deprecated someday
+        key = 'job_identifier' if key == 'job_id'
+
         if key == 'state'
           sm_record.set_state(value.to_sym)
         elsif key == 'resource_status'
@@ -169,6 +173,7 @@ class SimulationManagersController < ApplicationController
   end
 
   def handle_exception(exception)
+    Rails.logger.error("SimulationManagersController error: #{exception.class} #{exception.to_s}\n#{exception.backtrace.join("\n")}")
     render json: {
         status: 'error',
         msg: "#{exception.class.to_s}: #{exception.to_s} in line #{exception.backtrace[0].split(':')[-2]}"

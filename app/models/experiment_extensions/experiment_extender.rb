@@ -145,20 +145,6 @@ module ExperimentExtender
       simulation_run.index = new_simulation_id
       simulation_run.save
     end
-
-
-    #id_change_map.keys.sort.reverse.each do |old_simulation_id|
-    #  new_simulation_id = id_change_map[old_simulation_id]
-    #  Rails.logger.debug("Simulation id: #{old_simulation_id} -> #{new_simulation_id}")
-    #  # make the actual change
-    #  unless old_simulation_id == new_simulation_id
-    #    simulation = self.find_simulation_docs_by({id: old_simulation_id}, {limit: 1}).first
-    #    unless simulation.nil?
-    #      simulation['id'] = new_simulation_id
-    #      self.save_simulation(simulation)
-    #    end
-    #  end
-    #end
   end
 
 end

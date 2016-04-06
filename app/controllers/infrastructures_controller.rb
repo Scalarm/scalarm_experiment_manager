@@ -170,7 +170,7 @@ class InfrastructuresController < ApplicationController
       :host,
       :login,
       :port,
-      :image_id,
+      :image_identifier,
       :cloud_name
   ]
 
@@ -296,6 +296,7 @@ class InfrastructuresController < ApplicationController
   end
 
 =begin
+apiDoc:
   @api {post} /infrastructure/simulation_manager_command Invoke command on this Infrastructure's SimulationManager
   @apiName SimulationManagerCommand
   @apiGroup Infrastructures

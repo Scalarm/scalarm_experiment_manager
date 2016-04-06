@@ -3,7 +3,6 @@ require_relative 'shared_ssh'
 require_relative 'infrastructure_errors'
 
 class PrivateMachineFacade < InfrastructureFacade
-  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
 
@@ -18,33 +17,38 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # -- InfrastructureFacade implementation --
 
-  def sm_record_class
-    PrivateMachineRecord
-  end
-
-  # Params hash:
-  # Alternative - get credentials by ID from database or use simple host matching
-  # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
-  # - 'host' => hostname - matches first PM Credentials with this host name
-  def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
-    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
-
-    machine_creds = if params[:host]
-                      PrivateMachineCredentials.find_by_query(host: params[:host].to_s, user_id: user_id)
-                    else
-                      PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
-                    end
-
-    raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
-    raise InfrastructureErrors::InvalidCredentialsError.new if machine_creds.invalid
-
-    if machine_creds.user_id != user_id
-      return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
-                             name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
+    def sm_record_class
+      PrivateMachineRecord
     end
 
-    ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
-    ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
+    # Params hash:
+    # - time_limit
+    # - start_at
+    # - onsite_monitoring [optional] - if is a string 'on' - enable onsite monitoring
+    # Alternative - get credentials by ID from database or use simple host matching
+    # - 'credentials_id' => id of PrivateMachineCredentials record - this machine will be initialized
+    # - 'host' => hostname - matches first PM Credentials with this host name
+    def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
+      logger.debug "Start simulation managers for experiment #{experiment_id}"
+
+      machine_creds = if params[:host]
+                        PrivateMachineCredentials.where(user_id: user_id, host: params[:host].to_s).to_a
+                      else
+                        PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
+                      end
+
+      raise InfrastructureErrors::NoCredentialsError.new if machine_creds.nil?
+      raise InfrastructureErrors::InvalidCredentialsError.new if machine_creds.invalid
+
+      if machine_creds.user_id != user_id
+        return 'error', I18n.t('infrastructure_facades.private_machine.no_permissions',
+                               name: "#{params['login']}@#{params['host']}", scalarm_login: user.login)
+      end
+
+      ppn = shared_ssh_session(machine_creds).exec!(get_number_of_cores_command).strip
+      ppn = 'unavailable' if ppn.to_i.to_s != ppn.to_s
+
+      onsite_monitoring_enabled = if params['onsite_monitoring'].blank? then false else true end
 
     records = (1..instances_count).map do
       record = PrivateMachineRecord.new(
@@ -58,7 +62,7 @@ class PrivateMachineFacade < InfrastructureFacade
           ppn: ppn
       )
 
-      record.onsite_monitoring = params.include?(:onsite_monitoring)
+      record.onsite_monitoring = onsite_monitoring_enabled
 
       record.initialize_fields
       record.save
@@ -66,7 +70,7 @@ class PrivateMachineFacade < InfrastructureFacade
       record
     end
 
-    if params[:onsite_monitoring]
+    if onsite_monitoring_enabled
       sm_uuid = SecureRandom.uuid
       self.class.handle_monitoring_send_errors(records) do
         self.class.send_and_launch_onsite_monitoring(machine_creds, sm_uuid, user_id, short_name, params)
@@ -76,13 +80,35 @@ class PrivateMachineFacade < InfrastructureFacade
     records
   end
 
+  # See: {InfrastructureFacade#query_simulation_manager_records}
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    query = {
+      user_id: user_id,
+      experiment_id: experiment_id,
+      infrastructure: short_name
+    }
+
+    credentials_id = params[:credentials_id]
+    if params.include?(:host)
+      creds = PrivateMachineCredentials.where(user_id: user_id, host: params[:host].to_s).first
+      credentials_id = creds.id
+    end
+
+    query[:credentials_id] = credentials_id unless credentials_id.blank?
+    query[:time_limit] = params[:time_limit] unless params[:time_limit].blank?
+    query[:start_at] = params[:start_at] unless params[:start_at].blank?
+    query[:onsite_monitoring] = if params['onsite_monitoring'].blank? then false else true end
+
+    PrivateMachineRecord.where(query)
+  end
+
   def get_number_of_cores_command
     'cat /proc/cpuinfo | grep MHz | wc -l'
   end
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, infrastructure_name, params={})
     # TODO: implement multiple architectures support
-    arch = 'linux_386'
+    platform = credentials.runtime_platform
 
     InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id,
                                                    [{name: infrastructure_name, credentials_id: credentials.id.to_s}])
@@ -93,7 +119,7 @@ class PrivateMachineFacade < InfrastructureFacade
         SSHAccessedInfrastructure::create_remote_directories(ssh)
 
         PrivateMachineFacade.remove_remote_monitoring_files(ssh)
-        PrivateMachineFacade.upload_monitoring_files(scp, sm_uuid, arch)
+        PrivateMachineFacade.upload_monitoring_files(scp, sm_uuid, platform)
         PrivateMachineFacade.remove_local_monitoring_config(sm_uuid)
 
         cmd = PrivateMachineFacade.start_monitoring_cmd
@@ -109,7 +135,7 @@ class PrivateMachineFacade < InfrastructureFacade
         RemoteHomePath::monitoring_binary,
         RemoteHomePath::remote_monitoring_certificate
     ].each do |path|
-      ssh.exec! rm(path, true)
+      ssh.exec! BashCommand.new.rm(path, true).to_s
     end
   end
 
@@ -130,14 +156,13 @@ class PrivateMachineFacade < InfrastructureFacade
   end
 
   def self.start_monitoring_cmd
-    chain(
-        cd(RemoteDir::scalarm_root),
-        "unxz -f #{ScalarmFileName::monitoring_package}",
-        "chmod a+x #{ScalarmFileName::monitoring_binary}",
-        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                             "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
-`.log")}"
-    )
+    BashCommand.new.
+        cd(RemoteDir::scalarm_root).
+        append("unxz -f #{ScalarmFileName::monitoring_package}").
+        append("chmod a+x #{ScalarmFileName::monitoring_binary}").
+        run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+                          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)`.log"
+        ).to_s
   end
 
   def add_credentials(user, params, session)
@@ -178,11 +203,23 @@ class PrivateMachineFacade < InfrastructureFacade
     if params and params.include? 'credentials_id'
       query.merge!({credentials_id: BSON::ObjectId(params['credentials_id'].to_s)})
     end
-    PrivateMachineRecord.find_all_by_query(query)
+    PrivateMachineRecord.where(query).to_a
   end
 
   def get_sm_record_by_id(record_id)
     PrivateMachineRecord.find_by_id(record_id.to_s)
+  end
+
+  ##
+  # Returns list of hashes representing distinct resource configurations
+  # Resource configurations are distinguished by:
+  #  * private machine credentials
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
+  def get_resource_configurations(user_id)
+    PrivateMachineCredentials.where(user_id: user_id).map do |credentials|
+      {name: short_name.to_sym, params: {credentials_id: credentials.id.to_s}}
+    end
   end
 
   # -- SimulationManager delegation methods --
@@ -190,11 +227,11 @@ class PrivateMachineFacade < InfrastructureFacade
   def _simulation_manager_stop(record)
     if record.onsite_monitoring
       record.cmd_to_execute_code = "stop"
-      record.cmd_to_execute = "kill -9 #{record.pid}"
+      record.cmd_to_execute = "kill -9 #{record.pid} || true"
       record.cmd_delegated_at = Time.now
       record.save
     else
-      shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid}"
+      shared_ssh_session(record.credentials).exec! "kill -9 #{record.pid} || true"
     end
   end
 
@@ -227,12 +264,13 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = "tail -80 #{sm_record.absolute_log_path}"
+      sm_record.cmd_to_execute = BashCommand.new.tail(sm_record.absolute_log_path, 80).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
+      nil
 
     else
-      shared_ssh_session(sm_record.credentials).exec! "tail -80 #{sm_record.absolute_log_path}"
+      shared_ssh_session(sm_record.credentials).exec! BashCommand.new.tail(sm_record.absolute_log_path, 80).to_s
     end
   end
 
@@ -249,15 +287,18 @@ class PrivateMachineFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record)
+      sm_record.cmd_to_execute = ShellBasedInfrastructure.start_simulation_manager_cmd(sm_record).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
     else
-      logger.debug "Sending files and launching SM on host: #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
+      platform = sm_record.credentials.runtime_platform
+
+      logger.debug "Sending files and launching SM on host (#{platform}): #{sm_record.credentials.host}:#{sm_record.credentials.ssh_port}"
 
       InfrastructureFacade.prepare_simulation_manager_package(sm_record.sm_uuid, sm_record.user_id,
-                                                                        sm_record.experiment_id, sm_record.start_at) do
+                                                                        sm_record.experiment_id, sm_record.start_at,
+                                                                        platform) do
 
         error_counter = 0
         ssh = nil

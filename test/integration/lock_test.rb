@@ -98,12 +98,13 @@ class LockTest < MiniTest::Test
       # work...
       unlocked_pid = lock.release
       refute_nil(unlocked_pid)
-      short_pid = unlocked_pid.match(/.*?(\d+)/)[1]
-      assert_equal(Process.pid, short_pid.to_i)
+      unlocked_short_pid = unlocked_pid.match(/.*-(\d+)-\d+/)[1]
+      assert_equal(Process.pid, unlocked_short_pid.to_i)
+      # kill the former owner of lock
       Process.kill('KILL', suspended_pid)
     end
 
-    sleep(10)
+    sleep(6)
     Process.waitpid(suspended_pid, Process::WNOHANG)
     Process.waitpid(impatient_pid, Process::WNOHANG)
     refute LockTest.process_running?(suspended_pid)

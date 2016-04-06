@@ -57,7 +57,9 @@ module QcgScheduler
 #QCG queue=#{params['queue_name'] or PlGridJob.queue_for_minutes(params['time_limit'].to_i)}
 #QCG walltime=#{self.class.minutes_to_walltime(params['time_limit'].to_i)}
 #{params['nodes'].blank? ? '' : "#QCG nodes=#{params['nodes']}:#{params['ppn']}" }
-#{params['grant_id'].blank? ? '' : "#QCG grant=#{params['grant_id']}" }
+#{params['grant_identifier'].blank? ? '' : "#QCG grant=#{params['grant_identifier']}" }
+#{params['memory'].to_i <= 0 ? '' : "#QCG memory=#{params['memory'].to_i * 1024}" }
+
       eos
     end
 
@@ -75,7 +77,7 @@ module QcgScheduler
     end
 
     def submit_job(ssh, job)
-      cmd = chain(Command::cd_to_simulation_managers(submit_job_cmd(job)))
+      cmd = Command::cd_to_simulation_managers(submit_job_cmd(job))
       submit_job_output = ssh.exec!(cmd)
       logger.debug("QCG cmd: #{cmd}, output lines:\n#{submit_job_output}")
 
@@ -84,10 +86,9 @@ module QcgScheduler
     end
 
     def submit_job_cmd(sm_record)
-      chain(
-          "chmod a+x #{job_script_file(sm_record.sm_uuid)}",
-          PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}")
-      )
+      BashCommand.new.
+          append("chmod a+x #{job_script_file(sm_record.sm_uuid)}").
+          append(PlGridScheduler.qcg_command("qcg-sub #{job_qcg_file(sm_record.sm_uuid)}"))
     end
 
     def self.parse_job_id(submit_job_output)
@@ -124,7 +125,7 @@ module QcgScheduler
     }
 
     def status(ssh, job)
-      STATES_MAPPING[qcg_state(ssh, job.job_id)] or :error
+      STATES_MAPPING[qcg_state(ssh, job.job_identifier)] or :error
     end
 
     def qcg_state(ssh, job_id)
@@ -154,25 +155,25 @@ module QcgScheduler
     end
 
     def get_job_info(ssh, job_id)
-      ssh.exec!(get_job_info_cmd(job_id))
+      ssh.exec!(get_job_info_cmd(job_id).to_s)
     end
 
     def get_job_info_cmd(job_id)
-      PlGridScheduler.qcg_command "qcg-info #{job_id}"
+      BashCommand.new.append(PlGridScheduler.qcg_command("qcg-info #{job_id}"))
     end
 
     def cancel(ssh, job)
-      output = ssh.exec!(cancel_sm_cmd(job))
+      output = ssh.exec!(cancel_sm_cmd(job).to_s)
       logger.debug("QCG cancel output:\n#{output}")
       output
     end
 
     def cancel_sm_cmd(sm_record)
-      PlGridScheduler.qcg_command "qcg-cancel #{sm_record.job_id}"
+      BashCommand.new.append(PlGridScheduler.qcg_command("qcg-cancel #{sm_record.job_identifier} || true"))
     end
 
     def get_log(ssh, job)
-      ssh.exec!(get_log_cmd(job))
+      ssh.exec!(get_log_cmd(job).to_s)
     end
 
     def get_log_cmd(sm_record)
@@ -180,19 +181,18 @@ module QcgScheduler
       stdout_path = "#{absolute_log_path}.out"
       stderr_path = "#{absolute_log_path}.err"
 
-      chain(
-        "echo '--- QCG info ---'",
-        sm_record.job_id.blank? ? '' : get_job_info_cmd(sm_record.job_id),
-        "echo '--- STDOUT ---'",
-        "tail -40 #{stdout_path}",
-        "echo '--- STDERR ---'",
-        "tail -40 #{stderr_path}",
-        "rm -f #{stderr_path} #{stderr_path}"
-      )
+      BashCommand.new.
+          echo("--- QCG info ---").
+          append(sm_record.job_identifier.blank? ? '' : get_job_info_cmd(sm_record.job_identifier)).
+          echo("--- STDOUT ---").
+          tail(stdout_path, 40).
+          echo("--- STDERR ---").
+          tail(stderr_path, 40).
+          append("rm -f #{stderr_path} #{stderr_path}")
     end
 
     def clean_after_sm_cmd(sm_record)
-      chain(super, rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid)), true))
+      BashCommand.new.append(super).rm(File.join(RemoteDir::scalarm_root, job_qcg_file(sm_record.sm_uuid)), true)
     end
 
     def self.available_hosts
@@ -215,6 +215,24 @@ module QcgScheduler
 
     def job_qcg_file(sm_uuid)
       "scalarm_job_#{sm_uuid}.qcg"
+    end
+
+    ##
+    # Returns list of hashes representing distinct resource configurations
+    # Resource configurations are distinguished by:
+    #  * PLGrid hosts
+    #  * grant ids
+    # @param user_id [BSON::ObjectId, String]
+    # @return [Array<Hash>] list of resource configurations
+    def get_resource_configurations(user_id)
+      hosts = self.class.available_hosts
+      grant_ids = PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id))
+
+      hosts.flat_map do |host|
+        grant_ids.flat_map do |grant_id|
+          {name: short_name.to_sym, params: {plgrid_host: host, grant_id: grant_id}}
+        end
+      end
     end
 
   end

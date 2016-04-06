@@ -14,8 +14,6 @@ require_relative 'infrastructure_errors'
 class PlGridFacade < InfrastructureFacade
   include SSHAccessedInfrastructure
   include SharedSSH
-  include ShellCommands
-  extend ShellCommands
 
   attr_reader :ssh_sessions
   attr_reader :long_name
@@ -38,6 +36,9 @@ class PlGridFacade < InfrastructureFacade
     PlGridJob
   end
 
+  # additional_params:
+  # - (:plgrid_login and :plgrid_password) or :proxy
+  # -
   def start_simulation_managers(user_id, instances_count, experiment_id, additional_params = {})
     # 1. checking if the user can schedule SiM
     credentials = if PlGridFacade.using_temp_credentials?(additional_params)
@@ -79,6 +80,25 @@ class PlGridFacade < InfrastructureFacade
     records
   end
 
+  # See: {InfrastructureFacade#query_simulation_manager_records}
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    query = {
+      user_id: user_id,
+      experiment_id: experiment_id,
+      scheduler_type: scheduler.short_name
+    }
+    query[:grant_identifier] = params['grant_id'] unless params['grant_id'].blank?
+    query[:nodes] = params['nodes'] unless params['nodes'].blank?
+    query[:ppn] = params['ppn'] unless params['ppn'].blank?
+    query[:plgrid_host] = params['plgrid_host'] unless params['plgrid_host'].blank?
+    query[:queue_name] = params['queue'] unless params['queue'].blank?
+    query[:onsite_monitoring] = if params['onsite_monitoring'].blank? then false else true end
+    query[:time_limit] = params['time_limit'].to_i unless params['time_limit'].blank?
+    query[:start_at] = params['start_at'] unless params['start_at'].blank?
+
+    PlGridJob.where(query)
+  end
+
   def create_records(count, *args)
     (1..count).map do
       record = create_record(*args)
@@ -89,7 +109,7 @@ class PlGridFacade < InfrastructureFacade
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler_name, params={})
     # TODO: implement multiple architectures support
-    arch = 'linux_386'
+    arch = 'linux_amd64'
 
     InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
 
@@ -119,7 +139,7 @@ class PlGridFacade < InfrastructureFacade
         RemoteHomePath::remote_monitoring_certificate,
         RemoteAbsolutePath::remote_monitoring_proxy
     ].each do |path|
-      ssh.exec! rm(path, true)
+      ssh.exec! BashCommand.new.rm(path, true).to_s
     end
   end
 
@@ -140,27 +160,24 @@ class PlGridFacade < InfrastructureFacade
   end
 
   def self.start_monitoring_cmd
-    chain(
-        cd(RemoteDir::scalarm_root),
-        "unxz -f #{ScalarmFileName::monitoring_package}",
-        "chmod a+x #{ScalarmFileName::monitoring_binary}",
-        "export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}",
-        "#{run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
-                                           "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)
-`.log")}"
-    )
+    BashCommand.new.cd(RemoteDir::scalarm_root).
+        append("unxz -f #{ScalarmFileName::monitoring_package}").
+        append("chmod a+x #{ScalarmFileName::monitoring_binary}").
+        append("export X509_USER_PROXY=#{ScalarmFileName::remote_proxy}").
+        run_in_background("./#{ScalarmFileName::monitoring_binary} #{ScalarmFileName::monitoring_config}",
+          "#{ScalarmFileName::monitoring_binary}_`date +%Y-%m-%d_%H-%M-%S-$(expr $(date +%N) / 1000000)`.log").to_s
   end
 
   def self.clone_proxy(ssh, remote_path)
     # TODO: checking if proxy file exists?
-    ssh.exec! "cp `voms-proxy-info -p` #{remote_path}"
+    ssh.exec! BashCommand.new.append("cp `voms-proxy-info -p` #{remote_path}").to_s
   end
 
   # TODO: NOTE: without voms extension!
   def self.generate_proxy(ssh, key_passphrase)
     output = ''
     Timeout::timeout 30 do
-      output = ssh.exec! "echo #{key_passphrase} | grid-proxy-init -rfc -hours 24"
+      output = ssh.exec! BashCommand.new.append("echo #{key_passphrase} | grid-proxy-init -rfc -hours 24").to_s
     end
     Rails.logger.debug("grid-proxy-init output: #{output}")
     output
@@ -189,6 +206,15 @@ class PlGridFacade < InfrastructureFacade
     GridCredentials.find_by_user_id(user_id)
   end
 
+  # params: (string keys)
+  # - time_limit
+  # - start_at
+  # - grant_id (optional)
+  # - nodes (optional)
+  # - ppn (optional)
+  # - plgrid_host (optional)
+  # - queue (optional)
+  # - onsite_monitoring (optional) - monitoring will be enabled if onsite_monitoring is not blank
   def create_record(user_id, experiment_id, sm_uuid, params)
     job = PlGridJob.new(
         user_id:user_id,
@@ -200,15 +226,16 @@ class PlGridFacade < InfrastructureFacade
     )
 
     job.start_at = params['start_at']
-    job.grant_id = params['grant_id'] unless params['grant_id'].blank?
+    job.grant_identifier = params['grant_id'] unless params['grant_id'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
     job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?
     job.queue_name = params['queue'] unless params['queue'].blank?
+    job.memory = params['memory'].to_i unless params['memory'].blank?
 
     job.initialize_fields
 
-    job.onsite_monitoring = params.include?(:onsite_monitoring)
+    job.onsite_monitoring = if params['onsite_monitoring'].blank? then false else true end
 
     job
   end
@@ -253,7 +280,7 @@ class PlGridFacade < InfrastructureFacade
 
     begin
       credentials.ssh_session do |ssh|
-        grant_output = ssh.exec!('plg-show-grants').split("\n").select{|line| line.start_with?('|')}
+        grant_output = ssh.exec!(BashCommand.new.append('plg-show-grants').to_s).split("\n").select{|line| line.start_with?('|')}
       end
 
       grant_output.each do |line|
@@ -266,7 +293,16 @@ class PlGridFacade < InfrastructureFacade
 
     grants
   end
-  
+
+  ##
+  # Returns list of hashes representing distinct resource configurations
+  # Delegates method to classes inheriting from #PlGridSchedulerBase
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
+  def get_resource_configurations(user_id)
+    scheduler.get_resource_configurations(user_id)
+  end
+
   # Appends PL-Grid scheduler name to shared SSH session ID
   # NOTICE: not used because of stateless SSH sessions
   #def shared_ssh_session(record)
@@ -289,8 +325,9 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
       if sm_record.cmd_to_execute_code.blank?
         sm_record.cmd_to_execute_code = "stop"
-        sm_record.cmd_to_execute = chain(scheduler.cancel_sm_cmd(sm_record),
-                                     scheduler.clean_after_sm_cmd(sm_record))
+        sm_record.cmd_to_execute = BashCommand.new.
+                                      append(scheduler.cancel_sm_cmd(sm_record)).
+                                      append(scheduler.clean_after_sm_cmd(sm_record)).to_s
         sm_record.cmd_delegated_at = Time.now
         sm_record.save
       end
@@ -333,7 +370,7 @@ class PlGridFacade < InfrastructureFacade
       end
 
       begin
-        job_id = sm_record.job_id
+        job_id = sm_record.job_identifier
         if job_id
           status = scheduler.status(ssh, sm_record)
           case status
@@ -362,7 +399,7 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "get_log"
-      sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record)
+      sm_record.cmd_to_execute = scheduler.get_log_cmd(sm_record).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
@@ -379,7 +416,7 @@ class PlGridFacade < InfrastructureFacade
     if sm_record.onsite_monitoring
 
       sm_record.cmd_to_execute_code = "prepare_resource"
-      sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record)
+      sm_record.cmd_to_execute = scheduler.submit_job_cmd(sm_record).to_s
       sm_record.cmd_delegated_at = Time.now
       sm_record.save
 
@@ -392,7 +429,7 @@ class PlGridFacade < InfrastructureFacade
         create_and_upload_simulation_manager(ssh, sm_record)
 
         begin
-          sm_record.job_id = scheduler.submit_job(ssh, sm_record)
+          sm_record.job_identifier = scheduler.submit_job(ssh, sm_record)
           sm_record.save
         rescue JobSubmissionFailed => job_failed
           logger.warn "Scheduling job failed: #{job_failed.to_s}"

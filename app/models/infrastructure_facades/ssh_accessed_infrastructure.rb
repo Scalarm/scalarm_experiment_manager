@@ -1,5 +1,4 @@
 module SSHAccessedInfrastructure
-  extend ShellCommands
 
   def initialize(*args)
     super(*args)
@@ -7,7 +6,7 @@ module SSHAccessedInfrastructure
 
   def self.create_remote_directories(ssh)
     [RemoteDir::scalarm_root].each do |name|
-      ssh.exec!(mkdir(name))
+      ssh.exec!(BashCommand.new.mkdir(name).to_s)
     end
   end
 
@@ -180,10 +179,7 @@ module SSHAccessedInfrastructure
 
   module Command
     def self.cd_to_simulation_managers(cmd)
-      chain(
-          cd(RemoteDir::scalarm_root),
-          cmd
-      )
+      BashCommand.new.cd(RemoteDir::scalarm_root).append(cmd).to_s
     end
   end
 

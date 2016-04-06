@@ -25,23 +25,28 @@ class PrivateMachineFacadeTest < MiniTest::Test
     experiment1_id = 'a'
     experiment2_id = 'b'
 
-    PrivateMachineRecord.stubs(:find_all_by_query).with({user_id: user1_id})
+    PrivateMachineRecord.stubs(:where).with({user_id: user1_id})
     .returns([
                  stub_record(user1_id, experiment1_id),
                  stub_record(user1_id, experiment1_id),
                  stub_record(user1_id, experiment2_id)
              ])
 
-    PrivateMachineRecord.stubs(:find_all_by_query).with({user_id: user2_id})
+    PrivateMachineRecord.stubs(:where).with({user_id: user2_id})
     .returns([
                  stub_record(user2_id, experiment1_id),
                  stub_record(user2_id, experiment2_id)
              ])
 
-    PrivateMachineRecord.stubs(:find_all_by_query).with({user_id: user1_id, experiment_id: nil})
-    .returns(PrivateMachineRecord.find_all_by_query({user_id: user1_id}))
+    PrivateMachineRecord.stubs(:where).with({user_id: user1_id, experiment_id: nil})
+        .returns([
+                         stub_record(user1_id, experiment1_id),
+                         stub_record(user1_id, experiment1_id),
+                         stub_record(user1_id, experiment2_id)
+                     ])
 
-    PrivateMachineRecord.stubs(:find_all_by_query).with({user_id: user1_id, experiment_id: experiment1_id})
+
+    PrivateMachineRecord.stubs(:where).with({user_id: user1_id, experiment_id: experiment1_id})
     .returns([
                  stub_record(user1_id, experiment1_id),
                  stub_record(user1_id, experiment1_id)

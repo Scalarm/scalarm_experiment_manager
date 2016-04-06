@@ -18,6 +18,7 @@ en:
       no_reason_label: "No error reason was reported"
       reason: "Reported error reason:"
     create:
+
       no_simulation_name: "You need to provide simulation name."
       no_simulation_binaries: "You need to provide simulation binaries."
       no_simulation_input_description: "You need to provide input description"
@@ -28,6 +29,17 @@ en:
       adapter_not_found: "Cannot find Simulation%{adapter} with the %{id} id"
       internal_error: "Internal error on registering adapters or simulation files"
       registered: Your simulation scenario has been registered
+
+      wrong_collection_field_type: "%{field} for %{collection} must be string"
+      required_collection_id: "You need to specify string id foreach %{collection}"
+      wrong_collection_type: "Each value in array %{collection} must be a hash"
+      wrong_groped_collection_type: "Value for key: %{field} must be an array"
+      required_collection_key: "Key: %{field} is required in hash"
+      wrong_parameter_type: "Parameter has wrong type. It must be string, integer or float"
+      parameter_field_not_found: "%{type} value is required"
+      not_valid_parameter_value: "Not valid parameter %{type} value"
+      invalid_allowed_values: 'For each string parameter, "allowed_values" must be non-empty array of string values'
+
     conduct:
       doe:
         add_parameter: "Add parameter"

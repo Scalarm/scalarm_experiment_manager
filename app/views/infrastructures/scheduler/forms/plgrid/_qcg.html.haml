@@ -51,9 +51,23 @@
   .small-2.columns
 .row
   .small-4.columns
+    = label_tag :memory,  t('infrastructure.information.memory') + ':', class: 'inline right'
+
+  .small-2.columns
+    .row.collapse
+      .small-7.columns
+        = text_field_tag :memory, '', class: 'right', type: 'number'
+      .small-5.columns
+        %span.postfix.radius
+          = t('infrastructure.information.plgrid.submission.memory_units')
+  .small-1.columns.end
+    %h3
+      %i.fa.fa-question-circle.has-tip.tip-bottom{"aria-haspopup" => "true", "data-tooltip" => "", style: "color: 333", title: t('infrastructure.information.plgrid.submission.memory_help'), cursor: "pointer"}
+.row
+  .small-4.columns
     = label_tag :onsite_monitoring,  t('infrastructure.information.onsite_monitoring') + ':', class: 'inline right'
   .small-4.columns.end
     - forced = !!other_params[:force_onsite_monitoring]
     - if forced
       = hidden_field_tag :onsite_monitoring, true
-    = check_box_tag :onsite_monitoring, '', true, disabled: forced
+    = check_box_tag :onsite_monitoring, 'on', true, disabled: forced

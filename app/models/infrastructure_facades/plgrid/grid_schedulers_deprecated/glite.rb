@@ -1,8 +1,5 @@
 require_relative '../pl_grid_scheduler_base'
 
-require 'infrastructure_facades/shell_commands'
-include ShellCommands
-
 module GliteScheduler
 
   class PlGridScheduler < PlGridSchedulerBase
@@ -63,7 +60,7 @@ module GliteScheduler
 
     def get_job_info(ssh, job_id)
       PlGridScheduler.execute_glite_command(
-          chain(Command::cd_to_simulation_managers("glite-wms-job-status #{job_id}")),
+          Command::cd_to_simulation_managers("glite-wms-job-status #{job_id}"),
           ssh
       )
     end
@@ -108,7 +105,7 @@ module GliteScheduler
     end
 
     def status(ssh, job)
-      PlGridScheduler.map_status(glite_state(ssh, job.job_id)) or :error
+      PlGridScheduler.map_status(glite_state(ssh, job.job_identifier)) or :error
     end
 
     def cancel(ssh, record)
@@ -119,11 +116,12 @@ module GliteScheduler
     end
 
     def cancel_sm_cmd(record)
-      "glite-wms-job-cancel --no-int #{record.job_id}"
+      BashCommand.new.append("glite-wms-job-cancel --no-int #{record.job_identifier} || true")
+      "glite-wms-job-cancel --no-int #{record.job_identifier} || true"
     end
 
     def clean_after_sm_cmd(sm_record)
-      chain(super, rm(File.join(RemoteDir::scalarm_root, job_jdl_file(sm_record.sm_uuid)), true))
+      BashCommand.new.append(super).rm(File.join(RemoteDir::scalarm_root, job_jdl_file(sm_record.sm_uuid)), true)
     end
 
     def self.default_host
@@ -188,11 +186,11 @@ module GliteScheduler
 
       out_log_content = ssh.exec!(tail(log_path, 25))
       # TODO: remove also output dir
-      ssh.exec!(rm(log_path))
+      ssh.exec!(BashCommand.new.rm(log_path).to_s)
 
         <<-eos
 --- gLite info ---
-#{get_job_info(ssh, job.job_id)}
+#{get_job_info(ssh, job.job_identifier)}
 --- Simulation Manager log ---
 #{out_log_content}
         eos
@@ -200,7 +198,7 @@ module GliteScheduler
 
     def get_glite_output_to_file(ssh, job)
       output = PlGridScheduler.execute_glite_command(
-          Command::cd_to_simulation_managers("glite-wms-job-output --dir . #{job.job_id}"),
+          Command::cd_to_simulation_managers("glite-wms-job-output --dir . #{job.job_identifier}"),
           ssh
       )
       output_dir = GliteScheduler::PlGridScheduler.parse_get_output(output)
@@ -215,7 +213,10 @@ module GliteScheduler
     def self.execute_glite_command(command, ssh)
       # Before proxy init, force to use X509 default certificate and key (from UI storage)
       # Because by default it could use KeyFS storage
-      cmd = "unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}"
+      cmd = BashCommand.new.
+          append("unset X509_USER_CERT").
+          append("unset X509_USER_KEY; voms-proxy-init --voms vo.plgrid.pl; #{command}").to_s
+
       begin
         result = nil
         timeout 15 do
@@ -230,6 +231,18 @@ module GliteScheduler
 
     def job_jdl_file(sm_uuid)
       "scalarm_job_#{sm_uuid}.jdl"
+    end
+
+    ##
+    # Returns list of hashes representing distinct resource configurations
+    # Resource configurations are distinguished by:
+    #  * PLGrid hosts
+    # @param user_id [BSON::ObjectId, String]
+    # @return [Array<Hash>] list of resource configurations
+    def get_resource_configurations(user_id)
+      self.class.available_hosts.map do |host|
+        {name: short_name.to_sym, params: {plgrid_host: host}}
+      end
     end
 
   end

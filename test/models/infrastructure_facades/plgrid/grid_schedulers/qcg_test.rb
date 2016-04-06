@@ -148,12 +148,12 @@ Purged: false
   end
 
   def test_grant_id
-    desc = @qcg.prepare_job_descriptor('1', 'grant_id' => 'plgtest2014a')
+    desc = @qcg.prepare_job_descriptor('1', 'grant_identifier' => 'plgtest2014a')
     assert_match /#QCG grant=plgtest2014a/, desc
   end
 
   def test_grant_id_blank
-    desc = @qcg.prepare_job_descriptor('1', 'grant_id' => '')
+    desc = @qcg.prepare_job_descriptor('1', 'grant_identifier' => '')
     refute_match /#QCG grant/, desc
   end
 
@@ -209,6 +209,18 @@ its all wrong...
     )
 
     assert_match /#QCG queue=some_queue\s*\n/, desc
+  end
+
+   def test_memory_should_be_used_when_set
+    desc = @qcg.prepare_job_descriptor('sm_uuid', 'memory' => '2')
+
+    assert_match /#QCG memory=2048\s*\n/, desc
+  end
+
+  def test_memory_should_not_be_used_when_blank
+    desc = @qcg.prepare_job_descriptor('sm_uuid', 'memory' => '')
+
+    assert(/#QCG memory=\s*\n/ !~ desc)
   end
 
 end

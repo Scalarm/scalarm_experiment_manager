@@ -9,7 +9,6 @@
 
 - description = Hash["histogram" => "A histogram analysis shows results frequency distributions", "scatter" => "Analysis of two variables relationship creates a scatter plot", "regression" => "The classification of objects by dividing the found set of conditions"]
 
--#.row(data-equalizer="")
 = content_for :panel do
   .nano(style="overflow: hidden;")
     %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
@@ -68,9 +67,12 @@
   - if @experiment.is_running
     %section.panel.radius
       %h3.subheader
-        Computational resources summary
+        = t('experiments.computational_resources.title')
         = image_tag('loading.gif', id: 'actions-loading-workers')
       = render 'workers_info'
+      - if @experiment.workers_scaling
+        = render 'workers_scaling'
+
 
   %section.row.panel.radius.last-element#monitoring_section
     %h3.subheader= t('experiments.show.stats_header')
@@ -79,7 +81,7 @@
 
 
       = render 'monitoring_stats'
-      .speedometer{id: "speedometer_#{@experiment.id}"}
+      .speedometer.show-for-large-up{id: "speedometer_#{@experiment.id}"}
 
       %article#experiment_progress_bar(style="padding-top: 50px; margin-bottom: 40px" )
         %h4#header_progress_bar.hidden.subheader= t('.progress_bar_header')

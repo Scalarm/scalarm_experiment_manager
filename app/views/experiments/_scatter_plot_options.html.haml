@@ -4,30 +4,39 @@
   - scales_options = options_for_select([[t('charts.scatter.linear_scale'), 'linear'],
         [t('charts.scatter.logarithmic_scale'), 'logarithmic']],
         'linear')
+  - notation_options = options_for_select([["Default", 'default'], ["Scientific", 'scientific']], 'default')
 
   .row
-    .small-5.columns
+    .small-3.columns
       = label_tag :x_axis, t('charts.scatter.select_x') + ':', class: 'inline'
-    .small-4.columns
+    .small-2.columns
       = select_tag 'x_axis', '', { class: 'moes_and_params_list', id: "x_axis_select_parameter" }
     .small-1.columns
       = label_tag :x_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline',  id: "label_tag_scale_x"
     .small-2.columns
       = select_tag 'x_axis_type', scales_options, id: "x_axis_scale"
+    .small-1.columns
+      = label_tag :x_axis_notation, "Notation" + ':', class: 'inline',  id: "label_x_notation"
+    .small-3.columns
+      = select_tag 'x_axis_notation', notation_options, id: "x_notation"
 
   .row
-    .small-5.columns
+    .small-3.columns
       = label_tag :y_axis, t('charts.scatter.select_y') + ':', class: 'inline'
-    .small-4.columns
+    .small-2.columns
       = select_tag 'y_axis', '', { class: 'moes_and_params_list', id: "y_axis_select_parameter" }
     .small-1.columns
       = label_tag :y_axis_type, t('charts.scatter.axis_scale') + ':', class: 'inline', id: "label_tag_scale_y"
     .small-2.columns
       = select_tag 'y_axis_type', scales_options, id: "y_axis_scale"
+    .small-1.columns
+      = label_tag :y_axis_notation, "Notation" + ':', class: 'inline', id: "label_y_notation"
+    .small-3.columns
+      = select_tag 'y_axis_notation', notation_options, id: "y_notation"
   .row
     %ul.inline-list
       %li= submit_tag t('charts.load_button'), class: 'button radius', id: "load_chart_button"
-      %li= image_tag 'loading.gif', :id => 'busy_rt', size: '16x16', style: 'display: none'
+      %li= loading_gif('busy_scatter_plot')
 #bivariate_charts
 
 - content_for :javascript do
@@ -57,7 +66,10 @@
 
       var x_axis_type = $('#bivariate_charts_form').find('select[name=\'x_axis_type\'] option:selected').val();
       var y_axis_type = $('#bivariate_charts_form').find('select[name=\'y_axis_type\'] option:selected').val();
-
+      
+      var x_axis_notation = $('#bivariate_charts_form').find('select[name=\'x_axis_notation\'] option:selected').val();
+      var y_axis_notation = $('#bivariate_charts_form').find('select[name=\'y_axis_notation\'] option:selected').val();
+    
       if (window.moes_info.moes_names.indexOf(x_axis) != -1) {
         var index_of_x = window.moes_info.moes_names.indexOf(x_axis)
         var type_of_x = window.moes_info.moes_types[index_of_x]
@@ -81,7 +93,9 @@
         $('#busy_scatter_plot').show();
         $.post("#{scatter_plot_experiment_path(@experiment.id)}",
           { 'x_axis': x_axis, 'y_axis': y_axis,
-          'x_axis_type': x_axis_type, 'y_axis_type': y_axis_type, 'type_of_y' : type_of_y, 'type_of_x' : type_of_x },
+          'x_axis_type': x_axis_type, 'y_axis_type': y_axis_type,
+           'type_of_y' : type_of_y, 'type_of_x' : type_of_x,
+           'x_axis_notation': x_axis_notation, 'y_axis_notation' : y_axis_notation  },
           function(data) { $('#busy_scatter_plot').hide(); }
         );
       }
@@ -100,14 +114,18 @@
         if (type_of_x == "string") {
           $('#bivariate_charts_form').find('#label_tag_scale_x').hide();
           $('#bivariate_charts_form').find('#x_axis_scale').hide();
+          $('#bivariate_charts_form').find('#label_x_notation').hide();
+          $('#bivariate_charts_form').find('#x_notation').hide();
         }
         else {
           $('#bivariate_charts_form').find('#label_tag_scale_x').show();
           $('#bivariate_charts_form').find('#x_axis_scale').show();
+          $('#bivariate_charts_form').find('#label_x_notation').show();
+          $('#bivariate_charts_form').find('#x_notation').show();
         }
 
       } catch (e) {
-        $('#busy_basic').hide();
+        $('#busy_scatter_plot').hide();
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });
@@ -125,14 +143,18 @@
         if (type_of_y == "string") {
           $('#bivariate_charts_form').find('#label_tag_scale_y').hide();
           $('#bivariate_charts_form').find('#y_axis_scale').hide();
+          $('#bivariate_charts_form').find('#label_y_notation').hide();
+          $('#bivariate_charts_form').find('#y_notation').hide();
         }
         else {
           $('#bivariate_charts_form').find('#label_tag_scale_y').show();
           $('#bivariate_charts_form').find('#y_axis_scale').show();
+          $('#bivariate_charts_form').find('#label_y_notation').show();
+          $('#bivariate_charts_form').find('#y_notation').show();
         }
 
       } catch (e) {
-        $('#busy_basic').hide();
+        $('#busy_scatter_plot').hide();
         toastr.error("#{t('errors.loading_chart')}" + ": " + e);
       }
     });

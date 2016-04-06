@@ -1,19 +1,7 @@
-# Binds Scalarm user, experiment and cloud virtual machine instance
-# providing static information about VM (set once)
-#
-# Attributes (besides of generic SimulationManagerRecord's)
-# - cloud_name => string - name of the cloud, e.g. 'pl_cloud', 'amazon'
-# - image_secrets_id => id of CloudImageSecrets
-# - vm_id => string - instance id of the vm
-# - pid => integer - PID of SimulationManager application (if executed)
-# - instance_type => string - name of instance type
-#
-# - public_host => public hostname of machine which redirects to ssh port
-# - public_ssh_port => port of public machine redirecting to ssh private port
-
 require 'infrastructure_facades/infrastructure_errors'
 require 'scalarm/database/model'
 
+# For model documentation see Scalarm::Database::Model::CloudVmRecord docs
 class CloudVmRecord < Scalarm::Database::Model::CloudVmRecord
   include SimulationManagerRecord
   include SSHEnabledRecord
@@ -23,7 +11,7 @@ class CloudVmRecord < Scalarm::Database::Model::CloudVmRecord
   SSH_AUTH_METHODS = %w(password)
 
   def resource_id
-    self.vm_id
+    self.vm_identifier
   end
 
   def infrastructure_name

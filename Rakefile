@@ -2,6 +2,7 @@
 # for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
 
 require 'ci/reporter/rake/minitest'
+require 'fileutils'
 
 require File.expand_path('../config/application', __FILE__)
 require File.expand_path('../app/models/load_balancer_registration.rb', __FILE__)
@@ -15,6 +16,51 @@ REQUIRED_ARCHS = ['linux_386']
 
 task :check_test_env do
   raise 'RAILS_ENV not set to test' unless Rails.env.test?
+end
+
+task :build_indexes do
+  require 'scalarm/service_core/initializers/mongo_active_record_initializer'
+
+  MongoActiveRecordInitializer.start(Rails.application.secrets.database) unless Rails.env.test?
+
+  mongo_active_records = Scalarm::Database::MongoActiveRecord.descendants.select do |c|
+    not (c.name.include?("CappedMongoActiveRecord") or c.name.include?("EncryptedMongoActiveRecord"))
+  end.map{|c| c.name}.compact.map do |c_name|
+    Object.const_get(c_name)
+  end
+
+  mongo_active_records.each do |mar|
+    puts "Processing '#{mar.name}' - #{mar._indexed_attributes} ..."
+    record_collection = mar.collection
+
+    mar._indexed_attributes.each do |attr|
+      puts "Checking if an index for '#{attr}' exists ..."
+      index_exist = false
+
+      record_collection.index_information.each do |_, index_info|
+        if attr.is_a?(Hash)
+          if (index_info["key"].keys - attr.keys.map(&:to_s)).empty?
+            index_exist = true
+          end
+        else
+          if index_info["key"].include?(attr.to_s)
+            index_exist = true
+          end
+        end
+      end
+
+      unless index_exist
+        puts "Index for '#{attr}' does not exist so we create it"
+        if attr.is_a?(Hash)
+          record_collection.ensure_index(attr)
+        else
+          record_collection.ensure_index(attr.to_s)
+        end
+      else
+        puts "Index for '#{attr}' exists"
+      end
+    end
+  end
 end
 
 namespace :test do |ns|
@@ -82,7 +128,8 @@ namespace :service do
     puts 'Setup started'
     get_monitoring unless check_monitoring
     get_simulation_managers_go unless check_sim_go
-    get_simulation_manager_ruby unless check_sim_ruby
+    ## simulation_manager_ruby disabled, although it can be downloaded manally for own risk
+    # get_simulation_manager_ruby unless check_sim_ruby
     install_r_libraries
 
     _validate_service
@@ -134,7 +181,8 @@ namespace :get do
 
   task :simulation_managers do
     get_simulation_managers_go
-    get_simulation_manager_ruby
+    ## simulation_manager_ruby disabled, although it can be downloaded manally for own risk
+    # get_simulation_manager_ruby
   end
 
   task :mongos do
@@ -219,7 +267,11 @@ end
 # - ExperimentWatcher - check periodically if some SimulationRuns does not
 #   exceeded their time limit (probably they are faulty)
 # - InfrastructureFacade monitoring - multiple threads for SimulationManagers status monitoring
+# - WorkersScaling::AlgorithmRunner - thread maintaining all Worker Scaling Algorithms
 def monitoring_process(action)
+  unless File.directory?(File.join(Rails.root, 'tmp'))
+    FileUtils.mkdir_p(File.join(Rails.root, 'tmp'))
+  end
   probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
 
   case action
@@ -258,6 +310,9 @@ def monitoring_process(action)
 
           Rails.logger.info('Starting monitoring threads for all infrastructures')
           threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
+
+          Rails.logger.info('Starting algorithm runner')
+          threads << WorkersScaling::AlgorithmRunner.start
 
           # do not quit this process until all threads are working
           threads.each &:join
@@ -310,7 +365,7 @@ def create_anonymous_user
       anonymous_login = config['login']
       anonymous_password = config['password']
 
-      if anonymous_login and anonymous_password and not ScalarmUser.find_by_login(anonymous_login)
+      if anonymous_login and anonymous_password and not ScalarmUser.where(login: anonymous_login).first
         Rails.logger.debug "Creating anonymous user with login: #{anonymous_login}"
         user = ScalarmUser.new(login: anonymous_login)
         user.password = anonymous_password
@@ -357,6 +412,9 @@ def install_r_libraries
   puts 'Checking R libraries...'
   Rails.configuration.r_interpreter.eval(
       ".libPaths(c(\"#{Dir.pwd}/r_libs\", .libPaths()))
+    if(!require(lhs, quietly=TRUE)){
+      install.packages(\"lhs\", repos=\"http://cran.rstudio.com/\")
+    }
     if(!require(AlgDesign, quietly=TRUE)){
       install.packages(\"AlgDesign\", repos=\"http://cran.rstudio.com/\")
     }")
@@ -421,9 +479,10 @@ def _validate_service
   print 'Checking Go Simulation Manager...'
   raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
   puts 'OK'
-  print 'Checking Ruby Simulation Manager...'
-  raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
-  puts 'OK'
+  ## simulation_manager_ruby disabled, although it can be downloaded manally for own risk
+  # print 'Checking Ruby Simulation Manager...'
+  # raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
+  # puts 'OK'
 
   %w(gsissh R zip).each do |cmd|
     check_for_command(cmd)

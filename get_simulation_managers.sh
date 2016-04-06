@@ -1,7 +1,7 @@
 #!/bin/sh
 REPO_URL=http://scalarm.com/repository/
 
-for OS in linux; do
+for OS in linux darwin; do
     for ARCH in amd64 386; do
         # get Go SiM
         SIM_DIR="public/scalarm_simulation_manager_go/"

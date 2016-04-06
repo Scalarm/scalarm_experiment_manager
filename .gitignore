@@ -1,8 +1,9 @@
-# Scalarm configuration
+# Scalarm configuration and var files
 config/secrets.yml
 config/scalarm.yml
 config/puma.rb
 config/google_client_secrets.json
+config/plgrid_crl.pem
 
 # IDE settings
 .idea/

@@ -5,7 +5,6 @@ require_relative 'clouds/cloud_errors'
 require 'gsi'
 
 class CloudFacade < InfrastructureFacade
-  include ShellCommands
   include SharedSSH
   include ShellBasedInfrastructure
   include SSHAccessedInfrastructure
@@ -43,8 +42,14 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord
   end
 
+  # params: (string keys)
+  # - image_secrets_id
+  # - time_limit
+  # - start_at
+  # - instance_type
+  # - stored_* - special params for various clouds
   def start_simulation_managers(user_id, instances_count, experiment_id, params = {})
-    logger.debug "Start simulation managers for experiment #{experiment_id}, additional params: #{params}"
+    logger.debug "Start simulation managers for experiment #{experiment_id}"
 
     begin
       image_secrets_id = params['image_secrets_id']
@@ -55,10 +60,27 @@ class CloudFacade < InfrastructureFacade
     rescue CloudErrors::ImageValidationError => ive
       logger.error "Error validating image secrets: #{ive.to_s}"
       raise InfrastructureErrors::ScheduleError.new(I18n.t("infrastructure_facades.cloud.#{ive.to_s}", default: ive.to_s))
-    rescue Exception => e
+    rescue => e
       logger.error "Exception when staring simulation managers: #{e.class} - #{e.to_s}\n#{e.backtrace.join("\n")}"
       raise InfrastructureErrors::ScheduleError.new(I18n.t('infrastructure_facades.cloud.scheduled_error', error: e.message))
     end
+  end
+
+  # See: {InfrastructureFacade#query_simulation_manager_records}
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    query = {
+      cloud_name: short_name,
+      user_id: user_id,
+      experiment_id: experiment_id
+    }
+    query[:image_secrets_id] = params['image_secrets_id'] unless params['image_secrets_id'].blank?
+    query[:time_limit] = params['time_limit'] unless params['time_limit'].blank?
+    query[:start_at] = params['start_at'] unless params['start_at'].blank?
+    query[:instance_type] = params['instance_type'] unless params['instance_type'].blank?
+    stored_params = find_stored_params(params)
+    query[:params] = stored_params unless stored_params.blank?
+
+    CloudVmRecord.where(query)
   end
 
   def find_stored_params(params)
@@ -79,9 +101,9 @@ class CloudFacade < InfrastructureFacade
 
   def get_and_validate_image_secrets(image_secrets_id, user_id)
     exp_image = CloudImageSecrets.find_by_id(image_secrets_id.to_s)
-    if exp_image.nil? or exp_image.image_id.nil?
+    if exp_image.nil? or exp_image.image_identifier.nil?
       raise CloudErrors::ImageValidationError.new 'provide_image_secrets'
-    elsif not cloud_client_instance(user_id).image_exists? exp_image.image_id
+    elsif not cloud_client_instance(user_id).image_exists? exp_image.image_identifier
       raise CloudErrors::ImageValidationError.new 'image_not_exists'
     elsif exp_image.user_id != user_id
       raise CloudErrors::ImageValidationError.new 'image_permission'
@@ -92,12 +114,12 @@ class CloudFacade < InfrastructureFacade
     exp_image
   end
 
-  # Intantiate virtual machine and save vm_id to given record
+  # Intantiate virtual machine and save vm_identifier to given record
   def schedule_vm_instance(record)
     cloud_client = cloud_client_instance(record.user_id)
-    vm_id = cloud_client.instantiate_vms('scalarm', record.image_secrets.image_id, 1,
+    vm_id = cloud_client.instantiate_vms('scalarm', record.image_secrets.image_identifier, 1,
                                          record.params.merge('instance_type' => record.instance_type)).first
-    record.vm_id = vm_id
+    record.vm_identifier = vm_id
     record.save
     record
   end
@@ -128,6 +150,24 @@ class CloudFacade < InfrastructureFacade
     CloudVmRecord.find_by_id(record_id)
   end
 
+  ##
+  # Returns list of hashes representing distinct resource configurations
+  # Delegates method to classes inheriting from #AbstractCloudClient
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
+  def get_resource_configurations(user_id)
+    creds = CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
+    cloud_client = nil
+    begin
+      cloud_client = (creds.nil? ? nil : @client_class.new(creds))
+    rescue InfrastructureErrors::InvalidCredentialsError => _
+      cloud_client = nil
+    end
+    return [] if (cloud_client == nil or not cloud_client.valid_credentials?)
+
+    cloud_client.get_resource_configurations(user_id)
+  end
+
   # -- SimulationManager delegation methods --
 
   def handle_proxy_error(secrets, &block)
@@ -144,13 +184,13 @@ class CloudFacade < InfrastructureFacade
   def _simulation_manager_stop(record)
     Rails.logger.warn("stop disabled")
     # handle_proxy_error(record.secrets) do
-    #   cloud_client_instance(record.user_id).terminate(record.vm_id)
+    #   cloud_client_instance(record.user_id).terminate(record.vm_identifier)
     # end
   end
 
   def _simulation_manager_restart(record)
     handle_proxy_error(record.secrets) do
-      cloud_client_instance(record.user_id).reinitialize(record.vm_id)
+      cloud_client_instance(record.user_id).reinitialize(record.vm_identifier)
     end
   end
 
@@ -164,7 +204,7 @@ class CloudFacade < InfrastructureFacade
         return :not_available
       end
 
-      vm_id = record.vm_id
+      vm_id = record.vm_identifier
       if vm_id
         vm_status = cloud_client.status(vm_id)
         case vm_status
@@ -172,7 +212,9 @@ class CloudFacade < InfrastructureFacade
           when :running
             begin
               # VM is running, so check SSH connection
-              record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+              unless record.has_ssh_address?
+                record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_identifier))
+              end
               if record.has_ssh_address?
                 ssh = shared_ssh_session(record)
                 return (record.pid and app_running?(ssh, record.pid) and :running_sm or :ready)
@@ -206,13 +248,15 @@ class CloudFacade < InfrastructureFacade
 
   def _simulation_manager_get_log(record)
     handle_proxy_error(record.secrets) do
-      shared_ssh_session(record).exec! "tail -80 #{record.absolute_log_path}"
+      shared_ssh_session(record).exec! BashCommand.new.tail(record.absolute_log_path, 80).to_s
     end
   end
 
   def _simulation_manager_install(record)
     handle_proxy_error(record.secrets) do
-      record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_id)) unless record.has_ssh_address?
+      unless record.has_ssh_address?
+        record.update_ssh_address!(cloud_client_instance(record.user_id).vm_instance(record.vm_identifier))
+      end
       logger.debug "Installing SM on VM: #{record.public_host}:#{record.public_ssh_port}"
 
       InfrastructureFacade.prepare_simulation_manager_package(record.sm_uuid, record.user_id,
@@ -289,7 +333,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def enabled_for_user?(user_id)
-    creds = CloudSecrets.find_by_query(user_id: user_id, cloud_name: @short_name)
+    creds = CloudSecrets.where(cloud_name: @short_name, user_id: user_id).first
     !!(creds and not creds.invalid)
   end
 
@@ -317,7 +361,7 @@ class CloudFacade < InfrastructureFacade
   end
 
   def get_or_create_cloud_secrets(user_id)
-    CloudSecrets.find_by_query('cloud_name'=>@short_name, 'user_id'=>user_id) or
+    CloudSecrets.where(cloud_name: @short_name, user_id: user_id).first or
         CloudSecrets.new({'cloud_name'=>@short_name, 'user_id' => user_id})
   end
 
@@ -325,7 +369,7 @@ class CloudFacade < InfrastructureFacade
     image_id, label = params[:image_info].split(';')
 
     credentials = CloudImageSecrets.new(cloud_name: @short_name, user_id: user.id,
-                                        image_id: image_id, label: label)
+                                        image_identifier: image_id, label: label)
 
     credentials.image_login = params[:image_login]
     credentials.secret_image_password = params[:secret_image_password]
@@ -344,7 +388,7 @@ class CloudFacade < InfrastructureFacade
   			return
   		end
 
-  		cs = CloudSecrets.where(user_id: user.id, cloud_name: 'pl_cloud').first
+  		cs = CloudSecrets.where(cloud_name: 'pl_cloud', user_id: user.id).first
       unless cs.nil?
         cs._delete_attribute(:secret_proxy)
 

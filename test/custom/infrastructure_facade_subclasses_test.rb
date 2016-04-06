@@ -7,7 +7,8 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
 
   FACADE_CLASSES = {
       qsub: PlGridFacade,
-      glite: PlGridFacade,
+      # gLite is not used anymore (for now)
+      # glite: PlGridFacade,
       qcg: PlGridFacade,
       private_machine: PrivateMachineFacade,
       pl_cloud: CloudFacade,
@@ -20,6 +21,7 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
       :long_name,
       :short_name,
       :start_simulation_managers,
+      :query_simulation_manager_records,
       :sm_record_class,
       :add_credentials,
       :remove_credentials,

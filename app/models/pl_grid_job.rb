@@ -1,43 +1,20 @@
-# Specific attributes:
-# job_id => string - queue system specific id of the job
-# scheduler_type => string - short name of scheduler, eg. pbs
-# grant_id
-# nodes - nodes count
-# ppn - cores per node count
-# plgrid_host - host of PL-Grid, eg. zeus.cyfronet.pl
-#
-# Note that some attributes are used only by some queuing system facades
-
 require 'infrastructure_facades/infrastructure_errors'
 require 'scalarm/database/model/pl_grid_job'
 
+# For model documentation see Scalarm::Database::Model::PlGridJob docs
 class PlGridJob < Scalarm::Database::Model::PlGridJob
   include SimulationManagerRecord
-
-  attr_join :experiment, Experiment
 
   def infrastructure_name
     scheduler_type
   end
 
-  def self.ids_auto_convert
-    false
-  end
-
   def resource_id
-    self.job_id
-  end
-
-  def experiment
-    if @attributes.include?('experiment_id')
-      Experiment.find_by_id(self.experiment_id)
-    else
-      nil
-    end
+    self.job_identifier
   end
 
   def to_s
-    "JobId: #{job_id}, Scheduled at: #{created_at}, ExperimentId: #{experiment_id}"
+    "JobId: #{job_identifier}, Scheduled at: #{created_at}, ExperimentId: #{experiment_id}"
   end
 
   def queue

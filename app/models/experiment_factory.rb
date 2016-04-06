@@ -43,7 +43,7 @@ class ExperimentFactory
     params = Hash[params.collect {|k, v| [k.to_sym, v]}]
 
     replication_level = params.delete(:replication_level) || DEFAULT_REPLICATION_LEVEL
-    time_constraint_in_sec = params.delete(:time_constraint_in_sec) || DEFAULT_TIME_CONSTRAINT_IN_SECS
+    time_constraint_in_sec = params.delete(:execution_time_constraint) || DEFAULT_TIME_CONSTRAINT_IN_SECS
     scheduling_policy = params.delete(:scheduling_policy) || DEFAULT_SCHEDULING_POLICY
     name = params.delete(:experiment_name) || simulation.name
     description = params.delete(:experiment_description) || simulation.description

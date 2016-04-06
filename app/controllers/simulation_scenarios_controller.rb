@@ -77,6 +77,18 @@ class SimulationScenariosController < ApplicationController
     )
   end
 
+  def get_simulation_scenario_experiment_ids
+    experiment_ids = current_user.experiments.where({simulation_id: @simulation_scenario.id}, {fields: ["_id"]}).map{|obj| obj.id.to_s}
+
+    render json: (
+           if experiment_ids
+             {status: 'ok', experiments: experiment_ids}
+           else
+             {status: 'error', data: 'not_found'}
+           end
+           )
+  end
+
   def code_base
     if @simulation_scenario.blank?
       render inline: t('simulation_scenarios.not_found', id: params[:id]), status: 404
@@ -181,7 +193,7 @@ class SimulationScenariosController < ApplicationController
           flash[:error] = t('simulations.create.bad_simulation_input')
         end
 
-      when (not (scenarios = Simulation.where({name: params[:simulation_name].to_s, user_id: current_user.id})).blank?)
+      when (not (scenarios = Simulation.where({user_id: current_user.id, name: params[:simulation_name].to_s})).blank?)
         unless scenarios.size == 1 and scenarios.first.id == @simulation_scenario.id
           flash[:error] = t('simulations.create.simulation_invalid_name')
         end

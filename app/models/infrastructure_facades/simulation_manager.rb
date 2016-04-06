@@ -120,6 +120,13 @@ class SimulationManager
             condition: :experiment_end?,
             message: 'Experiment finished - destroying Simulation Manager'
         },
+        no_more_simulation_runs: {
+            source_states: [:created, :initializing, :running],
+            target_state: :terminating,
+            effect: :stop,
+            condition: :no_pending_tasks?,
+            message: 'There is no more simulation runs waiting - destroying Simulation Manager'
+        },
         prepare_resource: {
             source_states: [:created],
             target_state: :initializing,
@@ -158,7 +165,7 @@ class SimulationManager
             source_states: [:running],
             target_state: :error,
             resource_status: all_resource_states - [:running_sm],
-            condition: :should_not_be_already_terminated?,
+            condition: :should_be_running?,
             effect: :store_terminated_error,
             message: 'Simulation Manager has been terminated untimely - setting to ERROR state'
         },
@@ -187,8 +194,22 @@ class SimulationManager
     }
   end
 
-  def should_not_be_already_terminated?
-    @record.experiment.has_simulations_to_run? and not should_destroy?
+  # This SiM is not computing any simulation run and we do not predict any
+  # If the experiment is supervised, this method always returns true,
+  # as it always can be more simulations to do
+  def no_pending_tasks?
+    if not @record.experiment.supervised
+      simulation_run = record.experiment.simulation_runs.find_by_sm_uuid(record.sm_uuid)
+      sr_is_running = (simulation_run and not simulation_run.to_sent and not simulation_run.is_done)
+      not sr_is_running and not @record.experiment.has_simulations_to_run?
+    else
+      # we assume that in supervised experiment, there are always tasks pending
+      false
+    end
+  end
+
+  def should_be_running?
+    not should_destroy?
   end
 
   ##

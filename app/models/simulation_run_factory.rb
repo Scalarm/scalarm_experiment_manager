@@ -5,9 +5,8 @@ module SimulationRunExtensions
   def rollback!
     Rails.logger.debug("Rolling back SimulationRun: #{id}")
 
-    self.to_sent = true
+    self.destroy
     experiment.progress_bar_update(self.index, 'rollback')
-    self.save
     self
   end
 

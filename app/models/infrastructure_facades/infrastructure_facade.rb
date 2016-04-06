@@ -23,6 +23,8 @@ require 'mongo_lock'
 # Database support methods:
 # - _get_sm_records(query, params={}) -> Array of SimulationManagerRecord subclass instances
 # - get_sm_record_by_id(record_id) -> SimulationManagerRecord subclass instance
+# - query_simulation_manager_records(user_id, experiment_id, params) -> Array of simulation manager records
+#  -- queries database for records created with start_simulation_managers with the same user_id, experiment_id and params
 #
 # SimulationManager delegate methods to implement
 # - _simulation_manager_stop(record) - stop Simulation Manager execution and free used computational resources
@@ -60,15 +62,13 @@ class InfrastructureFacade
   end
 
   # Write tmp file: ZIP with SimulationManager application and config
-  def self.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, start_at = '')
-    Rails.logger.debug "Preparing configuration for Simulation Manager with id: #{sm_uuid}"
+  def self.prepare_simulation_manager_package(sm_uuid, user_id, experiment_id, start_at = '', platform = "linux_amd64")
+    Rails.logger.debug "Preparing configuration for Simulation Manager (#{platform}) with id: #{sm_uuid}"
 
     # using simulation manager implementation based on application config
     case Rails.configuration.simulation_manager_version
       when :go
-        # TODO checking somehow the destination server architecture
-        arch = 'linux_386'
-        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_go(arch), LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
+        FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_go(platform), LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
       when :ruby
         FileUtils.cp_r(LocalAbsoluteDir::simulation_manager_ruby, LocalAbsoluteDir::tmp_simulation_manager(sm_uuid))
       else
@@ -80,7 +80,7 @@ class InfrastructureFacade
     temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id) if temp_password.nil?
 
     sm_config = {
-        experiment_id: experiment_id,
+        experiment_id: experiment_id.to_s,
         information_service_url: Rails.application.secrets.information_service_url,
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
@@ -305,6 +305,19 @@ class InfrastructureFacade
     raise NotImplementedError
   end
 
+  # An abstract method - for documentation
+  #
+  # @param [BSON::ObjectId] user_id id of {ScalarmUser} for which SiMs were scheduled
+  # @param [BSON::ObjectId] experiment_id id of {Experiment} for which SiMs were scheduled
+  # @param [ActiveSupport::HashWithIndifferentAccess] params
+  #   params which were passed to +start_simulation_managers+ - should be as similar as possible
+  #   It is possible to omit some parameters to acquire wider set of workers.
+  # @return [MongoClass] a query object of specific {SimulationManagerRecord},
+  #   e.g. class of +PlGridJob.where+ results
+  def query_simulation_manager_records(user_id, experiment_id, params)
+    raise NotImplementedError
+  end
+
   # -- SimulationManger delegation default implementation --
 
   def _simulation_manager_before_monitor(record); end
@@ -347,9 +360,25 @@ class InfrastructureFacade
         query.merge!({onsite_monitoring: {'$ne' => true}})
       end
     end
+    if params.include? 'has_cmd_to_execute'
+      if params['has_cmd_to_execute'].downcase == 'true'
+        query.merge!({'$and' => [{cmd_to_execute_code: {'$ne'=>nil}}, {cmd_to_execute_code: {'$ne'=>''}}]})
+      else
+        query.merge!({cmd_to_execute_code: {'$in'=>['', nil]}})
+      end
+    end
     query.merge!({user_id: user_id}) if user_id
     query.merge!({experiment_id: experiment_id}) if experiment_id
     _get_sm_records(query, params)
+  end
+
+  ##
+  # Returns list of hashes representing distinct resource configurations
+  # Overridden in most of subclasses
+  # @param user_id [BSON::ObjectId, String]
+  # @return [Array<Hash>] list of resource configurations
+  def get_resource_configurations(user_id)
+    [{name: short_name.to_sym, params: {}}]
   end
 
   def self.handle_monitoring_send_errors(records)

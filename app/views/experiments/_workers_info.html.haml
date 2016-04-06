@@ -1,20 +1,23 @@
 .content
-  #workers_info.row
-    .small-6.columns
+  .row#workers_info
+    .small-12.large-6.columns
       %ul#state.small-12.columns(style="font-weight: bold;")
 
-      #workers_alert.row(style="display: none; margin-bottom: 10px;")
+      .row#workers_alert(style="display: none; margin-bottom: 10px;")
         .small-12.columns.w-failed(style="font-weight: bold")
-          = t('experiments.computational_resources.no_workers_alert')
+          - if @experiment.workers_scaling
+            = t('experiments.computational_resources.no_workers_alert_with_workers_scaling')
+          - else
+            = t('experiments.computational_resources.no_workers_alert')
       .row
         .small-8.columns
           %a{href: "#{infrastructures_path}?experiment_id=#{@experiment.id}"}
             = t('experiments.computational_resources.show_details_link')
 
-    .small-6.columns
+    .small-12.large-6.columns
       .row
         - if @experiment.is_running
-          .small-8.columns.small-centered
+          .small-12.large-10.large-centered.columns
             %span#boostButton{class: button_classes}
               %i.fi-plus
               = t('experiments.computational_resources.boost_button')

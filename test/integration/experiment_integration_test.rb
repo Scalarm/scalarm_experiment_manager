@@ -191,15 +191,11 @@ class ExperimentIntegrationTest < MiniTest::Test
     experiment.save
     experiment.insert_initial_bar
 
-    puts "Progress bar info #{experiment.basic_progress_bar_info.inspect}"
-    puts "Last bar #{experiment.progress_bar_table.find({}).to_a.last.inspect}"
-
     simulation_ids = []
 
     i = 0
     while not (simulation_id = experiment.naive_partition_based_simulation_hash).nil?
       i += 1
-      puts("#{Time.now} - Size: #{i}") if i % 100 == 0
       simulation_ids << simulation_id
       simulation_run_class = Scalarm::Database::SimulationRunFactory.for_experiment(experiment.id)
       simulation_run = simulation_run_class.new(index: simulation_id, to_sent: false)

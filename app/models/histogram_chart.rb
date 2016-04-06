@@ -1,17 +1,21 @@
 require 'csv'
 require 'rinruby'
 require 'tempfile'
+require 'uri'
 
 class HistogramChart
-  attr_accessor :experiment, :resolution, :moe_name, :bucket_name, :buckets, :stats, :type
-
-  def initialize(experiment, moe_name, resolution, type)
+  attr_accessor :experiment, :resolution, :moe_name,
+                :bucket_name, :buckets, :stats, :type,
+                :x_axis_notation, :y_axis_notation
+  include URI::Escape
+  def initialize(experiment, moe_name, resolution, type,  additional =nil)
     @experiment = experiment
-    @moe_name = moe_name
+    @moe_name = URI.escape(moe_name)
     @resolution = resolution
     @stats = { ex_min: 0 }
     @type = type
-
+    @x_axis_notation = URI.escape(additional[:x_axis_notation])
+    @y_axis_notation = URI.escape(additional[:y_axis_notation])
     if type == "string"
       prepare_chart_data_for_string_type
     else
@@ -95,8 +99,9 @@ class HistogramChart
         #if ind == resolution - 1
         #  "[#{ '%.1f' % (min_value + slice_width * ind) }-#{ '%.1f' % (min_value + slice_width * (ind + 1)) }]"
         #else
+        format_modifier = (x_axis_notation == 'scientific' ? 'E' : 'f')
+        "[#{ "%.#{leading_nums}#{format_modifier}" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}f" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
 
-          "[#{ "%.#{leading_nums}f" % (stats[:ex_min] + @bucket_width * ind) }-#{ "%.#{leading_nums}f" % (@stats[:ex_min] + @bucket_width * (ind + 1)) })"
         #end
       }
     end

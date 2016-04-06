@@ -24,7 +24,7 @@ module InfrastructuresHelper
 
   def image_secrets_select_data(user_id, cloud_name)
     CloudImageSecrets.find_all_by_query(user_id: user_id, cloud_name: cloud_name.to_s).map do |i|
-      ["#{i.image_id} #{i.label ? i.label : ''} (#{i.image_login})", i.id]
+      ["#{i.image_identifier} #{i.label ? i.label : ''} (#{i.image_login})", i.id]
     end
   end
 
@@ -33,7 +33,7 @@ module InfrastructuresHelper
   end
 
   def private_machine_credentials_select_data(user_id)
-    PrivateMachineCredentials.find_all_by_user_id(user_id).map{|mach| [mach.machine_desc, mach.id]}
+    PrivateMachineCredentials.where(user_id: user_id).map{|mach| [mach.machine_desc, mach.id]}
   end
 
   def infrastructure_long_name(infrastructure_name)

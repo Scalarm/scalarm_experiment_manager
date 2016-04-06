@@ -11,6 +11,7 @@
 # - status(ssh, record) -> job state in queue mapped to: :initializing, :running, :deactivated, :error
 # - clean_after_job(ssh, record) - cleans UI user's account from temporary files
 # - get_log(ssh, record) -> String with stdout+stderr contents for job
+# - get_resource_configurations(user_id) -> list of hashes representing distinct configurations of infrastructure
 
 require 'infrastructure_facades/shell_commands'
 require 'infrastructure_facades/ssh_accessed_infrastructure'
@@ -20,7 +21,6 @@ require 'timeout'
 class JobSubmissionFailed < StandardError; end
 
 class PlGridSchedulerBase
-  include ShellCommands
   include SSHAccessedInfrastructure
 
   attr_reader :logger
@@ -79,7 +79,7 @@ ruby simulation_manager.rb
   end
 
   def clean_after_job(ssh, job)
-    ssh.exec!(clean_after_sm_cmd(job))
+    ssh.exec!(BashCommand.new.append(clean_after_sm_cmd(job)).to_s)
   end
 
   #  Initialize VOMS-extended proxy certificate for the user
@@ -89,7 +89,8 @@ ruby simulation_manager.rb
       timeout 10 do
         # Before proxy init, force to use X509 default certificate and key (from UI storage)
         # Because by default it could use KeyFS storage
-        result = ssh.exec!("unset X509_USER_CERT; unset X509_USER_KEY; voms-proxy-init --voms #{voms}")
+        proxy_init_cmd = BashCommand.new.append("unset X509_USER_CERT").append("voms-proxy-init --voms #{voms}").to_s
+        result = ssh.exec!(proxy_init_cmd)
       end
       raise StandardError.new 'voms-proxy-init: No credentials found!' if result =~ /No credentials found!/
     rescue Timeout::Error
@@ -99,23 +100,20 @@ ruby simulation_manager.rb
 
   def restart(ssh, job)
     cancel(ssh, job)
-    job.job_id = submit_job(ssh, job)
+    job.job_identifier = submit_job(ssh, job)
     job.save
   end
 
   def clean_after_sm_cmd(record)
     sm_uuid = record.sm_uuid
-    chain(
-      rm(ScalarmFileName::tmp_sim_zip(sm_uuid)),
-      rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)), true)
-    )
+
+    BashCommand.new.
+        rm(ScalarmFileName::tmp_sim_zip(sm_uuid)).
+        rm(File.join(RemoteDir::scalarm_root, job_script_file(sm_uuid)), true)
   end
 
   def restart_sm_cmd(record)
-    chain(
-      cancel_sm_cmd(record),
-      submit_job_cmd(record)
-    )
+    BashCommand.new.append(cancel_sm_cmd(record)).append(submit_job_cmd(record))
   end
 
   def send_job_files(sm_uuid, scp)

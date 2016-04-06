@@ -45,7 +45,7 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
                'Simulation run should not be in to sent state before rollback'
     post simulation_manager_command_infrastructure_path, command: 'stop',
          record_id: @record_id, infrastructure_name: DUMMY
-    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+    assert_nil Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id),
            'Simulation run should be rolled back after executing stop command on SiM'
   end
 
@@ -58,7 +58,7 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
     facade.yield_simulation_manager(record)  do |sm|
       sm.stop
     end
-    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+    assert_nil Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id),
            'Simulation run should be rolled back after executing stop command on SiM'
   end
 
@@ -67,7 +67,7 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
                'Simulation run should not be in to sent state before rollback'
     post simulation_manager_command_infrastructure_path, command: 'destroy_record',
          record_id: @record_id, infrastructure_name: DUMMY
-    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+    assert_nil Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id),
            'Simulation run should be rolled back after executing destroy_record command on SiM'
   end
 
@@ -79,7 +79,7 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
     facade.yield_simulation_manager(record)  do |sm|
       sm.destroy_record
     end
-    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+    assert_nil Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id),
            'Simulation run should be rolled back after executing destroy_record command on SiM'
   end
 
@@ -97,8 +97,45 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
     end
 
     # then
-    assert Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+    assert_nil Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id),
            'Simulation run should be rolled back after executing destroy_record command on SiM'
     assert_nil SimulationManagerTempPassword.find_by_id(@temp_pass.id)
+  end
+
+  test "no simulation run duplication after getting rolled back simulation run" do
+    # given
+    stub_authentication
+    @experiment.simulation_input = [{
+                                     'entities' => [{
+                                       'parameters' => [{
+                                         'id' => 'param',
+                                         'label' => 'param',
+                                         'type' => 'integer',
+                                         'min' => 0,
+                                         'max' => 1,
+                                         'with_default_value' => false,
+                                         'index' => 1,
+                                         'value' => 0,
+                                         'parametrizationType' => 'range',
+                                         'step' => 1,
+                                         'in_doe' => false
+                                       }]
+                                     }]
+                                   }]
+    @experiment.scheduling_policy = 'sequential_forward'
+    @experiment.is_running = true
+    @experiment.size = 2
+    @experiment.save
+    @user.stubs(:experiments).returns(Experiment.where(id: @experiment_id))
+    assert_equal 1, Experiment.find_by_id(@experiment_id).simulation_runs.count
+    assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
+               'Simulation run should not be in to sent state before rollback'
+
+    # when
+    @simulation_run.rollback!
+    get next_simulation_experiment_path id: @experiment_id, format: :json
+
+    # then
+    assert_equal 1, Experiment.find_by_id(@experiment_id).simulation_runs.count
   end
 end

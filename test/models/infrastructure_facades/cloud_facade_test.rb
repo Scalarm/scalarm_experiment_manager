@@ -20,7 +20,7 @@ class CloudFacadeTest < MiniTest::Test
 
   def test_simulation_manager_install
     record = stub_everything 'record' do
-      stubs(:vm_id).returns('a')
+      stubs(:vm_identifier).returns('a')
       expects(:update_ssh_address!).once
       stubs(:time_limit_exceeded?).returns(false)
       stubs(:experiment_end?).returns(false)
@@ -106,7 +106,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:new).returns(client)
     end
     record = stub_everything 'record' do
-      stubs(:vm_id).returns(vm_id)
+      stubs(:vm_identifier).returns(vm_id)
     end
     facade = CloudFacade.new(client_class)
     facade.stubs(:logger).returns(stub_everything)
@@ -127,7 +127,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:new).returns(client)
     end
     record = stub_everything 'record' do
-      stubs(:vm_id).returns(vm_id)
+      stubs(:vm_identifier).returns(vm_id)
       stubs(:has_ssh_address?).returns(true)
     end
     facade = CloudFacade.new(client_class)
@@ -152,7 +152,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:new).returns(client)
     end
     record = stub_everything 'record' do
-      stubs(:vm_id).returns(vm_id)
+      stubs(:vm_identifier).returns(vm_id)
       stubs(:has_ssh_address?).returns(true)
     end
     facade = CloudFacade.new(client_class)
@@ -178,7 +178,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:new).returns(client)
     end
     record = stub_everything 'record' do
-      stubs(:vm_id).returns(vm_id)
+      stubs(:vm_identifier).returns(vm_id)
       stubs(:has_ssh_address?).returns(true)
       stubs(:pid).returns(pid)
     end
@@ -205,7 +205,7 @@ class CloudFacadeTest < MiniTest::Test
       stubs(:new).returns(client)
     end
     record = stub_everything 'record' do
-      stubs(:vm_id).returns(vm_id)
+      stubs(:vm_identifier).returns(vm_id)
       stubs(:has_ssh_address?).returns(true)
       stubs(:pid).returns(pid)
     end

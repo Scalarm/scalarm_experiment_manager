@@ -31,14 +31,15 @@ module SimulationsHelper
     common_parametrizations
   end
 
+  # commented methods are not supported any more due to lack of their understanding and tests
   def select_doe_type
     options_for_select([
-                           ['Near Orthogonal Latin Hypercubes', 'nolhDesign'],
+                           # ['Near Orthogonal Latin Hypercubes', 'nolhDesign'],
                            ['2^k', '2k'],
                            ['2^(k-1)', '2k-1'],
                            ['2^(k-2)', '2k-2'],
                            ['Full factorial', 'fullFactorial'],
-                           ['Fractional factorial (with Federov algorithm)', 'fractionalFactorial'],
+                           # ['Fractional factorial (with Federov algorithm)', 'fractionalFactorial'],
                            ['Orthogonal Latin Hypercubes', 'latinHypercube'],
                        ])
   end

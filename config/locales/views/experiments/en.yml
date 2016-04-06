@@ -5,11 +5,37 @@ en:
       manual: Manual
       automatic: Automatic
     manual_experiment:
-      title:  Input space
-      manual_designed: Manual designed
-      csv_imported: CSV imported
+      title: Input space specification
+      manual_designed: Manually designed
+      csv_imported: Imported from a CSV file
     automatic_experiment:
-      title: Automatic experiment algorithm
+      title: Automatic input space exploration method
+
+    workers_scaling:
+      plgrid_default:
+        This option will automatically execute experiment on PL-Grid resources using your grant.
+      mode:
+        title: Computational resources management
+        manual: Manual
+        automatic: Automated - advanced
+        plgrid_default: Automated - Zeus @ ACC Cyfronet AGH
+      algorithm:
+        title: Automated computational resources management
+        method_selection: Automation method
+        execution_time_limit: Experiment execution time limit
+        execution_time_unit: minutes
+      information_panel:
+        workers_scaling_active: Automated computational resources management is active
+        algorithm_name: Automation method
+        unknown_algorithm: Not available due to execution error
+        execution_time:
+          finished: Finished
+          unknown: Not available due to insufficient data
+          expected: Expected finish time
+          planned: Experiment execution deadline
+          warning: Experiment execution may exceed planned finish time.
+        error: An error occurred, automated computational resources management stopped, please contact administrators.
+
 
 
     click_to_expand: "(click to expand)"
@@ -48,6 +74,7 @@ en:
         tooltip: Stop this experiment. All running Simulation Managers will be stopped.
 
     computational_resources:
+      title: Computational resources summary
       get_sm_button: "Download Simulation Manager"
 
     sharing:
@@ -61,7 +88,7 @@ en:
 
     errors:
       zero_size: The size of an experiment must be greater than 0!
-      too_few_parameters: 
+      too_few_parameters:
          one: Selected DoE method requires more than 1 parameter.
          other: "Selected DoE method requires more than %{count} parameters."
       invalid_resolution: Number of bars should be an integer between 1 and 100

@@ -30,7 +30,10 @@ module SimulationManagerRecord
   CMD_SEPARATOR = '#_#'
 
   attr_join :user, ScalarmUser
-  attr_join :experiment, Experiment
+
+  def experiment
+    Experiment.where(id: self.experiment_id).first.auto_convert
+  end
 
   def initialize_fields
     set_state(:created)
@@ -121,6 +124,7 @@ module SimulationManagerRecord
     self.created_at + 3.minutes < Time.now
   end
 
+  # A special cases, when SiM should be destroyed regardless of its Simulation Run
   def should_destroy?
     (time_limit_exceeded? or experiment_end?) and record.state != :error
   end
@@ -166,7 +170,7 @@ module SimulationManagerRecord
   def get_current_simulation_run
     if not experiment.nil? and not self.sm_uuid.nil?
       experiment.simulation_runs.
-          where(sm_uuid: self.sm_uuid, to_sent: false, is_done: false).first
+          where(is_done: false, to_sent: false, sm_uuid: self.sm_uuid).first
     end
   end
 
@@ -178,12 +182,12 @@ module SimulationManagerRecord
   # See more in SCAL-956 issue comments
   def cmd_to_execute=(cmd)
     if cmd.blank?
-      attributes[:cmd_to_execute] = ''
+      attributes['cmd_to_execute'] = ''
     else
-      if attributes[:cmd_to_execute].blank?
-        attributes[:cmd_to_execute] = cmd
+      if attributes['cmd_to_execute'].blank?
+        attributes['cmd_to_execute'] = cmd
       else
-        attributes[:cmd_to_execute] << "#{CMD_SEPARATOR}#{cmd}"
+        attributes['cmd_to_execute'] << "#{CMD_SEPARATOR}#{cmd}"
       end
     end
   end
@@ -196,14 +200,21 @@ module SimulationManagerRecord
   # See more in SCAL-956 issue comments
   def cmd_to_execute_code=(code)
     if code.blank?
-      attributes[:cmd_to_execute_code] = ''
+      attributes['cmd_to_execute_code'] = ''
     else
-      if attributes[:cmd_to_execute_code].blank?
-        attributes[:cmd_to_execute_code] = code
+      if attributes['cmd_to_execute_code'].blank?
+        attributes['cmd_to_execute_code'] = code
       else
-        attributes[:cmd_to_execute_code] << "#{CMD_SEPARATOR}#{code}"
+        attributes['cmd_to_execute_code'] << "#{CMD_SEPARATOR}#{code}"
       end
     end
+  end
+
+  ##
+  # Determines if simulation manager should run more simulations
+  # If attribute simulations_left is not set, returned value is always true
+  def has_more_simulations_to_run?
+    (self.simulations_left || Float::INFINITY) > 0
   end
 
   def store_no_credentials
