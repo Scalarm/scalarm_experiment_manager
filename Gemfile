@@ -86,11 +86,11 @@ gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
 # gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
-gem 'scalarm-database', '~> 1.3.0', git: 'git://github.com/Scalarm/scalarm-database.git'
+gem 'scalarm-database', '~> 1.4.0', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
 # gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 1.2.1', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', '~> 1.3', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'
