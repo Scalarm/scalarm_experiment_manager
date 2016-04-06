@@ -128,7 +128,8 @@ namespace :service do
     puts 'Setup started'
     get_monitoring unless check_monitoring
     get_simulation_managers_go unless check_sim_go
-    get_simulation_manager_ruby unless check_sim_ruby
+    ## simulation_manager_ruby disabled, although it can be downloaded manally for own risk
+    # get_simulation_manager_ruby unless check_sim_ruby
     install_r_libraries
 
     _validate_service
@@ -180,7 +181,8 @@ namespace :get do
 
   task :simulation_managers do
     get_simulation_managers_go
-    get_simulation_manager_ruby
+    ## simulation_manager_ruby disabled, although it can be downloaded manally for own risk
+    # get_simulation_manager_ruby
   end
 
   task :mongos do
@@ -477,9 +479,10 @@ def _validate_service
   print 'Checking Go Simulation Manager...'
   raise "No Scalarm Simulation Manager packages found (Go version)" unless check_sim_go
   puts 'OK'
-  print 'Checking Ruby Simulation Manager...'
-  raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
-  puts 'OK'
+  ## simulation_manager_ruby disabled, although it can be downloaded manally for own risk
+  # print 'Checking Ruby Simulation Manager...'
+  # raise "No Scalarm Simulation Manager packages found (Ruby version)" unless check_sim_ruby
+  # puts 'OK'
 
   %w(gsissh R zip).each do |cmd|
     check_for_command(cmd)
