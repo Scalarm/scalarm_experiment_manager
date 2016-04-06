@@ -105,7 +105,7 @@ module PlGridOpenID
     plgrid_identity = oidresp.identity_url
     plgrid_login = PlGridOpenID::strip_identity(oidresp.identity_url)
 
-    Rails.logger.debug("User logged in with OpenID identity: #{plgrid_identity}")
+    Rails.logger.info("User logged in with OpenID identity: #{plgrid_identity}, dn: #{ax_attrs[:dn] or '<unavailable>'}")
 
     scalarm_user = PlGridOpenID::get_or_create_user(ax_attrs[:dn], plgrid_login, params[:temp_pass])
 
@@ -129,10 +129,14 @@ module PlGridOpenID
   end
 
   def self.get_or_create_user(dn, plgrid_login, password=nil)
+    # checking for empty DN added due to PLGrid OpenID issues
+    Rails.logger.warn("DN used to get or create user #{plgrid_login} is empty")
+    dn = plgoid_dn_to_browser_dn(dn) unless dn.blank?
+
     OpenIDUtils::get_user_with(dn: dn, login: plgrid_login) or
         OpenIDUtils::get_user_with(dn: dn) or OpenIDUtils::get_user_with(login: plgrid_login) or
         OpenIDUtils::create_user_with(plgrid_login, password,
-                                      dn: plgoid_dn_to_browser_dn(dn),
+                                      dn: dn,
                                       login: plgrid_login)
   end
 

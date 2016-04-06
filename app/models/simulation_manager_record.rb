@@ -32,7 +32,8 @@ module SimulationManagerRecord
   attr_join :user, ScalarmUser
 
   def experiment
-    Experiment.where(id: self.experiment_id).first.auto_convert
+    e = Experiment.where(id: self.experiment_id).first
+    e.nil? ? nil : e.auto_convert
   end
 
   def initialize_fields

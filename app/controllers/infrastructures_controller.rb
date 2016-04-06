@@ -275,24 +275,26 @@ class InfrastructuresController < ApplicationController
     end
   end
 
+  # TODO: WARNING: DEPRECATED - this method will be removed both from GUI and API
   # GET params
   # - infrastructure_name
   # All params will be passed to simulation_managers_info in view
   def simulation_managers_summary
-    validate(
-        infrastructure_name: :security_default
-    )
+    render html: 'Please use Computational Resources Summary in Experiment view.'
+    #validate(
+    #    infrastructure_name: :security_default
+    #)
 
-    infrastructure_name = params[:infrastructure_name]
-    facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-    group = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
-    render partial: 'infrastructures/simulation_managers_summary',
-           locals: {
-               long_name: facade.long_name,
-               partial_name: (group or params[:infrastructure_name]),
-               infrastructure_name: params[:infrastructure_name],
-               simulation_managers: facade.get_sm_records(current_user.id).to_a
-           }
+    #infrastructure_name = params[:infrastructure_name]
+    #facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+    #group = InfrastructureFacadeFactory.get_group_for(infrastructure_name)
+    #render partial: 'infrastructures/simulation_managers_summary',
+    #       locals: {
+    #           long_name: facade.long_name,
+    #           partial_name: (group or params[:infrastructure_name]),
+    #           infrastructure_name: params[:infrastructure_name],
+    #           simulation_managers: facade.get_sm_records(current_user.id).to_a
+    #       }
   end
 
 =begin

@@ -51,6 +51,9 @@ class GridCredentials < Scalarm::Database::Model::GridCredentials
     rescue Gsi::ClientError => client_error
       Rails.logger.warn "gsissh client error for PL-Grid user #{login}: #{client_error}"
       gsi_error = client_error
+      Rails.logger.warn 'Removing user proxy to prevent host blocking by Cyfronet'
+      self.secret_proxy = nil
+      self.save
     end
 
     if password

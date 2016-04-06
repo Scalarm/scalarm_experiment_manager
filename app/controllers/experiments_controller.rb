@@ -845,6 +845,7 @@ apiDoc:
                       elsif params[:simulations] == 'completed'
                         (simulation_run.sent_at.nil? or simulation_run.done_at.nil?) ? 'N/A' : "#{simulation_run.done_at - simulation_run.sent_at} [s]"
                       end
+        simulation_to_send = @experiment.completed? ? nil : @experiment.get_next_instance
 
         [
             simulation_run.index,
@@ -1363,7 +1364,7 @@ apiDoc:
           format.json { render json: {status: 'error', reason: flash[:error]}, status: 403 }
         end
       else
-        @experiment
+        @experiment = @experiment.auto_convert
       end
     end
   end

@@ -84,17 +84,31 @@ class InfrastructureFacadeFactory
     get_all_infrastructures.map do |facade|
       Rails.logger.info("Starting monitoring thread of '#{facade.long_name}'")
 
-      Thread.start do
-        facade.monitoring_thread
+      t = Thread.start do
+        begin
+          facade.monitoring_thread
+        rescue Exception => e
+          Rails.logger.error "Uncaught monitoring exception for infrastructure: #{infrastructure_name}: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
+          raise
+        end
       end
+
+      t["name"] = facade.short_name
+
+      t
     end
   end
 
-  def self.start_monitoring_thread_for(insfrastructure_name)
-    facade = get_facade_for(insfrastructure_name)
-    Rails.logger.info("Starting monitoring thread of '#{insfrastructure_name}'")
+  def self.start_monitoring_thread_for(infrastructure_name)
+    facade = get_facade_for(infrastructure_name)
+    Rails.logger.info("Starting monitoring thread of '#{infrastructure_name}'")
     Thread.start do
-      facade.monitoring_thread
+      begin
+        facade.monitoring_thread
+      rescue Exception => e
+        Rails.logger.error "Uncaught monitoring exception for infrastructure: #{infrastructure_name}: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
+        raise
+      end
     end
   end
 

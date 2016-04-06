@@ -238,6 +238,30 @@ namespace :load_balancer do
   end
 end
 
+namespace :monitoring do
+  desc 'Start a monitoring process (with ExperimentWatcher, MonitoringProbe and InfrastructureMonitoring threads) if it does not run'
+  task :start, [:debug] => [:environment] do
+    unless File.directory?(File.join(Rails.root, 'tmp'))
+      FileUtils.mkdir_p(File.join(Rails.root, 'tmp'))
+    end
+    probe_pid_path = File.join(Rails.root, 'tmp', 'scalarm_monitoring_probe.pid')
+    monitoring_job_pid = IO.read(probe_pid_path).to_i
+
+    is_running = (Process.getpgid(monitoring_job_pid) rescue nil).present?
+
+    if is_running
+      puts "Monitoring process is already running"
+    else
+      puts "Monitoring process is not running -> we will start it"
+      monitoring_process('start')
+    end
+  end
+
+  desc 'Stop a running monitoring process if any'
+  task :stop, [:debug] => [:environment] do
+    monitoring_process('stop')
+  end
+end
 
 # ================ UTILS
 def start_router(config_service_url)
@@ -277,8 +301,9 @@ def monitoring_process(action)
   case action
     when 'start'
       monitoring_job_pid = fork do
-        STDOUT.reopen(File.open('log/monitoring_process.log', 'w+'))
-        STDERR.reopen(File.open('log/monitoring_process.log', 'w+'))
+
+        STDOUT.reopen(File.open('log/monitoring_process.log', 'a+'))
+        STDERR.reopen(File.open('log/monitoring_process.log', 'a+'))
 
         STDOUT.sync = true
         STDERR.sync = true
@@ -297,22 +322,65 @@ def monitoring_process(action)
           threads = []
 
           # start machine monitoring only if there is configuration
-          if Rails.application.secrets.monitoring
-            Rails.logger.info('Starting monitoring probe')
-            probe = MonitoringProbe.new
-            threads << probe.start_monitoring
-          else
-            Rails.logger.info('Monitoring probe disabled due to lack of configuration')
-          end
+          # if Rails.application.secrets.monitoring
+          #   Rails.logger.info('Starting monitoring probe')
+          #   probe = MonitoringProbe.new
+          #   t3 = probe.start_monitoring
+          #   t3["name"] = "monitoring_probe"
+          #   threads << t3
+          # else
+          #   Rails.logger.info('Monitoring probe disabled due to lack of configuration')
+          # end
 
           Rails.logger.info('Starting experiment watcher')
-          threads << ExperimentWatcher.watch_experiments
+          t = ExperimentWatcher.watch_experiments
+          t["name"] = "experiment_watcher"
+          threads << t
 
           Rails.logger.info('Starting monitoring threads for all infrastructures')
           threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
 
           Rails.logger.info('Starting algorithm runner')
           threads << WorkersScaling::AlgorithmRunner.start
+
+          Rails.logger.error("Threads: #{threads.map{|t| t["name"]}}")
+
+          # EXPERIMENTAL
+          correct_thread_number = threads.size
+          while true
+            not_working_threads = threads.select{|t| t.status != 'sleep' and t.status != 'run'}
+            Rails.logger.error("Not working threads: #{not_working_threads.size}")
+
+            if threads.size != correct_thread_number or not_working_threads.size > 0
+              Rails.logger.error("Not working threads: #{not_working_threads.map{|t| t["name"]}}")
+              Rails.logger.error("All started threads were: #{threads.map{|t| t["name"]}}")
+              Rails.logger.error("Threads.size = #{threads.size}; Correct thread number: #{correct_thread_number}")
+              threads.map(&:kill)
+              Scalarm::MongoLockRecord.each(&:destroy)
+
+              # all started threads will be collected here
+              threads = []
+              # start machine monitoring only if there is configuration
+              if Rails.application.secrets.monitoring
+                Rails.logger.info('Starting monitoring probe')
+              probe = MonitoringProbe.new
+                threads << probe.start_monitoring
+              else
+                Rails.logger.info('Monitoring probe disabled due to lack of configuration')
+              end
+
+              Rails.logger.info('Starting experiment watcher')
+              t = ExperimentWatcher.watch_experiments
+              t['name'] = 'experiment_watcher'
+              threads << t
+              threads += InfrastructureFacadeFactory.start_all_monitoring_threads.to_a
+              Rails.logger.error("Threads after restart: #{threads.map{|t| t["name"]}}")
+              correct_thread_number = threads.size
+            end
+
+            sleep(300)
+          end
+          # EXPERIMENTAL END
 
           # do not quit this process until all threads are working
           threads.each &:join

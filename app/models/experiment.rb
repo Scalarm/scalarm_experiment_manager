@@ -394,7 +394,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       end
       query_fields[:result] = 1 if with_moes
       simulation_runs.where(
-          {is_done: true}.merge(additional_query),
+          {is_done: true, is_error: {'$exists' => false}}.merge(additional_query),
           {fields: query_fields}
       ).each do |simulation_run|
         if error_description
