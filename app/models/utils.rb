@@ -1,3 +1,4 @@
+require 'benchmark'
 require 'json'
 require 'scalarm/service_core/utils'
 require 'scalarm/service_core/parameter_validation'
@@ -113,6 +114,15 @@ module Utils
     end
 
     type_of_value
+  end
+
+  def self.bench(name, &block)
+    value = nil
+    measurement = Benchmark.measure do
+      value = yield
+    end
+    Rails.logger.debug("Benchmark '#{name}': #{measurement.to_s}".strip)
+    return value
   end
 
 end
