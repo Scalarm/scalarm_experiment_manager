@@ -652,14 +652,14 @@ textarea {
 
 @media screen and (min-width: 1024px) {
   #wrapper {
-   max-width: 1260px;
+   max-width: 1248px;
   }
   #panel {
     position: fixed;
-    width: calc(3*(1260px/12));
+    width: calc(3*(1248px/12));
   }
   .row {
-    max-width: 1260px;
+    max-width: 1248px;
   }
 }
 @media screen and (max-width: 1024px) {
