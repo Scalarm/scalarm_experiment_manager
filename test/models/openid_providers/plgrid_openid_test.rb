@@ -21,6 +21,7 @@ class PlGridOpenIDTest < MiniTest::Test
     plglogin = mock 'plglogin'
     user = mock 'user'
 
+    PlGridOpenID.stubs(:plgoid_dn_to_browser_dn).with(dn).returns(dn)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn, login: plglogin).returns(user)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn).returns(user)
     OpenIDUtils.stubs(:get_user_with).with(login: plglogin).returns(user)
@@ -33,6 +34,7 @@ class PlGridOpenIDTest < MiniTest::Test
     plglogin = mock 'plglogin'
     user = mock 'user'
 
+    PlGridOpenID.stubs(:plgoid_dn_to_browser_dn).with(dn).returns(dn)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn, login: plglogin).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn).returns(user)
     OpenIDUtils.stubs(:get_user_with).with(login: plglogin).returns(nil)
@@ -45,6 +47,7 @@ class PlGridOpenIDTest < MiniTest::Test
     plglogin = mock 'plglogin'
     user = mock 'user'
 
+    PlGridOpenID.stubs(:plgoid_dn_to_browser_dn).with(dn).returns(dn)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn, login: plglogin).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(login: plglogin).returns(user)
@@ -57,11 +60,10 @@ class PlGridOpenIDTest < MiniTest::Test
     plglogin = mock 'plglogin'
     user = mock 'user'
 
+    PlGridOpenID.stubs(:plgoid_dn_to_browser_dn).with(dn).returns(dn)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn, login: plglogin).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(dn: dn).returns(nil)
     OpenIDUtils.stubs(:get_user_with).with(login: plglogin).returns(nil)
-
-    PlGridOpenID.stubs(:plgoid_dn_to_browser_dn).with(dn).returns(dn)
 
     OpenIDUtils.expects(:create_user_with).with(plglogin, nil, login: plglogin, dn: dn).returns(user)
 
