@@ -8,7 +8,7 @@ module SSHExecTimeout
   def exec!(*args, &block)
     time_limit = Rails.application.config.ssh_exec_timeout_secs
     begin
-      timeout(time_limit) do
+      Timeout.timeout(time_limit) do
         super(*args, &block)
       end
     rescue Timeout::Error => e

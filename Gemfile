@@ -94,3 +94,5 @@ gem 'scalarm-service_core', '~> 1.3', git: 'git://github.com/Scalarm/scalarm-ser
 
 #oauth2
 gem 'signet'
+
+gem 'sidekiq'

@@ -378,7 +378,6 @@ its all wrong...
       'nodes' => 2,
       'time_limit' => (55*60) + 30,
       'ppn' => 8,
-      'memory' => 2048,
       'queue_name' => 'plgrid',
       'memory' => 2048
     })

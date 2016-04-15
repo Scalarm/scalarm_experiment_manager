@@ -85,6 +85,10 @@ namespace :service do
     create_anonymous_user
 
     monitoring_process('start')
+
+    sidekiq_start = 'bundle exec sidekiq -c 10 -d -L log/jobs.log -P tmp/sidekiq.pid'
+    puts sidekiq_start
+    %x[#{sidekiq_start}]
   end
 
   desc 'Stop the service'
@@ -93,6 +97,10 @@ namespace :service do
     %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_process('stop')
+
+    sidekiq_stop = 'sidekiqctl stop tmp/sidekiq.pid'
+    puts sidekiq_stop
+    %x[#{sidekiq_stop}]
 
     load_balancer_deregistration
   end

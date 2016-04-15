@@ -326,6 +326,7 @@ apiDoc:
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
           sm.send(params[:command])
+          SimMonitorWorker.perform_async(params[:infrastructure_name].to_s, params[:record_id].to_s)
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else
