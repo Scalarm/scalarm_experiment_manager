@@ -86,9 +86,11 @@ namespace :service do
 
     monitoring_process('start')
 
-    sidekiq_start = 'bundle exec sidekiq -c 10 -d -L log/jobs.log -P tmp/sidekiq.pid'
-    puts sidekiq_start
-    %x[#{sidekiq_start}]
+    Rails.application.secrets.redis_workers.to_i.times do |i|
+      sidekiq_start = "bundle exec sidekiq -c 5 -d -L log/jobs.log -P tmp/sidekiq_#{i}.pid"
+      puts sidekiq_start
+      %x[#{sidekiq_start}]
+    end
   end
 
   desc 'Stop the service'
@@ -98,9 +100,11 @@ namespace :service do
 
     monitoring_process('stop')
 
-    sidekiq_stop = 'sidekiqctl stop tmp/sidekiq.pid'
-    puts sidekiq_stop
-    %x[#{sidekiq_stop}]
+    Rails.application.secrets.redis_workers.to_i.times do |i|
+      sidekiq_stop = "sidekiqctl stop tmp/sidekiq_#{i}.pid"
+      puts sidekiq_stop
+      %x[#{sidekiq_stop}]
+    end
 
     load_balancer_deregistration
   end

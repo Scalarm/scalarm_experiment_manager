@@ -326,7 +326,6 @@ apiDoc:
       if %w(stop restart destroy_record).include? command
         yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
           sm.send(params[:command])
-          SimMonitorWorker.perform_async(params[:infrastructure_name].to_s, params[:record_id].to_s)
         end
         render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
       else
@@ -341,6 +340,8 @@ apiDoc:
     rescue Exception => e
       render json: { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
     end
+
+    SimMonitorWorker.perform_async(params[:infrastructure_name].to_s, current_user.id.to_s)
   end
 
   # Mandatory GET params:

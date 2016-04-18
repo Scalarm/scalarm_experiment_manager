@@ -1,39 +1,39 @@
 class SimMonitorWorker
   include Sidekiq::Worker
 
-  def perform(infrastructure_id, sim_id)
+  def perform(infrastructure_id, user_id)
     facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_id)
 
     if facade.nil?
-      puts "Couldn't create infrastructure facade for '#{infrastructure_id}'"
+      logger.error "Couldn't create infrastructure facade for '#{infrastructure_id}'"
       return
     end
 
-    puts "Facade: #{facade}"
+    logger.info "Infrastructure facade: #{facade.long_name}"
 
-    sim_record = facade.get_sm_record_by_id(sim_id)
+    run_another_monitoring_loop = false
 
-    if sim_record.nil?
-      puts "Couldn't get sim record for for '#{sim_id}' and infrastructure '#{infrastructure_id}'"
-      return
-    end
+    facade.yield_simulation_managers(user_id) do |sims|
+      sims.each do |sim|
+        logger.info "SiM: #{sim.record}"
 
-    puts "Record: #{sim_record}"
-
-    sim = SimulationManager.new(sim_record, facade)
-    puts "SiM: #{sim}"
-
-    begin
-      sim.monitor
-    rescue Exception => e
-      puts "An exception occured: #{e}"
-    ensure
-      if not sim.state == :error
-        puts "We are going to schedule another monitoring session for '#{sim_id}' and infrastructure '#{infrastructure_id}'"
-        SimMonitorWorker.perform_in(30.seconds, infrastructure_id, sim_id)
-      else
-        puts "This is the end of the monitoring process"
+        begin
+          sim.monitor
+        rescue Exception => e
+          logger.error "Sim monitoring: #{sim.record} - exception in the monitor method: #{e}"
+        ensure
+          if not sim.state == :error
+            run_another_monitoring_loop = true
+          end
+        end
       end
+    end
+
+    if run_another_monitoring_loop
+      logger.info "Scheduling another monitoring session for infrastructure '#{infrastructure_id}'"
+      SimMonitorWorker.perform_in(30.seconds, infrastructure_id, user_id)
+    else
+      logger.info "The end of the monitoring process for infrastructure '#{infrastructure_id}'"
     end
   end
 
