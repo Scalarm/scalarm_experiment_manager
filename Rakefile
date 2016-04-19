@@ -86,9 +86,17 @@ namespace :service do
 
     monitoring_process('start')
 
-    redis_start = "redis-server --port #{Rails.application.secrets.redis_port}"
-    puts redis_start
-    %x[#{redis_start}]
+    redis_start_proc = fork do
+      STDOUT.reopen(File.open('log/monitoring_process.log', 'w+'))
+      STDERR.reopen(File.open('log/monitoring_process.log', 'w+'))
+
+      STDOUT.sync = true
+      STDERR.sync = true
+
+      redis_start = "redis-server --port #{Rails.application.secrets.redis_port}"
+      puts redis_start
+      %x[#{redis_start}]
+    end
 
     Rails.application.secrets.redis_workers.to_i.times do |i|
       sidekiq_start = "bundle exec sidekiq -c 5 -d -L log/jobs.log -P tmp/sidekiq_#{i}.pid"

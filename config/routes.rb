@@ -162,6 +162,16 @@ ScalarmExperimentManager::Application.routes.draw do
     end
   end
 
+  require 'sidekiq/web'
+  Sidekiq::Web.set :session_secret, Rails.application.secrets[:secret_token]
+  Sidekiq::Web.set :sessions, Rails.application.config.session_options
+
+  Sidekiq::Web.use Rack::Auth::Basic do |username, password|
+    username == ENV["SIDEKIQ_USERNAME"] && password == ENV["SIDEKIQ_PASSWORD"]
+  end if Rails.env.production?
+
+  mount Sidekiq::Web => '/sidekiq'
+
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
 

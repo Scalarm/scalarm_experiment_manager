@@ -113,8 +113,14 @@ class SimulationManager
             effect: :store_error_resource_status,
             message: 'Resource has ERROR status - marking record as invalid'
         },
-        experiment_end: {
-            source_states: [:created, :initializing, :running],
+        experiment_end_new_sim_should_not_start: {
+            source_states: [:created],
+            condition: :experiment_end?,
+            effect: :destroy_record,
+            message: 'Experiment finished - we should not start new simulation managers',
+        },
+        experiment_end_existing_sims_should_stop: {
+            source_states: [:initializing, :running],
             target_state: :terminating,
             effect: :stop,
             condition: :experiment_end?,
