@@ -47,7 +47,11 @@ class ClusterRemoteWorkerDelegate
             :error
         end
       else
-        :available
+        if sm_record.state == :terminating
+          :released
+        else
+          :available
+        end
       end
     rescue
       :error

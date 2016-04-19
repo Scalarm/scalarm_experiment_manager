@@ -96,3 +96,13 @@ gem 'scalarm-service_core', '~> 1.3', git: 'git://github.com/Scalarm/scalarm-ser
 gem 'signet'
 
 gem 'sidekiq'
+gem 'sinatra', :require => nil
+
+gem 'pry-rails'
+gem 'awesome_print'
+
+group :development do
+  gem "better_errors"
+  gem "binding_of_caller"
+end
+

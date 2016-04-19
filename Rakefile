@@ -86,6 +86,10 @@ namespace :service do
 
     monitoring_process('start')
 
+    redis_start = "redis-server --port #{Rails.application.secrets.redis_port}"
+    puts redis_start
+    %x[#{redis_start}]
+
     Rails.application.secrets.redis_workers.to_i.times do |i|
       sidekiq_start = "bundle exec sidekiq -c 5 -d -L log/jobs.log -P tmp/sidekiq_#{i}.pid"
       puts sidekiq_start
@@ -105,6 +109,10 @@ namespace :service do
       puts sidekiq_stop
       %x[#{sidekiq_stop}]
     end
+
+    redis_stop = "redis-cli -p #{Rails.application.secrets.redis_port} shutdown"
+    puts redis_stop
+    %x[#{redis_stop}]
 
     load_balancer_deregistration
   end
@@ -160,6 +168,11 @@ namespace :service do
       puts "Error on validation, please read documentation and run service:setup"
       raise
     end
+  end
+
+  desc 'Schedule a sim monitoring worker for each valid user - infrastructure pair'
+  task :sims_monitoring do :environment
+
   end
 
 end
