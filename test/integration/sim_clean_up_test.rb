@@ -1,5 +1,6 @@
 require 'test_helper'
 require 'db_helper'
+require 'sidekiq/testing'
 
 class SimCleanUpTest < ActionDispatch::IntegrationTest
   include DBHelper
@@ -10,6 +11,8 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
 
   def setup
     super
+    Sidekiq::Testing.fake!
+
     user = ScalarmUser.new({login: USER_NAME})
     user.password = PASSWORD
     user.save
@@ -63,6 +66,8 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
   end
 
   test "rollback simulation on destroy_record simulation manager by API" do
+
+
     assert_not Experiment.find_by_id(@experiment_id).simulation_runs.find_by_id(@simulation_run_id).to_sent,
                'Simulation run should not be in to sent state before rollback'
     post simulation_manager_command_infrastructure_path, command: 'destroy_record',

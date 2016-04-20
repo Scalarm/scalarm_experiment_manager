@@ -11,7 +11,7 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
       # glite: PlGridFacade,
       qcg: PlGridFacade,
       private_machine: PrivateMachineFacade,
-      pl_cloud: CloudFacade,
+      # pl_cloud: CloudFacade,
       amazon: CloudFacade,
       google: CloudFacade,
       dummy: DummyFacade

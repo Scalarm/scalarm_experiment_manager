@@ -17,7 +17,7 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
     @plgrid = PlGridFacadeFactory.instance.get_facade('qsub')
     @gc = GridCredentials.new(user_id: @su.id, secret_proxy: '<this is secret proxy>'); @gc.save
 
-    @plcloud = CloudFacadeFactory.instance.get_facade('pl_cloud')
+    # @plcloud = CloudFacadeFactory.instance.get_facade('pl_cloud')
     @cs = CloudSecrets.new(user_id: @su.id, cloud_name: 'pl_cloud', secret_proxy: '<this is secret proxy>'); @cs.save
   end
 
@@ -74,40 +74,40 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
     refute_nil(GridCredentials.where(user_id: @su.id).first.secret_proxy)
   end  
 
-  def test_plcloud_removing_x509_proxy
-     # -- given -- scalarm user with credentials and two different jobs
-     CloudVmRecord.new(user_id: @su.id, state: :error, cloud_name: 'pl_cloud').save
-     CloudVmRecord.new(user_id: @su.id, state: :running, cloud_name: 'google').save
+  # def test_plcloud_removing_x509_proxy
+  #    # -- given -- scalarm user with credentials and two different jobs
+  #    CloudVmRecord.new(user_id: @su.id, state: :error, cloud_name: 'pl_cloud').save
+  #    CloudVmRecord.new(user_id: @su.id, state: :running, cloud_name: 'google').save
+  #
+  #    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  #    # -- when
+  #    @plcloud.destroy_unused_credentials(:x509_proxy, @su)
+  #    # -- then
+  #    assert_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first)
+  # end
 
-     refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
-     # -- when
-     @plcloud.destroy_unused_credentials(:x509_proxy, @su)
-     # -- then
-     assert_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first)
-  end
+  # def test_plcloud_not_removing_x509_proxy_due_to_user_session
+  #    # -- given -- scalarm user with user session
+  #    UserSession.new(session_id: @su.id, last_update: Time.now).save
+  #
+  #    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  #    # -- when
+  #    @plcloud.destroy_unused_credentials(:x509_proxy, @su)
+  #    # -- then
+  #    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  # end
 
-  def test_plcloud_not_removing_x509_proxy_due_to_user_session
-     # -- given -- scalarm user with user session
-     UserSession.new(session_id: @su.id, last_update: Time.now).save
-
-     refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
-     # -- when
-     @plcloud.destroy_unused_credentials(:x509_proxy, @su)
-     # -- then
-     refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
-  end
-
-  def test_plcloud_removing_x509_proxy_due_to_not_valid_user_session
-    # -- given -- scalarm user with user session
-    UserSession.new(session_id: @su.id,
-                    last_update: Time.now-Rails.configuration.session_threshold.seconds-10.minutes).save
-
-    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
-    # -- when
-    @plcloud.destroy_unused_credentials(:x509_proxy, @su)
-    # -- then
-    assert_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first)
-  end
+  # def test_plcloud_removing_x509_proxy_due_to_not_valid_user_session
+  #   # -- given -- scalarm user with user session
+  #   UserSession.new(session_id: @su.id,
+  #                   last_update: Time.now-Rails.configuration.session_threshold.seconds-10.minutes).save
+  #
+  #   refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  #   # -- when
+  #   @plcloud.destroy_unused_credentials(:x509_proxy, @su)
+  #   # -- then
+  #   assert_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first)
+  # end
 
   def test_plgrid_removing_x509_proxy_due_to_not_valid_user_session
     # -- given -- scalarm user with user session
@@ -121,16 +121,16 @@ class RemovingUnusedX509ProxyTest < MiniTest::Test
     assert_nil(GridCredentials.where(user_id: @su.id).first)
   end
 
-  def test_plcloud_not_removing_x509_proxy_due_to_monitored_vm
-     # -- given
-     CloudVmRecord.new(user_id: @su.id, state: :running, cloud_name: 'pl_cloud').save
-
-     refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
-     # -- when
-     @plcloud.destroy_unused_credentials(:x509_proxy, @su)
-     # -- then
-     refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
-  end
+  # def test_plcloud_not_removing_x509_proxy_due_to_monitored_vm
+  #    # -- given
+  #    CloudVmRecord.new(user_id: @su.id, state: :running, cloud_name: 'pl_cloud').save
+  #
+  #    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  #    # -- when
+  #    @plcloud.destroy_unused_credentials(:x509_proxy, @su)
+  #    # -- then
+  #    refute_nil(CloudSecrets.where(user_id: @su.id, cloud_name: 'pl_cloud').first.secret_proxy)
+  # end
 
   def test_user_removing_x509_proxy
     # -- given -- scalarm user with credentials and two different jobs

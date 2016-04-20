@@ -20,7 +20,7 @@ class PlGridFactoryTest < MiniTest::Test
   end
 
   create_test_get_facade 'amazon'
-  create_test_get_facade 'pl_cloud'
+  # create_test_get_facade 'pl_cloud'
   create_test_get_facade 'google'
 
 end
