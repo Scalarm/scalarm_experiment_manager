@@ -179,8 +179,24 @@ namespace :service do
   end
 
   desc 'Schedule a sim monitoring worker for each valid user - infrastructure pair'
-  task :sims_monitoring do :environment
+  task :initialize_sims_monitoring do :environment
+    # clear the default sidekiq queue
+    Sidekiq::Queue.new.clear
 
+    infrastructure_user_combinations = []
+
+    infrastructures = ClusterFacadeFactory.instance.provider_names.uniq
+    infrastructures.each do |infrastructure_id|
+      facade = InfrastructureFacadeFactory.get_facade_for(infrastructure_id)
+
+      infrastructure_users = facade.get_sm_records(nil, nil, {'states_not' => 'error'}).map { |sm_record| sm_record.user_id.to_s }.uniq
+
+      infrastructure_users.each{|user_id| infrastructure_user_combinations << [infrastructure_id, user_id]}
+    end
+
+    infrastructure_user_combinations.each do |combination|
+      SimMonitorWorker.perform_async(combination[0], combination[1])
+    end
   end
 
 end
