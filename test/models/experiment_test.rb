@@ -335,6 +335,8 @@ class ExperimentTest < MiniTest::Test
     assert_equal "Selected DoE method requires more than 1 parameter.", err.message
   end
 
+  # NOTE: if this test fails, install R "lhs" package in R interpreter with:
+  # install.packages("lhs")
   def test_doe_latin_hypercube_method_should_return_evenly_distributed_points_across_parameter_space_2_param_case
     @experiment_with_multiple_params.doe_info = [["latinHypercube", ["param-0", "param-1"]]]
 
@@ -357,6 +359,8 @@ class ExperimentTest < MiniTest::Test
     level_counters.each{|counter| assert_equal [1, 1, 1, 1, 1, 1], counter}
   end
 
+  # NOTE: if this test fails, install R "lhs" package in R interpreter with:
+  # install.packages("lhs")
   def test_doe_latin_hypercube_method_should_return_evenly_distributed_points_across_parameter_space_5_param_case
     @experiment_with_multiple_params.doe_info = [["latinHypercube", ["param-0", "param-1", "param-2", "param-3", "param-4"]]]
 
