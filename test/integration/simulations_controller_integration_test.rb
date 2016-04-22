@@ -39,7 +39,7 @@ class SimulationsControllerIntegrationTest < ActionDispatch::IntegrationTest
     body = response.body
     sim_hash = JSON.parse(body)
     assert_equal 2, sim_hash["simulation_scenarios"].count, sim_hash
-    assert_equal simulation.id.to_s, sim_hash["simulation_scenarios"][0], sim_hash
+    assert_includes sim_hash["simulation_scenarios"], simulation.id.to_s
 
 
     ## test for hmtl response
