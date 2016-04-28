@@ -19,7 +19,7 @@ gem 'mongo', '~> 1.12'
 gem 'aws-sdk'
 
 # Google Compute Engine connector
-gem 'google-api-client'
+gem 'google-api-client', '~> 0.7.1'
 
 gem 'rubyzip'
 gem 'encryptor'
