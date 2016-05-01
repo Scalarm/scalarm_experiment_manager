@@ -105,10 +105,6 @@ class InfrastructureFacadeFactory
         t["name"] = facade.short_name
         t
       end
-
-      t["name"] = facade.short_name
-
-      t
     end
 
     # monit_threads << Thread.start do
