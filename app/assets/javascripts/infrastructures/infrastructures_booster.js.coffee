@@ -1,6 +1,6 @@
 class window.InfrastructuresBooster
   constructor: (@infrastructureName, @disabledInfrastructures, @dialogId) ->
-    @dialog = $("##{dialogId}")
+    @dialog = $("##{@dialogId}")
     @schedulerForm = $('#scheduler-form form')
     @bindToSubmissionForms()
 
