@@ -50,6 +50,10 @@ module SimulationScheduler
     File.join(Rails.root, 'tmp', "manager_#{Rails.configuration.manager_id}_exp_#{self.id}.dat")
   end
 
+  def delete_file_with_ids
+    File.delete(file_with_ids_path)
+  end
+
   def fetch_instance_from_db
     #Rails.logger.debug("Scheduling_policy is set to #{self.scheduling_policy}")
     begin

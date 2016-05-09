@@ -1151,11 +1151,21 @@ apiDoc:
     if @experiment.user_id != current_user.id
       flash[:error] = t('experiments.edit.failure')
     else
-      @experiment.name = params[:experiment][:name]
-      @experiment.description = params[:experiment][:description]
+      # this is experiment attributes update
+      if params.include?(:experiment)
+        @experiment.name = params[:experiment][:name]
+        @experiment.description = params[:experiment][:description]
 
-      @experiment.save
-      flash[:notice] = t('experiments.edit.success')
+        @experiment.save
+
+        flash[:notice] = t('experiments.edit.success')
+
+      # this is a special case of removing all simulation results 
+      elsif params.include?(:reset_experiment)
+        ExperimentResetWorker.perform_async(@experiment.id.to_s)
+
+        flash[:notice] = t('experiments.edit.scheduled')
+      end
     end
 
     redirect_to experiment_path(@experiment.id)

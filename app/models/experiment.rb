@@ -424,29 +424,7 @@ class Experiment < Scalarm::Database::Model::Experiment
 
   # TODO: use token authentication
   def destroy
-    # TODO TMP due to problem with routing in PLGCloud
-    information_service = InformationService.instance
-    @storage_manager_url = information_service.get_list_of('storage').sample
-
-    unless @storage_manager_url
-      # destroy all binary files stored for this experiments
-      sm_uuid = SecureRandom.uuid
-      temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, self.experiment_id)
-      begin
-        config = {'storage_manager' => {'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password}}
-        Rails.logger.debug("Destroy config = #{config}")
-
-        sm_proxy = StorageManagerProxy.new(config)
-        begin
-          success = sm_proxy.delete_experiment_output(self.experiment_id, self.experiment_size)
-          Rails.logger.debug("Deletion of experiment output #{experiment_size} completed successfully ? #{success}")
-        rescue Exception => e
-          Rails.logger.debug("Data farming experiment destroy error - #{e}")
-        end
-      ensure
-        temp_password.destroy
-      end
-    end
+    delete_binary_results
 
     # drop simulation table
     simulation_runs.collection.drop
@@ -555,6 +533,31 @@ class Experiment < Scalarm::Database::Model::Experiment
     }.first
 
     sim_run and sim_run.result
+  end
+
+  def delete_binary_results
+    information_service = InformationService.instance
+    @storage_manager_url = information_service.get_list_of('storage').sample
+
+    unless @storage_manager_url
+      # destroy all binary files stored for this experiments
+      sm_uuid = SecureRandom.uuid
+      temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, self.experiment_id)
+      begin
+        config = {'storage_manager' => {'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password}}
+        Rails.logger.debug("Destroy config = #{config}")
+
+        sm_proxy = StorageManagerProxy.new(config)
+        begin
+          success = sm_proxy.delete_experiment_output(self.experiment_id, self.experiment_size)
+          Rails.logger.debug("Deletion of experiment output #{experiment_size} completed successfully ? #{success}")
+        rescue Exception => e
+          Rails.logger.debug("Data farming experiment destroy error - #{e}")
+        end
+      ensure
+        temp_password.destroy
+      end
+    end
   end
 
 
