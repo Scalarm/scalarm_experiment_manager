@@ -14,25 +14,26 @@ class window.SupervisorBooster
 
   onSupervisorSelectChange: () =>
     selectValue = @supervisorSelect.val()
-    fieldsURL = "https://#{@es_url}/supervisors/#{selectValue}/start_panel"
 
-    try
-      $.ajax({
-        url: fieldsURL,
-        xhrFields: {
-          withCredentials: true
-        },
-        success: ((data, textStatus, jqXHR) =>
-          @fieldsDiv.html(data)
-        ),
-        error: ((jqXHR, textStatus, errorThrown) =>
-          @fieldsDiv.html("There was a problem fetching this method's configuration: #{errorThrown}")
-        ),
-        complete: (=>
-          @hideLoader()
-        )
-      })
+    if selectValue != null
+      fieldsURL = "https://#{@es_url}/supervisors/#{selectValue}/start_panel"
 
-    catch error
-      @hideLoader()
+      try
+        $.ajax({
+          url: fieldsURL,
+          xhrFields: {
+            withCredentials: true
+          },
+          success: ((data, textStatus, jqXHR) =>
+            @fieldsDiv.html(data)
+          ),
+          error: ((jqXHR, textStatus, errorThrown) =>
+            @fieldsDiv.html("There was a problem fetching this method's configuration: #{errorThrown}")
+          ),
+          complete: (=>
+            @hideLoader()
+          )
+        })
 
+      catch error
+        @hideLoader()
