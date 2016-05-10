@@ -21,12 +21,12 @@
     .small-12.large-3.columns
       %h5.subheader= t('.experiment_name') + ':'
     .small-12.large-9.columns
-      %h5.subheader= @experiment.name
+      %h5.subheader.experiment-name= @experiment.name
   .row
     .small-12.large-3.columns
       %h5.subheader= t('.experiment_description') + ':'
     .small-12.large-9.columns
-      %h5.subheader= @experiment.description
+      %h5.subheader.experiment-description= @experiment.description
   .row
     - if current_user.owns?(@experiment)
       .small-12.large-3.columns
@@ -71,20 +71,27 @@
   %a.close-reveal-modal &#215;
 
   .content
-    = form_tag experiment_path(@experiment.id), method: :put, class: 'custom' do
+    = form_tag experiment_path(@experiment.id), method: :put, class: 'custom', remote: true do
       .row
         .small-12.large-3.columns
           %h5.subheader= t('.experiment_name') + ':'
         .small-12.large-6.columns.end
-          = text_field_tag 'experiment[name]', @experiment.name
+          = text_field_tag 'experiment[name]', @experiment.name, class: 'experiment-name'
       .row
         .small-12.large-3.columns
           %h5.subheader= t('.experiment_description') + ':'
         .small-12.large-6.columns.end
-          = text_area_tag 'experiment[description]', @experiment.description
+          = text_area_tag 'experiment[description]', @experiment.description, class: 'experiment-description'
       .row
         .small-12.small-centered.large-2.large-centered.columns
-          = submit_tag t('experiments.edit.submit_btn'), class: 'button radius expand'
+          = submit_tag t('experiments.edit.submit_btn'), class: 'button radius expand', data: { disabled_with: t("generic.loading") }
+    
+    = form_tag experiment_path(@experiment.id), method: :put, class: 'custom', remote: true do
+      = hidden_field_tag "reset_experiment", true
+      .row
+        .small-12.small-centered.large-3.large-centered.columns
+          = submit_tag t('experiments.edit.reset_btn'), class: 'button radius expand alert', data: { confirm: t("generic.confirm"), disabled_with: t("generic.loading") }
+
 
 - if @experiment.user_id == current_user.id
   #share-dialog.reveal-modal(data-reveal)

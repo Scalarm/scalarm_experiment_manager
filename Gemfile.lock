@@ -111,9 +111,9 @@ GEM
     foundation-icons-sass-rails (3.0.0)
       railties (>= 3.1.1)
       sass-rails (>= 3.1.1)
-    foundation-rails (5.5.0.0)
+    foundation-rails (5.4.5.0)
       railties (>= 3.1.0)
-      sass (>= 3.2.0, < 3.4)
+      sass (>= 3.2.0)
     google-api-client (0.7.1)
       addressable (>= 2.3.2)
       autoparse (>= 0.3.3)
@@ -477,7 +477,7 @@ DEPENDENCIES
   encryptor
   font-awesome-sass (= 4.4)
   foundation-icons-sass-rails
-  foundation-rails
+  foundation-rails (= 5.4.5)
   google-api-client (~> 0.7.1)
   haml
   jbuilder (~> 1.2)

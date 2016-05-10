@@ -1,0 +1,12 @@
+$("#share-dialog").foundation('reveal', 'close');
+
+<% if @msg.include?(:error) %>
+	toastr.error("<%= @msg[:error] %>")
+<% end %>
+
+<% if @msg.include?(:notice) %>
+	toastr.success("<%= @msg[:notice] %>")
+	// update experiment name and description everywhere
+	$(".experiment-name").html("<%= @experiment.name %>")
+	$(".experiment-description").html("<%= @experiment.description %>")
+<% end %>

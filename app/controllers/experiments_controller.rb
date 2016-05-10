@@ -1148,8 +1148,10 @@ apiDoc:
   end
 
   def update
+    @msg = {}
+
     if @experiment.user_id != current_user.id
-      flash[:error] = t('experiments.edit.failure')
+      @msg[:error] = t('experiments.edit.failure')
     else
       # this is experiment attributes update
       if params.include?(:experiment)
@@ -1158,17 +1160,15 @@ apiDoc:
 
         @experiment.save
 
-        flash[:notice] = t('experiments.edit.success')
+        @msg[:notice] = t('experiments.edit.success')
 
       # this is a special case of removing all simulation results 
       elsif params.include?(:reset_experiment)
         ExperimentResetWorker.perform_async(@experiment.id.to_s)
 
-        flash[:notice] = t('experiments.edit.scheduled')
+        @msg[:notice] = t('experiments.edit.scheduled')
       end
     end
-
-    redirect_to experiment_path(@experiment.id)
   end
 
   def new

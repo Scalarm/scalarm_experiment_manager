@@ -25,6 +25,10 @@ en:
   login-title: "platform for data farming experiments"
   account-title: Account management panel
 
+  generic:
+    confirm: "Are you sure?"
+    loading: "Loading..."
+
   registered_simulation_scenario_list:
     label: "Registered simulations"
     destroy_button: "Destroy"

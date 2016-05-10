@@ -102,6 +102,8 @@ en:
       submit_btn: "Update"
       success: "The experiment has been updated"
       failure: "You cannot edit this experiment because you are not its owner"
+      reset_btn: "Reset experiment"
+      scheduled: "The experiment will be updated shortly"
 
     stop:
       failure: "You cannot stop this experiment because you are not its owner"
