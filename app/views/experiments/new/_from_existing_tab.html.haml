@@ -1,0 +1,24 @@
+= form_tag(experiments_path, class: 'custom', id: 'cloned-experiment-form') do
+  = hidden_field_tag 'type', 'from_existing'
+
+  = hidden_field_tag 'simulation_id'
+  = hidden_field_tag 'replication_level'
+  = hidden_field_tag 'execution_time_constraint'
+  = hidden_field_tag 'experiment_name'
+  = hidden_field_tag 'experiment_description'
+
+  %h3.subheader= t('.header')
+
+  .content
+    .row
+      .small-12.columns
+        %h3.subheader= t('.copy_label')
+    .row
+      .small-12.columns
+        %ul.no-bullet
+          - current_user.experiments.select{|e| e.simulation.id == @simulation.id}.each_with_index do |experiment, idx|
+            %li
+              = radio_button_tag(:experiment_id, experiment.id, idx == 0, id: experiment.id)
+              = label_tag(experiment.id, experiment.name)
+              %br
+              = experiment.description

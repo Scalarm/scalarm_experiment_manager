@@ -8,6 +8,7 @@ en:
       title: Input space specification
       manual_designed: Manually designed
       csv_imported: Imported from a CSV file
+      from_existing: Cloned from existing experiment
     automatic_experiment:
       title: Automatic input space exploration method
 
@@ -162,6 +163,10 @@ en:
         submit_import: "Import"
         import_label: "Select a CSV file with the parameter space:"
 
+      from_existing_tab:
+        header: Input space - cloned from an existing experiment
+        copy_label: Select an experiment that you want to copy
+
       doe_tab:
         info:
           header: This is an optional step
@@ -171,6 +176,8 @@ en:
         header: Here you can specify that values of one parameter should be less than values of other parameter
         add_constraint_btn: Add new constraint
 
+      experiment_not_visible: Selected experiment is not visible for the current user
+      different_simulations: You should select experiment based on the same simulation model
 
 
     analysis:

@@ -400,10 +400,103 @@ apiDoc:
     }
   end
 
+=begin
+Create a new experiment by cloning input parameter space of an existing experiment.
+Invoke by sending POST to /experiments with type='from_existing'.
+
+apiDoc:
+  @api {post} /experiments  create a new experiment with cloned input parameter space of an existing one
+  @apiName    start_cloned_experiment
+  @apiGroup   Experiments
+  @apiDescription This action creates a new experiment by cloning input parameter space from an existing one.
+  Action supports two possible result formats:
+  * .json - json with info about performed action
+  * .html - redirection to experiment view page
+
+  @apiParam {String} type experiment type, must be set to 'from_existing'
+  @apiParam {String} simulation_id  ID of a simulation used to perform experiment
+  @apiParam {String} experiment_id  ID of an experiment whose input parameter space will be cloned
+  @apiParam {String} experiment_name  human readable name of the experiment
+  @apiParam {String} experiment_description  longer human readable description of the experiment
+
+  @apiParamExample Params-Example
+    type: 'from_existing'
+    simulation_id: '551fca1f2ab4f259fc000002'
+    experiment_id: '551fca1f2ab4f259fc003425'
+    experiment_name: 'test'
+    experiment_description: 'this is a clone experiment'
+
+  @apiSuccess {Object} info json object with information about performed action
+  @apiSuccess {String} info.status status of performed action, on success always 'ok'
+  @apiSuccess {String} info.experiment_id id of created experiment
+
+  @apiSuccessExample {json} Success-Response
+    {
+      'status': 'ok'
+      'experiment_id': '551fc1932ab4f259fc000001'
+    }
+
+  @apiError {Object} info json object with information about performed action
+  @apiError {String} info.status status of performed action, on failure always 'error'
+  @apiError {String} info.reason reason of failure to start experiment
+
+  @apiErrorExample {json} Failure-Response
+    {
+      'status': 'error'
+      'reason': 'Couldn't find an experiment with the given id'
+    }
+=end
+  def create_experiment_from_existing
+    validate(experiment_id: :security_default, simulation_id: :security_default)
+
+    begin
+      existing_experiment = Experiment.where(id: params[:experiment_id]).first
+      if existing_experiment.blank? or not current_user.experiments.map(&:id).include?(existing_experiment.id)
+        raise SecurityError.new(t('experiments.new.experiment_not_visible'))
+      end
+
+      if existing_experiment.simulation.id.to_s != params[:simulation_id]
+        raise StandardError.new(t('experiments.new.different_simulations'))
+      end
+
+      Utils::parse_param(params, :replication_level, lambda { |x| x.to_i })
+      Utils::parse_param(params, :execution_time_constraint, lambda { |x| x.to_i * 60 })
+
+      parsed_params = params.slice(:replication_level, :execution_time_constraint, :scheduling_policy, :experiment_name, :experiment_description).symbolize_keys
+
+      experiment = ExperimentFactory.create_experiment(current_user.id, @simulation, parsed_params)
+      experiment.doe_info = existing_experiment.doe_info
+      experiment.experiment_input = existing_experiment.experiment_input
+      experiment.save
+
+      experiment.insert_initial_bar
+      experiment.simulation_runs.create_table
+
+    rescue Exception => e
+      Rails.logger.error "Exception in ExperimentsController create_experiment_from_existing: #{e.to_s}\n#{e.backtrace.join("\n")}"
+      flash[:error] = e.message
+    end
+
+    if flash[:error].blank?
+      {
+          status: :ok,
+          json: {status: 'ok', experiment_id: experiment.id.to_s},
+          html: experiment_path(experiment.id), experiment: experiment
+      }
+    else
+      {
+          status: :error,
+          json: {status: 'error', message: flash[:error]},
+          html: experiments_path,
+      }
+    end
+  end
+
   CONSTRUCTORS = {
       'experiment' => :create_experiment,
       'custom_points' => :create_custom_points_experiment,
-      'supervised' => :create_supervised_experiment
+      'supervised' => :create_supervised_experiment,
+      'from_existing' => :create_experiment_from_existing
   }
 
   def create

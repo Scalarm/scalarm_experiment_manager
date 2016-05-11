@@ -1,0 +1,51 @@
+
+window.newExperimentSubmitHandler = (input_space) =>
+
+  switch $("#input_space_select").find(":selected").val()
+    when "<%= I18n.t('experiments.manual_experiment.manual_designed') %>" then submitStandardExperiment(input_space)
+    when "<%= I18n.t('experiments.manual_experiment.csv_imported') %>" then submitImportedExperiment()
+    when "<%= I18n.t('experiments.manual_experiment.from_existing') %>" then submitClonedExperiment()
+
+
+submitStandardExperiment = (input_space) =>
+  parameter_constraints_manager = new window.ParameterConstraintsManager()
+
+  if $("#wrapper").find(':input[data-invalid]:visible').length == 0
+    if $('#input-space-parameters').is(":visible")
+      # most basic experiment
+      parameter_constraints_manager.getParametersConstraints()
+      input_space.updateAllInputParameterValues()
+      $("#experiment_submit_form").submit()
+
+    else
+      # supervised experiment
+      builder = {}
+
+      $('#supervisor_fields *').filter(':input').each (key, value) =>
+          if value.name != "utf8" and value.name != "authenticity_token"
+            if (value.type == 'number')
+              builder[value.name] = Number(value.value)
+            else
+              builder[value.name] = value.value
+
+      $("input[name='supervisor_script_params']").val(JSON.stringify(builder))
+      cloneBasicExperimentInfo("supervised_experiment_submit_form", "experiment_submit_form")
+      $("#supervised_experiment_submit_form").submit()
+
+  else
+    $('#invalid-form').foundation('reveal', 'open')
+
+
+submitImportedExperiment = () =>
+  $("#import-form").submit()
+
+
+submitClonedExperiment = () =>
+  cloneBasicExperimentInfo("cloned-experiment-form", "experiment_submit_form")
+  $("#cloned-experiment-form").submit()
+
+
+cloneBasicExperimentInfo = (destinationFormId, sourceFormId) ->
+  fieldsToCopy = [ "replication_level", "execution_time_constraint", "experiment_name", "experiment_description", "simulation_id" ]
+  $("##{destinationFormId} ##{fieldId}").val($("##{sourceFormId} ##{fieldId}").val()) for fieldId in fieldsToCopy
+

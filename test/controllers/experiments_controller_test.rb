@@ -235,4 +235,9 @@ class ExperimentsControllerTest < ActionController::TestCase
     create_stats_param_test(configuration[:method_name], configuration[:default_value], configuration[:result_keys])
   end
 
+  test 'create should call proper constructor when type is from_existing' do
+    ExperimentsController.any_instance.expects(:create_experiment_from_existing).returns({})
+    post :create, type: 'from_existing'
+  end
+  
 end

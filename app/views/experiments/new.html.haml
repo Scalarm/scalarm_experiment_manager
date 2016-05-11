@@ -33,7 +33,7 @@
     .content
       .row
         .small-6.small-centered.columns
-          = select_tag 'input_space_select', options_for_select([t('experiments.manual_experiment.manual_designed'), t('experiments.manual_experiment.csv_imported')], t('experiments.manual_experiment.manual_designed'))
+          = select_tag 'input_space_select', options_for_select([t('experiments.manual_experiment.manual_designed'), t('experiments.manual_experiment.csv_imported'), t('experiments.manual_experiment.from_existing')], t('experiments.manual_experiment.manual_designed'))
 
 #automatic-experiment-panel
   %section.panel.radius
@@ -84,6 +84,10 @@
 #import{:style => 'display: none'}
   %section.panel.radius
     = render 'experiments/new/import_tab'
+
+#from-existing{:style => 'display: none'}
+  %section.panel.radius
+    = render 'experiments/new/from_existing_tab'
 
 #workers-scaling-mode
   %section.panel.radius
@@ -173,7 +177,7 @@
       var input_space_importer = new window.InputSpaceImporter("#{simulations_upload_parameter_space_path}",
                                                                "#{calculate_imported_experiment_size_experiments_path}");
 
-      var parameter_constraints_manager = new window.ParameterConstraintsManager();
+
 
       var doe_manager = new window.ExperimentDesigner(input_space);
       $("#invalid-ok").bind("click", function() {
@@ -213,40 +217,7 @@
           delete_workers_scaling_fields();
         }
 
-        if($('#import').is(":visible"))
-          $("#import-form").submit();
-        else{
-          if ($("#wrapper").find(':input[data-invalid]:visible').length==0){
-            if($('#input-space-parameters').is(":visible")) {
-              // standart experiment
-              parameter_constraints_manager.getParametersConstraints();
-              input_space.updateAllInputParameterValues();
-              $("#experiment_submit_form").submit();
-            } else {
-            // supervised
-            var builder = {};
-            $('#supervisor_fields *').filter(':input').each(function(key, value){
-                if (value.name != "utf8" && value.name != "authenticity_token") {
-                  if (value.type == 'number') {
-                    builder[value.name] = Number(value.value)
-                  } else {
-                    builder[value.name] = value.value
-                  }
-                }
-            });
-            $("input[name='supervisor_script_params']").val(JSON.stringify(builder));
-            $("#supervised_experiment_submit_form #replication_level").val($("#experiment_submit_form #replication_level").val())
-            $("#supervised_experiment_submit_form #execution_time_constraint").val($("#experiment_submit_form #execution_time_constraint").val())
-            $("#supervised_experiment_submit_form #experiment_name").val($("#experiment_submit_form #experiment_name").val())
-            $("#supervised_experiment_submit_form #experiment_description").val($("#experiment_submit_form #experiment_description").val())
-            $("#supervised_experiment_submit_form").submit();
-          }
-        }
-        else
-        {
-          $('#invalid-form').foundation('reveal', 'open');
-        }
-      }
+        window.newExperimentSubmitHandler(input_space);
       });
 
       $("#check-experiment-size").on("click", function() {
@@ -272,14 +243,23 @@
           $("#automatic-experiment-panel").hide();
           $('#supervisor_fields').empty()
           $("#supervised_experiment_submit_form").hide();
+
           if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
             $("#import").hide();
+            $("#from-existing").hide();
             $("#input-space-parameters").show();
           }
           else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
             $("#input-space-parameters").hide();
+            $("#from-existing").hide();
             $("#import").show();
           }
+          else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.from_existing')}")) {
+            $("#from-existing").show();
+            $("#input-space-parameters").hide();
+            $("#import").hide();
+          }
+
         }
         else if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.automatic')}") ) {
           $("#supervised_experiment_submit_form").show();
@@ -303,6 +283,11 @@
         else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
           $("#import").show();
           $("#input-space-parameters").hide();
+        }
+        else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.from_existing')}")) {
+          $("#from-existing").show();
+          $("#input-space-parameters").hide();
+          $("#import").hide();
         }
       });
 
