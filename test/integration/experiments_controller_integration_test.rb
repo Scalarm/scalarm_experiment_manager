@@ -23,6 +23,7 @@ class ExperimentsControllerIntegrationTest < ActionDispatch::IntegrationTest
     @simulation.save
 
     @experiment_params = {"is_running"=>true, "user_id"=>@user.id,
+                          "start_at" => Time.now,
           "replication_level"=>1,
           "time_constraint_in_sec"=>3300,
           "scheduling_policy"=>"monte_carlo",
@@ -57,15 +58,19 @@ class ExperimentsControllerIntegrationTest < ActionDispatch::IntegrationTest
                   ])
       stubs(:input_parameters).returns({})
     end
+
+    experiment_count = Experiment.all.count
     exp = ExperimentFactory.create_custom_points_experiment(@user.id, simulation, name: 'exp')
     exp.save
 
     get experiments_path, format: :json
+    assert_response :success
+
     body = response.body
     hash_resp = JSON.parse(body)
     assert_equal 'ok', hash_resp['status'], hash_resp
-    assert_equal 1, hash_resp['running'].count, hash_resp
-    assert_equal exp.id.to_s, hash_resp['running'][0], hash_resp
+    assert_equal experiment_count + 1, hash_resp['running'].count, hash_resp
+    assert  hash_resp['running'].include?(exp.id.to_s)
   end
 
   test 'create with from_existing type should return a new experiment with the same parametrization as the given one' do
