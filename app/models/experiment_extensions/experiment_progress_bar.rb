@@ -38,7 +38,8 @@ module ExperimentProgressBar
                       elsif update_type == 'sent'
                         1
                       elsif update_type == 'rollback'
-                        -1
+                        update_bar_state(simulation_id, force)
+                        0
                       elsif update_type == 'error'
                         -256
                       end

@@ -1,6 +1,13 @@
 %h2
   = t '.title', id: @simulation_run.index
 
+  - if @simulation_run.is_error or @simulation_run.is_done
+    = form_tag experiment_simulation_path(@experiment.id, @simulation_run.index), class: 'custom', method: :put, remote: true do
+      = hidden_field_tag :reset, true
+      = button_tag(type: "submit", class: "button radius alert") do
+        %i.fa.fa-repeat(aria-hidden="true")
+        = t('.reset')
+
 %a.close-reveal-modal &#215;
 
 .row.small-button-margin
@@ -45,14 +52,17 @@
             %br
 
 
-- elsif @simulation_run.is_done
+- if @simulation_run.is_done == true
   .row
     %h4= t('.output_section')
-    %ul
-      - @simulation_run.result.each do |moe_name, moe_value|
-        %li
-          %b= moe_name + ':'
-          = moe_value
+    - if @simulation_run.result.blank?
+      Not available
+    - else
+      %ul
+        - @simulation_run.result.each do |moe_name, moe_value|
+          %li
+            %b= moe_name + ':'
+            = moe_value
 
   .row
     %h4= t('.binary_output_header')
@@ -63,11 +73,11 @@
     - else
       = t('.output_not_available')
 
-.row
-  %h4= t('.stdout_header')
-  - if @stdout_size_err == 0
-    = link_to 'click to download', results_stdout_experiment_simulation_path
-    %p
-      = t('.size', { size: @stdout_size_label })
-  - else
-    = t('.output_not_available')
+  .row
+    %h4= t('.stdout_header')
+    - if @stdout_size_err == 0
+      = link_to 'click to download', results_stdout_experiment_simulation_path
+      %p
+        = t('.size', { size: @stdout_size_label })
+    - else
+      = t('.output_not_available')

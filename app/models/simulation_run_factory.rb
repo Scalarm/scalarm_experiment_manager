@@ -17,6 +17,53 @@ module SimulationRunExtensions
       self.tmp_results_list.last['result']
     end
   end
+
+  def destroy_binary_results
+    sm_proxy = StorageManagerProxy.create(self.experiment_id)
+
+    if sm_proxy.nil?
+      raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
+    end
+
+    begin
+      success = sm_proxy.delete_binary_output(self.experiment_id, self.index)
+      Rails.logger.debug("Deletion of simulation output #{self.experiment_id} #{self.index} completed successfully ? #{success}")
+
+      if not success
+        raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
+      end
+
+    rescue Exception => e
+      Rails.logger.error("Deletion of simulation output #{self.experiment_id} #{self.index} raised an exception - #{e}")
+        # raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index} - #{e}")
+    ensure
+      sm_proxy.teardown
+    end
+  end
+
+  def destroy_stdout
+    user = Experiment.where(id: self.experiment_id).first.user
+    sm_proxy = StorageManagerProxy.create(self.experiment_id, user)
+
+    if sm_proxy.nil?
+      raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
+    end
+
+    begin
+      success = sm_proxy.delete_stdout(self.experiment_id, self.index)
+      Rails.logger.debug("Deletion of simulation output #{self.experiment_id} #{self.index} completed successfully ? #{success}")
+
+      if not success
+        raise StandardError.new("Couldn't delete std out for #{self.experiment_id} #{self.index}")
+      end
+
+    rescue Exception => e
+      Rails.logger.error("Deletion of simulation output #{self.experiment_id} #{self.index} raised an exception - #{e}")
+        # raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index} - #{e}")
+    ensure
+      sm_proxy.teardown
+    end
+  end
 end
 
 class SimulationRunFactory < Scalarm::Database::SimulationRunFactory
