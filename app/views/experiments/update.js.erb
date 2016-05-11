@@ -9,4 +9,6 @@ $("#share-dialog").foundation('reveal', 'close');
 	// update experiment name and description everywhere
 	$(".experiment-name").html("<%= @experiment.name %>")
 	$(".experiment-description").html("<%= @experiment.description %>")
+  $("#avg_execution_time").hide();
+  $("#p_predicted_finish_time").hide();
 <% end %>
