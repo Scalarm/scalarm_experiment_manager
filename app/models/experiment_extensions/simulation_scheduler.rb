@@ -51,7 +51,9 @@ module SimulationScheduler
   end
 
   def delete_file_with_ids
-    File.delete(file_with_ids_path)
+    if File.exist?(file_with_ids_path)
+      File.delete(file_with_ids_path)
+    end
   end
 
   def fetch_instance_from_db
