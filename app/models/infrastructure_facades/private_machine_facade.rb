@@ -32,7 +32,7 @@ class PrivateMachineFacade < InfrastructureFacade
       logger.debug "Start simulation managers for experiment #{experiment_id}"
 
       machine_creds = if params[:host]
-                        PrivateMachineCredentials.where(user_id: user_id, host: params[:host].to_s).to_a
+                        PrivateMachineCredentials.where(user_id: user_id, host: params[:host].to_s).first
                       else
                         PrivateMachineCredentials.find_by_id(params[:credentials_id].to_s)
                       end
