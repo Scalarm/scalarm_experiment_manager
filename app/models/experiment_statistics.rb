@@ -16,12 +16,14 @@ class ExperimentStatistics
     sims_done = @experiment.count_done_simulations
 
     if sims_generated > @experiment.experiment_size
-      Rails.logger.error("FATAL - too many simulations generated for experiment #{@experiment.inspect}")
+      Rails.logger.error("FATAL - too many simulations generated for experiment #{@experiment.id}")
+      Rails.logger.error("FATAL - sims_generated (#{sims_generated}) is greater than experiment_size (#{@experiment.experiment_size}) which shouldn't happen")
       sims_generated = @experiment.experiment_size
     end
 
     if sims_done > @experiment.experiment_size
-      Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.inspect}")
+      Rails.logger.error("FATAL - too many simulations done and sent for experiment #{@experiment.id}")
+      Rails.logger.error("FATAL - sims_done (#{sims_done}) is greater than experiment_size (#{@experiment.experiment_size}) which shouldn't happen")
       sims_done = @experiment.experiment_size
     end
 

@@ -43,7 +43,7 @@ module SimulationRunExtensions
 
   def destroy_stdout
     user = Experiment.where(id: self.experiment_id).first.user
-    sm_proxy = StorageManagerProxy.create(self.experiment_id, user)
+    sm_proxy = StorageManagerProxy.create(self.experiment_id)
 
     if sm_proxy.nil?
       raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")

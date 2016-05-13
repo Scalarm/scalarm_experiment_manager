@@ -500,7 +500,6 @@ class SimulationsController < ApplicationController
 
     return unless params.include?('id') and params.include?('experiment_id')
     experiment_id = BSON::ObjectId(params[:experiment_id])
-    Rails.logger.debug("Experiment id : #{experiment_id}")
 
     @experiment = if not current_user.nil?
                     current_user.experiments.where(id: experiment_id).first
