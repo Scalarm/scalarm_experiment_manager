@@ -536,27 +536,25 @@ class Experiment < Scalarm::Database::Model::Experiment
   end
 
   def delete_binary_results
-    information_service = InformationService.instance
-    @storage_manager_url = information_service.get_list_of('storage').sample
+    sm_proxy = StorageManagerProxy.create(self.id.to_s)
 
-    unless @storage_manager_url
-      # destroy all binary files stored for this experiments
-      sm_uuid = SecureRandom.uuid
-      temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, self.experiment_id)
-      begin
-        config = {'storage_manager' => {'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password}}
-        Rails.logger.debug("Destroy config = #{config}")
+    if sm_proxy.nil?
+      Rails.logger.error("Couldn't experiment's delete binary results for #{self.id}")
+      sm_proxy.teardown
+      return
+    end
 
-        sm_proxy = StorageManagerProxy.new(config)
-        begin
-          success = sm_proxy.delete_experiment_output(self.experiment_id, self.experiment_size)
-          Rails.logger.debug("Deletion of experiment output #{experiment_size} completed successfully ? #{success}")
-        rescue Exception => e
-          Rails.logger.debug("Data farming experiment destroy error - #{e}")
-        end
-      ensure
-        temp_password.destroy
+    begin
+      success = sm_proxy.delete_experiment_output(self.id.to_s, self.experiment_size)
+      Rails.logger.info("Deletion of experiment's output #{self.id.to_s} completed successfully ? #{success}")
+
+      if not success
+        Rails.logger.error("Deletion of experiment's output #{self.id.to_s} completed successfully ? #{success}")
       end
+    rescue Exception => e
+      Rails.logger.error("Deletion of simulation output #{self.id.to_s}raised an exception - #{e}")
+    ensure
+      sm_proxy.teardown
     end
   end
 
