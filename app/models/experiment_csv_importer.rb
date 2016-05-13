@@ -7,7 +7,7 @@ class ExperimentCsvImporter
     @content = csv_content
     @parameters, @parameter_values = [], []
     @parameters_to_include = parameters_to_include
-    @indexes_to_ommit = []
+    @indexes_to_omit = []
 
     parse
   end
@@ -22,7 +22,7 @@ class ExperimentCsvImporter
 
         @parameters.each_with_index do |parameter, index|
           unless @parameters_to_include.include?(parameter)
-            @indexes_to_ommit << index
+            @indexes_to_omit << index
           end
         end
 
@@ -30,7 +30,7 @@ class ExperimentCsvImporter
       else
         row_values = []
         row.each_with_index do |cell, index|
-          next if @indexes_to_ommit.include?(index)
+          next if @indexes_to_omit.include?(index)
 
           begin
             parsed_cell = JSON.parse(cell)
@@ -50,7 +50,7 @@ class ExperimentCsvImporter
       i += 1
     end
 
-    @parameter_values.uniq!
+    @parameter_values
   end
 
   # TODO move to utils
