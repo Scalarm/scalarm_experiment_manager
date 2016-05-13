@@ -163,6 +163,7 @@
 - content_for :javascript do
   :javascript
     $(function() {
+      // variable declaration
       var wss_algorithms_descriptions = JSON.parse('#{raw(workers_scaling_algorithms_description.to_json)}');
       var es_url = "#{es_url}";
       if (es_url) {
@@ -180,6 +181,12 @@
 
 
       var doe_manager = new window.ExperimentDesigner(input_space);
+
+      // handler binding
+      $(document).ready(window.setInputSpaceSpecificationPanelsVisibility);
+      $("#experiment_type_select").on("change", window.setInputSpaceSpecificationPanelsVisibility);
+      $("#input_space_select").on("change", window.setInputSpaceSpecificationPanelsVisibility);
+
       $("#invalid-ok").bind("click", function() {
         $('#invalid-form').foundation('reveal', 'close');
         $('html, body').animate({
@@ -221,75 +228,10 @@
       });
 
       $("#check-experiment-size").on("click", function() {
-        if($("#input-space-parameters").is(":visible")) {
-          doe_manager.checkExperimentSize();
-        }
-        else {
-          input_space_importer.checkImportedSize();
-        }
+        window.checkExperimentSizeHandler(doe_manager, input_space_importer);
       });
 
       $("#createDoeGroupBtn").on("click", function() { doe_manager.createDoeGroup('doe_type'); });
-
-      $(document).ready(function (){
-        set_visible_panels();
-
-      });
-
-      function set_visible_panels() {
-        if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.manual')}" )) {
-          $("#manual-experiment-panel").show();
-          $('#check-experiment-size').show()
-          $("#automatic-experiment-panel").hide();
-          $('#supervisor_fields').empty()
-          $("#supervised_experiment_submit_form").hide();
-
-          if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
-            $("#import").hide();
-            $("#from-existing").hide();
-            $("#input-space-parameters").show();
-          }
-          else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
-            $("#input-space-parameters").hide();
-            $("#from-existing").hide();
-            $("#import").show();
-          }
-          else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.from_existing')}")) {
-            $("#from-existing").show();
-            $("#input-space-parameters").hide();
-            $("#import").hide();
-          }
-
-        }
-        else if (!$("#experiment_type_select").find(":selected").val().localeCompare("#{t('experiments.optimization_method.automatic')}") ) {
-          $("#supervised_experiment_submit_form").show();
-          $("#automatic-experiment-panel").show();
-          $("#manual-experiment-panel").hide();
-          $("#import").hide();
-          $("#input-space-parameters").hide();
-          $('#check-experiment-size').hide()
-        }
-      }
-
-      $("#experiment_type_select").on("change", function() {
-        set_visible_panels();
-      });
-
-      $("#input_space_select").on("change", function() {
-        if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.manual_designed')}")) {
-          $("#input-space-parameters").show();
-          $("#import").hide();
-        }
-        else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.csv_imported')}")) {
-          $("#import").show();
-          $("#input-space-parameters").hide();
-        }
-        else if (!$("#input_space_select").find(":selected").val().localeCompare("#{t('experiments.manual_experiment.from_existing')}")) {
-          $("#from-existing").show();
-          $("#input-space-parameters").hide();
-          $("#import").hide();
-        }
-      });
 
       // workers scaling
       workers_scaling_mode_select_on_change = function() {

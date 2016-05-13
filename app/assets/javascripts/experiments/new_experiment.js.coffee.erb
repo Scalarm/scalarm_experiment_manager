@@ -1,6 +1,5 @@
 
 window.newExperimentSubmitHandler = (input_space) =>
-
   switch $("#input_space_select").find(":selected").val()
     when "<%= I18n.t('experiments.manual_experiment.manual_designed') %>" then submitStandardExperiment(input_space)
     when "<%= I18n.t('experiments.manual_experiment.csv_imported') %>" then submitImportedExperiment()
@@ -49,3 +48,64 @@ cloneBasicExperimentInfo = (destinationFormId, sourceFormId) ->
   fieldsToCopy = [ "replication_level", "execution_time_constraint", "experiment_name", "experiment_description", "simulation_id" ]
   $("##{destinationFormId} ##{fieldId}").val($("##{sourceFormId} ##{fieldId}").val()) for fieldId in fieldsToCopy
 
+
+window.setInputSpaceSpecificationPanelsVisibility = () ->
+  if not $("#experiment_type_select").find(":selected").val().localeCompare("<%= I18n.t('experiments.optimization_method.manual') %>")
+    $("#manual-experiment-panel").show()
+    $('#check-experiment-size').show()
+    $("#automatic-experiment-panel").hide()
+    $('#supervisor_fields').empty()
+    $("#supervised_experiment_submit_form").hide()
+
+
+    if not $("#input_space_select").find(":selected").val().localeCompare("<%= I18n.t('experiments.manual_experiment.manual_designed') %>")
+      $("#import").hide()
+      $("#from-existing").hide()
+      $("#input-space-parameters").show()
+
+    else if not $("#input_space_select").find(":selected").val().localeCompare("<%= I18n.t('experiments.manual_experiment.csv_imported') %>")
+      $("#input-space-parameters").hide()
+      $("#from-existing").hide()
+      $("#import").show()
+
+    else if not $("#input_space_select").find(":selected").val().localeCompare("<%= I18n.t('experiments.manual_experiment.from_existing') %>")
+      $("#from-existing").show()
+      $("#input-space-parameters").hide()
+      $("#import").hide()
+
+  else if not $("#experiment_type_select").find(":selected").val().localeCompare("<%= I18n.t('experiments.optimization_method.automatic') %>")
+    $("#supervised_experiment_submit_form").show()
+    $("#automatic-experiment-panel").show()
+    $("#manual-experiment-panel").hide()
+    $("#import").hide()
+    $("#from-existing").hide()
+    $("#input-space-parameters").hide()
+    $('#check-experiment-size').hide()
+
+window.checkExperimentSizeHandler = (doeManager, inputSpaceImporter) ->
+  switch $("#input_space_select").find(":selected").val()
+    when "<%= I18n.t('experiments.manual_experiment.manual_designed') %>" then doeManager.checkExperimentSize()
+    when "<%= I18n.t('experiments.manual_experiment.csv_imported') %>" then inputSpaceImporter.checkImportedSize()
+    when "<%= I18n.t('experiments.manual_experiment.from_existing') %>"
+      experimentId = $("#from-existing [name='experiment_id']:checked").val()
+
+      $.ajax
+        type: "GET",
+        url: "/experiments/#{experimentId}.json",
+        beforeSend: (xhr) =>
+          $('#conduct-loading').show()
+        success: (msg) =>
+          $('#conduct-loading').hide()
+
+          if msg.status == "error"
+            toastr.error(msg.message)
+
+          else if msg.status == "ok"
+            $("#experiment-size-dialog #calculated-experiment-size").html(msg.data.size)
+            $('#experiment-size-dialog').foundation('reveal', 'open')
+
+        error: (msg) ->
+          $('#conduct-loading').hide()
+          toastr.error(msg)
+
+      return false
