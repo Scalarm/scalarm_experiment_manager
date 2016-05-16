@@ -540,7 +540,6 @@ class Experiment < Scalarm::Database::Model::Experiment
 
     if sm_proxy.nil?
       Rails.logger.error("Couldn't experiment's delete binary results for #{self.id}")
-      sm_proxy.teardown
       return
     end
 

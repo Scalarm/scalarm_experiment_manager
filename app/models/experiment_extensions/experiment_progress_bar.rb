@@ -28,6 +28,7 @@ module ExperimentProgressBar
   ##
   #update made on changing state of simulation
   def progress_bar_update(simulation_id, update_type)
+    Rails.logger.debug("Update progress bar: #{simulation_id} - #{update_type}")
     return if self.experiment_size > PROGRESS_BAR_THRESHOLD and update_type == 'sent'
 
     parts_per_slot = parts_per_progress_bar_slot
@@ -38,7 +39,8 @@ module ExperimentProgressBar
                       elsif update_type == 'sent'
                         1
                       elsif update_type == 'rollback'
-                        update_bar_state(simulation_id, force)
+                        Rails.logger.debug("Update progress bar: update_bar_state(#{simulation_id}, #{true})")
+                        update_bar_state(simulation_id, true)
                         0
                       elsif update_type == 'error'
                         -256

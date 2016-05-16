@@ -472,20 +472,12 @@ class SimulationsController < ApplicationController
     @msg = {}
 
     if params.include?(:reset) and params[:reset] and not @simulation_run.nil?
-      @simulation_run.to_sent = true
-      @simulation_run.is_done = false
-      @simulation_run.sent_at = nil
-      @simulation_run.results = nil
+
       begin
-        @simulation_run.destroy_stdout
-        @simulation_run.destroy_binary_results
+        @simulation_run.rollback!
       rescue Exception => e
         @msg[:error] = e.to_s
       end
-
-      @simulation_run.save
-
-      @experiment.progress_bar_update(@simulation_run.index, 'rollback')
 
       @msg[:notice] = t("simulations.show.reset_scheduled")
     else

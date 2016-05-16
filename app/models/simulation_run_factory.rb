@@ -5,8 +5,19 @@ module SimulationRunExtensions
   def rollback!
     Rails.logger.debug("Rolling back SimulationRun: #{id}")
 
+    begin
+      Rails.logger.debug("Destroy stdout: #{id}")
+      self.destroy_stdout
+      Rails.logger.debug("Destroy binary results: #{id}")
+      self.destroy_binary_results
+    rescue Exception => e
+      Rails.logger.info("An exception raised during destroy stdout or binary results - #{e}")
+    end
+
     self.destroy
-    experiment.progress_bar_update(self.index, 'rollback')
+
+    Experiment.where(id: self.experiment_id).first.progress_bar_update(self.index, 'rollback')
+
     self
   end
 
@@ -22,46 +33,43 @@ module SimulationRunExtensions
     sm_proxy = StorageManagerProxy.create(self.experiment_id)
 
     if sm_proxy.nil?
-      raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
+      raise StandardError.new("No storage manager registered")
     end
+
+    success = false
 
     begin
       success = sm_proxy.delete_binary_output(self.experiment_id, self.index)
-      Rails.logger.debug("Deletion of simulation output #{self.experiment_id} #{self.index} completed successfully ? #{success}")
-
-      if not success
-        raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
-      end
-
+      Rails.logger.debug("Deletion of binary results #{self.experiment_id} #{self.index} completed successfully ? #{success}")
     rescue Exception => e
-      Rails.logger.error("Deletion of simulation output #{self.experiment_id} #{self.index} raised an exception - #{e}")
-        # raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index} - #{e}")
+      Rails.logger.error("Deletion of binary results #{self.experiment_id} #{self.index} raised an exception - #{e}")
     ensure
       sm_proxy.teardown
+    end
+
+    if not success
+      raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
     end
   end
 
   def destroy_stdout
-    user = Experiment.where(id: self.experiment_id).first.user
     sm_proxy = StorageManagerProxy.create(self.experiment_id)
 
     if sm_proxy.nil?
-      raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index}")
+      raise StandardError.new("No storage manager registered")
     end
 
     begin
       success = sm_proxy.delete_stdout(self.experiment_id, self.index)
-      Rails.logger.debug("Deletion of simulation output #{self.experiment_id} #{self.index} completed successfully ? #{success}")
-
-      if not success
-        raise StandardError.new("Couldn't delete std out for #{self.experiment_id} #{self.index}")
-      end
-
+      Rails.logger.debug("Deletion of simulation stdout #{self.experiment_id} #{self.index} completed successfully ? #{success}")
     rescue Exception => e
-      Rails.logger.error("Deletion of simulation output #{self.experiment_id} #{self.index} raised an exception - #{e}")
-        # raise StandardError.new("Couldn't delete binary results for #{self.experiment_id} #{self.index} - #{e}")
+      Rails.logger.error("Deletion of simulation stdout #{self.experiment_id} #{self.index} raised an exception - #{e}")
     ensure
       sm_proxy.teardown
+    end
+
+    if not success
+      raise StandardError.new("Couldn't delete simulation stdout for #{self.experiment_id} #{self.index}")
     end
   end
 end
