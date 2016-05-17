@@ -16,7 +16,7 @@ class StorageManagerProxy
       sm_uuid = SecureRandom.uuid
       temp_password = SimulationManagerTempPassword.create_new_password_for(sm_uuid, experiment_id)
 
-      config = {'storage_manager' => {'address' => @storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password}}
+      config = {'storage_manager' => {'address' => storage_manager_url, 'user' => sm_uuid, 'pass' => temp_password.password}}
 
       StorageManagerProxy.new(config, temp_password)
     else
