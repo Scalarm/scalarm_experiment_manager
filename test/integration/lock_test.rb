@@ -132,7 +132,7 @@ class LockTest < MiniTest::Test
       assert(r_lock.acquire)
       begin
         results = []
-        Timeout::timeout count*2 do
+        Timeout.timeout count*2 do
           count.times do
             results << queue.pop
           end
@@ -151,7 +151,7 @@ class LockTest < MiniTest::Test
 
   def test_mutex_two_threads
     require 'timeout'
-    timeout 20 do
+    Timeout.timeout 20 do
 
       count = 3
       queue = Queue.new
@@ -170,7 +170,7 @@ class LockTest < MiniTest::Test
         Scalarm::MongoLock.mutex 'reader' do
           begin
             results = []
-            Timeout::timeout count*2 do
+            Timeout.timeout count*2 do
               count.times do
                 results << queue.pop
               end

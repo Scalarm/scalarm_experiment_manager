@@ -1500,7 +1500,7 @@ apiDoc:
   def input_space_manual_specification(experiment)
     # TODO , :experiment_input
     validate(
-        doe: :security_json
+        doe: [ :security_json, :optional ]
     )
 
     doe_info = params['doe'].blank? ? [] : Utils.parse_json_if_string(params['doe']).delete_if { |_, parameters| parameters.first.nil? }

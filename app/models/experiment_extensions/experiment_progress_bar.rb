@@ -213,7 +213,6 @@ module ExperimentProgressBar
       bar_doc = {'bar_num' => bar_num, 'bar_parts' => parts_per_slot, 'bar_state' => 0}
       if (bar_num == number_of_bars - 1) and (parts_per_slot > 1) and (self.experiment_size != number_of_bars * parts_per_slot)
         bar_doc['bar_parts'] = number_of_bars * parts_per_slot - self.experiment_size
-        puts "Number of parts in the last bar #{bar_doc['bar_parts']}"
       end
 
       next if bar_doc['bar_parts'] <= 0
