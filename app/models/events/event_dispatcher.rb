@@ -40,7 +40,7 @@ class EventDispatcher
             Thread.new do
               listener.send(:execute, event)
             end
-          rescue Exception => e
+          rescue => e
             Rails.logger.error("Exception during event handling: #{event.inspect} --- #{listener.inspect}")
           end
         end

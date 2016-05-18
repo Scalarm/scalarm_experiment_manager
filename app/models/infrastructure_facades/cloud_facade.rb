@@ -200,7 +200,8 @@ class CloudFacade < InfrastructureFacade
       begin
         cloud_client = cloud_client_instance(record.user_id)
         return :not_available unless cloud_client and cloud_client.valid_credentials?
-      rescue Exception
+      rescue => e
+        Rails.logger.error("Error occurred during resource status check: #{e}")
         return :not_available
       end
 
@@ -229,7 +230,7 @@ class CloudFacade < InfrastructureFacade
               :initializing
             rescue InfrastructureErrors::NoCredentialsError
               raise
-            rescue Exception => e
+            rescue => e
               logger.info "Exception on SSH connection test to #{record.public_host}:#{record.public_ssh_port}:"\
       "#{e.class} #{e.to_s}"
               record.store_error('ssh', e.to_s)
@@ -266,7 +267,7 @@ class CloudFacade < InfrastructureFacade
           begin
             ssh = shared_ssh_session(record)
             break if log_exists?(record, ssh) or send_and_launch_sm(record, ssh)
-          rescue Exception => e
+          rescue => e
             logger.warn "Exception #{e} occured while communication with "\
     "#{record.public_host}:#{record.public_ssh_port} - #{error_counter} tries"
             error_counter += 1
@@ -293,7 +294,7 @@ class CloudFacade < InfrastructureFacade
       end
     rescue InfrastructureErrors::NoCredentialsError
       raise
-    rescue Exception => error
+    rescue => error
       logger.error "Exception when instantiating VMs for user #{record.user_id}: #{error.to_s}\n#{error.backtrace.join("\n")}"
       record.store_error('install_failed', "#{error.to_s}\n#{error.backtrace.join("\n")}")
     end

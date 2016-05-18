@@ -58,7 +58,8 @@ class CustomPointsExperiment < Experiment
       self.cached_value_list[0] << point
       self.size += 1
 
-    rescue Exception
+    rescue => e
+      Rails.logger.error("Error occurred during _add_single_point_tuple: #{e}")
       self.doe_info[0][2] = old_pids
       self.cached_value_list[0] = old_cvals
       self.size = old_size

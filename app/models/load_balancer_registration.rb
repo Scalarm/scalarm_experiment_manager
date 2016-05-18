@@ -45,7 +45,7 @@ class LoadBalancerRegistration
         else
           puts "Unable to establish multicast connection: #{e.message}"
         end
-      rescue Exception => e
+      rescue => e
         puts "Unable to establish multicast connection: #{e.message}"
       end
     end

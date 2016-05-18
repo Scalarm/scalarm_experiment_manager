@@ -158,7 +158,7 @@ CONTEXT = [
       raise PLCloudError.new data if status != 0
       raise Gsi::ProxyError if data =~ /User couldn't be authenticated/
       data
-    rescue Exception => e
+    rescue => e
       Rails.logger.error "Exception on executing ONE command #{command}(#{args.join(', ')}): #{e}\n#{e.backtrace.join("\n")}"
       nil
     end

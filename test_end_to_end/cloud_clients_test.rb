@@ -119,7 +119,7 @@ class CloudClientsTest < MiniTest::Test
           assert_operator echo_output, :=~, /^hello/
         end
         break
-      rescue Exception => e
+      rescue => e
         puts "SSH connection error: #{e}"
         assert_operator tries, :<, 30, e.to_s
         sleep 5

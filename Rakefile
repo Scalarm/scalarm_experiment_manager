@@ -172,7 +172,7 @@ namespace :service do
   task :validate do
     begin
       _validate_service
-    rescue Exception => e
+    rescue => e
       puts "Error on validation, please read documentation and run service:setup"
       raise
     end
@@ -268,7 +268,7 @@ namespace :db_router do
   task :validate do
     begin
       _validate_db_router
-    rescue Exception => e
+    rescue => e
       puts "Error on validation, please read documentation and run db_router:setup"
       raise
     end
@@ -445,7 +445,7 @@ def monitoring_process(action)
           else
             raise
           end
-        rescue Exception => e
+        rescue => e
           unless e.class == SystemExit
             Rails.logger.error("Unhandled exception in monitoring process (application may be unusable): #{e.class} #{e.to_s}\n#{e.backtrace().join("\n")}")
             raise

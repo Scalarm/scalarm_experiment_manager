@@ -20,7 +20,7 @@ class SimulationManager
       rescue InfrastructureErrors::InvalidCredentialsError, InfrastructureErrors::NoCredentialsError
         Rails.logger.warn "Record #{record.id} for infrastructure #{infrastructure.short_name} has invalid credentials"
         record.store_error('credentials')
-      rescue Exception => error
+      rescue => error
         Rails.logger.warn "Record #{record.id} for infrastructure #{infrastructure.short_name} did not pass "/
                               "validation due to error: #{error.to_s}\n#{error.backtrace.join("\n")}"
         record.store_error('validation', error.to_s)
@@ -368,7 +368,7 @@ class SimulationManager
         infrastructure_action(action_name)
       rescue InfrastructureErrors::NoCredentialsError
         raise
-      rescue Exception => e
+      rescue => e
         logger.warn "Exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         record.store_error('resource_action', "#{action_name}: #{e.to_s}")
         infrastructure_action('stop') rescue nil

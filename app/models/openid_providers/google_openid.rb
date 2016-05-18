@@ -81,7 +81,7 @@ module GoogleOpenID
             flash[:error] = t('oauth.error_occured', error: result.data['error']['message'])
           end
         end
-      rescue Exception => e
+      rescue => e
         Rails.logger.error(t('oauth.error_occured', error: e.message))
         flash[:error] = t('oauth.error_occured', error: e.message)
       end

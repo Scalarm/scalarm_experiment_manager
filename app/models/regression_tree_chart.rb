@@ -30,7 +30,7 @@ class RegressionTreeChart
     begin
       @tree_nodes = parse_regression_tree_data(@rinruby.fit_to_string)
       Rails.logger.debug("Tree nodes: #{@tree_nodes}")
-    rescue Exception => e
+    rescue => e
       Rails.logger.debug(e.inspect)
       Rails.logger.debug(e.backtrace)
       Rails.logger.info("Could not create regression tree chart for #{@moe_name}. Probably too few simulations were performed.")

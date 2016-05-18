@@ -21,7 +21,7 @@ class ClusterRemoteWorkerDelegate
 
     begin
       ssh = @cluster_facade.shared_ssh_session(sm_record.credentials)
-    rescue Exception => e
+    rescue => e
       # remember this error in case of unable to initialize
       sm_record.error_log = e.to_s
       sm_record.save
@@ -88,7 +88,7 @@ class ClusterRemoteWorkerDelegate
     rescue Net::SSH::AuthenticationFailed => auth_exception
       Rails.logger.error "Authentication failed when starting simulation managers for user #{sm_record.user_id}: #{auth_exception.to_s}"
       sm_record.store_error('ssh')
-    rescue Exception => ex
+    rescue => ex
       Rails.logger.error "Exception when starting simulation managers for user #{sm_record.user_id}: #{ex.to_s}\n#{ex.backtrace.join("\n")}"
       sm_record.store_error('install_failed', "#{ex.to_s}\n#{ex.backtrace.join("\n")}")
     end

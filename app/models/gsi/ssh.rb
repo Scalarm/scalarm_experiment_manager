@@ -31,7 +31,8 @@ module Gsi
           end
           init_match = init_log.match /Entering interactive session./
           Gsi.handle_init_error(init_log) unless init_match
-        rescue Exception
+        rescue => e
+          Rails.logger.error("Error occurred during GSI session initialization: #{e}")
           close
           raise
         end

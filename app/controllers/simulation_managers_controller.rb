@@ -129,7 +129,7 @@ apiDoc:
                   @infrastructure_facade.yield_simulation_manager(sm_record) do |sm|
                     sm.monitor
                   end
-                rescue Exception => e
+                rescue => e
                   Rails.logger.error("An exception occured during SM monitoring - #{e} - #{e.backtrace.join("\n")}")
                 ensure
                   lock.release

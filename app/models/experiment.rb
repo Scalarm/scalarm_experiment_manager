@@ -550,7 +550,7 @@ class Experiment < Scalarm::Database::Model::Experiment
       if not success
         Rails.logger.error("Deletion of experiment's output #{self.id.to_s} completed successfully ? #{success}")
       end
-    rescue Exception => e
+    rescue => e
       Rails.logger.error("Deletion of simulation output #{self.id.to_s}raised an exception - #{e}")
     ensure
       sm_proxy.teardown

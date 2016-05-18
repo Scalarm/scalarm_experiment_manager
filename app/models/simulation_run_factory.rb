@@ -10,7 +10,7 @@ module SimulationRunExtensions
       self.destroy_stdout
       Rails.logger.debug("Destroy binary results: #{id}")
       self.destroy_binary_results
-    rescue Exception => e
+    rescue => e
       Rails.logger.info("An exception raised during destroy stdout or binary results - #{e}")
     end
 
@@ -41,7 +41,7 @@ module SimulationRunExtensions
     begin
       success = sm_proxy.delete_binary_output(self.experiment_id, self.index)
       Rails.logger.debug("Deletion of binary results #{self.experiment_id} #{self.index} completed successfully ? #{success}")
-    rescue Exception => e
+    rescue => e
       Rails.logger.error("Deletion of binary results #{self.experiment_id} #{self.index} raised an exception - #{e}")
     ensure
       sm_proxy.teardown
@@ -62,7 +62,7 @@ module SimulationRunExtensions
     begin
       success = sm_proxy.delete_stdout(self.experiment_id, self.index)
       Rails.logger.debug("Deletion of simulation stdout #{self.experiment_id} #{self.index} completed successfully ? #{success}")
-    rescue Exception => e
+    rescue => e
       Rails.logger.error("Deletion of simulation stdout #{self.experiment_id} #{self.index} raised an exception - #{e}")
     ensure
       sm_proxy.teardown

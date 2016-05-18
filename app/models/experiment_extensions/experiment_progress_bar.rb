@@ -61,7 +61,7 @@ module ExperimentProgressBar
       #          }
       #     ).save
      result
-    rescue Exception => e
+    rescue => e
       Rails.logger.debug("Error in fastest update --- #{e}")
     end
   end
@@ -155,7 +155,7 @@ module ExperimentProgressBar
       if color_of_bar(bar_index) != new_bar_state
         progress_bar_table.update({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
       end
-    rescue Exception => e
+    rescue => e
       Rails.logger.debug("Error --- #{e}")
     end
 

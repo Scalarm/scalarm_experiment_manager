@@ -29,7 +29,7 @@ class ExperimentIntegrationTest < MiniTest::Test
           begin
             parsed_cell = JSON.parse(cell)
             row_values << parsed_cell.map(&:to_f)
-          rescue Exception => e
+          rescue => e
             row_values << [ cell.to_f ]
           end
         end

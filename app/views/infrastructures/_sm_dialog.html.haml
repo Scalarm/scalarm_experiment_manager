@@ -79,7 +79,7 @@
           = t('infrastructure.information.sm_record_error', error: t('infrastructure.information.experiment_not_found'))
 
 
-- rescue Exception => e
+- rescue => e
   =t('infrastructure.information.sm_record_error', error: e.to_s)
 
 :javascript

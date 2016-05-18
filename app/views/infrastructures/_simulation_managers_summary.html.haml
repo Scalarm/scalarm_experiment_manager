@@ -29,7 +29,7 @@
               - begin
                 = render partial: "infrastructures/scheduler/simulation_manager_info",
                     locals: {partial_name: partial_name, record: record}
-              - rescue Exception => e
+              - rescue => e
                 %td(colspan="7" )
                   - raise e if e.kind_of? ActionView::MissingTemplate
                   =t('infrastructure.information.sm_record_error', error: e.to_s)

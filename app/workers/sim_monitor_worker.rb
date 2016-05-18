@@ -19,7 +19,7 @@ class SimMonitorWorker
 
         begin
           sim.monitor
-        rescue Exception => e
+        rescue => e
           logger.error "Sim monitoring: #{sim.record} - exception in the monitor method: #{e}"
         ensure
           if not sim.state == :error

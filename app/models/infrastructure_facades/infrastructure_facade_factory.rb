@@ -122,7 +122,7 @@ class InfrastructureFacadeFactory
     Thread.start do
       begin
         facade.monitoring_thread
-      rescue Exception => e
+      rescue => e
         Rails.logger.error "Uncaught monitoring exception for infrastructure: #{infrastructure_name}: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         raise
       end

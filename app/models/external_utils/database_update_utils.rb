@@ -21,12 +21,12 @@ module DatabaseUpdateUtils
                 simulation_run.tmp_result = Utils.parse_json_if_string(simulation_run.tmp_result)
 
                 simulation_run.save
-              rescue Exception => e
+              rescue => e
                 puts "Exception: #{e.class}, #{e.to_s} on simulation run: #{simulation.id}"
               end
         end
 
-      rescue Exception => e
+      rescue => e
         puts "Exception: #{e.class}, #{e.to_s} on experiement: #{experiment.id}"
       end
     end
@@ -36,7 +36,7 @@ module DatabaseUpdateUtils
         simulation.input_specification = Utils.parse_json_if_string(simulation.input_specification)
 
         simulation.save
-      rescue Exception => e
+      rescue => e
         puts "Exception: #{e.class}, #{e.to_s} on simulation: #{simulation.id}"
       end
     end

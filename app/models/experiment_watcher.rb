@@ -20,7 +20,7 @@ class ExperimentWatcher
                   simulation_run.rollback!
                 end
               end
-            rescue Exception => e
+            rescue => e
               Rails.logger.error("[experiment_watcher] Error during experiment watching #{e}")
             end
           end

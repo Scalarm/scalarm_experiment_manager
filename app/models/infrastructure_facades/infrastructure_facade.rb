@@ -189,7 +189,7 @@ class InfrastructureFacade
         logger.info 'monitoring thread is working'
         begin
           monitoring_loop
-        rescue Exception => e
+        rescue => e
           logger.error "Uncaught monitoring exception: #{e.class}, #{e}\n#{e.backtrace.join("\n")}"
         end
         lock.release
@@ -206,7 +206,7 @@ class InfrastructureFacade
             pool.schedule do
               begin
                 simulation_managers.each &:monitor
-              rescue Exception => e
+              rescue => e
                 logger.error "Uncaught exception on monitoring group computation thread (#{group.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
                 get_grouped_sm_records[group].select(&:should_destroy?).each do |record|
                   logger.warn "Record #{record.id} will be destroyed"
@@ -217,7 +217,7 @@ class InfrastructureFacade
           end
         end
       end
-    rescue Exception => e
+    rescue => e
       logger.error "Uncaught exception in monitoring loop: #{e.to_s}\n#{e.backtrace.join("\n")}"
     end
   end
@@ -390,7 +390,7 @@ class InfrastructureFacade
     rescue Errno::ECONNREFUSED => e
       records.each { |record| record.store_error('ssh', e.to_s) }
       raise InfrastructureErrors::AccessDeniedError.new(e.to_s)
-    rescue Exception => e
+    rescue => e
       records.each { |record| record.store_error('onsite_monitoring', e.to_s) }
       raise
     end

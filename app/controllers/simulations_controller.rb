@@ -242,7 +242,7 @@ class SimulationsController < ApplicationController
         simulation.set_simulation_binaries(params[:simulation_binaries].original_filename, params[:simulation_binaries].read)
 
         simulation.save
-      rescue Exception => e
+      rescue => e
         flash[:error] = t('simulations.create.internal_error') unless flash[:error]
         Rails.logger.error("Exception occurred when setting up adapters or binaries: #{e}\n#{e.backtrace.join("\n")}")
       end
@@ -311,7 +311,7 @@ class SimulationsController < ApplicationController
           else
             begin
               @simulation_run.result = Utils.parse_json_if_string(params[:result])
-            rescue Exception => e
+            rescue => e
               Rails.logger.warn("Got invalid result for #{@simulation_run.id} simulation:\n#{params[:result].to_s}")
               @simulation_run.result = {}
               @simulation_run.is_error = true
@@ -369,7 +369,7 @@ class SimulationsController < ApplicationController
           Thread.new { WorkersScaling::AlgorithmRunner.execute_and_schedule(@experiment.id) }
         end
       end
-    rescue Exception => e
+    rescue => e
       Rails.logger.error("Error in marking a simulation as complete - #{e}")
       response = {status: 'error', reason: e.to_s}
     end
@@ -388,7 +388,7 @@ class SimulationsController < ApplicationController
         @simulation_run.tmp_results_list << {time: Time.now, result: Utils.parse_json_if_string(params[:result])}
         @simulation_run.save
       end
-    rescue Exception => e
+    rescue => e
       Rails.logger.debug("Error in the 'progress_info' function - #{e}")
       response = {status: 'error', reason: e.to_s}
     end
@@ -442,7 +442,7 @@ class SimulationsController < ApplicationController
             else
               parameters[:values] << 'Single value'
             end
-          rescue Exception => e
+          rescue => e
             parameters[:values] << 'Single value'
           end
         end
@@ -475,7 +475,7 @@ class SimulationsController < ApplicationController
 
       begin
         @simulation_run.rollback!
-      rescue Exception => e
+      rescue => e
         @msg[:error] = e.to_s
       end
 

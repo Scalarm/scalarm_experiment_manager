@@ -59,7 +59,7 @@ class MonitoringProbe
     measurements = @metrics.reduce([]) do |acc, metric_type|
       begin
         acc + self.send("monitor_#{metric_type}")
-      rescue Exception => e
+      rescue => e
         log("An exception occurred during monitoring of #{metric_type}", 'error')
         acc
       end

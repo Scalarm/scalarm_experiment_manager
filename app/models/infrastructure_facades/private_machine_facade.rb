@@ -247,7 +247,7 @@ class PrivateMachineFacade < InfrastructureFacade
       sm_record.error_log = e.to_s
       sm_record.save
       return :not_available
-    rescue Exception => e
+    rescue => e
       sm_record.store_error('ssh', e.to_s)
       _simulation_manager_stop(sm_record)
     else

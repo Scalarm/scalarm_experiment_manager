@@ -28,7 +28,8 @@ class GridCredentials < Scalarm::Database::Model::GridCredentials
     begin
       ssh_session {}
       true
-    rescue Exception
+    rescue => e
+      Rails.logger.error("Error occurred during validation check: #{e}")
       false
     end
   end

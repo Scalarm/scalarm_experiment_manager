@@ -33,7 +33,7 @@ class InfrastructuresController < ApplicationController
     rescue NoSuchInfrastructureError => e
       Rails.logger.error "Try to fetch SM nodes, but requested infrastructure does not exist: #{e.to_s}"
       render json: []
-    rescue Exception => e
+    rescue => e
       Rails.logger.error "Exception on fetching SM nodes (#{params.to_s}): #{e.to_s}\n#{e.backtrace.join("\n")}"
       render json: []
     end
@@ -103,7 +103,7 @@ class InfrastructuresController < ApplicationController
                          name: infrastructure ? infrastructure.long_name : infrastructure_name,
                          error: error.to_s) }
       Rails.logger.error "#{error.class.to_s} #{error.to_s}\n#{error.backtrace.join("\n")}"
-    rescue Exception => exc
+    rescue => exc
       render json: { status: 'error', error_code: 'scheduling-failed', msg: I18n.t('infrastructures_controller.schedule_error',
                         name: infrastructure ? infrastructure.long_name : infrastructure_name,
                         error: exc.to_s) }
@@ -153,7 +153,7 @@ class InfrastructuresController < ApplicationController
       else
         raise StandardError.new(t('infrastructures_controller.credentials.nil_add_credentials'))
       end
-    rescue Exception => exc
+    rescue => exc
       mark_credentials_invalid(credentials, infrastructure_name) if credentials
       render json: {
           status: 'error',
@@ -222,7 +222,7 @@ class InfrastructuresController < ApplicationController
           status: 'error',
           msg: "No such infrastructure: #{infrastructure_name}"
       }
-    rescue Exception => exc
+    rescue => exc
       render json: {
           status: 'error',
           msg: "Internal error: #{exc.to_s}"
@@ -269,7 +269,7 @@ class InfrastructuresController < ApplicationController
       facade = InfrastructureFacadeFactory.get_facade_for(params[:infrastructure_name])
       facade.remove_credentials(params[:record_id], current_user.id, params[:credential_type])
       render json: {status: 'ok', msg: I18n.t('infrastructures_controller.credentials_removed', name: facade.long_name)}
-    rescue Exception => e
+    rescue => e
       Rails.logger.error "Remove credentials failed: #{e.to_s}\n#{e.backtrace.join("\n")}"
       render json: {status: 'error', msg: I18n.t('infrastructures_controller.credentials_not_removed', error: e.to_s)}
     end
@@ -337,7 +337,7 @@ apiDoc:
       render json: { status: 'error', error_code: 'access-denied', msg: t('infrastructures_controller.access_to_sm_denied')}
     rescue NoSuchInfrastructureError => e
       render json: { status: 'error', error_code: 'no-such-infrastructure', msg: t('infrastructures_controller.no_such_infrastructure', name: e.to_s)}
-    rescue Exception => e
+    rescue => e
       render json: { status: 'error', error_code: 'unknown', msg: t('infrastructures_controller.command_error', error: "#{e.class.to_s} - #{e.to_s}")}
     end
 
@@ -363,7 +363,7 @@ apiDoc:
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.wrong_infrastructure', name: params[:infrastructure_name])})
     rescue NoSuchSimulationManagerError => e
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.error_sm_removed')})
-    rescue Exception => e
+    rescue => e
       Rails.logger.error("Exception when getting Simulation Manager: #{e.to_s}\n#{e.backtrace.join("\n")}")
       render inline: render_to_string(partial: 'error_dialog', locals: {message: t('infrastructures_controller.sm_exception', error: e.to_s)})
     end
@@ -458,7 +458,7 @@ apiDoc:
         render text: t("infrastructures.sm_dialog.resource_states.#{(sm.resource_status or :error).to_s}",
                          default: t('infrastructures.sm_dialog.resource_states.unknown', state: sm.resource_status.to_s))
       end
-    rescue Exception => error
+    rescue => error
       render text: t('infrastructures.sm_dialog.resource_state_error', error: error.to_s)
     end
   end

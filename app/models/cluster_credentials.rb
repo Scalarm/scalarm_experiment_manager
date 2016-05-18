@@ -24,7 +24,8 @@ class ClusterCredentials < Scalarm::Database::EncryptedMongoActiveRecord
     begin
       ssh_session {}
       true
-    rescue Exception
+    rescue => e
+      Rails.logger.error("Error occurred during credentials validation: #{e}")
       false
     end
   end

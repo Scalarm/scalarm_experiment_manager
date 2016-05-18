@@ -38,7 +38,7 @@ module GithubOauth
             flash[:error] = t 'oauth.no_email_provided'
           end
         end
-      rescue Exception => e
+      rescue => e
         Rails.logger.error(t('oauth.error_occured', error: e.message))
         flash[:error] = t('oauth.error_occured', error: e.message)
       end

@@ -119,7 +119,7 @@ class UserControllerController < ApplicationController
 
       begin
         ScalarmUser.authenticate_with_password(current_user.login, params[:current_password])
-      rescue Exception => e
+      rescue => e
         flash[:error] = t('password_wrong')
       end
 

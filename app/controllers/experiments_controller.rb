@@ -74,7 +74,7 @@ class ExperimentsController < ApplicationController
 
     begin
       start_update_bars_thread if Time.now - @experiment.start_at > 30
-    rescue Exception => e
+    rescue => e
       flash[:error] = t('experiments.not_found', {id: @experiment.id, user: current_user.login})
       respond_to do |format|
         format.html { redirect_to action: :index }
@@ -238,7 +238,7 @@ apiDoc:
         experiment.experiment_id = experiment.id
         begin
           experiment.experiment_size(true)
-        rescue Exception => e
+        rescue => e
           Rails.logger.warn("An exception occured: #{e.message}\n#{e.backtrace.join("\n")}")
           flash[:error] = t(e.message, default: e.message)
           experiment.size = 0
@@ -269,7 +269,7 @@ apiDoc:
             experiment: experiment
         }
       end
-    rescue Exception => e
+    rescue => e
       Rails.logger.error "Exception in ExperimentsController create: #{e.to_s}\n#{e.backtrace.join("\n")}"
       flash[:error] = e.to_s
 
@@ -472,7 +472,7 @@ apiDoc:
       experiment.insert_initial_bar
       experiment.simulation_runs.create_table
 
-    rescue Exception => e
+    rescue => e
       Rails.logger.error "Exception in ExperimentsController create_experiment_from_existing: #{e.to_s}\n#{e.backtrace.join("\n")}"
       flash[:error] = e.message
     end
@@ -563,7 +563,7 @@ apiDoc:
     message = nil
     begin
       experiment_size = experiment.experiment_size(true)
-    rescue Exception => e
+    rescue => e
       experiment_size = 0; message = e.to_s
       Rails.logger.warn("An exception occured: #{message}")
     end
@@ -1046,7 +1046,7 @@ apiDoc:
           end
         end
       end
-    rescue Exception => e
+    rescue => e
       Rails.logger.debug("Error while preparing next simulation: #{e}")
       simulation_doc.merge!({'status' => 'error', 'reason' => e.to_s})
     end
