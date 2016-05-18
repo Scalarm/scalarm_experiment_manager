@@ -1,12 +1,12 @@
 %section.panel.radius
   %h3.subheader
-    Simulation: #{@simulation.name}&nbsp;
-    - if @simulation.description != ''
-      %i.fa.fa-question-circle.has-tip.tip-bottom{"aria-haspopup" => "true", "data-tooltip" => "", style: "color: 333", title: "Simulation description: #{@simulation.description}", cursor: "pointer"}
+    = t('experiments.information_panel.simulation.title', name: @simulation.name)
+    - if not @simulation.description.blank?
+      %i.fa.fa-question-circle.has-tip.tip-bottom{"aria-haspopup" => "true", "data-tooltip" => "", style: "color: 333",
+      title: t('experiments.information_panel.simulation.description', description: @simulation.description), cursor: "pointer"}
 
   %h3.subheader= t('experiments.information_panel.experiment_info_title')
   .content
-
     .row
       .small-3.columns
         %label.right.inline(for="experiment_name")
@@ -14,13 +14,13 @@
       .small-6.columns.end
         %h5.subheader
         = text_field_tag :experiment_name, @simulation.name + ' ' + DateTime.current.strftime("%d-%m-%Y %H:%M:%S"),  required: true
-        %small(class="error") Experiment name is required
+        %small(class="error")= t('experiments.information_panel.name_required_msg')
     .row
       .small-3.columns
         %label.right.inline(for="experiment_description")
-          = t('experiments.information_panel.experiment_description') + ':'
+          = t('experiments.information_panel.experiment_description') + '-'
       .small-6.columns.end
-        %h5.subheader= text_area_tag :experiment_description, ''
+        %h5.subheader= text_area_tag :experiment_description
 
     %h4.subheader= t('experiments.new.simulation_run_attrs')
 
@@ -29,7 +29,7 @@
         = label_tag :replication_level, t('experiments.new.replication_level_label') + ':', class: 'right inline'
       .small-4.columns.end
         = number_field_tag :replication_level, 1, min: 1, required: true, class: 'text-right', pattern: "^\\d+$"
-        %small(class="error") Wrong replication level value
+        %small(class="error")= t('experiments.information_panel.wrong_replication_level')
     .row
       .small-5.columns
         = label_tag :execution_time_constraint, t('experiments.new.time_constraint_label') + ':', class: 'right inline'
@@ -37,7 +37,7 @@
         .row.collapse
           .small-8.columns
             = number_field_tag :execution_time_constraint, 55, min: 10, required: true, class: 'text-right', pattern: "^\\d+$"
-            %small(class="error") Wrong execution time value
+            %small(class="error")= t('experiments.information_panel.wrong_execution_time')
           .small-4.columns
             %span.postfix.radius
               = t('experiments.new.time_constraint_unit')

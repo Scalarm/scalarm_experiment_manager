@@ -5,9 +5,6 @@
 - content_for :title, t('.title')
 - content_for :help, raw(t('help.simulations.conduct'))
 
--#:coffeescript
--#  window.alert("supervisors_ids: #{supervisor_ids.to_s}")
-
 = form_tag experiments_path, id: 'experiment_submit_form', "data-abide" => '' do
   = hidden_field_tag 'simulation_id', @simulation.id
   = hidden_field_tag 'experiment_input'

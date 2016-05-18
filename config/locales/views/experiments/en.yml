@@ -45,8 +45,14 @@ en:
       experiment_info_title: Experiment information
       experiment_name: Name
       experiment_description: Description
-
       destroy_button: Destroy
+      name_required_msg: "Experiment name is required"
+      wrong_replication_level: "Wrong replication level value"
+      wrong_execution_time: "Wrong execution time value"
+      simulation:
+        title: "Simulation: %{name}"
+        description: "Simulation description: %{description}"
+
 
     experiment_links:
       navigation_link: Experiments
