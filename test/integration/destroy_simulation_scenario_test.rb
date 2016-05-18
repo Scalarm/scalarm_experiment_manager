@@ -1,3 +1,4 @@
+require 'minitest/autorun'
 require 'test_helper'
 require 'json'
 require 'db_helper'
@@ -26,7 +27,7 @@ class DestroySimulationScenarioTest < ActionDispatch::IntegrationTest
     @simulation_scenario.save
 
     # mock information service
-    information_service = mock
+    information_service = mock()
     information_service.stubs(:get_list_of).returns([])
     information_service.stubs(:sample_public_url).returns(nil)
     InformationService.stubs(:instance).returns(information_service)
@@ -35,7 +36,7 @@ class DestroySimulationScenarioTest < ActionDispatch::IntegrationTest
   test 'unsuccessful destroying simulation scenario by non-owner coworker with html response' do
 
     assert_no_difference 'Simulation.count' do
-      delete "simulation_scenarios/#{@simulation_scenario.id}"
+      delete simulation_scenario_path(@simulation_scenario.id)
     end
 
     assert_redirected_to simulations_path

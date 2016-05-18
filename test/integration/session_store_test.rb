@@ -112,10 +112,10 @@ class SessionStoreTest < ActionDispatch::IntegrationTest
   end
 
   test 'session variables can be deleted' do
-    get 'set_variables', {one: 1}, format: :json
-    get 'delete_variables', {variables: ['one']}
+    get '/set_variables', {one: 1}, format: :json
+    get '/delete_variables', {variables: ['one']}
 
-    get 'get_variables', {variables: ['one']}
+    get '/get_variables', {variables: ['one']}
     body = JSON.parse(response.body)
     assert_empty body
   end
@@ -123,11 +123,11 @@ class SessionStoreTest < ActionDispatch::IntegrationTest
   test 'after resetting session, authentication should fail' do
     # make request with session - it should succeed
     # reset session on that request
-    get 'reset', format: :json
+    get '/reset', format: :json
     assert_response :success
 
     # next request with session should fail
-    get 'ping', format: :json
+    get '/ping', format: :json
     assert_response :unauthorized
   end
 
@@ -140,27 +140,27 @@ class SessionStoreTest < ActionDispatch::IntegrationTest
 
     # make request with session - user_session should be the session doc
     # document in db with user_session.id should be available in UserSession collection
-    get 'ping'
+    get '/ping'
 
     # the collection should contain equal one document
     assert_equal 1, UserSession.count
     assert_equal UserSession.first.session_id.to_s, session[:user].to_s
 
     # reset session
-    get 'reset'
+    get '/reset'
 
     # UserSession collection should be empty now
     assert_empty UserSession.all
   end
 
   test 'flash variables should be available only in one following requet' do
-    get 'set_flash_variables', variables: {foo: 'bar'}
+    get '/set_flash_variables', variables: {foo: 'bar'}
 
-    get 'get_flash_variables', variables: [:foo]
+    get '/get_flash_variables', variables: [:foo]
     body = JSON.parse(response.body)
     assert_equal 'bar', body['foo']
 
-    get 'get_flash_variables', variables: [:foo]
+    get '/get_flash_variables', variables: [:foo]
     body = JSON.parse(response.body)
     assert_nil body['foo']
   end

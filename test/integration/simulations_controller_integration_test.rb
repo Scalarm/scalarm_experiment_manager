@@ -35,7 +35,7 @@ class SimulationsControllerIntegrationTest < ActionDispatch::IntegrationTest
     simulation2.save
 
     #test json response with valid ids
-    get 'simulation_scenarios', format: :json
+    get simulation_scenarios_path, format: :json
     body = response.body
     sim_hash = JSON.parse(body)
     assert_equal 2, sim_hash["simulation_scenarios"].count, sim_hash
@@ -43,10 +43,9 @@ class SimulationsControllerIntegrationTest < ActionDispatch::IntegrationTest
 
 
     ## test for hmtl response
-    get 'simulation_scenarios'
+    get simulation_scenarios_path
     assert_response 200, response.body
     assert_equal "text/html; charset=utf-8", response["Content-Type"]
-
   end
 
 end
