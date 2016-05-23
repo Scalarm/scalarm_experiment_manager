@@ -205,7 +205,6 @@ class InfrastructuresController < ApplicationController
     infrastructure_name = params[:infrastructure]
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
-      p query_params
       records = infrastructure.get_credentials(current_user.id, query_params)
 
       # modify records to contain only non-secret fields
