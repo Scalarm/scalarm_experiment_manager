@@ -4,7 +4,6 @@ class InfrastructuresControllerTest < ActionController::TestCase
 
   def setup
     stub_authentication
-
   end
 
   test 'get_infrastructure_credentials should return empty json if there is no credentials registered' do
@@ -31,8 +30,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
     end
     InfrastructureFacadeFactory.stubs(:get_facade_for).with(infrastructure_name).returns(infrastructure)
 
-    get :get_infrastructure_credentials, infrastructure: infrastructure_name,
-        query_params: {'host'=>'localhost', 'bad'=>'one'}, format: :json
+    get :get_infrastructure_credentials, infrastructure: infrastructure_name, query_params: {'host'=>'localhost', 'bad'=>'one'}, format: :json
 
     assert_response 412, response.body
   end
@@ -68,7 +66,5 @@ class InfrastructuresControllerTest < ActionController::TestCase
     assert_kind_of Array, message['data']
     assert_equal credentials, message['data']
   end
-
-
 
 end

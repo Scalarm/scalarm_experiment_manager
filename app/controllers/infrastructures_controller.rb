@@ -185,7 +185,7 @@ class InfrastructuresController < ApplicationController
     )
 
     query_params =
-        (params.include?(:query_params) ? Scalarm::ServiceCore::Utils.parse_json_if_string(params[:query_params]).to_h : {})
+        (params.include?(:query_params) ? Scalarm::ServiceCore::Utils.parse_json_if_string(params[:query_params]).to_unsafe_h : {})
     raise SecurityError.new('Additional params should be Hash') unless query_params.kind_of? Hash
 
     raise SecurityError.new('All additional params values should be strings or integers') unless query_params.all? do |k, v|
@@ -205,6 +205,7 @@ class InfrastructuresController < ApplicationController
     infrastructure_name = params[:infrastructure]
     begin
       infrastructure = InfrastructureFacadeFactory.get_facade_for(infrastructure_name)
+      p query_params
       records = infrastructure.get_credentials(current_user.id, query_params)
 
       # modify records to contain only non-secret fields

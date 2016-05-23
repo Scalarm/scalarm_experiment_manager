@@ -4,6 +4,8 @@ require 'rails/test_help'
 
 require 'scalarm/service_core/test_utils/test_helper_extensions'
 
+require 'mocha/mini_test'
+
 class ActiveSupport::TestCase
   include Scalarm::ServiceCore::TestUtils::TestHelperExtensions
 

@@ -48,23 +48,23 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
   #   A simulation run for this point should be generated using /experiments/:id/next_simulation
   test 'next_instance should return scheduled point after schedule_point' do
     # Given
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
 
     # When
     scheduled_x = 5
 
-    post "experiments/#{@experiment.id.to_s}/schedule_point.json", {point: {x: scheduled_x}.to_json}
+    post schedule_point_experiment_path(@experiment.id), point: {x: scheduled_x}.to_json, format: :json
 
     # Then
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
     success_response = JSON.parse(response.body)
     assert_equal 'ok', success_response['status']
     assert success_response.has_key?('input_parameters')
     assert_equal scheduled_x, success_response['input_parameters']['x'].to_i
 
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
     wait_response = JSON.parse(response.body)
     assert_equal 'wait', wait_response['status']
@@ -79,7 +79,7 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
   #   next_simulation should return status: all_sent
   test 'next_instance should return all_sent status if experiment.is_error and has no points' do
     # Given
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
     assert_equal 'wait', JSON.parse(response.body)['status']
 
@@ -88,7 +88,7 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
     @experiment.save
 
     # Then
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
     assert_equal 'all_sent', JSON.parse(response.body)['status']
   end
@@ -102,14 +102,14 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
   test 'next_instance should return all_sent status if experiment.is_error and has points' do
     # Given
     scheduled_x = 5
-    post "experiments/#{@experiment.id.to_s}/schedule_point.json", {point: {x: scheduled_x}.to_json}
+    post schedule_point_experiment_path(@experiment.id), point: {x: scheduled_x}.to_json, format: :json
 
     # When
     @experiment.is_error = true
     @experiment.save
 
     # Then
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
     assert_equal 'all_sent', JSON.parse(response.body)['status']
   end
@@ -122,7 +122,7 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
   #   A multiple simulation runs for these point should be generated using /experiments/:id/next_simulation
   test 'next_instance should return multiple scheduled points after schedule_multiple_points' do
     # Given
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
 
     # When
@@ -130,13 +130,13 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
 
     sched_csv = "x\n" + scheduled_xs.join("\n")
 
-    post "experiments/#{@experiment.id.to_s}/schedule_multiple_points.json", {csv: sched_csv}
-    assert_response :success
+    post schedule_multiple_points_experiment_path(@experiment.id), csv: sched_csv, format: :json
 
+    assert_response :success
 
     # Then
     scheduled_xs.each do |x|
-      get "/experiments/#{@experiment.id.to_s}/next_simulation"
+      get next_simulation_experiment_path(@experiment.id)
       assert_response :success
       success_response = JSON.parse(response.body)
       assert_equal 'ok', success_response['status'], "Non-OK next_simulation response for x=#{x} point"
@@ -145,7 +145,7 @@ class ExperimentsControllerSchedulePointsTest < ActionDispatch::IntegrationTest
     end
 
     # After all next_simulations
-    get "/experiments/#{@experiment.id.to_s}/next_simulation"
+    get next_simulation_experiment_path(@experiment.id)
     assert_response :success
     wait_response = JSON.parse(response.body)
     assert_equal 'wait', wait_response['status']

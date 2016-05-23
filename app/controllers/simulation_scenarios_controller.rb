@@ -77,7 +77,7 @@ class SimulationScenariosController < ApplicationController
     )
   end
 
-  def get_simulation_scenario_experiment_ids
+  def experiments
     experiment_ids = current_user.experiments.where({simulation_id: @simulation_scenario.id}, {fields: ["_id"]}).map{|obj| obj.id.to_s}
 
     render json: (

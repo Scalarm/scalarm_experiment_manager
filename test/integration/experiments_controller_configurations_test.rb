@@ -54,17 +54,16 @@ class ExperimentsControllerConfigurationsTest < ActionDispatch::IntegrationTest
     # Given
     scheduled_xs = (1..10).to_a
     sched_csv = "x\n" + scheduled_xs.join("\n")
-    post "experiments/#{@experiment.id.to_s}/schedule_multiple_points.json", {csv: sched_csv}
+    post schedule_multiple_points_experiment_path(@experiment.id), csv: sched_csv, format: :json
     assert_response :success
 
     (1..10).each do |index|
-      get "experiments/#{@experiment.id.to_s}/next_simulation"
-      post "experiments/#{@experiment.id.to_s}/simulations/#{index}/mark_as_complete", {result: {y: index*2}.to_json}
+      get next_simulation_experiment_path(@experiment.id)
+      post mark_as_complete_experiment_simulation_path(index, @experiment.id), result: {y: index*2}.to_json, format: :json
     end
 
     # When
-    get "experiments/#{@experiment.id.to_s}/configurations.json",
-        {with_index: '1', min_index: min_index, max_index: max_index}
+    get configurations_experiment_path(@experiment.id), with_index: '1', min_index: min_index, max_index: max_index, format: :json
     content = JSON.parse(response.body)['data']
 
     # Then
@@ -86,17 +85,16 @@ class ExperimentsControllerConfigurationsTest < ActionDispatch::IntegrationTest
     # Given
     scheduled_xs = (1..10).to_a
     sched_csv = "x\n" + scheduled_xs.join("\n")
-    post "experiments/#{@experiment.id.to_s}/schedule_multiple_points.json", {csv: sched_csv}
+    post schedule_multiple_points_experiment_path(@experiment.id), csv: sched_csv, format: :json
     assert_response :success
 
     (1..10).each do |index|
-      get "experiments/#{@experiment.id.to_s}/next_simulation"
-      post "experiments/#{@experiment.id.to_s}/simulations/#{index}/mark_as_complete", {result: {y: index*2}.to_json}
+      get next_simulation_experiment_path(@experiment.id)
+      post mark_as_complete_experiment_simulation_path(index, @experiment.id), result: {y: index*2}.to_json, format: :json
     end
 
     # When
-    get "experiments/#{@experiment.id.to_s}/configurations.json",
-        {with_index: '1', min_index: min_index, max_index: max_index}
+    get configurations_experiment_path(@experiment.id), with_index: '1', min_index: min_index, max_index: max_index, format: :json
 
     # Then
     assert_response :precondition_failed

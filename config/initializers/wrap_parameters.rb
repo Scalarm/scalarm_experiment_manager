@@ -12,3 +12,5 @@ end
 # ActiveSupport.on_load(:active_record) do
 #  self.include_root_in_json = true
 # end
+
+ActionController::Parameters.permit_all_parameters = true

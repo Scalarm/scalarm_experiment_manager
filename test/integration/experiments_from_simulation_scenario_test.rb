@@ -40,7 +40,7 @@ class ExperimentsFromSimulationScenarioTest < ActionDispatch::IntegrationTest
     simulation2.save
     exp_sim2 = ExperimentFactory.create_experiment(@user.id, simulation2, name: 'experiment_test')
     exp_sim2.save
-    get "simulation_scenarios/#{simulation.id}/experiments", format: :json
+    get experiments_simulation_scenario_path(simulation.id), format: :json
     body = response.body
     hash_resp = JSON.parse(body)
     assert_equal 'ok', hash_resp['status'], hash_resp
