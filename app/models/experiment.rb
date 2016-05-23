@@ -138,8 +138,11 @@ class Experiment < Scalarm::Database::Model::Experiment
     self.experiment_input.each do |entity_group|
       entity_group['entities'].each do |entity|
         entity['parameters'].each do |parameter|
-          if ['range', 'custom'].include?(parameter['parametrizationType']) and ['integer', 'float'].include?(parameter['type'])
-            fittable_params << parameter_uid(entity_group, entity, parameter)
+          if ['integer', 'float'].include?(parameter['type'])
+            param_id = parameter_uid(entity_group, entity, parameter)
+
+            has_more_than_one_value = parameter_values_for(param_id).size > 1
+            fittable_params << param_id if has_more_than_one_value
           end
         end
       end

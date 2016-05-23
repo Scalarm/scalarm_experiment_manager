@@ -19,7 +19,8 @@ class RegressionTreeChartTest < MiniTest::Test
                 {"id" => "good_agent_energy", "label" => "Good agent energy", "type" => "integer", "value" => "110", "parametrizationType" => "value"},
                 {"id" => "evaluation_method", "label" => "Evaluation method", "type" => "string", "parametrizationType" => "custom", "custom_values" => ["rastrigin", "schwefel"]}
             ]}]}
-        ]
+        ],
+        doe_info: []
     )
 
     result_csv = IO.read(File.join(__dir__, 'sample_experiment_results.csv'))
@@ -44,7 +45,6 @@ class RegressionTreeChartTest < MiniTest::Test
 
     expected_results.each do |node_id, node|
       assert chart.tree_nodes.include?(node_id)
-
       assert_equal expected_results[node_id], node
     end
   end
