@@ -30,7 +30,7 @@ class LockTest < MiniTest::Test
     end
   end
 
-  def test_lock_write
+  def test_locks_should_work_with_threads
     data = []
     threads = []
 
