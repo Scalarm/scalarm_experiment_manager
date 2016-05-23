@@ -1067,7 +1067,7 @@ apiDoc:
     IO.binwrite("#{code_base_dir}/simulation_binaries.zip", simulation.simulation_binaries)
     file_list << 'simulation_binaries.zip'
 
-    zipfile_name = File.join('/tmp', "experiment_#{@experiment._id}_code_base.zip")
+    zipfile_name = File.join('/tmp', "experiment_#{@experiment._id}_code_base_#{SecureRandom.uuid}.zip")
 
     File.delete(zipfile_name) if File.exist?(zipfile_name)
 
@@ -1081,7 +1081,7 @@ apiDoc:
 
     FileUtils.rm_rf(code_base_dir)
 
-    send_file zipfile_name, type: 'application/zip'
+    send_file zipfile_name, type: 'application/zip', filename: "experiment_#{@experiment._id}_code_base.zip"
   end
 
   def histogram
