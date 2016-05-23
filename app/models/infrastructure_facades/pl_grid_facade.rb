@@ -87,7 +87,7 @@ class PlGridFacade < InfrastructureFacade
       experiment_id: experiment_id,
       scheduler_type: scheduler.short_name
     }
-    query[:grant_identifier] = params['grant_id'] unless params['grant_id'].blank?
+    query[:grant_identifier] = params['grant_identifier'] unless params['grant_identifier'].blank?
     query[:nodes] = params['nodes'] unless params['nodes'].blank?
     query[:ppn] = params['ppn'] unless params['ppn'].blank?
     query[:plgrid_host] = params['plgrid_host'] unless params['plgrid_host'].blank?
@@ -226,7 +226,7 @@ class PlGridFacade < InfrastructureFacade
     )
 
     job.start_at = params['start_at']
-    job.grant_id = params['grant_id'] unless params['grant_id'].blank?
+    job.grant_identifier = params['grant_identifier'] unless params['grant_identifier'].blank?
     job.nodes = params['nodes'] unless params['nodes'].blank?
     job.ppn = params['ppn'] unless params['ppn'].blank?
     job.plgrid_host = params['plgrid_host'] unless params['plgrid_host'].blank?
@@ -284,8 +284,8 @@ class PlGridFacade < InfrastructureFacade
       end
 
       grant_output.each do |line|
-        grant_id = line.split('|')[1].strip
-        grants << grant_id.split('(*)').first.strip unless grant_id.include?('GrantID')
+        grant_identifier = line.split('|')[1].strip
+        grants << grant_identifier.split('(*)').first.strip unless grant_identifier.include?('GrantID')
       end
     rescue => e
       Rails.logger.error("Could not read user's grants - #{e}")

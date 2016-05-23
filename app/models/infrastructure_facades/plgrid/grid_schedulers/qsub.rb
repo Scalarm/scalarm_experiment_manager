@@ -171,8 +171,8 @@ cd $PBS_O_WORKDIR
     # @param user_id [BSON::ObjectId, String]
     # @return [Array<Hash>] list of resource configurations
     def get_resource_configurations(user_id)
-      PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id)).flat_map do |grant_id|
-        {name: short_name.to_sym, params: {grant_id: grant_id}}
+      PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id)).flat_map do |grant_identifier|
+        {name: short_name.to_sym, params: {grant_identifier: grant_identifier}}
       end
     end
 

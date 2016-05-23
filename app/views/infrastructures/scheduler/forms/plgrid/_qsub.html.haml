@@ -18,12 +18,12 @@
 
 .row
   .small-4.columns
-    = label_tag :grant_id,  t('infrastructure.information.grant_id') + ':', class: 'inline right'
+    = label_tag :grant_identifier,  t('infrastructure.information.grant_identifier') + ':', class: 'inline right'
   .small-4.columns.end
     -if grants.empty?
-      = text_field_tag :grant_id, '', class: 'right'
+      = text_field_tag :grant_identifier, '', class: 'right'
     -else
-      = select_tag :grant_id, options_for_select(grants)
+      = select_tag :grant_identifier, options_for_select(grants)
 .row
   .small-4.columns
     = label_tag :nodes, t('infrastructure.information.plgrid.submission.nodes') + ':', class: 'inline right'

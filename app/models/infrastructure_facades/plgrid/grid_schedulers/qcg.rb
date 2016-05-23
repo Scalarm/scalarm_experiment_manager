@@ -229,8 +229,8 @@ module QcgScheduler
       grant_ids = PlGridFacade.retrieve_grants(GridCredentials.find_by_user_id(user_id))
 
       hosts.flat_map do |host|
-        grant_ids.flat_map do |grant_id|
-          {name: short_name.to_sym, params: {plgrid_host: host, grant_id: grant_id}}
+        grant_ids.flat_map do |grant_identifier|
+          {name: short_name.to_sym, params: {plgrid_host: host, grant_identifier: grant_identifier}}
         end
       end
     end

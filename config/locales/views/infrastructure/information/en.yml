@@ -38,7 +38,7 @@ en:
       instance_counter: Instance counter
       image_label: Image
       vm_type: Instance type
-      grant_id: Computing grant id (if you are using one)
+      grant_identifier: Computing grant id (if you are using one)
       time_constraint: Job time constraint [min]
       start_at: 'Start at ("hh:mm:ss" format)'
       submit: Submit
