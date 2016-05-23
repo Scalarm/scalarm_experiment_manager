@@ -19,15 +19,15 @@ class RegressionTreeChart
     result_csv = @experiment.create_result_csv_for(@moe_name)
     IO.write(result_file.path, result_csv)
 
-    range_arguments = @experiment.range_arguments.join('+')
-
-    @rinruby.eval("
-          library(rpart)
-          experiment_data <- read.csv('#{result_file.path}')
-          fit <- rpart(#{@moe_name}~#{range_arguments},method='anova',data=experiment_data)
-          fit_to_string <- capture.output(summary(fit))")
-
     begin
+      range_arguments = @experiment.fittable_parameters.join('+')
+
+      @rinruby.eval("
+            library(rpart)
+            experiment_data <- read.csv('#{result_file.path}')
+            fit <- rpart(#{@moe_name}~#{range_arguments},method='anova',data=experiment_data)
+            fit_to_string <- capture.output(summary(fit))")
+
       @tree_nodes = parse_regression_tree_data(@rinruby.fit_to_string)
       Rails.logger.debug("Tree nodes: #{@tree_nodes}")
     rescue => e

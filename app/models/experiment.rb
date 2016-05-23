@@ -131,6 +131,23 @@ class Experiment < Scalarm::Database::Model::Experiment
     params_with_range
   end
 
+  # parameters which can be used to fit models, e.g. regression model
+  def fittable_parameters
+    fittable_params = []
+
+    self.experiment_input.each do |entity_group|
+      entity_group['entities'].each do |entity|
+        entity['parameters'].each do |parameter|
+          if ['range', 'custom'].include?(parameter['parametrizationType']) and ['integer', 'float'].include?(parameter['type'])
+            fittable_params << parameter_uid(entity_group, entity, parameter)
+          end
+        end
+      end
+    end
+
+    fittable_params
+  end
+
   # @return [Array<String>] Array of parameter ids in proper order
   # NOTICE: value of this function should be cached
   def parameters
