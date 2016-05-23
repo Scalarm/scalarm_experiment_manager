@@ -19,7 +19,7 @@ class RegressionTreeChart
     result_csv = @experiment.create_result_csv_for(@moe_name)
     IO.write(result_file.path, result_csv)
 
-    range_arguments = @experiment.range_parameters.join('+')
+    range_arguments = @experiment.range_arguments.join('+')
 
     @rinruby.eval("
           library(rpart)
