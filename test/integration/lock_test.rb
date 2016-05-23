@@ -56,31 +56,34 @@ class LockTest < MiniTest::Test
 
   def test_processes_db
     pids = []
+
     PROC_NUM.times do |th_i|
       pids << fork do
         lock = Scalarm::MongoLock.new('test_job')
+
         sleep(0.1) until lock.acquire
+
         COUNT_PROC.times do
           sleep(rand*0.1)
+
           LockTestEntry.new({
                                 '_id'=>LockTestEntry.next_sequence,
                                 'pid'=>Process.pid
                             }).save
         end
+
         lock.release
       end
     end
 
     pids.each {|pid| Process.wait pid}
 
-    data = LockTestEntry.all
-
-    data.sort! {|a,b| a._id <=> b._id}
+    data = LockTestEntry.all.sort! {|a,b| a._id <=> b._id}
 
     PROC_NUM.times do |th_i|
       chunk = data[th_i*COUNT_PROC..(th_i+1)*COUNT_PROC-1]
-      assert ((chunk.map {|e| e.pid }).count(chunk[0].pid) == chunk.size),
-             "#{th_i}: #{(chunk.map {|e| "#{e._id}. #{e.pid}"})}"
+      chunk_pids = chunk.map(&:pid)
+      assert chunk_pids.count(chunk_pids[0]) == chunk.size, "#{th_i}: #{(chunk.map {|e| "#{e._id}. #{e.pid}"})}"
     end
   end
 
