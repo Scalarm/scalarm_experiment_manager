@@ -54,7 +54,7 @@ class LockTest < MiniTest::Test
     end
   end
 
-  def test_processes_db
+  def test_locks_should_work_with_processes
     pids = []
 
     PROC_NUM.times do |th_i|
