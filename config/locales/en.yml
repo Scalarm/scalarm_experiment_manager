@@ -142,6 +142,8 @@ en:
     go_to_registriation: Register new simulation or adapter
     empty_component: <N/A>
     edit_button: Edit
+    adapter_in_use: "Used in simulation scenarios - can't remove."
+    adapter_in_use_scenarios: "Used by %{scenarios}"
 
     registration:
       title: Simulation registration

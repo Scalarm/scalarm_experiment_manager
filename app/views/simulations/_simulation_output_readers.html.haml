@@ -17,4 +17,11 @@
             .small-8.columns
               %h4.subheader= output_reader.name
             .small-4.columns
-              = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
+              - scenarios_with_adapter = Simulation.where(output_reader_id: executor.id).map(&:name)
+              - if scenarios_with_adapter.blank?
+                = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
+              - else
+                %span.has-tip{"data-tooltip" => "", "aria-haspopup" => true,
+                              "title" => t('simulations.adapter_in_use_scenarios', scenarios: scenarios_with_adapter.join(", "))}
+                  = t('simulations.adapter_in_use')
+
