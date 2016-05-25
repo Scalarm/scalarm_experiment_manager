@@ -41,8 +41,8 @@ class GridCredentials < Scalarm::Database::Model::GridCredentials
   def _get_ssh_session
     gsi_error = nil
     begin
-      if secret_proxy
-        return Gsi::SSH.start(host, login, secret_proxy)
+      if self.secret_proxy
+        return Gsi::SSH.start(host, login, self.secret_proxy)
       end
     rescue Gsi::ProxyError => proxy_error
       Rails.logger.debug "Proxy for PL-Grid user #{login} is not valid: #{proxy_error.class}, removing"
@@ -57,7 +57,7 @@ class GridCredentials < Scalarm::Database::Model::GridCredentials
       self.save
     end
 
-    if password
+    if self.password
       Net::SSH.start(host, login, password: password, auth_methods: %w(keyboard-interactive password))
     else
       raise (gsi_error or InfrastructureErrors::NoCredentialsError)
@@ -65,9 +65,9 @@ class GridCredentials < Scalarm::Database::Model::GridCredentials
   end
 
   def _get_scp_session
-    if secret_proxy
+    if self.secret_proxy
       Gsi::SCP.start(host, login, secret_proxy)
-    elsif password
+    elsif self.password
       Net::SCP.start(host, login, password: password, auth_methods: %w(keyboard-interactive password))
     else
       raise InfrastructureErrors::NoCredentialsError

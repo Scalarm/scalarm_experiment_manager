@@ -6,6 +6,7 @@ class GridCredentialsTest < MiniTest::Test
 
   def setup
     Rails.stubs(:logger).returns(stub_everything)
+    Scalarm::Database::MongoActiveRecord.set_encryption_key('test_key')
   end
 
   def test_ssh

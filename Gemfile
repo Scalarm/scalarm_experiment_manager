@@ -7,14 +7,6 @@ gem 'racc'
 # wrapper for R interpreter
 gem 'rinruby'
 
-gem 'bson'
-gem 'bson_ext'
-gem 'mongo', '~> 1.12'
-# Once upon a time, a mongo-session was tested but it turned out to be buggy
-# gem 'mongo_session_store-rails4',
-#     git: 'git://github.com/kliput/mongo_session_store.git',
-#     branch: 'issue-31-mongo_store-deserialization'
-
 # Amazon EC2 connector
 gem 'aws-sdk'
 
@@ -39,7 +31,6 @@ gem 'coffee-rails', '~> 4.0.0'
 # force libv8 version, which can be build separately in OSX
 gem 'libv8', '3.16.14.13'
 gem 'therubyracer', '0.12.1', platforms: :ruby
-
 
 # Use jquery as the JavaScript library
 gem 'jquery-rails'
@@ -88,12 +79,12 @@ gem 'remotipart', '~> 1.0'
 gem 'newrelic_rpm'
 
 ## for local development - set path to scalarm-database
-# gem 'scalarm-database', path: '/home/jliput/Scalarm/scalarm-database'
-gem 'scalarm-database', '~> 1.4.0', git: 'git://github.com/Scalarm/scalarm-database.git'
+gem 'scalarm-database', path: '/vagrant/scalarm-database'
+# gem 'scalarm-database', '~> 2.0.0', git: 'git://github.com/Scalarm/scalarm-database.git'
 
 ## for local development - set path to scalarm-core
-# gem 'scalarm-service_core', '~> 0.8', path: '/Users/jliput/Scalarm/scalarm-service_core'
-gem 'scalarm-service_core', '~> 1.3', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', path: '/vagrant/scalarm-service_core'
+# gem 'scalarm-service_core', '~> 2.0.0', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'

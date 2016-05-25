@@ -47,10 +47,10 @@ module ExperimentProgressBar
                       end
 
     begin
-      result = progress_bar_table.update({bar_num: bar_index}, '$inc' => {bar_state: increment_value})
-      bar = progress_bar_table.find_one({bar_num: bar_index})
-      table_length = progress_bar_table.count
-      color = compute_bar_color(bar)
+      result = progress_bar_table.update_one({bar_num: bar_index}, {bar_state: {'$inc' => increment_value}})
+      # bar = progress_bar_table.find_one({bar_num: bar_index})
+      # table_length = progress_bar_table.count
+      # color = compute_bar_color(bar)
       # Scalarm::Database::Model::ExperimentProgressNotification.
       #     new(experiment_id: self.experiment_id,
       #          date: Time.now.to_i,
@@ -89,7 +89,7 @@ module ExperimentProgressBar
   #returns array of numbers describing how should each bar be colored
   #
   def progress_bar_color
-    progress_bar_table.find({}, {:sort => [%w(bar_num ascending)]}).to_a.map { |bar_doc| compute_bar_color(bar_doc) }
+    progress_bar_table.find({}, {sort: { bar_num: -1}}).to_a.map { |bar_doc| compute_bar_color(bar_doc) }
   end
 
   ##
@@ -153,7 +153,7 @@ module ExperimentProgressBar
     begin
       #Rails.logger.debug("New bar state = #{{:bar_num => bar_index}} #{{'$set' => { :bar_state => new_bar_state }}}")
       if color_of_bar(bar_index) != new_bar_state
-        progress_bar_table.update({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
+        progress_bar_table.update_one({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
       end
     rescue => e
       Rails.logger.debug("Error --- #{e}")
@@ -173,7 +173,7 @@ module ExperimentProgressBar
   ##
   # reuurns number describing how should this bar be colored
   def color_of_bar(bar_index)
-    compute_bar_color(progress_bar_table.find_one({bar_num: bar_index}))
+    compute_bar_color(progress_bar_table.where(bar_num: bar_index).first)
   end
 
 
@@ -181,6 +181,7 @@ module ExperimentProgressBar
   # creating progress bar in database
   #TODO why are we trying to create bar up to 5 times?
   def create_progress_bar_table
+    require 'mongo'
     bar_created, counter = false, 0
     while (not bar_created) and counter < 5
       counter += 1
@@ -188,7 +189,7 @@ module ExperimentProgressBar
         progress_bar = progress_bar_table
         progress_bar.drop
         progress_bar = progress_bar_table
-        progress_bar.create_index([['bar_num', Mongo::ASCENDING]])
+        progress_bar.indexes.create_one({bar_num: 1}, unique: 1)
         bar_created = true
 
         return progress_bar
@@ -221,7 +222,7 @@ module ExperimentProgressBar
 
     progress_bar_table = create_progress_bar_table
     if not progress_bar_data.empty?
-      progress_bar_table.insert(progress_bar_data)
+      progress_bar_table.insert_many(progress_bar_data)
     end
   end
 

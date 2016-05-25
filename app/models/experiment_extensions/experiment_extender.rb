@@ -133,7 +133,7 @@ module ExperimentExtender
   def update_simulations(id_change_map)
     Rails.logger.debug("Size of new ids: #{id_change_map.size}")
 
-    simulation_runs.where({}, {sort: [['id', :desc]]}).each do |simulation_run|
+    simulation_runs.where({}, {sort: { id: -1 }}).each do |simulation_run|
       new_simulation_id = id_change_map[simulation_run.index]
 
       Rails.logger.debug("Simulation id: #{simulation_run.index} -> #{new_simulation_id}")

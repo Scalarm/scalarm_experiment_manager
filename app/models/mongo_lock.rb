@@ -26,17 +26,10 @@ module Scalarm
     end
 
     def acquire
-      lock_dock = MongoLockRecord.collection.find_and_modify({
-        query: { name: @name },
-        update: { '$set' => { name: @name } },
-        upsert: true
-      })
+      lock_dock = MongoLockRecord.collection.find_one_and_update({ name: @name }, { '$set' => { name: @name } }, upsert: true)
 
       if lock_dock.nil? # lock acquired
-        MongoLockRecord.collection.find_and_modify({
-           query: { name: @name },
-           update: { '$set' => { pid: MongoLock.global_pid, acquired_at: Time.now } }
-        })
+        MongoLockRecord.collection.find_one_and_update({ name: @name }, { '$set' => { pid: MongoLock.global_pid, acquired_at: Time.now } })
 
         Rails.logger.debug "Process #{MongoLock.global_pid} acquired lock on #{@name}"
 
@@ -61,16 +54,13 @@ module Scalarm
     # @return [String] a "global_pid" of process, which originally acquired the lock,
     #   @see #global_pid for format
     def release
-      old_lock = MongoLockRecord.collection.find_and_modify({
-         query: { name: @name, pid: MongoLock.global_pid },
-         remove: true
-      })
+      old_lock = MongoLockRecord.collection.find_one_and_delete(name: @name, pid: MongoLock.global_pid)
       Rails.logger.debug "Process #{MongoLock.global_pid} released lock on #{@name}" if old_lock
       old_lock ? old_lock['pid'] : nil
     end
 
     def self.forced_release(name)
-      MongoLockRecord.collection.remove({ name: name })
+      MongoLockRecord.collection.delete_one({ name: name })
     end
 
     def self.mutex(name, probe_sec=0.1, &block)

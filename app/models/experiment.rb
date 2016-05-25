@@ -451,7 +451,7 @@ class Experiment < Scalarm::Database::Model::Experiment
     # drop progress bar object
     self.progress_bar_table.drop
     # self-drop
-    @@db['experiments_info'].remove({_id: self.id})
+    @@db['experiments_info'].delete_one({_id: self.id})
     Experiment.destroy({_id: self.id})
   end
 
