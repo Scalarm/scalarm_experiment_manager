@@ -17,7 +17,7 @@
             .small-8.columns
               %h4.subheader= input_writer.name
             .small-4.columns
-              - scenarios_with_adapter = Simulation.where(input_writer_id: executor.id).map(&:name)
+              - scenarios_with_adapter = Simulation.where(input_writer_id: input_writer.id).map(&:name)
               - if scenarios_with_adapter.blank?
                 = submit_tag t('simulations.deregister_button'), class: "button radius #{'last-element' if is_last}"
               - else
