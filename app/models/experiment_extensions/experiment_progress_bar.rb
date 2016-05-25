@@ -47,7 +47,7 @@ module ExperimentProgressBar
                       end
 
     begin
-      result = progress_bar_table.update_one({bar_num: bar_index}, {bar_state: {'$inc' => increment_value}})
+      result = progress_bar_table.update_one({bar_num: bar_index}, {'$inc' => {bar_state: increment_value}})
       # bar = progress_bar_table.find_one({bar_num: bar_index})
       # table_length = progress_bar_table.count
       # color = compute_bar_color(bar)
@@ -89,7 +89,7 @@ module ExperimentProgressBar
   #returns array of numbers describing how should each bar be colored
   #
   def progress_bar_color
-    progress_bar_table.find({}, {sort: { bar_num: -1}}).to_a.map { |bar_doc| compute_bar_color(bar_doc) }
+    progress_bar_table.find({}, {sort: { bar_num: 1}}).to_a.map { |bar_doc| compute_bar_color(bar_doc) }
   end
 
   ##
@@ -151,7 +151,6 @@ module ExperimentProgressBar
     end
 
     begin
-      #Rails.logger.debug("New bar state = #{{:bar_num => bar_index}} #{{'$set' => { :bar_state => new_bar_state }}}")
       if color_of_bar(bar_index) != new_bar_state
         progress_bar_table.update_one({bar_num: bar_index}, '$set' => {bar_state: new_bar_state})
       end
@@ -173,7 +172,7 @@ module ExperimentProgressBar
   ##
   # reuurns number describing how should this bar be colored
   def color_of_bar(bar_index)
-    compute_bar_color(progress_bar_table.where(bar_num: bar_index).first)
+    compute_bar_color(progress_bar_table.find({bar_num: bar_index}, {limit: 1}).first)
   end
 
 
