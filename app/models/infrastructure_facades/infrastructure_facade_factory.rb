@@ -75,10 +75,11 @@ class InfrastructureFacadeFactory
             children:
                 PlGridFacadeFactory.instance.provider_names.map{|name|
                   PlGridFacadeFactory.instance.get_facade(name).to_h(user_id).merge(group: 'plgrid')
-                } +
-                ClusterFacadeFactory.instance.provider_names(plgrid: true, public: true).map{|cluster_record_id|
-                  ClusterFacadeFactory.instance.get_facade_for(cluster_record_id).to_h(user_id).merge(group: 'plgrid')
                 }
+    # +
+    #             ClusterFacadeFactory.instance.provider_names(plgrid: true, public: true).map{|cluster_record_id|
+    #               ClusterFacadeFactory.instance.get_facade_for(cluster_record_id).to_h(user_id).merge(group: 'plgrid')
+    #             }
         },
         {
             name: I18n.t('infrastructures_controller.tree.clouds'),
