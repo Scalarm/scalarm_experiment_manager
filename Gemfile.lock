@@ -1,15 +1,6 @@
 GIT
-  remote: git://github.com/rweng/jquery-datatables-rails.git
-  revision: b8e6b6fa51e0074ea44b4771a68b1817a14023fc
-  specs:
-    jquery-datatables-rails (3.4.0)
-      actionpack (>= 3.1)
-      jquery-rails
-      railties (>= 3.1)
-      sass-rails
-
-PATH
-  remote: /vagrant/scalarm-database
+  remote: git://github.com/Scalarm/scalarm-database.git
+  revision: 065283fc5e24d7477b1764377a2b6131e966dadd
   specs:
     scalarm-database (2.0.0)
       activesupport
@@ -18,14 +9,25 @@ PATH
       encryptor (= 1.3.0)
       mongo (= 2.2.5)
 
-PATH
-  remote: /vagrant/scalarm-service_core
+GIT
+  remote: git://github.com/Scalarm/scalarm-service_core.git
+  revision: 08546c5a61b6f3787aeb6a52cb54c3ecd1118248
   specs:
     scalarm-service_core (2.0.0)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       grid-proxy (~> 0.1)
       rest-client (~> 1.8)
+
+GIT
+  remote: git://github.com/rweng/jquery-datatables-rails.git
+  revision: b8e6b6fa51e0074ea44b4771a68b1817a14023fc
+  specs:
+    jquery-datatables-rails (3.4.0)
+      actionpack (>= 3.1)
+      jquery-rails
+      railties (>= 3.1)
+      sass-rails
 
 GEM
   remote: https://rubygems.org/
@@ -524,8 +526,8 @@ DEPENDENCIES
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
-  scalarm-database!
-  scalarm-service_core!
+  scalarm-database (~> 2.0.0)!
+  scalarm-service_core (~> 2.0.0)!
   sdoc
   sidekiq
   signet
