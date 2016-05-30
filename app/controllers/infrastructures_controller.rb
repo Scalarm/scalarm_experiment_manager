@@ -19,7 +19,7 @@ class InfrastructuresController < ApplicationController
     render json: InfrastructureFacadeFactory.list_infrastructures(current_user.id)
   end
 
-  # Get Simulation Manager nodes for Infrastructure Tree for given containter name
+  # Get Simulation Manager nodes for Infrastructure Tree for given infrastructure
   # and current user.
   # GET params:
   # - infrastructure_name: name of Infrastructure

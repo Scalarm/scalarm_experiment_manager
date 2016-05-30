@@ -66,7 +66,9 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def _get_sm_records(query, params={})
-    JobRecord.where(query.merge({infrastructure_type: 'clusters'})).to_a
+    infrastructure_specific_params = {infrastructure_type: 'clusters', infrastructure_identifier: short_name}
+
+    JobRecord.where(query.merge(infrastructure_specific_params)).to_a
   end
 
   def other_params_for_booster(user_id)
