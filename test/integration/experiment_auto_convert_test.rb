@@ -7,6 +7,14 @@ require 'db_helper'
 class ExperimentAutoConvertTest < MiniTest::Test
   include DBHelper
 
+  def setup
+    super
+  end
+
+  def teardown
+    super
+  end
+
   def create_experiment(factory_method)
     user_id = ScalarmUser.new(login: 'test').save.id
     simulation = Simulation.new({})

@@ -479,7 +479,7 @@ class PlGridFacade < InfrastructureFacade
     scheduler.onsite_monitorable? and not valid_credentials_available?(user_id)
   end
 
-  def other_params_for_booster(user_id)
+  def other_params_for_booster(user_id, request_params={})
     {
         force_onsite_monitoring: force_onsite_monitoring?(user_id)
     }

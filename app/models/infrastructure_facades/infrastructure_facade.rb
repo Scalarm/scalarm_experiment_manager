@@ -297,7 +297,7 @@ class InfrastructureFacade
     get_sm_records(user_id, experiment_id, attributes).count
   end
 
-  def other_params_for_booster(user_id)
+  def other_params_for_booster(user_id, request_params={})
     {}
   end
 

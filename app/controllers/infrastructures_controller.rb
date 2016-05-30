@@ -405,7 +405,7 @@ apiDoc:
     begin
       render partial: "infrastructures/scheduler/forms/#{partial_name}", locals: {
           infrastructure_name: infrastructure_name,
-          other_params: facade.other_params_for_booster(current_user.id)
+          other_params: facade.other_params_for_booster(current_user.id, params)
       }
     rescue ActionView::MissingTemplate
       render nothing: true

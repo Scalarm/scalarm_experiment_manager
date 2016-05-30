@@ -71,12 +71,16 @@ class ClusterFacade < InfrastructureFacade
     JobRecord.where(query.merge(infrastructure_specific_params)).to_a
   end
 
-  def other_params_for_booster(user_id)
-    creds = ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first
+  def other_params_for_booster(user_id, request_params={})
+    creds_available = if request_params.include?(:proxy) and @cluster_record.plgrid == true
+      true
+    else
+      not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
+    end
 
     {
       scheduler: @cluster_record.scheduler,
-      user_has_valid_credentials: (not creds.nil?)
+      user_has_valid_credentials: creds_available
     }
   end
 
