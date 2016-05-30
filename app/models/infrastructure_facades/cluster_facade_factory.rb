@@ -6,8 +6,8 @@ require 'infrastructure_facades/cluster_facade'
 class ClusterFacadeFactory
   include Singleton
 
-  def provider_names
-    ClusterRecord.all.map { |record| "cluster_#{record.id}" }
+  def provider_names(query={})
+    ClusterRecord.where(query).map { |record| "cluster_#{record.id}" }
   end
 
   def get_facade_for(cluster_id)

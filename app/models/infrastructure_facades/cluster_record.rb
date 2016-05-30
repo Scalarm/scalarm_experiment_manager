@@ -9,6 +9,7 @@ require 'scalarm/database/core/mongo_active_record'
 # created_by:: id of a user who defined the cluster
 # shared_with:: list of users ids who will see this cluster definition
 # public:: boolean if this definition should be shared with everyone
+# plgrid:: boolean - optional if set to true than allow to authenticate with plgrid proxy certificate
 class ClusterRecord < Scalarm::Database::MongoActiveRecord
   use_collection 'clusters'
 
