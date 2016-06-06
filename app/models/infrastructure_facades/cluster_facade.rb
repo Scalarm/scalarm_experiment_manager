@@ -221,7 +221,7 @@ class ClusterFacade < InfrastructureFacade
     cluster = ClusterRecord.where(id: cluster_id).first
     current_user = ScalarmUser.where(id: user_id).first
 
-    credentials = if cluster.plgrid == true and (plgrid_creds = current_user.valid_plgrid_credentials) != nil
+    credentials = if cluster.plgrid == true and (plgrid_creds = current_user.valid_plgrid_credentials(cluster.host)) != nil
                     Rails.logger.debug { "Fetched proxy based credentials" }
                     plgrid_creds
                   elsif request_params[:type] == "password"
