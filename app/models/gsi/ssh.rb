@@ -21,7 +21,7 @@ module Gsi
           @leftovers = []
           output_results = nil
           # whole process of read should be also timed-out because of single byte timeout
-          timeout(10) do
+          Timeout.timeout(10) do
             output_results = self.class.time_limited_io_read(@output, 5)
           end
           raise Gsi::ClientError.new('time_limited_io_read failed') if output_results.nil?
@@ -54,7 +54,7 @@ module Gsi
         error = nil
         loop do
           begin
-            timeout(time_limit) do
+            Timeout.timeout(time_limit) do
               buf += io.readpartial(1)
               break unless buf
             end

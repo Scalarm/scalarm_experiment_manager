@@ -51,11 +51,8 @@ module PlGridOpenID
         'openid.identity'.to_sym => :validate_plgrid_identity
     )
 
-    # disabled for security reasons
-    #Rails.logger.debug("PL-Grid OpenID callback with parameters: #{params}")
-
-    parameters = params.reject{|k,v|request.path_parameters[k]}
-    parameters.reject!{|k,v|%w{action controller}.include? k.to_s}
+    parameters = params.reject{|k,v| request.path_parameters[k]}
+    parameters.reject!{|k,v| %w{action controller}.include? k.to_s}
     oidresp = consumer.complete(parameters, openid_callback_plgrid_url)
 
     if %w{success failure cancel}.include? oidresp.status.to_s
@@ -113,14 +110,14 @@ module PlGridOpenID
       x509_proxy_cert =
           Gsi::assemble_proxy_certificate(ax_attrs[:proxy], ax_attrs[:proxy_priv_key], ax_attrs[:user_cert])
 
-      pl_cloud_secret = PLCloudUtil::openid_proxy_to_cloud_proxy(x509_proxy_cert)
+      # pl_cloud_secret = PLCloudUtil::openid_proxy_to_cloud_proxy(x509_proxy_cert)
     else
       x509_proxy_cert = nil
-      pl_cloud_secret = nil
+      # pl_cloud_secret = nil
     end
 
     update_grid_credentials(scalarm_user.id, plgrid_login, x509_proxy_cert)
-    update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
+    # update_pl_cloud_credentials(scalarm_user.id, plgrid_login, pl_cloud_secret)
 
     flash[:notice] = t('openid.verification_success', identity: oidresp.display_identifier)
     session[:user] = scalarm_user.id.to_s

@@ -13,4 +13,19 @@ module PlGridUser
     /\/C=PL\/O=PL-Grid\/O=.+\/O=.+\/CN=.+\/CN=.+/ =~ dn
   end
 
+  def valid_plgrid_credentials(host)
+    gc = GridCredentials.where(user_id: self.id, secret_proxy: {'$exists' => true}).first
+
+    if gc.nil?
+      nil
+    else
+      gc.host = host
+      if gc.valid?
+        gc
+      else
+        nil
+      end
+    end
+  end
+
 end
