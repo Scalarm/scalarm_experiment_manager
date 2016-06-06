@@ -72,11 +72,12 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def other_params_for_booster(user_id, request_params={})
-    creds_available = if request_params.include?(:proxy) and @cluster_record.plgrid == true
-      true
-    else
-      not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
-    end
+    creds_available = if @cluster_record.plgrid == true
+                        user = ScalarmUser.where(id: user_id).first
+                        not user.valid_plgrid_credentials(@cluster_record.host).nil?
+                      else
+                        not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
+                      end
 
     {
       scheduler: @cluster_record.scheduler,
@@ -219,23 +220,21 @@ class ClusterFacade < InfrastructureFacade
   def load_or_create_credentials(user_id, cluster_id, request_params)
     cluster = ClusterRecord.where(id: cluster_id).first
 
-    credentials = if request_params.include?(:proxy) and cluster.plgrid == true
-                    Rails.logger.debug { "Creade proxy based credentials" }
-                    creds = GridCredentials.new(login: request_params[:login].to_s)
-                    creds.secret_proxy = params[:proxy]
-                    creds
+    credentials = if cluster.plgrid == true and (plgrid_creds = current_user.valid_plgrid_credentials) != nil
+                    Rails.logger.debug { "Fetched proxy based credentials" }
+                    plgrid_creds
                   elsif request_params[:type] == "password"
-                    Rails.logger.debug { "Creade temp credentials with password" }
+                    Rails.logger.debug { "Create temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
                       user_id, cluster_id, request_params[:login].to_s, request_params[:password].to_s
                     )
                   elsif request_params[:type] == "privkey"
-                    Rails.logger.debug { "Creade temp credentials with privkey" }
+                    Rails.logger.debug { "Create temp credentials with privkey" }
                     ClusterCredentials.create_privkey_credentials(
                       user_id, cluster_id, request_params[:login].to_s, request_params[:privkey].to_s
                     )
                   else
-                    Rails.logger.debug { "finding existing " }
+                    Rails.logger.debug { "finding existing" }
                     ClusterCredentials.where(owner_id: user_id, cluster_id: cluster_id).first
                   end
 

@@ -54,7 +54,7 @@ module Gsi
         error = nil
         loop do
           begin
-            timeout(time_limit) do
+            Timeout.timeout(time_limit) do
               buf += io.readpartial(1)
               break unless buf
             end
