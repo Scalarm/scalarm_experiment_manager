@@ -14,7 +14,7 @@ module PlGridUser
   end
 
   def valid_plgrid_credentials(host)
-    gc = GridCredentials.where(user_id: self.id, proxy: {'$exists' => true}).first
+    gc = GridCredentials.where(user_id: self.id, secret_proxy: {'$exists' => true}).first
 
     if gc.nil?
       nil
