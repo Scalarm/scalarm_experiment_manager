@@ -219,6 +219,7 @@ class ClusterFacade < InfrastructureFacade
 
   def load_or_create_credentials(user_id, cluster_id, request_params)
     cluster = ClusterRecord.where(id: cluster_id).first
+    current_user = ScalarmUser.where(id: user_id).first
 
     credentials = if cluster.plgrid == true and (plgrid_creds = current_user.valid_plgrid_credentials) != nil
                     Rails.logger.debug { "Fetched proxy based credentials" }
