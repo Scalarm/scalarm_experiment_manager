@@ -3,15 +3,15 @@ require 'minitest/autorun'
 require 'mocha/mini_test'
 
 
-require 'infrastructure_facades/plgrid/grid_schedulers/qsub'
+require 'infrastructure_facades/pbs_scheduler'
 
-class QsubTest < MiniTest::Test
+class PbsSchedulerTest < MiniTest::Test
 
   def setup
     @logger = stub_everything
     @ssh = stub_everything
     @record = stub_everything
-    @qsub = QsubScheduler::PlGridScheduler.new(@logger)
+    @qsub = PbsScheduler.new
   end
 
   def test_onsite_monitorable

@@ -312,6 +312,28 @@ namespace :monitoring do
   end
 end
 
+namespace :plgrid do
+  desc 'Defines individual clusters available in PLGrid'
+  task :setup_cluster, [:debug] => [:environment] do
+    ClusterRecord.new(
+      name: "Zeus @ ACK Cyfronet AGH", 
+      scheduler: "pbs", 
+      host: "zeus.cyfronet.pl", 
+      plgrid: true, 
+      public: true
+    ).save
+
+    ClusterRecord.new(
+      name: "Prometheus @ ACK Cyfronet AGH", 
+      scheduler: "slurm", 
+      host: "pro.cyfronet.pl", 
+      plgrid: true, 
+      public: true
+    ).save
+  end
+end
+
+
 # ================ UTILS
 def start_router(config_service_url)
   bin = mongos_path
