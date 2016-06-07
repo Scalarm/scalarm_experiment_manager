@@ -314,7 +314,7 @@ end
 
 namespace :plgrid do
   desc 'Defines individual clusters available in PLGrid'
-  task :setup_cluster, [:debug] => [:environment] do
+  task :setup_clusters, [:debug] => [:environment] do
     ClusterRecord.new(
       name: "Zeus @ ACK Cyfronet AGH", 
       scheduler: "pbs", 
