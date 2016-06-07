@@ -294,7 +294,7 @@ class ClusterFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.onsite_monitoring = if params['onsite_monitoring'] == "true"  then true else false end
+    job.onsite_monitoring = (params['onsite_monitoring'] == "true" || params['onsite_monitoring'] == "on")
 
     job
   end

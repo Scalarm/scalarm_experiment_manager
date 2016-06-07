@@ -37,52 +37,10 @@ class ClusterCredentials < Scalarm::Database::EncryptedMongoActiveRecord
 
   def _get_ssh_session
     self.authenticator.establish_ssh_session
-
-    # if type == 'password'
-    #   return Net::SSH.start(cluster.host, login, password: secret_password, auth_methods: %w(keyboard-interactive password))
-    # end
-
-    # if type == 'privkey'
-    #   privkey_file = Tempfile.new(owner_id.to_s)
-    #   privkey_file.write(secret_privkey)
-    #   privkey_file.close
-
-    #   ssh = nil
-    #   begin
-    #     ssh = Net::SSH.start(cluster.host, login, keys: [ privkey_file.path ], auth_methods: %w(publickey))
-    #   ensure
-    #     privkey_file.unlink
-    #   end
-
-    #   return ssh
-    # end
-
-    # raise InfrastructureErrors::NoCredentialsError
   end
 
   def _get_scp_session
     self.authenticator.establish_scp_session
-
-    # if type == 'password'
-    #   return Net::SCP.start(cluster.host, login, password: secret_password, auth_methods: %w(keyboard-interactive password))
-    # end
-
-    # if type == 'privkey'
-    #   privkey_file = Tempfile.new(owner_id.to_s)
-    #   privkey_file.write(secret_privkey)
-    #   privkey_file.close
-
-    #   scp = nil
-    #   begin
-    #     scp = Net::SCP.start(cluster.host, login, keys: [ privkey_file.path ], auth_methods: %w(publickey))
-    #   ensure
-    #     privkey_file.unlink
-    #   end
-
-    #   return scp
-    # end
-
-    # raise InfrastructureErrors::NoCredentialsError
   end
 
   def authenticator
