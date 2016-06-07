@@ -237,6 +237,9 @@ class ClusterFacade < InfrastructureFacade
 
                     creds.login = plgrid_creds.login
                     creds.secret_proxy = plgrid_creds.secret_proxy
+
+                    Rails.logger.debug { "Credentials: #{creds}" }
+
                     creds
                   elsif request_params[:type] == "password"
                     Rails.logger.debug { "Create temp credentials with password" }
