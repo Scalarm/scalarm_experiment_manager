@@ -72,12 +72,14 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def other_params_for_booster(user_id, request_params={})
-    creds_available = if @cluster_record.plgrid == true
-                        user = ScalarmUser.where(id: user_id).first
-                        not user.valid_plgrid_credentials(@cluster_record.host).nil?
-                      else
-                        not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
-                      end
+    user = ScalarmUser.where(id: user_id).first    
+
+    creds_available = if @cluster_record.plgrid == true and 
+        (not (plgrid_creds = user.valid_plgrid_credentials(@cluster_record.host)).nil?)
+      true
+    else
+      not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
+    end
 
     {
       scheduler: @cluster_record.scheduler,
@@ -92,6 +94,7 @@ class ClusterFacade < InfrastructureFacade
 
     # 1. checking if the user can schedule SiM
     credentials = load_or_create_credentials(user_id, cluster_id, additional_params)
+
     if not credentials.valid?
       raise InfrastructureErrors::InvalidCredentialsError.new
     end
@@ -219,11 +222,27 @@ class ClusterFacade < InfrastructureFacade
 
   def load_or_create_credentials(user_id, cluster_id, request_params)
     cluster = ClusterRecord.where(id: cluster_id).first
-    current_user = ScalarmUser.where(id: user_id).first
+    user = ScalarmUser.where(id: user_id).first
 
-    credentials = if cluster.plgrid == true and (plgrid_creds = current_user.valid_plgrid_credentials(cluster.host)) != nil
+    credentials = if cluster.plgrid == true and (not (plgrid_creds = user.valid_plgrid_credentials(cluster.host)).nil?)
                     Rails.logger.debug { "Fetched proxy based credentials" }
-                    plgrid_creds
+                    creds = ClusterCredentials.where(owner_id: user_id, cluster_id: cluster_id).first
+
+                    if creds.nil?
+                      creds = ClusterCredentials.new(
+                        owner_id: user_id,
+                        cluster_id: cluster_id,                         
+                        type: 'gsiproxy'
+                      )
+                    end
+
+                    creds.host = cluster.host
+                    creds.login = plgrid_creds.login
+                    creds.secret_proxy = plgrid_creds.secret_proxy
+
+                    creds.save
+
+                    creds
                   elsif request_params[:type] == "password"
                     Rails.logger.debug { "Create temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
@@ -275,7 +294,7 @@ class ClusterFacade < InfrastructureFacade
 
     job.initialize_fields
 
-    job.onsite_monitoring = if params['onsite_monitoring'] == "true"  then true else false end
+    job.onsite_monitoring = (params['onsite_monitoring'] == "true" || params['onsite_monitoring'] == "on")
 
     job
   end
