@@ -13,7 +13,7 @@ class PlGridFacadeFactoryTest < MiniTest::Test
     end
   end
 
-  create_test_get_facade 'qsub'
+  # create_test_get_facade 'qsub'
   # gLite is not used anymore (for now)
   # create_test_get_facade 'glite'
   create_test_get_facade 'qcg'

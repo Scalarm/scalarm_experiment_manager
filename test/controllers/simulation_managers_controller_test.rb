@@ -20,13 +20,13 @@ class SimulationManagersControllerTest < ActionController::TestCase
 
   test 'index with has_cmd_to_execute set to true should filter records from db with cmd to execute on PBS' do
     # given database
-    PlGridJob.new(i: 1, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qsub', state: :error).save
-    PlGridJob.new(i: 2, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qsub', state: :created).save
-    PlGridJob.new(i: 3, scheduler_type: 'qsub', cmd_to_execute_code: '', cmd_to_execute: '', state: :error).save
-    PlGridJob.new(i: 4, scheduler_type: 'qsub', state: :created).save
+    PlGridJob.new(i: 1, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qcg', state: :error).save
+    PlGridJob.new(i: 2, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qcg', state: :created).save
+    PlGridJob.new(i: 3, scheduler_type: 'qcg', cmd_to_execute_code: '', cmd_to_execute: '', state: :error).save
+    PlGridJob.new(i: 4, scheduler_type: 'qcg', state: :created).save
 
     # when
-    get :index, infrastructure: 'qsub', has_cmd_to_execute: 'true'
+    get :index, infrastructure: 'qcg', has_cmd_to_execute: 'true'
 
     # then
     assert_response :success, response.body
@@ -43,10 +43,10 @@ class SimulationManagersControllerTest < ActionController::TestCase
 
   test 'index with has_cmd_to_execute set to true should filter records from db with cmd to execute on private_machine' do
     # given database
-    PrivateMachineRecord.new(i: 1, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qsub', state: :error).save
-    PrivateMachineRecord.new(i: 2, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qsub', state: :created).save
-    PrivateMachineRecord.new(i: 3, scheduler_type: 'qsub', cmd_to_execute_code: '', cmd_to_execute: '', state: :error).save
-    PrivateMachineRecord.new(i: 4, scheduler_type: 'qsub', state: :created).save
+    PrivateMachineRecord.new(i: 1, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qcg', state: :error).save
+    PrivateMachineRecord.new(i: 2, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qcg', state: :created).save
+    PrivateMachineRecord.new(i: 3, scheduler_type: 'qcg', cmd_to_execute_code: '', cmd_to_execute: '', state: :error).save
+    PrivateMachineRecord.new(i: 4, scheduler_type: 'qcg', state: :created).save
 
     # when
     get :index, infrastructure: 'private_machine', has_cmd_to_execute: 'true'
@@ -66,10 +66,10 @@ class SimulationManagersControllerTest < ActionController::TestCase
 
   test 'index with has_cmd_to_execute set to false should filter records from db without cmd to execute on private_machine' do
     # given database
-    PrivateMachineRecord.new(i: 1, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qsub', state: :error).save
-    PrivateMachineRecord.new(i: 2, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qsub', state: :created).save
-    PrivateMachineRecord.new(i: 3, scheduler_type: 'qsub', cmd_to_execute_code: '', cmd_to_execute: '', state: :error).save
-    PrivateMachineRecord.new(i: 4, scheduler_type: 'qsub', state: :created).save
+    PrivateMachineRecord.new(i: 1, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qcg', state: :error).save
+    PrivateMachineRecord.new(i: 2, cmd_to_execute: 'echo hello', cmd_to_execute_code: 'say_hello', scheduler_type: 'qcg', state: :created).save
+    PrivateMachineRecord.new(i: 3, scheduler_type: 'qcg', cmd_to_execute_code: '', cmd_to_execute: '', state: :error).save
+    PrivateMachineRecord.new(i: 4, scheduler_type: 'qcg', state: :created).save
 
     # when
     get :index, infrastructure: 'private_machine', has_cmd_to_execute: 'false'

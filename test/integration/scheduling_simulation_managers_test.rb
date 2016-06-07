@@ -26,12 +26,12 @@ class SchedulingSimulationManagersTest < ActionDispatch::IntegrationTest
     super
   end
 
-  test 'scheduling workers with qsub should create plgrid job records' do
+  test 'scheduling workers with qcg should create plgrid job records' do
     GridCredentials.any_instance.stubs(:invalid).returns(false)
 
     post schedule_simulation_managers_infrastructure_path, {
       experiment_id: @exp.id,
-      infrastructure_name: 'qsub',
+      infrastructure_name: 'qcg',
       job_counter: 3,
       nodes: 1,
       ppn: 1,

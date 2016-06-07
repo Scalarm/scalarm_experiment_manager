@@ -6,7 +6,7 @@ require 'mocha/test_unit'
 class InfrastructureFacadeSubclassesTest < MiniTest::Test
 
   FACADE_CLASSES = {
-      qsub: PlGridFacade,
+      # qsub: PlGridFacade,
       # gLite is not used anymore (for now)
       # glite: PlGridFacade,
       qcg: PlGridFacade,
