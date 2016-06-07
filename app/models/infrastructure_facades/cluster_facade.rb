@@ -223,7 +223,7 @@ class ClusterFacade < InfrastructureFacade
     cluster = ClusterRecord.where(id: cluster_id).first
     user = ScalarmUser.where(id: user_id).first
 
-    credentials = if cluster.plgrid == true and (not (plgrid_creds = user.valid_plgrid_credentials).nil?)
+    credentials = if cluster.plgrid == true and (not (plgrid_creds = user.valid_plgrid_credentials(cluster.host)).nil?)
                     Rails.logger.debug { "Fetched proxy based credentials" }
                     creds = ClusterCredentials.where(owner_id: user_id, cluster_id: cluster_id).first
 
