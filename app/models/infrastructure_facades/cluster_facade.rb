@@ -73,7 +73,7 @@ class ClusterFacade < InfrastructureFacade
 
   def other_params_for_booster(user_id, request_params={})
     user = ScalarmUser.where(id: user_id).first
-    plgrid_creds = user.valid_plgrid_credentials
+    plgrid_creds = user.valid_plgrid_credentials(cluster.host)
 
     creds_available = if @cluster_record.plgrid == true and (not plgrid_creds.nil?)
       true
