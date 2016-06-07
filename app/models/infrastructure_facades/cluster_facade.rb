@@ -230,15 +230,13 @@ class ClusterFacade < InfrastructureFacade
                     if creds.nil?
                       creds = ClusterCredentials.new(
                         owner_id: user_id,
-                        cluster_id: cluster_id,
-                        login: request_params[:login].to_s, 
+                        cluster_id: cluster_id,                         
                         type: 'gsiproxy'
                       )
                     end
 
+                    creds.login = cluster.login
                     creds.secret_proxy = plgrid_creds.secret_proxy
-                    # creds = GridCredentials.new(login: request_params[:login].to_s)
-                    # creds.secret_proxy = params[:proxy]
                     creds
                   elsif request_params[:type] == "password"
                     Rails.logger.debug { "Create temp credentials with password" }
