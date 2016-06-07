@@ -13,6 +13,10 @@ require 'net/ssh'
 require 'scalarm/database/core/encrypted_mongo_active_record'
 require 'infrastructure_facades/infrastructure_errors'
 
+require 'infrastructure_authenticators/basic_auth_authenticator'
+require 'infrastructure_authenticators/priv_key_authenticator'
+require 'infrastructure_authenticators/gsi_proxy_authenticator'
+
 class ClusterCredentials < Scalarm::Database::EncryptedMongoActiveRecord
   include SSHEnabledRecord
 
