@@ -94,6 +94,7 @@ class ClusterFacade < InfrastructureFacade
 
     # 1. checking if the user can schedule SiM
     credentials = load_or_create_credentials(user_id, cluster_id, additional_params)
+
     if not credentials.valid?
       raise InfrastructureErrors::InvalidCredentialsError.new
     end
@@ -235,8 +236,11 @@ class ClusterFacade < InfrastructureFacade
                       )
                     end
 
-                    creds.login = cluster.login
+                    creds.host = cluster.host
+                    creds.login = plgrid_creds.login
                     creds.secret_proxy = plgrid_creds.secret_proxy
+
+                    creds.save
 
                     creds
                   elsif request_params[:type] == "password"
