@@ -72,12 +72,14 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def other_params_for_booster(user_id, request_params={})
-    creds_available = if @cluster_record.plgrid == true
-                        user = ScalarmUser.where(id: user_id).first
-                        not user.valid_plgrid_credentials(@cluster_record.host).nil?
-                      else
-                        not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
-                      end
+    user = ScalarmUser.where(id: user_id).first
+    plgrid_creds = user.valid_plgrid_credentials
+
+    creds_available = if @cluster_record.plgrid == true and (not plgrid_creds.nil?)
+      true
+    else
+      not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
+    end
 
     {
       scheduler: @cluster_record.scheduler,
@@ -219,11 +221,33 @@ class ClusterFacade < InfrastructureFacade
 
   def load_or_create_credentials(user_id, cluster_id, request_params)
     cluster = ClusterRecord.where(id: cluster_id).first
+<<<<<<< Updated upstream
     current_user = ScalarmUser.where(id: user_id).first
 
     credentials = if cluster.plgrid == true and (plgrid_creds = current_user.valid_plgrid_credentials(cluster.host)) != nil
                     Rails.logger.debug { "Fetched proxy based credentials" }
                     plgrid_creds
+=======
+    user = ScalarmUser.where(id: user_id).first
+
+    credentials = if cluster.plgrid == true and (not (plgrid_creds = user.valid_plgrid_credentials).nil?)
+                    Rails.logger.debug { "Creade proxy based credentials" }
+                    creds = ClusterCredentials.where(owner_id: user_id, cluster_id: cluster_id).first
+
+                    if creds.nil?
+                      creds = ClusterCredentials.new(
+                        owner_id: user_id,
+                        cluster_id: cluster_id,
+                        login: request_params[:login].to_s, 
+                        type: 'gsiproxy'
+                      )
+                    end
+
+                    creds.secret_proxy = plgrid_creds.secret_proxy
+                    # creds = GridCredentials.new(login: request_params[:login].to_s)
+                    # creds.secret_proxy = params[:proxy]
+                    creds
+>>>>>>> Stashed changes
                   elsif request_params[:type] == "password"
                     Rails.logger.debug { "Create temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
