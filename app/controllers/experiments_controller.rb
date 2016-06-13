@@ -1265,7 +1265,7 @@ apiDoc:
   end
 
   def new
-    pbs_facade = InfrastructureFacadeFactory.get_facade_for(:qsub)
+    pbs_facade = InfrastructureFacadeFactory.get_facade_for(:qcg)
 
     @simulation_input = @simulation.input_specification
 

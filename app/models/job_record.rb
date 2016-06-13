@@ -11,7 +11,7 @@ require 'credentials_store'
 #                       InfrastructureFacadeFactory.get_facade_for method
 # user:: user_id - who created the job
 # created_at:: timestamp - when the record was created the job
-# job_identifier:: string - infrastrcuture-specific string uniquely identifying the job
+# job_identifier:: string - infrastructure-specific string uniquely identifying the job
 
 class JobRecord < Scalarm::Database::MongoActiveRecord
   include SimulationManagerRecord
