@@ -2,27 +2,29 @@
   = form_tag '', class: 'custom' do
     .panel.radius
       .row
-        .large-5.columns
+        .large-5.small-12.columns
           %label.right.inline
             = t('simulations.conduct.doe.create_group_label')
-        .large-5.columns
+        .large-5.small-12.columns
           = select_tag 'doe_type', select_doe_type
-        .large-2.columns
-          %span#createDoeGroupBtn.button.right.radius
+        .large-2.small-12.columns
+          %span#createDoeGroupBtn.button.expand.right.radius
             = t('simulations.conduct.doe.create_new_group')
 
 %ul#doe-group-template.pricing-table(style="display: none;")
   %li.title Standard
-  %li.price.row
-    .large-9.columns
-      = select_tag('parameters')
-    .large-3.columns
-      %span.button.right.radius(onclick="doe_manager.addParameterToGroup($(this).closest('ul'))")
-        = t('simulations.conduct.doe.add_parameter')
-  %li.cta-button.row
-    .large-3.columns.large-centered
-      %span.button.right.radius(onclick="doe_manager.deleteGroup($(this).closest('ul'))")
-        = t('simulations.conduct.doe.delete_group')
+  %li.price
+    .row
+      .large-9.small-12.columns
+        = select_tag('parameters')
+      .large-3.small-12.columns
+        %span.button.expand.right.radius(onclick="doe_manager.addParameterToGroup($(this).closest('ul'))")
+          = t('simulations.conduct.doe.add_parameter')
+  %li.cta-button
+    .row
+      .large-3.small-12.columns.large-centered
+        %span.button.expand.right.radius(onclick="doe_manager.deleteGroup($(this).closest('ul'))")
+          = t('simulations.conduct.doe.delete_group')
 
 - content_for :javascript do
   :javascript
