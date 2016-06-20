@@ -93,7 +93,7 @@ namespace :service do
       STDOUT.sync = true
       STDERR.sync = true
 
-      redis_start = "redis-server --port #{Rails.application.secrets.redis_port}"
+      redis_start = "echo \"port #{Rails.application.secrets.redis_port}\" | redis-server -"
       puts redis_start
       %x[#{redis_start}]
     end
