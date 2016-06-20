@@ -30,7 +30,7 @@
 - content_for :javascript do
   :javascript
     $(function() {
-      monitor = new window.ExperimentResourcesMonitor("#{simulation_managers_path(experiment_id: @experiment.id)}")
+      monitor = new window.ExperimentResourcesMonitor("#{simulation_managers_path(experiment_id: @experiment.id)}");
       monitor.getResourcesSummary();
 
       setInterval(function() { monitor.getResourcesSummary() }, 30000);
