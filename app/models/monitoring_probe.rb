@@ -94,7 +94,7 @@ class MonitoringProbe
         end
 
         puts "Table: #{table_name}, Measurement of #{measurement_table[0]} : #{doc}"
-        table.insert(doc)
+        table.insert_one(doc)
         last_inserted_values[table_name] = doc
       end
     end
@@ -104,7 +104,7 @@ class MonitoringProbe
     unless @db.nil?
       table_name = "#{@host}.ExperimentManager___#{controller}___#{action}"
       doc = { date: Time.now, value: processing_time }
-      @db[table_name].insert(doc)
+      @db[table_name].insert_one(doc)
     end
   end
 
