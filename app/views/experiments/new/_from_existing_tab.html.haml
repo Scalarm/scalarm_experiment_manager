@@ -16,7 +16,7 @@
     .row
       .small-12.columns
         %ul.no-bullet
-          - current_user.experiments.select{|e| e.simulation.id == @simulation.id}.each_with_index do |experiment, idx|
+          - current_user.experiments.select{|e| e.simulation and (e.simulation.id == @simulation.id)}.each_with_index do |experiment, idx|
             %li
               = radio_button_tag(:experiment_id, experiment.id, idx == 0, id: experiment.id)
               = label_tag(experiment.id, experiment.name)
