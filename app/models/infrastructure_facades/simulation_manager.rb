@@ -205,9 +205,8 @@ class SimulationManager
   # as it always can be more simulations to do
   def no_pending_tasks?
     if not @record.experiment.supervised
-      simulation_run = record.experiment.simulation_runs.find_by_sm_uuid(record.sm_uuid)
-      sr_is_running = (simulation_run and not simulation_run.to_sent and not simulation_run.is_done)
-      not sr_is_running and not @record.experiment.has_simulations_to_run?
+      simulation_run = record.experiment.simulation_runs.where(sm_uuid: record.sm_uuid, to_sent: false, is_done: false).first
+      simulation_run.nil? and not @record.experiment.has_simulations_to_run?
     else
       # we assume that in supervised experiment, there are always tasks pending
       false
