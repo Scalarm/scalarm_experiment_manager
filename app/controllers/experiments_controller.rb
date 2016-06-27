@@ -372,6 +372,9 @@ apiDoc:
     experiment = ExperimentFactory.create_supervised_experiment(current_user.id, @simulation, parsed_params)
 
     experiment.save
+    experiment.create_progress_bar_table
+    experiment.simulation_runs.create_table
+
     response = {'status' => 'ok'}
     supervisor_script_params_tmp = (params[:supervisor_script_params] == '' ? {} : params[:supervisor_script_params])
 
