@@ -37,7 +37,7 @@ task :build_indexes do
       puts "Checking if an index for '#{attr}' exists ..."
       index_exist = false
 
-      record_collection.index_information.each do |_, index_info|
+      record_collection.indexes.each do |_, index_info|
         if attr.is_a?(Hash)
           if (index_info["key"].keys - attr.keys.map(&:to_s)).empty?
             index_exist = true
@@ -52,9 +52,9 @@ task :build_indexes do
       unless index_exist
         puts "Index for '#{attr}' does not exist so we create it"
         if attr.is_a?(Hash)
-          record_collection.ensure_index(attr)
+          record_collection.indexes.create_one(attr)
         else
-          record_collection.ensure_index(attr.to_s)
+          record_collection.indexes.create_one(attr.to_sym => 1)
         end
       else
         puts "Index for '#{attr}' exists"
@@ -103,6 +103,8 @@ namespace :service do
       puts sidekiq_start
       %x[#{sidekiq_start}]
     end
+
+    Rake::Task["service:initialize_sims_monitoring"].execute
   end
 
   desc 'Stop the service'
@@ -316,18 +318,18 @@ namespace :plgrid do
   desc 'Defines individual clusters available in PLGrid'
   task :setup_clusters, [:debug] => [:environment] do
     ClusterRecord.new(
-      name: "Zeus @ ACK Cyfronet AGH", 
-      scheduler: "pbs", 
-      host: "zeus.cyfronet.pl", 
-      plgrid: true, 
+      name: "Zeus @ ACK Cyfronet AGH",
+      scheduler: "pbs",
+      host: "zeus.cyfronet.pl",
+      plgrid: true,
       public: true
     ).save
 
     ClusterRecord.new(
-      name: "Prometheus @ ACK Cyfronet AGH", 
-      scheduler: "slurm", 
-      host: "pro.cyfronet.pl", 
-      plgrid: true, 
+      name: "Prometheus @ ACK Cyfronet AGH",
+      scheduler: "slurm",
+      host: "pro.cyfronet.pl",
+      plgrid: true,
       public: true
     ).save
   end

@@ -118,25 +118,9 @@ apiDoc:
         if key == 'state'
           sm_record.set_state(value.to_sym)
         elsif key == 'resource_status'
-          prev_status = sm_record.resource_status
-          sm_record.send("#{key}=", value.to_sym)
+          sm_record.resource_status = value.to_sym
           # changing resource status should trigger sm monitor procedure immediately
-          unless sm_record.resource_status == prev_status
-            Thread.new do 
-              lock = Scalarm::MongoLock.new(@infrastructure_facade.short_name)
-              if lock.acquire
-                begin
-                  @infrastructure_facade.yield_simulation_manager(sm_record) do |sm|
-                    sm.monitor
-                  end
-                rescue => e
-                  Rails.logger.error("An exception occured during SM monitoring - #{e} - #{e.backtrace.join("\n")}")
-                ensure
-                  lock.release
-                end
-              end
-            end   
-          end 
+          SimMonitorWorker.perform_async(params[:infrastructure].to_s, current_user.id.to_s)
         else
           sm_record.send("#{key}=", value)
         end

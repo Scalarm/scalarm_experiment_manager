@@ -119,9 +119,9 @@ class ClusterFacade < InfrastructureFacade
       InfrastructureFacade.handle_monitoring_send_errors(records) do
         self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, "#{self.short_name}.#{@scheduler.short_name}", additional_params)
       end
-    else
-      SimMonitorWorker.perform_async(additional_params[:infrastructure_name].to_s, user_id.to_s)
     end
+
+    SimMonitorWorker.perform_async(additional_params[:infrastructure_name].to_s, user_id.to_s)
 
     records
   end
