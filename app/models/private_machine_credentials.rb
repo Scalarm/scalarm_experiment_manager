@@ -15,13 +15,10 @@ class PrivateMachineCredentials < Scalarm::Database::Model::PrivateMachineCreden
 
   attr_join :user, ScalarmUser
 
-  SSH_AUTH_METHODS = %w(password)
+  SSH_AUTH_METHODS = %w(password keyboard-interactive)
 
   def ssh_params
-    {
-        port: port.to_i, password: secret_password,
-        auth_methods: SSH_AUTH_METHODS, timeout: 15
-    }
+    { port: port.to_i, password: secret_password, auth_methods: SSH_AUTH_METHODS, timeout: 15 }
   end
 
   def valid?
