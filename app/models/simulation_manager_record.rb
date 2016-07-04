@@ -106,6 +106,10 @@ module SimulationManagerRecord
     self.created_at + self.time_limit.to_i.minutes < Time.now
   end
 
+  def time_limit_not_exceeded?
+    self.created_at + self.time_limit.to_i.minutes > Time.now
+  end
+
   def init_time_exceeded?
     self.state == :initializing and (self.sm_initialized_at + self.max_init_time < Time.now)
   end

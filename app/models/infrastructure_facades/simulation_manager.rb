@@ -138,6 +138,7 @@ class SimulationManager
             target_state: :initializing,
             resource_status: [:available],
             effect: :prepare_resource,
+            condition: :time_limit_not_exceeded?,
             message: 'Preparing resource for Simulation Manager installation'
         },
         init_time_exceeded: {
@@ -243,6 +244,10 @@ class SimulationManager
   end
 
   def store_not_started_error
+    if record.state == :initializing
+      stop
+    end
+
     record.store_error('not_started')
   end
 

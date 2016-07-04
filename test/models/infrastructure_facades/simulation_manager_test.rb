@@ -175,6 +175,7 @@ class SimulationManagerTest < MiniTest::Test
   def test_created_prepare_resource
     @sm.stubs(:state).returns(:created)
     @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:time_limit_not_exceeded?).returns(true)
 
     @sm.expects(:prepare_resource).once
     @sm.expects(:set_state).with(:initializing).once
@@ -405,6 +406,7 @@ class SimulationManagerTest < MiniTest::Test
 
     @sm.stubs(:state).returns(:created)
     @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:time_limit_not_exceeded?).returns(true)
 
     @sm.expects(:effect_pass).never
     @sm.expects(:prepare_resource)
@@ -457,6 +459,27 @@ class SimulationManagerTest < MiniTest::Test
     @sm.stubs(:on_site_creation_timed_out?).returns(true)
 
     @sm.expects(:error_created_on_site_timed_out)
+
+    @sm.monitor
+  end
+
+  def test_sm_created_but_time_limit_exceeded
+    @sm.stubs(:state).returns(:created)
+    @sm.stubs(:resource_status).returns(:available)
+    @sm.stubs(:time_limit_exceeded?).returns(true)
+
+    @record.expects(:store_error).with('not_started')
+
+    @sm.monitor
+  end
+
+  def test_sm_initializing_but_time_limit_exceeded
+    @sm.stubs(:state).returns(:initializing)
+    @sm.stubs(:resource_status).returns(:initializing)
+    @sm.stubs(:time_limit_exceeded?).returns(true)
+
+    @record.expects(:store_error).with('not_started')
+    @sm.expects(:stop)
 
     @sm.monitor
   end
