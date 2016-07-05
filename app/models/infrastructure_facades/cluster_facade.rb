@@ -57,9 +57,9 @@ class ClusterFacade < InfrastructureFacade
 
   def query_simulation_manager_records(user_id, experiment_id, params)
     job_records = JobRecord.where(
-      infrastructure_type: 'clusters',
-      user_id: user_id,
-      experiment_id: experiment_id
+        infrastructure_type: 'clusters',
+        user_id: user_id,
+        experiment_id: experiment_id
     )
 
     job_records
@@ -72,18 +72,17 @@ class ClusterFacade < InfrastructureFacade
   end
 
   def other_params_for_booster(user_id, request_params={})
-    user = ScalarmUser.where(id: user_id).first    
+    user = ScalarmUser.where(id: user_id).first
 
-    creds_available = if @cluster_record.plgrid == true and 
-        (not (plgrid_creds = user.valid_plgrid_credentials(@cluster_record.host)).nil?)
-      true
-    else
-      not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
-    end
+    creds_available = if @cluster_record.plgrid and (not user.valid_plgrid_credentials(@cluster_record.host).nil?)
+                        true
+                      else
+                        not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
+                      end
 
     {
-      scheduler: @cluster_record.scheduler,
-      user_has_valid_credentials: creds_available
+        scheduler: @cluster_record.scheduler,
+        user_has_valid_credentials: creds_available
     }
   end
 
@@ -138,10 +137,6 @@ class ClusterFacade < InfrastructureFacade
     self.worker_delegate(record).restart(record)
   end
 
-  def _simulation_manager_resource_status(record)
-    self.worker_delegate(record).resource_status(record)
-  end
-
   def _simulation_manager_running?(record)
     self.worker_delegate(record).running?(record)
   end
@@ -164,12 +159,12 @@ class ClusterFacade < InfrastructureFacade
 
   def add_credentials(user, params, session)
     creds = if params[:type].to_s == "password"
-      ClusterCredentials.create_password_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:password].to_s)
-    elsif params[:type].to_s == "privkey"
-      ClusterCredentials.create_privkey_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:privkey].to_s)
-    else
-      nil
-    end
+              ClusterCredentials.create_password_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:password].to_s)
+            elsif params[:type].to_s == "privkey"
+              ClusterCredentials.create_privkey_credentials(user.id, params[:cluster_id].to_s, params[:login].to_s, params[:privkey].to_s)
+            else
+              nil
+            end
 
     creds.save if not creds.nil?
   end
@@ -192,7 +187,6 @@ class ClusterFacade < InfrastructureFacade
       FileUtils.remove_dir(code_dir, true)
       FileUtils.mkdir(code_dir)
       @scheduler.create_tmp_job_files(sm_uuid, {dest_dir: code_dir, sm_record: sm_record.to_h}) do
-
 
         FileUtils.mv(LocalAbsolutePath::tmp_sim_zip(sm_uuid), code_dir)
 
@@ -230,9 +224,9 @@ class ClusterFacade < InfrastructureFacade
 
                     if creds.nil?
                       creds = ClusterCredentials.new(
-                        owner_id: user_id,
-                        cluster_id: cluster_id,                         
-                        type: 'gsiproxy'
+                          owner_id: user_id,
+                          cluster_id: cluster_id,
+                          type: 'gsiproxy'
                       )
                     end
 
@@ -246,12 +240,12 @@ class ClusterFacade < InfrastructureFacade
                   elsif request_params[:type] == "password"
                     Rails.logger.debug { "Create temp credentials with password" }
                     ClusterCredentials.create_password_credentials(
-                      user_id, cluster_id, request_params[:login].to_s, request_params[:password].to_s
+                        user_id, cluster_id, request_params[:login].to_s, request_params[:password].to_s
                     )
                   elsif request_params[:type] == "privkey"
                     Rails.logger.debug { "Create temp credentials with privkey" }
                     ClusterCredentials.create_privkey_credentials(
-                      user_id, cluster_id, request_params[:login].to_s, request_params[:privkey].to_s
+                        user_id, cluster_id, request_params[:login].to_s, request_params[:privkey].to_s
                     )
                   else
                     Rails.logger.debug { "finding existing" }
@@ -301,31 +295,31 @@ class ClusterFacade < InfrastructureFacade
 
   def self.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler_name, params={})
     Rails.logger.debug("Sending and launching onsite monitoring: #{scheduler_name}, #{credentials}")
-   # TODO: implement multiple architectures support
-   arch = 'linux_amd64'
+    # TODO: implement multiple architectures support
+    arch = 'linux_amd64'
 
-   InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
+    InfrastructureFacade.prepare_monitoring_config(sm_uuid, user_id, [{name: scheduler_name}])
 
-   credentials.ssh_session do |ssh|
-     credentials.scp_session do |scp|
-       PlGridFacade.remove_remote_monitoring_files(ssh)
-       SSHAccessedInfrastructure::create_remote_directories(ssh)
+    credentials.ssh_session do |ssh|
+      credentials.scp_session do |scp|
+        PlGridFacade.remove_remote_monitoring_files(ssh)
+        SSHAccessedInfrastructure::create_remote_directories(ssh)
 
-       PlGridFacade.upload_monitoring_files(scp, sm_uuid, arch)
-       PlGridFacade.remove_local_monitoring_config(sm_uuid)
+        PlGridFacade.upload_monitoring_files(scp, sm_uuid, arch)
+        PlGridFacade.remove_local_monitoring_config(sm_uuid)
 
-       cmd = PlGridFacade.start_monitoring_cmd
-       Rails.logger.info("[cluster facade] Executing scalarm_monitoring for user #{user_id}: #{cmd}")
-       output = ssh.exec!(cmd)
-       Rails.logger.info("Output: #{output}")
-     end
-   end
- end
+        cmd = PlGridFacade.start_monitoring_cmd
+        Rails.logger.info("[cluster facade] Executing scalarm_monitoring for user #{user_id}: #{cmd}")
+        output = ssh.exec!(cmd)
+        Rails.logger.info("Output: #{output}")
+      end
+    end
+  end
 
- def worker_delegate(sm_record)
-   facade = InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure_identifier)
-   @worker_delegate ||= ClusterWorkerDelegate.create_delegate(sm_record, facade)
-   @worker_delegate
- end
+  def worker_delegate(sm_record)
+    facade = InfrastructureFacadeFactory.get_facade_for(sm_record.infrastructure_identifier)
+    @worker_delegate ||= ClusterWorkerDelegate.create_delegate(sm_record, facade)
+    @worker_delegate
+  end
 
 end
