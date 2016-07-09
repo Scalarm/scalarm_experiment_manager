@@ -11,7 +11,7 @@ class SimulationManager
 
   def_delegators :@record,
                  :state, :init_time_exceeded?, :experiment_end?,
-                 :time_limit_exceeded?, :should_destroy?, :stopping_time_exceeded?
+                 :time_limit_exceeded?, :time_limit_not_exceeded?, :should_destroy?, :stopping_time_exceeded?
 
   def initialize(record, infrastructure)
     unless record.state == :error
