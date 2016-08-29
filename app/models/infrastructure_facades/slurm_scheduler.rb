@@ -128,7 +128,7 @@ class SlurmScheduler < PlGridSchedulerBase
     <<-eos
 #!/bin/bash -l
 #{params['nodes'].blank? ? '' : "#SBATCH -N #{params['nodes']}" }
-#{params['ppn'].blank? ? '' : "#SBATCH --ntasks-per-node=#{params['nodes']}" }
+#{params['ppn'].blank? ? '' : "#SBATCH --ntasks-per-node=#{params['ppn']}" }
 #{params['grant_identifier'].blank? ? '' : "#SBATCH -A #{params['grant_identifier']}" }
 #{params['time_limit'].blank? ? '' : "#SBATCH --time=#{params['time_limit']}" }
 #{params['queue_name'].blank? ? '' : "#SBATCH -p #{params['queue_name']}" }
