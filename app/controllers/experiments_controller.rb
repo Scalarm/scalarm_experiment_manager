@@ -805,22 +805,29 @@ apiDoc:
     render json: {results: @experiment.results, error_reason: @experiment.error_reason}
   end
 
-  # POST save info about experiment progress - eg. info about optimzation process
-  # Intermediate results saved here can be fetched later with
+  # POST save info about state of supervisor - eg. info about optimzation process
+  # Entries saved here can be fetched later with GET get_supervisor_state_history
   #
   # HTTP params:
-  # - result - JSON with intermediate result
-  def post_progress_info
+  # - state - JSON with supervisor run state description
+  def post_supervisor_state_history
+    validate(
+      state: []
+    )
+
     response = {status: 'ok'}
 
     begin
-      if @experiment.nil? or @experiment.completed
-        logger.debug("Experiment #{params[:id]} of experiment is already done or is nil? #{@experiment.nil?}")
-      else
-        @experiment.tmp_results_list ||= []
-        @experiment.tmp_results_list << {time: Time.now, result: Utils.parse_json_if_string(params[:result])}
-        @experiment.save
+      if @experiment.completed
+        msg = "Added experiment supervisor state entry for exp. #{params[:id]}, but it is already completed"
+        logger.info(msg)
+        response['info'] = "Experiment is completed"
       end
+
+      @experiment.supervisor_run_states ||= []
+      @experiment.supervisor_run_states <<
+        {time: Time.now, state: Utils.parse_json_if_string(params[:state])}
+      @experiment.save
     rescue => e
       Rails.logger.debug("Error in experiment 'progress_info' function - #{e}")
       response = {status: 'error', reason: e.to_s}
@@ -829,19 +836,25 @@ apiDoc:
     render json: response
   end
 
-  # GET last intermediate info about experiment - eg. optimization information
-  # The format is: ``{"time": <iso_time_of_entry>,  "result": <intermediate_results_json>}``
-  # Info about experiment can be saved using POST progress_info
-  def get_progress_info
-    @experiment.tmp_results_list ||= []
-    render json: (@experiment.tmp_results_list.last or {})
-  end
+  # GET history of supervisor run state description - eg. optimization information
+  # The format is: ``{"time": <iso_time_of_entry>,  "state": <intermediate_results_json>}``
+  # Info about experiment can be saved using POST post_supervisor_state_history
+  #
+  # HTTP params:
+  # - last_records_count - integer, specify how many state entries should be returned
+  #   by default, this method returns all entries
+  def get_supervisor_state_history
+    validate(
+      last_records_count: [:optional, :integer]
+    )
 
-  # GET all collected intermediate info about experiment - eg. optimization information
-  # Info about experiment can be saved using POST progress_info
-  def progress_info_history
-    @experiment.tmp_results_list ||= []
-    render json: @experiment.tmp_results_list
+    @experiment.supervisor_run_states ||= []
+    states = @experiment.supervisor_run_states
+    if params.include?(:last_records_count)
+      states = states.last(params[:last_records_count].to_i)
+    end
+
+    render json: states
   end
 
   #  getting parametrization and generated values of every input parameter without default value
