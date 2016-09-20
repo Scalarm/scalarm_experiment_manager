@@ -799,8 +799,49 @@ apiDoc:
                       end
   end
 
+  # GET results of an experiment - eg. info about optimization
+  # Results of experiment simulations can be fetched with "configurations" method
   def results_info
     render json: {results: @experiment.results, error_reason: @experiment.error_reason}
+  end
+
+  # POST save info about experiment progress - eg. info about optimzation process
+  # Intermediate results saved here can be fetched later with
+  #
+  # HTTP params:
+  # - result - JSON with intermediate result
+  def post_progress_info
+    response = {status: 'ok'}
+
+    begin
+      if @experiment.nil? or @experiment.completed
+        logger.debug("Experiment #{params[:id]} of experiment is already done or is nil? #{@experiment.nil?}")
+      else
+        @experiment.tmp_results_list ||= []
+        @experiment.tmp_results_list << {time: Time.now, result: Utils.parse_json_if_string(params[:result])}
+        @experiment.save
+      end
+    rescue => e
+      Rails.logger.debug("Error in experiment 'progress_info' function - #{e}")
+      response = {status: 'error', reason: e.to_s}
+    end
+
+    render json: response
+  end
+
+  # GET last intermediate info about experiment - eg. optimization information
+  # The format is: ``{"time": <iso_time_of_entry>,  "result": <intermediate_results_json>}``
+  # Info about experiment can be saved using POST progress_info
+  def get_progress_info
+    @experiment.tmp_results_list ||= []
+    render json: (@experiment.tmp_results_list.last or {})
+  end
+
+  # GET all collected intermediate info about experiment - eg. optimization information
+  # Info about experiment can be saved using POST progress_info
+  def progress_info_history
+    @experiment.tmp_results_list ||= []
+    render json: @experiment.tmp_results_list
   end
 
   #  getting parametrization and generated values of every input parameter without default value
@@ -1257,7 +1298,7 @@ apiDoc:
 
         @msg[:notice] = t('experiments.edit.success')
 
-      # this is a special case of removing all simulation results 
+      # this is a special case of removing all simulation results
       elsif params.include?(:reset_experiment)
         ExperimentResetWorker.perform_async(@experiment.id.to_s)
 

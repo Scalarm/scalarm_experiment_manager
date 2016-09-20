@@ -107,6 +107,10 @@ ScalarmExperimentManager::Application.routes.draw do
 
       # Optimization experiment
       post :mark_as_complete
+      # API for intermediate_results for experiment
+      post :progress_info, action: :post_progress_info
+      get :progress_info, action: :get_progress_info
+      get :progress_info_history
     end
 
     resources :simulations do
