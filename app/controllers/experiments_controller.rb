@@ -1362,10 +1362,10 @@ apiDoc:
     raise ValidationError.
               new(:id, @experiment.id, 'Not a custom-points experiment') unless custom_experiment
 
-    @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
+    point_index = @experiment.add_point!(Utils::parse_json_if_string(params[:point]))
 
     respond_to do |format|
-      format.json { render json: {status: 'ok'}, status: :ok }
+      format.json { render json: {status: 'ok', index: point_index}, status: :ok }
     end
   end
 
