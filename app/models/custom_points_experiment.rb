@@ -12,13 +12,16 @@ class CustomPointsExperiment < Experiment
     self.new(experiment.attributes)
   end
 
+  # Add a parameter space point by creating a simulation run
+  # @return [Fixnum] index of created simulation run
   def add_point!(point)
-    add_points!([point])
+    add_points!([point]).first
   end
 
+  # @return [Array<Fixnum>] indexes of created simulation run
   def add_points!(points)
     begin
-      points.each {|p| self._add_single_point(p)}
+      points.map {|p| self._add_single_point(p)}
     ensure
       extend_progress_bar(true)
       save
@@ -39,12 +42,14 @@ class CustomPointsExperiment < Experiment
 
   # Example point:
   # {'param-1' => 1, 'param-2' => 20.0}
+  # @return [Fixnum] new size of an experiment which is an index of new simulation_run
   def _add_single_point_hash(point)
     _add_single_point_tuple(single_point_hash_to_tuple(point))
   end
 
   # Point is a tuple of values of parameters in order of parameter_ids
   # Point should be valid.. otherwise there will be nasty error
+  # @return [Fixnum] new size of an experiment which is an index of new simulation_run
   def _add_single_point_tuple(point)
     begin
       old_pids = self.doe_info[0][2]
