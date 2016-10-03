@@ -29,7 +29,7 @@ class SimulationManager
 
     @record = record
     @infrastructure = infrastructure
-    @logger = InfrastructureTaskLogger.new(infrastructure.short_name, record.resource_id)
+    @logger = InfrastructureTaskLogger.new(infrastructure.short_name, record)
   end
 
   def self.all_resource_states

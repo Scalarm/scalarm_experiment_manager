@@ -15,10 +15,10 @@ class InfrastructureTaskLogger
     end
   end
 
-  def initialize(infrastructure_name, task_id=nil)
-    if task_id
+  def initialize(infrastructure_name, job_record=nil)
+    if job_record
       @log_format = Proc.new do |message|
-        "[#{infrastructure_name}][#{task_id.to_s}] - #{message}"
+        "[#{infrastructure_name}][Exp: #{job_record.experiment_id}][SiM: #{job_record.id}][Res: #{job_record.resource_id}] - #{message}"
       end
     else
       @log_format = Proc.new do |message|
