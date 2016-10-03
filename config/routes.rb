@@ -107,6 +107,10 @@ ScalarmExperimentManager::Application.routes.draw do
 
       # Optimization experiment
       post :mark_as_complete
+
+      # Fake API for posting/getting history of supervisor run states
+      post 'supervisor_run/state_history', action: :post_supervisor_state_history
+      get 'supervisor_run/state_history', action: :get_supervisor_state_history
     end
 
     resources :simulations do
