@@ -22,3 +22,6 @@ config/DS_Store
 
 # Test outputs
 test/reports
+
+# Compiled assets
+public/assets
