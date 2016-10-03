@@ -82,6 +82,7 @@ class InfrastructuresController < ApplicationController
         records = infrastructure.start_simulation_managers(
             current_user.id, params[:job_counter].to_i, experiment_id, params
         )
+        Rails.logger.info "Created simulation managers for experiment #{experiment_id}: #{records.map(&:id)}"
         render json: { status: 'ok', records_ids: (records.map {|r| r.id.to_s}), infrastructure: infrastructure_name,
                        msg: I18n.t('infrastructures_controller.scheduled_info', count: records.count.to_s, name: infrastructure.long_name) }
       rescue InfrastructureErrors::ScheduleError => schedule_error
