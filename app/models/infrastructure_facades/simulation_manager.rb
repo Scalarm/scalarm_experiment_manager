@@ -375,7 +375,13 @@ class SimulationManager
       rescue => e
         logger.warn "Exception on action #{action_name}: #{e.to_s}\n#{e.backtrace.join("\n")}"
         record.store_error('resource_action', "#{action_name}: #{e.to_s}")
-        infrastructure_action('stop') rescue nil
+
+        begin
+          infrastructure_action('stop')
+        rescue StandardError => e2
+          logger.error "Exception on action stop: #{e2.to_s}\n#{e2.backtrace.join("\n")}"
+        end
+
       end
     else
       super(m, *args, &block)
