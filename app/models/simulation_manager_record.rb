@@ -154,14 +154,20 @@ module SimulationManagerRecord
 
   # Destroy temp password and rollback current simulation run
   def clean_up_database!
+    destroy_temp_password!
+
     Scalarm::MongoLock.mutex("experiment-#{self.experiment_id}-simulation-complete") do
-      destroy_temp_password!
       rollback_current_simulation_run!
     end
   end
 
   def destroy_temp_password!
-    get_temp_password.try :destroy
+    tp = get_temp_password
+    if tp
+      tp.destroy
+    else
+      Rails.logger.warn("Cannot find TempPassword for SiM Record with sm_uuid: #{self.sm_uuid}, Experiment ID: #{self.experiment_id}")
+    end
   end
 
   def rollback_current_simulation_run!

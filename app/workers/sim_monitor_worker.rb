@@ -15,7 +15,7 @@ class SimMonitorWorker
 
     facade.yield_simulation_managers(user_id) do |sims|
       sims.each do |sim|
-        logger.info "SiM: #{sim.record}"
+        logger.debug "SiM: #{sim.record}"
 
         begin
           sim.monitor
