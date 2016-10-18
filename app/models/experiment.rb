@@ -630,9 +630,14 @@ class Experiment < Scalarm::Database::Model::Experiment
         raise "Step can't be zero" if step.to_f == 0.0
 
         value = parameter['min'].to_f
+        value_precision = 15
+        rounded_step = step.round(value_precision)
+        if rounded_step <= 0
+          raise "Step is too small, please use steps larger or equal 1e-#{value_precision}"
+        end
         while value <= parameter['max'].to_f
-          parameter_values << value.round(15)
-          value += step.round(15)
+          parameter_values << value.round(value_precision)
+          value += rounded_step
         end
 
       when 'gauss'

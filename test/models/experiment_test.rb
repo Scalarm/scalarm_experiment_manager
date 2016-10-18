@@ -616,4 +616,25 @@ class ExperimentTest < MiniTest::Test
     assert_equal 0.00000000000018, parameter_values[8]
     assert_equal 0.00000000000019, parameter_values[9]
   end
+
+  def test_generate_parameter_values_should_not_hang_when_using_too_high_step_precision
+    require 'timeout'
+    min = 1e-13
+    max = 2e-13
+    step = 1e-16
+    experiment1 = Experiment.new({})
+
+    Timeout.timeout 10 do
+      assert_raises StandardError do
+        experiment1.send(:generate_parameter_values, {
+            'parametrizationType' => 'range',
+            'label' => 'test_param',
+            'type' => 'float',
+            'step' => step,
+            'min' => min,
+            'max' => max
+        })
+      end
+    end
+  end
 end
