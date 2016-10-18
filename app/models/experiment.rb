@@ -631,8 +631,8 @@ class Experiment < Scalarm::Database::Model::Experiment
 
         value = parameter['min'].to_f
         while value <= parameter['max'].to_f
-          parameter_values << value.round(3)
-          value += step.round(3)
+          parameter_values << value.round(15)
+          value += step.round(15)
         end
 
       when 'gauss'

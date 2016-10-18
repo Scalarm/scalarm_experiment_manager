@@ -584,4 +584,36 @@ class ExperimentTest < MiniTest::Test
 
       assert_equal [ "a", "b" ], param_values
   end
+
+  def test_generate_parameter_values_should_compute_valid_range_with_high_precision_step_in_reasonable_time
+    require 'timeout'
+    min = 1e-13
+    max = 2e-13
+    step = 1e-14
+    experiment1 = Experiment.new({})
+
+    parameter_values = Timeout.timeout 10 do
+      experiment1.send(:generate_parameter_values, {
+                     'parametrizationType' => 'range',
+                     'label' => 'test_param',
+                     'type' => 'float',
+                     'step' => step,
+                     'min' => min,
+                     'max' => max
+      })
+    end
+
+    assert_equal 10, parameter_values.count
+
+    assert_equal 0.00000000000010, parameter_values[0]
+    assert_equal 0.00000000000011, parameter_values[1]
+    assert_equal 0.00000000000012, parameter_values[2]
+    assert_equal 0.00000000000013, parameter_values[3]
+    assert_equal 0.00000000000014, parameter_values[4]
+    assert_equal 0.00000000000015, parameter_values[5]
+    assert_equal 0.00000000000016, parameter_values[6]
+    assert_equal 0.00000000000017, parameter_values[7]
+    assert_equal 0.00000000000018, parameter_values[8]
+    assert_equal 0.00000000000019, parameter_values[9]
+  end
 end
