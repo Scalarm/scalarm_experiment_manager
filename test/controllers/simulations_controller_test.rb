@@ -404,4 +404,15 @@ class SimulationsControllerTest < ActionController::TestCase
     assert_response 200, response.body
   end
 
+  test 'GET registration should display a simulation scenario registration form' do
+    get :registration
+
+    assert_response :success
+
+    assert_select '#simulation_name'
+    assert_select '#simulation_description'
+    assert_select '#input-definition'
+    assert_select '#simulation-files'
+  end
+
 end
