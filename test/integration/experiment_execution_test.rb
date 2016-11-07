@@ -162,4 +162,80 @@ class ExperimentExecutionTest < ActionDispatch::IntegrationTest
     experiment_id
   end
 
+  test 'user marks_as_complete the same simulation run multiple times' do
+    # experiment submission
+    experiment_id = create_experiment(@params, @experiment_size)
+
+    # experiment execution
+    get next_simulation_experiment_path(experiment_id), format: :json
+    assert_response :success
+    
+    simulation_run = JSON.parse(response.body)
+    simulation_run_id = simulation_run['simulation_id']
+    
+    post mark_as_complete_experiment_simulation_path(experiment_id, simulation_run_id), result: { x: simulation_run_id }, format: :json
+    assert_response :success
+
+    post mark_as_complete_experiment_simulation_path(experiment_id, simulation_run_id), result: { x: simulation_run_id }, format: :json
+    assert_response :success
+    assert_equal 'preconditioned_failed', JSON.parse(response.body)['status']
+  end
+
+  test 'user marks_as_complete a simulation run with no results' do
+    # experiment submission
+    experiment_id = create_experiment(@params, @experiment_size)
+
+    # experiment execution
+    get next_simulation_experiment_path(experiment_id), format: :json
+    assert_response :success
+
+    simulation_run = JSON.parse(response.body)
+    simulation_run_id = simulation_run['simulation_id']
+
+    post mark_as_complete_experiment_simulation_path(experiment_id, simulation_run_id), result: { }, format: :json
+    assert_response :success
+  end
+
+  test 'user marks_as_complete a simulation run with invalid results' do
+    # experiment submission
+    experiment_id = create_experiment(@params, @experiment_size)
+
+    # experiment execution
+    get next_simulation_experiment_path(experiment_id), format: :json
+    assert_response :success
+
+    simulation_run = JSON.parse(response.body)
+    simulation_run_id = simulation_run['simulation_id']
+
+    post mark_as_complete_experiment_simulation_path(experiment_id, simulation_run_id), result: 999, format: :json
+    assert_response :success
+
+    simulation_run = Experiment.where(id: experiment_id).first.simulation_runs.first
+    assert_equal true, simulation_run.is_error
+    assert_equal true, simulation_run.result.blank?
+  end
+
+  test 'user executes a simulation run and display information about it' do
+    # experiment submission
+    experiment_id = create_experiment(@params, @experiment_size)
+
+    # experiment execution
+    get next_simulation_experiment_path(experiment_id), format: :json
+    assert_response :success
+
+    simulation_run = JSON.parse(response.body)
+    simulation_run_id = simulation_run['simulation_id']
+
+    post mark_as_complete_experiment_simulation_path(experiment_id, simulation_run_id), result: { x: 1 }, format: :json
+    assert_response :success
+
+    get experiment_simulation_path(experiment_id, simulation_run_id)
+    assert_response :success
+
+    Rails.logger.debug("Sim: #{response.body}")
+
+    assert_match /completed/, response.body, "Incorrect simulation run status"
+    assert_match /Output Not Available/, response.body, "Incorrect binary or simulation stdout status"
+  end
+
 end
