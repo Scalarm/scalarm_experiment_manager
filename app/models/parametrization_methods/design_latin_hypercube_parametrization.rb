@@ -1,0 +1,5 @@
+require_relative 'experiment_design_method'
+
+class DesignLatinHypercubeParametrization < ExperimentDesignMethod
+
+end
