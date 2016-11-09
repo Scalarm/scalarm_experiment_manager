@@ -14,7 +14,7 @@ module ScalarmExperimentManager
   class Application < Rails::Application
     config.r_interpreter = RinRuby.new(false)
 
-    config.autoload_paths += %W(#{config.root}/app/models/infrastructure_facades #{config.root}/app/models/infrastructure_facades/amazon_credentials)
+    config.autoload_paths += %W(#{config.root}/app/models/infrastructure_facades #{config.root}/app/models/infrastructure_facades/amazon_credentials #{config.root}/app/models/parametrization_methods)
     # TODO this should be taken from the information service registration
     config.manager_id = 1
     config.experiment_seeks = {}

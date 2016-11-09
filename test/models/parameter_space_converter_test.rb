@@ -5,7 +5,7 @@ require 'mocha/test_unit'
 class ParameterSpaceConverterTest < MiniTest::Test
 
   def test_space_with_doe_conversion
-    parametrization_map = ParameterSpaceConverter.convert(
+    sampling_methods = ParameterSpaceConverter.convert(
         [{"id" => "main_category", "label" => "Main category", "entities" =>
             [{"id" => "main_group", "label" => "group Main", "parameters" =>
                 [{"id" => "parameter1", "type" => "integer", "label" => "Param1",
@@ -28,27 +28,23 @@ class ParameterSpaceConverterTest < MiniTest::Test
         ]
     )
 
-    assert_equal 3, parametrization_map.size
+    assert_equal 3, sampling_methods.size
 
-    parametrization_map.each_with_index do |(method, parameters), index|
-      Rails.logger.debug("Method: #{method}")
-      Rails.logger.debug("Parameters: #{parameters}")
+    sampling_methods.each_with_index do |sampling_method, index|
       case index
         when 0
-          assert_equal Design2kParametrization.new, method
-          assert_equal [ ApplicationParameter.new('main_category___main_group___parameter1', 'Param1', 'integer') ], parameters
+          assert sampling_method.kind_of?(Design2kParametrization)
+          assert_equal [ ApplicationParameter.new('main_category___main_group___parameter1', 'Param1', 'integer') ], sampling_method.parameters
         when 1
-          assert_equal RangeParametrization.new(1, 3, 1), method
-          assert_equal [ ApplicationParameter.new('main_category___main_group___parameter2', '', 'integer') ], parameters
+          assert_equal RangeParametrization.new(ApplicationParameter.new('main_category___main_group___parameter2', '', 'integer'), 1, 3, 1), sampling_method
         when 2
-          assert_equal SingleValueParametrization.new(2), method
-          assert_equal [ ApplicationParameter.new('main_category___main_group___parameter3', '', 'integer') ], parameters
+          assert_equal SingleValueParametrization.new(ApplicationParameter.new('main_category___main_group___parameter3', '', 'integer'), 2), sampling_method
       end
     end
   end
 
   def test_flat_space_conversion
-    parametrization_map = ParameterSpaceConverter.convert(
+    sampling_methods = ParameterSpaceConverter.convert(
         [{"entities" => [
             {"parameters" => [
                 {"id" => "param-0", "label" => "New parameter 1",
@@ -64,22 +60,20 @@ class ParameterSpaceConverterTest < MiniTest::Test
         []
     )
 
-    assert_equal 2, parametrization_map.size
+    assert_equal 2, sampling_methods.size
 
-    parametrization_map.each_with_index do |(method, parameters), index|
+    sampling_methods.each_with_index do |method, index|
       case index
         when 0
-          assert_equal RangeParametrization.new(0, 100, 20), method
-          assert_equal [ ApplicationParameter.new('param-0', 'New parameter 1', 'integer') ], parameters
+          assert_equal RangeParametrization.new(ApplicationParameter.new('param-0', 'New parameter 1', 'integer'), 0, 100, 20), method
         when 1
-          assert_equal SingleValueParametrization.new(0), method
-          assert_equal [ ApplicationParameter.new('param-1', 'New parameter 2', 'integer') ], parameters
+          assert_equal SingleValueParametrization.new(ApplicationParameter.new('param-1', 'New parameter 2', 'integer'), 0), method
       end
     end
   end
 
   def test_space_with_multiple_parameters_conversion
-    parametrization_map = ParameterSpaceConverter.convert(
+    sampling_methods = ParameterSpaceConverter.convert(
         [{"entities" => [{"parameters" => [
             {"id" => "param-0", "index" => 1, "parametrizationType" => "range",
              "type" => "integer", "min" => "0", "max" => "100", "step" => "20",
@@ -99,20 +93,10 @@ class ParameterSpaceConverterTest < MiniTest::Test
         ]}]}]
     )
 
-    assert_equal 1, parametrization_map.size
+    assert_equal 5, sampling_methods.size
 
-    parametrization_map.each_with_index do |(method, parameters), index|
-      case index
-        when 0
-          assert_equal RangeParametrization.new(0, 100, 20), method
-          assert_equal [
-                            ApplicationParameter.new('param-0', '', 'integer'),
-                            ApplicationParameter.new('param-1', '', 'integer'),
-                            ApplicationParameter.new('param-2', '', 'integer'),
-                            ApplicationParameter.new('param-3', '', 'integer'),
-                            ApplicationParameter.new('param-4', '', 'integer'),
-                        ], parameters
-      end
+    sampling_methods.each_with_index do |method, index|
+      assert_equal RangeParametrization.new(ApplicationParameter.new("param-#{index}", '', 'integer'), 0, 100, 20), method
     end
   end
 

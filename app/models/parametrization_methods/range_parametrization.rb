@@ -1,3 +1,7 @@
-class RangeParametrization < Struct.new(:min, :max, :step)
+class RangeParametrization < Struct.new(:parameter, :min, :max, :step)
+
+  def size
+    (min..max).step(step).size
+  end
 
 end

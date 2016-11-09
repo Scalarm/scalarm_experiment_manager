@@ -1,18 +1,8 @@
-require 'parametrization_methods/custom_parametrization'
-require 'parametrization_methods/gauss_parametrization'
-require 'parametrization_methods/uniform_parametrization'
-require 'parametrization_methods/range_parametrization'
-require 'parametrization_methods/single_value_parametrization'
-require 'parametrization_methods/design2k_parametrization'
-require 'parametrization_methods/design2k1_parametrization'
-require 'parametrization_methods/design2k2_parametrization'
-require 'parametrization_methods/design_full_factorial_parametrization'
-require 'parametrization_methods/design_latin_hypercube_parametrization'
 
 class ParameterSpaceConverter
 
   def self.convert(experiment_input, doe_info = nil)
-    result = {}
+    parametrization_methods = []
 
     experiment_input.each do |category|
       Rails.logger.debug("Parsing: #{category}")
@@ -22,39 +12,44 @@ class ParameterSpaceConverter
           Rails.logger.debug("Parsing: #{entity}")
 
           if entity.include?('parameters')
-            entity['parameters'].each do |parameter|
-              Rails.logger.debug("Parsing: #{parameter}")
+            entity['parameters'].each do |raw_param_element|
+              cast_parameter(raw_param_element)
 
-              unless parameter.include?('id') and parameter.include?('type')
+              Rails.logger.debug("Parsing: #{raw_param_element}")
+
+              unless raw_param_element.include?('id') and raw_param_element.include?('type')
                 throw ArgumentError.new("Either 'id' or 'type' property is missing")
               end
 
-              label = parameter.include?('label') ? parameter['label'] : ''
-              p = ApplicationParameter.new("#{category['id']}___#{entity['id']}___#{parameter['id']}".gsub(/^[_]*/,""), label, parameter['type'])
+              label = raw_param_element.include?('label') ? raw_param_element['label'] : ''
+              p = ApplicationParameter.new("#{category['id']}___#{entity['id']}___#{raw_param_element['id']}".gsub(/^[_]*/,""), label, raw_param_element['type'])
 
-              parametrization_method = if parameter['in_doe']
-                                         extract_doe_method(result, p, parameter, doe_info)
-                                       else
-                                         create_parametrization_method(parameter)
-                                       end
+              if raw_param_element['in_doe']
+                doe_sampling_method = extract_doe_method(p, doe_info)
 
-              if not result.include?(parametrization_method)
-                result[parametrization_method] = []
+                idx = parametrization_methods.index(doe_sampling_method)
+                if idx.nil?
+                  doe_sampling_method.include_parameter(p, raw_param_element)
+                  parametrization_methods << doe_sampling_method
+                else
+                  parametrization_methods[idx].include_parameter(p, raw_param_element)
+                end
+              else
+                sampling_method = create_parametrization_method(p, raw_param_element)
+                parametrization_methods << sampling_method
               end
-
-              result[parametrization_method] << p
             end
           end
         end
       end
     end
 
-    result
+    parametrization_methods
   end
 
   private
 
-  def self.extract_doe_method(methods_and_params, param, param_element, doe_info)
+  def self.extract_doe_method(param, doe_info)
     doe_method = nil
 
     doe_info.each do |doe_method_desc|
@@ -64,27 +59,25 @@ class ParameterSpaceConverter
       end
     end
 
-    if not doe_method.nil?
-      if methods_and_params.include?(doe_method)
-        methods_and_params[doe_method].include_param(param_element)
-      end
+    if doe_method.nil?
+      throw new StandardError("Argument #{p} could not be find in specification of design of experiment methods")
+    else
+      doe_method
     end
-
-    doe_method
   end
 
-  def self.create_parametrization_method(element)
+  def self.create_parametrization_method(param, element)
     case element['parametrizationType']
       when 'range'
-        RangeParametrization.new(cast(element['min'], element['type']), cast(element['max'], element['type']), cast(element['step'], element['type']))
+        RangeParametrization.new(param, cast(element['min'], element['type']), cast(element['max'], element['type']), cast(element['step'], element['type']))
       when 'value'
-        SingleValueParametrization.new(cast(element['value'], element['type']))
+        SingleValueParametrization.new(param, cast(element['value'], element['type']))
       when 'gauss'
-        GaussParametrization.new(cast(element['mean'], element['type']), cast(element['variance'], element['type']))
+        GaussParametrization.new(param, cast(element['mean'], element['type']), cast(element['variance'], element['type']))
       when 'uniform'
-        UniformParametrization.new(cast(element['min'], element['type']), cast(element['max'], element['type']))
+        UniformParametrization.new(param, cast(element['min'], element['type']), cast(element['max'], element['type']))
       when 'custom'
-        CustomParametrization.new(cast(parameter['custom_values'], element['type']))
+        CustomParametrization.new(param, cast(parameter['custom_values'], element['type']))
     end
   end
 
@@ -115,6 +108,14 @@ class ParameterSpaceConverter
         Design2k2Parametrization.new
       when 'latinHypercube'
         DesignLatinHypercubeParametrization.new
+    end
+  end
+
+  def self.cast_parameter(parameter)
+    %w(value mean variance min max step custom_values).each do |attr|
+      if parameter.include?(attr)
+        parameter[attr] = cast(parameter[attr], parameter['type'])
+      end
     end
   end
 

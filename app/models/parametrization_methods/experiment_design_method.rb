@@ -1,12 +1,14 @@
 class ExperimentDesignMethod
-  attr_reader :parameters
+  attr_reader :parameters, :raw_elements
 
   def initialize
     @parameters = []
+    @raw_elements = []
   end
 
-  def include_parameter(parameter)
+  def include_parameter(parameter, raw_element)
     @parameters << parameter
+    @raw_elements << raw_element
   end
 
   def ==(another_design)
