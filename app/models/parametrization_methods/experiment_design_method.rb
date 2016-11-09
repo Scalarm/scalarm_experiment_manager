@@ -14,4 +14,8 @@ class ExperimentDesignMethod
   def ==(another_design)
     another_design.kind_of?(self.class) and (@parameters == another_design.parameters)
   end
+
+  def values
+    throw StandardError('Not implemented')
+  end
 end

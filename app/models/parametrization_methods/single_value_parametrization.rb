@@ -4,4 +4,12 @@ class SingleValueParametrization < Struct.new(:parameter, :value)
     1
   end
 
+  def values
+    [ value ]
+  end
+
+  def parameters
+    [ parameter ]
+  end
+
 end

@@ -4,4 +4,12 @@ class GaussParametrization < Struct.new(:parameter, :mean, :variance)
     1
   end
 
+  def values
+    [ value ]
+  end
+
+  def parameters
+    [ parameter ]
+  end
+
 end
