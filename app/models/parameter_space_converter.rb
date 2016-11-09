@@ -5,34 +5,30 @@ class ParameterSpaceConverter
     parametrization_methods = []
 
     experiment_input.each do |category|
-      Rails.logger.debug("Parsing: #{category}")
-
       if category.include?('entities')
         category['entities'].each do |entity|
-          Rails.logger.debug("Parsing: #{entity}")
-
           if entity.include?('parameters')
             entity['parameters'].each do |raw_param_element|
               cast_parameter(raw_param_element)
-
-              Rails.logger.debug("Parsing: #{raw_param_element}")
 
               unless raw_param_element.include?('id') and raw_param_element.include?('type')
                 throw ArgumentError.new("Either 'id' or 'type' property is missing")
               end
 
               label = raw_param_element.include?('label') ? raw_param_element['label'] : ''
-              p = ApplicationParameter.new("#{category['id']}___#{entity['id']}___#{raw_param_element['id']}".gsub(/^[_]*/,""), label, raw_param_element['type'])
+              p_id  = "#{category['id']}___#{entity['id']}___#{raw_param_element['id']}".gsub(/^[_]*/,"")
+              p = ApplicationParameter.new(p_id, label, raw_param_element['type'])
 
               if raw_param_element['in_doe']
                 doe_sampling_method = extract_doe_method(p, doe_info)
+                p_constraint = ApplicationParameterConstraint.new(p_id, raw_param_element['min'], raw_param_element['max'], raw_param_element['step'] )
 
                 idx = parametrization_methods.index(doe_sampling_method)
                 if idx.nil?
-                  doe_sampling_method.include_parameter(p, raw_param_element)
+                  doe_sampling_method.include_parameter(p, p_constraint)
                   parametrization_methods << doe_sampling_method
                 else
-                  parametrization_methods[idx].include_parameter(p, raw_param_element)
+                  parametrization_methods[idx].include_parameter(p, p_constraint)
                 end
               else
                 sampling_method = create_parametrization_method(p, raw_param_element)

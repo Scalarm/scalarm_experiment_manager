@@ -33,8 +33,9 @@ class ParameterSpaceConverterTest < MiniTest::Test
     sampling_methods.each_with_index do |sampling_method, index|
       case index
         when 0
-          assert sampling_method.kind_of?(Design2kParametrization)
-          assert_equal [ ApplicationParameter.new('main_category___main_group___parameter1', 'Param1', 'integer') ], sampling_method.parameters
+          assert_equal Design2kParametrization.new(
+              [ ApplicationParameter.new('main_category___main_group___parameter1', 'Param1', 'integer') ],
+              [ ApplicationParameterConstraint.new('main_category___main_group___parameter1', 1, 3, 1) ]), sampling_method
         when 1
           assert_equal RangeParametrization.new(ApplicationParameter.new('main_category___main_group___parameter2', '', 'integer'), 1, 3, 1), sampling_method
         when 2
