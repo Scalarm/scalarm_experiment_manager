@@ -1,6 +1,6 @@
-class ParameterSpace < Struct.new(:sampling_methods, :replication_level, :parameter_restrictions)
+class ParameterSpace < Struct.new(:sampling_methods, :replication_level)
 
-  def initialize(sampling_methods = [], replication_level = 1, parameter_restrictions = [])
+  def initialize(sampling_methods = [], replication_level = 1)
     @sampling_methods = sampling_methods
     @replication_level = replication_level
     @parameter_restrictions = parameter_restrictions
