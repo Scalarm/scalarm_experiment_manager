@@ -1,18 +1,20 @@
-class ParameterSpace
+class ParameterSpace < Struct.new(:sampling_methods, :replication_level, :parameter_restrictions)
 
-  def initialize(sampling_methods = {})
+  def initialize(sampling_methods = [], replication_level = 1, parameter_restrictions = [])
     @sampling_methods = sampling_methods
+    @replication_level = replication_level
+    @parameter_restrictions = parameter_restrictions
   end
 
   def size
-    return 0 if @sampling_methods.blank?
-
-    @sampling_methods.reduce(1) { |acc, method| acc * method.size}
+    @size ||= @replication_level * @sampling_methods.reduce(1) { |acc, method| acc * method.size }
   end
 
   def point(point_index)
+    throw ArgumentError.new("Index out of bound - maximum index is #{size}") if point_index > size
+
     combination = []
-    id_num = point_index - 1
+    id_num = (point_index - 1) % (size / @replication_level)
 
     value_list.each_with_index do |param_values, index|
       current_index = id_num / multiply_list[index]
