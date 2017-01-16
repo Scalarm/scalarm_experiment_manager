@@ -141,7 +141,7 @@ en:
     error_sm_removed: "Sorry, requested Simulation Manager has been just removed."
     wrong_infrastructure: "Requested infrastructure does not exists: %{name}"
     sm_exception: "Exception when getting Simulation Manager: %{error}"
-    command_executed: "Command '%{command}' successfully executed on Simulation Manager"
+    command_executed: "Command '%{command}' successfully executed on %{length} Simulation Manager(s) at %{infrastructure}"
     wrong_command: "No such command for Simulation Manager: %{command}"
     no_such_simulation_manager: "No such Simulation Manager"
     access_to_sm_denied: "Access to Simulation Manager denied"

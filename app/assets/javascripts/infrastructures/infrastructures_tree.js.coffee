@@ -197,18 +197,28 @@ class window.InfrastructuresTree
       smNodesCount = smNodes.length
       if smNodesCount != 0
         window.Notices.show_loading_notice()
+
+      infrastructures = {}
+
       for d in smNodes
-        data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': 'stop' }
-        $.post(@simulation_manager_command_infrastructure_path, data, ((infrastructure_name) =>
+        if infrastructures[d['infrastructure_name']] == undefined
+          infrastructures[d['infrastructure_name']] = []
+        infrastructures[d['infrastructure_name']].push d['_id']
+
+      for infrastructure, record_ids of infrastructures
+        data = { 'infrastructure_name': infrastructure, 'record_ids': record_ids, 'command': 'stop' }
+        $.post @simulation_manager_command_infrastructure_path, data, ((infrastructure_name) =>
           (json) =>
             @updateInfrastructureNode(infrastructure_name)
-            if --smNodesCount == 0
+            smNodesCount -= infrastructures[infrastructure].length
+            if smNodesCount == 0
               window.Notices.hide_notice()
             switch json.status
               when 'error' then toastr.error(json.msg)
               when 'ok' then toastr.success(json.msg)
               else toastr.error(json.msg))(d['infrastructure_name'])
-        )
+
+
     $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
 
   updateTree: (source) ->
