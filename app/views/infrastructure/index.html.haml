@@ -1,19 +1,26 @@
 %section.panel.radius.list
+  %div.right
+    %a#refresh-button{class: 'button radius tiny', title: t('infrastructure.refresh_button')}
+      %i.fi-refresh
+      = t('infrastructure.refresh_button')
+
+    %a#stop-all-button{class: 'button alert radius tiny', title: t('infrastructure.stop_all_button')}
+      %i.fi-stop
+      = t('infrastructure.stop_all_button')
+
+    %a#destroy-in-error-button{class: 'button alert radius tiny', title: t('infrastructure.remove_all_in_error')}
+      %i.fi-trash
+      = t('infrastructure.remove_all_in_error')
+
   .row
-    .small-10.columns
+    .small-6.columns.end
       = content_tag :h3, t('infrastructure.tree_title'), class: 'subheader'
-    .small-1.columns
-      %span#refresh-button{class: 'button radius expand action-button', title: t('infrastructure.refresh_button')}
-        %i.fi-refresh
+
   .row
     .small-3.columns
       = label_tag :experiment_filter_id, t('infrastructure.tree_filter.label'), class: 'inline right'
-    .small-5.columns
+    .small-5.columns.end
       = select_tag :experiment_filter_id, options_for_select([[t('infrastructure.tree_filter.all_experiments'), '']] + experiments_select_data(current_user), experiment_id)
-    .small-2.columns
-    .small-1.columns
-      %span#stop-all-button{class: 'button alert radius expand action-button', title: t('infrastructure.stop_all_button')}
-        %i.fi-stop
 
   .row
     .small-12.columns
@@ -27,6 +34,7 @@
     %h2.dialog-header.hidden#restart-header= t('infrastructures.destroy_dialog.restart_header')
     %h2.dialog-header.hidden#destroy_record-header= t('infrastructures.destroy_dialog.destroy_record_header')
     %h2.dialog-header.hidden#stop_all-header= t('infrastructures.destroy_dialog.stop_all_header')
+    %h2.dialog-header.hidden#remove_all_in_error-header= t('infrastructures.destroy_dialog.remove_all_in_error_header')
     .row
       .small-6.columns.centered
         %span{id: 'destroy-yes', class: button_classes}= t('yes')
@@ -40,5 +48,3 @@
         "#{list_infrastructure_path}", "#{simulation_manager_records_infrastructure_path}",
         "#{simulation_manager_command_infrastructure_path}", "#{experiment_id}");
     });
-
-

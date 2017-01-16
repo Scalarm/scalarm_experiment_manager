@@ -134,6 +134,7 @@ en:
         credentials_needed: "No PL-Grid credentials were configured. We need them to submit jobs on your behalf. Provided credentials will not be stored in Scalarm."
     refresh_button: "Refresh tree"
     stop_all_button: "Stop all"
+    remove_all_in_error: "Remove all in error state"
   infrastructures_controller:
     tree:
       clouds: "Clouds"
@@ -194,6 +195,7 @@ en:
       restart_header: "Are you sure you want to restart this Simulation Manager?"
       destroy_record_header: "Are you sure you want to destroy this Simulation Manager record? Note, that you should check manually if its resource will be terminated."
       stop_all_header: "Are you sure you want to stop all Simulation Managers?"
+      remove_all_in_error_header: "Are you sure you want to remove all Simulation Manager in the error state? Note, that you should check manually if their resources will be terminated."
     resource_id: "Resource"
     state_tooltip: "State of Simulation Manager application"
     error_details_dialog:
