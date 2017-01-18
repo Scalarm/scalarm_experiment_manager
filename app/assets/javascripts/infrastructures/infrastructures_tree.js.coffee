@@ -6,6 +6,7 @@ class window.InfrastructuresTree
     @bindRefreshTreeButton('refresh-button')
     @bindFilterTreeSelect('experiment_filter_id')
     @bindStopAllSMButton('stop-all-button')
+    @bindRemoveAllSMInErrorButton('destroy-in-error-button')
 
     @dialog = $("##{genericDialogId}")
     PROBE_INTERVAL = 30000
@@ -197,18 +198,69 @@ class window.InfrastructuresTree
       smNodesCount = smNodes.length
       if smNodesCount != 0
         window.Notices.show_loading_notice()
+
+      infrastructures = {}
+
       for d in smNodes
-        data = { 'infrastructure_name': d['infrastructure_name'], 'record_id': d['_id'], 'command': 'stop' }
-        $.post(@simulation_manager_command_infrastructure_path, data, ((infrastructure_name) =>
+        if infrastructures[d['infrastructure_name']] == undefined
+          infrastructures[d['infrastructure_name']] = []
+        infrastructures[d['infrastructure_name']].push d['_id']
+
+      for infrastructure, record_ids of infrastructures
+        data = { 'infrastructure_name': infrastructure, 'record_ids': record_ids, 'command': 'stop' }
+        $.post @simulation_manager_command_infrastructure_path, data, ((infrastructure_name) =>
           (json) =>
             @updateInfrastructureNode(infrastructure_name)
-            if --smNodesCount == 0
+            smNodesCount -= infrastructures[infrastructure].length
+            if smNodesCount == 0
               window.Notices.hide_notice()
             switch json.status
               when 'error' then toastr.error(json.msg)
               when 'ok' then toastr.success(json.msg)
               else toastr.error(json.msg))(d['infrastructure_name'])
-        )
+
+    $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
+
+  removeAllSimulationManagersInErrorState: () ->
+    $('#destroy-no').on 'click', =>
+      $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+
+    $(".dialog-header").hide()
+    $(".dialog-header#remove_all_in_error-header").show()
+
+    button = $('#destroy-yes')
+    button.off()
+    button.unbind()
+
+    button.on 'click', =>
+      $('#destroy_simulation_manager_dialog').foundation('reveal', 'close')
+      mainNode = d3.select("#infrastructures-tree").selectAll("g.node").data().filter((e) -> e.name=="Scalarm")[0]
+      leaves = @retrieveLeaves(mainNode)
+      smNodes = leaves.filter((d) => d.type == 'sm-node' && d.state == 'error')
+      smNodesCount = smNodes.length
+      if smNodesCount != 0
+        window.Notices.show_loading_notice()
+
+      infrastructures = {}
+
+      for d in smNodes
+        if infrastructures[d['infrastructure_name']] == undefined
+          infrastructures[d['infrastructure_name']] = []
+        infrastructures[d['infrastructure_name']].push d['_id']
+
+      for infrastructure, record_ids of infrastructures
+        data = { 'infrastructure_name': infrastructure, 'record_ids': record_ids, 'command': 'destroy_record' }
+        $.post @simulation_manager_command_infrastructure_path, data, ((infrastructure_name) =>
+          (json) =>
+            @updateInfrastructureNode(infrastructure_name)
+            smNodesCount -= infrastructures[infrastructure].length
+            if smNodesCount == 0
+              window.Notices.hide_notice()
+            switch json.status
+              when 'error' then toastr.error(json.msg)
+              when 'ok' then toastr.success(json.msg)
+              else toastr.error(json.msg))(d['infrastructure_name'])
+
     $('#destroy_simulation_manager_dialog').foundation('reveal', 'open')
 
   updateTree: (source) ->
@@ -445,9 +497,7 @@ class window.InfrastructuresTree
       ''
 
   bindRefreshTreeButton: (button_id) ->
-    $("##{button_id}").on("click", =>
-      @updateAllInfrastructureNodes()
-    )
+    $("##{button_id}").on "click", => @updateAllInfrastructureNodes()
 
   bindFilterTreeSelect: (select_id) ->
     $("##{select_id}").change(() =>
@@ -456,9 +506,7 @@ class window.InfrastructuresTree
     )
 
   bindStopAllSMButton: (button_id) ->
-    $("##{button_id}").on("click", =>
-      @stopAllSimulationManagers()
-    )
+    $("##{button_id}").on "click", => @stopAllSimulationManagers()
 
   updateInfrastructureNode: (infrastructure_name) ->
     @fetchNodesFunctions[infrastructure_name]()
@@ -466,3 +514,6 @@ class window.InfrastructuresTree
   updateAllInfrastructureNodes: () ->
     for name, fun of @fetchNodesFunctions
       fun()
+
+  bindRemoveAllSMInErrorButton: (button_id) ->
+    $("##{button_id}").on "click", => @removeAllSimulationManagersInErrorState()

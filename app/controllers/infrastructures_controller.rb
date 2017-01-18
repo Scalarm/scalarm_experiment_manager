@@ -305,7 +305,8 @@ apiDoc:
   @apiGroup Infrastructures
 
   @apiParam {String=stop,restart,destroy_record} command
-  @apiParam {String} record_id SimulationManager ID
+  @apiParam {String} record_id SimulationManager ID (optional - can be used in exchange for record_ids)
+  @apiParam {String} record_ids a list of SimulationManager IDs (optional - can be used in exchange for record_id)
   @apiParam {String} infrastructure_name Name of infrastructure
 
   @apiSuccess {String=ok,error} status
@@ -318,17 +319,28 @@ apiDoc:
   def simulation_manager_command
     validate(
         command: :security_default,
-        record_id: :security_default,
+        record_id: :optional,
+        record_ids: :optional,
         infrastructure_name: :security_default
     )
 
     begin
       command = params[:command]
       if %w(stop restart destroy_record).include? command
-        yield_simulation_manager(params[:record_id], params[:infrastructure_name]) do |sm|
-          sm.send(params[:command])
+
+        if not params.include? :record_ids
+          params[:record_ids] = [ params[:record_id] ]
         end
-        render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command])}
+
+        Rails.logger.debug("Stopping: #{params[:records_ids]}")
+
+        params[:record_ids].each do |record_id|
+          yield_simulation_manager(record_id, params[:infrastructure_name]) do |sm|
+            sm.send(params[:command])
+          end
+        end
+
+        render json: {status: 'ok', msg: I18n.t('infrastructures_controller.command_executed', command: params[:command], infrastructure: params[:infrastructure_name], length: params[:record_ids].size)}
       else
         render json: {status: 'error', error_code: 'wrong-command', msg: I18n.t('infrastructures_controller.wrong_command', command: params[:command])}
       end
