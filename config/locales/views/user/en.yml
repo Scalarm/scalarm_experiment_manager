@@ -2,12 +2,19 @@ en:
   user_controller:
     account:
       manage_scalarm: "Manage your Scalarm account"
-      manage_infrastructures: "Manage your infrastructures credentials"
+
+    password_panel:
       login: "Login:"
-      certificate: "Certificate DN:"
       password: "Password:"
       repeat_password: "Repeat password:"
       change_password: "Change password"
+      password_change_message: "Changing your password affects only Scalarm. Passwords on your computational resources remain intact."
+      new_password_required: "New password is required"
+      passwords_not_match: "Password did not match"
+
+    infrastructures_credentials_panel:
+      manage_infrastructures: "Manage your infrastructures credentials"
+      certificate: "Certificate DN:"
       empty_dn: "<N/A>"
       plgrid: "PL-Grid credentials"
       pl_cloud: "PLGrid Cloud credentials"
@@ -16,6 +23,7 @@ en:
       cloud_image: "Cloud virtual machine images management"
       private_machine: "Private resources credentials"
       clusters: "Computer clusters"
+
     index:
       title: "Welcome to Scalarm"
       header: "What would you like to do?"
