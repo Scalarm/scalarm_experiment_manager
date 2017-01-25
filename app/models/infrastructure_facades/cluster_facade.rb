@@ -73,8 +73,9 @@ class ClusterFacade < InfrastructureFacade
 
   def other_params_for_booster(user_id, request_params={})
     user = ScalarmUser.where(id: user_id).first
+    user_has_proxy_cert = user.grid_credentials and (not user.grid_credentials.secret_proxy.blank?)
 
-    creds_available = if @cluster_record.plgrid and (not user.valid_plgrid_credentials(@cluster_record.host).nil?)
+    creds_available = if @cluster_record.plgrid and (user_has_proxy_cert or (not user.valid_plgrid_credentials(@cluster_record.host).nil?))
                         true
                       else
                         not ClusterCredentials.where(owner_id: user_id, cluster_id: @cluster_record.id, invalid: false).first.nil?
