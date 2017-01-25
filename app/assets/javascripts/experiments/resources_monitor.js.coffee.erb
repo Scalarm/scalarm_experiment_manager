@@ -1,6 +1,7 @@
 class window.ExperimentResourcesMonitor
 
   constructor: (@simulationManagersCurrentStateUrl) ->
+    document.addEventListener "sims-scheduled", => @getResourcesSummary()
 
   getResourcesSummary: () ->
     $.getJSON @simulationManagersCurrentStateUrl,

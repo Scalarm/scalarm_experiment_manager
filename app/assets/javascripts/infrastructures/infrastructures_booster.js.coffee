@@ -41,6 +41,8 @@ class window.InfrastructuresBooster
             toastr.error(data.msg)
           when 'ok'
             toastr.success(data.msg)
+            console.log "Triggering custom event"
+            document.dispatchEvent(new CustomEvent("sims-scheduled"))
           else
             toastr.error(data.msg)
       )
