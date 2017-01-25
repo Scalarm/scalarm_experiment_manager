@@ -32,8 +32,12 @@ class PlGridFacade < InfrastructureFacade
     @scheduler ||= @scheduler_class.new(logger)
   end
 
-  def sm_record_class
+  def self.sm_record_class
     PlGridJob
+  end
+
+  def self.credentials_record_class
+    GridCredentials
   end
 
   # additional_params:
@@ -71,7 +75,8 @@ class PlGridFacade < InfrastructureFacade
     end
 
     if additional_params[:onsite_monitoring]
-      SendOnsiteMonitoringWorker.perform_async(self.class, records, credentials, user_id, scheduler.short_name, additional_params)
+      record_ids = records.map{|r| r.id.to_s}
+      SendOnsiteMonitoringWorker.perform_async(self.class, record_ids, credentials.id.to_s, user_id.to_s, scheduler.short_name, additional_params)
     end
 
     records

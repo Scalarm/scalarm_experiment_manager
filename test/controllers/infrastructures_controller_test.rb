@@ -79,6 +79,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
   test 'scheduling sim on a cluster with onsite monitoring should create SendOnsiteMonitoringWorker' do
     credentials = mock 'credentials' do
       stubs(:valid?).returns(true)
+      stubs(:id).returns("fake")
     end
     cluster_record = mock 'cluster_record' do
       stubs(:id).returns('fake')
@@ -107,6 +108,7 @@ class InfrastructuresControllerTest < ActionController::TestCase
     credentials = mock 'credentials' do
       stubs(:invalid).returns(false)
       stubs(:password).returns("fake_pass")
+      stubs(:id).returns("fake")
     end
 
     InfrastructuresController.any_instance.stubs(:validate_experiment)

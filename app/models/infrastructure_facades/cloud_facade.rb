@@ -38,7 +38,7 @@ class CloudFacade < InfrastructureFacade
     @secret ||= CloudSecrets.find_by_query(cloud_name: @short_name, user_id: user_id)
   end
 
-  def sm_record_class
+  def self.sm_record_class
     CloudVmRecord
   end
 

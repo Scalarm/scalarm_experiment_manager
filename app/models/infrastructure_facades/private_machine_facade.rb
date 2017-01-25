@@ -17,7 +17,7 @@ class PrivateMachineFacade < InfrastructureFacade
 
   # -- InfrastructureFacade implementation --
 
-    def sm_record_class
+    def self.sm_record_class
       PrivateMachineRecord
     end
 
