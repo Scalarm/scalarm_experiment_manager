@@ -10,8 +10,8 @@ class SimulationManagerIntegrationTest < ActionDispatch::IntegrationTest
   def setup
     super
 
-    @experiment = Experiment.new({name: 'experiment_mocked'}).save
-    @supervised_experiment = SupervisedExperiment.new({name: 'supervised_mocked'}).save
+    @experiment = Experiment.new({name: 'experiment_mocked', doe_info: []}).save
+    @supervised_experiment = SupervisedExperiment.new({name: 'supervised_mocked', doe_info: []}).save
     @supervised_experiment.stubs(:supervised).returns(true)
 
     @experiment.stubs(:experiment_input).returns({})

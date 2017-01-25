@@ -23,7 +23,7 @@ class SimCleanUpTest < ActionDispatch::IntegrationTest
     @simulation.user_id = user.id
     @simulation.save
 
-    @experiment = Experiment.new({})
+    @experiment = Experiment.new({doe_info: []})
     @experiment.experiment_input = Experiment.prepare_experiment_input(@simulation, [], [])
     @experiment.save
     @experiment_id = @experiment.id
