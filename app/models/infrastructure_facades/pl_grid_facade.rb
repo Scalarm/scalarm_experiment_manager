@@ -71,10 +71,7 @@ class PlGridFacade < InfrastructureFacade
     end
 
     if additional_params[:onsite_monitoring]
-      sm_uuid = SecureRandom.uuid
-      self.class.handle_monitoring_send_errors(records) do
-        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, scheduler.short_name, additional_params)
-      end
+      SendOnsiteMonitoringWorker.perform_async(self.class, records, credentials, user_id, scheduler.short_name, additional_params)
     end
 
     records
