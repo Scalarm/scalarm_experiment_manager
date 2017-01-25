@@ -508,6 +508,7 @@ class SimulationsController < ApplicationController
     if @simulation_run.nil?
       @simulation_run = @experiment.generate_simulation_for(params[:id].to_i)
       @simulation_run.to_sent = true
+      @simulation_run.save
     end
   end
 
