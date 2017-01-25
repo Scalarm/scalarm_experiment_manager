@@ -81,19 +81,4 @@
         .small-12.small-centered.columns(style="text-align: center;")
           = submit_tag 'Login', class: 'button radius'
 
--content_for :javascript do
-  :coffeescript
-    $( =>
-      $('#login_username_button').click( =>
-        $('#login_username_fieldset').toggle()
-        $('#username').focus()
-      )
-    )
-
-%section.panel.radius
-  .row
-    .small-6.columns.small-centered
-      %a.button.split.custom-split.radius.success{ href: 'https://docs.cyfronet.pl/pages/viewpage.action?pageId=16023704' }
-        %span
-          %i.fa.fa-book.fa-fw.small-link
-        = "New to Scalarm? Read a user guide! (Polish)"
+= render partial: "guide_panel"
