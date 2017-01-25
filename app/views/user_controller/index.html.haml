@@ -76,3 +76,9 @@
   %a.close-reveal-modal &#215;
   = image_tag 'loading.gif', class: 'busy', style: 'display: none;'
   .content(style="display:none;")
+
+- content_for :javascript do
+  :javascript
+    $(function() {
+      new window.ExperimentLinksManager("#experiment-list-modal");
+    });
