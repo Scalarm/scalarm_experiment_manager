@@ -121,7 +121,7 @@ class SimulationManagerRecordTest < MiniTest::Test
   end
 
   def test_cmd_delegation_time_exceeded_true
-    @record.stubs(:cmd_delegated_at).returns(Time.now - 10.minutes)
+    @record.stubs(:cmd_delegated_at).returns(Time.now - 15.minutes)
 
     assert @record.cmd_delegation_time_exceeded?
   end

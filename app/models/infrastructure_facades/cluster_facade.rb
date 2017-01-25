@@ -114,10 +114,8 @@ class ClusterFacade < InfrastructureFacade
     end
 
     if additional_params[:onsite_monitoring]
-      sm_uuid = SecureRandom.uuid
-      InfrastructureFacade.handle_monitoring_send_errors(records) do
-        self.class.send_and_launch_onsite_monitoring(credentials, sm_uuid, user_id, "#{self.short_name}.#{@scheduler.short_name}", additional_params)
-      end
+      record_ids = records.map{|r| r.id.to_s}
+      SendOnsiteMonitoringWorker.perform_async(self.class, record_ids, credentials.id.to_s, user_id.to_s, "#{self.short_name}.#{@scheduler.short_name}", additional_params)
     end
 
     SimMonitorWorker.perform_async(additional_params[:infrastructure_name].to_s, user_id.to_s)
@@ -210,6 +208,14 @@ class ClusterFacade < InfrastructureFacade
       FileUtils.remove_dir(code_dir, true)
     end
 
+  end
+
+  def self.credentials_record_class
+    ClusterCredentials
+  end
+
+  def self.sm_record_class
+    JobRecord
   end
 
   #### private ####

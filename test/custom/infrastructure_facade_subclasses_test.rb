@@ -22,7 +22,7 @@ class InfrastructureFacadeSubclassesTest < MiniTest::Test
       :short_name,
       :start_simulation_managers,
       :query_simulation_manager_records,
-      :sm_record_class,
+      # :sm_record_class, # this has been moved to facade class methods
       :add_credentials,
       :remove_credentials,
       :get_credentials,

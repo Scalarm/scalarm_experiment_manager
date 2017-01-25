@@ -35,7 +35,7 @@ class DummyFacade < InfrastructureFacade
     DummyRecord.where(query)
   end
 
-  def sm_record_class
+  def self.sm_record_class
     DummyRecord
   end
 
