@@ -142,6 +142,7 @@ module SimulationScheduler
 
 
   def generate_simulation_for(simulation_id)
+    experiment_parameters = self.parameters
     combination = []
 
     if self.replication_level.nil? or (self.replication_level == 1)
@@ -155,6 +156,17 @@ module SimulationScheduler
     self.value_list.each_with_index do |tab, index|
       current_index = id_num / self.multiply_list[index]
       combination[index] = tab[current_index]
+
+      parameter_desc = self.get_parameter_doc experiment_parameters[index]
+      if parameter_desc['parametrizationType'] == 'uniform'
+        r_interpreter = Rails.configuration.r_interpreter
+        r_interpreter.eval("x <- runif(1, #{parameter_desc['min'].to_f}, #{parameter_desc['max'].to_f})")
+        combination[index] = ('%.3f' % r_interpreter.pull('x').to_f)
+      elsif parameter_desc['parametrizationType'] == 'gauss'
+        r_interpreter = Rails.configuration.r_interpreter
+        r_interpreter.eval("x <- rnorm(1, #{parameter_desc['mean'].to_f}, #{parameter_desc['variance'].to_f})")
+        combination[index] = ('%.3f' % r_interpreter.pull('x').to_f)
+      end
 
       id_num -= current_index * self.multiply_list[index]
       # Rails.logger.debug("Index: #{index} - Current index: #{current_index} - Selected Element: #{tab[current_index]} - id_num: #{id_num}")
