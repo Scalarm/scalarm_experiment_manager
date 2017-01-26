@@ -42,7 +42,6 @@ class ExperimentsControllerIntegrationTest < ActionDispatch::IntegrationTest
                 "labels"=>"parameter1,parameter2", "simulation_id" => @simulation.id}
 
     @experiment = Experiment.new(@experiment_params)
-
     @experiment.save
   end
 
@@ -89,7 +88,7 @@ class ExperimentsControllerIntegrationTest < ActionDispatch::IntegrationTest
     experiment = Experiment.where(name: 'name').first
 
     assert_not_nil experiment
-    assert_equal @experiment.size, experiment.size
+    assert_equal @experiment.experiment_size, experiment.experiment_size
     assert_equal @experiment_params['experiment_input'], experiment.experiment_input
     assert_equal 0, experiment.simulation_runs.count
   end
