@@ -101,3 +101,5 @@ group :development do
 end
 
 gem 'method_source'
+
+gem 'mongoid', '~> 5.1.0'

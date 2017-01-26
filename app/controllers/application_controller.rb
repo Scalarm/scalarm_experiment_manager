@@ -50,10 +50,19 @@ class ApplicationController < ActionController::Base
   # Override authenticate to use SclarmUser class from ExperimentManager
   # current_user and user_session should be initialized in Scalarm::ServiceCore::ScalarmAuthentication
   def authenticate
-    super
-    @current_user = current_user.convert_to(ScalarmUser) if current_user
-    @sm_user = sm_user.convert_to(SimulationManagerTempPassword) if sm_user
-    @user_session = user_session.convert_to(UserSession) if user_session
+    if [Information::StorageController, Information::ExperimentsController, Information::ChartController,
+        Information::DbInstancesController, Information::DbConfigServicesController, Information::StatusController,
+        Information::SupervisorController, Information::DbRoutersController].include? self.class
+
+      authenticate_or_request_with_http_basic do |username, password|
+        username == Rails.application.secrets.information_service_user && password == Rails.application.secrets.information_service_pass
+      end
+    else
+      super
+      @current_user = current_user.convert_to(ScalarmUser) if current_user
+      @sm_user = sm_user.convert_to(SimulationManagerTempPassword) if sm_user
+      @user_session = user_session.convert_to(UserSession) if user_session
+    end
   end
 
   def generic_exception_handler(exception)

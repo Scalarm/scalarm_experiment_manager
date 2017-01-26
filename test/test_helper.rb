@@ -29,6 +29,70 @@ class ActiveSupport::TestCase
     end
   end
 
+  # information service utils
+  def authorize_request(request)
+    user = Rails.application.secrets.information_service_user
+    pw = Rails.application.secrets.information_service_pass
+    request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
+  end
+
+  def clear_authorization(request)
+    request.env['HTTP_AUTHORIZATION'] = nil
+  end
+
+  def self.add_test_get_list
+    define_method 'test_get_list' do
+      get :list
+      assert_response :success
+    end
+  end
+
+  def self.add_test_register_address
+    define_method 'test_register_address' do
+      authorize_request(request)
+      post :register, address: 'some_address'
+      assert_response :success
+      assert_equal 'ok', JSON.parse(response.body)['status']
+
+      get :list
+      assert_response :success
+      assert_includes JSON.parse(response.body), 'some_address'
+    end
+  end
+
+  def self.add_test_register_address_unauthorized
+    define_method 'test_register_address_unauthorized' do
+      authorize_request(request)
+      get :list
+      assert_response :success
+      assert_not_includes JSON.parse(response.body), 'some_address'
+
+      clear_authorization(request)
+      post :register, address: 'some_address'
+      assert_response 401
+      authorize_request(request)
+    end
+  end
+
+  def self.add_test_deregister_address
+    define_method 'test_deregister_address' do
+      authorize_request(request)
+      post :register, address: 'some'
+      assert_response :success
+
+      get :list
+      assert_response :success
+      assert_includes JSON.parse(response.body), 'some'
+
+      post :deregister, address: 'some'
+      assert_response :success
+
+      get :list
+      assert_response :success
+      assert_not_includes JSON.parse(response.body), 'some'
+    end
+  end
+
 end
 
 class MockCollection

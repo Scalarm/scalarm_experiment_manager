@@ -5,3 +5,6 @@ Scalarm::Database::Model::ExperimentProgressNotification.create_capped_collectio
 
 Mongo::Logger.logger       = ::Logger.new(File.join(Rails.root, 'log', 'mongo_driver.log'))
 Mongo::Logger.logger.level = ::Logger::FATAL
+
+
+Mongoid.load!(File.join(Rails.root, 'config', 'mongoid.yml'), Rails.env)

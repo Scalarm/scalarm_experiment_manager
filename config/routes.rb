@@ -176,6 +176,68 @@ ScalarmExperimentManager::Application.routes.draw do
 
   mount Sidekiq::Web => '/sidekiq'
 
+  namespace :information do
+    # Status
+    get     'status' => 'status#status'
+    get     'scalarm_status' => 'status#scalarm_status'
+
+    # MongoDB instances
+    get     'db_instances/list'
+    post    'db_instances/register'
+    post    'db_instances/deregister'
+
+    post    'db_instances' => 'db_instances#register'
+    get     'db_instances' => 'db_instances#list'
+    delete  'db_instances' => 'db_instances#deregister'
+
+    # MongoDB config services
+    get     'db_config_services/list'
+    post    'db_config_services/register'
+    post    'db_config_services/deregister'
+
+    post    'db_config_services' => 'db_config_services#register'
+    get     'db_config_services' => 'db_config_services#list'
+    delete  'db_config_services' => 'db_config_services#deregister'
+
+    # MongoDB routers
+    get     'db_routers/list'
+    post    'db_routers/register'
+    post    'db_routers/deregister'
+
+    post    'db_routers' => 'db_routers#register'
+    get     'db_routers' => 'db_routers#list'
+    delete  'db_routers' => 'db_routers#deregister'
+
+    get 'storage/list'
+    post 'storage/register'
+    post 'storage/deregister'
+
+    post 'experiments/register'
+    get 'experiments/list'
+    post 'experiments/deregister'
+
+    post 'experiment_managers' => 'experiments#register'
+    get 'experiment_managers' => 'experiments#list'
+    delete 'experiment_managers' => 'experiments#deregister'
+
+    post 'storage_managers' => 'storage#register'
+    get 'storage_managers' => 'storage#list'
+    delete 'storage_managers' => 'storage#deregister'
+
+    post 'chart_services' => 'chart#register'
+    get 'chart_services' => 'chart#list'
+    delete 'chart_services' => 'chart#deregister'
+
+    # aliases for data explorer
+    post 'data_explorers' => 'chart#register'
+    get 'data_explorers' => 'chart#list'
+    delete 'data_explorers' => 'chart#deregister'
+
+    post 'experiment_supervisors' => 'supervisor#register'
+    get 'experiment_supervisors' => 'supervisor#list'
+    delete 'experiment_supervisors' => 'supervisor#deregister'
+  end
+
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
 
