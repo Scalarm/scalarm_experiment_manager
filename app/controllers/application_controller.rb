@@ -51,12 +51,14 @@ class ApplicationController < ActionController::Base
   # current_user and user_session should be initialized in Scalarm::ServiceCore::ScalarmAuthentication
   def authenticate
     if [Information::StorageController, Information::ExperimentsController, Information::ChartController,
-        Information::DbInstancesController, Information::DbConfigServicesController, Information::StatusController,
+        Information::DbInstancesController, Information::DbConfigServicesController,
         Information::SupervisorController, Information::DbRoutersController].include? self.class
 
       authenticate_or_request_with_http_basic do |username, password|
         username == Rails.application.secrets.information_service_user && password == Rails.application.secrets.information_service_pass
       end
+    elsif self.is_a? Information::StatusController
+    #   pass
     else
       super
       @current_user = current_user.convert_to(ScalarmUser) if current_user

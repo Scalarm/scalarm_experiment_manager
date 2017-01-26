@@ -35,7 +35,7 @@ class Information::StatusController < ApplicationController
   end
 
   def scalarm_status
-    service_classes = [ExperimentManager, StorageManager, ChartService, ExperimentSupervisor]
+    service_classes = [Information::ExperimentManager, Information::StorageManager, Information::ChartService, Information::ExperimentSupervisor]
     states = Hash[service_classes.collect { |service_class| [service_class, collect_service_states(service_class)] }]
 
     status = 'ok'
@@ -91,7 +91,7 @@ class Information::StatusController < ApplicationController
   end
 
   def collect_service_states(service_class)
-    service_class.get_all_addresses.collect do |address|
+    service_class.all.to_a.map(&:address).collect do |address|
       query_status_all(address)
     end
   end
