@@ -123,7 +123,8 @@ class Information::StatusController < ApplicationController
 
     begin
       json_resp = JSON.parse(resp)
-    rescue
+    rescue Exception => e
+      Rails.logger.error("query_status_all: #{e}")
       return {
           status: 'failed',
           content: "Invalid response (#{resp.respond_to?(:code) ? resp.code : 'none'}): \"#{resp}\""

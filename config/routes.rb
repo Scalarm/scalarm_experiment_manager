@@ -238,6 +238,23 @@ ScalarmExperimentManager::Application.routes.draw do
     delete 'experiment_supervisors' => 'supervisor#deregister'
   end
 
+  namespace :storage do
+    get '/status' => 'log_bank#status'
+    put 'experiments/:experiment_id/simulations/:simulation_id' => 'log_bank#put_simulation_output'
+    get 'experiments/:experiment_id/simulations/:simulation_id' => 'log_bank#get_simulation_output'
+    get 'experiments/:experiment_id/simulations/:simulation_id/size' => 'log_bank#get_simulation_output_size'
+    delete 'experiments/:experiment_id/simulations/:simulation_id' => 'log_bank#delete_simulation_output'
+
+    get 'experiments/:experiment_id' => 'log_bank#get_experiment_output'
+    get 'experiments/:experiment_id/size' => 'log_bank#get_experiment_output_size'
+    delete 'experiments/:experiment_id' => 'log_bank#delete_experiment_output'
+
+    put 'experiments/:experiment_id/simulations/:simulation_id/stdout' => 'log_bank#put_simulation_stdout'
+    get 'experiments/:experiment_id/simulations/:simulation_id/stdout' => 'log_bank#get_simulation_stdout'
+    get 'experiments/:experiment_id/simulations/:simulation_id/stdout_size' => 'log_bank#get_simulation_stdout_size'
+    delete 'experiments/:experiment_id/simulations/:simulation_id/stdout' => 'log_bank#delete_simulation_stdout'
+  end
+
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
 
