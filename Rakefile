@@ -78,8 +78,8 @@ end
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:ensure_config, :setup, :environment] do |t, args|
-    puts 'puma -C config/puma.rb'
-    %x[puma -C config/puma.rb]
+    puts 'passenger start --daemonize --port 3000'
+    %x[passenger start --daemonize --port 3000]
 
     load_balancer_registration
     create_anonymous_user
@@ -109,8 +109,8 @@ namespace :service do
 
   desc 'Stop the service'
   task :stop, [:debug] => [:environment] do |t, args|
-    puts 'pumactl -F config/puma.rb -T scalarm stop'
-    %x[pumactl -F config/puma.rb -T scalarm stop]
+    puts 'passenger stop'
+    %x[passenger stop]
 
     monitoring_process('stop')
 

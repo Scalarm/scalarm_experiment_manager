@@ -56,7 +56,7 @@ group :doc do
 end
 
 # Use unicorn as the app server
-gem 'puma'
+# gem 'puma'
 #gem 'thin'
 
 # Use debugger
@@ -104,3 +104,4 @@ end
 gem 'method_source'
 
 gem 'mongoid', '~> 5.1.0'
+gem 'passenger'
