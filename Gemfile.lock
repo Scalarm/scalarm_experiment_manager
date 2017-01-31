@@ -11,9 +11,9 @@ GIT
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 08546c5a61b6f3787aeb6a52cb54c3ecd1118248
+  revision: 265ce92a8a0bab5b2a047d52e38f5b91a0b643f7
   specs:
-    scalarm-service_core (2.0.0)
+    scalarm-service_core (2.1.0)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       grid-proxy (~> 0.1)
@@ -541,7 +541,7 @@ DEPENDENCIES
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (~> 2.0.0)!
-  scalarm-service_core (~> 2.0.0)!
+  scalarm-service_core (~> 2.1.0)!
   sdoc
   sidekiq
   signet

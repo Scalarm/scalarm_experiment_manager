@@ -85,7 +85,7 @@ gem 'scalarm-database', '~> 2.0.0', git: 'git://github.com/Scalarm/scalarm-datab
 
 ## for local development - set path to scalarm-core
 # gem 'scalarm-service_core', path: '/vagrant/scalarm-service_core'
-gem 'scalarm-service_core', '~> 2.0.0', git: 'git://github.com/Scalarm/scalarm-service_core.git'
+gem 'scalarm-service_core', '~> 2.1.0', git: 'git://github.com/Scalarm/scalarm-service_core.git'
 
 #oauth2
 gem 'signet'
