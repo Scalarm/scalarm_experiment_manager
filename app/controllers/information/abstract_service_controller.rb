@@ -21,6 +21,17 @@ class Information::AbstractServiceController < ApplicationController
   def list
     managers = self.class.model_class.all.map(&:address)
 
+    if managers.blank?
+      managers = case self.class.model_class
+                   when Information::ExperimentManager
+                     [ request.host_with_port ]
+                   when Information::StorageManager
+                     [ "#{request.host_with_port}/storage" ]
+                   else
+                     [ ]
+                 end
+    end
+
     render json: managers
   end
 

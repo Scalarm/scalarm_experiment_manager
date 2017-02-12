@@ -121,6 +121,8 @@ ScalarmExperimentManager::Application.routes.draw do
         get  :get_simulation_data
         get  :results_binaries
         get  :results_stdout
+        post :host_info
+        post :performance_stats
       end
     end
   end

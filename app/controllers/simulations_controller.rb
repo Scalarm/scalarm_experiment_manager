@@ -5,7 +5,8 @@ require 'rest_client'
 
 class SimulationsController < ApplicationController
   include AdaptersSetup
-  before_filter :load_simulation, only: [:show, :progress_info, :progress_info_history, :mark_as_complete, :results_binaries, :results_stdout, :update]
+  before_filter :load_simulation, only: [ :show, :progress_info, :progress_info_history, :mark_as_complete,
+                                          :results_binaries, :results_stdout, :update, :host_info, :performance_stats ]
 
   def index
     respond_to do |format|
@@ -418,7 +419,12 @@ class SimulationsController < ApplicationController
     @output_size, @output_size_label, @output_size_err = simulation_output_size
     @stdout_size, @stdout_size_label, @stdout_size_err = simulation_stdout_size
 
-    render partial: 'show'
+    respond_to do |format|
+      format.html { render partial: 'show' }
+      format.json {
+        render json: @simulation_run.to_json
+      }
+    end
   end
 
   def simulation_scenarios
@@ -482,6 +488,37 @@ class SimulationsController < ApplicationController
       @msg[:notice] = t("simulations.show.reset_scheduled")
     else
       @msg[:error] = t("simulations.show.reset_not_supported")
+    end
+  end
+
+  def host_info
+    if not params.include? 'host_info'
+      render status: 412, nothing: true
+    else
+      begin
+        @simulation_run.host_info = JSON.parse(params['host_info'])
+        @simulation_run.save
+        render status: 200, nothing: true
+      rescue => e
+        Rails.logger.error("An exception occured while parsing request: #{e}")
+        render status: 500, nothing: true
+      end
+    end
+  end
+
+  def performance_stats
+    if not params.include? 'stats'
+      render status: 412, nothing: true
+    else
+      begin
+        @simulation_run.performance_stats ||= []
+        @simulation_run.performance_stats << JSON.parse(params['stats'])
+        @simulation_run.save
+        render status: 200, nothing: true
+      rescue => e
+        Rails.logger.error("An exception occured while parsing request: #{e}")
+        render status: 500, nothing: true
+      end
     end
   end
 

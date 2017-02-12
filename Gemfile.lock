@@ -11,9 +11,9 @@ GIT
 
 GIT
   remote: git://github.com/Scalarm/scalarm-service_core.git
-  revision: 265ce92a8a0bab5b2a047d52e38f5b91a0b643f7
+  revision: 80407c97925510a68cbd74b2a421cf3fbd367e7a
   specs:
-    scalarm-service_core (2.1.0)
+    scalarm-service_core (2.2.0)
       actionpack (~> 4.1)
       activesupport (~> 4.1)
       grid-proxy (~> 0.1)
@@ -107,6 +107,9 @@ GEM
     coffee-script-source (1.12.2)
     concurrent-ruby (1.0.4)
     connection_pool (2.2.1)
+    debase (0.2.1)
+      debase-ruby_core_source
+    debase-ruby_core_source (0.9.6)
     debug_inspector (0.0.2)
     domain_name (0.5.20161129)
       unf (>= 0.0.5, < 1.0.0)
@@ -243,6 +246,8 @@ GEM
       netrc (~> 0.7)
     retriable (3.0.0)
     rinruby (2.0.3)
+    ruby-debug-ide (0.6.1.beta3)
+      rake (>= 0.8.1)
     ruby-openid (2.7.0)
     rubysl (2.2.0)
       rubysl-abbrev (~> 2.0)
@@ -509,6 +514,7 @@ DEPENDENCIES
   binding_of_caller
   ci_reporter_minitest
   coffee-rails (~> 4.0.0)
+  debase
   encryptor
   font-awesome-sass (= 4.4)
   foundation-icons-sass-rails
@@ -535,13 +541,14 @@ DEPENDENCIES
   remotipart (~> 1.0)
   rest-client (~> 1.8)
   rinruby
+  ruby-debug-ide
   ruby-openid
   rubysl (~> 2.0)
   rubysl-openssl (= 2.0.5)
   rubyzip
   sass-rails (~> 4.0.0)
   scalarm-database (~> 2.0.0)!
-  scalarm-service_core (~> 2.1.0)!
+  scalarm-service_core (~> 2.2.0)!
   sdoc
   sidekiq
   signet
