@@ -20,6 +20,8 @@ en:
       reset: "Reset"
       reset_scheduled: "Simulation run will be updated shortly"
       reset_not_supported: "Operation not supported"
+      host_info_header: "Information about computing resource"
+      performance_stats_header: "Performance statistics"
 
     create:
       no_simulation_name: "You need to provide simulation name."

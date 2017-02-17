@@ -109,6 +109,26 @@ class SimulationsControllerIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal second_stats, perf_stats.last
   end
 
+  test 'simulations GET should return html partial with host_info and performance_stats filled' do
+    create_fake_experiment
+
+    sim = @experiment.simulation_runs.first
+    sim.host_info = { "hostname" => 'example.com', "platform" => 'ubuntu' }
+    sim.performance_stats = [ { "timestamp" => Time.now.to_i, "utime" => 1.0, "stime" => 2.0, "iowait" => 3.0, "rss" => 4,
+                                 "vms" => 5, "swap" => 6, "read_count" => 7, "write_count" => 8, "read_bytes" => 9,
+                                 "write_bytes" => 10 } ]
+    sim.save
+
+    get experiment_simulation_path(experiment_id: @experiment.id, id: sim.index), format: :html
+    assert_response 200, response.status
+
+    assert response.body.include?('<b>hostname:</b>')
+    assert response.body.include?('example.com')
+    assert response.body.include?('<b>platform:</b>')
+    assert response.body.include?('ubuntu')
+    assert response.body.include?("<div id='cpu-stats'></div>")
+  end
+
   private
 
   def create_fake_experiment

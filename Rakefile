@@ -78,30 +78,14 @@ end
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:ensure_config, :setup, :environment] do |t, args|
-    puts 'passenger start --daemonize --port 3000'
-    %x[passenger start --daemonize --port 3000]
-
     load_balancer_registration
     create_anonymous_user
 
     monitoring_process('start')
 
-    redis_start_proc = fork do
-      STDOUT.reopen(File.open('log/monitoring_process.log', 'w+'))
-      STDERR.reopen(File.open('log/monitoring_process.log', 'w+'))
-
-      STDOUT.sync = true
-      STDERR.sync = true
-
-      redis_start = "echo \"port #{Rails.application.secrets.redis_port}\" | redis-server -"
-      puts redis_start
-      %x[#{redis_start}]
-    end
-
     Rails.application.secrets.redis_workers.to_i.times do |i|
       sidekiq_start = "bundle exec sidekiq -c 5 -d -L log/jobs.log -P tmp/sidekiq_#{i}.pid"
-      puts sidekiq_start
-      %x[#{sidekiq_start}]
+      exec_with_log sidekiq_start
     end
 
     Rake::Task["service:initialize_sims_monitoring"].execute
@@ -119,10 +103,6 @@ namespace :service do
       puts sidekiq_stop
       %x[#{sidekiq_stop}]
     end
-
-    redis_stop = "redis-cli -p #{Rails.application.secrets.redis_port} shutdown"
-    puts redis_stop
-    %x[#{redis_stop}]
 
     load_balancer_deregistration
   end
@@ -743,4 +723,9 @@ def create_information_service(config)
     config['information_service_pass'],
     !!config['information_service_development']
   )
+end
+
+def exec_with_log(cmd)
+  puts cmd
+  %x[#{cmd}]
 end

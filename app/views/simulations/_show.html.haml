@@ -81,3 +81,29 @@
         = t('.size', { size: @stdout_size_label })
     - else
       = t('.output_not_available')
+
+
+.row
+  %h4= t('.host_info_header')
+  - if @simulation_run.host_info.blank?
+    Not available
+  - else
+    %ul
+      - @simulation_run.host_info.each do |property, value|
+        - next if property == 'timestamp'
+        %li
+          %b= property + ':'
+          = value
+
+.row
+  %h4= t('.performance_stats_header')
+  - if @simulation_run.performance_stats.blank?
+    Not available
+  - else
+    #cpu-stats
+    #memory-stats
+    #io-stats
+    #io-counters-stats
+
+    :javascript
+      new window.PerformanceStats('#{@simulation_run.performance_stats.to_json}')
