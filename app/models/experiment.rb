@@ -52,6 +52,14 @@ class Experiment < Scalarm::Database::Model::Experiment
     super.map { |e| e.auto_convert }
   end
 
+  def shared_with?(user)
+    (not self.shared_with.nil?) and self.shared_with.include?(user.id)
+  end
+
+  def owned_by?(user)
+    self.user_id == user.id
+  end
+
   def simulation_runs
     SimulationRunFactory.for_experiment(id)
   end

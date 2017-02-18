@@ -78,6 +78,12 @@ end
 namespace :service do
   desc 'Start the service'
   task :start, [:debug] => [:ensure_config, :setup, :environment] do |t, args|
+    %x[rm -rf #{File.join(Rails.root, 'public', 'assets')}]
+
+    if Rails.env.production?
+      Rake::Task["service:non_digested"].execute
+    end
+
     load_balancer_registration
     create_anonymous_user
 
