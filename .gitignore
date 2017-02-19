@@ -4,6 +4,7 @@ config/scalarm.yml
 config/puma.rb
 config/google_client_secrets.json
 config/plgrid_crl.pem
+config/mongoid.yml
 
 # IDE settings
 .idea/
