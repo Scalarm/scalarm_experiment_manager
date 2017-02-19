@@ -9,17 +9,47 @@ necessary to conduct data farming experiments according to the following workflo
   * simulations execution (scheduling workers onto Clouds, Grids, etc.)
   * monitoring the experiment progress and extending the initial parameter space if necessary,
   * analyse results of the finished simulations.
+  
+Running with Docker
+-------------------
+
+To run core Scalarm functionality with no headache you can use Docker. Scalarm has two external dependencies: MongoDB and Redis.
+You can run everything with a few commands:
+
+```
+docker run -d --rm --name scalarm-mongo -v $HOME/scalarm-db:/data/db mongo:3.4.1 --storageEngine wiredTiger
+```
+
+keep in mind that if you move from previous version you may need to use previous storageEngine - mmapv1.
+
+```
+docker run -d --rm --name scalarm-redis redis
+```
+
+To run Scalarm you need to provide 2 configuration files: secrets.yml and mongoid.yml . Take a look at examples in the
+config folder.
+
+```
+docker run --rm -p 3000:3000 --name scalarm --link scalarm-mongo:mongo --link scalarm-redis:redis -v $PWD/secrets.yml:/scalarm/config/secrets.yml -v $PWD/mongoid.yml:/scalarm/config/mongoid.yml dkrol3/scalarm
+```
+
+You can set RAILS_ENV to production if you intend to use it heavily. In this case please use https and a reverse proxy
+like NGINX.
+
+
+Developer notes
+---------------
 
 To run the services you need to fulfill the following requirements:
 
 Ruby version
 ------------
 
-Currently we use and test Scalarm against MRI 2.1.x but the Rubinius version of Ruby should be good as well.
+Currently we use and test Scalarm against MRI 2.3.x but other Ruby versions should be good as well.
 
 Please install Ruby with RVM as described on http://rvm.io/
 ```
-\curl -sSL https://get.rvm.io | bash -s stable --ruby=2.1
+\curl -sSL https://get.rvm.io | bash -s stable --ruby=2.3
 ```
 
 Follow installation instructrions and reload shell on the end if necessary.
