@@ -9,7 +9,8 @@ development:
       # Provides the hosts the default client can connect to. Must be an array
       # of host:port pairs. (required)
       hosts:
-        - localhost:27017
+        - mongo:27017
+        # - 192.168.0.87:27017
       options:
         # Change the default write concern. (default = { w: 1 })
         # write:
@@ -135,8 +136,15 @@ test:
     default:
       database: scalarm_db_test
       hosts:
-        - localhost:27017
+        - mongo:27017
       options:
         read:
           mode: :primary
         max_pool_size: 1
+
+production:
+  clients:
+    default:
+      database: scalarm_db
+      hosts:
+        - mongo:27017

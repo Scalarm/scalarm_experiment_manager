@@ -12,6 +12,7 @@ class ClusterFacadeFactory
 
   def get_facade_for(cluster_id)
     cluster_record_id = cluster_id.split('cluster_').last
+    cluster_record_id = cluster_record_id.split('.').first
 
     cluster_record = ClusterRecord.where(id: cluster_record_id).first
     return nil if cluster_record.nil?
