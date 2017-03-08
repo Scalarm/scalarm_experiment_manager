@@ -2,7 +2,7 @@
 REPO_URL=http://scalarm.com/repository/
 
 for OS in linux; do
-    for ARCH in amd64 386; do
+    for ARCH in amd64; do
         # get Go Monitoring
         MON_DIR="public/scalarm_monitoring/"
         MON_PACKAGE_PATH="${OS}_${ARCH}/scalarm_monitoring.xz"
