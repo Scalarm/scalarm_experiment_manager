@@ -85,7 +85,8 @@ class InfrastructureFacade
         experiment_manager_user: temp_password.sm_uuid,
         experiment_manager_pass: temp_password.password,
         insecure_ssl: (Rails.application.secrets.include?(:insecure_ssl) ? Rails.application.secrets.insecure_ssl : true), # TODO insecure SSL by default
-        monitoring_interval: 5
+        monitoring_interval: 5,
+        timeout: 180
     }
 
     unless start_at.blank?
