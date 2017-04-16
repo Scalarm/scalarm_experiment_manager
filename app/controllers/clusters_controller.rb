@@ -41,7 +41,7 @@ class ClustersController < ApplicationController
 
     cluster_record = ClusterRecord.where(id: params[:id].to_s).first
 
-    if cluster_record.nil? or not cluster_record.visible_to?(@current_user.id)
+    if cluster_record.nil? or not cluster_record.owned_by?(@current_user.id)
       status = :not_found
     else
       if cluster_record.destroy

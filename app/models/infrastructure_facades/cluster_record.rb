@@ -19,4 +19,8 @@ class ClusterRecord < Scalarm::Database::MongoActiveRecord
         (self.shared_with.kind_of?(Array) and self.shared_with.include?(user_id))
   end
 
+  def owned_by?(user_id)
+    self.created_by == user_id
+  end
+
 end
