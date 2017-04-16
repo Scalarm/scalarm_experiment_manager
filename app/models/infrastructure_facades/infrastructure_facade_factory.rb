@@ -92,9 +92,9 @@ class InfrastructureFacadeFactory
             name: 'Computer clusters',
             group: 'clusters',
             children:
-                ClusterFacadeFactory.instance.provider_names.map do |cluster_record_id|
+                ClusterFacadeFactory.instance.provider_names.map {|cluster_record_id|
                   ClusterFacadeFactory.instance.get_facade_for(cluster_record_id).to_h(user_id).merge(group: 'clusters')
-                end
+                }.select {|cluster_record| cluster_record[:enabled]}
         }
     ]
   end
