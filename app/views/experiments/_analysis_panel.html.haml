@@ -1,6 +1,6 @@
 - analysis_methods.each do |method|
-  %li.analysis-element{class: "#{method}-analysis"}
-    %a.tip-right.text-left{href:"#method"+t("experiments.menu_panel.analysis.#{method}"), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{analysis_methods_description[method]}</div><div style=width:35%;float:right;><img src=/assets/material_design/#{method}_icon.png/></div>", "data-tooltip"=>""}
+  %li.analysis-element{class: "#{method}-analysis", style: "padding-bottom: 10px;"}
+    %a.tip-right.text-left{href:"#method"+t("experiments.menu_panel.analysis.#{method}"), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{analysis_methods_description[method]}</div><div style=width:35%;float:right;><img src=/assets/material_design/#{method}_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
       %span= t("experiments.menu_panel.analysis.#{method}")
 
 :javascript

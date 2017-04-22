@@ -399,12 +399,12 @@ class window.AnalysisLinksManager
   constructor: (@modalSelector) ->
 
     $(".histogram-analysis, .regression_tree-analysis, .scatter_plot-analysis, .interaction-analysis, .pareto-analysis").click (event) =>
-      className = $(event.currentTarget).attr('class').split()[0]
-
-      $("#{@modalSelector} .content").hide()
-      $("#{@modalSelector} .#{className}-content").show()
-
-      $("#{@modalSelector}").foundation("reveal", "open")
+      classNames = $(event.currentTarget).attr('class').split(" ")
+      for name in classNames
+        if name.endsWith("analysis")
+          $("#{@modalSelector} .content").hide()
+          $("#{@modalSelector} .#{name}-content").show()
+          $("#{@modalSelector}").foundation("reveal", "open")
 
 
 window.show_dialog_for_new_parameter_value = (parameter_id, parameter_label, url, experiment_id) ->
