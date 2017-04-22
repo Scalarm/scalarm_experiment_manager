@@ -390,27 +390,17 @@ select {
     border: medium solid;
 }
 
-//div.histogram-analysis {
-//    position: absolute;
-//    top: 0px;
-//    right: -110px;
-//}
-//
-//div.rtree-analysis {
-//    position: absolute;
-//    top: 170px;
-//    right: -110px;
-//}
-//
-//div.bivariate-analysis {
-//    position: absolute;
-//    top: 340px;
-//    right: -110px;
-//}
-
 p {
-  &.histogram-analysis, &.rtree-analysis, &.bivariate-analysis {
+  &.histogram-analysis, &.regression_tree-analysis, &.scatter_plot-analysis {
     cursor: pointer;
+  }
+}
+
+.analysis-element {
+  padding-bottom: 10px;
+
+  a {
+    padding: 0px;
   }
 }
 

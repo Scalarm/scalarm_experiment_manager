@@ -111,6 +111,8 @@ ScalarmExperimentManager::Application.routes.draw do
       # Fake API for posting/getting history of supervisor run states
       post 'supervisor_run/state_history', action: :post_supervisor_state_history
       get 'supervisor_run/state_history', action: :get_supervisor_state_history
+
+      get :analysis_panel
     end
 
     resources :simulations do

@@ -7,8 +7,6 @@
 = render 'experiment_links'
 = render 'analysis_charts'
 
-- description = Hash["histogram" => "A histogram analysis shows results frequency distributions", "scatter" => "Analysis of two variables relationship creates a scatter plot", "regression" => "The classification of objects by dividing the found set of conditions"]
-
 = content_for :panel do
   .nano(style="overflow: hidden;")
     %section.row.panel.radius.nano-content(style="padding-left: 15px; padding-right: 8px;")
@@ -49,16 +47,8 @@
       %hr
       %h3.text-center.subheader
         = t('experiments.menu_panel.analysis.header')
+
       %ul.analyses-panel{style: "text-align: left; list-style: none;"}
-        %li.histogram-analysis{style: "padding-bottom: 10px;"}
-          %a.tip-right.text-left{href:"#method"+t('experiments.menu_panel.analysis.histogram'), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{description['histogram']}</div><div style=width:35%;float:right;><img src=/assets/material_design/histogram_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
-            %span= t('experiments.menu_panel.analysis.histogram')
-        %li.rtree-analysis{style: "padding-bottom: 10px;"}
-          %a.tip-right.text-left{href:"#method"+t('experiments.menu_panel.analysis.regression_tree'), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{description['regression']}</div><div style=width:35%;float:right;><img src=/assets/material_design/regression_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
-            %span= t('experiments.menu_panel.analysis.regression_tree')
-        %li.bivariate-analysis{style: "padding-bottom: 10px;"}
-          %a.tip-right.text-left{href:"#method"+t('experiments.menu_panel.analysis.scatter_plot'), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{description['scatter']}</div><div style=width:35%;float:right;><img src=/assets/material_design/scatter_icon.png/></div>", "data-tooltip"=>"", style:"padding: 0px;"}
-            %span= t('experiments.menu_panel.analysis.scatter_plot')
 
 %section
   %section.row.panel.radius
@@ -103,11 +93,7 @@
       var booster = new window.ExperimentBooster('booster_dialog');
 
       var experiment_id = "#{@experiment.id}";
-      var chart_service_url = "#{@public_chart_service_url}";
-
-      if (!chart_service_url) {
-        console.log("There are no chart services available.");
-      }
+      $("#panel .analyses-panel").load("#{analysis_panel_experiment_path(@experiment.id)}");
 
       $("ul.analyses-panel li a").mouseenter(function() {
         $(this).css("background-color", "#EEE");
@@ -122,29 +108,6 @@
       monitor.generate_html('experiment_stats');
       
       window.toggle_panels_on_title_click();
-
-      if (!!chart_service_url) {
-        var base_url = encodeURIComponent('https://' + chart_service_url);
-
-
-        var panel_url = "https://" + chart_service_url + "/panels/" + experiment_id + "?base_url=" + base_url;
-        $.ajax({
-          url: panel_url,
-          xhrFields: {
-            withCredentials: true
-          },
-          success: function(data, textStatus, jqXHR) {
-            $("#panel .analyses-panel").html(data);
-
-            // disable nanoscroller in Firefox and SeaMonkey, TODO - repair nanoscroller
-            if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
-              $(".nano").nanoScroller();
-          },
-          error: function(jqXHR, textStatus, errorThrown) {
-            console.log("Error fetching panel: " + textStatus + " " + errorThrown);
-          }
-        });
-      }
 
       $(document).foundation();
 

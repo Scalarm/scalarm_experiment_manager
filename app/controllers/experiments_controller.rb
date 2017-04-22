@@ -66,21 +66,7 @@ class ExperimentsController < ApplicationController
   end
 
   def show
-    information_service = InformationService.instance
-    @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
-    @public_chart_service_url = information_service.sample_public_url 'chart_services'
-
-    @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
-
-    begin
-      start_update_bars_thread if Time.now - @experiment.start_at > 30
-    rescue => e
-      flash[:error] = t('experiments.not_found', {id: @experiment.id, user: current_user.login})
-      respond_to do |format|
-        format.html { redirect_to action: :index }
-        format.json { render json: {status: 'error', message: "experiment with id #{id.to_s} not found"} }
-      end
-    end
+    ExperimentProgressBarUpdateWorker.perform_async(@experiment.id.to_s) if Time.now - @experiment.start_at > 30
 
     respond_to do |format|
       format.html
@@ -88,11 +74,14 @@ class ExperimentsController < ApplicationController
     end
   end
 
-  def start_update_bars_thread
-    Thread.start do
-      Rails.logger.debug("Updating all progress bars --- #{Time.now - @experiment.start_at}")
-      @experiment.update_all_bars
-    end
+  def analysis_panel
+    information_service = InformationService.instance
+    @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
+    @public_chart_service_url = information_service.sample_public_url 'chart_services'
+
+    @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
+
+    render partial: 'analysis_panel'
   end
 
   def running_experiments

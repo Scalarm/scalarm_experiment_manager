@@ -69,4 +69,27 @@ module ExperimentsHelper
   def workers_scaling_algorithms_description
     WorkersScaling::AlgorithmFactory.get_algorithms_list.map {|entry| [entry[:id], entry[:description]] }.to_h
   end
+
+  def analysis_methods
+    [ 'histogram', 'scatter_plot', 'regression_tree' ]
+  end
+
+  def analysis_methods_description
+    {
+        "histogram" => "Histogram shows results frequency distribution",
+        "scatter_plot" => "Analysis of two variables relationship with scatter plot",
+        "regression_tree" => "Classification of objects by dividing the found set of conditions"
+    }
+  end
+
+  def data_explorer_base_url(url)
+    return url if url.blank?
+
+    if Rails.configuration.secrets.information_service_development
+      "http://#{url}"
+    else
+      "https://#{url}"
+    end
+  end
+
 end

@@ -1,0 +1,38 @@
+- analysis_methods.each do |method|
+  %li.analysis-element{class: "#{method}-analysis"}
+    %a.tip-right.text-left{href:"#method"+t("experiments.menu_panel.analysis.#{method}"), "title"=>"<div style=width:65%;float:left;padding-top:10px;>#{analysis_methods_description[method]}</div><div style=width:35%;float:right;><img src=/assets/material_design/#{method}_icon.png/></div>", "data-tooltip"=>""}
+      %span= t("experiments.menu_panel.analysis.#{method}")
+
+:javascript
+  $(function() {
+    var experiment_id = "#{@experiment.id}";
+    var chart_service_url = "#{data_explorer_base_url(@public_chart_service_url)}";
+
+    if (!chart_service_url) {
+      console.log("There are no chart services available.");
+    }
+
+    if (!!chart_service_url) {
+      var base_url = encodeURIComponent(chart_service_url);
+      var panel_url = chart_service_url + "/panels/" + experiment_id + "?base_url=" + base_url;
+
+      $.ajax({
+        url: panel_url,
+        xhrFields: {
+          withCredentials: true
+        },
+        success: function(data, textStatus, jqXHR) {
+          $("#panel .analyses-panel").html(data);
+          // disable nanoscroller in Firefox and SeaMonkey, TODO - repair nanoscroller
+          if(!navigator.userAgent.match(/Firefox|SeaMonkey/i))
+            $(".nano").nanoScroller();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log("Error fetching panel: " + textStatus + " " + errorThrown);
+        }
+      });
+    }
+
+    new window.AnalysisLinksManager("#experiment-analysis-modal");
+    $(document).foundation();
+  });
