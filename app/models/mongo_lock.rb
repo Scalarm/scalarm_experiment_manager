@@ -2,6 +2,8 @@ require 'socket'
 
 require 'scalarm/database/core'
 
+# IMPORTANT NOTE: Locks require a unique index in MongoDB collection
+# run MongoActiveRecordIndexBuilder.build_index(Scalarm::MongoLockRecord) before using it
 module Scalarm
 
   MongoLockRecord = Database::Model::MongoLockRecord
