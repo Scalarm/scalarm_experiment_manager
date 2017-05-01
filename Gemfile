@@ -55,10 +55,6 @@ group :doc do
   gem 'sdoc', require: false
 end
 
-# Use unicorn as the app server
-# gem 'puma'
-#gem 'thin'
-
 # Use debugger
 # gem 'debugger', group: [:development, :test]
 # Rubinius specifics
@@ -71,9 +67,6 @@ gem 'ruby-openid'
 gem 'rest-client', '~> 1.8'
 gem 'xml-simple', '1.1.3'
 gem 'vmstat'
-
-gem 'mocha', group: :test
-gem 'ci_reporter_minitest', group: :test
 
 gem 'remotipart', '~> 1.0'
 
@@ -95,16 +88,24 @@ gem 'sinatra', :require => nil
 
 gem 'pry-rails'
 gem 'awesome_print'
-
-group :development do
-  gem "better_errors"
-  gem "binding_of_caller"
-end
-
 gem 'method_source'
 
 gem 'mongoid', '~> 5.1.0'
 gem 'passenger'
 
-gem 'ruby-debug-ide', group: [:development,:test]
-gem 'debase', group: [:development,:test]
+
+group :development do
+  gem "better_errors"
+  gem "binding_of_caller"
+  gem 'ruby-debug-ide'
+  gem 'debase'
+end
+
+group :test do
+  gem 'mocha'
+  gem 'ci_reporter_minitest'
+  gem 'ruby-debug-ide'
+  gem 'debase'
+  gem 'capybara'
+  gem 'poltergeist'
+end

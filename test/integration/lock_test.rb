@@ -12,6 +12,10 @@ class LockTest < MiniTest::Test
 
   def setup
     super
+    Scalarm::MongoLockRecord.collection.drop
+    Scalarm::MongoLockRecord.collection.create
+
+    MongoActiveRecordIndexBuilder.build_index(Scalarm::MongoLockRecord)
   end
 
   def teardown
@@ -21,7 +25,7 @@ class LockTest < MiniTest::Test
   THREAD_NUM = 3
   COUNT_THREAD = 20
 
-  PROC_NUM = 3
+  PROC_NUM = 20
   COUNT_PROC = 20
 
   class LockTestEntry < Scalarm::Database::MongoActiveRecord
@@ -60,8 +64,9 @@ class LockTest < MiniTest::Test
     PROC_NUM.times do |th_i|
       pids << fork do
         lock = Scalarm::MongoLock.new('test_job')
-
+        # (p "Proc [#{th_i}-#{Process.pid}] - trying to aquire lock") &&
         sleep(0.1) until lock.acquire
+        # p "Proc [#{th_i}-#{Process.pid}] - acquired lock and writes entries - #{Scalarm::MongoLockRecord.to_a}"
 
         COUNT_PROC.times do
           sleep(rand*0.1)
@@ -72,6 +77,7 @@ class LockTest < MiniTest::Test
                             }).save
         end
 
+        # puts "Proc [#{th_i}-#{Process.pid}] - releasing lock - #{Scalarm::MongoLockRecord.to_a}"
         lock.release
       end
     end
@@ -85,6 +91,8 @@ class LockTest < MiniTest::Test
       chunk_pids = chunk.map(&:pid)
       assert chunk_pids.count(chunk_pids[0]) == chunk.size, "#{th_i}: #{(chunk.map {|e| "#{e._id}. #{e.pid}"})}"
     end
+
+    p Scalarm::MongoLockRecord.collection.indexes.to_a
   end
 
   def test_lock_timeout

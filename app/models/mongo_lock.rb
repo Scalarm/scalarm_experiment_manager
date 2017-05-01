@@ -26,28 +26,32 @@ module Scalarm
     end
 
     def acquire
-      lock_dock = MongoLockRecord.collection.find_one_and_update({ name: @name }, { '$set' => { name: @name } }, upsert: true)
+      begin
+        lock_dock = MongoLockRecord.collection.find_one_and_update({ name: @name }, { '$set' => { name: @name } }, upsert: true)
 
-      if lock_dock.nil? # lock acquired
-        MongoLockRecord.collection.find_one_and_update({ name: @name }, { '$set' => { pid: MongoLock.global_pid, acquired_at: Time.now } })
+        if lock_dock.nil? # lock acquired
+          MongoLockRecord.collection.find_one_and_update({ name: @name }, { '$set' => { pid: MongoLock.global_pid, acquired_at: Time.now } })
 
-        Rails.logger.debug "Process #{MongoLock.global_pid} acquired lock on #{@name}"
+          Rails.logger.debug "Process #{MongoLock.global_pid} acquired lock on #{@name}"
 
-        true
-      else
-        if lock_dock['pid'] != @locked_pid
-          # other process took lock in the meantime
-          @locked_pid = lock_dock['pid']
-          @locked_time = Time.now
-        elsif timeout?
-          Rails.logger.warn "LOCK TIMEOUT: Process #{MongoLock.global_pid} releases lock named \"#{@name}\" "\
-            "owned by #{lock_dock['pid']}, acquired at \"#{lock_dock['acquired_at']}\" due to time limit (#{@max_time}s)"
-          MongoLock.forced_release(@name)
+          return true
+        else
+          if lock_dock['pid'] != @locked_pid
+            # other process took lock in the meantime
+            @locked_pid = lock_dock['pid']
+            @locked_time = Time.now
+          elsif timeout?
+            Rails.logger.warn "LOCK TIMEOUT: Process #{MongoLock.global_pid} releases lock named \"#{@name}\" "\
+              "owned by #{lock_dock['pid']}, acquired at \"#{lock_dock['acquired_at']}\" due to time limit (#{@max_time}s)"
+            MongoLock.forced_release(@name)
+          end
+
+          return false
         end
-
-        false
+      rescue Exception => e
+        Rails.logger.warn "An error occured: #{e.message} - #{Process.pid} - #{MongoLockRecord.to_a}"
+        return false
       end
-
     end
 
     # Releases a lock stored in Mongo database
