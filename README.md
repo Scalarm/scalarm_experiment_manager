@@ -27,14 +27,20 @@ docker run -d --rm --name scalarm-redis redis
 ```
 
 To run Scalarm you need to provide 2 configuration files: secrets.yml and mongoid.yml . Take a look at examples in the
-config folder.
+config folder. You can run Scalarm Experiment Manager with the following command, cnce config files are ready in your current directory. 
 
 ```
-docker run --rm -p 3000:3000 --name scalarm --link scalarm-mongo:mongo --link scalarm-redis:redis -v $PWD/secrets.yml:/scalarm/config/secrets.yml -v $PWD/mongoid.yml:/scalarm/config/mongoid.yml dkrol3/scalarm
+docker run --rm -p 3000:3000 --name scalarm --link scalarm-mongo:mongo --link scalarm-redis:redis -v $PWD/secrets.yml:/scalarm/config/secrets.yml -v $PWD/mongoid.yml:/scalarm/config/mongoid.yml dkrol3/scalarm:latest
 ```
 
 You can set RAILS_ENV to production if you intend to use it heavily. In this case please use https and a reverse proxy
 like NGINX.
+
+To run Scalarm tests use the following command on your running Scalarm container:
+
+```
+ docker exec -it scalarm bash -c "source /etc/profile; rake test"
+```
 
 
 Developer notes
