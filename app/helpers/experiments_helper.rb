@@ -85,7 +85,7 @@ module ExperimentsHelper
   def data_explorer_base_url(url)
     return url if url.blank?
 
-    if Rails.configuration.secrets.information_service_development
+    if Rails.application.secrets.information_service_development
       "http://#{url}"
     else
       "https://#{url}"
