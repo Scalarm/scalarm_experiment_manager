@@ -10,6 +10,10 @@ require 'capybara/rails'
 require 'capybara/minitest'
 require 'capybara/poltergeist'
 
+require 'webmock/minitest'
+WebMock.disable_net_connect!(allow_localhost: true)
+
+
 class ActiveSupport::TestCase
   include Scalarm::ServiceCore::TestUtils::TestHelperExtensions
   # Make the Capybara DSL available in all integration tests

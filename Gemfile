@@ -108,4 +108,5 @@ group :test do
   gem 'debase'
   gem 'capybara'
   gem 'poltergeist'
+  gem 'webmock'
 end

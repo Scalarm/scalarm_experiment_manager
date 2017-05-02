@@ -46,11 +46,16 @@ class ExperimentMonitoringViewTest < ActionDispatch::IntegrationTest
                           "labels" => "parameter1,parameter2", "simulation_id" => @simulation.id}
 
     @experiment = Experiment.new(@experiment_params)
+    @experiment._id = '5908e109bf6e881c29b57be6'
     @experiment.save
+
+    @old_information_url = Rails.application.secrets['information_service_url']
   end
 
   def teardown
     super
+    Rails.application.secrets['information_service_url'] = @old_information_url
+    InformationService.instance_variable_set(:@instance, nil)
   end
 
   test 'experiment monitoring view should display default analysis panel with histogram analysis' do
@@ -60,6 +65,24 @@ class ExperimentMonitoringViewTest < ActionDispatch::IntegrationTest
     assert_selector '.analyses-panel .scatter_plot-analysis'
     assert_selector '.analyses-panel .regression_tree-analysis'
   end
+
+  # this test should work with calls with AJAX from a monitoring page but it doesnt :(
+  # test 'experiment monitoring view should display analysis panel from chart service when available' do
+  #   p 'Test 2'
+  #
+  #   Rails.application.secrets['information_service_url'] = "fake-server.com"
+  #   a = stub_request(:get, "fake-server.com/storage_managers").to_return(body: "[ ]")
+  #   b = stub_request(:get, "fake-server.com/chart_services").to_return(body: '[ "external.chartService.com" ]')
+  #   c = stub_request(:get, "external.chartService.com/panels/5908e109bf6e881c29b57be6").to_return(body: 'ExternalChartService')
+  #
+  #   visit(experiment_path(@experiment.id))
+  #
+  #   remove_request_stub(a)
+  #   remove_request_stub(b)
+  #   remove_request_stub(c)
+  #
+  #   assert_text find('.analyses-panel'), "ExternalChartService"
+  # end
 
   private
 
