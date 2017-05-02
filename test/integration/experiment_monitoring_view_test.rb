@@ -56,14 +56,15 @@ class ExperimentMonitoringViewTest < ActionDispatch::IntegrationTest
   test 'experiment monitoring view should display default analysis panel with histogram analysis' do
     visit(experiment_path(@experiment.id))
 
-    assert_text find('.analyses-panel .histogram-analysis'), 'Histogram'
+    assert_selector '.analyses-panel .histogram-analysis'
+    assert_selector '.analyses-panel .scatter_plot-analysis'
+    assert_selector '.analyses-panel .regression_tree-analysis'
   end
 
   private
 
   def login
     visit(root_path)
-    p page.has_selector?('#login_username_button')
     click_link('login_username_button')
     fill_in('Login', with: @user.login)
     fill_in('password', with: 'password')
