@@ -6,8 +6,18 @@ require 'scalarm/service_core/test_utils/test_helper_extensions'
 
 require 'mocha/mini_test'
 
+require 'capybara/rails'
+require 'capybara/minitest'
+require 'capybara/poltergeist'
+
 class ActiveSupport::TestCase
   include Scalarm::ServiceCore::TestUtils::TestHelperExtensions
+  # Make the Capybara DSL available in all integration tests
+  include Capybara::DSL
+  # Make `assert_*` methods behave like Minitest assertions
+  include Capybara::Minitest::Assertions
+
+  Capybara.javascript_driver = :poltergeist
 
   #ActiveRecord::Migration.check_pending!
 
@@ -18,6 +28,12 @@ class ActiveSupport::TestCase
   #fixtures :all
 
   # Add more helper methods to be used by all tests here...
+  # Reset sessions and driver between tests
+  # Use super wherever this method is redefined in your individual test classes
+
+  def teardown
+    Capybara.current_driver = nil
+  end
 
   def use_custom_controller(controller, &block)
     old_controller = self.class.controller_class

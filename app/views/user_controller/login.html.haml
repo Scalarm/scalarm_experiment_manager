@@ -53,7 +53,7 @@
 
       - if basicauth_enabled?
         .small-5.columns.small-centered
-          %a.button.split.custom-split.radius.username#login_username_button
+          %a.button.split.custom-split.radius.username#login_username_button(href="#")
             %span
               %i.fa.fa-key.fa-fw.small-link
             = t('openid.login', provider: 'BasicAuth')
