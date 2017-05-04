@@ -12,7 +12,7 @@ Bundler.require(:default, Rails.env)
 
 module ScalarmExperimentManager
   class Application < Rails::Application
-    config.r_interpreter = RinRuby.new(false)
+    # config.r_interpreter = RinRuby.new(false)
 
     config.autoload_paths += %W(#{config.root}/app/models/infrastructure_facades #{config.root}/app/models/infrastructure_facades/amazon_credentials)
     # TODO this should be taken from the information service registration

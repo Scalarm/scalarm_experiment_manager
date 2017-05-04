@@ -45,7 +45,7 @@ class HistogramChart
 
     #Rails.logger.debug("result_file.path - #{result_file.path}")
 
-    rinruby = Rails.configuration.r_interpreter
+    rinruby = RinRuby.new(false)
     rinruby.eval("
       experiment_data <- read.csv(\"#{result_file.path}\")
       ex_min <- min(experiment_data$#{@moe_name})
@@ -67,6 +67,8 @@ class HistogramChart
       @bucket_width = @stats[:ex_max]
       @resolution = 1
     end
+
+    rinruby.quit
 
     result_file.unlink
   end

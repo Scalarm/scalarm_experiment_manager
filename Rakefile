@@ -552,7 +552,7 @@ def install_r_libraries
     }
   EOF
 
-  Rails.configuration.r_interpreter.eval(install_r_cmd)
+  RinRuby.new(false).eval(install_r_cmd)
 end
 
 def install_mongodb

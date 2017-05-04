@@ -93,7 +93,7 @@ class ScatterPlotChart
         end
       end
 
-      rinruby = Rails.configuration.r_interpreter
+      rinruby = RinRuby.new(false)
       rinruby.x_values = x_values
       rinruby.y_values = y_values
       rinruby.eval("res = lm(y_values~x_values)
@@ -103,6 +103,7 @@ class ScatterPlotChart
       x_min, x_max = sorted_array[0], sorted_array[sorted_array.length-1]
       a = rinruby.pull("a").to_f
       b = rinruby.pull("b").to_f
+      rinruby.quit
       x1, y1 = x_min, a*x_min+b
       x2, y2 = x_max, a*x_max+b
 

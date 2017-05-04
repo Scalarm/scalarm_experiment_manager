@@ -655,9 +655,10 @@ class Experiment < Scalarm::Database::Model::Experiment
           validate_parameter_value(parameter['label'], value_of_input)
         end
 
-        r_interpreter = Rails.configuration.r_interpreter
+        r_interpreter = RinRuby.new(false)
         r_interpreter.eval("x <- rnorm(1, #{parameter['mean'].to_f}, #{parameter['variance'].to_f})")
         parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
+        r_interpreter.quit
 
       when 'uniform'
         # checking parameters for alpha-numeric characters, '_', '-' and '.'
@@ -666,9 +667,10 @@ class Experiment < Scalarm::Database::Model::Experiment
           validate_parameter_value(parameter['label'], value_of_input)
         end
 
-        r_interpreter = Rails.configuration.r_interpreter
+        r_interpreter = RinRuby.new(false)
         r_interpreter.eval("x <- runif(1, #{parameter['min'].to_f}, #{parameter['max'].to_f})")
         parameter_values << ('%.3f' % r_interpreter.pull('x').to_f)
+        r_interpreter.quit
 
       when 'custom'
         parameter_values.concat(parameter['custom_values'])
@@ -780,14 +782,16 @@ class Experiment < Scalarm::Database::Model::Experiment
           design_file_path = File.join(Rails.root, 'public', 'designs.R')
           Rails.logger.info("" "arg <- #{data_frame(parameters_for_doe)} source('#{design_file_path}')
                                design <- #{doe_method_name}(arg) design <- data.matrix(design)" "")
-          Rails.configuration.r_interpreter.eval("arg <- #{data_frame(parameters_for_doe)}
+          r_interpreter = RinRuby.new(false)
+          r_interpreter.eval("arg <- #{data_frame(parameters_for_doe)}
               source('#{design_file_path}')
               design <- #{doe_method_name}(arg)
               design <- data.matrix(design)")
 
-          values = Rails.configuration.r_interpreter.design.to_a
+          values = r_interpreter.design.to_a
           values = values.map { |list| list.map { |num| num.round(5) } }
           #Rails.logger.debug("Design: #{values}")
+          r_interpreter.quit
 
           values
         end

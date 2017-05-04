@@ -1208,8 +1208,10 @@ apiDoc:
     if params[:moe_name].blank?
       render inline: ""
     else
-      @chart = RegressionTreeChart.new(@experiment, params[:moe_name], Rails.configuration.r_interpreter)
+      r_interpreter = RinRuby.new(false)
+      @chart = RegressionTreeChart.new(@experiment, params[:moe_name], r_interpreter)
       @chart.prepare_chart_data
+      r_interpreter.quit
     end
   end
 

@@ -160,13 +160,15 @@ module SimulationScheduler
       parameter_desc = self.get_parameter_doc experiment_parameters[index]
       unless parameter_desc.blank?
         if parameter_desc['parametrizationType'] == 'uniform'
-          r_interpreter = Rails.configuration.r_interpreter
+          r_interpreter = RinRuby.new(false)
           r_interpreter.eval("x <- runif(1, #{parameter_desc['min'].to_f}, #{parameter_desc['max'].to_f})")
           combination[index] = ('%.3f' % r_interpreter.pull('x').to_f)
+          r_interpreter.quit
         elsif parameter_desc['parametrizationType'] == 'gauss'
-          r_interpreter = Rails.configuration.r_interpreter
+          r_interpreter = RinRuby.new(false)
           r_interpreter.eval("x <- rnorm(1, #{parameter_desc['mean'].to_f}, #{parameter_desc['variance'].to_f})")
           combination[index] = ('%.3f' % r_interpreter.pull('x').to_f)
+          r_interpreter.quit
         end
       end
 
