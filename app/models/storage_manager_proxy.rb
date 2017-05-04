@@ -10,7 +10,7 @@ class StorageManagerProxy
   end
 
   def self.create(experiment_id)
-    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
+    storage_manager_url = Information::StorageManager.all.map(&:address).sample
 
     if not storage_manager_url.nil?
       sm_uuid = SecureRandom.uuid

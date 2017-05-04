@@ -402,13 +402,10 @@ class SimulationsController < ApplicationController
   end
 
   def show
-    information_service = InformationService.instance
-
     if Rails.application.secrets.include?(:storage_manager_url)
       @storage_manager_url = Rails.application.secrets.storage_manager_url
     else
-      @storage_manager_url = information_service.get_list_of('storage_managers')
-      @storage_manager_url = @storage_manager_url.sample unless @storage_manager_url.nil?
+      @storage_manager_url = Information::StorageManager.all.map(&:address).sample
     end
 
     if @simulation_run.nil?
@@ -463,13 +460,13 @@ class SimulationsController < ApplicationController
   end
 
   def results_binaries
-    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
+    storage_manager_url = Information::StorageManager.all.map(&:address).sample
     redirect_to LogBankUtils::simulation_run_binaries_url(storage_manager_url,
                                                           @experiment.id, @simulation_run.index, @current_uer)
   end
 
   def results_stdout
-    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
+    storage_manager_url = Information::StorageManager.all.map(&:address).sample
     redirect_to LogBankUtils::simulation_run_stdout_url(storage_manager_url,
                                                         @experiment.id, @simulation_run.index, @current_uer)
   end

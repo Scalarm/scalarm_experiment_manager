@@ -122,7 +122,7 @@ class SupervisedExperiment < CustomPointsExperiment
 
   # TODO: use general sample public url method, now in applications controller
   def self.get_private_supervisor_url
-    InformationService.instance.sample_public_url('experiment_supervisors')
+    Information::ExperimentSupervisor.all.map(&:address).sample
   end
 
   ##

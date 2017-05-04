@@ -1337,7 +1337,7 @@ apiDoc:
   end
 
   def results_binaries
-    storage_manager_url = InformationService.instance.sample_public_url 'storage_managers'
+    storage_manager_url = Information::StorageManager.all.map(&:address).sample
     redirect_to LogBankUtils::experiment_url(storage_manager_url,
                                              @experiment.id, current_user)
   end
