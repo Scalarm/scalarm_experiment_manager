@@ -75,11 +75,11 @@ class ExperimentsController < ApplicationController
   end
 
   def analysis_panel
-    information_service = InformationService.instance
-    @public_storage_manager_url = information_service.sample_public_url 'storage_managers'
-    @public_chart_service_url = information_service.sample_public_url 'chart_services'
-
+    @public_storage_manager_url = Information::StorageManager.all.map(&:address).sample
+    @public_storage_manager_url ||= "#{request.host_with_port}/storage"
     @storage_manager_url = (Rails.application.secrets[:storage_manager_url] or @public_storage_manager_url)
+
+    @public_chart_service_url = Information::ChartService.all.map(&:address).sample
 
     render partial: 'analysis_panel'
   end
