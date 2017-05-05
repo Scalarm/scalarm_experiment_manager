@@ -117,9 +117,9 @@ class ClusterFacade < InfrastructureFacade
     if additional_params[:onsite_monitoring]
       record_ids = records.map{|r| r.id.to_s}
       SendOnsiteMonitoringWorker.perform_async(self.class, record_ids, credentials.id.to_s, user_id.to_s, "#{self.short_name}.#{@scheduler.short_name}", additional_params)
-    else
-      SimMonitorWorker.perform_async(additional_params[:infrastructure_name].to_s, user_id.to_s)
     end
+
+    SimMonitorWorker.perform_async(additional_params[:infrastructure_name].to_s, user_id.to_s)
 
     records
   end
