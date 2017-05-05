@@ -95,12 +95,15 @@ namespace :service do
     end
 
     Rake::Task["service:initialize_sims_monitoring"].execute
+
+    puts 'puma -C config/puma.rb'
+    %x[puma -C config/puma.rb]
   end
 
   desc 'Stop the service'
   task :stop, [:debug] => [:environment] do |t, args|
-    puts 'passenger stop'
-    %x[passenger stop]
+    puts 'pumactl -F config/puma.rb -T scalarm stop'
+    %x[pumactl -F config/puma.rb -T scalarm stop]
 
     monitoring_process('stop')
 

@@ -91,7 +91,8 @@ gem 'awesome_print'
 gem 'method_source'
 
 gem 'mongoid', '~> 5.1.0'
-gem 'passenger'
+# gem 'passenger'
+gem 'puma'
 
 
 group :development do
