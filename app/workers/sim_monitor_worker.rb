@@ -30,9 +30,10 @@ class SimMonitorWorker
     end
 
     if run_another_monitoring_loop
-      logger.info "Scheduling another monitoring session for infrastructure '#{infrastructure_id}'"
-      SimMonitorWorker.perform_in(30.seconds, infrastructure_id, user_id)
+      logger.info "Checking if scheduling another monitoring session for infrastructure '#{infrastructure_id}' is needed"
+      SchedulingInfrastructureMonitoringService.new(infrastructure_id, user_id, 30.seconds).run
     else
+      UnsetSchedulingInfrastructureMonitoringService.new(infrastructure_id, user_id).run
       logger.info "The end of the monitoring process for infrastructure '#{infrastructure_id}'"
     end
   end

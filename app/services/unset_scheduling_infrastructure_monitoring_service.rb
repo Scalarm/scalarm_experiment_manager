@@ -1,0 +1,16 @@
+class UnsetSchedulingInfrastructureMonitoringService
+
+  def initialize(infrastructure_id, user_id)
+    @infrastructure_id = infrastructure_id.to_s
+    @user_id = user_id.to_s
+    @time_delay = time_delay
+  end
+
+  def run
+    Scalarm::MongoLock.mutex("user-#{@user_id}-monitoring") do
+      user = ScalarmUser.where(id: @user_id).first
+      user.unset_monitoring_scheduled?(infrastructure_id)
+    end
+  end
+
+end

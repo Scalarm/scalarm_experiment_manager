@@ -120,7 +120,7 @@ apiDoc:
         elsif key == 'resource_status'
           sm_record.resource_status = value.to_sym
           # changing resource status should trigger sm monitor procedure immediately
-          SimMonitorWorker.perform_async(params[:infrastructure].to_s, sm_record.user_id.to_s)
+          SchedulingInfrastructureMonitoringService.new(params[:infrastructure_id], sm_record.user_id, nil).run
         else
           sm_record.send("#{key}=", value)
         end

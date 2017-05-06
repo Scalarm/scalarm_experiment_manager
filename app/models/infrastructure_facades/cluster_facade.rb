@@ -119,7 +119,7 @@ class ClusterFacade < InfrastructureFacade
       SendOnsiteMonitoringWorker.perform_async(self.class, record_ids, credentials.id.to_s, user_id.to_s, "#{self.short_name}.#{@scheduler.short_name}", additional_params)
     end
 
-    SimMonitorWorker.perform_async(additional_params[:infrastructure_name].to_s, user_id.to_s)
+    SchedulingInfrastructureMonitoringService.new(additional_params[:infrastructure_name], user_id, nil).run
 
     records
   end

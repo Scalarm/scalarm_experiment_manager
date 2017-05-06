@@ -186,7 +186,7 @@ namespace :service do
     end
 
     infrastructure_user_combinations.each do |combination|
-      SimMonitorWorker.perform_async(combination[0], combination[1])
+      SchedulingInfrastructureMonitoringService.new(combination[0], combination[1], nil).run
     end
   end
 
