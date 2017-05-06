@@ -7,11 +7,14 @@ class SchedulingInfrastructureMonitoringService
   end
 
   def run
+    Rails.logger.info("[SchedulingInfrastructureMonitoringService] infra: #{@infrastructure_id}, user: #{@user_id}")
+
     Scalarm::MongoLock.mutex("user-#{@user_id}-monitoring") do
       user = ScalarmUser.where(id: @user_id).first
 
       unless user.monitoring_scheduled?(@infrastructure_id)
         Rails.logger.info("Scheduling another SimMonitorWorker - #{@infrastructure_id} - #{@user_id}")
+
         if @time_delay.nil?
           SimMonitorWorker.perform_async(@infrastructure_id, @user_id)
         else
