@@ -52,13 +52,13 @@ class ScalarmUser < Scalarm::ServiceCore::ScalarmUser
     self.scheduled_monitoring.include?(infrastructure_id)
   end
 
-  def set_monitoring_scheduled?(infrastructure_id)
+  def set_monitoring_scheduled(infrastructure_id)
     self.scheduled_monitoring ||= {}
 
     self.scheduled_monitoring[infrastructure_id] = true
   end
 
-  def unset_monitoring_scheduled?(infrastructure_id)
+  def unset_monitoring_scheduled(infrastructure_id)
     self.scheduled_monitoring ||= {}
 
     self.scheduled_monitoring.delete(infrastructure_id)
