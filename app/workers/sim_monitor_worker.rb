@@ -29,8 +29,9 @@ class SimMonitorWorker
       end
     end
 
+    UnsetSchedulingInfrastructureMonitoringService.new(infrastructure_id, user_id).run
+
     if run_another_monitoring_loop
-      UnsetSchedulingInfrastructureMonitoringService.new(infrastructure_id, user_id).run
       SchedulingInfrastructureMonitoringService.new(infrastructure_id, user_id, 30.seconds).run
     end
   end
