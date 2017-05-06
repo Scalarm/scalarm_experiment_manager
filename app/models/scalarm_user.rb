@@ -71,6 +71,11 @@ class ScalarmUser < Scalarm::ServiceCore::ScalarmUser
 
     if self.scheduled_monitoring.include?(infrastructure_id)
       self.scheduled_monitoring[infrastructure_id] -= 1
+
+      if self.scheduled_monitoring[infrastructure_id] < 0
+        self.scheduled_monitoring.delete(infrastructure_id)
+        self.scheduled_monitoring_time.delete(infrastructure_id)
+      end
     end
   end
 
