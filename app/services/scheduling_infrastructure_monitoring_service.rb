@@ -11,6 +11,7 @@ class SchedulingInfrastructureMonitoringService
       user = ScalarmUser.where(id: @user_id).first
 
       unless user.monitoring_scheduled?(@infrastructure_id)
+        Rails.logger.info("Scheduling another SimMonitorWorker - #{@infrastructure_id} - #{@user_id}")
         if @time_delay.nil?
           SimMonitorWorker.perform_async(@infrastructure_id, @user_id)
         else
@@ -19,6 +20,8 @@ class SchedulingInfrastructureMonitoringService
 
         user.set_monitoring_scheduled(@infrastructure_id)
         user.save
+      else
+        Rails.logger.info("There is no need to schedule another SimMonitorWorker - #{@infrastructure_id} - #{@user_id}")
       end
     end
   end
