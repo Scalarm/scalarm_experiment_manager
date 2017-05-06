@@ -13,6 +13,7 @@ class SchedulingInfrastructureMonitoringService
 
     Scalarm::MongoLock.mutex("user-#{@user_id}-monitoring") do
       user = ScalarmUser.where(id: @user_id).first
+      Rails.logger.info("User: #{user}")
 
       unless user.monitoring_scheduled?(@infrastructure_id)
         Rails.logger.info("Scheduling another SimMonitorWorker - #{@infrastructure_id} - #{@user_id}")
