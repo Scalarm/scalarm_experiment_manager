@@ -11,6 +11,7 @@ class UnsetSchedulingInfrastructureMonitoringService
       user = ScalarmUser.where(id: @user_id).first
       user.unset_monitoring_scheduled?(@infrastructure_id)
       user.save
+      Rails.logger.info("User after unsetting: #{user}")
     end
   end
 

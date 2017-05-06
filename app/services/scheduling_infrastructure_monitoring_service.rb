@@ -28,6 +28,7 @@ class SchedulingInfrastructureMonitoringService
 
         user.set_monitoring_scheduled(@infrastructure_id)
         user.save
+        Rails.logger.info("User after setting: #{user}")
       else
         Rails.logger.info("There is no need to schedule another SimMonitorWorker - #{@infrastructure_id} - #{@user_id}")
       end
