@@ -9,9 +9,8 @@ class UnsetSchedulingInfrastructureMonitoringService
     Scalarm::MongoLock.mutex("user-#{@user_id}-monitoring") do
       Rails.logger.info("Unsetting infrastructure monitoring - #{@infrastructure_id} - #{@user_id}")
       user = ScalarmUser.where(id: @user_id).first
-      user.unset_monitoring_scheduled(@infrastructure_id)
+      user.unset_monitoring_schedule(@infrastructure_id)
       user.save
-      Rails.logger.info("User after unsetting: #{user}")
     end
   end
 
