@@ -3,7 +3,6 @@ class UnsetSchedulingInfrastructureMonitoringService
   def initialize(infrastructure_id, user_id)
     @infrastructure_id = infrastructure_id.to_s
     @user_id = user_id.to_s
-    @time_delay = time_delay
   end
 
   def run
