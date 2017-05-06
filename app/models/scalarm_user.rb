@@ -50,16 +50,18 @@ class ScalarmUser < Scalarm::ServiceCore::ScalarmUser
     self.scheduled_monitoring ||= {}
 
     self.scheduled_monitoring.include?(infrastructure_id) and
-        self.scheduled_monitoring_time.include?(infrastructure_id) and
-          self.scheduled_monitoring_time[infrastructure_id] + 5.minutes > Time.now
+        self.scheduled_monitoring[infrastructure_id] > 1 and
+          self.scheduled_monitoring_time.include?(infrastructure_id) and
+            self.scheduled_monitoring_time[infrastructure_id] + 5.minutes > Time.now
   end
 
   def set_monitoring_schedule(infrastructure_id)
     self.scheduled_monitoring ||= {}
-
-    self.scheduled_monitoring[infrastructure_id] = true
-
     self.scheduled_monitoring_time ||= {}
+
+    self.scheduled_monitoring[infrastructure_id] = 0 unless self.scheduled_monitoring.include?(infrastructure_id)
+    self.scheduled_monitoring[infrastructure_id] += 1
+
     self.scheduled_monitoring_time[infrastructure_id] = Time.now
   end
 
@@ -67,8 +69,9 @@ class ScalarmUser < Scalarm::ServiceCore::ScalarmUser
     self.scheduled_monitoring ||= {}
     self.scheduled_monitoring_time ||= {}
 
-    self.scheduled_monitoring.delete(infrastructure_id)
-    self.scheduled_monitoring_time.delete(infrastructure_id)
+    if self.scheduled_monitoring.include?(infrastructure_id)
+      self.scheduled_monitoring[infrastructure_id] -= 1
+    end
   end
 
 end
