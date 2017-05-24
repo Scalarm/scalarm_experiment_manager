@@ -180,4 +180,32 @@ class SimulationManagerRecordTest < MiniTest::Test
     assert sm_record.has_more_simulations_to_run?, 'Simulation Manager has more simulations to run when simulations_left is not present'
   end
 
+  def test_has_more_simulations_to_run_field_greater_than_zero
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(1)
+
+    assert sm_record.has_more_simulations_to_run?, 'Simulation Manager has more simulations to run when simulations_left is greater than 0'
+  end
+
+  def test_has_more_simulations_to_run_field_equal_to_zero
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(0)
+
+    assert (not sm_record.has_more_simulations_to_run?), 'Simulation Manager has no more simulations to run when simulations_left is 0'
+  end
+
+  def test_has_more_simulations_to_run_field_lesser_than_zero
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(-1)
+
+    assert (not sm_record.has_more_simulations_to_run?), 'Simulation Manager has no more simulations to run when simulations_left is lesser than 0'
+  end
+
+  def test_has_more_simulations_to_run_field_not_existing
+    sm_record = MockRecord.new({})
+    sm_record.stubs(:simulations_left).returns(nil)
+
+    assert sm_record.has_more_simulations_to_run?, 'Simulation Manager has more simulations to run when simulations_left is not present'
+  end
+
 end
