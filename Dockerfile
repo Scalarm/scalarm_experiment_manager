@@ -1,7 +1,7 @@
 FROM centos:7
 SHELL ["/bin/bash", "-l", "-c"]
 
-RUN yum install -y epel-release && yum install -y git wget man libxml2 R curl sysstat gsi-openssh-clients zip scipy python-setuptools python-pip redis
+RUN yum install -y epel-release && yum install -y git wget man libxml2 R curl sysstat gsi-openssh-clients zip scipy python-setuptools python-pip
 RUN pip install requests
 
 ENV SCALARM_HOME /scalarm
@@ -21,4 +21,4 @@ EXPOSE 3000
 RUN bundle config git.allow_insecure true
 RUN bundle install
 
-CMD /bin/bash -c "rake service:start; bundle exec passenger start" 
+CMD /bin/bash -c "rake service:start" 
