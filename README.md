@@ -1,3 +1,6 @@
+[![](https://images.microbadger.com/badges/version/scalarm/scalarm_experiment_manager.svg)](https://microbadger.com/images/scalarm/scalarm_experiment_manager "Get your own version badge on microbadger.com")   [![](https://images.microbadger.com/badges/image/scalarm/scalarm_experiment_manager.svg)](https://microbadger.com/images/scalarm/scalarm_experiment_manager "Get your own image badge on microbadger.com")
+
+
 ![Scalarm Logo](http://scalarm.com/images/scalarmNiebieskiemale.png)
 
 Scalarm Experiment Manager
