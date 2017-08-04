@@ -1,0 +1,35 @@
+sudo: required
+
+services:
+  - docker
+# when tests will work
+#language: ruby
+#rvm:
+#  - 2.3
+
+before_install:
+  - sudo apt-get install -y curl zip git sysstat r-base-core
+  - rvm install ruby-2.3.3
+  - gem install bundle
+  - bundle install
+  
+script:
+  - export REPO=scalarm/scalarm_experiment_manager
+  - docker build . -f Dockerfile -t $REPO
+ 
+before_deploy:	
+  - docker tag $REPO $REPO:$TRAVIS_TAG
+  - docker login -u $DOCKER_USER -p $DOCKER_PASS
+deploy:
+  - provider: script
+    script:
+      docker push $REPO 
+    on:
+      branch: master
+      tags: true
+   
+env:
+  global:
+    - secure: "G3J1g4YjnsLXBdqlj8tM7kCQR/v69XwSspMd+KIPBeC588H+2o9tBZW1mS4DYNI72jGQkcEFFoNXwYUNklfJz3GKBZ4D6q9Rg0DmKINSTvgfIGrnkpbKORYjOzlibcRqb1cYMs6zY7BjKhQSeH5O8wcUWlo5OUwgUKTXb2BXLsRKlxOpjUnT2553fdgqqpe3gchfeokjVl29UdcCA7EKCn9B56fE5GncSmvnMYWuKWb2PwMI1wJtvOUdHJhUmpu/prHyGLZmlUHqeBYuM86FGUWMN09EqeIL+kyWN1+JOBs8S9nyrcGc/fTMxYKgNeJI0WlLYaMZrpWkifZd3IMWzgfLN52qcp63oCjY+lIyGkzW/DvLm2fBigdqVzZfrDJTwYNc+gWwin1+mkelB7P38drS8y91pRBbJjvZglyMgaUZ9WsMOPPkAYXopPkpLwazjhBmKqFMWwTU+yusZkzNGKBFwxsCYQqlablW4LBrNLioKkpuU97Rk12ke036d33Gt2wq0ExCXMaQzLkC6QFxAEPpCDasMbCUvuw/wU4zUmwC/IhJFTXh3mJu70kJOYQWPqTkoOzQv/JLJRhu4JFQe6EFPulPTxUELClUzWKufI/d137QYUMxVP8tUfzAFaoDlfEb31HJyLp1iWA2zgpu31AdvazENA0ko58/7GrRttE="
+    - secure: "Cge+L1PConcQTBqV2BoiETlRIZwgcr78DPwKuPp2wuVZQA4KO4J25GfzSmUnlwOLcFV85/t7LX3zlN6GNmukmVDnwg3ZYN1DRNjQDpGfyTQD2hK/o10LdkLagsUnV8alsK3yOLe81hBOjDsLvjOY27z/FFJRzd256Zj8VJhYQ4jiVqgn5dwfYOFzP/1ps6x5bgwtUE7fAV/sLvoCyRWVlQJpLPjZe73fUr5wFtM6iPTDE9HDF2O6SH5Xaj4DrGiRnEv3ESKyqLcLs7ij/qraA4+8LS0LykL0E8iXp9fBEeET5PrY38TYAKv4SsbKFZu695Be4gCNGRqMfvtnkdMw8LzfZOmWYqy31JgPe+ynO+U8ax+koa/fJdh1lJieCxiXZdBs2uUltu43Y2t2L0uthbODPKP3fkw0fzQDxbosSb51c3Psr7HSROWu37z8yzBnQ+uagpj2ZsQcOwvtUyEEAjb7nU+5pMlHVWBwNPTSzcoTF6P1FGQ/yYnACnvImcfaW1awJVjuX/vd/W7YINur4dvyLSoenZ8p7BR6AIWcsUSf5TlwW+hkiogit1vYsvZoJkqt/6cCP3gdJeidIJU+GKt6k/az1t4NIhWtWrVk9QWa7IV+pKAgHmY7MbkuKNh5Xs0xfYJpErqb/a9APKG378T4M0qIAPBTMfdUTZD+xTs="
+
