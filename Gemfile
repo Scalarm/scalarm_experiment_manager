@@ -102,6 +102,9 @@ group :development do
   gem 'debase'
 end
 
+gem 'ci_reporter_minitest'
+gem 'minitest'
+
 group :test do
   gem 'mocha'
   gem 'ci_reporter_minitest'

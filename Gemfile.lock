@@ -553,6 +553,7 @@ DEPENDENCIES
   jquery-ui-rails
   libv8 (= 3.16.14.13)
   method_source
+  minitest
   mocha
   mongoid (~> 5.1.0)
   net-scp
@@ -586,4 +587,4 @@ DEPENDENCIES
   zip-zip
 
 BUNDLED WITH
-   1.14.6
+   1.15.1
