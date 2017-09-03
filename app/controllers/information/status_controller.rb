@@ -35,15 +35,23 @@ class Information::StatusController < ApplicationController
   end
 
   def scalarm_status
-    service_classes = [Information::ExperimentManager, Information::StorageManager, Information::ChartService, Information::ExperimentSupervisor]
-    states = Hash[service_classes.collect { |service_class| [service_class, collect_service_states(service_class)] }]
+    service_controllers_classes = [
+      Information::ExperimentsController,
+      Information::ChartController,
+      Information::SupervisorController,
+    ]
+    states = Hash[
+      service_controllers_classes.collect do |service_class|
+        [service_class, collect_service_states(service_class)]
+      end
+    ]
 
     status = 'ok'
     message = ''
 
     if states.values.any? &:empty?
       status = 'failed'
-      message = 'Every service should have at least one instance'
+      message = 'Every service should have at least one instance.'
     elsif any_service_in_state?('failed', *states.values)
       status = 'failed'
       message = 'One or more service failed. Please check service details.'
@@ -59,7 +67,11 @@ class Information::StatusController < ApplicationController
     }
 
     states.each do |service_class, this_service_states|
-      add_service_states(data, this_service_states, service_class.to_s.underscore)
+      add_service_states(
+        data,
+        this_service_states,
+        service_class.service_name.parameterize
+      )
     end
 
     respond_to do |format|
@@ -91,7 +103,10 @@ class Information::StatusController < ApplicationController
   end
 
   def collect_service_states(service_class)
-    service_class.all.to_a.map(&:address).collect do |address|
+    controller_instance = service_class.new
+    # pushing request into specific controller, because we need host_with_port
+    controller_instance.request = request
+    controller_instance.generate_address_list.collect do |address|
       query_status_all(address)
     end
   end
@@ -103,21 +118,37 @@ class Information::StatusController < ApplicationController
     end
   end
 
+  # IMPORTANT NOTE: this method will work only if server has at least 2 workers!
+  #                 because it needs to ping its Experiment Manager status
+  #                 which is server by the same Rails app
   # Queries status of serivce listening at service_address
   # Returns Hash with:
   # * status: 'failed' or 'ok' or 'warning'
   # * content (optional): an additional message
   def query_status_all(service_address, scheme='https')
+    request_exception = nil
+    status_url = "#{scheme}://#{service_address}/status.json"
     begin
-      resp = RestClient.get "#{scheme}://#{service_address}/status",
-                            params: { tests: ['database'] },
-                            content_type: :json, accept: :json
+      status_request = RestClient::Request.new(
+        method: :get,
+        url: status_url,
+        params: { tests: ['database'] },
+        content_type: :json,
+        accept: :json,
+        timeout: 20,
+        verify_ssl: OpenSSL::SSL::VERIFY_NONE,
+      )
+      Rails.logger.info("Will make status request to: #{status_url}")
+      resp = status_request.execute
     rescue RestClient::Exception => e
-      resp = e.response
+      return {
+        status: 'failed',
+        content: "Status check request failed for #{service_address} (GET #{status_url}): #{e.to_s}, body: #{e.response}"
+      }
     rescue => e
       return {
         status: 'failed',
-        content: "Exception on checking status for #{service_address}: #{e.to_s}"
+        content: "Exception on checking status for #{service_address} (GET #{status_url}): #{e.to_s}"
       }
     end
 
@@ -127,7 +158,9 @@ class Information::StatusController < ApplicationController
       Rails.logger.error("query_status_all: #{e}")
       return {
           status: 'failed',
-          content: "Invalid response (#{resp.respond_to?(:code) ? resp.code : 'none'}): \"#{resp}\""
+          content: "Cannot parse response of GET #{status_url} " \
+            "(code: #{resp.respond_to?(:code) ? resp.code : 'none'}), error: " \
+            "#{e.to_s}"
       }
     end
 
