@@ -49,7 +49,7 @@ class Information::StatusController < ApplicationController
     status = 'ok'
     message = ''
 
-    if states.values.any? &:empty?
+    if states.values.any?(&:empty?)
       status = 'failed'
       message = 'Every service should have at least one instance.'
     elsif any_service_in_state?('failed', *states.values)
@@ -126,7 +126,6 @@ class Information::StatusController < ApplicationController
   # * status: 'failed' or 'ok' or 'warning'
   # * content (optional): an additional message
   def query_status_all(service_address, scheme='https')
-    request_exception = nil
     status_url = "#{scheme}://#{service_address}/status.json"
     begin
       status_request = RestClient::Request.new(
@@ -143,12 +142,12 @@ class Information::StatusController < ApplicationController
     rescue RestClient::Exception => e
       return {
         status: 'failed',
-        content: "Status check request failed for #{service_address} (GET #{status_url}): #{e.to_s}, body: #{e.response}"
+        content: "Status check request failed for #{service_address} (GET #{status_url}): #{e}, body: #{e.response}"
       }
     rescue => e
       return {
         status: 'failed',
-        content: "Exception on checking status for #{service_address} (GET #{status_url}): #{e.to_s}"
+        content: "Exception on checking status for #{service_address} (GET #{status_url}): #{e}"
       }
     end
 
@@ -160,7 +159,7 @@ class Information::StatusController < ApplicationController
           status: 'failed',
           content: "Cannot parse response of GET #{status_url} " \
             "(code: #{resp.respond_to?(:code) ? resp.code : 'none'}), error: " \
-            "#{e.to_s}"
+            "#{e}"
       }
     end
 
