@@ -19,20 +19,7 @@ class Information::AbstractServiceController < ApplicationController
   end
 
   def list
-    managers = self.class.model_class.all.map(&:address)
-
-    if managers.blank?
-      managers = case self.class.model_class
-                   when Information::ExperimentManager
-                     [ request.host_with_port ]
-                   when Information::StorageManager
-                     [ "#{request.host_with_port}/storage" ]
-                   else
-                     [ ]
-                 end
-    end
-
-    render json: managers
+    render json: generate_address_list
   end
 
   def deregister
@@ -41,5 +28,9 @@ class Information::AbstractServiceController < ApplicationController
     self.class.model_class.where(address: address).each(&:destroy)
 
     render json: {status: 'ok', msg: "Success: '#{address}' has been deregistered as #{self.class.service_name}"}
+  end
+
+  def generate_address_list
+    self.class.model_class.all.map(&:address)
   end
 end
