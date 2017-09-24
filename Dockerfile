@@ -13,4 +13,4 @@ RUN bundle config build.ruby-debug-ide --with-ruby-include=$rvm_path/src/ruby-2.
 RUN bundle config build.debase --with-ruby-include=$rvm_path/src/ruby-2.3.4
 RUN bundle install
 
-CMD /bin/bash -c "rake service:start; bundle exec passenger start" 
+CMD /bin/bash -c "rake service:start" 
